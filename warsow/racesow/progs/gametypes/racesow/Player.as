@@ -150,7 +150,7 @@ class Racesow_Player
 		
         // set up for respawning the player with a delay
         cEntity @respawner = G_SpawnEntity( "race_respawner" );
-        respawner.nextThink = levelTime + 5000;
+        respawner.nextThink = levelTime + 3000;
         respawner.count = client.playerNum();
     }
 	
@@ -165,4 +165,12 @@ class Racesow_Player
         this.race.reset();
 		this.race.setPlayer(this);
     }
+	
+	uint getCheckPoint(uint id)
+	{
+		if (id >= this.bestCheckPoints.length())
+			return 0;
+	
+		return this.bestCheckPoints[id];
+	}
 }

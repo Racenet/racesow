@@ -1,13 +1,9 @@
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 3;
+const int MAX_RECORDS = 10;
 
-uint[] levelRecordSectors;
-uint   levelRecordFinishTime;
-cString levelRecordPlayerName;
-
-Racesow_Player_Record[] levelRecords( MAX_RECORDS );
 Racesow_Player[] players( maxClients );
+Racesow_Map @map;
 
 /**
  * TimeToString
@@ -86,21 +82,6 @@ void race_respawner_think( cEntity @respawner )
 }
 
 /**
- * RACE_UpdateHUDTopScores
- * @return void
- */
-void RACE_UpdateHUDTopScores()
-{
-    for ( int i = 0; i < MAX_RECORDS; i++ )
-    {
-        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
-        {
-            G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + TimeToString( levelRecords[i].finishTime ) );
-        }
-    }
-}
-
-/**
  * RACE_playerKilled
  *
  * a player has just died. The script is warned about it so it can account scores
@@ -145,80 +126,4 @@ void RACE_SetUpMatch()
     }
 
     G_RemoveDeadBodies();
-}
-
-void RACE_WriteTopScores()
-{
-    cString topScores;
-    cVar mapName( "mapname", "", 0 );
-
-    topScores = "//" + mapName.getString() + " top scores\n\n";
-
-    for ( int i = 0; i < MAX_RECORDS; i++ )
-    {
-        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
-        {
-            topScores += "\"" + int( levelRecords[i].finishTime ) + "\" \"" + levelRecords[i].playerName + "\" ";
-
-            // add the sectors
-            topScores += "\"" + numCheckpoints+ "\" ";
-
-            for ( int j = 0; j < numCheckpoints; j++ )
-                topScores += "\"" + int( levelRecords[i].checkPoints[j] ) + "\" ";
-
-            topScores += "\n";
-        }
-    }
-
-    G_WriteFile( "topscores/race/" + mapName.getString() + ".txt", topScores );
-}
-
-void RACE_LoadTopScores()
-{
-    cString topScores;
-    cVar mapName( "mapname", "", 0 );
-
-    topScores = G_LoadFile( "topscores/race/" + mapName.getString() + ".txt" );
-
-    if ( topScores.len() > 0 )
-    {
-        cString timeToken, nameToken, sectorToken;
-        int count = 0;
-
-        for ( int i = 0; i < MAX_RECORDS; i++ )
-        {
-            timeToken = topScores.getToken( count++ );
-            if ( timeToken.len() == 0 )
-                break;
-
-            nameToken = topScores.getToken( count++ );
-            if ( nameToken.len() == 0 )
-                break;
-
-            sectorToken = topScores.getToken( count++ );
-            if ( sectorToken.len() == 0 )
-                break;
-
-            int numSectors = sectorToken.toInt();
-
-            // store this one
-            for ( int j = 0; j < numSectors; j++ )
-            {
-                sectorToken = topScores.getToken( count++ );
-                if ( sectorToken.len() == 0 )
-                    break;
-
-                levelRecords[i].checkPoints[j] = uint( sectorToken.toInt() );
-            }
-
-            levelRecords[i].finishTime = uint( timeToken.toInt() );
-            levelRecords[i].playerName = nameToken;
-        }
-
-        RACE_UpdateHUDTopScores();
-		
-		G_Print("JAAAAAAAAAAAAAAAAAAA\n");
-    } else {
-	G_Print("NEEEEEEEEEEEEEEEEEEEEEEEEE\n");
-	}
 }

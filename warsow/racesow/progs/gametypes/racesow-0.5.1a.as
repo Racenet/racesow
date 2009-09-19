@@ -244,16 +244,16 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_TIME_SELF, (levelTime - Racesow_GetPlayerByClient( client ).race.startTime) / 100 );
 
         client.setHUDStat( STAT_TIME_BEST, Racesow_GetPlayerByClient( client ).bestRaceTime / 100 );
-        client.setHUDStat( STAT_TIME_RECORD, levelRecords[0].finishTime / 100 );
+        client.setHUDStat( STAT_TIME_RECORD, map.highScores[0].finishTime / 100 );
 
         client.setHUDStat( STAT_TIME_ALPHA, -9999 );
         client.setHUDStat( STAT_TIME_BETA, -9999 );
 
-        if ( levelRecords[0].playerName.len() > 0 )
+        if ( map.highScores[0].playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
-        if ( levelRecords[1].playerName.len() > 0 )
+        if ( map.highScores[1].playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
-        if ( levelRecords[2].playerName.len() > 0 )
+        if ( map.highScores[2].playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
     }
 }
@@ -276,7 +276,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
         match.stopAutorecord();
         demoRecording = false;
 
-        //RACE_WriteTopScores();
+        map.writeHighScores();
     }
 
     return true;
@@ -334,14 +334,17 @@ void GT_Shutdown()
  */
 void GT_SpawnGametype()
 {
+	@map = Racesow_Map();
+    map.loadHighScores();
+
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
 
-    for ( int i = 0; i < MAX_RECORDS; i++ )
-        levelRecords[i].reset();
-
-    RACE_LoadTopScores();
+		/*
+		for ( int i = 0; i < MAX_RECORDS; i++ )
+			map.highScores[i].reset();
+		*/
 }
 
 /**

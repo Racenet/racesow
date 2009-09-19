@@ -1,0 +1,9 @@
+
+/*************************************/
+/* Version 0.5.1a                    */
+/*************************************/
+
+- refactored the core of race gameytpe (better OOP)
+- fixed autorespawn bug when finishing a race
+- unified awards for checkpoints and complete races
+- changed racerestart command so it can be used at any time
