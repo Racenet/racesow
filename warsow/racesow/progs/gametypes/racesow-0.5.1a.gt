@@ -1,0 +1,12 @@
+/shared/constants.as;
+/shared/files.as;
+
+generic/matchstates.as;
+racesow/globals.as;
+racesow/targetEntities.as;
+racesow/Player.as;
+racesow/Player/Race.as;
+racesow/Player/Record.as;
+racesow-0.5.1a.as;
+
+legacy/quake1.as;
