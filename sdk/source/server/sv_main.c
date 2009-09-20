@@ -24,6 +24,10 @@ static qboolean sv_initialized = qfalse;
 
 mempool_t *sv_mempool;
 
+// racesow
+cvar_t *sv_clientRecord;
+// !racesow
+
 cvar_t *sv_ip;
 cvar_t *sv_port;
 
@@ -831,6 +835,10 @@ void SV_Init( void )
 		svc.gameFrameTime = svc.snapFrameTime;
 		Cvar_ForceSet( "sv_fps", sv_pps->dvalue );
 	}
+
+	// racesow
+	sv_clientRecord = Cvar_Get( "sv_clientRecord", "0", CVAR_LATCH );
+	// !racesow
 
 	Com_Printf( "Game running at %i fps. Server transmit at %i pps\n", sv_fps->integer, sv_pps->integer );
 

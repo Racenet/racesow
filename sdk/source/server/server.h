@@ -300,6 +300,10 @@ extern server_constant_t svc;              // constant server info (trully persi
 extern server_static_t svs;                // persistant server info
 extern server_t	sv;                 // local server
 
+// racesow
+extern cvar_t *sv_clientRecord;
+// !racesow
+
 extern cvar_t *sv_ip;
 extern cvar_t *sv_port;
 extern cvar_t *sv_tcp;
