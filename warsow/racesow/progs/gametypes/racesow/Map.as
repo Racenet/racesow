@@ -91,7 +91,7 @@ class Racesow_Map
 					{
 						players[i].cancelRace();
 						G_PrintMsg( players[i].getClient().getEnt(), S_COLOR_RED
-							+ "You have been moved to spectators because you were idle during overtime." );
+							+ "You have been moved to spectators because you were idle during overtime.\n" );
 					}
 					else
 					{
