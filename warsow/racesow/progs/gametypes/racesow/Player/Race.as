@@ -237,7 +237,7 @@ class Racesow_Player_Race
             str = S_COLOR_RED + "+";
         }
 
-        G_CenterPrintMsg( this.player.getClient().getEnt(), "Finish: " + TimeToString( newTime ) + "\n"
+        G_CenterPrintMsg( this.player.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
 		
 		map.handleFinishLine(@this);

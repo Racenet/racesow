@@ -129,6 +129,8 @@ class Racesow_Map
 		uint serverBestTime = this.highScores[0].getTime();
 		uint personalBestTime = player.getBestTime();
 	
+		race.triggerAward( S_COLOR_CYAN + "Race Finished!" );
+		
         if ( newTime < serverBestTime || serverBestTime == 0 )
         {
             player.setBestTime(newTime);
