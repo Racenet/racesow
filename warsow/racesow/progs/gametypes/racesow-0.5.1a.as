@@ -200,7 +200,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-    if ( match.scoreLimitHit() || match.timeLimitHit() || match.suddenDeathFinished() )
+    if ( match.timeLimitHit() && map.allowEndGame() )
         match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
@@ -231,7 +231,7 @@ void GT_ThinkRules()
             continue;
 			
 		Racesow_Player @player = Racesow_GetPlayerByClient( client );
-
+		
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );
         client.setHUDStat( STAT_PROGRESS_OTHER, 0 );

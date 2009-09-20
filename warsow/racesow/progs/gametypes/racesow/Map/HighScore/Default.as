@@ -70,7 +70,7 @@ class Racesow_Map_HighScore_Default
 		this.finishTime = highScore.finishTime;
 		this.playerName = highScore.playerName;
 		this.checkPoints.resize( highScore.checkPoints.length() );
-		for ( int i = 0; i < highScore.checkPoints.length(); i++ )
+		for ( uint i = 0; i < highScore.checkPoints.length(); i++ )
 			this.checkPoints[i] = highScore.checkPoints[i];
 
 		return this;	

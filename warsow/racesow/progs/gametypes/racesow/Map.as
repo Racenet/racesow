@@ -8,6 +8,8 @@ class Racesow_Map
 
 	Racesow_Map_HighScore_Default[] highScores;
 	
+	bool inOvertime;
+	
 	/**
 	 * Constructor
 	 *
@@ -29,12 +31,59 @@ class Racesow_Map
 	{
 		cVar mapName( "mapname", "", 0 );
 		this.name = mapName.getString();
-		
+		this.inOvertime = false;
 		this.highScores.resize( MAX_RECORDS );
 		for ( int i = 0; i < MAX_RECORDS; i++ )
 		{
 			this.highScores[i].reset();
 		}
+	}
+	
+	/**
+	 * allowEndGame
+	 * @return bool
+	 */
+	bool allowEndGame()
+	{
+		if (!this.inOvertime)
+		{
+			uint numRacing = 0;
+			
+			for ( int i = 0; i < maxClients; i++ )
+		    {
+				if ( players[i].isRacing() )
+				{
+					players[i].startOvertime();
+					numRacing++;
+				}
+			}
+			
+			if ( numRacing != 0 )
+			{
+				this.inOvertime = true;
+				G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime.ogg"), GS_MAX_TEAMS, false, null );
+			}
+		
+		}
+		else
+		{
+			uint numInOvertime = 0;
+		
+			for ( int i = 0; i < maxClients; i++ )
+		    {
+				if ( players[i].inOvertime )
+				{
+					numInOvertime++;
+				}
+			}
+			
+			if ( numInOvertime == 0 )
+			{
+				this.inOvertime = false;
+			}
+		}
+		
+		return !this.inOvertime;
 	}
 	
 	/**
@@ -75,6 +124,7 @@ class Racesow_Map
 	void handleFinishLine(Racesow_Player_Race @race)
 	{
 		Racesow_Player @player = race.getPlayer();
+		player.inOvertime = false;
 		uint newTime = race.getTime();
 		uint serverBestTime = this.highScores[0].getTime();
 		uint personalBestTime = player.getBestTime();

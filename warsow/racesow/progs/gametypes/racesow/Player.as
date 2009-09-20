@@ -13,6 +13,11 @@ class Racesow_Player
 	bool isSpawned;
 
 	/**
+	 * Is the player still racing in the overtime?
+	 */
+	bool inOvertime;
+	
+	/**
 	 * The player's best race
 	 * @var uint
 	 */
@@ -211,5 +216,11 @@ class Racesow_Player
 			return 0;
 	
 		return this.bestCheckPoints[id];
+	}
+	
+	void startOvertime()
+	{
+		this.inOvertime = true;
+		G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Please hurry up, theo ther players are waiting for you to finish...\n" );
 	}
 }
