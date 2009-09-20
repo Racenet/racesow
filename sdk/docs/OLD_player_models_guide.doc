@@ -1,0 +1,121 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1036{\fonttbl{\f0\fswiss\fcharset0 Arial;}}
+{\*\generator Msftedit 5.41.15.1507;}\viewkind4\uc1\pard\f0\fs20\par
+08/10/2006\par
+\par
+[note : Don't confuse  "skinning a model" (or "to skin a model"), with what you usually call a "model skin" or the "skin" files. "Skinning" a player model means binding the mesh with the skeleton, and define wich parts of the mesh is deformed by wich bone of the skeleton ; because the mesh reacts like an actual skin moving on the bones. On the other hand "skin" also means a texture. The ".skin" files used in Q3 and warsow are text files that tell the game wich texture/shader will be applied on wich part of a model.\par
+note2 : I may sometimes talk about "mapping". I don't mean leveldesigning, but uvwmapping/texturing/shader work. "Mapping" is a misused word when we talk about leveldesigning, because levels are stored in ".map" file in many games ... hope you'll get me neutral]\par
+\par
+I. REQUIREMENTS\par
+\par
+    - 3D software (max, maya, xsi, lightwave, milkshape, blender, etc...)\par
+    - HL2 .smd export plugin for your 3d software. HL2 player model guide\par
+    - Jal's SKModel tools, you'll find all you need in the SDK\par
+    - player_media pak. Contains test_box reference. It's a box that fits the game's hitbox. Contains both a .3ds to load in your 3D software, in order to scale correctly your model, and an .skm/skp to load in game. It also contains all the sources for monada [THIS IS NOT UPLOADED YET, WILL ALSO BE IN THE SDK]\par
+\par
+IMPORTANT : Before you read the following, I assume you have read and understood the SKMod Guide by Jal.\par
+\par
+\par
+II. LIMITATIONS/TECH\par
+\par
+=Polycount\par
+    - Try to keep your model under 1200 triangles. The engine can handle much more, though. If you really want to have 4k triangles or so model, you'll have to make very low detailed LODs. But be aware that most players will never use such a player model since their main goal is to have very high framerates. Keep Q3 polycounts as a reference : Most models are under 1k triangles, and the result is very good. I mean it's far enough for a fast paced game. Grab a viewer and look at Paul Steed's models.\par
+    - Please, whatever the polycount of your model, make LODs. I know it's annoying to create LODs for player models, since you'll have to rebind/reskin your model for each LOD. It should be quite like this :\par
+    . high detail model ~ 1k triangles\par
+    . middle LOD ~ 600 triangles\par
+    . low LOD ~ 400 triangles, and even less if you can.\par
+Don't take too much time making your LODs, they will only be seen from far distances. With 3dsMax, I use "optimise" modifier to generate them quickly, and I make a quick and dirty skinning. It works quite well for Monada, and the lowest LOD took me no more than 10 minutes to skin.\par
+Please don't take Silverclaw as an example, that's a bad model (1450 triangles and no LOD at all ...).\par
+\par
+=Textures\par
+    - The textures of the model should be 1 tga 512*512 in 32 bits to have alpha channels (you will need alpha channel to set the fullbright parts of the model). You can also use 2 different textures for the lower body and the upper body for example 2x(256*512), or a different texture for the head, if you plan to let the player chose between various faces for the same model. It's up to you, but please, the whole texture set of your model should not be higher than 1024*1024 (i recommend 512*512... seems to be really enough, regarding all the non-detailed fullbright parts of the model). Once again, just look at Q3 : the whole body is ONLY a 256*256 texture, with an additionnal 128*64 texture for the head.\par
+Please don't take Silverclaw as an example, that's a bad model (again). (1024*1024 texture for useless details).\par
+\par
+=Animations\par
+    You have no real limitations for the animations and skeleton setup (just read the jal's SKMod manual).\par
+\par
+\par
+III. DESIGN.\par
+\par
+    - For your character design, have a look at the wiki section concerning the background of Warsow, if you want your player model to fit the game (Hey you are free to make a pokemon-like model, but please no GIGN/SAS model :p).\par
+    - Try to fit the hitbox as possible. Avoid too thin character (Silverclaw is, once again, the perfect example of a too thin model), and to big characters of course, 'cause using a very big model should be like cheating).\par
+\par
+\par
+III. LET'S DO IT ! FIRST TEST\par
+\par
+    - I assume you have a proper sexy player model, far better than Silverclaw :p. Your model is UVmapped. You have scaled it to fit more or less the test_box in your 3D scene. Don't make the LODs now.\par
+    - Frist create a work directory. In the directory, put all the files you'll need :\par
+= textures files\par
+= animation.cfg picked from an existing character, that you will edit later\par
+= .skin file\par
+= SKModel tools (viewer, compiler)\par
+    - I recommend you to make a VERY simple skeleton for the moment : just a line of 3 big bones. Then skin your mesh on these bones. Just check that all the vertices of the mesh are binded, no matter for overlaps, etc. You are just gonna check how it looks ingame.\par
+    - select the bones and the mesh together, export this selection as a "reference frame", name this "test.smd" for example.\par
+    - Make your animation scale 800 frames long. Select the bones only, export them as "animation frames". Call this file "anim.smd"\par
+    - Now make a text file named "test_definition.txt", write this in it :\par
+\par
+    outputdir .\\\par
+    model tris\par
+    export tris\par
+    scale 1.0\par
+    origin 0 0 0\par
+    scene test.smd\par
+    scene anim.smd\par
+\par
+- edit the skmodel batch files, launch it. Check the result with the viewer. If it's ok, you will check it ingame. Just edit the animation.cfg and name the bones correctly, edit the skin file if needed. Put all the stuff (skm, skp, textures, .skin, animation.cfg) in basewsw/models/players/test/ , and give a look ingame with cg_thirdperson 1. Go back to your 3D software to eventually rotate, resize the model, or edit the .skin file to see your textures properly.\par
+It's important at this stage to see your textures properly. It can be pain in the ass if you see when you almost finished your animations that you need to split your model in order to have different shaders on different parts of the mesh. So try to have a finished texture/shader before animating, unless you really know what you are doing. Make also the fullbright.skin now.\par
+\par
+Once everything is ok, make a proper skeleton for your model, bind it with your mesh, and then make another compilation to test ingame. Then only you will begin the animations.\par
+Here is a little setup tip, that will make skinning easier, and economising a few precious polygons. You should do this for knees, elbows (and even shoulders, except if you plan to make animations where your character puts his hands up in the air...).\par
+http://membres.lycos.fr/coliq/trucs/warsow/player_models_guide/knee_optimised.jpg\par
+\par
+IMPORTANT : in order to display correctly the upper and lower animations, you will need to keep a bone fixed. So make a little bone between your root(pelvis) and the spine. This little bone will ALWAYS be in the same position : I'll call it the "fixed joint" in the next chapter, but you can name it as you want.\par
+\par
+IV. ANIMATING\par
+\par
+    - buy the book Richard Williams' "Animator survival kit", the animator's holly bible smile I won't give animation advices, just specifics for skmodel in warsow.\par
+    - first you can look at the animation.cfg for viciious or monada, and at the same time, look at the model in the skmviewer, so you will see exactly how works the whole shit.\par
+    - The first 39 frames of the set ( frame 0 is the binded pose, so i mean frame 1 to 39 included) are a custom whole body animation that is displayed on player selection screen.\par
+    - Except for death and "menu select" animations, you will have to take care of the "fixed joint" on all your animations. All your animations are displayed separatly on lower and upper body, and the fixed joint is the reference point. It has the same role of the tag_torso in q3 player models.\par
+Always keep this joint fixed in your 3Dview. If you animated the root bone (and i hope you did) with many rotations in the 3 axis, you will have to compensate with the fixed joint to keep its axis in the same orientation.\par
+\par
+=Legs animations\par
+    I'll give at least one good advice : Always begin your animation with the root bone (pelvis). And don't touch any other bone until you can actually feel what your character is doing with only the root animated. Use your hands to hide your model on the screen except the root. If you animated correctly your root, you can feel if he is walking forward/bacward, running, jumping, etc ... without even seeing the legs.\par
+Nothing else special for legs animation. Make them nice looking, they are the most important, and take care of the "fixed joint".\par
+\par
+=Torso animations\par
+    - Get rid of the torso_run animation, it won't work properly ingame, there will be asynchronisation with legs_run, and you character will look ridiculously drunk. In your aimation.cfg, put a fixed torso_idle frame in place of torso_run.\par
+    - Before making any TORSO animation, you should first make the "STAND" animation, where your character is just idling (whole body), because the torso part af the stand animation will be used most of the time (while running, jumping, crouching... idling).\par
+And each time you begin a new torso animation, try to keep the first and last frames in the same pose as torso_stand's first/last frame. So you will open your "stand" animation scene, delete all the key except the first one and last one (that should be the same pose), and begin a new torso animation.\par
+For pain and shoot animation, also delete the first "stand" frames, since such fast movements will begin on their 1st frame.\par
+\par
+Once again, if you really plan to make animations, buy the Richard Williams' book. That's a master piece, with a bunch of awesome drawings for only 20 bucks.\par
+\par
+\par
+V. MAKING THE LODS.\par
+    You can make your LODs whenever you want (assuming you successfully done chapter III). Just use the same scene aDs your "reference" scene (where you just have the model in a binded pose). Make the LOD by hand or with a tool (optimize on 3dsmax, decimator on blender), skin it on your skeleton, and save the whole shit as a reference smd. No need to resave all the animations smd.\par
+Compile it again, and just rename the tris.skm with a "_*" extension (You can make this via the batch file). Even if the *.skp is always the same file, you'll have to copy it and rename it each time you make a new LOD. So you'll have :\par
+    - tris.skm, tris.skp = the high detailed model (let's say it's 1,2k triangles)\par
+    - tris_1.skm, tris_1.skp = Jal preconise to keep this LOD the same as the most detailed one. So it should just be a copy of tris.skm and tris.skp\par
+    - tris_2.skm, tris_2.skp = 600 to 800 triangles\par
+    - tris_3.skm, tris_3.skp = The lower polycount you can do.\par
+\par
+You're done. Each LOD will use the same .skin file and the same animation.cfg file. (see monada's directory in your basewsw/models/players/)\par
+\par
+\par
+VI. USING EXISTING ANIMATIONS. [REQUIRED FILES ARE NOT UPLOADED YET]\par
+\par
+You can't use animation .SMDs with a different skeleton.\par
+You will need the original animations smd used to compile the skp, and the binded model for the .skm.\par
+    - If you use milkshape, just import the reference.smd and make your mesh fitting the skeleton. Then you will only have to skin it and compile it. I think you can modify .smd anims directly with milkshape (never tried, though).\par
+    - If you work with 3dsmax, you'll need character studio, and open the the binded ".max" model. Same as before make your mesh fitting the skeleton, skin, compile, and you're done.\par
+If you have to modify some animations (if you see overlappings...), you can import the ".bip" animation files on your 3dsmax binded model and modify the poses.\par
+\par
+note on Character Studio :\par
+Character studio is, IMO, a real crappy stuff for animating. You can't edit tangents in your animation curves view and that's a BIG problem. Character studio is mostly used to mix motion captured anims, or to make easy footsteps. You won't need such features for warsow...\par
+I used this only because you can easily paste anims made on a tall and thin character to a fat guy, even if it has not the same number of bones, with the use of .bip files... Otherwise it's far better to use classic bones.\par
+IF ANYONE KNOWS A BETTER TOOL TO ANIMATE AND SHARE ANIMATIONS LIKE CHARACTER STUDIO, PLZ TELL ME\par
+\par
+    - If your skeleton is not exactly the same as those that are already in game, you'll need the .bip files. Load them on your binded model, and re-export all the anims in .smd.\par
+\par
+}
+ 

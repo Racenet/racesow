@@ -1,0 +1,7 @@
+SKMviewer is a QFusion's SKM skeletal models viewer.
+
+usage: skmviewer <filename>
+
+SKMviewer is based on LordHavoc's DPM viewer source code.
+
+-jal.
