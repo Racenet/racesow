@@ -116,11 +116,20 @@ class Racesow_Player
 		this.bestRaceTime = time;
 	}
 	
+	/**
+	 * getName
+	 * @return cString
+	 */
 	cString getName()
 	{
 		return this.client.getName();
 	}	
 	
+	/**
+	 * getBestCheckPoint
+	 * @param uint id
+	 * @return uint
+	 */
 	uint getBestCheckPoint(uint id)
 	{
 		if ( id >= this.bestCheckPoints.length() )
@@ -129,6 +138,12 @@ class Racesow_Player
 		return this.bestCheckPoints[id];
 	}	
 	
+	/**
+	 * setBestCheckPoint
+	 * @param uint id
+	 * @param uint time
+	 * @return uint
+	 */
 	bool setBestCheckPoint(uint id, uint time)
 	{
 		if ( id >= this.bestCheckPoints.length() && time < this.bestCheckPoints[id])
@@ -140,7 +155,7 @@ class Racesow_Player
 	
 	/**
 	 * Player spawn event
-	 *
+	 * @return void
 	 */
 	void onSpawn()
 	{
@@ -267,14 +282,10 @@ class Racesow_Player
 		return this.idleTime != 0;
 	}
 	
-	uint getCheckPoint(uint id)
-	{
-		if (id >= this.bestCheckPoints.length())
-			return 0;
-	
-		return this.bestCheckPoints[id];
-	}
-	
+	/**
+	 * startOvertime
+	 * @return void
+	 */
 	void startOvertime()
 	{
 		this.inOvertime = true;

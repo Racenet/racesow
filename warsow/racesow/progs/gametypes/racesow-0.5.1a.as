@@ -48,7 +48,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
     {
-		G_PrintMsg( client.getEnt(), map.getHighscores() );
+		G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
     }
 
     return false;
@@ -251,16 +251,16 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_TIME_SELF, (levelTime - player.race.getStartTime()) / 100 );
 
         client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
-        client.setHUDStat( STAT_TIME_RECORD, map.highScores[0].getTime() / 100 );
+        client.setHUDStat( STAT_TIME_RECORD, map.getStatsHandler().getHighScore(0).getTime() / 100 );
 
         client.setHUDStat( STAT_TIME_ALPHA, -9999 );
         client.setHUDStat( STAT_TIME_BETA, -9999 );
 
-        if ( map.highScores[0].playerName.len() > 0 )
+        if ( map.getStatsHandler().getHighScore(0).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
-        if ( map.highScores[1].playerName.len() > 0 )
+        if ( map.getStatsHandler().getHighScore(1).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
-        if ( map.highScores[2].playerName.len() > 0 )
+        if ( map.getStatsHandler().getHighScore(2).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
     }
 }
@@ -283,7 +283,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
         match.stopAutorecord();
         demoRecording = false;
 
-        map.writeHighScores();
+        map.getStatsHandler().writeStats();
     }
 
     return true;
@@ -342,7 +342,7 @@ void GT_Shutdown()
 void GT_SpawnGametype()
 {
 	@map = Racesow_Map();
-    map.loadHighScores();
+    map.getStatsHandler().loadStats();
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
     for ( int i = 0; i < maxClients; i++ )
@@ -350,7 +350,7 @@ void GT_SpawnGametype()
 
 		/*
 		for ( int i = 0; i < MAX_RECORDS; i++ )
-			map.highScores[i].reset();
+			map.getHighScore(i).reset();
 		*/
 }
 

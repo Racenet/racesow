@@ -4,7 +4,7 @@
  * @package Racesow
  * @subpackage Player
  * @version 0.5.1a
- * @global int numCheckpoints
+ * @author soh-zolex <zolex@warsow-race.net>
  */
 class Racesow_Player_Race
 {
@@ -48,7 +48,16 @@ class Racesow_Player_Race
 	 */
     Racesow_Player_Race()
     {
-		this.reset();
+		this.delta = 0;
+		this.stopTime = 0;
+		this.checkPoints.resize( numCheckpoints );
+		this.lastCheckPoint = 0;
+		this.startTime = 0;
+		
+		for ( int i = 0; i < numCheckpoints; i++ )
+		{
+            this.checkPoints[i] = 0;
+		}
     }
 
 	/**
@@ -60,8 +69,7 @@ class Racesow_Player_Race
 	{
 		if ( this.isFinished() )
 		{
-			G_Print(S_COLOR_GREEN +"add race to scores\n");
-			map.handleFinishedRace(@this);
+			map.getStatsHandler().addRace(@this);
 		}
 	}
 	
@@ -73,25 +81,6 @@ class Racesow_Player_Race
 	void setPlayer( Racesow_Player @player )
 	{
 		@this.player = @player;
-	}
-	
-	/**
-	 * Cleanup any data collected from a preious race
-	 * this is not so nice, better would be to use new instances
-	 * @return void
-	 */
-	void reset()
-	{
-		this.delta = 0;
-		this.stopTime = 0;
-		this.checkPoints.resize( numCheckpoints );
-		this.lastCheckPoint = 0;
-		this.startTime = 0;
-		
-		for ( int i = 0; i < numCheckpoints; i++ )
-		{
-            this.checkPoints[i] = 0;
-		}
 	}
 
 	/**
@@ -142,6 +131,11 @@ class Racesow_Player_Race
 		return @this.player;
 	}
 	
+	/**
+	 * getCheckPoint
+	 * @param uint id
+	 * @return uint
+	 */
 	uint getCheckPoint(uint id)
 	{
 		if ( id >= this.checkPoints.length() )
@@ -150,6 +144,10 @@ class Racesow_Player_Race
 		return this.checkPoints[id];
 	}	
 	
+	/**
+	 * getStartTime
+	 * @return uint
+	 */
 	uint getStartTime()
 	{
 		return this.startTime;
@@ -171,9 +169,10 @@ class Racesow_Player_Race
 		this.checkPoints[id] = levelTime - this.startTime;
 		
 		cString str;
-		//uint bestTime = this.player.bestCheckPoints[id]; // diff to own best
-		uint bestTime = map.highScores[0].getCheckPoint(id); // diff to server best
 		uint newTime =  this.checkPoints[id];
+		//uint bestTime = this.player.bestCheckPoints[id]; // diff to own best
+		uint bestTime = map.getStatsHandler().getHighScore(0).getCheckPoint(id); // diff to server best
+		uint personalBestTime = this.player.getBestCheckPoint(id);
 		
 		bool noDelta = 0 == bestTime;
 		
@@ -196,12 +195,30 @@ class Racesow_Player_Race
 
         G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
-
-		map.handleCheckpoint(@this, id);
+		
+        if ( newTime < bestTime || bestTime == 0 )
+        {
+			if ( map.getStatsHandler().getHighScore(0).setCheckPoint(id, newTime) && this.player.setBestCheckPoint(id, newTime) )
+			{
+				this.triggerAward( S_COLOR_GREEN + (id + 1) + ". checkpoint record!" );
+				G_Print(this.player.getName() + " " + S_COLOR_WHITE + "made a new "
+					+ (id + 1) + ". checkpoint record: " + TimeToString( newTime ) + "\n" );
+			}
+        }
+        else if ( newTime < personalBestTime || personalBestTime == 0 )
+        {
+            if ( this.player.setBestCheckPoint(id, newTime) )
+				this.triggerAward( S_COLOR_YELLOW + (id + 1) + ". checkpoint personal record!" );
+        }
 
         this.lastCheckPoint++;
 	}
 	
+	/**
+	 * triggerAward
+	 * @param cString text
+	 * @return void
+	 */
 	void triggerAward(cString text)
 	{
 		this.player.getClient().addAward(text);
@@ -213,7 +230,6 @@ class Racesow_Player_Race
 	 */
 	void start()
 	{
-		this.reset();
 		this.startTime = levelTime;
 	}
 	
@@ -232,7 +248,7 @@ class Racesow_Player_Race
 		
 		uint newTime = this.getTime();
 		//uint bestTime = this.player.getBestTime(); // diff to own best
-		uint bestTime = map.highScores[0].getTime(); // diff to server best
+		uint bestTime = map.getStatsHandler().getHighScore(0).getTime(); // diff to server best
 		uint personalBestTime = this.player.getBestTime();
 		
 		bool noDelta = 0 == bestTime;
