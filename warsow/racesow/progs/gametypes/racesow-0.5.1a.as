@@ -368,7 +368,7 @@ void GT_InitGametype()
 {
     gametype.setTitle( "Racesow" );
     gametype.setVersion( "0.5.1a" );
-    gametype.setAuthor( "not b1shop" );
+    gametype.setAuthor( "www.warsow-race.net" );
 
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + ".cfg" ) )
