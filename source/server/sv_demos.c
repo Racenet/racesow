@@ -249,101 +249,6 @@ void SV_Demo_Start_f( void )
 
 /*
 ==============
-SV_Demo_StartSingleClient_f
-
-Begins client demo recording.
-==============
-*/
-void SV_Demo_StartSingleClient_f( void )
-{
-	int demofilename_size, i, client_num;
-
-	if( Cmd_Argc() < 3 )
-	{
-		Com_Printf( "Usage: clientrecord <demoname> <playernum>\n" );
-		return;
-	}
-
-	client_num = atoi(Cmd_Argv(2));
-
-	if( svs.demos[client_num].file )
-	{
-		Com_Printf( va("Already recording for client %d\n", client_num) );
-		return;
-	}
-
-	if( sv.state != ss_game )
-	{
-		Com_Printf( "Client must be in a level to record\n" );
-		return;
-	}
-
-	if( !( svs.clients[client_num].state >= CS_SPAWNED && svs.clients[client_num].edict &&
-		!( svs.clients[client_num].edict->r.svflags & SVF_NOCLIENT ) ) ) {
-
-		Com_Printf( "Player not in game, can't record a demo\n" );
-		return;
-	}
-
-	//
-	// open the demo file
-	//
-
-	// real name
-	demofilename_size =
-		sizeof( char ) * ( strlen( SV_DEMO_DIR ) + 1 + strlen( Cmd_Argv( 1 ) ) + 4 + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
-	svs.demos[client_num].filename = Mem_ZoneMalloc( demofilename_size );
-
-	Q_snprintfz( svs.demos[client_num].filename, demofilename_size, "%s/%s", SV_DEMO_DIR, Cmd_Argv( 1 ) );
-
-	COM_SanitizeFilePath( svs.demos[client_num].filename );
-
-	if( !COM_ValidateRelativeFilename( svs.demos[client_num].filename ) )
-	{
-		Mem_ZoneFree( svs.demos[client_num].filename );
-		svs.demos[client_num].filename = NULL;
-		Com_Printf( "Invalid filename.\n" );
-		return;
-	}
-
-	COM_DefaultExtension( svs.demos[client_num].filename, APP_DEMO_EXTENSION_STR, demofilename_size );
-
-	// temp name
-	demofilename_size = sizeof( char ) * ( strlen( svs.demos[client_num].filename ) + strlen( ".rec" ) + 1 );
-	svs.demos[client_num].tempname = Mem_ZoneMalloc( demofilename_size );
-	Q_snprintfz( svs.demos[client_num].tempname, demofilename_size, "%s.rec", svs.demos[client_num].filename );
-
-	// open it
-	if( FS_FOpenFile( svs.demos[client_num].tempname, &svs.demos[client_num].file, FS_WRITE ) == -1 )
-	{
-		Com_Printf( "Error: Couldn't open file: %s\n", svs.demos[client_num].tempname );
-		Mem_ZoneFree( svs.demos[client_num].filename );
-		svs.demos[client_num].filename = NULL;
-		Mem_ZoneFree( svs.demos[client_num].tempname );
-		svs.demos[client_num].tempname = NULL;
-		return;
-	}
-
-	Com_Printf( "Recording client demo: %s\n", svs.demos[client_num].filename );
-
-	SV_Demo_InitClient(client_num);
-	svs.demos[client_num].client.mv = qtrue;
-	svs.demos[client_num].client.reliable = qtrue;
-
-	// write serverdata, configstrings and baselines
-	svs.demos[client_num].duration = 0;
-	svs.demos[client_num].basetime = svs.gametime;
-
-	SV_Demo_WriteStartMessages(client_num);
-
-	// write one nodelta frame
-	svs.demos[client_num].client.nodelta = qtrue;
-	SV_Demo_WriteSingleClientSnap( client_num );
-	svs.demos[client_num].client.nodelta = qfalse;
-}
-
-/*
-==============
 SV_Demo_Stop
 ==============
 */
@@ -444,24 +349,6 @@ Console command for stopping server demo recording.
 void SV_Demo_Stop_f( void )
 {
 	SV_Demo_Stop( qfalse );
-}
-
-/*
-==============
-SV_Demo_StopSingleClient_f
-
-Console command for stopping client demo recording.
-==============
-*/
-void SV_Demo_StopSingleClient_f( int client_num )
-{
-	if( Cmd_Argc() > 2 )
-	{
-		Com_Printf( "Usage: clientrecordstop <clientnum>\n" );
-		return;
-	}
-
-	SV_Demo_StopSingleClient( atoi(Cmd_Argv(1)), qfalse );
 }
 
 /*
@@ -742,3 +629,126 @@ void SV_DemoGet_f( client_t *client )
 
 	SV_AddGameCommand( client, message );
 }
+
+// racesow
+
+/*
+==============
+SV_Demo_StartSingleClient_f
+
+Begins client demo recording.
+==============
+*/
+void SV_Demo_StartSingleClient_f( void )
+{
+	int demofilename_size, client_num;
+
+	if (!sv_clientRecord->integer)
+	{
+		Com_Printf( "clientrecord is disabled\n" );
+		return;
+	}
+
+	if( Cmd_Argc() < 3 )
+	{
+		Com_Printf( "Usage: clientrecord <demoname> <playernum>\n" );
+		return;
+	}
+
+	client_num = atoi(Cmd_Argv(2));
+
+	if( svs.demos[client_num].file )
+	{
+		Com_Printf( va("Already recording for client %d\n", client_num) );
+		return;
+	}
+
+	if( sv.state != ss_game )
+	{
+		Com_Printf( "Client must be in a level to record\n" );
+		return;
+	}
+
+	if( !( svs.clients[client_num].state >= CS_SPAWNED && svs.clients[client_num].edict &&
+		!( svs.clients[client_num].edict->r.svflags & SVF_NOCLIENT ) ) ) {
+
+		Com_Printf( "Player not in game, can't record a demo\n" );
+		return;
+	}
+
+	//
+	// open the demo file
+	//
+
+	// real name
+	demofilename_size =
+		sizeof( char ) * ( strlen( SV_DEMO_DIR ) + 1 + strlen( Cmd_Argv( 1 ) ) + 4 + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
+	svs.demos[client_num].filename = Mem_ZoneMalloc( demofilename_size );
+
+	Q_snprintfz( svs.demos[client_num].filename, demofilename_size, "%s/%s", SV_DEMO_DIR, Cmd_Argv( 1 ) );
+
+	COM_SanitizeFilePath( svs.demos[client_num].filename );
+
+	if( !COM_ValidateRelativeFilename( svs.demos[client_num].filename ) )
+	{
+		Mem_ZoneFree( svs.demos[client_num].filename );
+		svs.demos[client_num].filename = NULL;
+		Com_Printf( "Invalid filename.\n" );
+		return;
+	}
+
+	COM_DefaultExtension( svs.demos[client_num].filename, APP_DEMO_EXTENSION_STR, demofilename_size );
+
+	// temp name
+	demofilename_size = sizeof( char ) * ( strlen( svs.demos[client_num].filename ) + strlen( ".rec" ) + 1 );
+	svs.demos[client_num].tempname = Mem_ZoneMalloc( demofilename_size );
+	Q_snprintfz( svs.demos[client_num].tempname, demofilename_size, "%s.rec", svs.demos[client_num].filename );
+
+	// open it
+	if( FS_FOpenFile( svs.demos[client_num].tempname, &svs.demos[client_num].file, FS_WRITE ) == -1 )
+	{
+		Com_Printf( "Error: Couldn't open file: %s\n", svs.demos[client_num].tempname );
+		Mem_ZoneFree( svs.demos[client_num].filename );
+		svs.demos[client_num].filename = NULL;
+		Mem_ZoneFree( svs.demos[client_num].tempname );
+		svs.demos[client_num].tempname = NULL;
+		return;
+	}
+
+	Com_Printf( "Recording client demo: %s\n", svs.demos[client_num].filename );
+
+	SV_Demo_InitClient(client_num);
+	svs.demos[client_num].client.mv = qtrue;
+	svs.demos[client_num].client.reliable = qtrue;
+
+	// write serverdata, configstrings and baselines
+	svs.demos[client_num].duration = 0;
+	svs.demos[client_num].basetime = svs.gametime;
+
+	SV_Demo_WriteStartMessages(client_num);
+
+	// write one nodelta frame
+	svs.demos[client_num].client.nodelta = qtrue;
+	SV_Demo_WriteSingleClientSnap( client_num );
+	svs.demos[client_num].client.nodelta = qfalse;
+}
+
+/*
+==============
+SV_Demo_StopSingleClient_f
+
+Console command for stopping client demo recording.
+==============
+*/
+void SV_Demo_StopSingleClient_f( int client_num )
+{
+	if( Cmd_Argc() > 2 )
+	{
+		Com_Printf( "Usage: clientrecordstop <clientnum>\n" );
+		return;
+	}
+
+	SV_Demo_StopSingleClient( atoi(Cmd_Argv(1)), qfalse );
+}
+
+// !racesow
