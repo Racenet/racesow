@@ -63,7 +63,6 @@ class Racesow_Map
 				this.inOvertime = true;
 				G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime.ogg"), GS_MAX_TEAMS, false, null );
 			}
-		
 		}
 		else
 		{
