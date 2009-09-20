@@ -73,7 +73,30 @@ class Racesow_Map
 		    {
 				if ( players[i].inOvertime )
 				{
-					numInOvertime++;
+					cVec3 velocity = players[i].getClient().getEnt().getVelocity();
+					
+					if ( velocity.x == 0 && velocity.y == 0 && velocity.z == 0 )
+					{
+						if ( !players[i].startedIdling() )
+						{
+							players[i].startIdling();
+						}
+					}
+					else if ( players[i].startedIdling() )
+					{
+						players[i].stopIdling();
+					}
+					
+					if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
+					{
+						players[i].cancelRace();
+						G_PrintMsg( players[i].getClient().getEnt(), S_COLOR_RED
+							+ "You have been moved to spectators because you were idle during overtime." );
+					}
+					else
+					{
+						numInOvertime++;
+					}
 				}
 			}
 			
@@ -121,30 +144,10 @@ class Racesow_Map
 	 * @param Racesow_Player_Race @race
 	 * @return void
 	 */
-	void handleFinishLine(Racesow_Player_Race @race)
+	void handleFinishedRace(Racesow_Player_Race @race)
 	{
-		Racesow_Player @player = race.getPlayer();
-		player.inOvertime = false;
 		uint newTime = race.getTime();
-		uint serverBestTime = this.highScores[0].getTime();
-		uint personalBestTime = player.getBestTime();
 	
-		race.triggerAward( S_COLOR_CYAN + "Race Finished!" );
-		
-        if ( newTime < serverBestTime || serverBestTime == 0 )
-        {
-            player.setBestTime(newTime);
-			race.triggerAward( S_COLOR_GREEN + "New server record!" );
-			G_Print(player.getName() + " " + S_COLOR_YELLOW
-				+ "made a new server record: " + TimeToString( newTime ) + "\n");
-        }
-        // else if beating his own record on this secotr give an award
-        else if ( newTime < personalBestTime || personalBestTime == 0 )
-        {
-            player.setBestTime(newTime);
-			race.triggerAward( "Personal record!" );
-        }
-		
         // see if the player improved one of the top scores
 		for ( int top = 0; top < MAX_RECORDS; top++ )
 		{
@@ -157,7 +160,7 @@ class Racesow_Map
 					if (this.highScores[i - 1].getTime() == 0)
 						break;
 						
-					this.highScores[i] = this.highScores[i - 1]; // operator is overloaded
+					this.highScores[i] = this.highScores[i - 1];
 				}
 
 				this.highScores[top].fromRace( race );

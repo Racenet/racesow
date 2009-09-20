@@ -58,6 +58,11 @@ class Racesow_Player_Race
 	 */
     ~Racesow_Player_Race()
 	{
+		if ( this.isFinished() )
+		{
+			G_Print(S_COLOR_GREEN +"add race to scores\n");
+			map.handleFinishedRace(@this);
+		}
 	}
 	
 	/**
@@ -99,6 +104,15 @@ class Racesow_Player_Race
 			return true;
 		else
 			return false;
+	}
+	
+	/**
+	 * See if teh race was finished
+	 * @return bool
+	 */
+	bool isFinished()
+	{
+		return (this.stopTime != 0);
 	}
 	
 	/**
@@ -157,26 +171,26 @@ class Racesow_Player_Race
 		this.checkPoints[id] = levelTime - this.startTime;
 		
 		cString str;
-		//uint oldTime = this.player.bestCheckPoints[id]; // diff to own best
-		uint oldTime = map.highScores[0].getCheckPoint(id); // diff to server best
+		//uint bestTime = this.player.bestCheckPoints[id]; // diff to own best
+		uint bestTime = map.highScores[0].getCheckPoint(id); // diff to server best
 		uint newTime =  this.checkPoints[id];
 		
-		bool noDelta = 0 == oldTime;
+		bool noDelta = 0 == bestTime;
 		
-		if ( noDelta || newTime < oldTime )
+		if ( noDelta || newTime < bestTime )
         {
-            this.delta = (noDelta ? 0 : oldTime - newTime);
+            this.delta = (noDelta ? 0 : bestTime - newTime);
 			str = S_COLOR_GREEN + (noDelta ? "" : "-");
 			
         }
-		else if ( newTime == oldTime )
+		else if ( newTime == bestTime )
 		{
 		    this.delta = 0;
             str = S_COLOR_YELLOW + "+-";
 		}
         else
         {
-            this.delta = newTime - oldTime;
+            this.delta = newTime - bestTime;
             str = S_COLOR_RED + "+";
         }
 
@@ -214,33 +228,50 @@ class Racesow_Player_Race
 
 		cString str;
         this.stopTime = levelTime;
+		this.player.inOvertime = false;
 		
-		//uint oldTime = this.player.getBestTime(); // diff to own best
-		uint oldTime = map.highScores[0].getTime(); // diff to server best
 		uint newTime = this.getTime();
+		//uint bestTime = this.player.getBestTime(); // diff to own best
+		uint bestTime = map.highScores[0].getTime(); // diff to server best
+		uint personalBestTime = this.player.getBestTime();
 		
-		bool noDelta = 0 == oldTime;
+		bool noDelta = 0 == bestTime;
 		
-        if ( noDelta || newTime < oldTime )
+        if ( noDelta || newTime < bestTime )
         {
 			this.delta = newTime;
             str = S_COLOR_GREEN + (noDelta ? "" : "-");
         }
-		else if ( newTime == oldTime )
+		else if ( newTime == bestTime )
 		{
 		    this.delta = 0;
             str = S_COLOR_YELLOW + "+-";
 		}
         else
         {
-            this.delta = newTime - oldTime;
+            this.delta = newTime - bestTime;
             str = S_COLOR_RED + "+";
         }
 
         G_CenterPrintMsg( this.player.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
+	
+		this.triggerAward( S_COLOR_CYAN + "Race Finished!" );
+		G_PrintMsg(this.player.getClient().getEnt(), S_COLOR_WHITE
+			+ "race finished: " + TimeToString( newTime ) + "\n");
 		
-		map.handleFinishLine(@this);
+        if ( newTime < bestTime || bestTime == 0 )
+        {
+            player.setBestTime(newTime);
+			this.triggerAward( S_COLOR_GREEN + "New server record!" );
+			G_Print(player.getName() + " " + S_COLOR_YELLOW
+				+ "made a new server record: " + TimeToString( newTime ) + "\n");
+        }
+        else if ( newTime < personalBestTime || personalBestTime == 0 )
+        {
+            player.setBestTime(newTime);
+			this.triggerAward( "Personal record!" );
+        }
 		
 		return true;
 	}

@@ -18,6 +18,11 @@ class Racesow_Player
 	bool inOvertime;
 	
 	/**
+	 * The time when the player started idling
+	 */
+	uint idleTime;
+	
+	/**
 	 * The player's best race
 	 * @var uint
 	 */
@@ -48,8 +53,8 @@ class Racesow_Player
 	 */
     Racesow_Player()
     {
-		@this.race = Racesow_Player_Race();
-		this.race.setPlayer(@this);
+		//@this.race = Racesow_Player_Race();
+		//this.race.setPlayer(@this);
     }
 
 	/**
@@ -66,7 +71,7 @@ class Racesow_Player
 	 */
 	void reset()
 	{
-		this.race.reset();
+		this.idleTime = 0;
 		this.isSpawned = true;
 		this.bestRaceTime = 0;
 		this.bestCheckPoints.resize( numCheckpoints );
@@ -147,6 +152,9 @@ class Racesow_Player
 	 */
 	bool isRacing()
 	{
+		if (@this.race == null) 
+			return false;
+			
 		return this.race.inRace();
 	}
 	
@@ -159,6 +167,8 @@ class Racesow_Player
 		if ( this.isRacing() )
             return;
 		
+		@this.race = Racesow_Player_Race();
+		this.race.setPlayer(@this);
 		this.race.start();
     }
 	
@@ -198,6 +208,15 @@ class Racesow_Player
         respawner.count = client.playerNum();
     }
 	
+	/**
+	 * restartRace
+	 * @return void
+	 */
+    void restartRace()
+    {
+		this.isSpawned = true;
+		@this.race = null;
+    }	
 	
 	/**
 	 * cancelRace
@@ -205,10 +224,48 @@ class Racesow_Player
 	 */
     void cancelRace()
     {
-		this.isSpawned = true;
-        this.race.reset();
-		this.race.setPlayer(this);
+		this.race.getPlayer().getClient().team = TEAM_SPECTATOR;
+		@this.race = null;
     }
+	
+	/**
+	 * startIdling
+	 * @return void
+	 */
+	void startIdling()
+	{
+		this.idleTime = levelTime;
+	}	
+	
+	/**
+	 * stopIdling
+	 * @return void
+	 */
+	void stopIdling()
+	{
+		this.idleTime = 0;
+	}
+	
+	/**
+	 * getIdleTime
+	 * @return uint
+	 */
+	uint getIdleTime()
+	{
+		if ( !this.startedIdling() )
+			return 0;
+			
+		return levelTime - this.idleTime;
+	}	
+	
+	/**
+	 * startedIdling
+	 * @return bool
+	 */
+	bool startedIdling()
+	{
+		return this.idleTime != 0;
+	}
 	
 	uint getCheckPoint(uint id)
 	{

@@ -60,7 +60,7 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
     if ( @client == null || client.playerNum() < 0 )
         return null;
 
-	return @players[ client.playerNum() ].setClient(client);
+	return @players[ client.playerNum() ].setClient( client );
 }
 
 /**
@@ -98,7 +98,7 @@ void RACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter )
     if ( @target == null || @target.client == null )
         return;
 
-    Racesow_GetPlayerByClient( target.client ).cancelRace();
+    Racesow_GetPlayerByClient( target.client ).restartRace();
 }
 
 /**

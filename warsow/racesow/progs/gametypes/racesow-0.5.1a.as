@@ -39,7 +39,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     {
         if ( @client != null )
         {
-            Racesow_GetPlayerByClient( client ).cancelRace();
+            Racesow_GetPlayerByClient( client ).restartRace();
             client.team = TEAM_PLAYERS;
 			client.respawn( false );
         }
@@ -176,7 +176,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
  */
 void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
-    Racesow_GetPlayerByClient( ent.client ).cancelRace();
+    Racesow_GetPlayerByClient( ent.client ).restartRace();
 
     if ( ent.isGhosting() )
         return;
