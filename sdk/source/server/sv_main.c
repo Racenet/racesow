@@ -593,6 +593,9 @@ void SV_Frame( int realmsec, int gamemsec )
 		// write snap to server demo file
 		SV_Demo_WriteSnap();
 
+		// write snaps to all client demo files
+		SV_Demo_WriteSingleClientsSnap();
+
 		// check matchmaker stuff
 		SV_MM_Frame();
 

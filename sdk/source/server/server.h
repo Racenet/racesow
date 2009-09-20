@@ -205,6 +205,7 @@ typedef struct
 // for server side demo recording
 typedef struct
 {
+	qboolean waiting;
 	int file;
 	char *filename;
 	char *tempname;
@@ -266,7 +267,7 @@ typedef struct
 	incoming_t incoming[MAX_INCOMING_CONNECTIONS]; // holds socket while tcp client is connecting
 #endif
 
-	server_static_demo_t demo;
+	server_static_demo_t demos[MAX_CLIENTS + 1];
 
 	purelist_t *purelist;				// pure file support
 
@@ -473,8 +474,12 @@ void SV_InitEdict( edict_t *e );
 // sv_demos.c
 //
 void SV_Demo_WriteSnap( void );
+void SV_Demo_WriteSingleClientsSnap( void );
+void SV_Demo_WriteSingleClientSnap( int client_num );
 void SV_Demo_Start_f( void );
+void SV_Demo_StartSingleClient_f( void );
 void SV_Demo_Stop_f( void );
+void SV_Demo_StopSingleClient_f( int client_num );
 void SV_Demo_Cancel_f( void );
 void SV_Demo_Purge_f( void );
 

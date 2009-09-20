@@ -796,6 +796,9 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "serverrecordcancel", SV_Demo_Cancel_f );
 	Cmd_AddCommand( "serverrecordpurge", SV_Demo_Purge_f );
 
+	Cmd_AddCommand( "clientrecord", SV_Demo_StartSingleClient_f );
+	Cmd_AddCommand( "clientrecordstop", SV_Demo_StopSingleClient_f );
+
 	Cmd_AddCommand( "purelist", SV_PureList_f );
 
 	if( dedicated->integer )
