@@ -269,8 +269,8 @@ static void PF_ConfigString( int index, const char *val )
 			SV_SendServerCommand( client, "cs %i \"%s\"", index, val );
 		}
 
-		if( svs.demo.file )
-			SV_AddServerCommand( &svs.demo.client, va( "cs %i \"%s\"", index, val ) );
+		if( svs.demos[MAX_CLIENTS].file )
+			SV_AddServerCommand( &svs.demos[MAX_CLIENTS].client, va( "cs %i \"%s\"", index, val ) );
 	}
 }
 

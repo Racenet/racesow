@@ -455,7 +455,7 @@ void SV_ShutdownGame( char *finalmsg, qboolean reconnect )
 	if( !svs.initialized )
 		return;
 
-	if( svs.demo.file )
+	if( svs.demos[MAX_CLIENTS].file )
 		SV_Demo_Stop_f();
 
 	if( svs.clients )
@@ -521,7 +521,7 @@ void SV_Map( const char *level, qboolean devmap )
 	client_t *cl;
 	int i;
 
-	if( svs.demo.file )
+	if( svs.demos[MAX_CLIENTS].file )
 		SV_Demo_Stop_f();
 
 	// skip the end-of-unit flag if necessary

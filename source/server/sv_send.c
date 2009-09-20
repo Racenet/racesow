@@ -141,8 +141,8 @@ void SV_SendServerCommand( client_t *cl, const char *format, ... )
 	}
 
 	// add to demo
-	if( svs.demo.file )
-		SV_AddServerCommand( &svs.demo.client, message );
+	if( svs.demos[MAX_CLIENTS].file )
+		SV_AddServerCommand( &svs.demos[MAX_CLIENTS].client, message );
 }
 
 //==================
