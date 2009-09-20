@@ -1,0 +1,159 @@
+------------------------------------------------------------------------------
+                     Warsow Sourcecode documentation
+------------------------------------------------------------------------------
+  Author           : Bart Meuris (KoFFiE)
+  E-Mail           : bart.meuris@gmail.com
+  Start date       : 2007-10-17
+  Last modified    : 2007-10-17
+  Maintainer       : Bart Meuris
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+0. Introduction
+---------------
+
+I started this document because when I joined the Warsow development team as a
+coder and started exploring the code, I had a hard time figuring out what part
+did what. This document will explore the major parts of the code, mostly while
+I'm exploring them too.
+
+This document is aimed at people with at least a basic knowledge of C
+concepts who are getting ready to explore the game source-code.  Most things
+said here will probably apply to other Quake 2 (and maybe 3) based games,
+since Warsow is based on Q-Fusion, which is based on the original Quake 2
+engine.
+
+
+
+1. The basics
+--------------
+
+Warsow is a program built around 'frames'. First the program reads inputs,
+then it 'thinks', modifying the current gamestate, and then implements the
+current state.
+
+This means, that there is 1 major loop handling all application logic. This
+called a 'state machine' design, which can be confusing when you used to
+straight-forward procedural or object-oriented programming.
+
+This may sound pritty abstract, but this is due to the fact that warsow is a
+client AND a server with exactly the same sourcecode. This means that in the
+big lines, the same steps are taken for both the client and the server.
+Offcourse, once digging deeper into the code, things will start looking very
+different, since the server is the one who actually makes all decisions, sends
+state-changes and events to the client (or clients), who then alter their
+local state and implement it (as in: build the scene and render it).
+
+
+2. Main loop
+------------
+
+Since warsow can be run on Windows, Linux - and has some basic MacOS-X
+support, there are different platform-specific entry-points for each platform.
+They all do the same: first some some basic initialisation, followed by
+running the state-machine loop, which looks like this: (semi-pseudo-code)
+
+	while (true) {
+		time = <the current time in milliseconds>
+		Qcommon_Frame( time )
+	}
+
+This loop never quits and is executed ever frame. The Qcommon_Frame function
+is a real function which can be found in the "qcommon/common.c" file. This is
+not a very interesting function on it's own, it does very little
+decisionmaking and just calls a bunch of different other functions in a
+certain order. These functions are more interesting, they actually do things.
+However, for most changes in the code you will have to dig a bit deeper, but
+knowing this can be usefull to understand the whole thing a bit better.
+
+
+
+3. The modules
+--------------
+
+Basicly the game is organised in different modules, which are mostly organised
+in directories. This is the 'main' list of the directories with their short
+descriptions:
+
+cgame      : Client Game module responible for the client-side handling of the
+             gameplay.
+client     : Client module, containing generic client-specific code not
+             responsible for gameplay.
+game       : Game module, running on serverside which performs all decisions
+             about the game, depending on gametype, ...
+             This also contains the AI (Artificial intelligence) code for the
+             bots.
+gameshared : Generic gamecode used by both the cgame and game module.
+qcommon    : Quake engine 'common' files, used by most modules
+ref_gl     : This contains the OpenGL render-code.
+server     : Contains code for specific for the server-logic
+ui         : Does the user-interface drawing and handling
+irc        : built-in IRC client module
+null       : Empty implementations of the client module and platform specific
+             video initialisation for dedicated servers. Also contains an
+             empty platform sys implementation (sys_null.c) to help porting.
+
+For the sound sub-system, 2 different backends exist at the moment, which are
+dynamicly loadable. These are:
+
+snd_openal : Sound backend using the multiplatform OpenAL libraries
+snd_qf     : QFusion Sound backend
+
+Then we also have the 'platform' modules, which contain all platform specific
+functions, initialisation, wrappers, ... like startup, keyboard input,
+graphics initialisation, filesystem access, network access, generic library
+functions, sound, ...
+Currently the following platforms are available for warsow:
+
+win32      : The win32 (and win64) specific code
+unix       : Linux/BSD/*nix X11 specific code
+
+There also is a mac platform, but at the moment of writing this, this is not
+being maintained.
+
+
+
+4. Naming conventions
+---------------------
+Due to the fact that C does not have namespaces, strict naming-conventions are
+used for non-static functions to avoid problems with name-collisions.
+
+Both the files and functions should have a module-specific prefix:
+
+r_	: Render code (OpenGL)
+cg_	: Client Game module
+cl_     : Client module
+g_      : Game module
+ai_     : Artificial intelligence (bots) code
+gs_     : Game Shared, code shared between the game and clientgame module.
+irc_    : IRC Module
+snd_    : Code for a sound module (qf or openal module)
+ui_     : User interface code
+
+Platform specific files also have their platform as a prefix:
+win_    : Windows
+unix_   : *nix/Linux/BSD
+
+Public functions of a certain library (except for the platform specific
+functions offcourse) use the same prefixes, but in capital. The "CL_NetFrame"
+function for example is part of the Client module. Function names are in
+camelcase (http://en.wikipedia.org/wiki/CamelCase).
+
+
+
+5. The client
+-------------
+
+
+
+
+
+6. The server
+-------------
+
+
+7. Entities
+-----------
+
+
+vim:textwidth=78

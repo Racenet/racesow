@@ -1,0 +1,215 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\mudFont.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MUDFONT DIALOGEX 0, 0, 466, 346
+STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "mudGE Font builder"
+MENU IDD_MUDFONT
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "View",IDC_STATIC,138,7,322,321
+    SCROLLBAR       IDC_UP,445,34,11,277,SBS_VERT
+    CTEXT           "Static",IDC_VIEW,142,34,300,277,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    SCROLLBAR       IDC_RIGHT,142,313,300,10
+    LTEXT           "Zoom:",IDC_STATIC,144,17,21,12,SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_ZOOM,"msctls_trackbar32",TBS_AUTOTICKS | TBS_TOP | WS_TABSTOP,167,13,237,21,WS_EX_TRANSPARENT
+    CTEXT           "100%",IDC_ZOOM_TEXT,406,17,49,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    GROUPBOX        "Width",IDC_STATIC,7,251,60,64
+    CONTROL         "64",IDC_W64,"Button",BS_AUTORADIOBUTTON | WS_GROUP,23,263,24,10
+    CONTROL         "128",IDC_W128,"Button",BS_AUTORADIOBUTTON,23,275,28,10
+    CONTROL         "256",IDC_W256,"Button",BS_AUTORADIOBUTTON,23,287,28,10
+    CONTROL         "512",IDC_W512,"Button",BS_AUTORADIOBUTTON,23,299,28,10
+    GROUPBOX        "Height",IDC_STATIC,76,251,60,64
+    CONTROL         "64",IDC_H64,"Button",BS_AUTORADIOBUTTON | WS_GROUP,93,263,24,10
+    CONTROL         "128",IDC_H128,"Button",BS_AUTORADIOBUTTON,93,275,28,10
+    CONTROL         "256",IDC_H256,"Button",BS_AUTORADIOBUTTON,93,287,28,10
+    CONTROL         "512",IDC_H512,"Button",BS_AUTORADIOBUTTON,93,299,28,10
+    GROUPBOX        "Font",IDC_STATIC,7,7,129,178
+    COMBOBOX        IDC_FONT,41,19,88,126,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Name",IDC_STATIC,17,19,20,12,SS_CENTERIMAGE
+    LTEXT           "Quality",IDC_STATIC,17,35,38,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_QUALITY,67,35,61,118,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_SIZE_EDIT,67,65,50,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_SIZE_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ARROWKEYS,118,65,11,13
+    LTEXT           "Size",IDC_STATIC,17,65,14,13,SS_CENTERIMAGE
+    LTEXT           "Weight",IDC_STATIC,17,81,24,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_WEIGHT,67,81,61,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Italic",IDC_ITALIC,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,17,99,59,10
+    EDITTEXT        IDC_BL_EDIT,67,119,50,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_BL_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ARROWKEYS,118,119,11,13
+    LTEXT           "Border Left",IDC_STATIC,17,119,42,13,SS_CENTERIMAGE
+    EDITTEXT        IDC_BR_EDIT,67,134,50,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_BR_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ARROWKEYS,118,134,11,13
+    LTEXT           "Border Right",IDC_STATIC,17,135,42,13,SS_CENTERIMAGE
+    EDITTEXT        IDC_BT_EDIT,67,149,50,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_BT_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ARROWKEYS,118,149,11,13
+    LTEXT           "Border Top",IDC_STATIC,17,150,42,13,SS_CENTERIMAGE
+    EDITTEXT        IDC_BB_EDIT,67,164,50,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_BB_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ARROWKEYS,118,164,11,13
+    LTEXT           "Border Bottom",IDC_STATIC,17,165,46,13,SS_CENTERIMAGE
+    GROUPBOX        "Character",IDC_STATIC,7,186,129,61
+    EDITTEXT        IDC_CBL_EDIT,67,213,50,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_CBL_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ARROWKEYS,118,213,11,13
+    LTEXT           "Border Left",IDC_STATIC,17,213,42,13,SS_CENTERIMAGE
+    EDITTEXT        IDC_CBR_EDIT,67,229,50,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_CBR_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ARROWKEYS,118,229,11,13
+    LTEXT           "Border Right",IDC_STATIC,17,229,42,13,SS_CENTERIMAGE
+    LTEXT           "Character",IDC_STATIC,17,195,46,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_CHAR,67,195,61,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Show Rectangles",IDC_RECT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,318,72,10
+    LTEXT           "Anti-aliassing",IDC_STATIC,17,50,43,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_AA,67,50,61,118,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_ADDCHAR DIALOG  0, 0, 183, 45
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add characters"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,70,24,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,124,24,50,14
+    EDITTEXT        IDC_EDIT2,6,6,167,15,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_MUDFONT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 460
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 339
+    END
+
+    IDD_ADDCHAR, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 41
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDD_MUDFONT MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New",                        ID_FILE_NEW
+        MENUITEM "&Open",                       ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Save",                       ID_FILE_SAVE
+        MENUITEM "&Export Font",                ID_FILE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Add characters",             ID_TOOLS_ADDCHAR
+        MENUITEM "Add &Western Charset",        ID_TOOLS_ADDWESTERN
+        MENUITEM "Add &Latin Ext-A Charset",    ID_TOOLS_ADDLATIN_A
+        MENUITEM "Add &Cyrillic Charset",       ID_TOOLS_ADDCYRILLIC
+    END
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\mudFont.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

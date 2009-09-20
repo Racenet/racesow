@@ -1,0 +1,247 @@
+{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fcharset0 Arial;}{\f1\fswiss\fprq2\fcharset0 Arial;}{\f2\fnil\fcharset0 Courier New;}{\f3\fmodern\fprq1\fcharset0 Courier New;}}
+{\*\generator Msftedit 5.41.15.1507;}\viewkind4\uc1\pard\lang3082\f0\fs20\par
+\par
+\ul\b SKM, skeletal models.\ulnone\b0\par
+\par
+SKM is a \b skeletal model format\b0  designed for QFusion engine integration. A SKM model is composed of two archives, the model.\b skm\b0  and the model.\b skp\b0 . The .skm archive contains the \b model information\b0  and bones \b references\b0 , while the .skp archive contains the \b frames bones poses\b0 .\par
+\par
+SKM models can be composed of a \b maximun of 32 different meshes\b0 , with each mesh being able of using a different texture name. When using QFusion, it's also \b possible to create .skin files\b0 , matching Quake 3 skinfile format, for them, so the SKM models are capable of using custom textures on all their meshes. \par
+\par
+The SKM model, or the .skp file if you prefer, can contain up to a maximum of 65536 frames, each frame containing up to a maximum of 256 bone poses, since \b 256 is the maximum number of bones \b0 of SKM models. Another limit is that animation names can't be superior to 64 characters lenght. Maximum vertex count is also 65536, which means a limit of 21845 triangles. Obviously that's a triangle count absollutely not recommended to use.\par
+\par
+The .skp files contain frame based skeleton poses, to transform the model meshes by them. This skp files can be used with different .skm files, as long as the different skm models were originally binded (or skinned, depending on your favourite modelling tool) to exactly the \b same skeleton\b0 . This means, a skeleton with the same bones, having the same bone names.\par
+\par
+SKM models actually don't contain any collision information.\par
+\par
+\par
+\ul\b SKM, compiling a simple model.\ulnone\par
+\b0\par
+SKM models are compiled from SMD models using the command line program of name \b skmodel\b0 . The next paragraphs explain how a SMD model is converted into any generic (not player model) SKM.\par
+\par
+SMD is the ascii model format used by Half Life and Half Life 2 as source to compile their ingame MDL models. There are 2 types of SMD models: the \b reference\b0  SMD and the \b animation\b0  SMD. The reference model contains the model meshes and skeleton information in the bind pose, each other smd model will contain \b a single animation\b0 . A group composed of the reference SMD + as many animation SMDs as wanted is parsed into the \b skmodel \b0 converter, so it compiles a unified SKM (the same process as it's done for HL/HL2 models).\par
+\par
+Since SMD models are the official Half Life 2 source model format there are many exporters available in the net. It's important to know if the exporter you are going to use was made for HL or HL2, though. Both HL and HL2 smd exporters will work, but smd exporters created for Half Life (1) \b only export a single bone influence per vertex\b0 , while the exporters for \b Half Life 2 write several influences\b0 , and SKM is capable of making use of those multiple influences. This doesn't only help achieving a smoother animation, but also makes skin binding much easier. For more information about SMDs, and how to export them from each different 3D modelling program, just google for Half Life 2 and SMD. \par
+\par
+Using \b skmodel:\par
+\par
+skmodel \b0 is a command line tool. It requires to receive the name of a text file containing the parsing commands. It's run like this:\par
+\par
+\i skmodel model_definition.txt\i0\par
+\par
+The model definition text file can contain the following commands:\par
+\par
+\i outputdir <path>\i0\tab\tab\tab\tab The output path. .\\ for the program folder\par
+\i model <name>\i0\tab\tab\tab\tab Name of the .skm and .skin files to be generated\par
+\i origin <value> <value> <value>\i0\tab\tab Offset the model origin\par
+\i rotatepicth <value>\i0\tab\tab\tab rotates along the z axis by the given angle\par
+\i rotateyaw <value>\i0\tab\tab\tab rotates along the z axis by the given angle\par
+\i rotateroll <value>\i0\tab\tab\tab rotates along the z axis by the given angle\par
+\i export <name>\i0\tab\tab\tab\tab Name of the .skp file to be generated\par
+\i cleanbones\i0\tab\tab\tab\tab Removes bones without any vertex link from the final model\par
+\i scale <value>\i0\tab\tab\tab\tab Scale up or down the model\par
+\i scene <name.smd>\i0\tab\tab\tab SMD models. Once for the reference model, and repeated for each animation.\par
+\tab\tab\tab\tab\tab There are as many 'scene' commands as SMD sources used.\par
+\par
+\par
+Note: Since the SMD models don't contain meshes names, \b skmodel\b0  will generate the meshes names by their numbers in the meshes array. In short, meshes names in the skin file will be a number.\par
+\par
+\par
+\ul\b SKM, creating player models for QFusion's Skelmod.\ulnone\b0\par
+\par
+\b Skelmod\b0  is a QFusion mod which adds \b animation blending\b0  for SKM player models. Animation blending is made by the game code, and it's, in short, the code selecting into what bones it will use what animation. For this reason, it requires information of what animations to play, and what bones are part of each group inside the skeleton. This information is provided by the \b animation.cfg\b0 .\par
+\par
+Skelmod accepts up to 3 animations for the player model, but we are, by now, only using 2, \b upper\b0  and \b lower\b0 , since head animation is always at frame 0. For defining what bone belongs to each group, Skelmod uses \b rootAnims\b0 , this is just a name as any other, and it refers to a bone which will mark the starting point in the skeleton tree for an animation to be played. As example, marking as rootanim bone a bone in the elbow of a model will make play that animation at the elbow and all the following bones in the arm (hand, fingers...). \par
+There are currently 3 animation-channels to be blended: "\b lower\b0 ", "\b upper\b0 " and "\b head\b0 ". The bones not belong to any rootanim group will be assigned to "lower" group.\par
+\par
+This is the list of available commands to be used in the animation.cfg:\par
+\par
+\i rootanim <animation-channel> <bone name> \tab\i0\tab Sets the animation to the played in this bone and its childs in\par
+\tab\tab\tab\tab\tab\tab\tab the skeleton tree.\par
+\par
+\i sex <m or f>\i0\tab\tab\tab\tab\tab\tab Sets player model sex.\par
+\par
+\i fps <value>\i0\tab\tab\tab\tab\tab\tab Sets model FPS ratio. Note, ratio is the same for all the animations.\par
+\par
+\i rotationbone <type> <bone name>\i0\tab\tab\tab Defines that bone as a rotator. There are 2 possible types: \i upper\i0  and \i head\i0 .\par
+\tab\tab\tab\tab\tab\tab\tab You can set as many bones as you want as rotators of the same type, the\par
+\tab\tab\tab\tab\tab\tab\tab rotation angle will be divided by all them.\par
+\par
+\i tagmask <bone name> <tag name> <offsetForward> <offsetRight> <offsetUp>\i0\tab\par
+\tab\tab\tab\tab\tab\tab\tab Defines a tag mask for that bone, so, the bone will be used as the tag\par
+\tab\tab\tab\tab\tab\tab\tab when looking for a tag of name <tag name>. This is done so different\par
+\tab\tab\tab\tab\tab\tab\tab models, with different skeletons can use the same tag name.\par
+\par
+\i\f1 isnumframes\i0\tab\tab\tab\tab\tab\tab Makes the third value in the animation definition\par
+\tab\tab\tab\tab\tab\tab\tab to be read as animation frames count, instead of the\par
+\tab\tab\tab\tab\tab\tab\tab frame number where the animation finishes.\par
+\par
+\i islastframe\i0\tab\tab\tab\tab\tab\tab The opposite as isnumframes. It's used by default.\par
+\par
+\i offset\i0\tab\tab\tab\tab\tab\tab\tab Makes the first value in the animation lines have offset in it's first\par
+\tab\tab\tab\tab\tab\tab\tab value (as Q3 animation configs). By default the offset isn't applied,\par
+\tab\tab\tab\tab\tab\tab\tab and every animation is defined by it's real frame value in the model.\par
+\par
+\i alljumps\i0\tab\tab\tab\tab\tab\tab Makes use of the different jump animations to simulate bunny hopping.\par
+\par
+\par
+\f0 And finally, each animation is defined by 4 values in a line, meaning this by default:\par
+\par
+\i <first frame> <last frame> <looping frames> <fps>\par
+\i0\par
+Note: looping frames don't have to be the same lenght of the animation extension.\par
+\par
+This being the list of animations which are defined in \b Skelmod\b0 :\par
+\par
+\f2 BOTH_DEATH1\tab Death animation\tab\par
+BOTH_DEAD1\tab corpse on the ground\par
+BOTH_DEATH2\par
+BOTH_DEAD2\par
+BOTH_DEATH3\par
+BOTH_DEAD3\par
+\par
+LEGS_STAND_IDLE\par
+LEGS_WALK_FORWARD\par
+LEGS_WALK_BACK\par
+LEGS_WALK_LEFT\par
+LEGS_WALK_RIGHT\par
+\par
+LEGS_RUN_FORWARD\par
+LEGS_RUN_BACK\par
+LEGS_RUN_LEFT\par
+LEGS_RUN_RIGHT\par
+\par
+LEGS_JUMP_LEG1 (left leg)\par
+LEGS_JUMP_LEG2\par
+LEGS_JUMP_NEUTRAL\par
+LEGS_LAND\par
+\par
+LEGS_CROUCH_IDLE\par
+LEGS_CROUCH_WALK\par
+\par
+LEGS_SWIM_FORWARD\par
+LEGS_SWIM_NEUTRAL\par
+\par
+LEGS_WALLJUMP\par
+LEGS_WALLJUMP_LEFT\par
+LEGS_WALLJUMP_RIGHT\par
+LEGS_WALLJUMP_BACK\par
+\par
+LEGS_DASH\tab\par
+LEGS_DASH_LEFT\par
+LEGS_DASH_RIGHT\par
+LEGS_DASH_BACK\par
+\par
+TORSO_HOLD_BLADE\tab GB\par
+TORSO_HOLD_PISTOL\tab LG\par
+TORSO_HOLD_LIGHTGUN\tab PG, RG\par
+TORSO_HOLD_HEAVYGUN\tab RL, GL\par
+TORSO_HOLD_AIMGUN\tab EB\par
+\par
+TORSO_SHOOT_BLADE\tab weak GB\par
+TORSO_SHOOT_PISTOL\tab LG, strong GB\par
+TORSO_SHOOT_LIGHTGUN\tab PG, RG\par
+TORSO_SHOOT_HEAVYGUN\tab RL, GL\par
+TORSO_SHOOT_AIMGUN\tab EB\par
+\par
+TORSO_WEAPON_SWITCHOUT\par
+TORSO_WEAPON_SWITCHIN\par
+\par
+TORSO_DROPHOLD\tab Unused\par
+TORSO_DROP\par
+\par
+TORSO_SWIM\par
+\par
+TORSO_PAIN1\par
+TORSO_PAIN2\par
+TORSO_PAIN3\f3\par
+\f0\par
+\par
+//==============================================================\par
+//\par
+// Example of animation.cfg of a Warsow model\par
+//\par
+//==============================================================\f2\par
+\par
+sex f\par
+\par
+rootanim upper "Bip01 Spine1"\par
+rotationbone upper "Bip01 Spine1"\par
+rotationbone upper "Bip01 Spine2"\par
+rotationbone upper "Bip01 Neck"\par
+rotationbone head "Bip01 Head"\par
+\par
+tagmask "Bip01 R Hand" "tag_weapon" -2 0 0 // numbers mean offset forward, right & up\par
+tagmask "Bip01 Spine2" "tag_flag1" 0 -6 0\par
+tagmask "bip01 head" "tag_head" 28 0 0\par
+\par
+// first frame, last frame, looping frames, fps\par
+\par
+// frames 1 to 39 are reserved for the ui animation\par
+\par
+40\tab 58\tab 0\tab 24\tab // BOTH_DEATH1\tab Death animation\tab\par
+58\tab 58\tab 0\tab 24\tab // BOTH_DEAD1\tab corpse on the ground\par
+59\tab 83\tab 0\tab 24\tab // BOTH_DEATH2\par
+83\tab 83\tab 0\tab 24\tab // BOTH_DEAD2\par
+84\tab 107\tab 0\tab 24\tab // BOTH_DEATH3\par
+107\tab 107\tab 0\tab 24\tab // BOTH_DEAD3\par
+\par
+160\tab 200\tab 40\tab 24\tab // LEGS_STAND_IDLE\par
+267\tab 291\tab 24\tab 24\tab // LEGS_WALK_FORWARD\par
+292\tab 316\tab 24\tab 24\tab // LEGS_WALK_BACK\par
+317\tab 341\tab 24\tab 24\tab // LEGS_WALK_LEFT\par
+342\tab 366\tab 24\tab 24\tab // LEGS_WALK_RIGHT\par
+\par
+367\tab 383\tab 16\tab 24\tab // LEGS_RUN_FORWARD\par
+384\tab 400\tab 16\tab 24\tab // LEGS_RUN_BACK\par
+401\tab 413\tab 12\tab 24\tab // LEGS_RUN_LEFT\par
+414\tab 426\tab 12\tab 24\tab // LEGS_RUN_RIGHT\par
+\par
+465\tab 484\tab 0\tab 24\tab // LEGS_JUMP_LEG1 (left leg)\par
+514\tab 533\tab 0\tab 24\tab // LEGS_JUMP_LEG2\par
+489\tab 509\tab 0\tab 24\tab // LEGS_JUMP_NEUTRAL\par
+485\tab 488\tab 1\tab 24\tab // LEGS_LAND\par
+\par
+157\tab 159\tab 1\tab 24\tab // LEGS_CROUCH_IDLE\par
+242\tab 266\tab 24\tab 24\tab // LEGS_CROUCH_WALK\par
+\par
+427\tab 445\tab 18\tab 24\tab // LEGS_SWIM_FORWARD\par
+446\tab 464\tab 18\tab 24\tab // LEGS_SWIM_NEUTRAL\par
+\par
+605\tab 622\tab 0 \tab 24\tab // LEGS_WALLJUMP\par
+643\tab 658\tab 0\tab 24\tab // LEGS_WALLJUMP_LEFT\par
+659\tab 674\tab 0\tab 24\tab // LEGS_WALLJUMP_RIGHT\par
+623\tab 642\tab 0\tab 24\tab // LEGS_WALLJUMP_BACK\par
+\par
+675\tab 690\tab 0\tab 24\tab // LEGS_DASH\tab\par
+711\tab 726\tab 0\tab 24\tab // LEGS_DASH_LEFT\par
+727\tab 742\tab 0\tab 24\tab // LEGS_DASH_RIGHT\par
+695\tab 710\tab 0\tab 24\tab // LEGS_DASH_BACK\par
+\par
+160\tab 162\tab 1\tab 24\tab // TORSO_HOLD_BLADE\tab GB\par
+160\tab 162\tab 1\tab 24\tab // TORSO_HOLD_PISTOL\tab LG\par
+160\tab 162\tab 1\tab 24\tab // TORSO_HOLD_LIGHTGUN\tab PG, RG\par
+160\tab 162\tab 1\tab 24\tab // TORSO_HOLD_HEAVYGUN\tab RL, GL\par
+160\tab 162\tab 1\tab 24\tab // TORSO_HOLD_AIMGUN\tab EB\par
+\par
+138\tab 156\tab 0\tab 24\tab // TORSO_SHOOT_BLADE\tab weak GB\par
+123\tab 137\tab 0\tab 24\tab // TORSO_SHOOT_PISTOL\tab LG, strong GB\par
+123\tab 137\tab 0\tab 24\tab // TORSO_SHOOT_LIGHTGUN\tab PG, RG\par
+123\tab 137\tab 0\tab 24\tab // TORSO_SHOOT_HEAVYGUN\tab RL, GL\par
+123\tab 137\tab 0\tab 24\tab // TORSO_SHOOT_AIMGUN\tab EB\par
+\par
+108\tab 110\tab 1\tab 24\tab // TORSO_WEAPON_SWITCHOUT\par
+111\tab 122\tab 0\tab 24\tab // TORSO_WEAPON_SWITCHIN\par
+\par
+565\tab 605\tab 40\tab 24\tab // TORSO_DROPHOLD\tab Unused\par
+538\tab 554\tab 0\tab 24\tab // TORSO_DROP\par
+\par
+427\tab 445\tab 18\tab 24\tab // TORSO_SWIM\par
+\par
+555\tab 575\tab 0\tab 24\tab // TORSO_PAIN1\par
+576\tab 588\tab 0\tab 24\tab // TORSO_PAIN2\par
+589\tab 604\tab 0\tab 24\tab // TORSO_PAIN3\par
+\par
+\par
+\par
+}
+ 

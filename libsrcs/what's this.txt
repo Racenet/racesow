@@ -1,0 +1,13 @@
+This is the source for the static linked libraries used in Warsow, with
+the settings we use for building them. They are in the svn repository for
+backup purposes (se we don't loose the settings and have to do it again).
+The compiled libs are already included in Warsow source and they shouldn't
+need to be rebuilt unless in exceptional occasions.
+
+The configurations used for win32 builds:
+libjpeg-6b: libjpeg/libjpeg_static.vcproj (Release).
+zlib123: projects/visualc7/zlib.vcproj (LIB_ASM_Release).
+curl-7.15.4: lib/curllib_static.vcproj (Release)
+libogg-1.1.3: win32/ogg_static_vc7.vcproj (Release)
+libvorbis-1.1.2: win32/vorbis_static_vc7.vcproj (Release)
+libvorbis-1.1.2: win32/vorbisfile_static_vc7.vcproj (Release)
