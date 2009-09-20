@@ -102,10 +102,13 @@ class Racesow_Map
 				// move the other records down
 				for ( int i = MAX_RECORDS - 1; i > top; i-- )
 				{
-					this.highScores[i].Copy( this.highScores[i - 1] );
+					if (this.highScores[i - 1].getTime() == 0)
+						break;
+						
+					this.highScores[i] = this.highScores[i - 1]; // operator is overloaded
 				}
 
-				this.highScores[top].Store( player.getClient() );
+				this.highScores[top].fromRace( race );
 
 				this.writeHighScores();
 				this.updateHud();
@@ -206,5 +209,26 @@ class Racesow_Map
 	            G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + this.highScores[i].playerName + " - " + TimeToString( this.highScores[i].finishTime ) );
 	        }
 	    }
+	}
+	
+	/**
+	 * getHighscores
+	 * @return cString
+	 */
+	cString getHighscores()
+	{
+		cString highScores = "";
+
+	    for ( int i = 0; i < MAX_RECORDS; i++ )
+	    {
+	        int time = this.highScores[i].getTime();
+			if ( time > 0 )
+			{
+				cString playerName = this.highScores[i].getPlayerName();
+				highScores += (i+1) + ". " + playerName + " ("+ TimeToString(time) +")\n";
+			}
+	    }
+
+	    return highScores;
 	}
 }

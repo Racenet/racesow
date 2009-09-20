@@ -65,26 +65,23 @@ class Racesow_Map_HighScore_Default
 			this.checkPoints[i] = 0;
 	}	
 	
-	void Copy(Racesow_Map_HighScore_Default @score)
+	Racesow_Map_HighScore_Default@ opAssign(const Racesow_Map_HighScore_Default &highScore)
 	{
-		this.finishTime = score.getTime();
-		this.playerName = score.getPlayerName();
-	
+		this.finishTime = highScore.finishTime;
+		this.playerName = highScore.playerName;
+		this.checkPoints.resize( highScore.checkPoints.length() );
+		for ( int i = 0; i < highScore.checkPoints.length(); i++ )
+			this.checkPoints[i] = highScore.checkPoints[i];
+
+		return this;	
+	}
+
+	void fromRace( Racesow_Player_Race &race )
+	{
+		this.finishTime = race.getTime();
+		this.playerName = race.getPlayer().getClient().getName();
 		this.checkPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )
-		{
-			this.checkPoints[i] = score.getCheckPoint(i);
-		}
-	}	
-	
-	void Store(cClient @client)
-	{
-		Racesow_Player @player = Racesow_GetPlayerByClient( client );
-		
-		this.finishTime = player.getBestTime();
-		this.playerName = client.getName();
-		this.checkPoints.resize( numCheckpoints );
-		for ( int i = 0; i < numCheckpoints; i++ )
-			this.checkPoints[i] = player.getCheckPoint(i);
+			this.checkPoints[i] = race.getCheckPoint(i);
 	}
 }

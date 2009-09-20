@@ -46,6 +46,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
         return true;
     }
+	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
+    {
+		G_PrintMsg( client.getEnt(), map.getHighscores() );
+    }
 
     return false;
 }
@@ -76,9 +80,8 @@ bool GT_UpdateBotStatus( cEntity @self )
  */
 cEntity @GT_SelectSpawnPoint( cEntity @self )
 {
-	cEntity @spawnPoint = GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
 	Racesow_GetPlayerByClient(self.client).onSpawn();
-	return @spawnPoint;
+	return null; // select random
 }
 
 /**
@@ -447,6 +450,7 @@ void GT_InitGametype()
     // add commands
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
+    G_RegisterCommand( "top" );
 
     demoRecording = false;
 

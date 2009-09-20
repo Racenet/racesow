@@ -5,7 +5,7 @@ generic/matchstates.as;
 legacy/quake1.as;
 
 racesow/globals.as;
-racesow/targetEntities.as;
+racesow/entities.as;
 racesow/Map.as;
 racesow/Map/HighScore/Default.as;
 racesow/Player.as;

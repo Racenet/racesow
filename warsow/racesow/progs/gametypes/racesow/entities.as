@@ -1,5 +1,14 @@
+/**
+ * Racesow custom entities file
+ * based on Warsow 0.5 race gametype
+ *
+ * @package Racesow
+ * @version 0.5.1a
+ * @author zoh-zolex <zolex@warsow-race.net>
+ */
 
-// This sucks: some defrag maps have the entity classname with pseudo camel notation and classname->function is case sensitive so we need duplicate functions
+// This sucks: some defrag maps have the entity classname with pseudo camel notation 
+// and classname->function is case sensitive so we need some shadow functions
 
 /**
  * Cgg - defrag support
