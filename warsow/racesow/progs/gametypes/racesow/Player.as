@@ -95,6 +95,45 @@ class Racesow_Player
 	uint getBestTime()
 	{
 		return this.bestRaceTime;
+	}	
+	
+	/**
+	 * Set the players best time
+	 * @return void
+	 */
+	void setBestTime(uint time)
+	{
+		this.bestRaceTime = time;
+	}
+	
+	cString getName()
+	{
+		return this.client.getName();
+	}	
+	
+	uint getBestCheckPoint(uint id)
+	{
+		if ( id >= this.bestCheckPoints.length() )
+			return 0;
+			
+		return this.bestCheckPoints[id];
+	}	
+	
+	bool setBestCheckPoint(uint id, uint time)
+	{
+		if ( id >= this.bestCheckPoints.length() && time < this.bestCheckPoints[id])
+			return false;
+			
+		this.bestCheckPoints[id] = time;
+		return true;
+	}
+	
+	/**
+	 * Player spawn event
+	 *
+	 */
+	void onSpawn()
+	{
 	}
 	
 	/**

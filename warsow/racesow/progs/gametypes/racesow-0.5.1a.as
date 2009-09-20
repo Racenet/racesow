@@ -76,7 +76,9 @@ bool GT_UpdateBotStatus( cEntity @self )
  */
 cEntity @GT_SelectSpawnPoint( cEntity @self )
 {
-    return GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
+	cEntity @spawnPoint = GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
+	Racesow_GetPlayerByClient(self.client).onSpawn();
+	return @spawnPoint;
 }
 
 /**
@@ -110,7 +112,7 @@ cString @GT_ScoreboardMessage( int maxlen )
         racing = int( Racesow_GetPlayerByClient( ent.client ).isRacing() ? 1 : 0 );
 
         entry = "&p " + playerID + " " + ent.client.getClanName() + " "
-                + Racesow_GetPlayerByClient( ent.client ).bestRaceTime + " "
+                + Racesow_GetPlayerByClient( ent.client ).getBestTime() + " "
                 + ent.client.ping + " " + racing + " ";
 
         if ( scoreboardMessage.len() + entry.len() < maxlen )
@@ -224,6 +226,8 @@ void GT_ThinkRules()
         @client = @G_GetClient( i );
         if ( client.state() < CS_SPAWNED )
             continue;
+			
+		Racesow_Player @player = Racesow_GetPlayerByClient( client );
 
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );
@@ -240,11 +244,11 @@ void GT_ThinkRules()
         client.setHUDStat( STAT_MESSAGE_BETA, 0 );
 
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
-        if ( Racesow_GetPlayerByClient( client ).isRacing() )
-            client.setHUDStat( STAT_TIME_SELF, (levelTime - Racesow_GetPlayerByClient( client ).race.startTime) / 100 );
+        if ( player.isRacing() )
+            client.setHUDStat( STAT_TIME_SELF, (levelTime - player.race.getStartTime()) / 100 );
 
-        client.setHUDStat( STAT_TIME_BEST, Racesow_GetPlayerByClient( client ).bestRaceTime / 100 );
-        client.setHUDStat( STAT_TIME_RECORD, map.highScores[0].finishTime / 100 );
+        client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
+        client.setHUDStat( STAT_TIME_RECORD, map.highScores[0].getTime() / 100 );
 
         client.setHUDStat( STAT_TIME_ALPHA, -9999 );
         client.setHUDStat( STAT_TIME_BETA, -9999 );

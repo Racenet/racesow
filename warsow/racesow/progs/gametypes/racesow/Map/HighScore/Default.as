@@ -14,15 +14,6 @@ class Racesow_Map_HighScore_Default
 	 * @var cString
 	 */
     cString playerName;
-
-	/**
-	 * identify
-	 * @return void
-	 */
-	void identify(Racesow_Player @player)
-	{
-		return;
-	}
 	
 	/**
 	 * getPlayerName
@@ -53,6 +44,15 @@ class Racesow_Map_HighScore_Default
 			return 0;
 		
 		return this.checkPoints[id];
+	}
+	
+	bool setCheckPoint(uint id, uint time)
+	{
+		if ( id >= this.checkPoints.length() ) 
+			return false;
+		
+		this.checkPoints[id] = time;
+		return true;
 	}
 	
 	void reset()

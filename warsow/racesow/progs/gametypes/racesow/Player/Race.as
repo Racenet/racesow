@@ -117,6 +117,28 @@ class Racesow_Player_Race
 	int getDelta()
 	{
 		return this.delta;
+	}	
+	
+	/**
+	 * Get the race delta
+	 * @return void
+	 */
+	Racesow_Player @getPlayer()
+	{
+		return @this.player;
+	}
+	
+	uint getCheckPoint(uint id)
+	{
+		if ( id >= this.checkPoints.length() )
+            return 0;
+		
+		return this.checkPoints[id];
+	}	
+	
+	uint getStartTime()
+	{
+		return this.startTime;
 	}
 	
 	/**
@@ -132,9 +154,9 @@ class Racesow_Player_Race
         if ( this.startTime > levelTime ) // something is very wrong here
             return;
 
-		cString str;
 		this.checkPoints[id] = levelTime - this.startTime;
 		
+		cString str;
 		//uint oldTime = this.player.bestCheckPoints[id]; // diff to own best
 		uint oldTime = map.highScores[0].getCheckPoint(id); // diff to server best
 		uint newTime =  this.checkPoints[id];
@@ -143,7 +165,6 @@ class Racesow_Player_Race
 		
 		if ( noDelta || newTime < oldTime )
         {
-			this.player.bestCheckPoints[id] = newTime;
             this.delta = (noDelta ? 0 : oldTime - newTime);
 			str = S_COLOR_GREEN + (noDelta ? "" : "-");
 			
@@ -159,26 +180,17 @@ class Racesow_Player_Race
             str = S_COLOR_RED + "+";
         }
 
-        G_CenterPrintMsg( this.player.client.getEnt(), "Current: " + TimeToString( newTime ) + "\n"
+        G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
 
-        // if beating the checkpoint record on this sector give an award
-        if ( newTime < map.highScores[0].getCheckPoint(id) || map.highScores[0].getCheckPoint(id) == 0 )
-        {
-            this.player.client.addAward( (this.lastCheckPoint + 1) + ". checkpoint record!" );
-			G_Print(this.player.client.getName() + " " + S_COLOR_YELLOW + "made a new "
-				+ (this.lastCheckPoint + 1) + ". checkpoint record: " + TimeToString( newTime ) + "\n" );
-			map.highScores[0].checkPoints[id] = newTime;
-			
-        }
-        // else if beating his own record on this secotr give an award
-        else if ( newTime < this.player.bestCheckPoints[id] || this.player.bestCheckPoints[id] == 0 )
-        {
-            this.player.client.addAward( (this.lastCheckPoint + 1) + ". checkpoint personal record!" );
-            this.player.bestCheckPoints[id] = newTime;
-        }
+		map.handleCheckpoint(@this, id);
 
         this.lastCheckPoint++;
+	}
+	
+	void triggerAward(cString text)
+	{
+		this.player.getClient().addAward(text);
 	}
 	
 	/**
@@ -204,14 +216,13 @@ class Racesow_Player_Race
         this.stopTime = levelTime;
 		
 		//uint oldTime = this.player.getBestTime(); // diff to own best
-		uint oldTime = map.highScores[0].finishTime; // diff to server best
+		uint oldTime = map.highScores[0].getTime(); // diff to server best
 		uint newTime = this.getTime();
 		
 		bool noDelta = 0 == oldTime;
 		
         if ( noDelta || newTime < oldTime )
         {
-            this.player.bestRaceTime = newTime;
 			this.delta = newTime;
             str = S_COLOR_GREEN + (noDelta ? "" : "-");
         }
@@ -229,37 +240,7 @@ class Racesow_Player_Race
         G_CenterPrintMsg( this.player.getClient().getEnt(), "Finish: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
 		
-		// if beating the level record on this sector give an award
-        if ( newTime < map.highScores[0].finishTime || map.highScores[0].finishTime == 0 )
-        {
-            this.player.client.addAward( "Server record!" );
-			G_Print(this.player.client.getName() + " " + S_COLOR_YELLOW
-				+ "made a new server record: " + TimeToString( newTime ) + "\n");
-        }
-        // else if beating his own record on this secotr give an award
-        else if ( newTime < oldTime || oldTime == 0 )
-        {
-            this.player.client.addAward( "Personal record!" );
-        }
-		
-        // see if the player improved one of the top scores
-		for ( int top = 0; top < MAX_RECORDS; top++ )
-		{
-			if ( newTime < map.highScores[top].finishTime || map.highScores[top].finishTime == 0 )
-			{
-				// move the other records down
-				for ( int i = MAX_RECORDS - 1; i > top; i-- )
-				{
-					map.highScores[i].Copy( map.highScores[i - 1] );
-				}
-
-				map.highScores[top].Store( this.player.client );
-
-				map.writeHighScores();
-				map.updateHud();
-				break;
-			}
-		}
+		map.handleFinishLine(@this);
 		
 		return true;
 	}

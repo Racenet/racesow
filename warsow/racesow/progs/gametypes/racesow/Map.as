@@ -38,6 +38,83 @@ class Racesow_Map
 	}
 	
 	/**
+	 * handleCheckpoint
+	 * @param Racesow_Player_Race @race,
+	 * @param uint id
+	 */
+	void handleCheckpoint(Racesow_Player_Race @race, uint id)
+	{
+		Racesow_Player @player = race.getPlayer();
+		uint newTime = race.getCheckPoint(id);
+		uint serverBestTime = this.highScores[0].getCheckPoint(id);
+		uint personalBestTime = player.getBestCheckPoint(id);
+		
+		// if beating the checkpoint record on this sector give an award
+        if ( newTime < serverBestTime || serverBestTime == 0 )
+        {
+			if ( this.highScores[0].setCheckPoint(id, newTime) && player.setBestCheckPoint(id, newTime) )
+			{
+				race.triggerAward( S_COLOR_GREEN + (id + 1) + ". checkpoint record!" );
+				G_Print(player.client.getName() + " " + S_COLOR_WHITE + "made a new "
+					+ (id + 1) + ". checkpoint record: " + TimeToString( newTime ) + "\n" );
+			}
+        }
+        // else if beating his own record on this secotr give an award
+        else if ( newTime < personalBestTime || personalBestTime == 0 )
+        {
+            if ( player.setBestCheckPoint(id, newTime) )
+				race.triggerAward( S_COLOR_YELLOW + (id + 1) + ". checkpoint personal record!" );
+        }
+	}
+	
+	/**
+	 * handleFinishLine
+	 * @param Racesow_Player_Race @race
+	 * @return void
+	 */
+	void handleFinishLine(Racesow_Player_Race @race)
+	{
+		Racesow_Player @player = race.getPlayer();
+		uint newTime = race.getTime();
+		uint serverBestTime = this.highScores[0].getTime();
+		uint personalBestTime = player.getBestTime();
+	
+        if ( newTime < serverBestTime || serverBestTime == 0 )
+        {
+            player.setBestTime(newTime);
+			race.triggerAward( S_COLOR_GREEN + "New server record!" );
+			G_Print(player.getName() + " " + S_COLOR_YELLOW
+				+ "made a new server record: " + TimeToString( newTime ) + "\n");
+        }
+        // else if beating his own record on this secotr give an award
+        else if ( newTime < personalBestTime || personalBestTime == 0 )
+        {
+            player.setBestTime(newTime);
+			race.triggerAward( "Personal record!" );
+        }
+		
+        // see if the player improved one of the top scores
+		for ( int top = 0; top < MAX_RECORDS; top++ )
+		{
+			uint oldTime = this.highScores[top].getTime();
+			if ( newTime < oldTime || oldTime == 0 )
+			{
+				// move the other records down
+				for ( int i = MAX_RECORDS - 1; i > top; i-- )
+				{
+					this.highScores[i].Copy( this.highScores[i - 1] );
+				}
+
+				this.highScores[top].Store( player.getClient() );
+
+				this.writeHighScores();
+				this.updateHud();
+				break;
+			}
+		}
+	}
+	
+	/**
 	 * WriteHighScores
 	 *
 	 */
@@ -64,7 +141,7 @@ class Racesow_Map
 	        }
 	    }
 
-	    G_WriteFile( "highScores/race/" + this.name + ".txt", highScores );
+	    G_WriteFile( "topscores/race/" + this.name + ".txt", highScores );
 	}
 
 	/**
@@ -75,7 +152,7 @@ class Racesow_Map
 	{
 	    cString highScores;
 
-	    highScores = G_LoadFile( "highScores/race/" + this.name + ".txt" );
+	    highScores = G_LoadFile( "topscores/race/" + this.name + ".txt" );
 
 	    if ( highScores.len() > 0 )
 	    {
