@@ -47,7 +47,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	{
 		cVar g_logRaces( "g_logRaces", "0", 0 );
 		if ( g_logRaces.getBool() )
-			G_AppendToFile( "gamedata/races/" + this.map.name + "_" + this.logId, race.toString() );
+			G_AppendToFile( "gamedata/races/" + this.map.name + "_" + this.logTime, race.toString() );
 	}
 	
 	/**
@@ -65,7 +65,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 			
 			if ( time > 0 && playerName.len() > 0 )
 	        {
-	            highScores += "\"" + time + "\" \"" + playerName + "\" ";
+	            highScores += "\"" + time + "\" \"" + playerName + "\" \"" + this.highScores[i].getTimeStamp() + "\" ";
 
 	            // add checkpoints
 	            highScores += "\"" + numCheckpoints+ "\" ";
@@ -92,7 +92,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 
 	    if ( highScores.len() > 0 )
 	    {
-	        cString timeToken, nameToken, sectorToken;
+	        cString timeToken, nameToken, dateToken, sectorToken;
 	        int count = 0;
 
 	        for ( int i = 0; i < MAX_RECORDS; i++ )
@@ -103,6 +103,10 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 
 	            nameToken = highScores.getToken( count++ );
 	            if ( nameToken.len() == 0 )
+	                break;
+					
+	            dateToken = highScores.getToken( count++ );
+	            if ( dateToken.len() == 0 )
 	                break;
 
 	            sectorToken = highScores.getToken( count++ );
@@ -121,6 +125,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	                this.highScores[i].checkPoints[j] = uint( sectorToken.toInt() );
 	            }
 
+	            this.highScores[i].timeStamp = uint64( dateToken.toInt() );
 	            this.highScores[i].finishTime = uint( timeToken.toInt() );
 	            this.highScores[i].playerName = nameToken;
 	        }

@@ -225,7 +225,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-    if ( match.timeLimitHit() && map.allowEndGame() )
+	if ( match.timeLimitHit() && map.allowEndGame() )
         match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
@@ -246,6 +246,10 @@ void GT_ThinkRules()
         }
     }
 
+	// set the logTime once
+	if ( map.getStatsHandler().logTime == 0 && localTime != 0 )
+		map.getStatsHandler().logTime = localTime;
+	
     // set all clients race stats
     cClient @client;
 
@@ -368,15 +372,12 @@ void GT_SpawnGametype()
 {
 	@map = Racesow_Map();
     map.getStatsHandler().loadStats();
+	
+	G_Print("LT: " + localTime + "\n");
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
-
-		/*
-		for ( int i = 0; i < MAX_RECORDS; i++ )
-			map.getHighScore(i).reset();
-		*/
 }
 
 /**

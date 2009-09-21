@@ -21,10 +21,16 @@ class Racesow_Player_Race
     uint startTime;
 	
 	/**
-	 *  Duration of the race
+	 * Duration of the race
 	 * @var uint
 	 */
     uint stopTime;
+	
+	/**
+	 * Local time when race has finished
+	 * @var uint64
+	 */
+	uint64 timeStamp;
 
 	/**
 	 * Difference to best race
@@ -59,19 +65,6 @@ class Racesow_Player_Race
             this.checkPoints[i] = 0;
 		}
     }
-
-	/**
-	 * Destructor
-	 *
-	 * This little friend will later look if the race was completed or aborted and conditionally add a database entry :)
-	 */
-    ~Racesow_Player_Race()
-	{
-		if ( this.isFinished() )
-		{
-			map.getStatsHandler().addRace(@this);
-		}
-	}
 	
 	/**
 	 * Set the player
@@ -151,6 +144,15 @@ class Racesow_Player_Race
 	uint getStartTime()
 	{
 		return this.startTime;
+	}	
+	
+	/**
+	 * getTimeStamp
+	 * @return uint64
+	 */
+	uint64 getTimeStamp()
+	{
+		return this.timeStamp;
 	}
 	
 	/**
@@ -244,6 +246,7 @@ class Racesow_Player_Race
 
 		cString str;
         this.stopTime = levelTime;
+		this.timeStamp = localTime;
 		this.player.inOvertime = false;
 		
 		uint newTime = this.getTime();
@@ -299,11 +302,8 @@ class Racesow_Player_Race
 	cString toString()
 	{
 		cString raceString;
-		
-		raceString += "\"" + this.getTime() + "\" \"" + this.player.getName() + "\" ";
-
+		raceString += "\"" + this.getTime() + "\" \"" + this.player.getName() + "\" \"" + localTime + "\" ";
 		raceString += "\"" + this.checkPoints.length() + "\" ";
-
 		for ( int i = 0; i < this.checkPoints.length(); i++ )
 			raceString += "\"" + this.getCheckPoint( i ) + "\" ";
 

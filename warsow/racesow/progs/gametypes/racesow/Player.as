@@ -210,7 +210,7 @@ class Racesow_Player
 	 */
     void touchCheckPoint( int id )
     {
-        if ( id < 0 || id >= numCheckpoints )
+		if ( id < 0 || id >= numCheckpoints )
             return;
 
         if ( !this.isRacing() )
@@ -231,6 +231,7 @@ class Racesow_Player
             return;
 			
 		this.isSpawned = false;
+		map.getStatsHandler().addRace(@this.race);
 		
         // set up for respawning the player with a delay
         cEntity @respawner = G_SpawnEntity( "race_respawner" );

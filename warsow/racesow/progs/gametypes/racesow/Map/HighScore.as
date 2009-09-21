@@ -21,6 +21,11 @@ class Racesow_Map_HighScore
     uint finishTime;
 	
 	/**
+	 * @var uint64
+	 */
+	uint64 timeStamp;
+	
+	/**
 	 * @var cString
 	 */
     cString playerName;
@@ -57,6 +62,15 @@ class Racesow_Map_HighScore
 	int getTime()
 	{
 		return this.finishTime;
+	}	
+	
+	/**
+	 * getTimeStamp
+	 * @return uint64
+	 */
+	uint64 getTimeStamp()
+	{
+		return this.timeStamp;
 	}
 	
 	/**
@@ -110,6 +124,7 @@ class Racesow_Map_HighScore
 	{
 		this.finishTime = race.getTime();
 		this.playerName = race.getPlayer().getClient().getName();
+		this.timeStamp = race.getTimeStamp();
 		this.checkPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )
 			this.checkPoints[i] = race.getCheckPoint(i);
