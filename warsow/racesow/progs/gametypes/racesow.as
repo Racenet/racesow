@@ -18,6 +18,8 @@
  */
 bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int argc )
 {
+	Racesow_Player @player = Racesow_GetPlayerByClient( client );
+
     if ( cmdString == "gametype" )
     {
         cString response = "";
@@ -39,7 +41,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     {
         if ( @client != null )
         {
-            Racesow_GetPlayerByClient( client ).restartRace();
+            player.restartRace();
             client.team = TEAM_PLAYERS;
 			client.respawn( false );
         }
@@ -49,6 +51,72 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
     {
 		G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
+    }
+	else if ( ( cmdString == "racesow_register" ) )
+    {
+		cString authName = argsString.getToken(0).removeColorTokens();
+		cString password = argsString.getToken(1);
+		cString confirmation = argsString.getToken(2);
+		cString authFile = "gamedata/auths/" + authName;
+		
+		if ( authName == "" || password == "" || confirmation == "" )
+		{
+			G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
+			return false;
+		}
+		
+	    if ( G_FileLength( authFile ) > 0 )
+		{
+			G_PrintMsg( client.getEnt(), S_COLOR_RED + authName + " is already registered.\n" );
+			return false;
+		}
+
+		if ( password == "" || confirmation == "" )
+		{
+			G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
+			return false;
+		}
+		
+		if ( password != confirmation )
+		{
+			G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_register: passwords do not match\n" );
+			return false;
+		}
+		
+		G_WriteFile( authFile, password );
+		G_PrintMsg( client.getEnt(), S_COLOR_GREEN + "Successfully registered as " + authName + "\n" );
+		G_PrintMsg( client.getEnt(), S_COLOR_WHITE + "Don't forget your password \"" + password + "\"\n" );
+		
+		return true;
+    }
+	else if ( ( cmdString == "racesow_auth" ) )
+    {
+		cString authName = argsString.getToken(0).removeColorTokens();
+		cString authPass = argsString.getToken(1);
+		cString authFile = "gamedata/auths/" + authName;
+		
+		if ( authName == "" || authPass == "" )
+		{
+			G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_auth <account name> <password>\n" );
+			return false;
+		}
+		
+	    if ( G_FileLength( authFile ) == -1 )
+		{
+			G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_auth: "+ authName +" is not registered\n" );
+			return false;
+		}
+		
+		cString accountPassword = G_LoadFile( authFile );
+		if ( accountPassword != authPass )
+		{
+			G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + player.getName()
+				+ S_COLOR_RED + " failed in authenticating as "+ authName +"\n" );
+			return false;
+		}
+			
+		G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_GREEN
+			+ " successfully authenticated as "+ authName +"\n" );
     }
 
     return false;
@@ -137,7 +205,9 @@ cString @GT_ScoreboardMessage( int maxlen )
  */
 void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 {
-    if ( score_event == "dmg" )
+    Racesow_Player @player = Racesow_GetPlayerByClient( client );
+	
+	if ( score_event == "dmg" )
     {
     }
     else if ( score_event == "kill" )
@@ -158,8 +228,33 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
     }
     else if ( score_event == "enterGame" )
     {
-        Racesow_GetPlayerByClient( client ).reset();
-        Racesow_GetPlayerByClient( client ).setClient(@client);
+		//cString command = "racesow_auth " + client.getUserInfoKey("racesow_auth_name") + " " + client.getUserInfoKey("racesow_auth_pass");
+		//client.addGameCommand(command);
+		
+		cString authName = client.getUserInfoKey("racesow_auth_name");
+		cString authPass = client.getUserInfoKey("racesow_auth_pass");
+		cString authFile = "gamedata/auths/" + authName;
+		
+		if ( authName != "" && authPass != "" )
+		{
+			if ( G_FileLength( authFile ) == -1 )
+			{
+				G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_auth: "+ authName +" is not registered\n" );
+			}
+			
+			cString accountPassword = G_LoadFile( authFile );
+			if ( accountPassword != authPass )
+			{
+				G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + player.getName()
+					+ S_COLOR_RED + " failed in authenticating as "+ authName +"\n" );
+			}
+			
+			G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_GREEN
+				+ " successfully authenticated as "+ authName +"\n" );
+		}
+	
+        player.reset();
+        player.setClient(@client);
     }
 }
 
@@ -436,9 +531,6 @@ void GT_InitGametype()
 
     gametype.spawnpointRadius = 0;
 
-    if ( gametype.isInstagib() )
-        gametype.spawnpointRadius *= 2;
-
     // set spawnsystem type
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
@@ -451,6 +543,8 @@ void GT_InitGametype()
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
     G_RegisterCommand( "top" );
+    G_RegisterCommand( "racesow_register" );
+	G_RegisterCommand( "racesow_auth" );
 
     demoRecording = false;
 

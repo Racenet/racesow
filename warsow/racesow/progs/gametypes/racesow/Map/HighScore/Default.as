@@ -68,7 +68,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	        }
 	    }
 
-	    G_WriteFile( "topscores/race/" + this.map.name + ".txt", highScores );
+	    G_WriteFile( "gamedata/highscores/" + this.map.name, highScores );
 	}
 
 	/**
@@ -79,7 +79,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	{
 	    cString highScores;
 
-	    highScores = G_LoadFile( "topscores/race/" + this.map.name + ".txt" );
+	    highScores = G_LoadFile( "gamedata/highscores/" + this.map.name );
 
 	    if ( highScores.len() > 0 )
 	    {

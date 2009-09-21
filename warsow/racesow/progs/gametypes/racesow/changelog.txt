@@ -2,6 +2,7 @@
 	- added race-overtime feature
 	- added idle detection when in overtime
 	- added an abstract interface for handling race highscores
+	- added basic authentication (need to change pass to md5)
 
 2009-09-19 / racesow 0.5.1a
 	- refactored whole race gameytpe (better OOP)
