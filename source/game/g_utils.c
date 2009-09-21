@@ -21,16 +21,221 @@
 
 #include "g_local.h"
 
-#define LEVELPOOL_SENTINEL1		0xEF
-#define LEVELPOOL_SENTINEL2		0xAF
-#define LEVELPOOL_HEADER_SIZE	5
+/*
+==============================================================================
 
-static qbyte *levelpool = NULL;          // Vic: I'm tempted to rename this to liverpool...
-static size_t levelpool_size = 0;
-static size_t levelpool_pointer = 0;
-static size_t levelpool_prevpointer = 0;
-static size_t levelpool_lastalloc_size = 0;
-static size_t levelpool_alloc_count = 0, levelpool_prevalloc_count = 0;
+						ZONE MEMORY ALLOCATION
+
+There is never any space between memblocks, and there will never be two
+contiguous free memblocks.
+
+The rover can be left pointing at a non-empty block
+==============================================================================
+*/
+
+#define TAG_FREE	0
+#define TAG_LEVEL	1
+
+#define	ZONEID		0x1d4a11
+#define MINFRAGMENT 64
+
+typedef struct memblock_s
+{
+	int		size;           // including the header and possibly tiny fragments
+	int     tag;            // a tag of 0 is a free block
+	struct memblock_s       *next, *prev;
+	int     id;        		// should be ZONEID
+} memblock_t;
+
+typedef struct
+{
+	int		size;		// total bytes malloced, including header
+	int		count, used;
+	memblock_t	blocklist;		// start / end cap for linked list
+	memblock_t	*rover;
+} memzone_t;
+
+static memzone_t *levelzone;
+
+/*
+* G_Z_ClearZone
+*/
+static void G_Z_ClearZone( memzone_t *zone, int size )
+{
+	memblock_t	*block;
+	
+	// set the entire zone to one free block
+	zone->blocklist.next = zone->blocklist.prev = block =
+		(memblock_t *)( (qbyte *)zone + sizeof(memzone_t) );
+	zone->blocklist.tag = 1;	// in use block
+	zone->blocklist.id = 0;
+	zone->blocklist.size = 0;
+	zone->size = size;
+	zone->rover = block;
+	zone->used = 0;
+	zone->count = 0;
+
+	block->prev = block->next = &zone->blocklist;
+	block->tag = 0;			// free block
+	block->id = ZONEID;
+	block->size = size - sizeof(memzone_t);
+}
+
+/*
+* G_Z_Free
+*/
+static void G_Z_Free( void *ptr, const char *filename, int fileline )
+{
+	memblock_t *block, *other;
+	memzone_t *zone;
+
+	if (!ptr)
+		G_Error( "G_Z_Free: NULL pointer" );
+
+	block = (memblock_t *) ( (qbyte *)ptr - sizeof(memblock_t));
+	if( block->id != ZONEID )
+		G_Error( "G_Z_Free: freed a pointer without ZONEID (file %s at line %i)", filename, fileline );
+	if( block->tag == 0 )
+		G_Error( "G_Z_Free: freed a freed pointer (file %s at line %i)", filename, fileline );
+
+	// check the memory trash tester
+	if ( *(int *)((qbyte *)block + block->size - 4 ) != ZONEID )
+		G_Error( "G_Z_Free: memory block wrote past end" );
+
+	zone = levelzone;
+	zone->used -= block->size;
+	zone->count--;
+
+	block->tag = 0;		// mark as free
+
+	other = block->prev;
+	if( !other->tag )
+	{
+		// merge with previous free block
+		other->size += block->size;
+		other->next = block->next;
+		other->next->prev = other;
+		if( block == zone->rover )
+			zone->rover = other;
+		block = other;
+	}
+
+	other = block->next;
+	if( !other->tag )
+	{
+		// merge the next free block onto the end
+		block->size += other->size;
+		block->next = other->next;
+		block->next->prev = block;
+		if( other == zone->rover )
+			zone->rover = block;
+	}
+}
+
+/*
+* G_Z_TagMalloc
+*/
+static void *G_Z_TagMalloc( int size, int tag, const char *filename, int fileline )
+{
+	int extra;
+	memblock_t *start, *rover, *new, *base;
+	memzone_t *zone;
+
+	if( !tag )
+		G_Error( "G_Z_TagMalloc: tried to use a 0 tag (file %s at line %i)", filename, fileline );
+
+	//
+	// scan through the block list looking for the first free block
+	// of sufficient size
+	//
+	size += sizeof(memblock_t);	// account for size of block header
+	size += 4;					// space for memory trash tester
+	size = (size + 3) & ~3;		// align to 32-bit boundary
+
+	zone = levelzone;
+	base = rover = zone->rover;
+	start = base->prev;
+
+	do
+	{
+		if( rover == start )	// scaned all the way around the list
+			return NULL;
+		if( rover->tag )
+			base = rover = rover->next;
+		else
+			rover = rover->next;
+	} while( base->tag || base->size < size );
+
+	//
+	// found a block big enough
+	//
+	extra = base->size - size;
+	if( extra > MINFRAGMENT )
+	{
+		// there will be a free fragment after the allocated block
+		new = (memblock_t *) ((qbyte *)base + size );
+		new->size = extra;
+		new->tag = 0;			// free block
+		new->prev = base;
+		new->id = ZONEID;
+		new->next = base->next;
+		new->next->prev = new;
+		base->next = new;
+		base->size = size;
+	}
+
+	base->tag = tag;				// no longer a free block
+	zone->rover = base->next;	// next allocation will start looking here
+	zone->used += base->size;
+	zone->count++;
+	base->id = ZONEID;
+
+	// marker for memory trash testing
+	*(int *)((qbyte *)base + base->size - 4) = ZONEID;
+
+	return (void *) ((qbyte *)base + sizeof(memblock_t));
+}
+
+/*
+* G_Z_Malloc
+*/
+static void *G_Z_Malloc( int size, const char *filename, int fileline )
+{
+	void	*buf;
+	
+	buf = G_Z_TagMalloc( size, TAG_LEVEL, filename, fileline );
+	if( !buf )
+		G_Error( "G_Z_Malloc: failed on allocation of %i bytes", size );
+	memset( buf, 0, size );
+
+	return buf;
+}
+
+/*
+* G_Z_Print
+*/
+static void G_Z_Print( memzone_t *zone )
+{
+	memblock_t	*block;
+
+	G_Printf( "zone size: %i  used: %i in %i blocks\n", zone->size, zone->used, zone->count );
+
+	for( block = zone->blocklist.next; ; block = block->next )
+	{
+		//G_Printf( "block:%p    size:%7i    tag:%3i\n", block, block->size, block->tag );
+
+		if( block->next == &zone->blocklist )
+			break;			// all blocks have been hit	
+		if( (qbyte *)block + block->size != (qbyte *)block->next )
+			G_Printf( "ERROR: block size does not touch the next block\n" );
+		if( block->next->prev != block )
+			G_Printf( "ERROR: next block doesn't have proper back link\n" );
+		if( !block->tag && !block->next->tag )
+			G_Printf( "ERROR: two consecutive free blocks\n");
+	}
+}
+
+//==============================================================================
 
 /*
 * G_LevelInitPool
@@ -39,18 +244,8 @@ void G_LevelInitPool( size_t size )
 {
 	G_LevelFreePool();
 
-	if( !size )
-		size = levelpool_size;
-	assert( size );
-
-	levelpool = ( qbyte * )G_Malloc( size );
-	memset( levelpool, 0, size );
-
-	levelpool_size = size;
-	levelpool_pointer = 0;
-	levelpool_prevpointer = 0;
-	levelpool_lastalloc_size = 0;
-	levelpool_alloc_count = levelpool_prevalloc_count = 0;
+	levelzone = ( memzone_t * )G_Malloc( size );
+	G_Z_ClearZone( levelzone, size );
 }
 
 /*
@@ -58,10 +253,10 @@ void G_LevelInitPool( size_t size )
 */
 void G_LevelFreePool( void )
 {
-	if( levelpool )
+	if( levelzone )
 	{
-		G_Free( levelpool );
-		levelpool = NULL;
+		G_Free( levelzone );
+		levelzone = NULL;
 	}
 }
 
@@ -70,31 +265,7 @@ void G_LevelFreePool( void )
 */
 void *_G_LevelMalloc( size_t size, const char *filename, int fileline )
 {
-	qbyte *pointer;
-
-	if( levelpool_pointer + (unsigned int)size + LEVELPOOL_HEADER_SIZE > levelpool_size )
-	{
-		G_Error( "G_LevelMalloc: out of memory (alloc %i bytes at %s:%i)\n", size, filename, fileline );
-		return NULL;
-	}
-
-	pointer = levelpool + levelpool_pointer;
-	memset( pointer, 0, LEVELPOOL_HEADER_SIZE + size );
-
-	// store last allocation size
-	(( qbyte * )pointer)[0] = ( ( levelpool_lastalloc_size       ) & 0xFF );
-	(( qbyte * )pointer)[1] = ( ( levelpool_lastalloc_size >> 8  ) & 0xFF );
-	(( qbyte * )pointer)[2] = ( ( levelpool_lastalloc_size >> 16 ) & 0xFF );
-	(( qbyte * )pointer)[3] = ( ( levelpool_lastalloc_size >> 24 ) & 0xFF );
-	(( qbyte * )pointer)[4] = LEVELPOOL_SENTINEL1;
-
-	pointer += LEVELPOOL_HEADER_SIZE;
-	levelpool_pointer += size + LEVELPOOL_HEADER_SIZE;
-	levelpool_lastalloc_size = size;
-
-	levelpool_alloc_count++;
-
-	return ( void * )pointer;
+	return G_Z_Malloc( size, filename, fileline );
 }
 
 /*
@@ -102,20 +273,7 @@ void *_G_LevelMalloc( size_t size, const char *filename, int fileline )
 */
 void _G_LevelFree( void *data, const char *filename, int fileline )
 {
-	qbyte *header;
-
-	if( !data )
-		return;
-
-	header = ( qbyte * )data - LEVELPOOL_HEADER_SIZE;
-
-	// prevent double freeing and attempts to mark wrong memory regions as "level free"
-	assert( header[4] == LEVELPOOL_SENTINEL1 );
-	if( header[4] != LEVELPOOL_SENTINEL1 )
-		return;
-	header[4] = LEVELPOOL_SENTINEL2;
-
-	levelpool_alloc_count--;
+	G_Z_Free( data, filename, fileline );
 }
 
 /*
@@ -135,53 +293,7 @@ char *_G_LevelCopyString( const char *in, const char *filename, int fileline )
 */
 void G_LevelGarbageCollect( void )
 {
-	size_t size;
-	size_t cur, cnt;
-	qbyte *header;
-
-	if( levelpool_alloc_count == levelpool_prevalloc_count )
-	{
-		if( levelpool_prevpointer != levelpool_pointer )
-		{
-			if( developer->integer )
-				Com_Printf( "Levelpool: gc=simple, size=%u, diff=%i\n", levelpool_prevpointer, levelpool_prevpointer - levelpool_pointer );
-			levelpool_pointer = levelpool_prevpointer;
-		}
-	}
-	else
-	{
-		// run a primitive garbage collector, moving the allocation
-		// pointer to the left as freed memory regions are encountered
-		cnt = 0;
-		cur = levelpool_pointer;
-		do
-		{
-			header = levelpool + levelpool_pointer - levelpool_lastalloc_size - LEVELPOOL_HEADER_SIZE;
-			if( header[4] == LEVELPOOL_SENTINEL2 )
-			{
-				size = ( header[0] << 0 ) | ( header[1] << 8 ) | ( header[2] << 16 ) | ( header[3] << 24 );
-				levelpool_pointer = header - levelpool;
-				levelpool_lastalloc_size = size;
-
-				cnt++;
-			}
-			else
-			{
-				assert( header[4] == LEVELPOOL_SENTINEL1 );
-				break;
-			}
-		} while( levelpool_pointer );
-
-		if( cur != levelpool_pointer || levelpool_pointer != levelpool_prevpointer )
-		{
-			if( developer->integer )
-				Com_Printf( "Levelpool: gc=normal, freed=%u(%u), size=%u, diff=%i\n", cur - levelpool_pointer, cnt,
-					levelpool_pointer, levelpool_pointer - levelpool_prevpointer );
-			levelpool_prevpointer = levelpool_pointer;
-		}
-	}
-
-	levelpool_prevalloc_count = levelpool_alloc_count;
+	G_Z_Print( levelzone );
 }
 
 //==============================================================================
@@ -209,8 +321,6 @@ void G_StringPoolInit( void )
 	memset( g_stringpool_hash, 0, sizeof( g_stringpool_hash ) );
 
 	g_stringpool = G_LevelMalloc( STRINGPOOL_SIZE );
-	assert( g_stringpool );
-
 	g_stringpool_offset = 0;
 }
 
