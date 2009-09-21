@@ -5,6 +5,8 @@
 	- added basic authentication (need to change pass to md5)
 	- added authorization
 	- added admin command "map"
+    - added logging of races
+	- added cVar g_logRaces
 
 2009-09-19 / racesow 0.5.1a
 	- refactored whole race gameytpe (better OOP)

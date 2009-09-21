@@ -394,7 +394,7 @@ void GT_InitGametype()
     gametype.setTitle( "Racesow" );
     gametype.setVersion( "0.5.1b" );
     gametype.setAuthor( "warsow-race.net" );
-
+	
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + ".cfg" ) )
     {
@@ -421,6 +421,7 @@ void GT_InitGametype()
                  + "set g_countdown_time \"5\"\n"
                  + "set g_maxtimeouts \"-1\" // -1 = unlimited\n"
                  + "set g_challengers_queue \"0\"\n"
+				 + "set g_logRaces \"0\"\n"
                  + "\necho " + gametype.getName() + ".cfg executed\n";
 
         G_WriteFile( "configs/server/gametypes/" + gametype.getName() + ".cfg", config );

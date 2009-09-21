@@ -45,7 +45,9 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	
 	void logRace(Racesow_Player_Race @race)
 	{
-		G_WriteFile( "gamedata/races/" + this.map.name + "_" + this.logId, race.toString() );
+		cVar g_logRaces( "g_logRaces", "0", 0 );
+		if ( g_logRaces.getBool() )
+			G_AppendToFile( "gamedata/races/" + this.map.name + "_" + this.logId, race.toString() );
 	}
 	
 	/**
