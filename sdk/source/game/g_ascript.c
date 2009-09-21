@@ -6679,7 +6679,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "bool G_InPVS( cVec3 &origin1, cVec3 &origin2 )", asFunc_InPVS, asFunc_asGeneric_InPVS },
 	{ "bool G_WriteFile( cString &, cString & )", asFunc_WriteFile, asFunc_asGeneric_WriteFile },
 	{ "bool G_AppendToFile( cString &, cString & )", asFunc_AppendToFile, asFunc_asGeneric_AppendToFile },
-	{ "cString &G_LoadFile( cString & )", asFunc_LoadFile, asFunc_asGeneric_LoadFile },
+	{ "cString @G_LoadFile( cString & )", asFunc_LoadFile, asFunc_asGeneric_LoadFile },
 	{ "int G_FileLength( cString & )", asFunc_FileLength, asFunc_asGeneric_FileLength },
 	{ "void G_CmdExecute( cString & )", asFunc_Cmd_ExecuteText, asFunc_asGeneric_Cmd_ExecuteText },
 	{ "cString @G_LocationName( cVec3 &origin )", asFunc_LocationName, asFunc_asGeneric_LocationName },
