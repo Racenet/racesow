@@ -2,7 +2,7 @@
  * Racesow Gametype Interface
  *
  * based on warsow 0.5 race gametype
- * @version 0.5.1a 
+ * @version 0.5.1b 
  * @author soh#zolex <zolex@warsow-race.net>
  * @author you? <you@warsow-race.net>
  */
@@ -367,8 +367,8 @@ void GT_SpawnGametype()
 void GT_InitGametype()
 {
     gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.5.1a" );
-    gametype.setAuthor( "www.warsow-race.net" );
+    gametype.setVersion( "0.5.1b" );
+    gametype.setAuthor( "warsow-race.net" );
 
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + ".cfg" ) )

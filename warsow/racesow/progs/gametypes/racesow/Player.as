@@ -2,8 +2,8 @@
  * Racesow_Player
  *
  * @package Racesow
- * @version 0.5.1a
- * @global int levelTime
+ * @version 0.5.1b
+ * @author soh-zolex <zolex@warsow-race.net>
  */
 class Racesow_Player
 {

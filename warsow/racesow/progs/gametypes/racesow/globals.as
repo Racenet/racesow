@@ -1,3 +1,11 @@
+/**
+ * Racesow_Player
+ *
+ * @package Racesow
+ * @version 0.5.1b
+ * @author soh-zolex <zolex@warsow-race.net>
+ */
+
 int numCheckpoints = 0;
 bool demoRecording = false;
 const int MAX_RECORDS = 10;

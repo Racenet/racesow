@@ -3,7 +3,7 @@
  * based on Warsow 0.5 race gametype
  *
  * @package Racesow
- * @version 0.5.1a
+ * @version 0.5.1b
  * @author zoh-zolex <zolex@warsow-race.net>
  */
 
