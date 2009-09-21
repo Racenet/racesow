@@ -293,7 +293,6 @@ char *_G_LevelCopyString( const char *in, const char *filename, int fileline )
 */
 void G_LevelGarbageCollect( void )
 {
-	G_Z_Print( levelzone );
 }
 
 //==============================================================================
