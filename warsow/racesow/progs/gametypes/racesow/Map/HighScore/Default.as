@@ -17,6 +17,8 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	 */
 	void addRace(Racesow_Player_Race @race)
 	{
+		this.logRace(@race);
+	
 		// see if the player improved one of the top scores
 		for ( int top = 0; top < MAX_RECORDS; top++ )
 		{
@@ -39,6 +41,11 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 				break;
 			}
 		}
+	}
+	
+	void logRace(Racesow_Player_Race @race)
+	{
+		G_WriteFile( "gamedata/races/" + this.map.name + "_" + this.logId, race.toString() );
 	}
 	
 	/**

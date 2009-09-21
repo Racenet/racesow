@@ -15,6 +15,12 @@ class Racesow_Map_HighScore_Abstract
 	Racesow_Map @map;
 	
 	/**
+	 * Logfile id
+	 * @var uint
+	 */
+	uint logId;
+	
+	/**
 	 * The map's highscores
 	 * @var Racesow_Map_HighScore
 	 */
@@ -26,6 +32,7 @@ class Racesow_Map_HighScore_Abstract
 	 */
 	Racesow_Map_HighScore_Abstract()
 	{
+		this.logId = realTime;
 		this.highScores.resize( MAX_RECORDS );
 		for ( int i = 0; i < MAX_RECORDS; i++ )
 		{
@@ -39,8 +46,8 @@ class Racesow_Map_HighScore_Abstract
 	 */
 	Racesow_Map_HighScore_Abstract( Racesow_Map @map )
 	{
+		this.logId = realTime;
 		this.setMap(@map);
-		
 		this.highScores.resize( MAX_RECORDS );
 		for ( int i = 0; i < MAX_RECORDS; i++ )
 		{

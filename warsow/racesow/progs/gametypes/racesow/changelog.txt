@@ -3,6 +3,8 @@
 	- added idle detection when in overtime
 	- added an abstract interface for handling race highscores
 	- added basic authentication (need to change pass to md5)
+	- added authorization
+	- added admin command "map"
 
 2009-09-19 / racesow 0.5.1a
 	- refactored whole race gameytpe (better OOP)

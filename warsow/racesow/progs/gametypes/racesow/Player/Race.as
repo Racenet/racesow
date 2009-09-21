@@ -291,4 +291,24 @@ class Racesow_Player_Race
 		
 		return true;
 	}
+	
+	/**
+	 * Get race data as string
+	 * @return cString
+	 */
+	cString toString()
+	{
+		cString raceString;
+		
+		raceString += "\"" + this.getTime() + "\" \"" + this.player.getName() + "\" ";
+
+		raceString += "\"" + this.checkPoints.length() + "\" ";
+
+		for ( int i = 0; i < this.checkPoints.length(); i++ )
+			raceString += "\"" + this.getCheckPoint( i ) + "\" ";
+
+		raceString += "\n";
+	
+		return raceString;
+	}
 }
