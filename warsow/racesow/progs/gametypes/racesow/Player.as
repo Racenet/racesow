@@ -14,6 +14,12 @@ class Racesow_Player
 	cString authName;
 	
 	/**
+	 * Racesow authorizations bitmask
+	 * @var uint
+	 */
+	uint authMask;
+	
+	/**
 	 * Did the player respawn on his own after finishing a race?
 	 * @var bool
 	 */
@@ -302,19 +308,20 @@ class Racesow_Player
 	}
 	
 	/**
-	 * Register a new racesow account (per server)
+	 * Register a new server account
 	 * @param cString &authName
+	 * @param cString &authEmail
 	 * @param cString &password
 	 * @param cString &confirmation
 	 * @return bool
 	 */
-	bool registerAccount(cString &authName, cString &password, cString &confirmation)
+	bool registerAccount(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
 		cString authFile = "gamedata/auths/" + authName;
 		
-		if ( authName == "" || password == "" || confirmation == "" )
+		if ( authName == "" || authEmail == "" || password == "" || confirmation == "" )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <account email> <password> <confirm password>\n" );
 			return false;
 		}
 		
@@ -324,19 +331,15 @@ class Racesow_Player
 			return false;
 		}
 
-		if ( password == "" || confirmation == "" )
-		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
-			return false;
-		}
-		
 		if ( password != confirmation )
 		{
 			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "racesow_register: passwords do not match\n" );
 			return false;
 		}
 		
-		G_WriteFile( authFile, password );
+		// TODO: check email for valid format
+		
+		G_WriteFile( authFile, '"'+ password + '" "' + authEmail + '" "' + password + '" "' + 1 + '"\n' ); // "authName" "authEmail" "authPass" "authMask"
 		G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Successfully registered as " + authName + "\n" );
 		G_PrintMsg( this.client.getEnt(), S_COLOR_WHITE + "Don't forget your password \"" + password + "\"\n" );
 		
@@ -344,15 +347,13 @@ class Racesow_Player
 	}
 	
 	/**
-	 * Authenticate racesow account (per server)
+	 * Authenticate server account (per server)
 	 * @param cString &authName
 	 * @param cString &password
 	 * @return bool
 	 */
 	bool authenticate( cString &authName, cString &authPass, bool autoAuth )
 	{
-		cString authFile = "gamedata/auths/" + authName;
-		
 		if ( authName == "" || authPass == "" )
 		{
 			if ( !autoAuth )
@@ -360,14 +361,19 @@ class Racesow_Player
 			return false;
 		}
 		
-	    if ( G_FileLength( authFile ) == -1 )
+		cString authFile = "gamedata/auths/" + authName;
+		
+		if ( G_FileLength( authFile ) == -1 )
 		{
 			G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_auth: "+ authName +" is not registered\n" );
 			return false;
 		}
 		
-		cString accountPassword = G_LoadFile( authFile );
-		if ( accountPassword != authPass )
+		cString authContent = G_LoadFile( authFile );
+		cString requirePass = authContent.getToken( 2 );
+	    uint authMask = uint( authContent.getToken( 3 ).toInt() );
+		
+		if ( authPass != requirePass )
 		{
 			G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + this.getName()
 				+ S_COLOR_RED + " failed in authenticating as "+ authName +"\n" );
@@ -378,7 +384,40 @@ class Racesow_Player
 			+ " successfully authenticated as "+ authName +"\n" );
 		
 		this.authName = authName;
+		this.authMask = authMask;
 		
+		return true;
+	}
+	
+	/**
+	 * Execute an admin command
+	 * @param cString &cmdString
+	 * @return bool
+	 */
+	bool adminCommand( cString &cmdString )
+	{
+		if ( this.authMask & RACESOW_AUTH_ADMIN == 0 )
+		{
+			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED
+				+ " tried to execute command '"+ cmdString +"' without permission\n" );
+			return false;
+		}
+		
+		cString command = cmdString.getToken( 0 );
+		
+		if ( command == "map" )
+		{
+			if ( this.authMask & RACESOW_AUTH_MAP == 0 )
+			{
+				G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED
+					+ " tried to execute command '"+ cmdString +"' without permission\n" );
+				return false;
+			}
+		}
+		
+		G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
+			+ " executed command '"+ cmdString +"'\n" );
+
 		return true;
 	}
 }

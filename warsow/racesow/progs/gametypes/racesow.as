@@ -55,10 +55,11 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	else if ( ( cmdString == "racesow_register" ) )
     {
 		cString authName = argsString.getToken(0).removeColorTokens();
-		cString password = argsString.getToken(1);
-		cString confirmation = argsString.getToken(2);
+		cString authEmail = argsString.getToken(1);
+		cString password = argsString.getToken(2);
+		cString confirmation = argsString.getToken(3);
 		
-		return player.registerAccount( authName, password, confirmation );
+		return player.registerAccount( authName, authEmail, password, confirmation );
     }
 	else if ( ( cmdString == "racesow_auth" ) )
     {
@@ -66,6 +67,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		cString authPass = argsString.getToken(1);
 		
 		return player.authenticate( authName, authPass, false );
+    }
+	else if ( ( cmdString == "admin" ) )
+    {
+		return player.adminCommand( argsString );
     }
 
     return false;
@@ -470,6 +475,7 @@ void GT_InitGametype()
     G_RegisterCommand( "top" );
     G_RegisterCommand( "racesow_register" );
 	G_RegisterCommand( "racesow_auth" );
+	G_RegisterCommand( "admin" );
 
     demoRecording = false;
 
