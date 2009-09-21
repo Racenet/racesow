@@ -57,66 +57,15 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		cString authName = argsString.getToken(0).removeColorTokens();
 		cString password = argsString.getToken(1);
 		cString confirmation = argsString.getToken(2);
-		cString authFile = "gamedata/auths/" + authName;
 		
-		if ( authName == "" || password == "" || confirmation == "" )
-		{
-			G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
-			return false;
-		}
-		
-	    if ( G_FileLength( authFile ) > 0 )
-		{
-			G_PrintMsg( client.getEnt(), S_COLOR_RED + authName + " is already registered.\n" );
-			return false;
-		}
-
-		if ( password == "" || confirmation == "" )
-		{
-			G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
-			return false;
-		}
-		
-		if ( password != confirmation )
-		{
-			G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_register: passwords do not match\n" );
-			return false;
-		}
-		
-		G_WriteFile( authFile, password );
-		G_PrintMsg( client.getEnt(), S_COLOR_GREEN + "Successfully registered as " + authName + "\n" );
-		G_PrintMsg( client.getEnt(), S_COLOR_WHITE + "Don't forget your password \"" + password + "\"\n" );
-		
-		return true;
+		return player.registerAccount( authName, password, confirmation );
     }
 	else if ( ( cmdString == "racesow_auth" ) )
     {
 		cString authName = argsString.getToken(0).removeColorTokens();
 		cString authPass = argsString.getToken(1);
-		cString authFile = "gamedata/auths/" + authName;
 		
-		if ( authName == "" || authPass == "" )
-		{
-			G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_auth <account name> <password>\n" );
-			return false;
-		}
-		
-	    if ( G_FileLength( authFile ) == -1 )
-		{
-			G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_auth: "+ authName +" is not registered\n" );
-			return false;
-		}
-		
-		cString accountPassword = G_LoadFile( authFile );
-		if ( accountPassword != authPass )
-		{
-			G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + player.getName()
-				+ S_COLOR_RED + " failed in authenticating as "+ authName +"\n" );
-			return false;
-		}
-			
-		G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_GREEN
-			+ " successfully authenticated as "+ authName +"\n" );
+		return player.authenticate( authName, authPass, false );
     }
 
     return false;
@@ -228,33 +177,9 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
     }
     else if ( score_event == "enterGame" )
     {
-		//cString command = "racesow_auth " + client.getUserInfoKey("racesow_auth_name") + " " + client.getUserInfoKey("racesow_auth_pass");
-		//client.addGameCommand(command);
-		
-		cString authName = client.getUserInfoKey("racesow_auth_name");
-		cString authPass = client.getUserInfoKey("racesow_auth_pass");
-		cString authFile = "gamedata/auths/" + authName;
-		
-		if ( authName != "" && authPass != "" )
-		{
-			if ( G_FileLength( authFile ) == -1 )
-			{
-				G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_auth: "+ authName +" is not registered\n" );
-			}
-			
-			cString accountPassword = G_LoadFile( authFile );
-			if ( accountPassword != authPass )
-			{
-				G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + player.getName()
-					+ S_COLOR_RED + " failed in authenticating as "+ authName +"\n" );
-			}
-			
-			G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_GREEN
-				+ " successfully authenticated as "+ authName +"\n" );
-		}
-	
-        player.reset();
+		player.reset();
         player.setClient(@client);
+		player.authenticate( client.getUserInfoKey("racesow_auth_name"), client.getUserInfoKey("racesow_auth_pass"), true );
     }
 }
 

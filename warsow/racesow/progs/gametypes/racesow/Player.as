@@ -8,17 +8,26 @@
 class Racesow_Player
 {
 	/**
+	 * Racesow account name
+	 * @var cString
+	 */
+	cString authName;
+	
+	/**
 	 * Did the player respawn on his own after finishing a race?
+	 * @var bool
 	 */
 	bool isSpawned;
 
 	/**
 	 * Is the player still racing in the overtime?
+	 * @var bool
 	 */
 	bool inOvertime;
 	
 	/**
 	 * The time when the player started idling
+	 * @var uint
 	 */
 	uint idleTime;
 	
@@ -290,5 +299,86 @@ class Racesow_Player
 	{
 		this.inOvertime = true;
 		G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Please hurry up, theo ther players are waiting for you to finish...\n" );
+	}
+	
+	/**
+	 * Register a new racesow account (per server)
+	 * @param cString &authName
+	 * @param cString &password
+	 * @param cString &confirmation
+	 * @return bool
+	 */
+	bool registerAccount(cString &authName, cString &password, cString &confirmation)
+	{
+		cString authFile = "gamedata/auths/" + authName;
+		
+		if ( authName == "" || password == "" || confirmation == "" )
+		{
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
+			return false;
+		}
+		
+	    if ( G_FileLength( authFile ) > 0 )
+		{
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + authName + " is already registered.\n" );
+			return false;
+		}
+
+		if ( password == "" || confirmation == "" )
+		{
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <password> <confirm password>\n" );
+			return false;
+		}
+		
+		if ( password != confirmation )
+		{
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "racesow_register: passwords do not match\n" );
+			return false;
+		}
+		
+		G_WriteFile( authFile, password );
+		G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Successfully registered as " + authName + "\n" );
+		G_PrintMsg( this.client.getEnt(), S_COLOR_WHITE + "Don't forget your password \"" + password + "\"\n" );
+		
+		return true;
+	}
+	
+	/**
+	 * Authenticate racesow account (per server)
+	 * @param cString &authName
+	 * @param cString &password
+	 * @return bool
+	 */
+	bool authenticate( cString &authName, cString &authPass, bool autoAuth )
+	{
+		cString authFile = "gamedata/auths/" + authName;
+		
+		if ( authName == "" || authPass == "" )
+		{
+			if ( !autoAuth )
+				G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_auth <account name> <password>\n" );
+			return false;
+		}
+		
+	    if ( G_FileLength( authFile ) == -1 )
+		{
+			G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_auth: "+ authName +" is not registered\n" );
+			return false;
+		}
+		
+		cString accountPassword = G_LoadFile( authFile );
+		if ( accountPassword != authPass )
+		{
+			G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + this.getName()
+				+ S_COLOR_RED + " failed in authenticating as "+ authName +"\n" );
+			return false;
+		}
+			
+		G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
+			+ " successfully authenticated as "+ authName +"\n" );
+		
+		this.authName = authName;
+		
+		return true;
 	}
 }
