@@ -318,7 +318,10 @@ class Racesow_Player
 	 */
 	bool registerAccount(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
-		cString authFile = "gamedata/auths/" + authName;
+		cString dataDir = "gamedata";
+		cString authFile = dataDir + "/auths/" + authName;
+		cString mailShadow = dataDir + "/emails/" + authEmail;
+		cString nickShadow = dataDir + "/nicknames/" + this.getName().removeColorTokens();
 		
 		if ( authName == "" || authEmail == "" || password == "" || confirmation == "" )
 		{
@@ -326,21 +329,37 @@ class Racesow_Player
 			return false;
 		}
 		
-	    if ( G_FileLength( authFile ) > 0 )
-		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + authName + " is already registered.\n" );
-			return false;
-		}
-
 		if ( password != confirmation )
 		{
 			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "racesow_register: passwords do not match\n" );
 			return false;
 		}
 		
+	    if ( G_FileLength( authFile ) > 0 )
+		{
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "The login " + authName + " is already registered.\n" );
+			return false;
+		}
+		
+		if ( G_FileLength( mailShadow ) > 0 )
+		{
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "The email " + authEmail + " is already registered.\n" );
+			return false;
+		}		
+		
+		if ( G_FileLength( nickShadow ) > 0 )
+		{
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "The nickname " + this.getName() + " is already registered.\n" );
+			return false;
+		}
+		
 		// TODO: check email for valid format
 		
-		G_WriteFile( authFile, '"'+ password + '" "' + authEmail + '" "' + password + '" "' + 1 + '"\n' ); // "authName" "authEmail" "authPass" "authMask"
+		// "authName" "authEmail" "authPass" "authMask" "timeStamp"
+		G_WriteFile( authFile, '"'+ authName + '" "' + authEmail + '" "' + password + '" "' + 1 + '" "' + localTime + '"\n' );
+		G_WriteFile( mailShadow, authName );
+		G_WriteFile( nickShadow, authName );
+		
 		G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Successfully registered as " + authName + "\n" );
 		G_PrintMsg( this.client.getEnt(), S_COLOR_WHITE + "Don't forget your password \"" + password + "\"\n" );
 		
@@ -362,30 +381,50 @@ class Racesow_Player
 			return false;
 		}
 		
+		cString authContent;
 		cString authFile = "gamedata/auths/" + authName;
 		
 		if ( G_FileLength( authFile ) == -1 )
 		{
-			G_PrintMsg( client.getEnt(), S_COLOR_RED + "racesow_auth: "+ authName +" is not registered\n" );
-			return false;
+			authFile = "gamedata/emails/" + authName;
+			if ( G_FileLength( authFile ) == -1 )
+			{
+				authFile = "gamedata/nicknames/" + authName.removeColorTokens();
+				if ( G_FileLength( authFile ) == -1 )
+				{
+					G_PrintMsg( client.getEnt(), S_COLOR_RED + "Error: "+ authName +" is not registered\n" );
+					return false;
+				}
+				else
+				{
+					authContent = G_LoadFile( "gamedata/auths/" + G_LoadFile( authFile ) );
+				}
+			}
+			else
+			{
+				authContent = G_LoadFile( "gamedata/auths/" + G_LoadFile( authFile ) );
+			}
 		}
-		
-		cString authContent = G_LoadFile( authFile );
+		else 
+		{
+			authContent = G_LoadFile( authFile );
+		}
+
+		cString accountName = authContent.getToken( 0 );
 		cString requirePass = authContent.getToken( 2 );
-	    uint authMask = uint( authContent.getToken( 3 ).toInt() );
 		
 		if ( authPass != requirePass )
 		{
 			G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + this.getName()
-				+ S_COLOR_RED + " failed in authenticating as "+ authName +"\n" );
+				+ S_COLOR_RED + " failed in authenticating as "+ accountName +"\n" );
 			return false;
 		}
 			
+		this.authName = accountName;
+		this.authMask = uint( authContent.getToken( 3 ).toInt() );
+		
 		G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
 			+ " successfully authenticated as "+ authName +"\n" );
-		
-		this.authName = authName;
-		this.authMask = authMask;
 		
 		return true;
 	}
