@@ -1432,7 +1432,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\md5.c"
+				RelativePath="..\qcommon\md5.c"
 				>
 			</File>
 			<File
@@ -1745,7 +1745,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\md5.h"
+				RelativePath="..\qcommon\md5.h"
 				>
 			</File>
 			<File

@@ -764,6 +764,9 @@ $(BUILDDIR)/game/%.o: game/ai/%.c
 
 $(BUILDDIR)/game/%.o: gameshared/%.c
 	@$(DO_CC_MODULE)
+	
+$(BUILDDIR)/game/md5.o: qcommon/md5.c
+	@$(DO_CC_MODULE)
 
 ########
 # UI
