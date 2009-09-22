@@ -4,6 +4,7 @@
  *
  * @package Racesow
  * @version 0.5.1b
+ * @date 22.09.2009
  * @author zoh-zolex <zolex@warsow-race.net>
  */
 

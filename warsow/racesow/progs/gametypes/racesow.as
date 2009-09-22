@@ -2,7 +2,8 @@
  * Racesow Gametype Interface
  *
  * based on warsow 0.5 race gametype
- * @version 0.5.1b 
+ * @version 0.5.1c
+ * @date 23.09.2009
  * @author soh#zolex <zolex@warsow-race.net>
  * @author you? <you@warsow-race.net>
  */

@@ -2,8 +2,9 @@
  * Racesow_Player_Auth
  *
  * @package Racesow
- * @subpackage Auth
+ * @subpackage Player
  * @version 0.5.1c
+ * @date 23.09.2009
  * @author soh-zolex <zolex@warsow-race.net>
  */
  
