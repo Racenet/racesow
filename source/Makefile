@@ -321,6 +321,7 @@ OBJS_CGAME = $(addprefix $(BUILDDIR)/cgame/, $(OFILES_CGAME) )
 CFILES_GAME  = $(wildcard game/*.c)
 CFILES_GAME += $(wildcard game/ai/*.c)
 CFILES_GAME += $(wildcard gameshared/*.c)
+CFILES_GAME += qcommon/md5.c
 
 CFILES_GAME_WITHOUT_PATH= $(notdir  $(CFILES_GAME))
 OFILES_GAME=$(CFILES_GAME_WITHOUT_PATH:.c=.o)
