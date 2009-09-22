@@ -1,4 +1,5 @@
 #include "g_local.h"
+#include "md5.h"
 #include "../gameshared/angelref.h"
 
 
@@ -5748,6 +5749,30 @@ static void asFunc_asGeneric_G_Spawn( void *gen )
 	G_asGeneric_SetReturnAddress( gen, asFunc_G_Spawn( G_asGeneric_GetArgAddress( gen, 0 ) ) );
 }
 
+// racesow
+
+static asstring_t *asFunc_G_Md5( asstring_t *in )
+{
+	md5_state_t state;
+	md5_byte_t digest[16];                
+	char hex_output[16*2 + 1];
+	int di;
+
+        md5_init(&state);
+        md5_append(&state, (const md5_byte_t *)in->buffer, in->len);
+        md5_finish(&state, digest);
+        for (di = 0; di < 16; ++di)
+	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
+	return objectString_FactoryBuffer(hex_output, strlen(hex_output));
+}
+
+static void asFunc_asGeneric_G_Md5( void *gen )
+{
+	G_asGeneric_SetReturnAddress( gen, asFunc_G_Md5( G_asGeneric_GetArgAddress( gen, 0 ) ) );
+}
+
+// !racesow
+
 static edict_t *asFunc_GetEntity( int entNum )
 {
 	if( entNum < 0 || entNum >= game.numentities )
@@ -6647,6 +6672,10 @@ typedef struct
 
 static asglobfuncs_t asGlobFuncs[] =
 {
+	// racesow
+	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
+	// !racesow
+
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
 	{ "cString @G_SpawnTempValue( cString & )", asFunc_G_SpawnTempValue, asFunc_asGeneric_G_SpawnTempValue },
 	{ "cEntity @G_GetEntity( int entNum )", asFunc_GetEntity, asFunc_asGeneric_GetEntity },
