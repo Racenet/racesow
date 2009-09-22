@@ -1432,6 +1432,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\md5.c"
+				>
+			</File>
+			<File
 				RelativePath="p_client.c"
 				>
 				<FileConfiguration
@@ -1738,6 +1742,10 @@
 			</File>
 			<File
 				RelativePath="..\gameshared\gs_ref.h"
+				>
+			</File>
+			<File
+				RelativePath=".\md5.h"
 				>
 			</File>
 			<File
