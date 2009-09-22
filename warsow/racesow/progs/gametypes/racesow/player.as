@@ -318,6 +318,12 @@ class Racesow_Player
 	
 	/**
 	 * Register a new server account
+	 *
+	 * You can login using either your authName, your email or any
+	 * of your nicknames plus your password. This requires to avoid
+	 * cross-type duplicates, means you cannot for example register
+	 * a login-name which has already been taken as auth-name or email.
+	 *
 	 * @param cString &authName
 	 * @param cString &authEmail
 	 * @param cString &password
@@ -327,9 +333,17 @@ class Racesow_Player
 	bool registerAccount(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
 		cString nickName = this.getName().removeColorTokens();
+		
 		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
 		cString mailShadow = gameDataDir + "/emails/" + authEmail.substr(0,1) + "/" + authEmail;
 		cString nickShadow = gameDataDir + "/nicknames/" + nickName.substr(0,1) + "/" + nickName;
+		
+		cString duplicateNameCheckNick = gameDataDir + "/auths/" + nickName.substr(0,1) + "/" + nickName;
+		cString duplicateNameCheckEmail = gameDataDir + "/auths/" + authEmail.substr(0,1) + "/" + authEmail;
+		cString duplicateEmailCheckName = gameDataDir + "/emails/" + authName.substr(0,1) + "/" + authName;
+		cString duplicateEmailCheckNick = gameDataDir + "/emails/" + nickName.substr(0,1) + "/" + nickName;
+		cString duplicateNickCheckEmail = gameDataDir + "/nicknames/" + authEmail.substr(0,1) + "/" + authEmail;
+		cString duplicateNickCheckName = gameDataDir + "/nicknames/" + authName.substr(0,1) + "/" + authName;
 		
 		if ( authName == "" || authEmail == "" || password == "" || confirmation == "" )
 		{
@@ -343,21 +357,27 @@ class Racesow_Player
 			return false;
 		}
 		
-	    if ( G_FileLength( authFile ) > 0 )
+	    if ( G_FileLength( authFile ) != -1 ||
+			 G_FileLength( duplicateNameCheckNick ) != -1 ||
+			 G_FileLength( duplicateNameCheckEmail ) != -1 )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "The login " + authName + " is already registered.\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Yout login '" + authName + "' is already registered.\n" );
 			return false;
 		}
 		
-		if ( G_FileLength( mailShadow ) > 0 )
+		if ( G_FileLength( mailShadow ) != -1 ||
+			G_FileLength( duplicateEmailCheckName ) != -1 ||
+			G_FileLength( duplicateEmailCheckNick ) != -1 )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "The email " + authEmail + " is already registered.\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Your email '" + authEmail + "' is already registered.\n" );
 			return false;
 		}		
 		
-		if ( G_FileLength( nickShadow ) > 0 )
+		if ( G_FileLength( nickShadow ) != -1 ||
+			G_FileLength( duplicateNickCheckName ) != -1 ||
+			G_FileLength( duplicateNickCheckEmail ) != -1 )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "The nickname " + this.getName() + " is already registered.\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + '"Your nickname " + this.getName() + "' is already registered.\n" );
 			return false;
 		}
 		
