@@ -513,16 +513,19 @@ class Racesow_Player
 	 */
 	bool displayHelp()
 	{
-		cString myHelp = gametype.getName() + " " + gametype.getVersion() + " Help\n";
-		myHelp += "--------------------------------------------------------------------------------------------------------------------------\n";
-		myHelp += "help				display this help ;)\n";
-		myHelp += "racerestart		go back to the start-area whenever you want\n";
-		myHelp += "register			register a new account on this server\n";
-		myHelp += "auth				authenticate to the server (alternatively you can SETU (!) auth_name and auth_pass in your autoexec.cfg)\n";
-		myHelp += "admin			more info with 'admin help'\n";
-		myHelp += "--------------------------------------------------------------------------------------------------------------------------\n\n";
+		cString help;
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_RED + gametype.getName() + " " + gametype.getVersion() + " Help\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_RED + "help            " + S_COLOR_YELLOW + "display this help ;)\n";
+		help += S_COLOR_RED + "racerestart  " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
+		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
+		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate to the server (alternatively you can use setu\n";
+		help += "                  " + S_COLOR_YELLOW + "to set auth_name and auth_pass in your autoexec.cfg)\n";
+		help += S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 	
-		G_PrintMsg( this.client.getEnt(), myHelp );
+		G_PrintMsg( this.client.getEnt(), help );
 		return true;
 	}
 }
