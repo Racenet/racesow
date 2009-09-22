@@ -52,25 +52,26 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     {
 		G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
     }
-	else if ( ( cmdString == "racesow_register" ) )
+	else if ( ( cmdString == "register" ) )
     {
-		cString authName = argsString.getToken(0).removeColorTokens();
-		cString authEmail = argsString.getToken(1);
-		cString password = argsString.getToken(2);
-		cString confirmation = argsString.getToken(3);
+		cString authName = argsString.getToken( 0 ).removeColorTokens();
+		cString authEmail = argsString.getToken( 1 );
+		cString password = argsString.getToken( 2 );
+		cString confirmation = argsString.getToken( 3 );
 		
 		return player.registerAccount( authName, authEmail, password, confirmation );
     }
-	else if ( ( cmdString == "racesow_auth" ) )
+	else if ( ( cmdString == "auth" ) )
     {
-		cString authName = argsString.getToken(0).removeColorTokens();
-		cString authPass = argsString.getToken(1);
-		
-		return player.authenticate( authName, authPass, false );
+		return player.authenticate( argsString.getToken( 0 ).removeColorTokens(), argsString.getToken( 1 ), false );
     }
 	else if ( ( cmdString == "admin" ) )
     {
 		return player.adminCommand( argsString );
+    }
+	else if ( ( cmdString == "help" ) )
+    {
+		return player.displayHelp( argsString );
     }
 
     return false;
@@ -477,9 +478,10 @@ void GT_InitGametype()
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
     G_RegisterCommand( "top" );
-    G_RegisterCommand( "racesow_register" );
-	G_RegisterCommand( "racesow_auth" );
+    G_RegisterCommand( "register" );
+	G_RegisterCommand( "auth" );
 	G_RegisterCommand( "admin" );
+	G_RegisterCommand( "help" );
 
     demoRecording = false;
 

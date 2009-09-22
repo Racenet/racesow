@@ -322,7 +322,7 @@ class Racesow_Player
 	 * You can login using either your authName, your email or any
 	 * of your nicknames plus your password. This requires to avoid
 	 * cross-type duplicates, means you cannot for example register
-	 * a login-name which has already been taken as auth-name or email.
+	 * an auth-name which has already been taken as nickname or email.
 	 *
 	 * @param cString &authName
 	 * @param cString &authEmail
@@ -504,6 +504,25 @@ class Racesow_Player
 		G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
 			+ " executed command '"+ cmdString +"'\n" );
 
+		return true;
+	}
+	
+	/**
+	 * Display the help to the player
+	 * @return bool
+	 */
+	bool displayHelp()
+	{
+		cString help = gametype.getName() + " " gametype.getVersion() + " Help\n";
+		help += "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += "help				display this help ;)\n";
+		help += "racerestart		go back to the start-area whenever you want\n";
+		help += "register			register a new account on this server\n";
+		help += "auth				authenticate to the server (alternatively you can SETU (!) auth_name and auth_pass in your autoexec.cfg)\n";
+		help += "admin				more info with 'admin help'\n";
+		help += "--------------------------------------------------------------------------------------------------------------------------\n\n";
+	
+		G_PrintMsg( this.client.getEnt(), help );
 		return true;
 	}
 }
