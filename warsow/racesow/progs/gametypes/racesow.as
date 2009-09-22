@@ -59,11 +59,11 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		cString password = argsString.getToken( 2 );
 		cString confirmation = argsString.getToken( 3 );
 		
-		return player.registerAccount( authName, authEmail, password, confirmation );
+		return player.getAuth().signUp( authName, authEmail, password, confirmation );
     }
 	else if ( ( cmdString == "auth" ) )
     {
-		return player.authenticate( argsString.getToken( 0 ).removeColorTokens(), argsString.getToken( 1 ), false );
+		return player.getAuth().authenticate( argsString.getToken( 0 ).removeColorTokens(), argsString.getToken( 1 ), false );
     }
 	else if ( ( cmdString == "admin" ) )
     {
@@ -185,8 +185,8 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
     {
 		player.reset();
         player.setClient(@client);
-		player.authenticate( client.getUserInfoKey("racesow_auth_name"), client.getUserInfoKey("racesow_auth_pass"), true );
-		player.checkProtectedNickname();
+		player.getAuth().authenticate( client.getUserInfoKey("racesow_auth_name"), client.getUserInfoKey("racesow_auth_pass"), true );
+		player.getAuth().checkProtectedNickname();
     }
 }
 

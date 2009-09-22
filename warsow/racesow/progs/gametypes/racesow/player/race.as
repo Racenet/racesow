@@ -6,7 +6,7 @@
  * @version 0.5.1b
  * @author soh-zolex <zolex@warsow-race.net>
  */
-class Racesow_Player_Race
+class Racesow_Player_Race : Racesow_Player_Implemented
 {
 	/**
 	 * Checkpoints of the race
@@ -44,11 +44,6 @@ class Racesow_Player_Race
     int lastCheckPoint;
 	
 	/**
-	 * The player who races
-	 */
-	Racesow_Player @player;
-	
-	/**
 	 * Constructor
 	 *
 	 */
@@ -66,16 +61,6 @@ class Racesow_Player_Race
 		}
     }
 	
-	/**
-	 * Set the player
-	 * @param Racesow_Player @player
-	 * @return void
-	 */
-	void setPlayer( Racesow_Player @player )
-	{
-		@this.player = @player;
-	}
-
 	/**
 	 * Check if it's is currently beeing raced
 	 * @return bool
@@ -114,15 +99,6 @@ class Racesow_Player_Race
 	{
 		return this.delta;
 	}	
-	
-	/**
-	 * Get the race delta
-	 * @return void
-	 */
-	Racesow_Player @getPlayer()
-	{
-		return @this.player;
-	}
 	
 	/**
 	 * getCheckPoint

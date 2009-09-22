@@ -10,6 +10,8 @@ racesow/Map.as;
 racesow/Map/HighScore.as;
 racesow/Map/HighScore/Abstract.as;
 racesow/Map/HighScore/Default.as;
+racesow/Player/Implemented.as;
 racesow/Player.as;
+racesow/Player/Auth.as;
 racesow/Player/Race.as;
 racesow.as;

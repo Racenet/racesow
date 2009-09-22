@@ -1,15 +1,27 @@
-2009-09-21 / racesow 0.5.1b
-	- added race-overtime feature
-	- added idle detection when in overtime
-	- added an abstract interface for handling race highscores
-	- added basic authentication (need to change pass to md5)
-	- added authorization
-	- added admin command "map"
-    - added logging of races
-	- added cVar g_logRaces
+Changelog: (items with a § require the modded game module)
 
-2009-09-19 / racesow 0.5.1a
-	- refactored whole race gameytpe (better OOP)
-	- fixed autorespawn bug when finishing a race
-	- unified awards for checkpoints and races
-	- changed racerestart command so it can be used at any time
+	2009-09-22 / racesow 0.5.1b
+		- added fix for memory management by vic, thanks to jal §
+		- changed authorization to create some subfolders
+		- added md5 encryption for passwords §
+		- changed authentication to create subfolders
+		- fixed authentication exploit
+		- changed commands racesow_register and racesow_auth to register and auth
+		- added g_secureAuth 0 to disable hashing of passwords
+		- added help command
+		- changed all files to lowercase for linux
+
+	2009-09-21 / racesow 0.5.1b
+		- added race-overtime feature
+		- added idle detection when in overtime
+		- added an abstract interface for handling race highscores
+		- added basic authentication
+		- added authorization
+		- added admin command "map"
+		- added logging of races
+
+	2009-09-19 / racesow 0.5.1a
+		- refactored whole race gameytpe (better OOP)
+		- fixed autorespawn bug when finishing a race
+		- unified awards for checkpoints and races
+		- changed racerestart command so it can be used at any time
