@@ -186,6 +186,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		player.reset();
         player.setClient(@client);
 		player.authenticate( client.getUserInfoKey("racesow_auth_name"), client.getUserInfoKey("racesow_auth_pass"), true );
+		player.checkProtectedNickname();
     }
 }
 

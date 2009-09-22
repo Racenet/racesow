@@ -26,6 +26,13 @@ class Racesow_Player
 	uint authFailCount;
 	
 	/**
+	 * the time when we started to wait for the player
+	 * to authenticate as he uses a protected nickname
+	 * @var uint64
+	 */
+	uint64 waitingForAuthSince;
+	
+	/**
 	 * Did the player respawn on his own after finishing a race?
      * Info for the respawn thinker not to respawn the player again.
 	 * @var bool
@@ -473,6 +480,24 @@ class Racesow_Player
 			+ " successfully authenticated as "+ authName +"\n" );
 		
 		return true;
+	}
+	
+	/**
+	 * Check if the palyer uses a protected nickname
+	 * @return void
+	 */
+	void checkProtectedNickname()
+	{
+		cString name = this.getName().removeColorTokens();
+		cString authFile = gameDataDir + "/nicknames/" + name.substr(0,1) + "/" + name;
+		if ( G_LoadFile( authFile ) != this.authName )
+		{
+			this.waitingForAuthSince = localTime;
+			this.client.addAward(S_COLOR_RED + "NICKNAME PROTECTION!");
+			this.client.addAward(S_COLOR_RED + "CHECK THE CONSOLE NOW!");
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "You are using a protected nickname which dos not belong to you.\n"
+				+ "If you don't authenticate or change your nickname within X TIMEUNIT you will be kicked.\n" );
+		}
 	}
 	
 	/**
