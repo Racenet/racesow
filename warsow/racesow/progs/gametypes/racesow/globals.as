@@ -24,7 +24,8 @@ Racesow_Map @map;
 
 
 
-cVar g_roundlimit( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+cVar g_secureAuth( "g_secureAuth", "0", CVAR_ARCHIVE|CVAR_NOSET );
 
 /**
  * TimeToString

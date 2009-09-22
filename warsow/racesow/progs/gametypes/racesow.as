@@ -409,7 +409,7 @@ void GT_InitGametype()
                  + "set g_maprotation \"0\"   // 0 = same map, 1 = in order, 2 = random\n"
                  + "\n// game settings\n"
                  + "set g_scorelimit \"0\"\n"
-                 + "set g_timelimit \"0\"\n"
+                 + "set g_timelimit \"60\"\n"
                  + "set g_warmup_enabled \"0\"\n"
                  + "set g_warmup_timelimit \"0\"\n"
                  + "set g_match_extendedtime \"0\"\n"
@@ -420,9 +420,11 @@ void GT_InitGametype()
                  + "set g_teams_maxplayers \"0\"\n"
                  + "set g_teams_allow_uneven \"0\"\n"
                  + "set g_countdown_time \"5\"\n"
-                 + "set g_maxtimeouts \"-1\" // -1 = unlimited\n"
+                 + "set g_maxtimeouts \"0\" // -1 = unlimited\n"
                  + "set g_challengers_queue \"0\"\n"
 				 + "set g_logRaces \"0\"\n"
+				 + "set g_secureAuth \"0\"\n"
+				 + "set g_freestyle \"0\"\n"
                  + "\necho " + gametype.getName() + ".cfg executed\n";
 
         G_WriteFile( "configs/server/gametypes/" + gametype.getName() + ".cfg", config );
@@ -481,10 +483,18 @@ void GT_InitGametype()
 
     demoRecording = false;
 
-    if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
-	G_Print( "* " + S_COLOR_RED + "MD5 hashing test failed!!!\n" );
-    else
-	G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
-
+	if ( g_secureAuth.getBool() )
+	{
+		if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
+			G_Print( "* " + S_COLOR_RED + "MD5 hashing test failed!!!\n" );
+		else
+			G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
+	
+	}
+	else
+	{
+		G_Print( "* " + S_COLOR_RED + "ATTENTION: PLAYER PASSWORDS ARE STORED IN CLEARTEXT!!!\n" );
+	}
+	
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }

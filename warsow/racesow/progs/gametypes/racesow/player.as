@@ -363,13 +363,18 @@ class Racesow_Player
 		
 		// TODO: check email for valid format
 		
+		if ( g_secureAuth.getBool() )
+		{
+			password = G_Md5( password );
+		}
+		
 		// "authName" "authEmail" "authPass" "authMask" "timeStamp"
 		G_WriteFile( authFile, '"'+ authName + '" "' + authEmail + '" "' + password + '" "' + 1 + '" "' + localTime + '"\n' );
 		G_WriteFile( mailShadow, authName );
 		G_WriteFile( nickShadow, authName );
 		
-		G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Successfully registered as " + authName + "\n" );
-		G_PrintMsg( this.client.getEnt(), S_COLOR_WHITE + "Don't forget your password \"" + password + "\"\n" );
+		G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Successfully registered as "
+			+ authName + ". " + S_COLOR_WHITE + "Don't forget your password...\n" );
 		
 		return true;
 	}
@@ -417,6 +422,11 @@ class Racesow_Player
 		}
 
 		cString authContent = G_LoadFile( authFile );
+		
+		if ( g_secureAuth.getBool() )
+		{
+			authPass = G_Md5( authPass );
+		}
 		
 		if ( authPass != authContent.getToken( 2 ) )
 		{
