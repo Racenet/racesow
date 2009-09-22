@@ -347,13 +347,13 @@ class Racesow_Player
 		
 		if ( authName == "" || authEmail == "" || password == "" || confirmation == "" )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "usage: racesow_register <account name> <account email> <password> <confirm password>\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "usage: register <account name> <account email> <password> <confirm password>\n" );
 			return false;
 		}
 		
 		if ( password != confirmation )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "racesow_register: passwords do not match\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Error: passwords do not match\n" );
 			return false;
 		}
 		
@@ -361,7 +361,7 @@ class Racesow_Player
 			 G_FileLength( duplicateNameCheckNick ) != -1 ||
 			 G_FileLength( duplicateNameCheckEmail ) != -1 )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Yout login '" + authName + "' is already registered.\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Error: Your login '" + authName + "' is already registered.\n" );
 			return false;
 		}
 		
@@ -369,7 +369,7 @@ class Racesow_Player
 			G_FileLength( duplicateEmailCheckName ) != -1 ||
 			G_FileLength( duplicateEmailCheckNick ) != -1 )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Your email '" + authEmail + "' is already registered.\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Error: Your email '" + authEmail + "' is already registered.\n" );
 			return false;
 		}		
 		
@@ -377,7 +377,7 @@ class Racesow_Player
 			G_FileLength( duplicateNickCheckName ) != -1 ||
 			G_FileLength( duplicateNickCheckEmail ) != -1 )
 		{
-			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + '"Your nickname " + this.getName() + "' is already registered.\n" );
+			G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Your nickname '" + this.getName() + "' is already registered.\n" );
 			return false;
 		}
 		
@@ -410,7 +410,7 @@ class Racesow_Player
 		if ( authName == "" || authPass == "" )
 		{
 			if ( !autoAuth )
-				G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: racesow_auth <account name> <password>\n" );
+				G_PrintMsg( client.getEnt(), S_COLOR_RED + "usage: auth <account name> <password>\n" );
 			return false;
 		}
 		
@@ -513,16 +513,16 @@ class Racesow_Player
 	 */
 	bool displayHelp()
 	{
-		cString help = gametype.getName() + " " gametype.getVersion() + " Help\n";
-		help += "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += "help				display this help ;)\n";
-		help += "racerestart		go back to the start-area whenever you want\n";
-		help += "register			register a new account on this server\n";
-		help += "auth				authenticate to the server (alternatively you can SETU (!) auth_name and auth_pass in your autoexec.cfg)\n";
-		help += "admin				more info with 'admin help'\n";
-		help += "--------------------------------------------------------------------------------------------------------------------------\n\n";
+		cString myHelp = gametype.getName() + " " + gametype.getVersion() + " Help\n";
+		myHelp += "--------------------------------------------------------------------------------------------------------------------------\n";
+		myHelp += "help				display this help ;)\n";
+		myHelp += "racerestart		go back to the start-area whenever you want\n";
+		myHelp += "register			register a new account on this server\n";
+		myHelp += "auth				authenticate to the server (alternatively you can SETU (!) auth_name and auth_pass in your autoexec.cfg)\n";
+		myHelp += "admin			more info with 'admin help'\n";
+		myHelp += "--------------------------------------------------------------------------------------------------------------------------\n\n";
 	
-		G_PrintMsg( this.client.getEnt(), help );
+		G_PrintMsg( this.client.getEnt(), myHelp );
 		return true;
 	}
 }

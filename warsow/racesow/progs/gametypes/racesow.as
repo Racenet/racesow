@@ -71,7 +71,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
 	else if ( ( cmdString == "help" ) )
     {
-		return player.displayHelp( argsString );
+		return player.displayHelp();
     }
 
     return false;
