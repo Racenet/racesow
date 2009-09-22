@@ -370,10 +370,10 @@ void GT_Shutdown()
  */
 void GT_SpawnGametype()
 {
-	@map = Racesow_Map();
+    @map = Racesow_Map();
     map.getStatsHandler().loadStats();
 	
-	G_Print("LT: " + localTime + "\n");
+    
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
     for ( int i = 0; i < maxClients; i++ )
@@ -480,6 +480,11 @@ void GT_InitGametype()
 	G_RegisterCommand( "admin" );
 
     demoRecording = false;
+
+    if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
+	G_Print( "* " + S_COLOR_RED + "MD5 hashing test failed!!!\n" );
+    else
+	G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }

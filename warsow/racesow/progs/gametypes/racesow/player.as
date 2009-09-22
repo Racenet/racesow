@@ -20,7 +20,14 @@ class Racesow_Player
 	uint authMask;
 	
 	/**
+	 * Number of failed auths in a row
+	 * @var uint
+	 */
+	uint authFailCount;
+	
+	/**
 	 * Did the player respawn on his own after finishing a race?
+     * Info for the respawn thinker not to respawn the player again.
 	 * @var bool
 	 */
 	bool isSpawned;
@@ -86,6 +93,7 @@ class Racesow_Player
 	 */
 	void reset()
 	{
+		this.authFailCount = 0;
 		this.idleTime = 0;
 		this.isSpawned = true;
 		this.bestRaceTime = 0;
@@ -318,10 +326,10 @@ class Racesow_Player
 	 */
 	bool registerAccount(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
-		cString dataDir = "gamedata";
-		cString authFile = dataDir + "/auths/" + authName;
-		cString mailShadow = dataDir + "/emails/" + authEmail;
-		cString nickShadow = dataDir + "/nicknames/" + this.getName().removeColorTokens();
+		cString nickName = this.getName().removeColorTokens();
+		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
+		cString mailShadow = gameDataDir + "/emails/" + authEmail.substr(0,1) + "/" + authEmail;
+		cString nickShadow = gameDataDir + "/nicknames/" + nickName.substr(0,1) + "/" + nickName;
 		
 		if ( authName == "" || authEmail == "" || password == "" || confirmation == "" )
 		{
@@ -367,7 +375,7 @@ class Racesow_Player
 	}
 	
 	/**
-	 * Authenticate server account (per server)
+	 * Authenticate server account
 	 * @param cString &authName
 	 * @param cString &password
 	 * @return bool
@@ -381,46 +389,54 @@ class Racesow_Player
 			return false;
 		}
 		
-		cString authContent;
-		cString authFile = "gamedata/auths/" + authName;
+		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
 		
 		if ( G_FileLength( authFile ) == -1 )
 		{
-			authFile = "gamedata/emails/" + authName;
+			authFile = gameDataDir + "/emails/" + authName.substr(0,1) + "/" + authName;
 			if ( G_FileLength( authFile ) == -1 )
 			{
-				authFile = "gamedata/nicknames/" + authName.removeColorTokens();
-				if ( G_FileLength( authFile ) == -1 )
+				authFile = gameDataDir + "/nicknames/" + authName.substr(0,1) + "/" + authName;
+				if ( G_FileLength( authFile ) != -1 )
 				{
-					G_PrintMsg( client.getEnt(), S_COLOR_RED + "Error: "+ authName +" is not registered\n" );
-					return false;
-				}
-				else
-				{
-					authContent = G_LoadFile( "gamedata/auths/" + G_LoadFile( authFile ) );
+					authName = G_LoadFile( authFile );
+					authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
 				}
 			}
 			else
 			{
-				authContent = G_LoadFile( "gamedata/auths/" + G_LoadFile( authFile ) );
+				authName =  G_LoadFile( authFile );
+				authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
+			}
+			
+			if ( G_FileLength( authFile ) == -1 )
+			{
+				G_PrintMsg( client.getEnt(), S_COLOR_RED + "Error: "+ authName +" is not registered\n" );
+				return false;
 			}
 		}
-		else 
-		{
-			authContent = G_LoadFile( authFile );
-		}
 
-		cString accountName = authContent.getToken( 0 );
-		cString requirePass = authContent.getToken( 2 );
+		cString authContent = G_LoadFile( authFile );
 		
-		if ( authPass != requirePass )
+		if ( authPass != authContent.getToken( 2 ) )
 		{
-			G_PrintMsg( null, S_COLOR_RED + S_COLOR_WHITE + this.getName()
-				+ S_COLOR_RED + " failed in authenticating as "+ accountName +"\n" );
+			if ( this.authFailCount >= 3 ) 
+			{
+				// TODO: kick player with reason instead of this print
+				G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED
+					+ " kicked due to too many failed logins.\n" );
+			}
+			else 
+			{
+				G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED 
+					+ " failed in authenticating as "+ authName +"\n" );
+			}
+				
 			return false;
 		}
-			
-		this.authName = accountName;
+	
+		this.authFailCount = 0;
+		this.authName = authName;
 		this.authMask = uint( authContent.getToken( 3 ).toInt() );
 		
 		G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
@@ -439,7 +455,8 @@ class Racesow_Player
 		if ( this.authMask & RACESOW_AUTH_ADMIN == 0 )
 		{
 			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED
-				+ " tried to execute command '"+ cmdString +"' without permission\n" );
+				+ " tried to execute an admin command without permission.\n" );
+					
 			return false;
 		}
 		
@@ -449,8 +466,7 @@ class Racesow_Player
 		{
 			if ( this.authMask & RACESOW_AUTH_MAP == 0 )
 			{
-				G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED
-					+ " tried to execute command '"+ cmdString +"' without permission\n" );
+				G_PrintMsg( this.client.getEnt(), S_COLOR_RED + " you are not permitted to execute 'admin "+ cmdString +"'.\n" );
 				return false;
 			}
 		}

@@ -17,8 +17,12 @@ int numCheckpoints = 0;
 bool demoRecording = false;
 const int MAX_RECORDS = 10;
 
+cString gameDataDir = "gamedata";
+
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
+
+
 
 cVar g_roundlimit( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
