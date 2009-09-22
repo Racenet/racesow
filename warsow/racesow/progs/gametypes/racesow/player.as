@@ -500,12 +500,35 @@ class Racesow_Player
 				return false;
 			}
 		}
+		else if( command == "help" )
+		{
+			this.displayAdminHelp();
+		}
 		
-		G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
-			+ " executed command '"+ cmdString +"'\n" );
-
+		if( command != "help" )
+		{
+			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
+				+ " executed command '"+ cmdString +"'\n" );
+		}
+		
 		return true;
 	}
+	
+	/**
+	 * Display the help to the player
+	 * @return bool
+	 */
+	void displayAdminHelp()
+	{
+		cString help;
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_RED + "ADMIN HELP for " + gametype.getName() + "\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_RED + "admin map     " + S_COLOR_YELLOW + "change to the given map immedeatly\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
+	
+		G_PrintMsg( this.client.getEnt(), help );
+	}	
 	
 	/**
 	 * Display the help to the player
@@ -515,7 +538,7 @@ class Racesow_Player
 	{
 		cString help;
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + gametype.getName() + " " + gametype.getVersion() + " Help\n";
+		help += S_COLOR_RED + "HELP for " + gametype.getName() + "\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "help            " + S_COLOR_YELLOW + "display this help ;)\n";
 		help += S_COLOR_RED + "racerestart  " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
