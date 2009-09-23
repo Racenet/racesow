@@ -264,6 +264,15 @@ void GT_ThinkRules()
 			
 		Racesow_Player @player = Racesow_GetPlayerByClient( client );
 		
+		int countdownState;
+		if ( 0 != ( countdownState = player.getAuth().wontGiveUpViolatingNickProtection() ) )
+		{
+		    if ( countdownState == 1 )
+		        player.getClient().addAward(player.getAuth().getViolateCountDown());
+		    else if ( countdownState == 2 )
+		        player.kick( S_COLOR_RED + "You violated against the nickname protection." );
+		}
+		
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );
         client.setHUDStat( STAT_PROGRESS_OTHER, 0 );

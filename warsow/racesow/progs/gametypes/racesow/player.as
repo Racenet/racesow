@@ -327,6 +327,18 @@ class Racesow_Player
 	}
 	
 	/**
+	 * Kick the player and leave a message for everyone
+	 * @param cString message
+	 * @return void
+	 */
+	void kick( cString message )
+	{
+		G_PrintMsg( null, message + "\nHe should now get kicked (TODO)\n");
+		this.auth.lastViolateProtectionMessage = 0;
+		this.auth.violateNickProtectionSince = 0;
+	}
+	
+	/**
 	 * Execute an admin command
 	 * @param cString &cmdString
 	 * @return bool

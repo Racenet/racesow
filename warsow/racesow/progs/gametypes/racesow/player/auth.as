@@ -29,6 +29,12 @@
 	uint failCount;
 	
 	/**
+	 * The time of the last message
+	 * @var uint64
+	 */
+	uint64 lastViolateProtectionMessage;
+	
+	/**
 	 * the time when we started to wait for the player
 	 * to authenticate as he uses a protected nickname
 	 * @var uint64
@@ -221,20 +227,39 @@
 	 * Check if the user should finallly get kicked due to
 	 * violation against the nickname protection and send
 	 * countdown "awards"
-	 * @return bool
+	 * @return int
 	 */
-	bool wontGiveUpViolatingNickProtection()
+	int wontGiveUpViolatingNickProtection()
 	{
 		if ( this.violateNickProtectionSince == 0 )
 		{
-			return false;
+			return 0;
 		}
-		
-		uint64 seconds = localTime - this.violateNickProtectionSince;
-		
-		this.player.getClient().addAward( "" + (10 - seconds) );
-		
-		return (seconds > 10);
+
+		int seconds = localTime - this.violateNickProtectionSince;
+		if ( seconds != 0 && seconds == this.lastViolateProtectionMessage )
+			return -1; // nothing to do
+			
+		this.lastViolateProtectionMessage = seconds;
+			
+		if ( seconds < 10 )
+			return 1;
+			
+		return 2;
+	}
+	
+	cString getViolateCountDown()
+	{
+		cString color;
+		int seconds = localTime - this.violateNickProtectionSince;
+		if ( seconds > 6 )
+			color = S_COLOR_RED;
+		else if ( seconds > 3 )
+			color = S_COLOR_YELLOW;
+		else
+			color = S_COLOR_GREEN;
+	
+		return color + (10 - (localTime - this.violateNickProtectionSince)) + " seconds remaining...";
 	}
 	
 	/**
@@ -245,7 +270,8 @@
 	{
 		cString name = this.player.getName().removeColorTokens();
 		cString authFile = gameDataDir + "/nicknames/" + name.substr(0,1) + "/" + name;
-		if ( G_LoadFile( authFile ) != this.authenticationName )
+		
+		if ( G_FileLength( authFile ) != -1 && G_LoadFile( authFile ) != this.authenticationName )
 		{
 			this.violateNickProtectionSince = localTime;
 			this.player.getClient().addAward(S_COLOR_RED + "NICKNAME PROTECTION!");
