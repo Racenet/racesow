@@ -175,7 +175,11 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
     }
     else if ( score_event == "enterGame" )
     {
-		player.getAuth().authenticate( client.getUserInfoKey("auth_name"), client.getUserInfoKey("auth_pass"), true );
+		if ( !player.getAuth().loadSession() )
+		{
+			player.getAuth().authenticate( client.getUserInfoKey("auth_name"), client.getUserInfoKey("auth_pass"), true );
+		}
+		
 		player.getAuth().checkProtectedNickname();
     }
 	else if ( score_event == "userinfochanged" )

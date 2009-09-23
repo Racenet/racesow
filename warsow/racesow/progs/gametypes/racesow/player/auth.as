@@ -11,10 +11,22 @@
  class Racesow_Player_Auth : Racesow_Player_Implemented
  {
 	/**
+	 * Session name
+	 * @var cString
+	 */
+	cString sessionName;
+ 
+	/**
 	 * Racesow account name
 	 * @var cString
 	 */
 	cString authenticationName;
+	
+	/**
+	 * Racesow authorizations bitmask
+	 * @var uint
+	 */
+	uint authorizationsMask;
 	
 	/**
 	 * The last auth name found in userinfo
@@ -27,12 +39,6 @@
 	 * @var cString
 	 */
 	cString lastRefreshPass;
-	
-	/**
-	 * Racesow authorizations bitmask
-	 * @var uint
-	 */
-	uint authorizationsMask;
 	
 	/**
 	 * Number of failed auths in a row
@@ -62,6 +68,7 @@
 	
 	~Racesow_Player_Auth()
 	{
+		this.killSession();
 	}
 	
 	/**
@@ -81,7 +88,7 @@
 	bool signUp(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
 		cString nickName = this.player.getName().removeColorTokens();
-		
+	
 		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
 		cString mailShadow = gameDataDir + "/emails/" + authEmail.substr(0,1) + "/" + authEmail;
 		cString nickShadow = gameDataDir + "/nicknames/" + nickName.substr(0,1) + "/" + nickName;
@@ -224,6 +231,8 @@
 		this.authenticationName = authName;
 		this.authorizationsMask = uint( authContent.getToken( 3 ).toInt() );
 		
+		this.writeSession();
+		
 		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN
 			+ " successfully authenticated as "+ authName +"\n" );
 		
@@ -250,6 +259,46 @@
 		{
 			this.checkProtectedNickname();
 		}
+	}
+	
+	void writeSession()
+	{
+		this.sessionName = this.player.getName().removeColorTokens();
+		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
+		G_WriteFile( sessionFile, '"' + this.player.getClient().getUserInfoKey("ip") + '" "' + this.authenticationName + '" "' + this.authorizationsMask +'"\n' );
+	}	
+	
+	bool loadSession()
+	{
+		this.sessionName = this.player.getName().removeColorTokens();
+		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
+		cString sessionContent = G_LoadFile( sessionFile );
+		
+		if ( this.player.getClient().getUserInfoKey("ip") == sessionContent.getToken( 0 ) ) {
+		
+			this.failCount = 0;
+			this.violateNickProtectionSince = 0;
+			this.lastViolateProtectionMessage = 0;
+			this.authenticationName = sessionContent.getToken( 1 );
+			this.authorizationsMask = uint( sessionContent.getToken( 2 ).toInt() );
+			
+			G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN
+				+ " successfully loaded session for "+ this.authenticationName +"\n" );
+				
+			return true;
+		
+		}
+		
+		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED
+			+ " could not load session for "+ this.authenticationName +"\n" );
+			
+		return false;
+	}
+	
+	void killSession()
+	{
+		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
+		G_WriteFile( sessionFile, "0" );
 	}
 	
 	/**
