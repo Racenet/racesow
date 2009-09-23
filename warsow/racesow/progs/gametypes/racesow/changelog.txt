@@ -2,14 +2,15 @@ Changelog: (items with a § require the modded game module)
 
 	2009-09-23 / racesow 0.5.1c
 		- extracted auth plugin from player model
-		- added nickname protection
+		- added very nice nickname protection!
 		- removed own md5 sources as they are in qcommon
+		- changed makefile and vcproject for md5 stuff
 		- changed console command workflows
 
 	2009-09-22 / racesow 0.5.1b
-		- added fix for memory management by vic, thanks to jal §
-		- added md5 encryption for passwords §
-		- added g_secureAuth 0 to disable hashing of passwords
+		- added fix for memory management by vic, thanks to jal [b]§[/b]
+		- added md5 encryption for passwords [b]§[/b]
+		- added g_secureAuth 0 to disable md5 encryption 
 		- added help command
 		- changed authorization to create some subfolders
 		- changed authentication to create subfolders
