@@ -23,10 +23,7 @@ cString gameDataDir = "gamedata";
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 
-
-
-cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
-cVar g_secureAuth( "g_secureAuth", "0", CVAR_ARCHIVE|CVAR_NOSET );
+cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
 
 /**
  * TimeToString
@@ -102,24 +99,6 @@ void race_respawner_think( cEntity @respawner )
 	}
 
     respawner.freeEntity(); // free the respawner
-}
-
-/**
- * RACE_playerKilled
- *
- * a player has just died. The script is warned about it so it can account scores
- *
- * @param cEntity @target,
- * @param cEntity @attacker
- * @param cEntity @inflicter
- * @return viod
- */
-void RACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter )
-{
-    if ( @target == null || @target.client == null )
-        return;
-
-    Racesow_GetPlayerByClient( target.client ).restartRace();
 }
 
 /**

@@ -79,6 +79,7 @@
             - extracted auth plugin from player model
             - added very nice nickname protection!
             - removed own md5 sources as they are in qcommon
+			- removed g_secureAuth as it won't solve our problem
             - changed makefile and vcproject for md5 stuff
             - changed console command workflows
 

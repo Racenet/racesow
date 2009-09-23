@@ -119,13 +119,8 @@
 		
 		// TODO: check email for valid format
 		
-		if ( g_secureAuth.getBool() )
-		{
-			password = G_Md5( password );
-		}
-		
 		// "authenticationName" "email" "password" "authorizationsMask" "currentTimestamp"
-		G_WriteFile( authFile, '"'+ authName + '" "' + authEmail + '" "' + password + '" "' + 1 + '" "' + localTime + '"\n' );
+		G_WriteFile( authFile, '"'+ authName + '" "' + G_Md5( password ) + '" "' + password + '" "' + 1 + '" "' + localTime + '"\n' );
 		G_WriteFile( mailShadow, authName );
 		G_WriteFile( nickShadow, authName );
 		
@@ -178,13 +173,7 @@
 		}
 
 		cString authContent = G_LoadFile( authFile );
-		
-		if ( g_secureAuth.getBool() )
-		{
-			authPass = G_Md5( authPass );
-		}
-		
-		if ( authPass != authContent.getToken( 2 ) )
+		if ( G_Md5( authPass ) != authContent.getToken( 2 ) )
 		{
 			this.failCount++;
 			
@@ -203,7 +192,14 @@
 			return false;
 		}
 	
+		if ( this.lastViolateProtectionMessage != 0 )
+		{
+			this.player.getClient().addAward( S_COLOR_GREEN + "Countdown stopped." );
+		}
+	
 		this.failCount = 0;
+		this.violateNickProtectionSince = 0;
+		this.lastViolateProtectionMessage = 0;
 		this.authenticationName = authName;
 		this.authorizationsMask = uint( authContent.getToken( 3 ).toInt() );
 		
@@ -211,6 +207,26 @@
 			+ " successfully authenticated as "+ authName +"\n" );
 		
 		return true;
+	}
+	
+	/**
+	 * Refresh the authentication when it changed
+	 * @return void
+	 */
+	void refresh( cString &args )
+	{
+		/*
+		cString authName = this.player.getClient().getUserInfoKey("auth_name");
+		if ( authName != this.authenticationName )
+		{
+			this.authenticate( authName, this.player.getClient().getUserInfoKey("auth_name") , true );
+		}
+		*/
+		
+		if ( args.getToken(0).removeColorTokens() != this.player.getName().removeColorTokens() )
+		{
+			this.checkProtectedNickname();
+		}
 	}
 	
 	/**

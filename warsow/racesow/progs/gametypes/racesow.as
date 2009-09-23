@@ -168,16 +168,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
     }
     else if ( score_event == "kill" )
     {
-        cEntity @attacker = null;
-
-        if ( @client != null )
-            @attacker = @client.getEnt();
-
-        int arg1 = args.getToken( 0 ).toInt();
-        int arg2 = args.getToken( 1 ).toInt();
-
-        // target, attacker, inflictor
-        RACE_playerKilled( G_GetEntity( arg1 ), attacker, G_GetEntity( arg2 ) );
+        player.restartRace();
     }
     else if ( score_event == "award" )
     {
@@ -186,9 +177,13 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
     {
 		player.reset();
         player.setClient(@client);
-		player.getAuth().authenticate( client.getUserInfoKey("racesow_auth_name"), client.getUserInfoKey("racesow_auth_pass"), true );
+		player.getAuth().authenticate( client.getUserInfoKey("auth_name"), client.getUserInfoKey("auth_pass"), true );
 		player.getAuth().checkProtectedNickname();
     }
+	else if ( score_event == "userinfochanged" )
+	{
+		player.getAuth().refresh( args );
+	}
 }
 
 /**
@@ -496,17 +491,13 @@ void GT_InitGametype()
 
     demoRecording = false;
 
-	if ( g_secureAuth.getBool() )
+	if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
 	{
-		if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
-			G_Print( "* " + S_COLOR_RED + "MD5 hashing test failed!!!\n" );
-		else
-			G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
-	
+		G_Print( "* " + S_COLOR_RED + "MD5 hashing test failed!!!\n" );
 	}
 	else
 	{
-		G_Print( "* " + S_COLOR_RED + "ATTENTION: PLAYER PASSWORDS ARE STORED IN CLEARTEXT!!!\n" );
+		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 	
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
