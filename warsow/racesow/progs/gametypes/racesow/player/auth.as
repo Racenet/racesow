@@ -17,6 +17,18 @@
 	cString authenticationName;
 	
 	/**
+	 * The last auth name found in userinfo
+	 * @var cString
+	 */
+	cString lastRefreshName;	
+	
+	/**
+	 * The last auth pass found in userinfo
+	 * @var cString
+	 */
+	cString lastRefreshPass;
+	
+	/**
 	 * Racesow authorizations bitmask
 	 * @var uint
 	 */
@@ -141,7 +153,10 @@
 		if ( authName == "" || authPass == "" )
 		{
 			if ( !autoAuth )
+			{
 				this.player.sendMessage( S_COLOR_RED + "usage: auth <account name> <password>\n" );
+			}
+			
 			return false;
 		}
 		
@@ -175,6 +190,12 @@
 		cString authContent = G_LoadFile( authFile );
 		if ( G_Md5( authPass ) != authContent.getToken( 2 ) )
 		{
+			if ( this.authorizationsMask > 0 )
+			{
+				this.player.sendMessage(S_COLOR_RED + "Your authentication info changed but is invalid now.");
+				return false;
+			}
+			
 			this.failCount++;
 			
 			if ( this.failCount >= 3 ) 
@@ -215,13 +236,15 @@
 	 */
 	void refresh( cString &args )
 	{
-		/*
+		// when authentication information changed, try to authenticate again
 		cString authName = this.player.getClient().getUserInfoKey("auth_name");
-		if ( authName != this.authenticationName )
+		cString authPass = this.player.getClient().getUserInfoKey("auth_pass");
+		if ( authName != this.lastRefreshName && authPass != this.lastRefreshPass )
 		{
-			this.authenticate( authName, this.player.getClient().getUserInfoKey("auth_name") , true );
+			this.lastRefreshName = authName;
+			this.lastRefreshPass = authPass;
+			this.authenticate( authName, authPass, true );
 		}
-		*/
 		
 		if ( args.getToken(0).removeColorTokens() != this.player.getName().removeColorTokens() )
 		{

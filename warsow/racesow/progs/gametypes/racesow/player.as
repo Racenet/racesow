@@ -83,7 +83,7 @@ class Racesow_Player
 		this.idleTime = 0;
 		this.isSpawned = true;
 		this.bestRaceTime = 0;
-		@this.auth = /*new*/ Racesow_Player_Auth();
+		@this.auth = Racesow_Player_Auth();
 		this.auth.setPlayer(@this);
 		this.bestCheckPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )
@@ -166,7 +166,7 @@ class Racesow_Player
 	 */
 	bool setBestCheckPoint(uint id, uint time)
 	{
-		if ( id >= this.bestCheckPoints.length() && time < this.bestCheckPoints[id])
+		if ( id >= this.bestCheckPoints.length() || time < this.bestCheckPoints[id])
 			return false;
 			
 		this.bestCheckPoints[id] = time;
@@ -369,12 +369,20 @@ class Racesow_Player
 		{
 			if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
 			{
-				this.sendMessage( S_COLOR_RED + " you are not permitted "
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
 					+ "to execute the command 'admin "+ cmdString +"'.\n" );
 					
 				return false;
 			}
 			
+			cString mapName = cmdString.getToken( 1 );
+			if ( mapName == "" )
+			{
+				this.sendMessage( S_COLOR_RED + "No map name given.\n" );
+				return false;
+			}
+			
+			G_CmdExecute("map "+ mapName + "\n");
 			showNotification = true;
 		}
 		

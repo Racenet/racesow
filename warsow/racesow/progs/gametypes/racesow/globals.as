@@ -78,7 +78,7 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
     if ( @client == null || client.playerNum() < 0 )
         return null;
 
-	return @players[ client.playerNum() ].setClient( client );
+	return @players[ client.playerNum() ].setClient( @client );
 }
 
 /**

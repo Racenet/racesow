@@ -175,8 +175,6 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
     }
     else if ( score_event == "enterGame" )
     {
-		player.reset();
-        player.setClient(@client);
 		player.getAuth().authenticate( client.getUserInfoKey("auth_name"), client.getUserInfoKey("auth_pass"), true );
 		player.getAuth().checkProtectedNickname();
     }
@@ -379,10 +377,8 @@ void GT_SpawnGametype()
 {
     @map = Racesow_Map();
     map.getStatsHandler().loadStats();
-	
-    
 
-    // setup the checkpoints arrays sizes adjusted to numCheckPoints
+	// setup players
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
 }
