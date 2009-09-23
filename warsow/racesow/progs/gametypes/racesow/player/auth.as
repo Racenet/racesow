@@ -139,7 +139,7 @@
 		// TODO: check email for valid format
 		
 		// "authenticationName" "email" "password" "authorizationsMask" "currentTimestamp"
-		G_WriteFile( authFile, '"'+ authName + '" "' + G_Md5( password ) + '" "' + password + '" "' + 1 + '" "' + localTime + '"\n' );
+		G_WriteFile( authFile, '"'+ authName + '" "' + authEmail + '" "' + G_Md5( password ) + '" "' + 1 + '" "' + localTime + '"\n' );
 		G_WriteFile( mailShadow, authName );
 		G_WriteFile( nickShadow, authName );
 		
@@ -288,9 +288,6 @@
 			return true;
 		
 		}
-		
-		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED
-			+ " could not load session for "+ this.authenticationName +"\n" );
 			
 		return false;
 	}
