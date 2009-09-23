@@ -294,6 +294,14 @@
 			this.player.getClient().addAward(S_COLOR_RED + "CHECK THE CONSOLE NOW!");
 			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which dos not belong to you.\n"
 				+ "If you don't authenticate or change your nickname within X TIMEUNIT you will be kicked.\n" );
+		
+		}
+		// if authenticated, add new nickShadow
+		else if ( this.authorizationsMask > 0 )
+		{
+			cString nickName = this.player.getName().removeColorTokens();
+			cString nickShadow = gameDataDir + "/nicknames/" + nickName.substr(0,1) + "/" + nickName;
+			G_WriteFile( nickShadow, this.authenticationName );
 		}
 	}
  }
