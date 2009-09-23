@@ -107,3 +107,15 @@
             - changed racerestart command so it can be used at any time
             - changed awards for checkpoints and races
             - fixed autorespawn bug when finishing a race
+			
+			
+			
+	Roadmap: (items with a § require the modded game module, or wait for stuff be added to basewsw game module)
+   
+        - create shadow files for all nicknames of registered players
+        - movement types like b1shop's mod (planned: vq3-like, cpm-like, basewsw, racesow)
+        - optionally force movement type serverside
+        - weapondefs, depending on movement type §
+        - let player choose to shoot weak or strong ammo
+        - defrag like race-ghost for own, best and server best §
+        - protect admins from beeing kicked and callvoted etc...
