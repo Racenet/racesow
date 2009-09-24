@@ -3,7 +3,7 @@
  *
  * @package Racesow
  * @version 0.5.1c
- * @date 23.09.2009
+ * @date 24.09.2009
  * @author soh-zolex <zolex@warsow-race.net>
  */
 class Racesow_Player
@@ -83,11 +83,27 @@ class Racesow_Player
 		this.idleTime = 0;
 		this.isSpawned = true;
 		this.bestRaceTime = 0;
-		@this.auth = Racesow_Player_Auth();
+		this.resetAuth();
 		this.auth.setPlayer(@this);
 		this.bestCheckPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )
+		{
 			this.bestCheckPoints[i] = 0;
+		}	
+	}
+	
+	/**
+	 * Reset the players auth
+	 * @return void
+	 */
+	void resetAuth()
+	{
+		if (@this.auth != null)
+		{
+			this.auth.killSession();
+		}
+		
+		@this.auth = Racesow_Player_Auth();
 	}
 	
 	/**
@@ -382,7 +398,23 @@ class Racesow_Player
 				return false;
 			}
 			
-			G_CmdExecute("map "+ mapName + "\n");
+			G_CmdExecute("gamemap "+ mapName + "\n");
+			showNotification = true;
+		}	
+		
+		// kick command
+		else if ( commandExists = command == "kick" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+					
+				return false;
+			}
+			
+			cString playerNum = cmdString.getToken( 1 );
+			G_CmdExecute("kick "+ playerNum + "\n");
 			showNotification = true;
 		}
 		

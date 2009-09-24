@@ -322,7 +322,7 @@
 		}
 
 		int seconds = localTime - this.violateNickProtectionSince;
-		if ( seconds != 0 && seconds == this.lastViolateProtectionMessage )
+		if ( seconds != 0 && uint(seconds) == this.lastViolateProtectionMessage )
 			return -1; // nothing to do
 			
 		this.lastViolateProtectionMessage = seconds;

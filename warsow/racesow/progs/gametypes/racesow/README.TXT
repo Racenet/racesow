@@ -3,7 +3,7 @@
  *
  * @package Racesow
  * @version 0.5.1c
- * @date 23.09.2009
+ * @date 24.09.2009
  * @author soh-zolex <zolex@warsow-race.net>
  */
 
@@ -83,7 +83,7 @@
             - changed makefile and vcproject for md5 stuff
             - changed console command workflows
 
-        2009-09-22 / racesow 0.5.1b
+        2009-09-22 / racesow 0.5.1d
             - added fix for memory management by vic, thanks to jal §
             - added md5 encryption for passwords §
             - added g_secureAuth 0 to disable md5 encryption
@@ -94,7 +94,7 @@
             - changed all files to lowercase for linux
             - fixed possible authentication exploit
 
-        2009-09-21 / racesow 0.5.1b
+        2009-09-21 / racesow 0.5.1d
             - added race-overtime feature
             - added idle detection when in overtime
             - added an abstract interface for handling race highscores
@@ -103,7 +103,7 @@
             - added admin command "map"
             - added logging of races
 
-        2009-09-19 / racesow 0.5.1a
+        2009-09-19 / racesow 0.5.1d
             - refactored whole race gameytpe (better OOP)
             - changed racerestart command so it can be used at any time
             - changed awards for checkpoints and races

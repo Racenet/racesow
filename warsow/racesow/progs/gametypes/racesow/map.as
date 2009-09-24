@@ -3,7 +3,7 @@
  *
  * @package Racesow
  * @version 0.5.1c
- * @date 23.09.2009
+ * @date 24.09.2009
  * @author soh-zolex <zolex@warsow-race.net>
  */
 class Racesow_Map
@@ -113,5 +113,34 @@ class Racesow_Map
 	Racesow_Map_HighScore_Abstract @getStatsHandler()
 	{
 		return @this.statsHandler;
+	}
+	
+	/**
+	 * setUpMatch
+	 * @return void
+	 */
+	void setUpMatch()
+	{
+	    int i, j;
+	    cEntity @ent;
+	    cTeam @team;
+
+	    gametype.shootingDisabled = false;
+	    gametype.readyAnnouncementEnabled = false;
+	    gametype.scoreAnnouncementEnabled = false;
+	    gametype.countdownEnabled = true;
+
+	    gametype.pickableItemsMask = gametype.spawnableItemsMask;
+	    gametype.dropableItemsMask = gametype.spawnableItemsMask;
+
+	    // clear player stats and scores, team scores
+
+	    for ( i = TEAM_PLAYERS; i < GS_MAX_TEAMS; i++ )
+	    {
+	        @team = @G_GetTeam( i );
+	        team.stats.clear();
+	    }
+
+	    G_RemoveDeadBodies();
 	}
 }
