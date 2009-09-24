@@ -1434,6 +1434,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\mysql.c"
+				>
+			</File>
+			<File
 				RelativePath="p_client.c"
 				>
 				<FileConfiguration
@@ -1744,6 +1748,10 @@
 			</File>
 			<File
 				RelativePath="..\qcommon\md5.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mysql.h"
 				>
 			</File>
 			<File
