@@ -6065,21 +6065,112 @@ static void asFunc_asGeneric_LoadFile( void *gen )
 }
 
 // racesow
-static int asFunc_GetFileList( asstring_t *dir, asstring_t *extension, asstring_t *buf, int bufsize, int start, int end )
+static asstring_t *asFunc_GetFileList( asstring_t *dir, asstring_t *extension, int start, int end )
 {
-	return trap_FS_GetFileList( dir->buffer, extension->buffer, buf->buffer, buf->len, start, end);
+	char separators[2];
+	char name[MAX_CONFIGSTRING_CHARS];
+	char buffer[MAX_STRING_CHARS], *s, *list;
+	int numfiles, i, j, found, length, fulllength;
+	asstring_t *data;
+
+	if( !extension->buffer || !dir->buffer )
+		return NULL;
+
+	if( extension->buffer[0] != '.' || strlen( extension->buffer ) < 2 )
+		return NULL;
+
+	if( ( numfiles = trap_FS_GetFileList( dir->buffer, extension->buffer, NULL, 0, start, end ) ) == 0 ) 
+		return NULL;
+
+	separators[0] = ' ';
+	separators[1] = 0;
+
+	//
+	// do a first pass just for finding the full len of the list
+	//
+
+	i = 0;
+	found = 0;
+	length = 0;
+	fulllength = 0;
+	do 
+	{
+		if( ( j = trap_FS_GetFileList( dir->buffer, extension->buffer, buffer, sizeof( buffer ), i, numfiles ) ) == 0 ) 
+		{
+			// can happen if the filename is too long to fit into the buffer or we're done
+			i++;
+			continue;
+		}
+
+		i += j;
+		for( s = buffer; j > 0; j--, s += length + 1 ) 
+		{
+			length = strlen( s );
+
+			if( strlen( dir->buffer ) + 1 + length >= MAX_CONFIGSTRING_CHARS ) 
+			{
+				Com_Printf( "Warning: G_AllocCreateNamesList :file name too long: %s\n", s );
+				continue;
+			}
+
+			Q_strncpyz( name, s, sizeof( name ) );
+			COM_StripExtension( name );
+
+			fulllength += strlen( name ) + 1;
+			found++;
+		}
+	} while( i < numfiles );
+
+	if( !found )
+		return NULL;
+
+	//
+	// Allocate a string for the full list and do a second pass to copy them in there
+	//
+
+	fulllength += 1;
+	list = G_Malloc( fulllength );
+
+	i = 0;
+	length = 0;
+	do 
+	{
+		if( ( j = trap_FS_GetFileList( dir->buffer, extension->buffer, buffer, sizeof( buffer ), i, numfiles ) ) == 0 ) 
+		{
+			// can happen if the filename is too long to fit into the buffer or we're done
+			i++;
+			continue;
+		}
+
+		i += j;
+		for( s = buffer; j > 0; j--, s += length + 1 ) 
+		{
+			length = strlen( s );
+
+			if( strlen( dir->buffer ) + 1 + length >= MAX_CONFIGSTRING_CHARS ) 
+				continue;
+
+			Q_strncpyz( name, s, sizeof( name ) );
+			COM_StripExtension( name );
+
+			Q_strncatz( list, name, fulllength );
+			Q_strncatz( list, separators, fulllength );
+		}
+	} while( i < numfiles );
+
+	data = objectString_FactoryBuffer( (char *)list, strlen(list) );
+	G_Free( list );
+
+	return data;
 }
 
 static void asFunc_asGeneric_GetFileList( void *gen )
 {
-	G_asGeneric_SetReturnInt( gen, 
+	G_asGeneric_SetReturnAddress( gen, 
 		asFunc_GetFileList(
 			(asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 			(asstring_t *)G_asGeneric_GetArgAddress( gen, 1 ),
-			(asstring_t *)G_asGeneric_GetArgAddress( gen, 2 ),
-			(int)G_asGeneric_GetArgAddress( gen, 3 ),
-			(int)G_asGeneric_GetArgAddress( gen, 4 ),
-			(int)G_asGeneric_GetArgAddress( gen, 5 )
+			0, 0
 		)
 	);
 }
@@ -6707,7 +6798,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	// racesow
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
-	{ "int G_GetFileList( cString &, cString &, cString @, int, int, int )", asFunc_GetFileList, asFunc_asGeneric_GetFileList },
+	{ "cString G_GetFileList( cString &, cString &, cString @, int, int, int )", asFunc_GetFileList, asFunc_asGeneric_GetFileList },
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
