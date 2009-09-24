@@ -6798,7 +6798,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	// racesow
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
-	{ "cString G_GetFileList( cString &, cString &, cString @, int, int, int )", asFunc_GetFileList, asFunc_asGeneric_GetFileList },
+	//{ "cString G_GetFileList( cString &, cString &, int, int )", asFunc_GetFileList, asFunc_asGeneric_GetFileList },
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
