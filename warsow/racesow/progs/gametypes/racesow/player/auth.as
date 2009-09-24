@@ -68,7 +68,7 @@
 	
 	~Racesow_Player_Auth()
 	{
-		this.killSession();
+		// this.killSession();
 	}
 	
 	/**
