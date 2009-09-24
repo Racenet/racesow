@@ -6064,6 +6064,19 @@ static void asFunc_asGeneric_LoadFile( void *gen )
 		asFunc_LoadFile( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ) ) );
 }
 
+// racesow
+static qboolean asFunc_RemoveFile( asstring_t *path )
+{
+	return trap_FS_RemoveFile( (char *)path );
+}
+
+static void asFunc_asGeneric_RemoveFile( void *gen )
+{
+	G_asGeneric_SetReturnBool( gen, 
+		asFunc_RemoveFile( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ) ) );
+}
+// !racesow
+
 static int asFunc_FileLength( asstring_t *path )
 {
 	if( !path || !path->len )
@@ -6674,6 +6687,7 @@ static asglobfuncs_t asGlobFuncs[] =
 {
 	// racesow
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
+	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },

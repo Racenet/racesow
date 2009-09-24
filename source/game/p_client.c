@@ -1061,6 +1061,10 @@ void ClientUserinfoChanged( edict_t *ent, char *userinfo )
 	Q_strncpyz( cl->userinfo, userinfo, sizeof( cl->userinfo ) );
 
 	G_UpdatePlayerInfoString( PLAYERNUM( ent ) );
+
+	// racesow 
+	G_Gametype_ScoreEvent( cl, "userinfochanged", oldname );
+	// !racesow
 }
 
 
