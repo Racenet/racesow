@@ -6067,7 +6067,7 @@ static void asFunc_asGeneric_LoadFile( void *gen )
 // racesow
 static int asFunc_GetFileList( asstring_t *dir, asstring_t *extension, asstring_t *buf, int bufsize, int start, int end )
 {
-	return trap_FS_GetFileList( (char *)dir, (char *)extension, (char *)buf, (size_t)bufsize, start, end);
+	return trap_FS_GetFileList( dir->buffer, extension->buffer, buf->buffer, buf->len, start, end);
 }
 
 static void asFunc_asGeneric_GetFileList( void *gen )
@@ -6086,7 +6086,7 @@ static void asFunc_asGeneric_GetFileList( void *gen )
 
 static qboolean asFunc_RemoveFile( asstring_t *path )
 {
-	return trap_FS_RemoveFile( (char *)path );
+	return trap_FS_RemoveFile( path->buffer );
 }
 
 static void asFunc_asGeneric_RemoveFile( void *gen )
