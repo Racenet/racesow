@@ -6065,6 +6065,25 @@ static void asFunc_asGeneric_LoadFile( void *gen )
 }
 
 // racesow
+static int asFunc_GetFileList( asstring_t *dir, asstring_t *extension, asstring_t *buf, int bufsize, int start, int end )
+{
+	return trap_FS_GetFileList( (char *)dir, (char *)extension, (char *)buf, (size_t)bufsize, start, end);
+}
+
+static void asFunc_asGeneric_GetFileList( void *gen )
+{
+	G_asGeneric_SetReturnInt( gen, 
+		asFunc_GetFileList(
+			(asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
+			(asstring_t *)G_asGeneric_GetArgAddress( gen, 1 ),
+			(asstring_t *)G_asGeneric_GetArgAddress( gen, 2 ),
+			(int)G_asGeneric_GetArgAddress( gen, 3 ),
+			(int)G_asGeneric_GetArgAddress( gen, 4 ),
+			(int)G_asGeneric_GetArgAddress( gen, 5 )
+		)
+	);
+}
+
 static qboolean asFunc_RemoveFile( asstring_t *path )
 {
 	return trap_FS_RemoveFile( (char *)path );
@@ -6688,6 +6707,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	// racesow
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
+	{ "int G_GetFileList( cString &, cString &, cString @, int, int, int )", asFunc_GetFileList, asFunc_asGeneric_GetFileList },
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
