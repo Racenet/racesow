@@ -8,7 +8,7 @@ racesow/main.as;
 racesow/entities.as;
 racesow/map.as;
 racesow/map/highscore.as;
-racesow/map/highscore/dbstract.as;
+racesow/map/highscore/abstract.as;
 racesow/map/highscore/default.as;
 racesow/player/implemented.as;
 racesow/player.as;
