@@ -64,6 +64,7 @@ class Racesow_Player
 	 */
     Racesow_Player()
     {
+		@this.auth = Racesow_Player_Auth();
     }
 
 	/**
@@ -101,9 +102,8 @@ class Racesow_Player
 		if (@this.auth != null)
 		{
 			this.auth.killSession();
+			this.auth.reset();
 		}
-		
-		@this.auth = Racesow_Player_Auth();
 	}
 	
 	/**
@@ -349,7 +349,8 @@ class Racesow_Player
 	 */
 	void kick( cString message )
 	{
-		G_PrintMsg( null, message + "\nHe should now get kicked (TODO)\n");
+		G_PrintMsg( this.client, S_COLOR_RED + message + "\n" );
+		G_CmdExecute( "kick " + this.client.playerNum() );
 		this.auth.lastViolateProtectionMessage = 0;
 		this.auth.violateNickProtectionSince = 0;
 	}

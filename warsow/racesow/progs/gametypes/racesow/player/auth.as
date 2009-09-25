@@ -61,6 +61,11 @@
 	
 	Racesow_Player_Auth()
 	{
+		this.reset();
+	}
+	
+	void reset()
+	{
 		this.authenticationName = "";
 		this.authorizationsMask = 0;
 		this.failCount = 0;
@@ -68,7 +73,6 @@
 	
 	~Racesow_Player_Auth()
 	{
-		// this.killSession();
 	}
 	
 	/**
@@ -207,9 +211,7 @@
 			
 			if ( this.failCount >= 3 ) 
 			{
-				// TODO: kick player with reason instead of this print
-				G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED
-					+ " kicked due to too many failed logins. (TODO)\n" );
+				player.kick( "Too many failed logins." );
 			}
 			else 
 			{
@@ -255,6 +257,9 @@
 	void refresh( cString &args )
 	{
 		// when authentication information changed, try to authenticate again
+		if ( @this.player == null || @this.player.getClient() == null )
+			return;
+		
 		cString authName = this.player.getClient().getUserInfoKey("auth_name");
 		cString authPass = this.player.getClient().getUserInfoKey("auth_pass");
 		if ( authName != this.lastRefreshName && authPass != this.lastRefreshPass )
@@ -318,9 +323,7 @@
 	}
 	
 	/**
-	 * Check if the user should finallly get kicked due to
-	 * violation against the nickname protection and send
-	 * countdown "awards"
+	 * Get the player's status concerning nickname protection
 	 * @return int
 	 */
 	int wontGiveUpViolatingNickProtection()
@@ -331,12 +334,12 @@
 		}
 
 		int seconds = localTime - this.violateNickProtectionSince;
-		if ( seconds != 0 && uint(seconds) == this.lastViolateProtectionMessage )
+		if ( uint(seconds) == this.lastViolateProtectionMessage )
 			return -1; // nothing to do
 			
 		this.lastViolateProtectionMessage = seconds;
 			
-		if ( seconds < 10 )
+		if ( seconds < 11 )
 			return 1;
 			
 		return 2;
@@ -353,7 +356,7 @@
 		else
 			color = S_COLOR_GREEN;
 	
-		return color + (10 - (localTime - this.violateNickProtectionSince)) + " seconds remaining...";
+		return color + (11 - (localTime - this.violateNickProtectionSince)) + " seconds remaining...";
 	}
 	
 	/**

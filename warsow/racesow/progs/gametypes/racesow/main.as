@@ -401,7 +401,7 @@ void GT_ThinkRules()
 		    if ( countdownState == 1 )
 		        player.getClient().addAward(player.getAuth().getViolateCountDown());
 		    else if ( countdownState == 2 )
-		        player.kick( S_COLOR_RED + "You violated against the nickname protection." );
+		        player.kick( "You violated against the nickname protection." );
 		}
 		
         // always clear all before setting
