@@ -1,5 +1,4 @@
 #include "g_local.h"
-#include "mysql.h"
 #include "../qcommon/md5.h"
 #include "../gameshared/angelref.h"
 
