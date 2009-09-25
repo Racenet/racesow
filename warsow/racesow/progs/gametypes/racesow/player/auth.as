@@ -240,6 +240,15 @@
 	}
 	
 	/**
+	 * isAuthenticated
+	 * @return bool
+	 */
+	bool isAuthenticated()
+	{
+		return this.authorizationsMask > 0;
+	}
+	
+	/**
 	 * Refresh the authentication when it changed
 	 * @return void
 	 */

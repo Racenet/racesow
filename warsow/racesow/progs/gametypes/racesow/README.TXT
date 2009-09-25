@@ -9,7 +9,6 @@
 
     Project goals:
 
-        - no changes to game module which are required to run the gametype to allow easy setup
         - no use of external services, instead effectively (!) based on files
         - bring the race community together <3 (!!!!)
         - coding for fun while learning a lot
@@ -19,15 +18,13 @@
 		
     Sources:
 
-        - development trunk: http://svn.warsow-race.net/racesow0.5/t … gametypes/
-        - latest stable version: http://svn.warsow-race.net/racesow0.5/t … gametypes/
-
-		
+	- development trunk: http://svn.warsow-race.net/racesow0.5/trunk/[/url]
+	- latest stable gametypescript: http://svn.warsow-race.net/racesow0.5/tags/0.5.1d-stable/warsow/racesow/progs/gametypes/
+	- latest win32 game module: http://svn.warsow-race.net/racesow0.5/trunk/sdk/source/Release/x86/basewsw/game_x86.dll
 		
     Game cvars:
 
         g_logRaces 1|0, default 0, log all races to a file
-        g_secureAuth 1|0, default 0, use md5 hashing for auth passwords, §
         g_freestyle 1|0, default 0, enables freestyle mode (not implemented yet)
 
 		
@@ -38,7 +35,9 @@
         register <name> <email> <password> <password confirmation>
         auth <name> <password>
         admin <command params>
-            admin map <map name> (not implemented yet)
+            admin map <map name>
+	    admin kick <playerNum>
+	    admin help
         help, shows the help
 
         you can add this to your autoexec.cfg to auto-login when connecting to a racesow server
@@ -66,6 +65,11 @@
             Jezus
             joko
 
+	special thanks to
+            jal
+            learn_more
+            vic
+
         are you missing in this list? tell me...
 
         we're still searching for people interested in helping with racesow or contributing their own race modifications.
@@ -74,16 +78,22 @@
 		
 		
     Changelog: (items with a § require the modded game module)
+	
+        2009-09-25 / racesow 0.5.1d
+            - added removal of old session files
+            - added creation of shadow files for registered players
+            - removed goal not to use a modded game module
+            - changed session to use the clients ip as filename
 
         2009-09-23 / racesow 0.5.1c
             - extracted auth plugin from player model
             - added very nice nickname protection!
             - removed own md5 sources as they are in qcommon
-			- removed g_secureAuth as it won't solve our problem
+    	    - removed g_secureAuth as it won't solve our problem
             - changed makefile and vcproject for md5 stuff
             - changed console command workflows
 
-        2009-09-22 / racesow 0.5.1d
+        2009-09-22 / racesow 0.5.1b
             - added fix for memory management by vic, thanks to jal §
             - added md5 encryption for passwords §
             - added g_secureAuth 0 to disable md5 encryption
@@ -94,7 +104,7 @@
             - changed all files to lowercase for linux
             - fixed possible authentication exploit
 
-        2009-09-21 / racesow 0.5.1d
+        2009-09-21 / racesow 0.5.1b
             - added race-overtime feature
             - added idle detection when in overtime
             - added an abstract interface for handling race highscores
@@ -103,7 +113,7 @@
             - added admin command "map"
             - added logging of races
 
-        2009-09-19 / racesow 0.5.1d
+        2009-09-19 / racesow 0.5.1a
             - refactored whole race gameytpe (better OOP)
             - changed racerestart command so it can be used at any time
             - changed awards for checkpoints and races

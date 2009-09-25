@@ -1,0 +1,16 @@
+/shared/constants.as;
+/shared/files.as;
+
+generic/matchstates.as;
+legacy/quake1.as;
+
+racesow/main.as;
+racesow/entities.as;
+racesow/map.as;
+racesow/map/highscore.as;
+racesow/map/highscore/dbstract.as;
+racesow/map/highscore/default.as;
+racesow/player/implemented.as;
+racesow/player.as;
+racesow/player/auth.as;
+racesow/player/race.as;
