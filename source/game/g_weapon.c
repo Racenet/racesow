@@ -816,11 +816,22 @@ static void W_Touch_Rocket( edict_t *ent, edict_t *other, cplane_t *plane, int s
 edict_t *W_Fire_Rocket( edict_t *self, vec3_t start, vec3_t angles, int speed, float damage, int minKnockback, int maxKnockback, int stun, int minDamage, int radius, int timeout, int mod, int timeDelta )
 {
 	edict_t	*rocket;
+	/* racesow: added water rockets */
+	int new_speed;
+	/* !racesow*/
 
 	if( GS_Instagib() )
 		damage = 9999;
 
-	rocket = W_Fire_LinearProjectile( self, start, angles, speed, damage, minKnockback, maxKnockback, stun, minDamage, radius, timeout, timeDelta );
+	/* racesow: added water rockets */
+	new_speed=speed;
+	if( self->waterlevel > 1 )
+		new_speed*=0.5;
+	/* !racesow */
+
+    /* racesow: changed speed to new_speed */
+	rocket = W_Fire_LinearProjectile( self, start, angles, new_speed, damage, minKnockback, maxKnockback, stun, minDamage, radius, timeout, timeDelta );
+	/* !racesow */
 
 	rocket->s.type = ET_ROCKET; //rocket trail sfx
 	if( mod == MOD_ROCKET_S )
