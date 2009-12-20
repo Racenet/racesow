@@ -402,7 +402,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			10,                             // splash minimum knockback
 
 			//projectile def
-			1150,							// speed
+			/* racesow (used to be 1150) */
+			950,							// speed
+			/* !racesow */
 			0,								// spread
 
 			//ammo
@@ -434,7 +436,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			5,                              // splash minimum knockback
 
 			//projectile def
-			1150,							// speed
+			/* racesow (used to be 1150) */
+			950,							// speed
+			/* !racesow */
 			0,								// spread
 
 			//ammo

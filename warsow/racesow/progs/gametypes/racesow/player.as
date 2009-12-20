@@ -349,7 +349,7 @@ class Racesow_Player
 	 */
 	void kick( cString message )
 	{
-		G_PrintMsg( this.client, S_COLOR_RED + message + "\n" );
+		G_PrintMsg( null, S_COLOR_RED + message + "\n" );
 		G_CmdExecute( "kick " + this.client.playerNum() );
 		this.auth.lastViolateProtectionMessage = 0;
 		this.auth.violateNickProtectionSince = 0;
