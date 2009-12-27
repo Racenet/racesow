@@ -276,37 +276,39 @@ cString @GT_ScoreboardMessage( int maxlen )
 void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 {
     Racesow_Player @player = Racesow_GetPlayerByClient( client );
-	
-	if ( score_event == "dmg" )
-    {
-    }
-    else if ( score_event == "kill" )
-    {
-        player.restartRace();
-    }
-    else if ( score_event == "award" )
-    {
-    }
-    else if ( score_event == "connect" )
+	if (@player != null )
 	{
-	
-	}
-    else if ( score_event == "enterGame" )
-    {
-		if ( !player.getAuth().isAuthenticated() )
+		if ( score_event == "dmg" )
 		{
-			player.getAuth().loadSession();
 		}
+		else if ( score_event == "kill" )
+		{
+			player.restartRace();
+		}
+		else if ( score_event == "award" )
+		{
+		}
+		else if ( score_event == "connect" )
+		{
 		
-		player.getAuth().checkProtectedNickname();
-    }
-	else if ( score_event == "disconnect" )
-    {
-		player.resetAuth();
-    }
-	else if ( score_event == "userinfochanged" )
-	{
-		player.getAuth().refresh( args );
+		}
+		else if ( score_event == "enterGame" )
+		{
+			if ( !player.getAuth().isAuthenticated() )
+			{
+				player.getAuth().loadSession();
+			}
+			
+			player.getAuth().checkProtectedNickname();
+		}
+		else if ( score_event == "disconnect" )
+		{
+			player.resetAuth();
+		}
+		else if ( score_event == "userinfochanged" )
+		{
+			player.getAuth().refresh( args );
+		}
 	}
 }
 

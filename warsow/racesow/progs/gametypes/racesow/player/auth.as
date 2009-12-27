@@ -75,6 +75,25 @@
 	{
 	}
 	
+	/*
+	* Convert a string to an allowed filename
+	*/
+	cString toFileName(cString fileName)
+	{
+		cString outName="";
+		int position = 0;
+		for (position = 0; position < fileName.len(); position++)
+		{
+			cString character;
+			character=fileName.substr(position,1);
+			if (character=='|' || character=='<' || character=='>' || character=='?' ||  character=='!' || character=='\\' || character=='/' || character=='%' || character==':' || character=='*')
+				outName+="_";
+			else
+				outName+=fileName.substr(position,1);
+		}
+		return outName;
+	}
+	
 	/**
 	 * Register a new server account
 	 *
@@ -91,7 +110,7 @@
 	 */
 	bool signUp(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
-		cString nickName = this.player.getName().removeColorTokens();
+		cString nickName = toFileName(this.player.getName().removeColorTokens());
 	
 		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
 		cString mailShadow = gameDataDir + "/emails/" + authEmail.substr(0,1) + "/" + authEmail;
@@ -143,7 +162,7 @@
 		// TODO: check email for valid format
 		
 		// "authenticationName" "email" "password" "authorizationsMask" "currentTimestamp"
-		G_WriteFile( authFile, '"'+ authName + '" "' + authEmail + '" "' + G_Md5( password ) + '" "' + 1 + '" "' + localTime + '"\n' );
+		G_WriteFile( authFile, '"'+ authName + '" "' + authEmail + '" "' + G_Md5( password ) + '" "' + 1 + '" "' + localTime + '"\n' + nickName);
 		G_WriteFile( mailShadow, authName );
 		G_WriteFile( nickShadow, authName );
 		
@@ -277,14 +296,14 @@
 	
 	void writeSession()
 	{
-		this.sessionName = this.player.getName().removeColorTokens();
+		this.sessionName = toFileName(this.player.getName().removeColorTokens());
 		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
 		G_WriteFile( sessionFile, '"' + this.player.getClient().getUserInfoKey("ip") + '" "' + this.authenticationName + '" "' + this.authorizationsMask +'"\n' );
 	}	
 	
 	bool loadSession()
 	{
-		this.sessionName = this.player.getName().removeColorTokens();
+		this.sessionName = toFileName(this.player.getName().removeColorTokens());
 		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
 		cString sessionContent = G_LoadFile( sessionFile );
 		
@@ -365,7 +384,7 @@
 	 */
 	void checkProtectedNickname()
 	{
-		cString name = this.player.getName().removeColorTokens();
+		cString name = toFileName(this.player.getName().removeColorTokens());
 		cString authFile = gameDataDir + "/nicknames/" + name.substr(0,1) + "/" + name;
 		
 		if ( G_FileLength( authFile ) != -1 && G_LoadFile( authFile ) != this.authenticationName )
@@ -380,7 +399,7 @@
 		// if authenticated, add new nickShadow
 		else if ( this.authorizationsMask > 0 )
 		{
-			cString nickName = this.player.getName().removeColorTokens();
+			cString nickName = toFileName(this.player.getName().removeColorTokens());
 			cString nickShadow = gameDataDir + "/nicknames/" + nickName.substr(0,1) + "/" + nickName;
 			G_WriteFile( nickShadow, this.authenticationName );
 		}
