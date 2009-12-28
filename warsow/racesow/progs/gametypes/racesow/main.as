@@ -70,6 +70,56 @@ cString TimeToString( uint time )
 }
 
 /**
+ * DateToString
+ * @param uint64 dateuint64
+ * @return cString
+ */
+cString DateToString( uint64 dateuint64 )
+{
+    // convert dates to printable form
+	cTime date = cTime(dateuint64);
+    cString daysString, monsString, yearsString, hoursString, minsString, secsString;
+	
+    if ( date.min == 0 )
+        minsString = "00";
+    else if ( date.min < 10 )
+        minsString = "0" + date.min;
+    else
+        minsString = date.min;
+
+    if ( date.sec == 0 )
+        secsString = "00";
+    else if ( date.sec < 10 )
+        secsString = "0" + date.sec;
+    else
+        secsString = date.sec;
+
+    if ( date.hour == 0 )
+        hoursString = "00";
+    else if ( date.hour < 10 )
+        hoursString = "0" + date.hour;
+    else
+        hoursString = date.hour;
+
+	if ( date.mon == 0 )
+        monsString = "00";
+    else if ( date.mon < 10 )
+        monsString = "0" + date.mon;
+    else
+        monsString = date.mon;
+		
+	if ( date.mday == 0 )
+        daysString = "00";
+    else if ( date.mday < 10 )
+        daysString = "0" + date.mday;
+    else
+        daysString = date.mday;
+		
+    return daysString + "/" + monsString + "/" + (1900+date.year) + " " + hoursString +":" + minsString + ":" + secsString;
+}
+
+
+/**
  * Racesow_GetPlayerByClient
  * @param cClient @client
  * @return Racesow_Player
@@ -620,6 +670,7 @@ void GT_InitGametype()
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
     G_RegisterCommand( "top" );
+	G_RegisterCommand( "highscores" );
     G_RegisterCommand( "register" );
 	G_RegisterCommand( "auth" );
 	G_RegisterCommand( "admin" );

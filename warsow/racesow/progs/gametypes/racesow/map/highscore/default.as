@@ -26,13 +26,18 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 			uint oldTime = this.highScores[top].getTime();
 			if ( oldTime == 0 || race.getTime() < oldTime )
 			{
+				int skipPlayer = 0;
 				// move the other records down
 				for ( int i = MAX_RECORDS - 1; i > top; i-- )
 				{
 					if (this.highScores[i - 1].getTime() == 0)
 						break;
-						
-					this.highScores[i] = this.highScores[i - 1];
+					
+					// if the same player has a worse time, do not keep it
+					if (this.highScores[i-1].getPlayerName()==race.getPlayer().getClient().getName())
+						skipPlayer = 1;
+
+					this.highScores[i] = this.highScores[i - 1 - skipPlayer];
 				}
 
 				this.highScores[top].fromRace( race );
@@ -41,6 +46,10 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 				this.updateHud();
 				break;
 			}
+			
+			// if the same player already has a better time, don't do anything
+			if (this.highScores[top].getPlayerName()==race.getPlayer().getClient().getName())
+				break;
 		}
 	}
 	
@@ -157,15 +166,21 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	 */
 	cString getStats()
 	{
-		cString stats = "";
+		cString stats = S_COLOR_ORANGE + "Top " + MAX_RECORDS + " players on map '"+ this.map.name + "' \n" + S_COLOR_WHITE;
 
 	    for ( int i = 0; i < MAX_RECORDS; i++ )
 	    {
 	        int time = this.highScores[i].getTime();
+			int bestTime = this.highScores[0].getTime();
+			int difftime = time - bestTime;
+			
+			uint64 date = this.highScores[i].getTimeStamp();
+			
 			if ( time > 0 )
 			{
 				cString playerName = this.highScores[i].getPlayerName();
-				stats += (i+1) + ". " + playerName + " ("+ TimeToString(time) +")\n";
+				// .42-like highscores
+				stats += S_COLOR_WHITE + "" + (i+1) + ". " + S_COLOR_GREEN + TimeToString(time) + S_COLOR_YELLOW + "+[" + TimeToString(difftime) + "]   " + S_COLOR_WHITE + playerName + "  " +  S_COLOR_WHITE + "(" + DateToString(date) + ")\n";
 			}
 	    }
 
