@@ -24,21 +24,22 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 		for ( int top = 0; top < MAX_RECORDS; top++ )
 		{
 			uint oldTime = this.highScores[top].getTime();
+			
 			if ( oldTime == 0 || race.getTime() < oldTime )
 			{
-				int skipPlayer = 0;
-				// move the other records down
-				for ( int i = MAX_RECORDS - 1; i > top; i-- )
-				{
-					if (this.highScores[i - 1].getTime() == 0)
-						break;
-					
-					// if the same player has a worse time, do not keep it
-					if (this.highScores[i-1].getPlayerName()==race.getPlayer().getClient().getName())
-						skipPlayer = 1;
+				// if the same player already has a better time, don't do anything
+				if (this.highScores[top].getPlayerName()==race.getPlayer().getClient().getName())
+					break;
+			
+				// check if the same player has a worse time, to define from where the list has to be moved down
+				int startShift=MAX_RECORDS-1;
+				for ( int i = top; i < MAX_RECORDS; i++ )
+						if (this.highScores[i].getPlayerName()==race.getPlayer().getClient().getName() )
+							startShift=i;
 
-					this.highScores[i] = this.highScores[i - 1 - skipPlayer];
-				}
+				// move the other records down
+				for ( int i = startShift; i > top; i-- )
+					this.highScores[i] = this.highScores[i-1];
 
 				this.highScores[top].fromRace( race );
 
@@ -46,10 +47,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 				this.updateHud();
 				break;
 			}
-			
-			// if the same player already has a better time, don't do anything
-			if (this.highScores[top].getPlayerName()==race.getPlayer().getClient().getName())
-				break;
+		
 		}
 	}
 	
