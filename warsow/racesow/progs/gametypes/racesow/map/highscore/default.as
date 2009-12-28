@@ -25,12 +25,13 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 		{
 			uint oldTime = this.highScores[top].getTime();
 			
-			if ( oldTime == 0 || race.getTime() < oldTime )
-			{
-				// if the same player already has a better time, don't do anything
-				if (this.highScores[top].getPlayerName()==race.getPlayer().getClient().getName())
+			// if the same player already has a better time, don't do anything
+			if (this.highScores[top].getPlayerName()==race.getPlayer().getClient().getName() && race.getTime() > oldTime )
 					break;
 			
+			if ( oldTime == 0 || race.getTime() < oldTime )
+			{
+							
 				// check if the same player has a worse time, to define from where the list has to be moved down
 				int startShift=MAX_RECORDS-1;
 				for ( int i = top; i < MAX_RECORDS; i++ )
