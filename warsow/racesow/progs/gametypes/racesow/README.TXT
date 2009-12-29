@@ -123,10 +123,48 @@
 			
 	Roadmap: (items with a § require the modded game module, or wait for stuff be added to basewsw game module)
    
-        - create shadow files for all nicknames of registered players
         - movement types like b1shop's mod (planned: vq3-like, cpm-like, basewsw, racesow)
         - optionally force movement type serverside
-        - weapondefs, depending on movement type §
+        - weapondefs, depending on movement type (see appendix for a summary of weapondefs)§
         - let player choose to shoot weak or strong ammo
         - defrag like race-ghost for own, best and server best §
         - protect admins from beeing kicked and callvoted etc...
+		
+		
+	Appendix: weapondefs of warsow.5 vs racesow.42 (values for warsow.42 are not shown)
+
+	rocket   |strong 0.5 0.42 |weak 0.5 0.42
+	---------|----------------|---------------
+	damage   |       85   90  |     75   80 
+	knockbk  |      100  100  |     95  100
+	splash   |      140  120  |    140  120
+	mindmg   |        4   15  |      4    8
+	minknock |       10  none |      5  none
+
+	(racesow.5 rocket speed and reload are already forced to racesow.42 values)
+
+	plasma   |strong 0.5 0.42 |weak 0.5 0.42
+	---------|----------------|---------------
+	damage   |       15   15  |     14   12
+	selfdmg  |      0.5  0.75 |    0.5  0.5
+	knockbk  |       20   28  |     14   19
+	splash   |       45   40  |     45   20
+	mindmg   |        5    5  |      0    1
+	minknock |        1  none |      1  none
+	speed    |      2.4k 1.7k |    2.4k 1.7k
+	spread   |        0    0  |     90    0
+
+	(racesow.5 weak plasma spread is already forced to 0)
+
+	grenade  |strong 0.5 0.42 |weak 0.5 0.42
+	---------|----------------|---------------
+	timeout  |     1250 2000  |   1250 2000
+	damage   |       65  100  |     60  100
+	selfdmg  |     0.35  0.5  |   0.35  0.5
+	knockbk  |      100  120  |     90  120
+	splash   |      170  150  |    160  150
+	mindmg   |       15    5  |     15    5
+	minknock |       10  none |      5  none
+	speed    |      900  800  |    900  800
+
+	(grenade racesow.42 reload=800, warsow.5 reload=725, should that be changed?)

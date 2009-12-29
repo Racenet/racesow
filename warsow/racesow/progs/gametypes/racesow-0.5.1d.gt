@@ -14,3 +14,5 @@ racesow/player/implemented.as;
 racesow/player.as;
 racesow/player/auth.as;
 racesow/player/race.as;
+
+racesow/weapondefs.as;

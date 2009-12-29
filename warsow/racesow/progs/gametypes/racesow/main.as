@@ -238,6 +238,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		
 		client.selectWeapon( WEAP_ROCKETLAUNCHER );
     }
+	else if ( ( cmdString == "weapondef" ) )
+    {
+		return weaponDefCommand( argsString, @client );
+    }
 
     return false;
 }
@@ -640,6 +644,51 @@ void GT_InitGametype()
 				 + "set g_logRaces \"0\"\n"
 				 + "set g_secureAuth \"0\"\n"
 				 + "set g_freestyle \"0\"\n"
+				 + "\n"
+				 + "// weapon defs, with default warsow.5 values\n"
+				 + "\n"
+				 + "// rocket weak\n"
+				 + "set rs_rocketweak_damage \"75\"\n"
+				 + "set rs_rocketweak_knockback \"95\"\n"
+				 + "set rs_rocketweak_splash \"140\"\n"
+				 + "set rs_rocketweak_mindamage \"4\"\n"
+				 + "set rs_rocketweak_minknockback \"5\"\n"
+				 + "// rocket strong\n"
+				 + "set rs_rocketstrong_damage \"85\"\n"
+				 + "set rs_rocketstrong_knockback \"100\"\n"
+				 + "set rs_rocketstrong_splash \"140\"\n"
+				 + "set rs_rocketstrong_mindamage \"4\"\n"
+				 + "set rs_rocketstrong_minknockback \"10\"\n"
+				 + "// plasma weak\n"
+				 + "set rs_plasmaweak_damage \"14\"\n"
+				 + "set rs_plasmaweak_knockback \"14\"\n"
+				 + "set rs_plasmaweak_splash \"45\"\n"
+				 + "set rs_plasmaweak_mindamage \"0\"\n"
+				 + "set rs_plasmaweak_minknockback \"1\"\n"
+				 + "set rs_plasmaweak_speed \"2400\"\n"
+				 + "// plasma strong\n"
+				 + "set rs_plasmastrong_damage \"15\"\n"
+				 + "set rs_plasmastrong_knockback \"20\"\n"
+				 + "set rs_plasmastrong_splash \"45\"\n"
+				 + "set rs_plasmastrong_mindamage \"5\"\n"
+				 + "set rs_plasmastrong_minknockback \"1\"\n"
+				 + "set rs_plasmastrong_speed \"2400\"\n"
+				 + "// grenade weak\n"
+				 + "set rs_grenadeweak_timeout \"1250\"\n"
+				 + "set rs_grenadeweak_damage \"65\"\n"
+				 + "set rs_grenadeweak_knockback \"100\"\n"
+				 + "set rs_grenadeweak_splash \"170\"\n"
+				 + "set rs_grenadeweak_mindamage \"15\"\n"
+				 + "set rs_grenadeweak_minknockback \"10\"\n"
+				 + "set rs_grenadeweak_speed \"900\"\n"
+				 + "// grenade strong\n"
+				 + "set rs_grenadestrong_timeout \"1250\"\n"
+				 + "set rs_grenadestrong_damage \"100\"\n"
+				 + "set rs_grenadestrong_knockback \"90\"\n"
+				 + "set rs_grenadestrong_splash \"160\"\n"
+				 + "set rs_grenadestrong_mindamage \"15\"\n"
+				 + "set rs_grenadestrong_minknockback \"5\"\n"
+				 + "set rs_grenadestrong_speed \"900\"\n"
                  + "\necho " + gametype.getName() + ".cfg executed\n";
 
         G_WriteFile( "configs/server/gametypes/" + gametype.getName() + ".cfg", config );
@@ -698,6 +747,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "admin" );
 	G_RegisterCommand( "help" );
 	G_RegisterCommand( "rocketswitch" );
+	G_RegisterCommand( "weapondef" );
 
     demoRecording = false;
 
