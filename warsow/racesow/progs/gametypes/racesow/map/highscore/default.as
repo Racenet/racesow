@@ -149,14 +149,19 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	 */
 	void updateHud()
 	{
-	    for ( int i = 0; i < MAX_RECORDS; i++ )
-	    {
-	        if ( this.highScores[i].finishTime > 0 )
-	        {
-	            G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - "
-					+ this.highScores[i].playerName + " - " + TimeToString( this.highScores[i].finishTime ) );
-	        }
-	    }
+		// removed for now - r2
+		int i_like_top_in_hud=0;
+		if (i_like_top_in_hud==1)
+		{
+			for ( int i = 0; i < MAX_RECORDS; i++ )
+			{
+				if ( this.highScores[i].finishTime > 0 )
+				{
+					G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - "
+						+ this.highScores[i].playerName + " - " + TimeToString( this.highScores[i].finishTime ) );
+				}
+			}
+		}
 	}
 	
 	/**
