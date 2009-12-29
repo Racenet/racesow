@@ -372,21 +372,43 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
  * @param int old_team
  * @param int new_team
  * @return void
- */
+*/
 void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
-    Racesow_GetPlayerByClient( ent.client ).restartRace();
+	cItem @item;
+	cItem @ammoItem;
+	
+	Racesow_GetPlayerByClient( ent.client ).restartRace();
 
-    if ( ent.isGhosting() )
-        return;
+	if ( ent.isGhosting() )
+	return;
 
-    // set player movement to pass through other players
+	// set player movement to pass through other players
 	if ( g_freestyle.getBool() )
 	{
 		ent.client.inventorySetCount( WEAP_ROCKETLAUNCHER, 1 );
 		ent.client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
 		
-		// TODO: more weaons...
+		
+		// give all weapons
+		for ( int i = WEAP_GUNBLADE + 1; i < WEAP_TOTAL; i++ )
+		{
+			if ( i == WEAP_INSTAGUN ) // dont add instagun...
+			continue;
+
+			ent.client.inventoryGiveItem( i );
+
+			@item = @G_GetItem( i );
+
+			@ammoItem = @G_GetItem( item.weakAmmoTag );
+			if ( @ammoItem != null )
+			ent.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
+
+			@ammoItem = @G_GetItem( item.ammoTag );
+			if ( @ammoItem != null )
+			ent.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
+		}
+		
 		// TODO: let player choose if allow interacting with others, maybe also who to interact with
 	}
 	else

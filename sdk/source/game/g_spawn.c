@@ -754,6 +754,9 @@ void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int lev
 	edict_t *ent;
 	char *token;
 	gsitem_t *item;
+	// racesow
+	int racesow_freestyle_maps_bug;
+	// !racesow
 
 	G_asGarbageCollect( qtrue );
 
@@ -853,6 +856,8 @@ void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int lev
 
 	entities = level.mapString;
 
+	racesow_freestyle_maps_bug=trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET )->integer;
+
 	i = 0;
 	ent = NULL;
 	while( 1 )
@@ -890,7 +895,10 @@ void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int lev
 		if( !G_CallSpawn( ent ) )
 		{
 			i++;
-			G_FreeEdict( ent );
+			// racesow: introducing that bug again in order to make some freestyle map work
+			if (!racesow_freestyle_maps_bug)
+				G_FreeEdict( ent );
+			// !racesow
 			continue;
 		}
 
