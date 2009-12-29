@@ -1051,7 +1051,7 @@ void G_PrecacheItems( void )
 	gsitem_t *item;
 
 	// precache item names and weapondefs
-	for( i = 0; ( item = GS_FindItemByTag( i ) ) != NULL; i++ )
+	for( i = 1; ( item = GS_FindItemByTag( i ) ) != NULL; i++ )
 	{
 		trap_ConfigString( CS_ITEMS + i, item->name );
 
