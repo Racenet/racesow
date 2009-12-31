@@ -855,7 +855,9 @@ void G_FireWeapon( edict_t *ent, int parm )
 		//if( projectile->s.linearProjectile ) // convert distance to time for linear projectiles
 		//	G_ProjectileTimePrestep( projectile, 1000.0f * ( g_projectile_prestep->value / VectorLengthFast( projectile->velocity ) ) );
 		//else
-			G_ProjectileDistancePrestep( projectile, g_projectile_prestep->value );
+			// racesow: modified prestep
+			G_ProjectileDistancePrestep( projectile, prestep );
+			// !racesow
 	}
 
 #ifdef NO_ROCKET_ANTILAG
