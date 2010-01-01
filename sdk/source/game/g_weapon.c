@@ -732,13 +732,13 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	}
 	else
 	{
-		rs_timeout= trap_Cvar_Get( "rs_grenadestrong_timeout", "1250", CVAR_ARCHIVE )->integer;
-		rs_damage= trap_Cvar_Get( "rs_grenadestrong_damage", "100", CVAR_ARCHIVE )->value;
-		rs_maxKnockback= trap_Cvar_Get( "rs_grenadestrong_knockback", "90", CVAR_ARCHIVE )->integer;
-		rs_radius= trap_Cvar_Get( "rs_grenadestrong_splash", "160", CVAR_ARCHIVE )->value;
-		rs_minDamage= trap_Cvar_Get( "rs_grenadestrong_mindamage", "15", CVAR_ARCHIVE )->integer;
-		rs_minKnockback= trap_Cvar_Get( "rs_grenadestrong_minknockback", "5", CVAR_ARCHIVE )->integer;
-		rs_speed= trap_Cvar_Get( "rs_grenadestrong_speed", "900", CVAR_ARCHIVE )->integer;
+		rs_timeout= trap_Cvar_Get( "rs_grenade_timeout", "1250", CVAR_ARCHIVE )->integer;
+		rs_damage= trap_Cvar_Get( "rs_grenade_damage", "100", CVAR_ARCHIVE )->value;
+		rs_maxKnockback= trap_Cvar_Get( "rs_grenade_knockback", "90", CVAR_ARCHIVE )->integer;
+		rs_radius= trap_Cvar_Get( "rs_grenade_splash", "160", CVAR_ARCHIVE )->value;
+		rs_minDamage= trap_Cvar_Get( "rs_grenade_mindamage", "15", CVAR_ARCHIVE )->integer;
+		rs_minKnockback= trap_Cvar_Get( "rs_grenade_minknockback", "5", CVAR_ARCHIVE )->integer;
+		rs_speed= trap_Cvar_Get( "rs_grenade_speed", "900", CVAR_ARCHIVE )->integer;
 	}
 	
 	
@@ -872,11 +872,11 @@ edict_t *W_Fire_Rocket( edict_t *self, vec3_t start, vec3_t angles, int speed, f
 	}
 	else
 	{
-		rs_damage= trap_Cvar_Get( "rs_rocketstrong_damage", "85", CVAR_ARCHIVE )->value;
-		rs_maxKnockback= trap_Cvar_Get( "rs_rocketstrong_knockback", "100", CVAR_ARCHIVE )->integer;
-		rs_radius= trap_Cvar_Get( "rs_rocketstrong_splash", "140", CVAR_ARCHIVE )->integer;
-		rs_minDamage= trap_Cvar_Get( "rs_rocketstrong_mindamage", "4", CVAR_ARCHIVE )->integer;
-		rs_minKnockback= trap_Cvar_Get( "rs_rocketstrong_minknockback", "10", CVAR_ARCHIVE )->integer;
+		rs_damage= trap_Cvar_Get( "rs_rocket_damage", "85", CVAR_ARCHIVE )->value;
+		rs_maxKnockback= trap_Cvar_Get( "rs_rocket_knockback", "100", CVAR_ARCHIVE )->integer;
+		rs_radius= trap_Cvar_Get( "rs_rocket_splash", "140", CVAR_ARCHIVE )->integer;
+		rs_minDamage= trap_Cvar_Get( "rs_rocket_mindamage", "4", CVAR_ARCHIVE )->integer;
+		rs_minKnockback= trap_Cvar_Get( "rs_rocket_minknockback", "10", CVAR_ARCHIVE )->integer;
 
 	}
 
@@ -1053,12 +1053,12 @@ edict_t *W_Fire_Plasma( edict_t *self, vec3_t start, vec3_t angles, float damage
 	}
 	else
 	{
-		rs_damage= trap_Cvar_Get( "rs_plasmastrong_damage", "15", CVAR_ARCHIVE )->value;
-		rs_maxKnockback= trap_Cvar_Get( "rs_plasmastrong_knockback", "20", CVAR_ARCHIVE )->integer;
-		rs_radius= trap_Cvar_Get( "rs_plasmastrong_splash", "45", CVAR_ARCHIVE )->integer;
-		rs_minDamage= trap_Cvar_Get( "rs_plasmastrong_mindamage", "5", CVAR_ARCHIVE )->integer;
-		rs_minKnockback= trap_Cvar_Get( "rs_plasmastrong_minknockback", "1", CVAR_ARCHIVE )->integer;
-		rs_speed= trap_Cvar_Get( "rs_plasmastrong_speed", "2400", CVAR_ARCHIVE )->integer;
+		rs_damage= trap_Cvar_Get( "rs_plasma_damage", "15", CVAR_ARCHIVE )->value;
+		rs_maxKnockback= trap_Cvar_Get( "rs_plasma_knockback", "20", CVAR_ARCHIVE )->integer;
+		rs_radius= trap_Cvar_Get( "rs_plasma_splash", "45", CVAR_ARCHIVE )->integer;
+		rs_minDamage= trap_Cvar_Get( "rs_plasma_mindamage", "5", CVAR_ARCHIVE )->integer;
+		rs_minKnockback= trap_Cvar_Get( "rs_plasma_minknockback", "1", CVAR_ARCHIVE )->integer;
+		rs_speed= trap_Cvar_Get( "rs_plasma_speed", "2400", CVAR_ARCHIVE )->integer;
 	}
 		
 	if( GS_Instagib() )

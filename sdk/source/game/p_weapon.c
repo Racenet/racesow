@@ -814,7 +814,8 @@ void G_FireWeapon( edict_t *ent, int parm )
 		projectile = G_Fire_Grenade( origin, angles, firedef, ent, ucmdSeed );
 		// racesow
 		if( GS_RaceGametype() )
-			prestep/=2; // racesow 0.42 had default prestep=48 and genade prestep=24
+			//prestep/=2; // racesow 0.42 had default prestep=48 and genade prestep=24
+			prestep=trap_Cvar_Get( "rs_grenade_prestep", "90", CVAR_ARCHIVE )->integer;
 		// !racesow
 		break;
 
@@ -822,14 +823,16 @@ void G_FireWeapon( edict_t *ent, int parm )
 		projectile = G_Fire_Rocket( origin, angles, firedef, ent, ucmdSeed );
 		// racesow
 		if( GS_RaceGametype() )
-			prestep=0; // racesow 0.42 had rocket prestep=0
+			//prestep=0; // racesow 0.42 had rocket prestep=0
+			prestep=trap_Cvar_Get( "rs_rocket_prestep", "90", CVAR_ARCHIVE )->integer;
 		// !racesow
 		break;
 	case WEAP_PLASMAGUN:
 		projectile = G_Fire_Plasma( origin, angles, firedef, ent, ucmdSeed );
 		// racesow
 		if( GS_RaceGametype() )
-			prestep*=2/3; // racesow 0.42 had plasma prestep=32
+			//prestep*=2/3; // racesow 0.42 had plasma prestep=32
+			prestep=trap_Cvar_Get( "rs_plasma_prestep", "90", CVAR_ARCHIVE )->integer;
 		// !racesow
 		break;
 
@@ -859,6 +862,11 @@ void G_FireWeapon( edict_t *ent, int parm )
 			G_ProjectileDistancePrestep( projectile, prestep );
 			// !racesow
 	}
+
+	// racesow: enable skipping no_antilag if rs_rocket_antilag is 1
+		if ( GS_RaceGametype() && (trap_Cvar_Get( "rs_rocket_antilag", "1", CVAR_ARCHIVE )->integer==1) )
+			return;
+	// !racesow 
 
 #ifdef NO_ROCKET_ANTILAG
 	// hack for disabling antilag on rockets

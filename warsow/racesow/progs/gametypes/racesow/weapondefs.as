@@ -33,12 +33,12 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 	// no command
 	if ( command == "" )
 	{
-		sendMessage( S_COLOR_RED + "No command given. Use 'weapondef help' for more information.\n", @client);
+		sendMessage( S_COLOR_RED + "No command given. Use '" + S_COLOR_WHITE +"weapondef help" + S_COLOR_RED +"' for more information.\n", @client);
 		return false;
 	}
 	
 	// map command
-	else if ( commandExists = ( command == "rocketweak" || command == "rocketstrong" || command == "grenadeweak"  || command == "grenadestrong" || command == "plasmaweak" || command == "plasmastrong") )
+	else if ( commandExists = ( command == "rocketweak" || command == "rocket" || command == "grenadeweak"  || command == "grenade" || command == "plasmaweak" || command == "plasma") )
 	{
 		cString property = cmdString.getToken( 1 );
 		cString value = cmdString.getToken( 2 );
@@ -68,10 +68,10 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 		help += S_COLOR_RED + "WEAPONDEF HELP for " + gametype.getName() + "\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "weapondef [weapon] [property] [value], where:\n";
-		help += S_COLOR_RED + "  weapon = [(rocket|plasma|grenade)(strong|weak)]\n";
-		help += S_COLOR_RED + "  property = [speed|damage|knockback|splash|minknockback|mindamage|timeout]\n";
-		help += S_COLOR_RED + "example:" + S_COLOR_WHITE + " weapondef rocketstrong knockback 150\n";
-		help += S_COLOR_RED + "to see default values, type: " + S_COLOR_WHITE + "weapondef reference [(rocket|plasma|grenade)]\n";
+		help += S_COLOR_RED + "  weapon = ( rocket | plasma | grenade )[weak]\n";
+		help += S_COLOR_RED + "  property = ( speed | damage | knockback | splash | minknockback | mindamage | timeout | prestep | antilag )\n\n";
+		help += S_COLOR_RED + "example:" + S_COLOR_WHITE + " weapondef rocket knockback 150\n";
+		help += S_COLOR_RED + "to see default values, type: " + S_COLOR_WHITE + "weapondef reference [( rocket | plasma | grenade )]\n";
 		help += S_COLOR_RED + "to restore default .5 values, type: " + S_COLOR_WHITE + "weapondef restore\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 		
