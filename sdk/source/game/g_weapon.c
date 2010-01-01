@@ -727,7 +727,7 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 		rs_maxKnockback= trap_Cvar_Get( "rs_grenadeweak_knockback", "100", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_grenadeweak_splash", "170", CVAR_ARCHIVE )->value;
 		rs_minDamage= trap_Cvar_Get( "rs_grenadeweak_mindamage", "15", CVAR_ARCHIVE )->integer;
-		rs_minKnockback= trap_Cvar_Get( "rs_grenadeweak_minknockback", "10", CVAR_DEVELOPER)->integer;
+		rs_minKnockback= trap_Cvar_Get( "rs_grenadeweak_minknockback", "10", CVAR_ARCHIVE)->integer;
 		rs_speed= trap_Cvar_Get( "rs_grenadeweak_speed", "900", CVAR_ARCHIVE )->integer;
 	}
 	else
@@ -868,10 +868,10 @@ edict_t *W_Fire_Rocket( edict_t *self, vec3_t start, vec3_t angles, int speed, f
 		rs_maxKnockback= trap_Cvar_Get( "rs_rocketweak_knockback", "95", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_rocketweak_splash", "140", CVAR_ARCHIVE )->integer;
 		rs_minDamage= trap_Cvar_Get( "rs_rocketweak_mindamage", "4", CVAR_ARCHIVE )->integer;
-		rs_minKnockback= trap_Cvar_Get( "rs_rocketweak_minknockback", "5", CVAR_DEVELOPER)->integer;
+		rs_minKnockback= trap_Cvar_Get( "rs_rocketweak_minknockback", "5", CVAR_ARCHIVE)->integer;
 	}
 	else
-	{
+	{	
 		rs_damage= trap_Cvar_Get( "rs_rocket_damage", "85", CVAR_ARCHIVE )->value;
 		rs_maxKnockback= trap_Cvar_Get( "rs_rocket_knockback", "100", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_rocket_splash", "140", CVAR_ARCHIVE )->integer;
@@ -1048,7 +1048,7 @@ edict_t *W_Fire_Plasma( edict_t *self, vec3_t start, vec3_t angles, float damage
 		rs_maxKnockback= trap_Cvar_Get( "rs_plasmaweak_knockback", "14", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_plasmaweak_splash", "45", CVAR_ARCHIVE )->integer;
 		rs_minDamage= trap_Cvar_Get( "rs_plasmaweak_mindamage", "0", CVAR_ARCHIVE )->integer;
-		rs_minKnockback= trap_Cvar_Get( "rs_plasmaweak_minknockback", "1", CVAR_DEVELOPER)->integer;
+		rs_minKnockback= trap_Cvar_Get( "rs_plasmaweak_minknockback", "1", CVAR_ARCHIVE)->integer;
 		rs_speed= trap_Cvar_Get( "rs_plasmaweak_speed", "2400", CVAR_ARCHIVE )->integer;
 	}
 	else
