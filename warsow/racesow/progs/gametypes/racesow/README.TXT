@@ -131,6 +131,7 @@
         - protect admins from beeing kicked and callvoted etc...
 		
 		
+		
 	Appendix: weapondefs of warsow.5 vs racesow.42 (values for warsow.42 are not shown)
 
 	rocket   |strong 0.5 0.42 |weak 0.5 0.42
