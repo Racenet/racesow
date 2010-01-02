@@ -305,10 +305,18 @@ cString @GT_ScoreboardMessage( int maxlen )
 
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
         racing = int( Racesow_GetPlayerByClient( ent.client ).isRacing() ? 1 : 0 );
-
-        entry = "&p " + playerID + " " + ent.client.getClanName() + " "
-                + Racesow_GetPlayerByClient( ent.client ).getBestTime() + " "
-                + ent.client.ping + " " + racing + " ";
+    	if ( !(g_freestyle.getBool()) ) // use a diffrent scoreboard for freestyle
+    	{
+			entry = "&p " + playerID + " " + ent.client.getClanName() + " "
+					+ Racesow_GetPlayerByClient( ent.client ).getBestTime() + " "
+					+ ent.client.ping + " " + racing + " ";
+    	}
+    	else
+    	{
+			entry = "&p " + playerID + " " + ent.client.getClanName() + " "
+					+ Racesow_GetPlayerByClient( ent.client ).getBestTime() + " "
+					+ ent.client.ping + " ";
+    	}
 
         if ( scoreboardMessage.len() + entry.len() < maxlen )
             scoreboardMessage += entry;
