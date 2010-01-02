@@ -168,5 +168,3 @@
 	speed    |      900  800  |    900  800
 
 	(grenade racesow.42 reload=800, warsow.5 reload=725, should that be changed?)
-
-	
