@@ -77,7 +77,7 @@
 
 		
 		
-    Changelog: (items with a § require the modded game module)
+    Changelog: (items with a ï¿½ require the modded game module)
 	
         2009-09-25 / racesow 0.5.1d
             - added removal of old session files
@@ -94,8 +94,8 @@
             - changed console command workflows
 
         2009-09-22 / racesow 0.5.1b
-            - added fix for memory management by vic, thanks to jal §
-            - added md5 encryption for passwords §
+            - added fix for memory management by vic, thanks to jal ï¿½
+            - added md5 encryption for passwords ï¿½
             - added g_secureAuth 0 to disable md5 encryption
             - added help command
             - changed authorization to create some subfolders
@@ -121,13 +121,13 @@
 			
 			
 			
-	Roadmap: (items with a § require the modded game module, or wait for stuff be added to basewsw game module)
+	Roadmap: (items with a ï¿½ require the modded game module, or wait for stuff be added to basewsw game module)
    
         - movement types like b1shop's mod (planned: vq3-like, cpm-like, basewsw, racesow)
         - optionally force movement type serverside
-        - weapondefs, depending on movement type (see appendix for a summary of weapondefs)§
+        - weapondefs, depending on movement type (see appendix for a summary of weapondefs)ï¿½
         - let player choose to shoot weak or strong ammo
-        - defrag like race-ghost for own, best and server best §
+        - defrag like race-ghost for own, best and server best ï¿½
         - protect admins from beeing kicked and callvoted etc...
 		
 		
@@ -168,3 +168,5 @@
 	speed    |      900  800  |    900  800
 
 	(grenade racesow.42 reload=800, warsow.5 reload=725, should that be changed?)
+
+	
