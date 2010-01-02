@@ -7,7 +7,7 @@
  * @author soh#zolex <zolex@warsow-race.net>
  * @author you? <you@warsow-race.net>
  */
- 
+
 const uint RACESOW_AUTH_REGISTERED	= 1;
 const uint RACESOW_AUTH_MAP			= 2;
 const uint RACESOW_AUTH_KICK		= 4;
@@ -79,7 +79,7 @@ cString DateToString( uint64 dateuint64 )
     // convert dates to printable form
 	cTime date = cTime(dateuint64);
     cString daysString, monsString, yearsString, hoursString, minsString, secsString;
-	
+
     if ( date.min == 0 )
         minsString = "00";
     else if ( date.min < 10 )
@@ -107,14 +107,14 @@ cString DateToString( uint64 dateuint64 )
         monsString = "0" + date.mon;
     else
         monsString = date.mon;
-		
+
 	if ( date.mday == 0 )
         daysString = "00";
     else if ( date.mday < 10 )
         daysString = "0" + date.mday;
     else
         daysString = date.mday;
-		
+
     return daysString + "/" + monsString + "/" + (1900+date.year) + " " + hoursString +":" + minsString + ":" + secsString;
 }
 
@@ -203,7 +203,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		cString authEmail = argsString.getToken( 1 );
 		cString password = argsString.getToken( 2 );
 		cString confirmation = argsString.getToken( 3 );
-		
+
 		return player.getAuth().signUp( authName, authEmail, password, confirmation );
     }
 	else if ( ( cmdString == "auth" ) )
@@ -224,7 +224,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		{
 			client.inventorySetCount( WEAP_ROCKETLAUNCHER, 1 );
 		}
-		
+
 		if ( client.inventoryCount( AMMO_ROCKETS ) == 0 )
 		{
 			client.inventorySetCount( AMMO_ROCKETS, 10 );
@@ -235,7 +235,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			client.inventorySetCount( AMMO_ROCKETS, 0 );
 			client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
 		}
-		
+
 		client.selectWeapon( WEAP_ROCKETLAUNCHER );
     }
 	else if ( ( cmdString == "weapondef" ) )
@@ -344,7 +344,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "connect" )
 		{
-		
+
 		}
 		else if ( score_event == "enterGame" )
 		{
@@ -352,7 +352,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 			{
 				player.getAuth().loadSession();
 			}
-			
+
 			player.getAuth().checkProtectedNickname();
 		}
 		else if ( score_event == "disconnect" )
@@ -368,7 +368,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 
 /**
  * GT_playerRespawn
- * 
+ *
  * a player is being respawned. This can happen from several ways, as dying, changing team,
  * being moved to ghost state, be placed in respawn queue, being spawned from spawn queue, etc
  *
@@ -381,7 +381,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
 	cItem @item;
 	cItem @ammoItem;
-	
+
 	Racesow_GetPlayerByClient( ent.client ).restartRace();
 
 	if ( ent.isGhosting() )
@@ -392,8 +392,8 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	{
 		ent.client.inventorySetCount( WEAP_ROCKETLAUNCHER, 1 );
 		ent.client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
-		
-		
+
+
 		// give all weapons
 		for ( int i = WEAP_GUNBLADE + 1; i < WEAP_TOTAL; i++ )
 		{
@@ -412,14 +412,14 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 			if ( @ammoItem != null )
 			ent.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
 		}
-		
+
 		// TODO: let player choose if allow interacting with others, maybe also who to interact with
 	}
 	else
 	{
 		ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
 	}
-	
+
 	ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
 
     // select rocket launcher if available
@@ -461,7 +461,7 @@ void GT_ThinkRules()
 	// set the logTime once
 	if ( map.getStatsHandler().logTime == 0 && localTime != 0 )
 		map.getStatsHandler().logTime = localTime;
-	
+
     // set all clients race stats
     cClient @client;
 
@@ -470,9 +470,9 @@ void GT_ThinkRules()
         @client = @G_GetClient( i );
         if ( client.state() < CS_SPAWNED )
             continue;
-			
+
 		Racesow_Player @player = Racesow_GetPlayerByClient( client );
-		
+
 		int countdownState;
 		if ( 0 != ( countdownState = player.getAuth().wontGiveUpViolatingNickProtection() ) )
 		{
@@ -481,7 +481,7 @@ void GT_ThinkRules()
 		    else if ( countdownState == 2 )
 		        player.kick( "You violated against the nickname protection." );
 		}
-		
+
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );
         client.setHUDStat( STAT_PROGRESS_OTHER, 0 );
@@ -500,8 +500,11 @@ void GT_ThinkRules()
         if ( player.isRacing() )
             client.setHUDStat( STAT_TIME_SELF, (levelTime - player.race.getStartTime()) / 100 );
 
-        client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
-        client.setHUDStat( STAT_TIME_RECORD, map.getStatsHandler().getHighScore(0).getTime() / 100 );
+		if ( !(g_freestyle.getBool()) ) // remove the time stats in freestyle
+		{
+     	  	client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
+        	client.setHUDStat( STAT_TIME_RECORD, map.getStatsHandler().getHighScore(0).getTime() / 100 );
+		}
 
         client.setHUDStat( STAT_TIME_ALPHA, -9999 );
         client.setHUDStat( STAT_TIME_BETA, -9999 );
@@ -513,6 +516,14 @@ void GT_ThinkRules()
         if ( map.getStatsHandler().getHighScore(2).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
     }
+
+	if ( (g_freestyle.getBool()) ) // charge gunblade for freestyle for freestyle
+	{
+		for ( int i = 0; i < maxClients; i++ )
+    	{
+       	 GENERIC_ChargeGunblade( @G_GetClient( i ) );
+	   	}
+	}
 }
 
 /**
@@ -593,7 +604,7 @@ void GT_SpawnGametype()
 {
     @map = Racesow_Map();
     map.getStatsHandler().loadStats();
-	
+
 	// setup players
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
@@ -614,7 +625,7 @@ void GT_InitGametype()
     gametype.setTitle( "Racesow" );
     gametype.setVersion( "0.5.1c" );
     gametype.setAuthor( "warsow-race.net" );
-	
+
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + ".cfg" ) )
     {
@@ -738,8 +749,16 @@ void GT_InitGametype()
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 
     // define the scoreboard layout
-    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %b 48" );
-    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping Racing" );
+	if ( !(g_freestyle.getBool()) ) // use a diffrent scoreboard for freestyle
+	{
+    	G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %b 48" );
+    	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping Racing" );
+	}
+	else
+	{
+    	G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48" );
+    	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping" );
+	}
 
     // add commands
     G_RegisterCommand( "gametype" );
@@ -763,6 +782,6 @@ void GT_InitGametype()
 	{
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
-	
+
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }
