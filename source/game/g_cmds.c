@@ -239,8 +239,11 @@ static void Cmd_God_f( edict_t *ent )
 static void Cmd_Noclip_f( edict_t *ent )
 {
 	char *msg;
+	cvar_t *g_freestyle;
 
-	if( !sv_cheats->integer )
+	g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+
+	if( !sv_cheats->integer && !g_freestyle->integer)
 	{
 		G_PrintMsg( ent, "Cheats are not enabled on this server.\n" );
 		return;
@@ -384,9 +387,12 @@ static void Cmd_CvarInfo_f( edict_t *ent )
 static void Cmd_Position_f( edict_t *ent )
 {
 	char *action;
+	cvar_t *g_freestyle;
+
+	g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
 	if( !sv_cheats->integer && GS_MatchState() > MATCH_STATE_WARMUP &&
-		ent->r.client->ps.pmove.pm_type != PM_SPECTATOR )
+		ent->r.client->ps.pmove.pm_type != PM_SPECTATOR && !g_freestyle->integer )
 	{
 		G_PrintMsg( ent, "Position command is only available in warmup and in spectator mode.\n" );
 		return;
@@ -1275,7 +1281,7 @@ void ClientCommand( edict_t *ent )
 		{
 			if( g_Commands[i].func )
 				g_Commands[i].func( ent );
-			else 
+			else
 				G_asCallGameCommandScript( ent->r.client, cmd, trap_Cmd_Args(), trap_Cmd_Argc() - 1 );
 			return;
 		}
