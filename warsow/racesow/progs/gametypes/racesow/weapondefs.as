@@ -18,17 +18,13 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 	bool showNotification = false;
 	cString command = cmdString.getToken( 0 );
 	
-	// this is currently public for testing purposes, will be set to admin-only later
-	/*
-	if ( !client.auth.allow( RACESOW_AUTH_ADMIN ) )
+	if ( !Racesow_GetPlayerByClient(client).auth.allow( RACESOW_AUTH_ADMIN ) )
 	{
 		G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_RED
 		+ " tried to execute an admin command without permission.\n" );
 		
 		return false;
 	}
-	*/
-	
 	
 	// no command
 	if ( command == "" )
