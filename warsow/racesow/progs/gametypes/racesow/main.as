@@ -314,7 +314,6 @@ cString @GT_ScoreboardMessage( int maxlen )
     	else
     	{
 			entry = "&p " + playerID + " " + ent.client.getClanName() + " "
-					+ Racesow_GetPlayerByClient( ent.client ).getBestTime() + " "
 					+ ent.client.ping + " ";
     	}
 
@@ -764,8 +763,8 @@ void GT_InitGametype()
 	}
 	else
 	{
-    	G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48" );
-    	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping" );
+    	G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 152 %s 90 %l 48" );
+    	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Ping" );
 	}
 
     // add commands
