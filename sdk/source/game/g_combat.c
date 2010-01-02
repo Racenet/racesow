@@ -17,12 +17,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+//////
+// direct rockets need a fix!
+/////
+
+
 // g_combat.c
 
 #include "g_local.h"
 
 /*
-* 
+*
 */
 int G_ModToAmmo( int mod )
 {
@@ -305,13 +310,13 @@ static void G_KnockBackPush( edict_t *targ, edict_t *attacker, const vec3_t base
 * inflictor	entity that is causing the damage
 * attacker	entity that caused the inflictor to damage targ
 * example: targ=enemy, inflictor=rocket, attacker=player
-* 
+*
 * dir			direction of the attack
 * point		point at which the damage is being inflicted
 * normal		normal vector from that point
 * damage		amount of damage being inflicted
 * knockback	force to be applied against targ as a result of the damage
-* 
+*
 * dflags		these flags are used to control how T_Damage works
 */
 void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const vec3_t pushdir, const vec3_t dmgdir, const vec3_t point, float damage, float knockback, float stun, int dflags, int mod )
@@ -320,6 +325,8 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 	float take;
 	float save;
 	float asave;
+	cvar_t *g_freestyle;
+	 g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
 	if( !targ || !targ->takedamage )
 		return;
@@ -333,9 +340,8 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 	meansOfDeath = mod;
 
 	client = targ->r.client;
-
 	// Cgg - race mode: players don't interact with one another
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !g_freestyle->integer)
 	{
 		if( attacker->r.client && targ->r.client && attacker != targ )
 			return;
@@ -346,7 +352,7 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 		G_KnockBackPush( targ, attacker, pushdir, knockback, dflags );
 
 	// stun
-	if( g_allow_stun->integer && (int)stun > 0 && !( dflags & (DAMAGE_NO_STUN|FL_GODMODE) ) 
+	if( g_allow_stun->integer && (int)stun > 0 && !( dflags & (DAMAGE_NO_STUN|FL_GODMODE) )
 		&& targ->r.client && !GS_IsTeamDamage( &targ->s, &attacker->s ) && ( targ != attacker ) )
 	{
 		if( dflags & DAMAGE_STUN_CLAMP )
@@ -376,12 +382,12 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 		else if( GS_MatchPaused() )
 		{
 			take = save = 0;
-		} 
+		}
 		// ca has self splash damage disabled
 		else if( ( dflags & DAMAGE_RADIUS ) && attacker == targ && !GS_SelfDamage() )
 		{
 			take = save = 0;
-		} 
+		}
 		// don't get damage from players in race
 		else if( ( GS_RaceGametype() ) && attacker->r.client )
 		{
@@ -451,7 +457,7 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 						client->level.stats.total_teamdamage_received += take + asave;
 						teamlist[targ->s.team].stats.total_teamdamage_received += take + asave;
 					}
-				}	
+				}
 			}
 		}
 
@@ -585,7 +591,7 @@ void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, co
 	for( i = 0; i < 3; i++ )
 		boxcenter[i] = origin[i] + ( 0.5f * ( maxs[i] + mins[i] ) );
 #endif
-	
+
 	// find push intensity
 	distance = DistanceFast( boxcenter, hitpoint );
 
@@ -612,7 +618,7 @@ void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, co
 	distance -= refdistance;
 	if( distance < 0 )
 		distance = 0;
-	
+
 	distance = maxradius - distance;
 	clamp( distance, 0, maxradius );
 
@@ -639,7 +645,7 @@ void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, co
 
 	//if( dmgFrac && kickFrac )
 	//	G_Printf( "SPLASH: dmgFrac %.2f kickFrac %.2f\n", *dmgFrac, *kickFrac );
-	
+
 	// find push direction
 
 	if( pushdir )
@@ -660,7 +666,7 @@ void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, co
 		// if pushed from below, hack the hitpoint to limit the side push direction
 		if( hitpoint[2] < boxcenter[2] && SPLASH_HDIST_CLAMP > 0 )
 		{
-			// do not allow the hitpoint to be further away 
+			// do not allow the hitpoint to be further away
 			// than SPLASH_HDIST_CLAMP in the horizontal axis
 			vec[0] = hitpoint[0];
 			vec[1] = hitpoint[1];
