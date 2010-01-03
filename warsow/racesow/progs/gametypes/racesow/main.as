@@ -524,7 +524,7 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
     }
 
-	if ( (g_freestyle.getBool()) ) // charge gunblade for freestyle for freestyle
+	if ( (g_freestyle.getBool()) ) // charge gunblade for freestyle
 	{
 		for ( int i = 0; i < maxClients; i++ )
     	{
@@ -635,7 +635,7 @@ void GT_InitGametype()
 
 	// initalize weapondef config
 	weaponDefInit();
-	
+
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + ".cfg" ) )
     {
@@ -672,7 +672,7 @@ void GT_InitGametype()
         G_Print( "Created default config file for '" + gametype.getName() + "'\n" );
         G_CmdExecute( "exec configs/server/gametypes/" + gametype.getName() + ".cfg silent" );
     }
-	
+
     gametype.spawnableItemsMask = ( IT_AMMO | IT_WEAPON | IT_POWERUP );
     if ( gametype.isInstagib() )
         gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
