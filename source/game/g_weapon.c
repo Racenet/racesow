@@ -659,8 +659,9 @@ static void W_Touch_Grenade( edict_t *ent, edict_t *other, cplane_t *plane, int 
 			float fric;
 			static cvar_t *g_grenade_friction = NULL;
 
-			if( !g_grenade_friction )
-				g_grenade_friction = trap_Cvar_Get( "g_grenade_friction", "0.85", CVAR_DEVELOPER );
+			// racesow: changed CVAR_DEVELOPER to CVAR_ARCHIVE, and made it update every time a rocket is launched
+			g_grenade_friction = trap_Cvar_Get( "g_grenade_friction", "0.85", CVAR_ARCHIVE );
+			// !racesow
 
 			fric = bound( 0, g_grenade_friction->value, 1 );
 			VectorScale( ent->velocity, fric, ent->velocity );
