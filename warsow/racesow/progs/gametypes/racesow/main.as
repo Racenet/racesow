@@ -667,7 +667,7 @@ void GT_InitGametype()
 				 + "set g_logRaces \"0\"\n"
 				 + "set g_secureAuth \"0\"\n"
 				 + "set g_freestyle \"0\"\n"
-				 + "exec configs/server/gametypes/" + gametype.getName() + "_weapondef silent\n"
+				 + "exec configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg silent\n"
 				 + "\necho " + gametype.getName() + ".cfg executed\n";
 
         G_WriteFile( "configs/server/gametypes/" + gametype.getName() + ".cfg", config );

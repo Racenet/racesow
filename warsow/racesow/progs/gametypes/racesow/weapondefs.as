@@ -90,13 +90,11 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				cVar cvar_smk( "rs_plasma_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_plasmaweak_minknockback", "", CVAR_ARCHIVE );
 				cVar cvar_spd( "rs_plasma_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_plasma_speed", "", CVAR_ARCHIVE );
 				cVar cvar_sps( "rs_plasma_prestep", "", CVAR_ARCHIVE );
-				cVar cvar_sal( "rs_plasma_antilag", "", CVAR_ARCHIVE );
 				cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
 				cString ssp=cvar_ssp.getString(); cString wsp=cvar_wsp.getString();
 				cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 				cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
 				cString sps=cvar_sps.getString(); 
-				cString sal=cvar_sal.getString();
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 				help += S_COLOR_RED + "plasma___|strong__cur__0.5__0.42_|_weak__cur__0.5__0.42\n";
 				help += S_COLOR_RED + "knockbk__|_______"+skb+"__20___28__|________"+wkb+"___14___19\n";
@@ -104,7 +102,6 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				help += S_COLOR_RED + "minknock_|________"+smk+"___1__none_|________"+wmk+"____1__none\n";
 				help += S_COLOR_RED + "speed____|_____"+spd+"_2.4k_1.7k__|______"+wpd+"__2.4k__1.7k\n";
 				help += S_COLOR_RED + "prestep__|_______"+sps+"__90___45	\n";
-				help += S_COLOR_RED + "antilag__|________"+sal+"___1__dunno\n";
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 			}
 			else if (command == "grenade")
@@ -114,15 +111,15 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				cVar cvar_ssp( "rs_grenade_splash", "", CVAR_ARCHIVE );cVar cvar_wsp( "rs_grenadeweak_splash", "", CVAR_ARCHIVE );
 				cVar cvar_smk( "rs_grenade_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_grenadeweak_minknockback", "", CVAR_ARCHIVE );
 				cVar cvar_spd( "rs_grenade_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_grenadeweak_speed", "", CVAR_ARCHIVE );
+				cVar cvar_sfr( "rs_grenade_friction", "", CVAR_ARCHIVE );
 				cVar cvar_sps( "rs_grenade_prestep", "", CVAR_ARCHIVE );
-				cVar cvar_sal( "rs_grenade_antilag", "", CVAR_ARCHIVE );
 				cString stm=cvar_stm.getString(); cString wtm=cvar_wtm.getString();
 				cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
 				cString ssp=cvar_ssp.getString(); cString wsp=cvar_wsp.getString();
 				cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 				cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
+				cString sfr=cvar_sfr.getString(); 
 				cString sps=cvar_sps.getString(); 
-				cString sal=cvar_sal.getString();
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 				help += S_COLOR_RED + "grenade__|strong_cur__0.5__0.42_|_weak__cur__0.5__0.42\n";
 				help += S_COLOR_RED + "timeout__|_____"+stm+"_1250_2000__|_______"+wtm+"__1250_2000\n";
@@ -130,8 +127,8 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				help += S_COLOR_RED + "splash___|______"+ssp+"__170__150__|________"+wsp+"___160__150\n";
 				help += S_COLOR_RED + "minknock_|_______"+smk+"___10__none_|_________"+wmk+"_____5__none\n";
 				help += S_COLOR_RED + "speed____|______"+spd+"__900__800__|________"+wpd+"___900__800\n";
+				help += S_COLOR_RED + "friction_|_____"+sfr+"_0.85_0.80\n";
 				help += S_COLOR_RED + "prestep__|_______"+sps+"___90___45\n";
-				help += S_COLOR_RED + "antilag__|________"+sal+"____1__dunno\n";
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 			}
 			else help = S_COLOR_RED  + "invalid weapondef default property, see " + S_COLOR_WHITE + "weapondef help\n";
@@ -151,7 +148,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "weapondef weapon [property] [value], where:\n";
 		help += S_COLOR_RED + "  weapon = ( rocket | plasma | grenade )[weak]\n";
-		help += S_COLOR_RED + "  property = ( speed | damage | knockback | splash | minknockback | mindamage | timeout | prestep | antilag )\n\n";
+		help += S_COLOR_RED + "  property = ( speed | knockback | splash | minknockback | timeout | friction | prestep | antilag )\n\n";
 		help += S_COLOR_RED + "example:" + S_COLOR_WHITE + " weapondef rocket knockback 150\n";
 		help += S_COLOR_RED + "to restore default .5 values, type: " + S_COLOR_WHITE + "weapondef restore\n";
 		help += S_COLOR_RED + "to save current values, type: " + S_COLOR_WHITE + "weapondef save\n";
@@ -237,7 +234,6 @@ void weaponDefInitCfg(cString suffix)
 	+ "set rs_plasma_minknockback \"1\"\n"
 	+ "set rs_plasma_speed \"2400\"\n"
 	+ "set rs_plasma_prestep \"90\"\n"
-	+ "set rs_plasma_antilag \"1\"\n"
 	+ "// grenade weak\n"
 	+ "set rs_grenadeweak_timeout \"1250\"\n"
 	+ "set rs_grenadeweak_knockback \"90\"\n"
@@ -250,8 +246,8 @@ void weaponDefInitCfg(cString suffix)
 	+ "set rs_grenade_splash \"170\"\n"
 	+ "set rs_grenade_minknockback \"10\"\n"
 	+ "set rs_grenade_speed \"900\"\n"
+	+ "set rs_grenade_friction \"0.85\"\n"
 	+ "set rs_grenade_prestep \"90\"\n"
-	+ "set rs_grenade_antilag \"1\"\n"
 	+ "\necho " + gametype.getName() + "_weapondef.cfg executed\n";
 	
 	G_WriteFile( "configs/server/gametypes/" + gametype.getName() + "_weapondef"+suffix+".cfg", config_wpdef );
@@ -299,13 +295,11 @@ void weaponDefSave()
 		cVar cvar_smk( "rs_plasma_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_plasmaweak_minknockback", "", CVAR_ARCHIVE );
 		cVar cvar_spd( "rs_plasma_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_plasma_speed", "", CVAR_ARCHIVE );
 		cVar cvar_sps( "rs_plasma_prestep", "", CVAR_ARCHIVE );
-		cVar cvar_sal( "rs_plasma_antilag", "", CVAR_ARCHIVE );
 		cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
 		cString ssp=cvar_ssp.getString(); cString wsp=cvar_wsp.getString();
 		cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 		cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
 		cString sps=cvar_sps.getString(); 
-		cString sal=cvar_sal.getString();
 		config_wpdef = config_wpdef + "// plasma weak\n"
 		+ "set rs_plasmaweak_knockback \""+wkb+"\"\n"
 		+ "set rs_plasmaweak_splash \""+wsp+"\"\n"
@@ -316,8 +310,7 @@ void weaponDefSave()
 		+ "set rs_plasma_splash \""+ssp+"\"\n"
 		+ "set rs_plasma_minknockback \""+smk+"\"\n"
 		+ "set rs_plasma_speed \""+spd+"\"\n"
-		+ "set rs_plasma_prestep \""+sps+"\"\n"
-		+ "set rs_plasma_antilag \""+sal+"\"\n";
+		+ "set rs_plasma_prestep \""+sps+"\"\n";
 	}
 	{
 		cVar cvar_stm( "rs_grenade_timeout", "", CVAR_ARCHIVE );cVar cvar_wtm( "rs_grenadeweak_timeout", "", CVAR_ARCHIVE );
@@ -325,15 +318,15 @@ void weaponDefSave()
 		cVar cvar_ssp( "rs_grenade_splash", "", CVAR_ARCHIVE );cVar cvar_wsp( "rs_grenadeweak_splash", "", CVAR_ARCHIVE );
 		cVar cvar_smk( "rs_grenade_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_grenadeweak_minknockback", "", CVAR_ARCHIVE );
 		cVar cvar_spd( "rs_grenade_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_grenadeweak_speed", "", CVAR_ARCHIVE );
+		cVar cvar_sfr( "rs_grenade_friction", "", CVAR_ARCHIVE );
 		cVar cvar_sps( "rs_grenade_prestep", "", CVAR_ARCHIVE );
-		cVar cvar_sal( "rs_grenade_antilag", "", CVAR_ARCHIVE );
 		cString stm=cvar_stm.getString(); cString wtm=cvar_wtm.getString();
 		cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
 		cString ssp=cvar_ssp.getString(); cString wsp=cvar_wsp.getString();
 		cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 		cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
+		cString sfr=cvar_sfr.getString(); 
 		cString sps=cvar_sps.getString(); 
-		cString sal=cvar_sal.getString();
 		config_wpdef = config_wpdef + "// grenade weak\n"
 		+ "set rs_grenadeweak_timeout \""+wtm+"\"\n"
 		+ "set rs_grenadeweak_knockback \""+wkb+"\"\n"
@@ -346,8 +339,8 @@ void weaponDefSave()
 		+ "set rs_grenade_splash \""+ssp+"\"\n"
 		+ "set rs_grenade_minknockback \""+smk+"\"\n"
 		+ "set rs_grenade_speed \""+spd+"\"\n"
+		+ "set rs_grenade_friction \""+sfr+"\"\n"
 		+ "set rs_grenade_prestep \""+sps+"\"\n"
-		+ "set rs_grenade_antilag \""+sal+"\"\n"
 		+ "\necho " + gametype.getName() + "_weapondef.cfg executed\n";;
 	}
 	G_WriteFile( "configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg", config_wpdef );
