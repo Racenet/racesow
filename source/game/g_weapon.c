@@ -646,21 +646,28 @@ static void W_Touch_Grenade( edict_t *ent, edict_t *other, cplane_t *plane, int 
 	if( hitType == PROJECTILE_TOUCH_NOT )
 		return;
 
-	// don't explode on doors and plats that take damage
-	if( !other->takedamage || ISBRUSHMODEL( other->s.modelindex ) )
+	// don't explode on doors and plats that take damage (removed in racesow: || ISBRUSHMODEL( other->s.modelindex ))
+	if( !other->takedamage )
 	{
-		// kill some velocity on each bounce
-		float fric;
-		static cvar_t *g_grenade_friction = NULL;
+		if( ent->s.effects & EF_STRONG_WEAPON )
+			ent->health -= 1;
 
-		if( !g_grenade_friction )
-			g_grenade_friction = trap_Cvar_Get( "g_grenade_friction", "0.85", CVAR_DEVELOPER );
+		if( !( ent->s.effects & EF_STRONG_WEAPON ) 
+			|| ( ( VectorLength( ent->velocity ) && Q_rint( ent->health ) > 0 ) || ent->timeStamp + 350 > level.time ) )
+		{
+			// kill some velocity on each bounce
+			float fric;
+			static cvar_t *g_grenade_friction = NULL;
 
-		fric = bound( 0, g_grenade_friction->value, 1 );
-		VectorScale( ent->velocity, fric, ent->velocity );
+			if( !g_grenade_friction )
+				g_grenade_friction = trap_Cvar_Get( "g_grenade_friction", "0.85", CVAR_DEVELOPER );
 
-		G_AddEvent( ent, EV_GRENADE_BOUNCE, ( ent->s.effects & EF_STRONG_WEAPON ) ? FIRE_MODE_STRONG : FIRE_MODE_WEAK, qtrue );
-		return;
+			fric = bound( 0, g_grenade_friction->value, 1 );
+			VectorScale( ent->velocity, fric, ent->velocity );
+
+			G_AddEvent( ent, EV_GRENADE_BOUNCE, ( ent->s.effects & EF_STRONG_WEAPON ) ? FIRE_MODE_STRONG : FIRE_MODE_WEAK, qtrue );
+			return;
+		}
 	}
 
 	if( other->takedamage )
@@ -770,6 +777,7 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	{
 		grenade->s.modelindex = trap_ModelIndex( PATH_GRENADE_STRONG_MODEL );
 		grenade->s.effects |= EF_STRONG_WEAPON;
+		grenade->health = 2;
 	}
 	else
 	{
