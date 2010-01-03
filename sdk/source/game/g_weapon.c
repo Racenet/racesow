@@ -710,8 +710,8 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	edict_t	*grenade;
 	static cvar_t *g_grenade_gravity = NULL;
 	/* racesow: custom parameters*/
-	float rs_damage, rs_radius;
-	int rs_minKnockback, rs_maxKnockback, rs_minDamage, rs_speed, rs_timeout;
+	float rs_radius;
+	int rs_minKnockback, rs_maxKnockback, rs_speed, rs_timeout;
 	/* !racesow*/
 
 	if( !g_grenade_gravity )
@@ -736,31 +736,26 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	if (mod==MOD_GRENADE_W)
 	{
 		rs_timeout= trap_Cvar_Get( "rs_grenadeweak_timeout", "1250", CVAR_ARCHIVE )->integer;
-		rs_damage= trap_Cvar_Get( "rs_grenadeweak_damage", "65", CVAR_ARCHIVE )->value;
 		rs_maxKnockback= trap_Cvar_Get( "rs_grenadeweak_knockback", "100", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_grenadeweak_splash", "170", CVAR_ARCHIVE )->value;
-		rs_minDamage= trap_Cvar_Get( "rs_grenadeweak_mindamage", "15", CVAR_ARCHIVE )->integer;
 		rs_minKnockback= trap_Cvar_Get( "rs_grenadeweak_minknockback", "10", CVAR_ARCHIVE)->integer;
 		rs_speed= trap_Cvar_Get( "rs_grenadeweak_speed", "900", CVAR_ARCHIVE )->integer;
 	}
 	else
 	{
 		rs_timeout= trap_Cvar_Get( "rs_grenade_timeout", "1250", CVAR_ARCHIVE )->integer;
-		rs_damage= trap_Cvar_Get( "rs_grenade_damage", "100", CVAR_ARCHIVE )->value;
 		rs_maxKnockback= trap_Cvar_Get( "rs_grenade_knockback", "90", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_grenade_splash", "160", CVAR_ARCHIVE )->value;
-		rs_minDamage= trap_Cvar_Get( "rs_grenade_mindamage", "15", CVAR_ARCHIVE )->integer;
 		rs_minKnockback= trap_Cvar_Get( "rs_grenade_minknockback", "5", CVAR_ARCHIVE )->integer;
 		rs_speed= trap_Cvar_Get( "rs_grenade_speed", "900", CVAR_ARCHIVE )->integer;
 	}
-
+	/* !racesow */	
 
 	if( GS_Instagib() )
-		rs_damage = 9999;
-	/* !racesow */
+		damage = 9999;
 
 	/* racesow */
-	grenade = W_Fire_TossProjectile( self, start, angles, rs_speed, rs_damage, rs_minKnockback, rs_maxKnockback, stun, rs_minDamage, rs_radius, rs_timeout, timeDelta );
+	grenade = W_Fire_TossProjectile( self, start, angles, rs_speed, damage, rs_minKnockback, rs_maxKnockback, stun, minDamage, rs_radius, rs_timeout, timeDelta );
 	/* !racesow */
 	VectorClear( grenade->s.angles );
 	grenade->style = mod;
@@ -865,8 +860,7 @@ edict_t *W_Fire_Rocket( edict_t *self, vec3_t start, vec3_t angles, int speed, f
 	edict_t	*rocket;
 	/* racesow: custom parameters*/
 	int new_speed;
-	float rs_damage;
-	int rs_minKnockback, rs_maxKnockback, rs_radius, rs_minDamage;
+	int rs_minKnockback, rs_maxKnockback, rs_radius;
 	/* !racesow*/
 
 	/* racesow: added water rockets */
@@ -878,29 +872,23 @@ edict_t *W_Fire_Rocket( edict_t *self, vec3_t start, vec3_t angles, int speed, f
 	/* racesow: cvars for other parameters */
 	if (mod==MOD_ROCKET_W)
 	{
-		rs_damage= trap_Cvar_Get( "rs_rocketweak_damage", "75", CVAR_ARCHIVE )->value;
 		rs_maxKnockback= trap_Cvar_Get( "rs_rocketweak_knockback", "95", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_rocketweak_splash", "140", CVAR_ARCHIVE )->integer;
-		rs_minDamage= trap_Cvar_Get( "rs_rocketweak_mindamage", "4", CVAR_ARCHIVE )->integer;
 		rs_minKnockback= trap_Cvar_Get( "rs_rocketweak_minknockback", "5", CVAR_ARCHIVE)->integer;
 	}
 	else
 	{
-		rs_damage= trap_Cvar_Get( "rs_rocket_damage", "85", CVAR_ARCHIVE )->value;
 		rs_maxKnockback= trap_Cvar_Get( "rs_rocket_knockback", "100", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_rocket_splash", "140", CVAR_ARCHIVE )->integer;
-		rs_minDamage= trap_Cvar_Get( "rs_rocket_mindamage", "4", CVAR_ARCHIVE )->integer;
 		rs_minKnockback= trap_Cvar_Get( "rs_rocket_minknockback", "10", CVAR_ARCHIVE )->integer;
-
 	}
-
-	if( GS_Instagib() )
-		rs_damage = 9999;
 	/* !racesow */
 
+	if( GS_Instagib() )
+		damage = 9999;
 
     /* racesow: custom arguments */
-	rocket = W_Fire_LinearProjectile( self, start, angles, new_speed, rs_damage, rs_minKnockback, rs_maxKnockback, stun, rs_minDamage, rs_radius, timeout, timeDelta );
+	rocket = W_Fire_LinearProjectile( self, start, angles, new_speed, damage, rs_minKnockback, rs_maxKnockback, stun, minDamage, rs_radius, timeout, timeDelta );
 	/* !racesow */
 
 	rocket->s.type = ET_ROCKET; //rocket trail sfx
@@ -1054,36 +1042,31 @@ edict_t *W_Fire_Plasma( edict_t *self, vec3_t start, vec3_t angles, float damage
 {
 	edict_t	*plasma;
 	/* racesow: custom parameters*/
-	float  rs_damage;
-	int rs_minKnockback, rs_maxKnockback, rs_radius, rs_minDamage, rs_speed;
+	int rs_minKnockback, rs_maxKnockback, rs_radius, rs_speed;
 	/* !racesow*/
 
 	/* racesow: cvars for other parameters */
 	if (mod==MOD_PLASMA_W)
 	{
-		rs_damage= trap_Cvar_Get( "rs_plasmaweak_damage", "14", CVAR_ARCHIVE )->value;
 		rs_maxKnockback= trap_Cvar_Get( "rs_plasmaweak_knockback", "14", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_plasmaweak_splash", "45", CVAR_ARCHIVE )->integer;
-		rs_minDamage= trap_Cvar_Get( "rs_plasmaweak_mindamage", "0", CVAR_ARCHIVE )->integer;
 		rs_minKnockback= trap_Cvar_Get( "rs_plasmaweak_minknockback", "1", CVAR_ARCHIVE)->integer;
 		rs_speed= trap_Cvar_Get( "rs_plasmaweak_speed", "2400", CVAR_ARCHIVE )->integer;
 	}
 	else
 	{
-		rs_damage= trap_Cvar_Get( "rs_plasma_damage", "15", CVAR_ARCHIVE )->value;
 		rs_maxKnockback= trap_Cvar_Get( "rs_plasma_knockback", "20", CVAR_ARCHIVE )->integer;
 		rs_radius= trap_Cvar_Get( "rs_plasma_splash", "45", CVAR_ARCHIVE )->integer;
-		rs_minDamage= trap_Cvar_Get( "rs_plasma_mindamage", "5", CVAR_ARCHIVE )->integer;
 		rs_minKnockback= trap_Cvar_Get( "rs_plasma_minknockback", "1", CVAR_ARCHIVE )->integer;
 		rs_speed= trap_Cvar_Get( "rs_plasma_speed", "2400", CVAR_ARCHIVE )->integer;
 	}
-
-	if( GS_Instagib() )
-		rs_damage = 9999;
 	/* !racesow */
+	
+	if( GS_Instagib() )
+		damage = 9999;
 
-	/* racesow */
-	plasma = W_Fire_LinearProjectile( self, start, angles, rs_speed, rs_damage, rs_minKnockback, rs_maxKnockback, stun, rs_minDamage, rs_radius, timeout, timeDelta );
+	/* racesow */	
+	plasma = W_Fire_LinearProjectile( self, start, angles, rs_speed, damage, rs_minKnockback, rs_maxKnockback, stun, minDamage, rs_radius, timeout, timeDelta );
 	/* !racesow */
 	plasma->s.type = ET_PLASMA;
 	plasma->classname = "plasma";

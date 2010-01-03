@@ -633,6 +633,9 @@ void GT_InitGametype()
     gametype.setVersion( "0.5.1c" );
     gametype.setAuthor( "warsow-race.net" );
 
+	// initalize weapondef config
+	weaponDefInit();
+	
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + ".cfg" ) )
     {
@@ -662,62 +665,14 @@ void GT_InitGametype()
 				 + "set g_logRaces \"0\"\n"
 				 + "set g_secureAuth \"0\"\n"
 				 + "set g_freestyle \"0\"\n"
-				 + "\n"
-				 + "// weapon defs, with default warsow.5 values\n"
-				 + "\n"
-				 + "// rocket weak\n"
-				 + "set rs_rocketweak_damage \"75\"\n"
-				 + "set rs_rocketweak_knockback \"95\"\n"
-				 + "set rs_rocketweak_splash \"140\"\n"
-				 + "set rs_rocketweak_mindamage \"4\"\n"
-				 + "set rs_rocketweak_minknockback \"5\"\n"
-				 + "// rocket strong\n"
-				 + "set rs_rocket_damage \"85\"\n"
-				 + "set rs_rocket_knockback \"100\"\n"
-				 + "set rs_rocket_splash \"140\"\n"
-				 + "set rs_rocket_mindamage \"4\"\n"
-				 + "set rs_rocket_minknockback \"10\"\n"
-				 + "set rs_rocket_prestep \"90\"\n"
-				 + "set rs_rocket_antilag \"0\"\n"
-				 + "// plasma weak\n"
-				 + "set rs_plasmaweak_damage \"14\"\n"
-				 + "set rs_plasmaweak_knockback \"14\"\n"
-				 + "set rs_plasmaweak_splash \"45\"\n"
-				 + "set rs_plasmaweak_mindamage \"0\"\n"
-				 + "set rs_plasmaweak_minknockback \"1\"\n"
-				 + "set rs_plasmaweak_speed \"2400\"\n"
-				 + "// plasma strong\n"
-				 + "set rs_plasma_damage \"15\"\n"
-				 + "set rs_plasma_knockback \"20\"\n"
-				 + "set rs_plasma_splash \"45\"\n"
-				 + "set rs_plasma_mindamage \"5\"\n"
-				 + "set rs_plasma_minknockback \"1\"\n"
-				 + "set rs_plasma_speed \"2400\"\n"
-				 + "set rs_plasma_prestep \"90\"\n"
-				 + "// grenade weak\n"
-				 + "set rs_grenadeweak_timeout \"1250\"\n"
-				 + "set rs_grenadeweak_damage \"65\"\n"
-				 + "set rs_grenadeweak_knockback \"100\"\n"
-				 + "set rs_grenadeweak_splash \"170\"\n"
-				 + "set rs_grenadeweak_mindamage \"15\"\n"
-				 + "set rs_grenadeweak_minknockback \"10\"\n"
-				 + "set rs_grenadeweak_speed \"900\"\n"
-				 + "// grenade strong\n"
-				 + "set rs_grenade_timeout \"1250\"\n"
-				 + "set rs_grenade_damage \"100\"\n"
-				 + "set rs_grenade_knockback \"90\"\n"
-				 + "set rs_grenade_splash \"160\"\n"
-				 + "set rs_grenade_mindamage \"15\"\n"
-				 + "set rs_grenade_minknockback \"5\"\n"
-				 + "set rs_grenade_speed \"900\"\n"
-				 + "set rs_grenade_prestep \"90\"\n"
-                 + "\necho " + gametype.getName() + ".cfg executed\n";
+				 + "exec configs/server/gametypes/" + gametype.getName() + "_weapondef silent\n"
+				 + "\necho " + gametype.getName() + ".cfg executed\n";
 
         G_WriteFile( "configs/server/gametypes/" + gametype.getName() + ".cfg", config );
         G_Print( "Created default config file for '" + gametype.getName() + "'\n" );
         G_CmdExecute( "exec configs/server/gametypes/" + gametype.getName() + ".cfg silent" );
     }
-
+	
     gametype.spawnableItemsMask = ( IT_AMMO | IT_WEAPON | IT_POWERUP );
     if ( gametype.isInstagib() )
         gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
