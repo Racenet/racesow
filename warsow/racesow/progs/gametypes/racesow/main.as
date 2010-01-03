@@ -526,10 +526,12 @@ void GT_ThinkRules()
 
 	if ( (g_freestyle.getBool()) ) // charge gunblade for freestyle
 	{
-		for ( int i = 0; i < maxClients; i++ )
-    	{
-       	 GENERIC_ChargeGunblade( @G_GetClient( i ) );
-	   	}
+	    for ( int i = 0; i < maxClients; i++ )
+	    {
+	        if ( G_GetClient( i ).inventoryCount( WEAP_GUNBLADE ) == 0 )
+	            continue;
+	    	G_GetClient( i ).inventorySetCount( AMMO_GUNBLADE, 10 );
+	    }
 	}
 }
 
