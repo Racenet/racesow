@@ -864,16 +864,14 @@ void G_FireWeapon( edict_t *ent, int parm )
 	}
 
 	// racesow: enable skipping no_antilag if rs_rocket_antilag is 1
-		if ( GS_RaceGametype() && ((trap_Cvar_Get( "rs_rocket_antilag", "1", CVAR_ARCHIVE )->integer==1 && projectile->s.type == ET_ROCKET) \
-								|| (trap_Cvar_Get( "rs_plasma_antilag", "1", CVAR_ARCHIVE )->integer==1 && projectile->s.type == ET_PLASMA) \
-								|| (trap_Cvar_Get( "rs_grenade_antilag", "1", CVAR_ARCHIVE )->integer==1 && projectile->s.type == ET_GRENADE)))
+		if ( GS_RaceGametype() && ((trap_Cvar_Get( "rs_rocket_antilag", "1", CVAR_ARCHIVE )->integer==1 && projectile->s.type == ET_ROCKET)))
 			return;
 	// !racesow 
 
 #ifdef NO_ROCKET_ANTILAG
 	// hack for disabling antilag on rockets
 	// racesow: added plasma and grenades
-	if( projectile && (projectile->s.type == ET_ROCKET || projectile->s.type == ET_PLASMA || projectile->s.type == ET_GRENADE) )
+	if( projectile && (projectile->s.type == ET_ROCKET) )
 	// !racesow
 	{
 		int timeOffset;
