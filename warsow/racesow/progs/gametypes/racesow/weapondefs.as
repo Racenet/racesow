@@ -127,7 +127,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				help += S_COLOR_RED + "splash___|______"+ssp+"__170__150__|________"+wsp+"___160__150\n";
 				help += S_COLOR_RED + "minknock_|_______"+smk+"___10__none_|_________"+wmk+"_____5__none\n";
 				help += S_COLOR_RED + "speed____|______"+spd+"__900__800__|________"+wpd+"___900__800\n";
-				help += S_COLOR_RED + "friction_|_____"+sfr+"_0.85_0.80\n";
+				help += S_COLOR_RED + "friction_|______"+sfr+"__0.85__0.80\n";
 				help += S_COLOR_RED + "prestep__|_______"+sps+"___90___45\n";
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 			}
