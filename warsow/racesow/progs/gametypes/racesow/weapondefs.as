@@ -112,6 +112,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				cVar cvar_smk( "rs_grenade_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_grenadeweak_minknockback", "", CVAR_ARCHIVE );
 				cVar cvar_spd( "rs_grenade_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_grenadeweak_speed", "", CVAR_ARCHIVE );
 				cVar cvar_sfr( "rs_grenade_friction", "", CVAR_ARCHIVE );
+				cVar cvar_sgr( "rs_grenade_gravity", "", CVAR_ARCHIVE );
 				cVar cvar_sps( "rs_grenade_prestep", "", CVAR_ARCHIVE );
 				cString stm=cvar_stm.getString(); cString wtm=cvar_wtm.getString();
 				cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
@@ -119,6 +120,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 				cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
 				cString sfr=cvar_sfr.getString(); 
+				cString sgr=cvar_sgr.getString(); 
 				cString sps=cvar_sps.getString(); 
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 				help += S_COLOR_RED + "grenade__|strong_cur__0.5__0.42_|_weak__cur__0.5__0.42\n";
@@ -128,6 +130,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				help += S_COLOR_RED + "minknock_|_______"+smk+"___10__none_|_________"+wmk+"_____5__none\n";
 				help += S_COLOR_RED + "speed____|______"+spd+"__900__800__|________"+wpd+"___900__800\n";
 				help += S_COLOR_RED + "friction_|______"+sfr+"__0.85__0.80\n";
+				help += S_COLOR_RED + "gravity__|______"+sgr+"__1.3__1.3\n";
 				help += S_COLOR_RED + "prestep__|_______"+sps+"___90___45\n";
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 			}
@@ -148,7 +151,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "weapondef weapon [property] [value], where:\n";
 		help += S_COLOR_RED + "  weapon = ( rocket | plasma | grenade )[weak]\n";
-		help += S_COLOR_RED + "  property = ( speed | knockback | splash | minknockback | timeout | friction | prestep | antilag )\n\n";
+		help += S_COLOR_RED + "  property = ( speed | knockback | splash | minknockback | timeout | friction | gravity | prestep | antilag )\n\n";
 		help += S_COLOR_RED + "example:" + S_COLOR_WHITE + " weapondef rocket knockback 150\n";
 		help += S_COLOR_RED + "to restore default .5 values, type: " + S_COLOR_WHITE + "weapondef restore\n";
 		help += S_COLOR_RED + "to save current values, type: " + S_COLOR_WHITE + "weapondef save\n";
@@ -247,6 +250,7 @@ void weaponDefInitCfg(cString suffix)
 	+ "set rs_grenade_minknockback \"10\"\n"
 	+ "set rs_grenade_speed \"900\"\n"
 	+ "set rs_grenade_friction \"0.85\"\n"
+	+ "set rs_grenade_gravity \"1.3\"\n"
 	+ "set rs_grenade_prestep \"90\"\n"
 	+ "\necho " + gametype.getName() + "_weapondef.cfg executed\n";
 	
@@ -319,6 +323,7 @@ void weaponDefSave()
 		cVar cvar_smk( "rs_grenade_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_grenadeweak_minknockback", "", CVAR_ARCHIVE );
 		cVar cvar_spd( "rs_grenade_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_grenadeweak_speed", "", CVAR_ARCHIVE );
 		cVar cvar_sfr( "rs_grenade_friction", "", CVAR_ARCHIVE );
+		cVar cvar_sgr( "rs_grenade_gravity", "", CVAR_ARCHIVE );
 		cVar cvar_sps( "rs_grenade_prestep", "", CVAR_ARCHIVE );
 		cString stm=cvar_stm.getString(); cString wtm=cvar_wtm.getString();
 		cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
@@ -326,6 +331,7 @@ void weaponDefSave()
 		cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 		cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
 		cString sfr=cvar_sfr.getString(); 
+		cString sgr=cvar_sgr.getString(); 
 		cString sps=cvar_sps.getString(); 
 		config_wpdef = config_wpdef + "// grenade weak\n"
 		+ "set rs_grenadeweak_timeout \""+wtm+"\"\n"
@@ -340,6 +346,7 @@ void weaponDefSave()
 		+ "set rs_grenade_minknockback \""+smk+"\"\n"
 		+ "set rs_grenade_speed \""+spd+"\"\n"
 		+ "set rs_grenade_friction \""+sfr+"\"\n"
+		+ "set rs_grenade_gravity \""+sgr+"\"\n"
 		+ "set rs_grenade_prestep \""+sps+"\"\n"
 		+ "\necho " + gametype.getName() + "_weapondef.cfg executed\n";;
 	}
