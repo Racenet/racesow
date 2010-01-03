@@ -715,9 +715,10 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	int rs_minKnockback, rs_maxKnockback, rs_speed, rs_timeout;
 	/* !racesow*/
 
-	if( !g_grenade_gravity )
-		g_grenade_gravity = trap_Cvar_Get( "g_grenade_gravity", "1.3", CVAR_DEVELOPER );
-
+	// racesow: used rs_grenade_gravity instead of g_grenade_gravity
+	g_grenade_gravity = trap_Cvar_Get( "rs_grenade_gravity", "1.3", CVAR_ARCHIVE );
+	// !racesow
+	
 	if( aim_up )
 	{
 		// racesow
