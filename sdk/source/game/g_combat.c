@@ -659,7 +659,8 @@ void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, co
 #ifdef VERTICALBIAS
 		// move the center up for the push direction
 		if( origin[2] + maxs[2] > boxcenter[2] )
-			boxcenter[2] += VERTICALBIAS * ( ( origin[2] + maxs[2] ) - boxcenter[2] );
+			// racesow - weqo: dont do this in racesow
+			// boxcenter[2] += VERTICALBIAS * ( ( origin[2] + maxs[2] ) - boxcenter[2] );
 #endif // VERTICALBIAS
 
 #ifdef SPLASH_HDIST_CLAMP
