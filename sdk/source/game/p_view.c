@@ -242,8 +242,11 @@ static void G_PlayerWorldEffects( edict_t *ent )
 {
 	int waterlevel, old_waterlevel;
 	int watertype, old_watertype;
+	cvar_t *g_freestyle;
 
-	if( ent->movetype == MOVETYPE_NOCLIP )
+	g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+
+	if( ent->movetype == MOVETYPE_NOCLIP || g_freestyle->integer )
 	{
 		ent->air_finished = level.time + ( 12*1000 ); // don't need air
 		return;
@@ -384,7 +387,7 @@ static void G_SetClientEffects( edict_t *ent )
 	{
 		ent->s.effects |= EF_SHELL;
 		if( client->ps.inventory[POWERUP_SHELL] < 6 )
-			ent->s.effects |= EF_EXPIRING_SHELL;			
+			ent->s.effects |= EF_EXPIRING_SHELL;
 	}
 
 	if( ent->s.weapon )
