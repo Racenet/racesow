@@ -213,7 +213,7 @@ static void G_ProjectileDistancePrestep( edict_t *projectile, float distance )
 	// ffs : hack for the plasmagun
 #ifdef PLASMAHACK
 	if( projectile->s.type == ET_PLASMA )
-		if (trap_Cvar_Get( "rs_plasma_hack", "1", CVAR_ARCHIVE )->integer==1);
+		if (trap_Cvar_Get( "rs_plasma_hack", "1", CVAR_ARCHIVE )->integer==1)
 			W_Plasma_Backtrace( projectile, plasma_hack_start );
 #endif
 }
