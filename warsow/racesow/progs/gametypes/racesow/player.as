@@ -466,12 +466,14 @@ class Racesow_Player
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "HELP for " + gametype.getName() + "\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "help            " + S_COLOR_YELLOW + "display this help ;)\n";
-		help += S_COLOR_RED + "racerestart  " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
+		help += S_COLOR_RED + "help           " + S_COLOR_YELLOW + "display this help ;)\n";
+		help += S_COLOR_RED + "top             " + S_COLOR_YELLOW + "display the top 30 times on this map\n";
+        help += S_COLOR_RED + "racerestart " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
 		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
 		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate to the server (alternatively you can use setu\n";
 		help += "                  " + S_COLOR_YELLOW + "to set auth_name and auth_pass in your autoexec.cfg)\n";
 		help += S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
+        help += S_COLOR_RED + "weapondef   " + S_COLOR_YELLOW + "change the weapon values, more info with 'weapondef help'\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 	
 		G_PrintMsg( this.client.getEnt(), help );
