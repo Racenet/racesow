@@ -26,6 +26,7 @@
 
         g_logRaces 1|0, default 0, log all races to a file
         g_freestyle 1|0, default 0, enables freestyle mode (not implemented yet)
+        g_allowammoswitch 1|0, allows players to convert ammo
 
 		
 		
@@ -38,6 +39,7 @@
             admin map <map name>
 	    admin kick <playerNum>
 	    admin help
+	    ammoswitch
         help, shows the help
 
         you can add this to your autoexec.cfg to auto-login when connecting to a racesow server
@@ -84,6 +86,7 @@
             - added creation of shadow files for registered players
             - removed goal not to use a modded game module
             - changed session to use the clients ip as filename
+            - added ammoswitch
 
         2009-09-23 / racesow 0.5.1c
             - extracted auth plugin from player model
@@ -126,7 +129,6 @@
         - movement types like b1shop's mod (planned: vq3-like, cpm-like, basewsw, racesow)
         - optionally force movement type serverside
         - weapondefs, depending on movement type (see appendix for a summary of weapondefs)�
-        - let player choose to shoot weak or strong ammo
         - defrag like race-ghost for own, best and server best �
         - protect admins from beeing kicked and callvoted etc...
 		
