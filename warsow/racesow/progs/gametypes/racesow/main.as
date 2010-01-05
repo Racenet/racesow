@@ -25,6 +25,7 @@ Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 
 cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
+cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
 /**
  * TimeToString
@@ -224,71 +225,18 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	////
 	// ammo switch allows players to switch between strong and weak ammo (atm freestyle only)
 	////
-
-		if(g_freestyle.getBool())
+		if( g_freestyle.getBool() || g_allowammoswitch.getBool() )
 		{
-			if ( argsString.getToken( 0 ) == "rockets" )
+		    if( argsString.getToken( 0 ) == "help" )
 		    {
-				if ( client.inventoryCount( WEAP_ROCKETLAUNCHER ) == 0 )
-				{
-					sendMessage( S_COLOR_RED + "You have no rocketlauncher \n", @client );
-					return false;
-				}
-
-				if ( client.inventoryCount( AMMO_ROCKETS ) > 0
-						&& client.inventoryCount( AMMO_WEAK_ROCKETS ) > 0 )
-				{
-				// the user wants to use weak rockets
-					client.inventorySetCount( AMMO_ROCKETS, 0 );
-					client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
-					sendMessage( S_COLOR_WHITE + "You are using weak rockets now.\n", @client );
-				}
-				else if ( client.inventoryCount( AMMO_ROCKETS ) == 0
-						&& client.inventoryCount( AMMO_WEAK_ROCKETS ) > 0 )
-				{
-				// the user wants to use strong rockets
-					client.inventorySetCount( AMMO_ROCKETS, 10 );
-					client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
-					sendMessage( S_COLOR_WHITE + "You are using strong rockets now.\n", @client );
-				}
-				else
-				{
-				// the user has no ammo
-					sendMessage( S_COLOR_RED + "You have no ammo \n", @client );
-				}
+		    	sendMessage( S_COLOR_WHITE + "Converts the ammotype of your selected weapon\n", @client );
 		    }
-			else if ( argsString.getToken( 0 ) == "plasma" )
-			{
-				if ( client.inventoryCount( WEAP_PLASMAGUN ) == 0 )
-				{
-					sendMessage( S_COLOR_RED + "You have no plasmagun \n", @client );
-					return false;
-				}
-
-				if ( client.inventoryCount( AMMO_PLASMA ) > 0
-						&& client.inventoryCount( AMMO_WEAK_PLASMA) > 0 )
-				{
-				// the user wants to use weak plasma
-					client.inventorySetCount( AMMO_PLASMA, 0 );
-					client.inventorySetCount( AMMO_WEAK_PLASMA, 125 );
-					sendMessage( S_COLOR_WHITE + "You are using weak plasma now.\n", @client );
-				}
-				else if ( client.inventoryCount( AMMO_PLASMA ) == 0
-						&& client.inventoryCount( AMMO_WEAK_PLASMA ) > 0 )
-				{
-				// the user wants to use strong plasma
-					client.inventorySetCount( AMMO_PLASMA, 75 );
-					client.inventorySetCount( AMMO_WEAK_PLASMA, 125 );
-					sendMessage( S_COLOR_WHITE + "You are using strong plasma now.\n", @client );
-				}
-				else
-				{
-				// the user has no ammo
-					sendMessage( S_COLOR_RED + "You have no ammo \n", @client );
-				}
-			}
-
-			else if( argsString.getToken( 0 ) == "grenades" )
+		    else if (client.pendingWeapon < 4 || client.pendingWeapon > 6 )
+		    {
+				sendMessage( S_COLOR_RED + "You can only convert grenades, rockets and plasma \n", @client );
+				return false;
+		    }
+			else if( client.pendingWeapon == 4 ) // the player is using grenades
 			{
 				if ( client.inventoryCount( WEAP_GRENADELAUNCHER ) == 0 )
 				{
@@ -296,8 +244,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					return false;
 				}
 
-				if ( client.inventoryCount( AMMO_GRENADES ) > 0
-						&& client.inventoryCount( AMMO_WEAK_GRENADES) > 0 )
+				if ( client.inventoryCount( AMMO_GRENADES ) > 0 )
 				{
 				// the user wants to use weak grenades
 					client.inventorySetCount( AMMO_GRENADES, 0 );
@@ -318,18 +265,64 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					sendMessage( S_COLOR_RED + "You have no ammo \n", @client );
 				}
 			}
-
-		    else if( argsString.getToken( 0 ) == "help" )
+		    else if ( client.pendingWeapon == 5 ) // the player is using a rocketlauncher
 		    {
-		    	sendMessage( S_COLOR_WHITE + "Converts ammotypes. Usage: /ammoswitch (weapon)  "
-		    			"Possible weapons: rockets, plasma or grenades\n", @client );
-		    }
+				if ( client.inventoryCount( WEAP_ROCKETLAUNCHER ) == 0 )
+				{
+					sendMessage( S_COLOR_RED + "You have no rocketlauncher \n", @client );
+					return false;
+				}
 
-		    else
-		    {
-		    	sendMessage( S_COLOR_WHITE + "Converts ammotypes. Usage: /ammoswitch (weapon) "
-		    			"Possible weapons: rockets, plasma or grenades\n", @client );
+				if ( client.inventoryCount( AMMO_ROCKETS ) > 0 )
+				{
+				// the user wants to use weak rockets
+					client.inventorySetCount( AMMO_ROCKETS, 0 );
+					client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
+					sendMessage( S_COLOR_WHITE + "You are using weak rockets now.\n", @client );
+				}
+				else if ( client.inventoryCount( AMMO_ROCKETS ) == 0
+						&& client.inventoryCount( AMMO_WEAK_ROCKETS ) > 0 )
+				{
+				// the user wants to use strong rockets
+					client.inventorySetCount( AMMO_ROCKETS, 10 );
+					client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
+					sendMessage( S_COLOR_WHITE + "You are using strong rockets now.\n", @client );
+				}
+				else
+				{
+				// the user has no ammo
+					sendMessage( S_COLOR_RED + "You have no ammo \n", @client );
+				}
 		    }
+			else if ( client.pendingWeapon == 6 ) // the player is using plasma
+			{
+				if ( client.inventoryCount( WEAP_PLASMAGUN ) == 0 )
+				{
+					sendMessage( S_COLOR_RED + "You have no plasmagun \n", @client );
+					return false;
+				}
+
+				if ( client.inventoryCount( AMMO_PLASMA ) > 0 )
+				{
+				// the user wants to use weak plasma
+					client.inventorySetCount( AMMO_PLASMA, 0 );
+					client.inventorySetCount( AMMO_WEAK_PLASMA, 125 );
+					sendMessage( S_COLOR_WHITE + "You are using weak plasma now.\n", @client );
+				}
+				else if ( client.inventoryCount( AMMO_PLASMA ) == 0
+						&& client.inventoryCount( AMMO_WEAK_PLASMA ) > 0 )
+				{
+				// the user wants to use strong plasma
+					client.inventorySetCount( AMMO_PLASMA, 75 );
+					client.inventorySetCount( AMMO_WEAK_PLASMA, 125 );
+					sendMessage( S_COLOR_WHITE + "You are using strong plasma now.\n", @client );
+				}
+				else
+				{
+				// the user has no ammo
+					sendMessage( S_COLOR_RED + "You have no ammo \n", @client );
+				}
+			}
 		}
 		else
 		{
@@ -765,6 +758,7 @@ void GT_InitGametype()
 				 + "set g_logRaces \"0\"\n"
 				 + "set g_secureAuth \"0\"\n"
 				 + "set g_freestyle \"0\"\n"
+				 + "set g_allowammoswitch \"0\"\n"
 				 + "exec configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg silent\n"
 				 + "\necho " + gametype.getName() + ".cfg executed\n";
 
