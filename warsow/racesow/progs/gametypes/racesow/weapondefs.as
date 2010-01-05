@@ -79,7 +79,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				help += S_COLOR_RED + "knockbk__|_______"+skb+"__100__100__|_______"+wkb+"___95__100\n";
 				help += S_COLOR_RED + "splash___|_______"+ssp+"__140__120__|______"+wsp+"__140__120\n";
 				help += S_COLOR_RED + "minknock_|________"+smk+"___10__none_|_______"+wmk+"____5__none\n";
-				help += S_COLOR_RED + "prestep__|________"+sps+"___90___45\n";
+				help += S_COLOR_RED + "prestep__|________"+sps+"___90____0\n";
 				help += S_COLOR_RED + "antilag__|_________"+sal+"____0__dunno\n";
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 			}
@@ -89,11 +89,13 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				cVar cvar_ssp( "rs_plasma_splash", "", CVAR_ARCHIVE );cVar cvar_wsp( "rs_plasmaweak_splash", "", CVAR_ARCHIVE );
 				cVar cvar_smk( "rs_plasma_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_plasmaweak_minknockback", "", CVAR_ARCHIVE );
 				cVar cvar_spd( "rs_plasma_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_plasma_speed", "", CVAR_ARCHIVE );
+				cVar cvar_shk( "rs_plasma_hack", "", CVAR_ARCHIVE );
 				cVar cvar_sps( "rs_plasma_prestep", "", CVAR_ARCHIVE );
 				cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
 				cString ssp=cvar_ssp.getString(); cString wsp=cvar_wsp.getString();
 				cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 				cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
+				cString shk=cvar_shk.getString(); 
 				cString sps=cvar_sps.getString(); 
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 				help += S_COLOR_RED + "plasma___|strong__cur__0.5__0.42_|_weak__cur__0.5__0.42\n";
@@ -101,7 +103,8 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				help += S_COLOR_RED + "splash___|_______"+ssp+"__45___40__|________"+wsp+"___45___20\n";
 				help += S_COLOR_RED + "minknock_|________"+smk+"___1__none_|________"+wmk+"____1__none\n";
 				help += S_COLOR_RED + "speed____|_____"+spd+"_2.4k_1.7k__|______"+wpd+"__2.4k__1.7k\n";
-				help += S_COLOR_RED + "prestep__|_______"+sps+"__90___45	\n";
+				help += S_COLOR_RED + "hack_____|________"+shk+"___1___0\n";
+				help += S_COLOR_RED + "prestep__|_______"+sps+"__90___32\n";
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 			}
 			else if (command == "grenade")
@@ -131,7 +134,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 				help += S_COLOR_RED + "speed____|______"+spd+"__900__800__|________"+wpd+"___900__800\n";
 				help += S_COLOR_RED + "friction_|______"+sfr+"__0.85__0.80\n";
 				help += S_COLOR_RED + "gravity__|______"+sgr+"__1.3__1.3\n";
-				help += S_COLOR_RED + "prestep__|_______"+sps+"___90___45\n";
+				help += S_COLOR_RED + "prestep__|_______"+sps+"___90___24\n";
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
 			}
 			else help = S_COLOR_RED  + "invalid weapondef default property, see " + S_COLOR_WHITE + "weapondef help\n";
@@ -237,6 +240,7 @@ void weaponDefInitCfg(cString suffix)
 	+ "set rs_plasma_minknockback \"1\"\n"
 	+ "set rs_plasma_speed \"2400\"\n"
 	+ "set rs_plasma_prestep \"90\"\n"
+	+ "set rs_plasma_hack \"1\"\n"
 	+ "// grenade weak\n"
 	+ "set rs_grenadeweak_timeout \"1250\"\n"
 	+ "set rs_grenadeweak_knockback \"90\"\n"
@@ -298,11 +302,13 @@ void weaponDefSave()
 		cVar cvar_ssp( "rs_plasma_splash", "", CVAR_ARCHIVE );cVar cvar_wsp( "rs_plasmaweak_splash", "", CVAR_ARCHIVE );
 		cVar cvar_smk( "rs_plasma_minknockback", "", CVAR_ARCHIVE );cVar cvar_wmk( "rs_plasmaweak_minknockback", "", CVAR_ARCHIVE );
 		cVar cvar_spd( "rs_plasma_speed", "", CVAR_ARCHIVE );cVar cvar_wpd( "rs_plasma_speed", "", CVAR_ARCHIVE );
+		cVar cvar_shk( "rs_plasma_hack", "", CVAR_ARCHIVE );
 		cVar cvar_sps( "rs_plasma_prestep", "", CVAR_ARCHIVE );
 		cString skb=cvar_skb.getString(); cString wkb=cvar_wkb.getString();
 		cString ssp=cvar_ssp.getString(); cString wsp=cvar_wsp.getString();
 		cString smk=cvar_smk.getString(); cString wmk=cvar_wmk.getString();
 		cString spd=cvar_spd.getString(); cString wpd=cvar_wpd.getString();
+		cString shk=cvar_shk.getString(); 
 		cString sps=cvar_sps.getString(); 
 		config_wpdef = config_wpdef + "// plasma weak\n"
 		+ "set rs_plasmaweak_knockback \""+wkb+"\"\n"
@@ -314,6 +320,7 @@ void weaponDefSave()
 		+ "set rs_plasma_splash \""+ssp+"\"\n"
 		+ "set rs_plasma_minknockback \""+smk+"\"\n"
 		+ "set rs_plasma_speed \""+spd+"\"\n"
+		+ "set rs_plasma_hack \""+shk+"\"\n"
 		+ "set rs_plasma_prestep \""+sps+"\"\n";
 	}
 	{
