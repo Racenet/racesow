@@ -404,7 +404,6 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	if ( ent.isGhosting() )
 	return;
 
-	// set player movement to pass through other players
 	if ( g_freestyle.getBool() )
 	{
 		ent.client.inventorySetCount( WEAP_ROCKETLAUNCHER, 1 );
@@ -434,6 +433,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	}
 	else
 	{
+		// set player movement to pass through other players
 		ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
 	}
 
@@ -444,6 +444,9 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
         ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
     else
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
+	
+	// make dash 450
+	ent.client.setPMoveDashSpeed( 450 );
 }
 
 /**
