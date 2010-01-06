@@ -1055,7 +1055,11 @@ void G_SplashFrac4D( int entNum, vec3_t hitpoint, float maxradius, vec3_t pushdi
 	c4clipedict_t *clipEnt;
 
 	clipEnt = GClip_GetClipEdictForDeltaTime( entNum, timeDelta );
-	G_SplashFrac( clipEnt->s.origin, clipEnt->r.mins, clipEnt->r.maxs, hitpoint, maxradius, pushdir, kickFrac, dmgFrac );
+
+	if ( trap_Cvar_Get("g_alternative_splash", "0", CVAR_ARCHIVE)->integer == 1 )
+		G_SplashFrac_42( clipEnt->s.origin, clipEnt->r.mins, clipEnt->r.maxs, hitpoint, maxradius, pushdir, kickFrac, dmgFrac );
+	else
+		G_SplashFrac( clipEnt->s.origin, clipEnt->r.mins, clipEnt->r.maxs, hitpoint, maxradius, pushdir, kickFrac, dmgFrac );
 }
 
 entity_state_t *G_GetEntityStateForDeltaTime( int entNum, int deltaTime )
