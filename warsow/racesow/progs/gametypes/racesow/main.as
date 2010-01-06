@@ -219,7 +219,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     {
 		return player.displayHelp();
     }
-	else if ( ( cmdString == "ammoswitch" ) )
+	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
 	{
 		if ( g_freestyle.getBool() || g_allowammoswitch.getBool() )
 		{
