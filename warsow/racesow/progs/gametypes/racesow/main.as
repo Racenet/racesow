@@ -746,6 +746,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "help" );
 	G_RegisterCommand( "ammoswitch" );
 	G_RegisterCommand( "weapondef" );
+	G_RegisterCommand( "classaction1" );
 
     demoRecording = false;
 
