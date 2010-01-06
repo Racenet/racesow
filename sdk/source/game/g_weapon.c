@@ -275,7 +275,7 @@ static edict_t *W_Fire_LinearProjectile( edict_t *self, vec3_t start, vec3_t ang
 	projectile->s.linearProjectile = qtrue;
 
 	projectile->r.solid = SOLID_YES;
-	projectile->r.clipmask = ( !GS_RaceGametype() && g_freestyle->integer) ? MASK_SHOT : MASK_SOLID;
+	projectile->r.clipmask = ( GS_RaceGametype() && !g_freestyle->integer ) ? MASK_SOLID : MASK_SHOT;
 
 	projectile->r.svflags = SVF_PROJECTILE;
 	// enable me when drawing exception is added to cgame
@@ -652,7 +652,7 @@ static void W_Touch_Grenade( edict_t *ent, edict_t *other, cplane_t *plane, int 
 		if( ent->s.effects & EF_STRONG_WEAPON )
 			ent->health -= 1;
 
-		if( !( ent->s.effects & EF_STRONG_WEAPON ) 
+		if( !( ent->s.effects & EF_STRONG_WEAPON )
 			|| ( ( VectorLength( ent->velocity ) && Q_rint( ent->health ) > 0 ) || ent->timeStamp + 350 > level.time ) )
 		{
 			// kill some velocity on each bounce
@@ -718,7 +718,7 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	// racesow: used rs_grenade_gravity instead of g_grenade_gravity
 	g_grenade_gravity = trap_Cvar_Get( "rs_grenade_gravity", "1.3", CVAR_ARCHIVE );
 	// !racesow
-	
+
 	if( aim_up )
 	{
 		// racesow
@@ -751,7 +751,7 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 		rs_minKnockback= trap_Cvar_Get( "rs_grenade_minknockback", "5", CVAR_ARCHIVE )->integer;
 		rs_speed= trap_Cvar_Get( "rs_grenade_speed", "900", CVAR_ARCHIVE )->integer;
 	}
-	/* !racesow */	
+	/* !racesow */
 
 	if( GS_Instagib() )
 		damage = 9999;
@@ -1063,11 +1063,11 @@ edict_t *W_Fire_Plasma( edict_t *self, vec3_t start, vec3_t angles, float damage
 		rs_speed= trap_Cvar_Get( "rs_plasma_speed", "2400", CVAR_ARCHIVE )->integer;
 	}
 	/* !racesow */
-	
+
 	if( GS_Instagib() )
 		damage = 9999;
 
-	/* racesow */	
+	/* racesow */
 	plasma = W_Fire_LinearProjectile( self, start, angles, rs_speed, damage, rs_minKnockback, rs_maxKnockback, stun, minDamage, rs_radius, timeout, timeDelta );
 	/* !racesow */
 	plasma->s.type = ET_PLASMA;
