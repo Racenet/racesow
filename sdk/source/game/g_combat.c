@@ -706,6 +706,8 @@ void G_SplashFrac_42( const vec3_t origin, const vec3_t mins, const vec3_t maxs,
 	{
 		if( kickFrac )
 			*kickFrac = 0;
+		if( dmgFrac )
+			*dmgFrac = 0;
 		return;
 	}
 
@@ -735,8 +737,18 @@ void G_SplashFrac_42( const vec3_t origin, const vec3_t mins, const vec3_t maxs,
 		distance = sqrt( ( g_distance - innerradius )*( g_distance - innerradius ) + ( h_distance - outerradius/2 )*( h_distance - outerradius/2 ) );
 	}
 
-	*kickFrac = 1.0 - fabs( distance / maxradius ); 
-	clamp( *kickFrac, 0.0f, 1.0f );
+	if( dmgFrac )
+	{
+		// soft sin curve
+		*dmgFrac = sin( DEG2RAD( ( distance / maxradius ) * 80 ) );
+		clamp( *dmgFrac, 0.0f, 1.0f );
+	}
+
+	if( kickFrac )
+	{
+		*kickFrac = 1.0 - fabs( distance / maxradius ); 
+		clamp( *kickFrac, 0.0f, 1.0f );
+	}	
 
 	VectorSubtract( boxcenter, point, pushdir );
 	VectorNormalizeFast( pushdir );
