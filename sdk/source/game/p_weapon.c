@@ -871,7 +871,7 @@ void G_FireWeapon( edict_t *ent, int parm )
 
 #ifdef NO_ROCKET_ANTILAG
 	// hack for disabling antilag on rockets
-	if( projectile && (projectile->s.type == ET_ROCKET) )
+	if( projectile && (projectile->s.type == ET_ROCKET ||projectile->s.type == ET_PLASMA) )
 	{
 		int timeOffset;
 
