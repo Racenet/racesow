@@ -766,6 +766,8 @@ void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane,
 
 	float maxdamage, mindamage, maxknockback, minknockback, maxstun, minstun, radius;
 
+	int rs_minKnockback, rs_maxKnockback, rs_radius;
+
 	assert( inflictor );
 
 	maxdamage = inflictor->projectileInfo.maxDamage;
@@ -804,13 +806,34 @@ void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane,
 		{
 			gs_weapon_definition_t *weapondef = NULL;
 			if( inflictor->s.type == ET_ROCKET )
+			{
 				weapondef = GS_GetWeaponDef( WEAP_ROCKETLAUNCHER );
+				rs_maxKnockback = trap_Cvar_Get( "rs_rocket_knockback", "100", CVAR_ARCHIVE )->integer;
+				rs_radius = trap_Cvar_Get( "rs_rocket_splash", "140", CVAR_ARCHIVE )->integer;
+				rs_minKnockback = trap_Cvar_Get( "rs_rocket_minknockback", "10", CVAR_ARCHIVE)->integer;
+			}
 			else if( inflictor->s.type == ET_GRENADE )
+			{
 				weapondef = GS_GetWeaponDef( WEAP_GRENADELAUNCHER );
+				rs_maxKnockback = trap_Cvar_Get( "rs_grenade_knockback", "90", CVAR_ARCHIVE )->integer;
+				rs_radius = trap_Cvar_Get( "rs_grenade_splash", "160", CVAR_ARCHIVE )->value;
+				rs_minKnockback = trap_Cvar_Get( "rs_grenade_minknockback", "5", CVAR_ARCHIVE )->integer;
+			}
 			else if( inflictor->s.type == ET_PLASMA )
+			{
 				weapondef = GS_GetWeaponDef( WEAP_PLASMAGUN );
+				rs_maxKnockback = trap_Cvar_Get( "rs_plasma_knockback", "20", CVAR_ARCHIVE )->integer;
+				rs_radius = trap_Cvar_Get( "rs_plasma_splash", "45", CVAR_ARCHIVE )->integer;
+				rs_minKnockback = trap_Cvar_Get( "rs_plasma_minknockback", "1", CVAR_ARCHIVE)->integer;
+			}
 
-			if( weapondef )
+			if( rs_maxKnockback && rs_radius && rs_minKnockback )
+			{
+				G_SplashFrac4D( ENTNUM( ent ), inflictor->s.origin, rs_radius, pushDir, &kickFrac, NULL, 0 );
+				knockback = (float)( rs_maxKnockback * kickFrac * g_self_knockback->value );
+				damage *= weapondef->firedef.selfdamage;
+			}
+			else
 			{
 				G_SplashFrac4D( ENTNUM( ent ), inflictor->s.origin, weapondef->firedef.splash_radius, pushDir, &kickFrac, NULL, 0 );
 				knockback = ( minknockback + ( (float)( weapondef->firedef.knockback - minknockback ) * kickFrac ) ) * g_self_knockback->value;
