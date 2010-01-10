@@ -315,7 +315,7 @@ cString @GT_ScoreboardMessage( int maxlen )
 
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
         racing = int( Racesow_GetPlayerByClient( ent.client ).isRacing() ? 1 : 0 );
-    	if ( !(g_freestyle.getBool()) ) // use a diffrent scoreboard for freestyle
+    	if ( !(g_freestyle.getBool()) ) // use a different scoreboard for freestyle
     	{
 			entry = "&p " + playerID + " " + ent.client.getClanName() + " "
 					+ Racesow_GetPlayerByClient( ent.client ).getBestTime() + " "
@@ -444,7 +444,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
         ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
     else
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
-	
+
 	// make dash 450
 	ent.client.setPMoveDashSpeed( 450 );
 }
@@ -720,14 +720,22 @@ void GT_InitGametype()
     gametype.canShowMinimap = false;
 	gametype.teamOnlyMinimap = true;
 
-    gametype.spawnpointRadius = 0;
+	if ( !(g_freestyle.getBool()) )
+	{
+		gametype.spawnpointRadius = 0;
+	}
+	else
+	{
+		 // use a different spawnpoint radius for freestyle (avoid massacres when spawning)
+		gametype.spawnpointRadius = 256;
+	}
 
     // set spawnsystem type
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 
     // define the scoreboard layout
-	if ( !(g_freestyle.getBool()) ) // use a diffrent scoreboard for freestyle
+	if ( !(g_freestyle.getBool()) ) // use a different scoreboard for freestyle
 	{
     	G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %b 48" );
     	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping Racing" );
