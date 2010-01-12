@@ -646,6 +646,7 @@ void G_CallVotes_CmdVote( edict_t *ent );
 void G_CallVotes_Think( void );
 void G_CallVote_Cmd( edict_t *ent );
 void G_OperatorVote_Cmd( edict_t *ent );
+void G_Cancelvote_f( void );
 void G_RegisterGametypeScriptCallvote( const char *name, const char *usage, const char *help );
 
 //
@@ -1104,7 +1105,7 @@ struct gclient_s
 	char clanname[MAX_CLANNAME_BYTES];
 	char ip[MAX_INFO_VALUE];
 	char socket[MAX_INFO_VALUE];
-	
+
 	qboolean connecting;
 	qboolean multiview, tv;
 
