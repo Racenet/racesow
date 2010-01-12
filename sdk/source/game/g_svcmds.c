@@ -371,6 +371,7 @@ void G_AddServerCommands( void )
 	if( dedicated->integer )
 		trap_Cmd_AddCommand( "say", Cmd_ConsoleSay_f );
 	trap_Cmd_AddCommand( "kick", Cmd_ConsoleKick_f );
+	trap_Cmd_AddCommand( "cancelvote", G_Cancelvote_f );
 
 	// match controls
 	trap_Cmd_AddCommand( "match", Cmd_Match_f );
@@ -403,6 +404,7 @@ void G_RemoveCommands( void )
 	if( dedicated->integer )
 		trap_Cmd_RemoveCommand( "say" );
 	trap_Cmd_RemoveCommand( "kick" );
+	trap_Cmd_RemoveCommand( "cancelvote" );
 
 	// match controls
 	trap_Cmd_RemoveCommand( "match" );
