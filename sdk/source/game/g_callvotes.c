@@ -417,47 +417,6 @@ static char *G_VoteGametypeCurrent( void )
 
 
 //====================
-// warmup
-//====================
-
-static qboolean G_VoteWarmupValidate( callvotedata_t *vote, qboolean first )
-{
-	int warmup = atoi( vote->argv[0] );
-
-	if( warmup != 0 && warmup != 1 )
-	{
-		return qfalse;
-	}
-
-	if( warmup && g_warmup_enabled->integer )
-	{
-		if( first ) G_PrintMsg( vote->caller, "%sWarmup is already enabled\n", S_COLOR_RED );
-		return qfalse;
-	}
-
-	if( !warmup && !g_warmup_enabled->integer )
-	{
-		if( first ) G_PrintMsg( vote->caller, "%sWarmup is already disabled\n", S_COLOR_RED );
-		return qfalse;
-	}
-
-	return qtrue;
-}
-
-static void G_VoteWarmupPassed( callvotedata_t *vote )
-{
-	trap_Cvar_Set( "g_warmup_enabled", va( "%i", atoi( vote->argv[0] ) ) );
-}
-
-static char *G_VoteWarmupCurrent( void )
-{
-	if( g_warmup_enabled->integer )
-		return "1";
-	return "0";
-}
-
-
-//====================
 // warmup_timelimit
 //====================
 
@@ -881,7 +840,15 @@ static qboolean G_VoteKickValidate( callvotedata_t *vote, qboolean first )
 
 		if( who != -1 )
 		{
-			// we save the player id to be kicked, so we don't later get confused by new ids or players changing names
+			if( game.edicts[who+1].r.client->isoperator )
+			{
+				G_PrintMsg( vote->caller, S_COLOR_RED"%s is a game operator.\n", game.edicts[who+1].r.client->netname );
+				return qfalse;
+			}
+
+			// we save the player id to be kicked, so we don't later get
+			//confused by new ids or players changing names
+
 			vote->data = G_Malloc( sizeof( int ) );
 			memcpy( vote->data, &who, sizeof( int ) );
 		}
@@ -904,7 +871,9 @@ static qboolean G_VoteKickValidate( callvotedata_t *vote, qboolean first )
 	{
 		if( !vote->string || Q_stricmp( vote->string, game.edicts[who+1].r.client->netname ) )
 		{
-			if( vote->string ) G_Free( vote->string );
+			if( vote->string )
+				G_Free( vote->string );
+
 			vote->string = G_CopyString( game.edicts[who+1].r.client->netname );
 		}
 
@@ -971,7 +940,15 @@ static qboolean G_VoteKickBanValidate( callvotedata_t *vote, qboolean first )
 
 		if( who != -1 )
 		{
-			// we save the player id to be kicked, so we don't later get confused by new ids or players changing names
+			if( game.edicts[who+1].r.client->isoperator )
+			{
+				G_PrintMsg( vote->caller, S_COLOR_RED"%s is a game operator.\n", game.edicts[who+1].r.client->netname );
+				return qfalse;
+			}
+
+			// we save the player id to be kicked, so we don't later get
+			// confused by new ids or players changing names
+
 			vote->data = G_Malloc( sizeof( int ) );
 			memcpy( vote->data, &who, sizeof( int ) );
 		}
@@ -994,7 +971,9 @@ static qboolean G_VoteKickBanValidate( callvotedata_t *vote, qboolean first )
 	{
 		if( !vote->string || Q_stricmp( vote->string, game.edicts[who+1].r.client->netname ) )
 		{
-			if( vote->string ) G_Free( vote->string );
+			if( vote->string )
+				G_Free( vote->string );
+
 			vote->string = G_CopyString( game.edicts[who+1].r.client->netname );
 		}
 
@@ -1307,14 +1286,14 @@ static qboolean G_VoteAllowInstajumpValidate( callvotedata_t *vote, qboolean fir
 
 	if( instajump && g_instajump->integer )
 	{
-		if( first ) 
+		if( first )
 			G_PrintMsg( vote->caller, "%sInstajump is already allowed\n", S_COLOR_RED );
 		return qfalse;
 	}
 
 	if( !instajump && !g_instajump->integer )
 	{
-		if( first ) 
+		if( first )
 			G_PrintMsg( vote->caller, "%sInstajump is already disabled\n", S_COLOR_RED );
 		return qfalse;
 	}
@@ -1348,14 +1327,14 @@ static qboolean G_VoteAllowInstashieldValidate( callvotedata_t *vote, qboolean f
 
 	if( instashield && g_instashield->integer )
 	{
-		if( first ) 
+		if( first )
 			G_PrintMsg( vote->caller, "%sInstashield is already allowed\n", S_COLOR_RED );
 		return qfalse;
 	}
 
 	if( !instashield && !g_instashield->integer )
 	{
-		if( first ) 
+		if( first )
 			G_PrintMsg( vote->caller, "%sInstashield is already disabled\n", S_COLOR_RED );
 		return qfalse;
 	}
@@ -1366,6 +1345,20 @@ static qboolean G_VoteAllowInstashieldValidate( callvotedata_t *vote, qboolean f
 static void G_VoteAllowInstashieldPassed( callvotedata_t *vote )
 {
 	trap_Cvar_Set( "g_instashield", va( "%i", atoi( vote->argv[0] ) ) );
+
+	// remove the shield from all players
+	if( !g_instashield->integer )
+	{
+		int i;
+
+		for( i = 0; i < gs.maxclients; i++ )
+		{
+			if( trap_GetClientState( i ) < CS_SPAWNED )
+				continue;
+
+			game.clients[i].ps.inventory[POWERUP_SHELL] = 0;
+		}
+	}
 }
 
 static char *G_VoteAllowInstashieldCurrent( void )
@@ -1873,13 +1866,12 @@ void G_CallVotes_CmdVote( edict_t *ent )
 	}
 	else if( !Q_stricmp( vote, "no" ) )
 	{
-
 		clientVoted[PLAYERNUM( ent )] = VOTED_NO;
 		G_CallVotes_CheckState();
 		return;
 	}
 
-	G_PrintMsg( ent, "%sInvalid vote: %s%s%s. Use yes or no\n", S_COLOR_RED
+	G_PrintMsg( ent, "%sInvalid vote: %s%s%s. Use yes or no\n", S_COLOR_RED,
 		S_COLOR_YELLOW, vote, S_COLOR_RED );
 }
 
@@ -1906,13 +1898,13 @@ void G_CallVotes_Think( void )
 /*
 * G_CallVote
 */
-static void G_CallVote( edict_t *ent, qboolean isoperator )
+static void G_CallVote( edict_t *ent, qboolean isopcall )
 {
 	int i;
 	char *votename;
 	callvotetype_t *callvote;
 
-	if( !isoperator && ent->s.team == TEAM_SPECTATOR && GS_InvidualGameType()
+	if( !isopcall && ent->s.team == TEAM_SPECTATOR && GS_InvidualGameType()
 		&& GS_MatchState() == MATCH_STATE_PLAYTIME && !GS_MatchPaused() )
 	{
 		int team, count;
@@ -1981,9 +1973,16 @@ static void G_CallVote( edict_t *ent, qboolean isoperator )
 
 	// wsw : pb : server admin can now disable a specific vote command (g_disable_vote_<vote name>)
 	// check if vote is disabled
-	if( trap_Cvar_Value( va( "g_disable_vote_%s", callvote->name ) ) )
+	if( !isopcall && trap_Cvar_Value( va( "g_disable_vote_%s", callvote->name ) ) )
 	{
 		G_PrintMsg( ent, "%sCallvote %s is disabled on this server\n", S_COLOR_RED, callvote->name );
+		return;
+	}
+
+	// allow a second cvar specific for opcall
+	if( isopcall && trap_Cvar_Value( va( "g_disable_opcall_%s", callvote->name ) ) )
+	{
+		G_PrintMsg( ent, "%sOpcall %s is disabled on this server\n", S_COLOR_RED, callvote->name );
 		return;
 	}
 
@@ -2005,7 +2004,7 @@ static void G_CallVote( edict_t *ent, qboolean isoperator )
 
 	callvoteState.vote.callvote = callvote;
 	callvoteState.vote.caller = ent;
-	callvoteState.vote.operatorcall = isoperator;
+	callvoteState.vote.operatorcall = isopcall;
 
 	//validate if there's a validation func
 	if( callvote->validate != NULL && !callvote->validate( &callvoteState.vote, qtrue ) )
@@ -2061,6 +2060,13 @@ void G_OperatorVote_Cmd( edict_t *ent )
 		return;
 	}
 
+	if( !Q_stricmp( trap_Cmd_Argv( 1 ), "help" ) )
+	{
+		G_PrintMsg( ent, "Opcall can be used with all callvotes and the following commands:\n" );
+		G_PrintMsg( ent, "-help - passvote\n- cancelvote\n" );
+		return;
+	}
+
 	if( !Q_stricmp( trap_Cmd_Argv( 1 ), "cancelvote" ) )
 	{
 		if( !callvoteState.vote.callvote )
@@ -2084,7 +2090,86 @@ void G_OperatorVote_Cmd( edict_t *ent )
 		return;
 	}
 
+	if( !Q_stricmp( trap_Cmd_Argv( 1 ), "passvote" ) )
+	{
+		if( !callvoteState.vote.callvote )
+		{
+			G_PrintMsg( ent, "There's no callvote to pass.\n" );
+			return;
+		}
+
+		for( other = game.edicts + 1; PLAYERNUM( other ) < gs.maxclients; other++ )
+		{
+			if( !other->r.inuse || trap_GetClientState( PLAYERNUM( other ) ) < CS_SPAWNED )
+				continue;
+
+			if( ( other->r.svflags & SVF_FAKECLIENT ) || other->r.client->tv )
+				continue;
+
+			clientVoted[PLAYERNUM( other )] = VOTED_YES;
+		}
+
+		G_PrintMsg( NULL, "Callvote has been passed by %s\n", ent->r.client->netname );
+		return;
+	}
+
+	if( !Q_stricmp( trap_Cmd_Argv( 1 ), "putteam" ) )
+	{
+		char *splayer = trap_Cmd_Argv( 2 );
+		char *steam = trap_Cmd_Argv( 3 );
+		edict_t *playerEnt;
+		int newTeam;
+
+		if( !steam || !steam[0] || !splayer || !splayer[0] )
+		{
+			G_PrintMsg( ent, "Usage 'putteam <player id > <team name>'.\n" );
+			return;
+		}
+
+		if( ( newTeam = GS_Teams_TeamFromName( steam ) ) < 0 )
+		{
+			G_PrintMsg( ent, "The team '%s' doesn't exist.\n", steam );
+			return;
+		}
+
+		if( ( playerEnt = G_PlayerForText( splayer ) ) == NULL )
+		{
+			G_PrintMsg( ent, "The player '%s' couldn't be found.\n", splayer );
+			return;
+		}
+
+		G_Teams_SetTeam( playerEnt, newTeam );
+		G_PrintMsg( NULL, "%s was moved to team %s by %s.\n", playerEnt->r.client->netname, GS_TeamName( newTeam ), ent->r.client->netname );
+
+		return;
+	}
+
 	G_CallVote( ent, qtrue );
+}
+
+void G_Cancelvote_f( void )
+{
+	edict_t *other;
+
+	if( !callvoteState.vote.callvote )
+	{
+		Com_Printf( "There's no callvote to cancel.\n" );
+		return;
+	}
+
+	for( other = game.edicts + 1; PLAYERNUM( other ) < gs.maxclients; other++ )
+	{
+		if( !other->r.inuse || trap_GetClientState( PLAYERNUM( other ) ) < CS_SPAWNED )
+			continue;
+
+		if( ( other->r.svflags & SVF_FAKECLIENT ) || other->r.client->tv )
+			continue;
+
+		clientVoted[PLAYERNUM( other )] = VOTED_NO;
+	}
+
+	G_PrintMsg( NULL, "Callvote has been cancelled by admin\n" );
+	return;
 }
 
 /*
@@ -2215,15 +2300,6 @@ void G_CallVotes_Init( void )
 	callvote->extraHelp = G_VoteGametypeExtraHelp;
 	callvote->argument_format = G_LevelCopyString( "<name>" );
 	callvote->help = G_LevelCopyString( "- Changes the gametype" );
-
-	callvote = G_RegisterCallvote( "warmup" );
-	callvote->expectedargs = 1;
-	callvote->validate = G_VoteWarmupValidate;
-	callvote->execute = G_VoteWarmupPassed;
-	callvote->current = G_VoteWarmupCurrent;
-	callvote->extraHelp = NULL;
-	callvote->argument_format = G_LevelCopyString( "<1 or 0>" );
-	callvote->help = G_LevelCopyString( "- Enables or disables the warmup period before the match" );
 
 	callvote = G_RegisterCallvote( "warmup_timelimit" );
 	callvote->expectedargs = 1;
