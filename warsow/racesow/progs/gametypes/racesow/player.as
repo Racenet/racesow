@@ -20,13 +20,13 @@ class Racesow_Player
 	 * @var bool
 	 */
 	bool inOvertime;
-	
+
 	/**
 	 * The time when the player started idling
 	 * @var uint
 	 */
 	uint idleTime;
-	
+
 	/**
 	 * The player's best race
 	 * @var uint
@@ -39,25 +39,25 @@ class Racesow_Player
 	 * @var uint[]
 	 */
     uint[] bestCheckPoints;
-	
+
 	/**
 	 * The player's client
 	 * @var uint
 	 */
 	cClient @client;
-	
+
 	/**
 	 * Player authentication and authorization
 	 * @var Racesow_Player_Auth
 	 */
 	Racesow_Player_Auth @auth;
-	
+
 	/**
 	 * The current race of the player
 	 * @var Racesow_Player_Race
 	 */
 	Racesow_Player_Race @race;
-	
+
 	/**
 	 * Constructor
 	 *
@@ -74,7 +74,7 @@ class Racesow_Player
     ~Racesow_Player()
 	{
 	}
-	
+
 	/**
 	 * Reset the player, just f*ckin remove this and use the constructor...
 	 * @return void
@@ -90,9 +90,9 @@ class Racesow_Player
 		for ( int i = 0; i < numCheckpoints; i++ )
 		{
 			this.bestCheckPoints[i] = 0;
-		}	
+		}
 	}
-	
+
 	/**
 	 * Reset the players auth
 	 * @return void
@@ -105,7 +105,7 @@ class Racesow_Player
 			this.auth.reset();
 		}
 	}
-	
+
 	/**
 	 * Set the player's client
 	 * @return void
@@ -115,7 +115,7 @@ class Racesow_Player
 		@this.client = @client;
 		return @this;
 	}
-	
+
 	/**
 	 * Get the player's client
 	 * @return cClient
@@ -124,7 +124,7 @@ class Racesow_Player
 	{
 		return @this.client;
 	}
-	
+
 	/**
 	 * Get the players best time
 	 * @return uint
@@ -132,8 +132,8 @@ class Racesow_Player
 	uint getBestTime()
 	{
 		return this.bestRaceTime;
-	}	
-	
+	}
+
 	/**
 	 * Set the players best time
 	 * @return void
@@ -142,7 +142,7 @@ class Racesow_Player
 	{
 		this.bestRaceTime = time;
 	}
-	
+
 	/**
 	 * getName
 	 * @return cString
@@ -150,8 +150,8 @@ class Racesow_Player
 	cString getName()
 	{
 		return this.client.getName();
-	}		
-	
+	}
+
 	/**
 	 * getAuth
 	 * @return cString
@@ -159,8 +159,8 @@ class Racesow_Player
 	Racesow_Player_Auth @getAuth()
 	{
 		return @this.auth;
-	}	
-	
+	}
+
 	/**
 	 * getBestCheckPoint
 	 * @param uint id
@@ -170,10 +170,10 @@ class Racesow_Player
 	{
 		if ( id >= this.bestCheckPoints.length() )
 			return 0;
-			
+
 		return this.bestCheckPoints[id];
-	}	
-	
+	}
+
 	/**
 	 * setBestCheckPoint
 	 * @param uint id
@@ -184,11 +184,11 @@ class Racesow_Player
 	{
 		if ( id >= this.bestCheckPoints.length() || time < this.bestCheckPoints[id])
 			return false;
-			
+
 		this.bestCheckPoints[id] = time;
 		return true;
 	}
-	
+
 	/**
 	 * Player spawn event
 	 * @return void
@@ -196,19 +196,19 @@ class Racesow_Player
 	void onSpawn()
 	{
 	}
-	
+
 	/**
 	 * Check if the player is currently racing
 	 * @return uint
 	 */
 	bool isRacing()
 	{
-		if (@this.race == null) 
+		if (@this.race == null)
 			return false;
-			
+
 		return this.race.inRace();
 	}
-	
+
 	/**
 	 * crossStartLine
 	 * @return void
@@ -217,12 +217,12 @@ class Racesow_Player
     {
 		if ( this.isRacing() )
             return;
-		
+
 		@this.race = Racesow_Player_Race();
 		this.race.setPlayer(@this);
 		this.race.start();
     }
-	
+
 	/**
 	 * touchCheckPoint
 	 * @param cClient @client
@@ -239,7 +239,7 @@ class Racesow_Player
 
 		this.race.check( id );
     }
-	
+
 	/**
 	 * completeRace
 	 * @param cClient @client
@@ -250,16 +250,16 @@ class Racesow_Player
         // when the race can not be finished something is very wrong, maybe small penis playing
 		if ( !this.isRacing() || !this.race.stop() )
             return;
-			
+
 		this.isSpawned = false;
 		map.getStatsHandler().addRace(@this.race);
-		
+
         // set up for respawning the player with a delay
         cEntity @respawner = G_SpawnEntity( "race_respawner" );
         respawner.nextThink = levelTime + 3000;
         respawner.count = client.playerNum();
     }
-	
+
 	/**
 	 * restartRace
 	 * @return void
@@ -268,8 +268,8 @@ class Racesow_Player
     {
 		this.isSpawned = true;
 		@this.race = null;
-    }	
-	
+    }
+
 	/**
 	 * cancelRace
 	 * @return void
@@ -279,7 +279,7 @@ class Racesow_Player
 		this.client.team = TEAM_SPECTATOR;
 		@this.race = null;
     }
-	
+
 	/**
 	 * Player has just started idling (triggered in overtime)
 	 * @return void
@@ -287,8 +287,8 @@ class Racesow_Player
 	void startIdling()
 	{
 		this.idleTime = levelTime;
-	}	
-	
+	}
+
 	/**
 	 * stopIdling
 	 * @return void
@@ -297,7 +297,7 @@ class Racesow_Player
 	{
 		this.idleTime = 0;
 	}
-	
+
 	/**
 	 * getIdleTime
 	 * @return uint
@@ -306,10 +306,10 @@ class Racesow_Player
 	{
 		if ( !this.startedIdling() )
 			return 0;
-			
+
 		return levelTime - this.idleTime;
-	}	
-	
+	}
+
 	/**
 	 * startedIdling
 	 * @return bool
@@ -318,7 +318,7 @@ class Racesow_Player
 	{
 		return this.idleTime != 0;
 	}
-	
+
 	/**
 	 * startOvertime
 	 * @return void
@@ -328,7 +328,7 @@ class Racesow_Player
 		this.inOvertime = true;
 		this.sendMessage( S_COLOR_RED + "Please hurry up, theo ther players are waiting for you to finish...\n" );
 	}
-	
+
 	/**
 	 * Send a message to console of the player
 	 * @param cString message
@@ -338,10 +338,10 @@ class Racesow_Player
 	{
 		// just send to original func
 		G_PrintMsg( this.client.getEnt(), message );
-		
+
 		// maybe log messages for some reason to figure out ;)
 	}
-	
+
 	/**
 	 * Kick the player and leave a message for everyone
 	 * @param cString message
@@ -354,7 +354,15 @@ class Racesow_Player
 		this.auth.lastViolateProtectionMessage = 0;
 		this.auth.violateNickProtectionSince = 0;
 	}
-	
+
+	/**
+	 * Cancel the current vote (equals to /opcall cancelvote)
+	 */
+	void cancelvote()
+	{
+		G_CmdExecute( "cancelvote" );
+	}
+
 	/**
 	 * Execute an admin command
 	 * @param cString &cmdString
@@ -365,22 +373,22 @@ class Racesow_Player
 		bool commandExists = false;
 		bool showNotification = false;
 		cString command = cmdString.getToken( 0 );
-		
+
 		if ( !this.auth.allow( RACESOW_AUTH_ADMIN ) )
 		{
 			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED
 				+ " tried to execute an admin command without permission.\n" );
-					
+
 			return false;
 		}
-	
+
 		// no command
 		if ( command == "" )
 		{
 			this.sendMessage( S_COLOR_RED + "No command given. Use 'admin help' for more information.\n" );
 			return false;
 		}
-		
+
 		// map command
 		else if ( commandExists = command == "map" )
 		{
@@ -388,21 +396,21 @@ class Racesow_Player
 			{
 				this.sendMessage( S_COLOR_RED + "You are not permitted "
 					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-					
+
 				return false;
 			}
-			
+
 			cString mapName = cmdString.getToken( 1 );
 			if ( mapName == "" )
 			{
 				this.sendMessage( S_COLOR_RED + "No map name given.\n" );
 				return false;
 			}
-			
+
 			G_CmdExecute("gamemap "+ mapName + "\n");
 			showNotification = true;
-		}	
-		
+		}
+
 		// kick command
 		else if ( commandExists = command == "kick" )
 		{
@@ -410,21 +418,25 @@ class Racesow_Player
 			{
 				this.sendMessage( S_COLOR_RED + "You are not permitted "
 					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-					
+
 				return false;
 			}
-			
+
 			cString playerNum = cmdString.getToken( 1 );
 			G_CmdExecute("kick "+ playerNum + "\n");
 			showNotification = true;
 		}
-		
+		// canncel the vote
+		else if ( commandExists = command == "cancelvote" )
+		{
+			cancelvote();
+		}
 		// help command
 		else if( commandExists = command == "help" )
 		{
 			this.displayAdminHelp();
 		}
-		
+
 		// don't touch the rest of the method!
 		if( !commandExists )
 		{
@@ -436,10 +448,10 @@ class Racesow_Player
 			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
 				+ " executed command '"+ cmdString +"'\n" );
 		}
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Display the help to the player
 	 * @return bool
@@ -452,10 +464,10 @@ class Racesow_Player
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "admin map     " + S_COLOR_YELLOW + "change to the given map immedeatly\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-	
+
 		G_PrintMsg( this.client.getEnt(), help );
-	}	
-	
+	}
+
 	/**
 	 * Display the help to the player
 	 * @return bool
@@ -475,7 +487,7 @@ class Racesow_Player
 		help += S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
         help += S_COLOR_RED + "weapondef   " + S_COLOR_YELLOW + "change the weapon values, more info with 'weapondef help'\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-	
+
 		G_PrintMsg( this.client.getEnt(), help );
 		return true;
 	}
