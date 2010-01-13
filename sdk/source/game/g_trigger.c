@@ -539,11 +539,10 @@ static void hurt_touch( edict_t *self, edict_t *other, cplane_t *plane, int surf
 	if( (self->spawnflags & 32) || (self->spawnflags & 64) ) // KILL, FALL
 	{
 		edict_t *delayer = G_Spawn();
-		int diedelay = 500;
 
 		delayer->s.ownerNum = ENTNUM( other );
 		delayer->think = hurt_delayer_think;
-		delayer->nextThink = level.time + diedelay;
+		delayer->nextThink = level.time + 1;
 		delayer->deathTimeStamp = other->r.client->resp.timeStamp;
 		
 		// play the death sound, and delay the damage a little
@@ -551,13 +550,13 @@ static void hurt_touch( edict_t *self, edict_t *other, cplane_t *plane, int surf
 		if( self->noise_index )
 		{
 			G_Sound( other, CHAN_AUTO, self->noise_index, ATTN_NORM );
-			other->pain_debounce_time = level.time + diedelay + 25;
+			other->pain_debounce_time = level.time;
 		}
 
 		// make it be dead so it doesn't touch the trigger again
 		other->takedamage = qfalse;
 		if( other->r.client )
-			other->r.client->ps.pmove.stats[PM_STAT_NOUSERCONTROL] = level.time + diedelay + 25;
+			other->r.client->ps.pmove.stats[PM_STAT_NOUSERCONTROL] = level.time;
 
 		return;
 	}
