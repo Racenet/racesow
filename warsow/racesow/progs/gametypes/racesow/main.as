@@ -361,7 +361,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "connect" )
 		{
-
+			player.reset();
 		}
 		else if ( score_event == "enterGame" )
 		{
