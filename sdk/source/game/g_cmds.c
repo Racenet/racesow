@@ -388,6 +388,7 @@ static void Cmd_Position_f( edict_t *ent )
 {
 	char *action;
 	cvar_t *g_freestyle;
+	gsitem_t *weaponItem;
 
 	g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
@@ -410,7 +411,8 @@ static void Cmd_Position_f( edict_t *ent )
 		ent->r.client->teamstate.position_saved = qtrue;
 		VectorCopy( ent->s.origin, ent->r.client->teamstate.position_origin );
 		VectorCopy( ent->s.angles, ent->r.client->teamstate.position_angles );
-		G_PrintMsg( ent, "Position saved.\n" );
+		ent->r.client->teamstate.position_weapon = ent->s.weapon;
+		G_PrintMsg( ent, "Position saved. \n" );
 	}
 	else if( !Q_stricmp( action, "load" ) )
 	{
@@ -424,9 +426,15 @@ static void Cmd_Position_f( edict_t *ent )
 				G_SpectatorMode( ent );
 
 			if( G_Teleport( ent, ent->r.client->teamstate.position_origin, ent->r.client->teamstate.position_angles ) )
+			{
+				weaponItem = GS_FindItemByTag( ent->r.client->teamstate.position_weapon );
+				G_UseItem( ent, weaponItem );
 				G_PrintMsg( ent, "Position loaded.\n" );
+			}
 			else
+			{
 				G_PrintMsg( ent, "Position not available.\n" );
+			}
 		}
 	}
 	else if( !Q_stricmp( action, "set" ) && trap_Cmd_Argc() == 7 )
