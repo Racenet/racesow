@@ -48,9 +48,9 @@
 
 	/**
 	 * The time of the last message
-	 * @var uint64
+	 * @var int
 	 */
-	uint64 lastViolateProtectionMessage;
+	int lastViolateProtectionMessage;
 
 	/**
 	 * the time when we started to wait for the player
@@ -319,7 +319,6 @@
 				+ " successfully loaded session for "+ this.authenticationName +"\n" );
 
 			return true;
-
 		}
 
 		return false;
@@ -353,11 +352,11 @@
 		}
 
 		int seconds = localTime - this.violateNickProtectionSince;
-		if ( uint(seconds) == this.lastViolateProtectionMessage )
+		if ( seconds == this.lastViolateProtectionMessage )
 			return -1; // nothing to do
-
+        
 		this.lastViolateProtectionMessage = seconds;
-
+        
 		if ( seconds < 11 )
 			return 1;
 
