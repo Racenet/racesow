@@ -196,7 +196,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
     {
-		if( player.top_lastcmd + 30 > localTime )
+		if( g_freestyle.getBool() )
+		{
+			sendMessage( S_COLOR_RED + "Command only available for race\n", @client );
+			return false;
+		}
+		else if( player.top_lastcmd + 30 > localTime )
 		{
 			sendMessage( S_COLOR_RED + "Flood protection. You can use the top command"
 					+"only every 30 seconds\n", @client );
