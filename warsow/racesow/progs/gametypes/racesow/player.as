@@ -34,6 +34,12 @@ class Racesow_Player
     uint bestRaceTime;
 
 	/**
+	 * Local time of the last top command (flood protection)
+	 * @var uint
+	 */
+    uint top_lastcmd;
+
+	/**
 	 * The player's best checkpoints
 	 * stored across races
 	 * @var uint[]
