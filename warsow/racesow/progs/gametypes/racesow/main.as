@@ -196,7 +196,17 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
     {
-		G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
+		if( player.top_lastcmd + 30 > localTime )
+		{
+			sendMessage( S_COLOR_RED + "Flood protection. You can use the top command"
+					+"only every 30 seconds\n", @client );
+			return false;
+		}
+		else
+		{
+			player.top_lastcmd = localTime;
+			G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
+		}
     }
 	else if ( ( cmdString == "register" ) )
     {
