@@ -763,7 +763,6 @@ void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane,
 	float dmgFrac, kickFrac, damage, knockback, stun;
 	vec3_t pushDir;
 	int timeDelta;
-	float temp, tlog; // for racesow 
 
 	float maxdamage, mindamage, maxknockback, minknockback, maxstun, minstun, radius;
 
@@ -801,11 +800,6 @@ void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane,
 		damage = max( 0, mindamage + ( ( maxdamage - mindamage ) * dmgFrac ) );
 		stun = max( 0, minstun + ( ( maxstun - minstun ) * dmgFrac ) );
 		knockback = max( 0, minknockback + ( ( maxknockback - minknockback ) * kickFrac ) );
-
-		// racesow: some more knockback code
-		tlog = log(mindamage / maxdamage);
-		temp = exp( ( 1.0f - kickFrac )*( 1.0f - kickFrac ) ) * tlog;
-		knockback = ( knockback > maxknockback*temp ) ? knockback : maxknockback*temp;
 
 		// weapon jumps hack : when knockback on self, use strong weapon definition
 		if( ent == attacker && ent->r.client )
