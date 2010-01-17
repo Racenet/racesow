@@ -141,6 +141,12 @@ spawn_t	spawns[] = {
 
 	{ "worldspawn", SP_worldspawn },
 
+	// Racesow	
+	{ "shooter_rocket", RS_shooter_rocket },
+	{ "shooter_grenade", RS_shooter_grenade },
+	{ "shooter_plasma", RS_shooter_plasma },
+	// !Racesow
+
 	{ "light", SP_light },
 	{ "light_mine1", SP_light_mine },
 	{ "info_null", SP_info_null },

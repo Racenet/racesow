@@ -1054,9 +1054,11 @@ void G_SplashFrac4D( int entNum, vec3_t hitpoint, float maxradius, vec3_t pushdi
 {
 	c4clipedict_t *clipEnt;
 	clipEnt = GClip_GetClipEdictForDeltaTime( entNum, timeDelta );
-	G_SplashFrac_42( clipEnt->s.origin, clipEnt->r.mins, clipEnt->r.maxs, hitpoint, maxradius, pushdir, kickFrac, dmgFrac );
-	// racesow: This will use .5 settings:
+	// racesow - weqo
+	rs_SplashFrac( clipEnt->s.origin, clipEnt->r.mins, clipEnt->r.maxs, hitpoint, maxradius, pushdir, kickFrac, dmgFrac );
+	// to use default settings:
 	// G_SplashFrac( clipEnt->s.origin, clipEnt->r.mins, clipEnt->r.maxs, hitpoint, maxradius, pushdir, kickFrac, dmgFrac );
+	// !racesow
 }
 
 entity_state_t *G_GetEntityStateForDeltaTime( int entNum, int deltaTime )
