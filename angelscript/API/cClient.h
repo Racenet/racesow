@@ -15,7 +15,7 @@ public:
 	const int zoomFov;
 	const bool isOperator;
 	const uint queueTimeStamp;
-	const int muted;
+	int muted;
 	float armor;
 	uint gunbladeChargeTimeStamp;
 	const bool chaseActive;
@@ -29,7 +29,7 @@ public:
 	const int16 pmoveFeatures;
 
 	/* object behaviors */
-	cClient @ f(); /* factory */ 
+	cClient @ f(); /* factory */
 
 	/* object methods */
 	int playerNum();
