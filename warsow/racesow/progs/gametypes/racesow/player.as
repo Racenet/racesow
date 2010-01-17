@@ -362,6 +362,17 @@ class Racesow_Player
 	}
 
 	/**
+	 * Mute the player and leave a message for everyone
+	 * @param cString message
+	 * @return void
+
+	void mute( cString message )
+	{
+		G_PrintMsg( null, S_COLOR_RED + message + "\n" );
+		G_GetClient( playerNum.toInt() ).muted = 1;
+	}
+	 */
+	/**
 	 * Cancel the current vote (equals to /opcall cancelvote)
 	 */
 	void cancelvote()
@@ -432,9 +443,89 @@ class Racesow_Player
 			G_CmdExecute("kick "+ playerNum + "\n");
 			showNotification = true;
 		}
-		// canncel the vote
+
+		// mute command
+		else if ( commandExists = command == "mute" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			cString playerNum = cmdString.getToken( 1 );
+			int mute = G_GetClient( playerNum.toInt() ).muted;
+			if( mute == 0 || mute == 2 )
+			G_GetClient( playerNum.toInt() ).muted = mute + 1;
+			showNotification = true;
+		}
+
+		// unmute command
+		else if ( commandExists = command == "unmute" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			cString playerNum = cmdString.getToken( 1 );
+			int mute = G_GetClient( playerNum.toInt() ).muted;
+			if( mute == 1 || mute == 3 )
+			G_GetClient( playerNum.toInt() ).muted = mute - 1;
+			showNotification = true;
+		}
+
+		// vmute command
+		else if ( commandExists = command == "vmute" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			cString playerNum = cmdString.getToken( 1 );
+			int mute = G_GetClient( playerNum.toInt() ).muted;
+			if( mute == 0 || mute == 1 )
+			G_GetClient( playerNum.toInt() ).muted = mute + 2;
+			showNotification = true;
+		}
+
+		// vunmute command
+		else if ( commandExists = command == "vunmute" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			cString playerNum = cmdString.getToken( 1 );
+			int mute = G_GetClient( playerNum.toInt() ).muted;
+			if( mute == 2 || mute == 3 )
+			G_GetClient( playerNum.toInt() ).muted = mute - 2;
+			showNotification = true;
+		}
+
+		// cancelvote command
 		else if ( commandExists = command == "cancelvote" )
 		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
 			cancelvote();
 		}
 		// help command
