@@ -133,6 +133,28 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
 	return @players[ client.playerNum() ].setClient( @client );
 }
 
+
+/**
+ * Racesow_GetPlayerNumber
+ * @param cstring playerName
+ * @return int
+ */
+int Racesow_GetClientNumber( cString playerName )
+{
+    cClient @client;
+
+    for ( int i = 0; i < maxClients; i++ )
+    {
+        @client = @G_GetClient( i );
+        if ( client.state() < CS_SPAWNED )
+            continue;
+			
+		if (client.getName().removeColorTokens() == playerName)
+			return client.playerNum();
+	}
+    return -1;
+}
+
 /**
  * race_respawner_think
  * the player has finished the race. This entity times his automatic respawning
@@ -236,33 +258,14 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
 	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
 	{
-		if ( g_freestyle.getBool() || g_allowammoswitch.getBool() )
-		{
-			if ( client.inventoryCount( client.pendingWeapon ) == 0 )
-			{
-				// something is really wrong as the client can't
-				// own a weapon which is not in his inventory
-				return false;
-			}
+		return player.ammoSwitch( @client );
 
-			uint strong_ammo = client.pendingWeapon + 9;
-			uint weak_ammo = client.pendingWeapon + 18;
-
-			if ( client.inventoryCount( strong_ammo ) > 0 )
-			{
-				client.inventorySetCount( weak_ammo, client.inventoryCount( strong_ammo ) );
-				client.inventorySetCount( strong_ammo, 0 );
-			}
-			else
-			{
-				client.inventorySetCount( strong_ammo, client.inventoryCount( weak_ammo ) );
-			}
-		}
-		else
-		{
-			sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n", @client );
-		}
 	}
+	else if ( ( cmdString == "privsay" ) )
+    {
+		return player.privSay( argsString, @client );
+        
+    }
 	else if ( ( cmdString == "weapondef" ) )
     {
 		return weaponDefCommand( argsString, @client );
@@ -773,6 +776,8 @@ void GT_InitGametype()
 	G_RegisterCommand( "ammoswitch" );
 	G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
+	
+	G_RegisterCommand( "privsay" );
 
     demoRecording = false;
 

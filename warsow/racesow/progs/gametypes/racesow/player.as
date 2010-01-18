@@ -347,6 +347,59 @@ class Racesow_Player
 
 		// maybe log messages for some reason to figure out ;)
 	}
+	
+	/**
+	* Send a message to another player's console 
+	* @param cString message, cClient @client
+	* @return void
+	*/
+	void sendMessage( cString message, cClient @client )
+	{
+		G_PrintMsg( client.getEnt(), message );
+	}
+
+	
+	/**
+	 * Send a message to another player
+	 * @param cString argString, cClient @client
+	 * @return bool
+	 */
+	bool privSay( cString argsString, cClient @client )
+	{
+		if (argsString.getToken( 0 ) == "" || argsString.getToken( 1 ) == "" )
+		{
+			sendMessage( S_COLOR_RED + "Empty arguments.\n", @client );
+			return false;
+		}
+		
+		
+		if ( argsString.getToken( 0 ).toInt() > maxClients)
+			return false;
+		cClient @target;
+		
+		if ( argsString.getToken( 0 ).isNumerical()==true)
+			@target = @G_GetClient( argsString.getToken( 0 ).toInt() );
+		else
+			if (Racesow_GetClientNumber( argsString.getToken( 0 )) != -1)
+				@target = @G_GetClient( Racesow_GetClientNumber( argsString.getToken( 0 )) );
+				
+		cString message = argsString.substr(argsString.getToken( 0 ).length()+1,argsString.length());
+		
+		// check if target doesn't exist
+		if ( @target == null || target.getName().length() <=2) 
+		{
+			this.sendMessage( S_COLOR_RED + "Invalid player!\n", @client );
+			return false;
+		}
+		else
+		{
+			sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.getName() 
+			+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @client );
+			sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + client.getName() 
+			+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @target );
+		}
+		return true;
+	}
 
 	/**
 	 * Kick the player and leave a message for everyone
@@ -378,6 +431,42 @@ class Racesow_Player
 	void cancelvote()
 	{
 		G_CmdExecute( "cancelvote" );
+	}
+	
+	/**
+	 * Switch player ammo between strong/weak
+	 * @param cClient @client
+	 * @return bool
+	 */
+	bool ammoSwitch( cClient @client )
+	{
+		if ( g_freestyle.getBool() || g_allowammoswitch.getBool() )
+		{
+			if ( client.inventoryCount( client.pendingWeapon ) == 0 )
+			{
+				// something is really wrong as the client can't
+				// own a weapon which is not in his inventory
+				return false;
+			}
+
+			uint strong_ammo = client.pendingWeapon + 9;
+			uint weak_ammo = client.pendingWeapon + 18;
+
+			if ( client.inventoryCount( strong_ammo ) > 0 )
+			{
+				client.inventorySetCount( weak_ammo, client.inventoryCount( strong_ammo ) );
+				client.inventorySetCount( strong_ammo, 0 );
+			}
+			else
+			{
+				client.inventorySetCount( strong_ammo, client.inventoryCount( weak_ammo ) );
+			}
+		}
+		else
+		{
+			sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n", @client );
+		}
+		return true;
 	}
 
 	/**
