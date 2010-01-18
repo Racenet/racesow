@@ -454,11 +454,12 @@ class Racesow_Player
 
 				return false;
 			}
-
 			cString playerNum = cmdString.getToken( 1 );
+			if( playerNum .toInt() > maxClients )
+				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 0 || mute == 2 )
-			G_GetClient( playerNum.toInt() ).muted = mute + 1;
+				G_GetClient( playerNum.toInt() ).muted = mute + 1;
 			showNotification = true;
 		}
 
@@ -474,9 +475,11 @@ class Racesow_Player
 			}
 
 			cString playerNum = cmdString.getToken( 1 );
+			if( playerNum .toInt() > maxClients )
+				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 1 || mute == 3 )
-			G_GetClient( playerNum.toInt() ).muted = mute - 1;
+				G_GetClient( playerNum.toInt() ).muted = mute - 1;
 			showNotification = true;
 		}
 
@@ -492,9 +495,11 @@ class Racesow_Player
 			}
 
 			cString playerNum = cmdString.getToken( 1 );
+			if( playerNum .toInt() > maxClients )
+				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 0 || mute == 1 )
-			G_GetClient( playerNum.toInt() ).muted = mute + 2;
+				G_GetClient( playerNum.toInt() ).muted = mute + 2;
 			showNotification = true;
 		}
 
@@ -510,9 +515,11 @@ class Racesow_Player
 			}
 
 			cString playerNum = cmdString.getToken( 1 );
+			if( playerNum .toInt() > maxClients )
+				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 2 || mute == 3 )
-			G_GetClient( playerNum.toInt() ).muted = mute - 2;
+				G_GetClient( playerNum.toInt() ).muted = mute - 2;
 			showNotification = true;
 		}
 
