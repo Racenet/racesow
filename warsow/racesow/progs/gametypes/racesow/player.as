@@ -578,6 +578,7 @@ class Racesow_Player
 				return false;
 			if( @players[ playerNum ].getClient() == null )
 				return false;
+			players[playerNum].remove( cmdString.getToken( 2 ) );
 			players[playerNum].isJoinlocked = true;
 			showNotification = true;
 		}
