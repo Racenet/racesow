@@ -347,9 +347,9 @@ class Racesow_Player
 
 		// maybe log messages for some reason to figure out ;)
 	}
-	
+
 	/**
-	* Send a message to another player's console 
+	* Send a message to another player's console
 	* @param cString message, cClient @client
 	* @return void
 	*/
@@ -358,7 +358,7 @@ class Racesow_Player
 		G_PrintMsg( client.getEnt(), message );
 	}
 
-	
+
 	/**
 	 * Send a message to another player
 	 * @param cString argString, cClient @client
@@ -371,31 +371,31 @@ class Racesow_Player
 			sendMessage( S_COLOR_RED + "Empty arguments.\n", @client );
 			return false;
 		}
-		
-		
+
+
 		if ( argsString.getToken( 0 ).toInt() > maxClients)
 			return false;
 		cClient @target;
-		
+
 		if ( argsString.getToken( 0 ).isNumerical()==true)
 			@target = @G_GetClient( argsString.getToken( 0 ).toInt() );
 		else
 			if (Racesow_GetClientNumber( argsString.getToken( 0 )) != -1)
 				@target = @G_GetClient( Racesow_GetClientNumber( argsString.getToken( 0 )) );
-				
+
 		cString message = argsString.substr(argsString.getToken( 0 ).length()+1,argsString.length());
-		
+
 		// check if target doesn't exist
-		if ( @target == null || target.getName().length() <=2) 
+		if ( @target == null || target.getName().length() <=2)
 		{
 			this.sendMessage( S_COLOR_RED + "Invalid player!\n", @client );
 			return false;
 		}
 		else
 		{
-			sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.getName() 
+			sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.getName()
 			+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @client );
-			sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + client.getName() 
+			sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + client.getName()
 			+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @target );
 		}
 		return true;
@@ -415,16 +415,18 @@ class Racesow_Player
 	}
 
 	/**
-	 * Mute the player and leave a message for everyone
+	 * Remove the player and leave a message for everyone
 	 * @param cString message
 	 * @return void
-
-	void mute( cString message )
-	{
-		G_PrintMsg( null, S_COLOR_RED + message + "\n" );
-		G_GetClient( playerNum.toInt() ).muted = 1;
-	}
 	 */
+	void remove( cString message )
+	{
+		if( message.length() > 0)
+			G_PrintMsg( null, S_COLOR_RED + message + "\n" );
+		this.client.team = TEAM_SPECTATOR;
+		this.client.respawn( true );
+	}
+
 	/**
 	 * Cancel the current vote (equals to /opcall cancelvote)
 	 */
@@ -432,7 +434,7 @@ class Racesow_Player
 	{
 		G_CmdExecute( "cancelvote" );
 	}
-	
+
 	/**
 	 * Switch player ammo between strong/weak
 	 * @param cClient @client
@@ -533,6 +535,26 @@ class Racesow_Player
 			showNotification = true;
 		}
 
+		// remove command
+		else if ( commandExists = command == "remove" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			int playerNum = cmdString.getToken( 1 ).toInt();
+			if( playerNum > maxClients )
+				return false;
+			if( players[playerNum].getClient() == null )
+				return false;
+			players[playerNum].remove( cmdString.getToken( 2 ) );
+			showNotification = true;
+		}
+
 		// mute command
 		else if ( commandExists = command == "mute" )
 		{
@@ -544,7 +566,7 @@ class Racesow_Player
 				return false;
 			}
 			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum .toInt() > maxClients )
+			if( playerNum.toInt() > maxClients )
 				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 0 || mute == 2 )
@@ -564,7 +586,7 @@ class Racesow_Player
 			}
 
 			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum .toInt() > maxClients )
+			if( playerNum.toInt() > maxClients )
 				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 1 || mute == 3 )
@@ -584,7 +606,7 @@ class Racesow_Player
 			}
 
 			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum .toInt() > maxClients )
+			if( playerNum.toInt() > maxClients )
 				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 0 || mute == 1 )
@@ -604,7 +626,7 @@ class Racesow_Player
 			}
 
 			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum .toInt() > maxClients )
+			if( playerNum.toInt() > maxClients )
 				return false;
 			int mute = G_GetClient( playerNum.toInt() ).muted;
 			if( mute == 2 || mute == 3 )
