@@ -28,6 +28,12 @@ class Racesow_Player
 	bool isJoinlocked;
 
 	/**
+	 * Is the player allowed to call a vote?
+	 * @var bool
+	 */
+	bool isVotemuted;
+
+	/**
 	 * The time when the player started idling
 	 * @var uint
 	 */
@@ -96,6 +102,7 @@ class Racesow_Player
 		this.idleTime = 0;
 		this.isSpawned = true;
 		this.isJoinlocked = false;
+		this.isVotemuted = false;
 		this.bestRaceTime = 0;
 		this.resetAuth();
 		this.auth.setPlayer(@this);
@@ -602,6 +609,47 @@ class Racesow_Player
 			players[playerNum].isJoinlocked = false;
 			showNotification = true;
 		}
+
+		// unjoinlock command
+		else if ( commandExists = command == "votemute" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			int playerNum = cmdString.getToken( 1 ).toInt();
+			if( playerNum > maxClients )
+				return false;
+			if( @players[ playerNum ].getClient() == null )
+				return false;
+			players[playerNum].isVotemuted = true;
+			showNotification = true;
+		}
+
+		// unvotemute command
+		else if ( commandExists = command == "unvotemute" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			int playerNum = cmdString.getToken( 1 ).toInt();
+			if( playerNum > maxClients )
+				return false;
+			if( @players[ playerNum ].getClient() == null )
+				return false;
+			players[playerNum].isVotemuted = false;
+			showNotification = true;
+		}
+
 
 		// mute command
 		else if ( commandExists = command == "mute" )

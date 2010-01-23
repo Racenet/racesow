@@ -292,6 +292,19 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return player.privSay( argsString, @client );
 
     }
+	else if ( ( cmdString == "callvotecheckpermission" ) )
+	{
+		if( player.isVotemuted )
+		{
+			sendMessage( S_COLOR_RED + "You are votemuted\n", @client );
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+
+	}
 	else if ( ( cmdString == "weapondef" ) )
     {
 		return weaponDefCommand( argsString, @client );
