@@ -136,7 +136,7 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
 
 /**
  * Racesow_GetPlayerNumber
- * @param cstring playerName
+ * @param cString playerName
  * @return int
  */
 int Racesow_GetClientNumber( cString playerName )
@@ -148,7 +148,7 @@ int Racesow_GetClientNumber( cString playerName )
         @client = @G_GetClient( i );
         if ( client.state() < CS_SPAWNED )
             continue;
-			
+
 		if (client.getName().removeColorTokens() == playerName)
 			return client.playerNum();
 	}
@@ -207,15 +207,41 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
     else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) )
     {
-        if ( @client != null )
+        if ( @client != null && !player.isJoinlocked )
         {
+        	if(client.team == TEAM_SPECTATOR)
+        	{
+        		sendMessage( S_COLOR_WHITE + "Join the game first.\n", @client );
+        	}
+        	else
+        	{
+        		player.restartRace();
+        		client.team = TEAM_PLAYERS;
+        		client.respawn( false );
+        	}
+        }
+
+        return true;
+    }
+
+    else if ( cmdString == "join" )
+    {
+        if ( @client != null && !player.isJoinlocked)
+        {
+        	if( client.team != TEAM_PLAYERS ) //spam protection
+    			G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_WHITE
+    					+ " joined the PLAYERS team.\n" ); // leave a message for everyone
             player.restartRace();
             client.team = TEAM_PLAYERS;
 			client.respawn( false );
         }
 
+        if( player.isJoinlocked )
+        	sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n", @client );
+
         return true;
     }
+
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
     {
 		if( g_freestyle.getBool() )
@@ -264,7 +290,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	else if ( ( cmdString == "privsay" ) )
     {
 		return player.privSay( argsString, @client );
-        
+
     }
 	else if ( ( cmdString == "weapondef" ) )
     {
@@ -767,6 +793,7 @@ void GT_InitGametype()
     // add commands
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
+    G_RegisterCommand( "join" );
     G_RegisterCommand( "top" );
 	G_RegisterCommand( "highscores" );
     G_RegisterCommand( "register" );
@@ -776,7 +803,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "ammoswitch" );
 	G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
-	
+
 	G_RegisterCommand( "privsay" );
 
     demoRecording = false;

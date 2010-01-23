@@ -22,6 +22,12 @@ class Racesow_Player
 	bool inOvertime;
 
 	/**
+	 * Is the player allowed to join?
+	 * @var bool
+	 */
+	bool isJoinlocked;
+
+	/**
 	 * The time when the player started idling
 	 * @var uint
 	 */
@@ -89,6 +95,7 @@ class Racesow_Player
 	{
 		this.idleTime = 0;
 		this.isSpawned = true;
+		this.isJoinlocked = false;
 		this.bestRaceTime = 0;
 		this.resetAuth();
 		this.auth.setPlayer(@this);
@@ -549,9 +556,49 @@ class Racesow_Player
 			int playerNum = cmdString.getToken( 1 ).toInt();
 			if( playerNum > maxClients )
 				return false;
-			if( players[playerNum].getClient() == null )
+			if( @players[playerNum].getClient() == null )
 				return false;
 			players[playerNum].remove( cmdString.getToken( 2 ) );
+			showNotification = true;
+		}
+
+		// joinlock command
+		else if ( commandExists = command == "joinlock" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			int playerNum = cmdString.getToken( 1 ).toInt();
+			if( playerNum > maxClients )
+				return false;
+			if( @players[ playerNum ].getClient() == null )
+				return false;
+			players[playerNum].isJoinlocked = true;
+			showNotification = true;
+		}
+
+		// unjoinlock command
+		else if ( commandExists = command == "unjoinlock" )
+		{
+			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+			{
+				this.sendMessage( S_COLOR_RED + "You are not permitted "
+					+ "to execute the command 'admin "+ cmdString +"'.\n" );
+
+				return false;
+			}
+
+			int playerNum = cmdString.getToken( 1 ).toInt();
+			if( playerNum > maxClients )
+				return false;
+			if( @players[ playerNum ].getClient() == null )
+				return false;
+			players[playerNum].isJoinlocked = false;
 			showNotification = true;
 		}
 
