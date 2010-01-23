@@ -1895,6 +1895,26 @@ void G_CallVotes_Think( void )
 	}
 }
 
+static qboolean G_VoteCheckPermission()
+{
+	char argsString[MAX_STRING_CHARS];
+	callvotedata_t* vote = &callvoteState.vote;
+	int i;
+
+	if( !vote || !vote->callvote || !vote->caller )
+		return qfalse;
+
+	Q_snprintfz( argsString, MAX_STRING_CHARS, "\"%s\"", vote->callvote->name );
+	for( i = 0; i < vote->argc; i++ )
+	{
+		Q_strncatz( argsString, " ", MAX_STRING_CHARS );
+		Q_strncatz( argsString, va( " \"%s\"", vote->argv[i] ), MAX_STRING_CHARS );
+	}
+
+	return G_asCallGameCommandScript( vote->caller->r.client, "callvotecheckpermission", argsString, vote->argc + 1 );
+}
+
+
 /*
 * G_CallVote
 */
@@ -2010,6 +2030,13 @@ static void G_CallVote( edict_t *ent, qboolean isopcall )
 	if( callvote->validate != NULL && !callvote->validate( &callvoteState.vote, qtrue ) )
 	{
 		G_CallVotes_PrintHelpToPlayer( ent, callvote );
+		G_CallVotes_Reset(); // free the args
+		return;
+	}
+
+	if( !G_VoteCheckPermission() )
+	{
+		//print not allowed here :)
 		G_CallVotes_Reset(); // free the args
 		return;
 	}
