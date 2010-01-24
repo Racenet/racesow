@@ -301,7 +301,38 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		}
 		else
 		{
-			return true;
+			cString vote = argsString.getToken( 0 );
+			if( vote == "mute" || vote == "vmute" ||
+					vote == "kickban" || vote == "kick" || vote == "remove" )
+			{
+				Racesow_Player @victimPlayer;
+				cString victim = argsString.getToken( 1 );
+
+				if ( Racesow_GetClientNumber( victim ) != -1)
+					@victimPlayer = players[ Racesow_GetClientNumber( victim ) ];
+				else if( victim.isNumerical() )
+					if ( victim.toInt() > maxClients )
+						return true;
+					else
+						@victimPlayer = players[ victim.toInt() ];
+				else
+					return true;
+
+				if( victimPlayer.auth.allow( RACESOW_AUTH_ADMIN ))
+				{
+					G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
+						+ " tried to " + argsString.getToken( 0 ) + " an admin.\n" );
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+			else
+			{
+				return true;
+			}
 		}
 
 	}
