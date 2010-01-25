@@ -86,7 +86,8 @@
             - added creation of shadow files for registered players
             - removed goal not to use a modded game module
             - changed session to use the clients ip as filename
-            - added ammoswitch
+            - added ammoswitch       
+            - protected admins from beeing kicked and callvoted etc...
 
         2009-09-23 / racesow 0.5.1c
             - extracted auth plugin from player model
@@ -130,7 +131,6 @@
         - optionally force movement type serverside
         - weapondefs, depending on movement type (see appendix for a summary of weapondefs)�
         - defrag like race-ghost for own, best and server best �
-        - protect admins from beeing kicked and callvoted etc...
 		
 		
 		
