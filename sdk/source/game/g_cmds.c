@@ -249,6 +249,12 @@ static void Cmd_Noclip_f( edict_t *ent )
 		return;
 	}
 
+	if( ent->s.team == TEAM_SPECTATOR )
+	{
+		G_PrintMsg( ent, "You can't use noclip while spectating.\n" );
+		return;
+	}
+
 	if( ent->movetype == MOVETYPE_NOCLIP )
 	{
 		ent->movetype = MOVETYPE_PLAYER;
