@@ -33,7 +33,7 @@ void rs_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, c
 		boxcenter[i] = origin[i] + maxs[i] + mins[i];
 
 	// find box radius to explosion origin direction
-	VectorSubtract( boxcenter, origin, pushdir );
+	VectorSubtract( boxcenter, point, pushdir );
 
 	g_distance = sqrt( pushdir[0]*pushdir[0] + pushdir[1]*pushdir[1] ); // distance on the virtual ground
 	h_distance = fabs( pushdir[2] );                                // corrected distance in height
@@ -64,7 +64,7 @@ void rs_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, c
 		clamp( *kickFrac, 0.0f, 1.0f );
 	}	
 
-	VectorSubtract( boxcenter, point, pushdir );
+	//VectorSubtract( boxcenter, point, pushdir );
 	VectorNormalizeFast( pushdir );
 }
 
