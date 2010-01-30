@@ -354,9 +354,9 @@
 		int seconds = localTime - this.violateNickProtectionSince;
 		if ( seconds == this.lastViolateProtectionMessage )
 			return -1; // nothing to do
-        
+
 		this.lastViolateProtectionMessage = seconds;
-        
+
 		if ( seconds < 11 )
 			return 1;
 
@@ -391,7 +391,7 @@
 			this.violateNickProtectionSince = localTime;
 			this.player.getClient().addAward(S_COLOR_RED + "NICKNAME PROTECTION!");
 			this.player.getClient().addAward(S_COLOR_RED + "CHECK THE CONSOLE NOW!");
-			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which dos not belong to you.\n"
+			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
 				+ "If you don't authenticate or change your nickname within X TIMEUNIT you will be kicked.\n" );
 
 		}
