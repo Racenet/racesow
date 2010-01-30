@@ -348,22 +348,28 @@ class Racesow_Player
 	}
 
     /**
-     * Test if the player is doing a perfect
+     * Rate the current
      * plasma climb.
-     * @return bool
+     * @return int
      */
-    bool isPerfectPlasmaClimbing()
+    int ratePlasmaClimbing()
     {
         if ( this.client.weapon != WEAP_PLASMAGUN )
-            return false;
+            return 0;
         
         if ( this.client.getEnt().getVelocity().z <= 0 )
-            return false;
+            return 0;
 
-        if ( this.client.getEnt().getAngles().x >= 75 || this.client.getEnt().getAngles().x <= 70)
-            return false;
+        if ( (this.client.getEnt().getAngles().x) < 69 || (this.client.getEnt().getAngles().x > 73) )
+            return 0;
+        
+        if ( (this.client.getEnt().getAngles().x >= 71) && (this.client.getEnt().getAngles().x <= 72) )
+            return 2;
+        
+        if ( (this.client.getEnt().getAngles().x) >= 69 && (this.client.getEnt().getAngles().x <= 73) )
+            return 1;
 
-        return true;
+        return 0;
     }
 
 
@@ -373,8 +379,9 @@ class Racesow_Player
      */
     int processPlasmaClimbStatus()
     {
-    
-        if ( !this.isPerfectPlasmaClimbing() )
+        int rate = this.ratePlasmaClimbing();
+
+        if ( rate == 0)
         {
             this.plasmaPerfectClimbSince = 0;
             return 0;
@@ -384,18 +391,18 @@ class Racesow_Player
             if ( this.plasmaPerfectClimbSince == 0 )
             {
                 this.plasmaPerfectClimbSince = localTime;
-                return 1;
+                return 0;
             }
 
             int seconds = localTime - this.plasmaPerfectClimbSince;
             if ( seconds > 1 )
             {
                 this.plasmaPerfectClimbSince = 0;
-                return 2;
+                return rate;
             }
             else
             {
-                return 1;
+                return 0;
             }
     
         }

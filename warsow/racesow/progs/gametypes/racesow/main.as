@@ -590,9 +590,14 @@ void GT_ThinkRules()
 		        player.kick( "You violated against the nickname protection." );
 		}
         
-        if ( player.processPlasmaClimbStatus() == 2 )
+        int status;
+        if ( (status = player.processPlasmaClimbStatus()) > 0 )
         {
-            player.getClient().addAward(S_COLOR_GREEN + "Perfect Plasma Climb !");
+            if (status == 1)
+                player.getClient().addAward(S_COLOR_YELLOW + "Good Plasma Climb !");
+
+            if (status == 2)
+                player.getClient().addAward(S_COLOR_GREEN + "Perfect Plasma Climb !");
         }
 
         // always clear all before setting
