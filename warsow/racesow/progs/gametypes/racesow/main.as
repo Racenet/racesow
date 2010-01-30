@@ -589,6 +589,11 @@ void GT_ThinkRules()
 		    else if ( countdownState == 2 )
 		        player.kick( "You violated against the nickname protection." );
 		}
+        
+        if ( player.processPlasmaClimbStatus() == 2 )
+        {
+            player.getClient().addAward(S_COLOR_GREEN + "Perfect Plasma Climb !");
+        }
 
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );

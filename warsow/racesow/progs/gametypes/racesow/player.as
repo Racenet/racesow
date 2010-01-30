@@ -39,6 +39,13 @@ class Racesow_Player
 	 */
 	uint idleTime;
 
+    /**
+     * the time when the player started to make 
+     * a perfect plasma climb
+     * @var uint64
+     */
+    uint64 plasmaPerfectClimbSince;
+
 	/**
 	 * The player's best race
 	 * @var uint
@@ -104,6 +111,7 @@ class Racesow_Player
 		this.isJoinlocked = false;
 		this.isVotemuted = false;
 		this.bestRaceTime = 0;
+        this.plasmaPerfectClimbSince = 0;
 		this.resetAuth();
 		this.auth.setPlayer(@this);
 		this.bestCheckPoints.resize( numCheckpoints );
@@ -339,6 +347,60 @@ class Racesow_Player
 		return this.idleTime != 0;
 	}
 
+    /**
+     * Test if the player is doing a perfect
+     * plasma climb.
+     * @return bool
+     */
+    bool isPerfectPlasmaClimbing()
+    {
+        if ( this.client.weapon != WEAP_PLASMAGUN )
+            return false;
+        
+        if ( this.client.getEnt().getVelocity().z <= 0 )
+            return false;
+
+        if ( this.client.getEnt().getAngles().x >= 75 || this.client.getEnt().getAngles().x <= 70)
+            return false;
+
+        return true;
+    }
+
+
+    /**
+     * Get the player's status concerning plasma climb.
+     * @return int
+     */
+    int processPlasmaClimbStatus()
+    {
+    
+        if ( !this.isPerfectPlasmaClimbing() )
+        {
+            this.plasmaPerfectClimbSince = 0;
+            return 0;
+        }
+        else
+        {
+            if ( this.plasmaPerfectClimbSince == 0 )
+            {
+                this.plasmaPerfectClimbSince = localTime;
+                return 1;
+            }
+
+            int seconds = localTime - this.plasmaPerfectClimbSince;
+            if ( seconds > 1 )
+            {
+                this.plasmaPerfectClimbSince = 0;
+                return 2;
+            }
+            else
+            {
+                return 1;
+            }
+    
+        }
+    }
+
 	/**
 	 * startOvertime
 	 * @return void
@@ -346,7 +408,7 @@ class Racesow_Player
 	void startOvertime()
 	{
 		this.inOvertime = true;
-		this.sendMessage( S_COLOR_RED + "Please hurry up, theo ther players are waiting for you to finish...\n" );
+		this.sendMessage( S_COLOR_RED + "Please hurry up, the ther players are waiting for you to finish...\n" );
 	}
 
 	/**
