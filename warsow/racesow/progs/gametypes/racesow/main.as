@@ -466,6 +466,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "userinfochanged" )
 		{
+			if( !client.connecting )
 			player.getAuth().refresh( args );
 		}
 	}
@@ -589,7 +590,7 @@ void GT_ThinkRules()
 		    else if ( countdownState == 2 )
 		        player.kick( "You violated against the nickname protection." );
 		}
-        
+
         int status;
         if ( (status = player.processPlasmaClimbStatus()) > 0 )
         {
