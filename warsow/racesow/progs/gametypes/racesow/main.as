@@ -801,9 +801,9 @@ void GT_InitGametype()
     gametype.hasChallengersQueue = false;
     gametype.maxPlayersPerTeam = 0;
 
-    gametype.ammoRespawn = 1;
+    gametype.ammoRespawn = 0;
     gametype.armorRespawn = 1;
-    gametype.weaponRespawn = 1;
+    gametype.weaponRespawn = 0;
     gametype.healthRespawn = 1;
     gametype.powerupRespawn = 1;
     gametype.megahealthRespawn = 1;

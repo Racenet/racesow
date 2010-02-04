@@ -202,6 +202,7 @@ static qboolean Pickup_Ammo( edict_t *ent, edict_t *other )
 {
 	int oldcount;
 	int count;
+	int max;
 	qboolean weapon;
 
 	// ammo packs are special
@@ -216,6 +217,14 @@ static qboolean Pickup_Ammo( edict_t *ent, edict_t *other )
 		count = ent->item->quantity;
 
 	oldcount = other->r.client->ps.inventory[ent->item->tag];
+
+	max = ent->item->inventory_max;
+
+	if( max <= 0 )
+		max = 255;
+
+	if( (int)oldcount >= max )
+		return qfalse; //racesow: player already has max amount of ammo
 
 	if( !Add_Ammo( other->r.client, ent->item, count, qtrue ) )
 		return qfalse;
@@ -343,7 +352,7 @@ qboolean Add_Armor( edict_t *ent, edict_t *other, qboolean pick_it )
 		client->level.stats.armor_taken += ent->item->quantity;
 		teamlist[other->s.team].stats.armor_taken += ent->item->quantity;
 	}
-	
+
 	return qtrue;
 }
 
@@ -385,6 +394,15 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 
 	if( !G_Gametype_CanPickUpItem( ent->item ) )
 		return;
+
+	int oldcount;
+	int max;
+	oldcount = other->r.client->ps.inventory[ent->item->tag];
+	max = ent->item->inventory_max;
+	if( max <= 0 )
+		max = 255;
+	if( (int)oldcount >= max )
+		return; //racesow: player already has max amount of the weapon
 
 	taken = G_PickupItem( ent, other );
 
@@ -499,7 +517,7 @@ edict_t *Drop_Item( edict_t *ent, gsitem_t *item )
 						anything = qtrue;
 					}
 				}
-				
+
 				if( item->tag == AMMO_PACK_STRONG || item->tag == AMMO_PACK )
 				{
 					int strongTag = GS_FindItemByTag( w )->ammo_tag;
