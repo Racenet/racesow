@@ -805,9 +805,9 @@ void GT_InitGametype()
     gametype.armorRespawn = 1;
     gametype.weaponRespawn = 0;
     gametype.healthRespawn = 1;
-    gametype.powerupRespawn = 1;
+    gametype.powerupRespawn = 0;
     gametype.megahealthRespawn = 1;
-    gametype.ultrahealthRespawn = 1;
+    gametype.ultrahealthRespawn = 0;
 
     gametype.readyAnnouncementEnabled = false;
     gametype.scoreAnnouncementEnabled = false;
