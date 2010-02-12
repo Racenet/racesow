@@ -383,6 +383,9 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 {
 	qboolean taken;
 
+	int oldcount;
+	int max;
+
 	if( !other->r.client || G_ISGHOSTING( other ) )
 		return;
 
@@ -395,8 +398,7 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 	if( !G_Gametype_CanPickUpItem( ent->item ) )
 		return;
 
-	int oldcount;
-	int max;
+
 	oldcount = other->r.client->ps.inventory[ent->item->tag];
 	max = ent->item->inventory_max;
 	if( max <= 0 )
