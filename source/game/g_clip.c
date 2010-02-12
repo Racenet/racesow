@@ -872,7 +872,12 @@ void GClip_SetBrushModel( edict_t *ent, char *name )
 	}
 
 	// brush model
-	ent->s.modelindex = trap_ModelIndex( name );
+	//ent->s.modelindex = trap_ModelIndex( name );
+	
+	// racesow: THIS IS A VERY DIRTY "FIX": it assigns normally unreachable models (the ones over MAX_MODELS) to unrelated models..
+	// normally this only affects buggy maps that otherwise wouldn't load (like amt-freestyle3)
+	ent->s.modelindex = atoi( name+1 ); 
+
 	assert( ent->s.modelindex == (unsigned int)atoi( name + 1 ) );
 	cmodel = trap_CM_InlineModel( ent->s.modelindex );
 	trap_CM_InlineModelBounds( cmodel, ent->r.mins, ent->r.maxs );
