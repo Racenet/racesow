@@ -391,7 +391,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			850,							// reload frametime
 			/* !racesow */
 			0,								// cooldown frametime
-			10000,							// projectile timeout
+			100000,							// projectile timeout racesow
 			0,								// smooth refire
 
 			//damages
@@ -427,7 +427,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			850,							// reload frametime
 			/* !racesow */
 			0,								// cooldown frametime
-			10000,							// projectile timeout
+			100000,							// projectile timeout racesow
 			0,								// smooth refire
 
 			//damages
@@ -450,7 +450,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			10								// max amount
 		},
 	},
-			
+
 	{
 		"Plasmagun",
 		WEAP_PLASMAGUN,
