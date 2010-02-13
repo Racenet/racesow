@@ -60,9 +60,9 @@ void rs_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, c
 
 	if( kickFrac )
 	{
-		*kickFrac = 1.0 - fabs( distance / maxradius ); 
+		*kickFrac = 1.0 - fabs( distance / maxradius );
 		clamp( *kickFrac, 0.0f, 1.0f );
-	}	
+	}
 
 	VectorSubtract( boxcenter, point, pushdir );
 	VectorNormalizeFast( pushdir );
@@ -148,4 +148,72 @@ void RS_shooter_plasma( edict_t *self ) {
 //===============
 void RS_shooter_grenade( edict_t *self ) {
     RS_InitShooter( self, WEAP_GRENADELAUNCHER);
+}
+
+//=================
+//QUAKED target_delay (1 0 0) (-8 -8 -8) (8 8 8)
+//"wait" seconds to pause before firing targets.
+//=================
+void Think_Target_Delay( edict_t *self ) {
+
+    G_UseTargets( self, self->activator );
+}
+
+//=================
+//Use_Target_Delay
+//=================
+void Use_Target_Delay( edict_t *self, edict_t *other, edict_t *activator ) {
+    self->nextThink = level.time + self->wait * 1000;
+    self->think = Think_Target_Delay;
+    self->activator = activator;
+}
+
+//=================
+//RS_target_delay
+//=================
+void RS_target_delay( edict_t *self ) {
+
+    if ( !self->wait ) {
+        self->wait = 1;
+    }
+    self->use = Use_Target_Delay;
+}
+
+
+//==========================================================
+//QUAKED target_relay (0 .7 .7) (-8 -8 -8) (8 8 8) RED_ONLY BLUE_ONLY RANDOM
+//This can only be activated by other triggers which will cause it in turn to activate its own targets.
+//-------- KEYS --------
+//targetname : activating trigger points to this.
+//target : this points to entities to activate when this entity is triggered.
+//notfree : when set to 1, entity will not spawn in "Free for all" and "Tournament" modes.
+//notteam : when set to 1, entity will not spawn in "Teamplay" and "CTF" modes.
+//notsingle : when set to 1, entity will not spawn in Single Player mode (bot play mode).
+//-------- SPAWNFLAGS --------
+//RED_ONLY : only red team players can activate trigger. <- WRONG
+//BLUE_ONLY : only red team players can activate trigger. <- WRONG
+//RANDOM : one one of the targeted entities will be triggered at random.
+void target_relay_use (edict_t *self, edict_t *other, edict_t *activator) {
+    if ( ( self->spawnflags & 1 ) && activator->s.team && activator->s.team != TEAM_ALPHA ) {
+        return;
+    }
+    if ( ( self->spawnflags & 2 ) && activator->s.team && activator->s.team != TEAM_BETA ) {
+        return;
+    }
+    if ( self->spawnflags & 4 ) {
+        edict_t *ent;
+        ent = G_PickTarget( self->target );
+        if ( ent && ent->use ) {
+            ent->use( ent, self, activator );
+        }
+        return;
+    }
+    G_UseTargets (self, activator);
+}
+
+//=================
+//RS_target_relay
+//=================
+void RS_target_relay (edict_t *self) {
+    self->use = target_relay_use;
 }
