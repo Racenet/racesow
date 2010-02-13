@@ -11,3 +11,7 @@ void RS_InitShooter_Finish( edict_t *self );
 void RS_shooter_rocket( edict_t *self );
 void RS_shooter_plasma( edict_t *self );
 void RS_shooter_grenade( edict_t *self );
+
+// target_delay
+void RS_target_delay( edict_t *self );
+void RS_target_relay (edict_t *self);

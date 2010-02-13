@@ -141,7 +141,9 @@ spawn_t	spawns[] = {
 
 	{ "worldspawn", SP_worldspawn },
 
-	// Racesow	
+	// Racesow
+	{ "target_relay", RS_target_relay },
+	{ "target_delay", RS_target_delay },
 	{ "shooter_rocket", RS_shooter_rocket },
 	{ "shooter_grenade", RS_shooter_grenade },
 	{ "shooter_plasma", RS_shooter_plasma },
@@ -213,7 +215,7 @@ static qboolean G_CanSpawnEntity( edict_t *ent )
 		if( !strstr( st.gametype, gs.gametypeName ) )
 			return qfalse;
 	}
-		
+
 	if( ( item = G_ItemForEntity( ent ) ) != NULL )
 	{
 		// not pickable items aren't either spawnable
@@ -843,7 +845,7 @@ void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int lev
 	trap_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "" );
 	trap_ConfigString( CS_SCB_PLAYERTAB_TITLES, "" );
 	trap_ConfigString( CS_MATCHNAME, "" );
-	
+
 	G_InitGameCommands();
 	G_MapLocations_Init();
 	G_CallVotes_Init();
