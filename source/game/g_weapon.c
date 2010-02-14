@@ -1194,11 +1194,12 @@ void W_Fire_Electrobolt_Combined( edict_t *self, vec3_t start, vec3_t angles, fl
 
 		// some entity was touched
 		hit = &game.edicts[tr.ent];
+		/* racesow
 		if( hit == world )  // stop dead if hit the world
 			break;
 		if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
 			break;
-
+		*/
 		// allow trail to go through BBOX entities (players, gibs, etc)
 		if( !ISBRUSHMODEL( hit->s.modelindex ) )
 			ignore = hit;
@@ -1296,11 +1297,12 @@ void W_Fire_Electrobolt_FullInstant( edict_t *self, vec3_t start, vec3_t angles,
 
 		// some entity was touched
 		hit = &game.edicts[tr.ent];
+		/* racesow
 		if( hit == world )  // stop dead if hit the world
 			break;
 		if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
 			break;
-
+		*/
 		// allow trail to go through BBOX entities (players, gibs, etc)
 		if( !ISBRUSHMODEL( hit->s.modelindex ) )
 			ignore = hit;
@@ -1403,7 +1405,7 @@ void W_Fire_Instagun( edict_t *self, vec3_t start, vec3_t angles, float damage, 
 		ignore = NULL;
 		if( tr.ent == -1 )
 			break;
-
+		/* racesow
 		// some entity was touched
 		if( tr.ent == world->s.number
 			|| game.edicts[tr.ent].movetype == MOVETYPE_NONE
@@ -1429,7 +1431,7 @@ void W_Fire_Instagun( edict_t *self, vec3_t start, vec3_t angles, float damage, 
 			}
 			break;
 		}
-
+		*/
 		// allow trail to go through SOLID_BBOX entities (players, gibs, etc)
 		if( !ISBRUSHMODEL( game.edicts[tr.ent].s.modelindex ) )
 			ignore = &game.edicts[tr.ent];
