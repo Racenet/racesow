@@ -74,6 +74,7 @@ void rs_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, c
 void RS_UseShooter( edict_t *self, edict_t *other, edict_t *activator ) {
 
 	vec3_t      dir;
+	vec3_t      angles;
     gs_weapon_definition_t *weapondef = NULL;
 
     if ( self->enemy ) {
@@ -83,18 +84,19 @@ void RS_UseShooter( edict_t *self, edict_t *other, edict_t *activator ) {
         VectorCopy( self->moveinfo.movedir, dir );
         VectorNormalize( dir );
     }
-
+    VecToAngles( dir, angles );
 	switch ( self->s.weapon ) {
         case WEAP_GRENADELAUNCHER:
-            //W_Fire_Grenade( activator, self->s.origin, dir, firedef->speed, damage, knockback, mindmg, firedef->splash_radius, firedef->timeout, MOD_GRENADE_W, timeDelta );
+        	weapondef = GS_GetWeaponDef( WEAP_GRENADELAUNCHER );
+            W_Fire_Grenade( activator, self->s.origin, angles, weapondef->firedef.speed, weapondef->firedef.damage, weapondef->firedef.minknockback, weapondef->firedef.knockback, weapondef->firedef.stun, weapondef->firedef.mindamage, weapondef->firedef.splash_radius, weapondef->firedef.timeout, MOD_GRENADE_W, 0, qfalse );
             break;
         case WEAP_ROCKETLAUNCHER:
 			weapondef = GS_GetWeaponDef( WEAP_ROCKETLAUNCHER );
-            //W_Fire_Rocket( activator, self->s.origin, dir, speed, damage, knockback, mindmg, firedef->splash_radius, firedef->timeout, MOD_ROCKET_W, 0 );
-			W_Fire_Rocket( activator, self->s.origin, dir, weapondef->firedef.speed, weapondef->firedef.damage, weapondef->firedef.minknockback, weapondef->firedef.knockback, weapondef->firedef.stun, weapondef->firedef.mindamage, weapondef->firedef.splash_radius, weapondef->firedef.timeout, MOD_ROCKET_W, 0 );
+			W_Fire_Rocket( activator, self->s.origin, angles, weapondef->firedef.speed, weapondef->firedef.damage, weapondef->firedef.minknockback, weapondef->firedef.knockback, weapondef->firedef.stun, weapondef->firedef.mindamage, weapondef->firedef.splash_radius, weapondef->firedef.timeout, MOD_ROCKET_W, 0 );
             break;
         case WEAP_PLASMAGUN:
-            // W_Fire_Plasma( activator, self->s.origin, dir, damage, knockback, mindmg, firedef->splash_radius, firedef->speed, firedef->timeout, MOD_PLASMA_W, timeDelta );
+        	weapondef = GS_GetWeaponDef( WEAP_PLASMAGUN );
+            W_Fire_Plasma( activator, self->s.origin, angles, weapondef->firedef.speed, weapondef->firedef.damage, weapondef->firedef.minknockback, weapondef->firedef.knockback, weapondef->firedef.stun, weapondef->firedef.mindamage, weapondef->firedef.splash_radius, weapondef->firedef.timeout, MOD_PLASMA_W, 0 );
             break;
     }
 
