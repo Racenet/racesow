@@ -383,7 +383,8 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 {
 	qboolean taken;
 
-
+	int oldcount;
+	int max;
 
 	if( !other->r.client || G_ISGHOSTING( other ) )
 		return;
@@ -397,20 +398,13 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 	if( !G_Gametype_CanPickUpItem( ent->item ) )
 		return;
 
-	// racesow
-	int oldcountweak;
-	int maxweak;
-	qboolean hasweapon = qfalse;
 
-	if( other->r.client->ps.inventory[ent->item->tag] > 0 )
-		hasweapon = qtrue;
-	oldcountweak = other->r.client->ps.inventory[ent->item->weakammo_tag];
-	maxweak = GS_FindItemByTag( ent->item->weakammo_tag )->inventory_max;
-	if( maxweak <= 0 )
-		maxweak = 255;
-	if( (int)oldcountweak >= maxweak && hasweapon )
+	oldcount = other->r.client->ps.inventory[ent->item->tag];
+	max = ent->item->inventory_max;
+	if( max <= 0 )
+		max = 255;
+	if( (int)oldcount >= max )
 		return; //racesow: player already has max amount of the weapon
-	// !racesow
 
 	taken = G_PickupItem( ent, other );
 
