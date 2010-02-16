@@ -174,9 +174,9 @@ static void G_ProjectileDistancePrestep( edict_t *projectile, float distance )
 	vec3_t plasma_hack_start;
 #endif
 
-	if( projectile->movetype != MOVETYPE_TOSS 
+	if( projectile->movetype != MOVETYPE_TOSS
 		&& projectile->movetype != MOVETYPE_LINEARPROJECTILE
-		&& projectile->movetype != MOVETYPE_BOUNCE 
+		&& projectile->movetype != MOVETYPE_BOUNCE
 		&& projectile->movetype != MOVETYPE_BOUNCEGRENADE )
 		return;
 
@@ -252,6 +252,8 @@ qboolean G_CheckBladeAutoAttack( player_state_t *playerState )
 	trace_t trace;
 	edict_t *targ, *player;
 	gs_weapon_definition_t *weapondef = GS_GetWeaponDef( WEAP_GUNBLADE );
+	cvar_t *g_freestyle; //racesow
+	g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); //racesow
 
 	if( playerState->POVnum <= 0 || (int)playerState->POVnum > gs.maxclients )
 		return qfalse;
@@ -274,7 +276,7 @@ qboolean G_CheckBladeAutoAttack( player_state_t *playerState )
 	if( !targ->takedamage || targ->s.type != ET_PLAYER )
 		return qfalse;
 
-	if( GS_RaceGametype() && targ->team == player->team )
+	if( GS_RaceGametype() && targ->team == player->team && !g_freestyle->integer ) //racesow
 		return qfalse;
 
 	if( GS_IsTeamDamage( &targ->s, &player->s ) )
@@ -496,7 +498,7 @@ static edict_t *G_Fire_Riotgun( vec3_t origin, vec3_t angles, firedef_t *firedef
 		knockback *= QUAD_KNOCKBACK_SCALE;
 	}
 
-	W_Fire_Riotgun( owner, origin, angles, seed, range, firedef->spread, firedef->projectile_count, 
+	W_Fire_Riotgun( owner, origin, angles, seed, range, firedef->spread, firedef->projectile_count,
 		damage, knockback, stun, mod, timeDelta );
 
 	return NULL;
@@ -758,7 +760,7 @@ void G_FireWeapon( edict_t *ent, int parm )
 	vec3_t viewoffset = { 0, 0, 0 };
 	int ucmdSeed;
 	// racesow
-	float prestep; 
+	float prestep;
 	// !racesow
 
 	weapondef = GS_GetWeaponDef( ( parm & ~EV_INVERSE ) );
@@ -782,11 +784,11 @@ void G_FireWeapon( edict_t *ent, int parm )
 	VectorAdd( ent->s.origin, viewoffset, origin );
 
 	// racesow
-	prestep=g_projectile_prestep->value; 
+	prestep=g_projectile_prestep->value;
 	// !racesow
-	
 
-	// shoot 
+
+	// shoot
 
 	projectile = NULL;
 
@@ -851,7 +853,7 @@ void G_FireWeapon( edict_t *ent, int parm )
 	}
 
 	// add stats
-	if( ent->r.client && weapondef->weapon_id != WEAP_NONE ) 
+	if( ent->r.client && weapondef->weapon_id != WEAP_NONE )
 		ent->r.client->level.stats.accuracy_shots[firedef->ammo_id - AMMO_GUNBLADE] += firedef->projectile_count;
 
 	if( projectile )
@@ -867,7 +869,7 @@ void G_FireWeapon( edict_t *ent, int parm )
 	// racesow: enable skipping no_antilag if rs_rocket_antilag is 1
 	if ( GS_RaceGametype() && ((trap_Cvar_Get( "rs_rocket_antilag", "0", CVAR_ARCHIVE )->integer==1 && projectile->s.type == ET_ROCKET)))
 		return;
-	// !racesow 
+	// !racesow
 
 #ifdef NO_ROCKET_ANTILAG
 	// hack for disabling antilag on rockets
