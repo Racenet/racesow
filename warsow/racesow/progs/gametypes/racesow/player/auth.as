@@ -240,6 +240,16 @@
 
 			return false;
 		}
+		
+		cString name = toFileName(this.player.getName().removeColorTokens());
+		cString nickFile = gameDataDir + "/nicknames/" + name.substr(0,1) + "/" + name;
+
+		if ( G_FileLength( nickFile ) != -1 && G_LoadFile( nickFile ) != authName )
+		{
+			G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED
+				+ " does not have permission to authenticate as "+ authName +"\n" );
+			return false;
+		}
 
 		if ( this.lastViolateProtectionMessage != 0 )
 		{
