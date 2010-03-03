@@ -285,7 +285,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
 	{
 		return player.ammoSwitch( @client );
-
+	}
+	else if ( ( cmdString == "chrono" ) )
+	{
+		return player.chronoUse( argsString );
 	}
 	else if ( ( cmdString == "privsay" ) )
     {
@@ -625,8 +628,6 @@ void GT_ThinkRules()
         	client.setHUDStat( STAT_TIME_RECORD, map.getStatsHandler().getHighScore(0).getTime() / 100 );
 		}
 
-        client.setHUDStat( STAT_TIME_ALPHA, -9999 );
-        client.setHUDStat( STAT_TIME_BETA, -9999 );
 
         if ( map.getStatsHandler().getHighScore(0).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
@@ -634,11 +635,14 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
         if ( map.getStatsHandler().getHighScore(2).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
+
+    	if( player.chronoInUse() )
+    		client.setHUDStat( STAT_TIME_ALPHA, (levelTime - player.chronoTime()) / 100 );
     }
 
-	if ( (g_freestyle.getBool()) ) // charge gunblade for freestyle
+	if ( g_freestyle.getBool() )
 	{
-	    for ( int i = 0; i < maxClients; i++ )
+	    for ( int i = 0; i < maxClients; i++ )  // charge gunblade for freestyle
 	    {
 	        if ( G_GetClient( i ).inventoryCount( WEAP_GUNBLADE ) == 0 )
 	            continue;
@@ -858,6 +862,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "ammoswitch" );
 	G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
+	G_RegisterCommand( "chrono" );
 
 	G_RegisterCommand( "privsay" );
 

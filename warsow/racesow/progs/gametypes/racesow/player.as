@@ -34,13 +34,25 @@ class Racesow_Player
 	bool isVotemuted;
 
 	/**
+	 * Is the player using the chrono function?
+	 * @var bool
+	 */
+	bool isUsingChrono;
+
+	/**
+	 * The time when the player started the chrono
+	 * @var uint
+	 */
+	uint chronoStartTime;
+
+	/**
 	 * The time when the player started idling
 	 * @var uint
 	 */
 	uint idleTime;
 
     /**
-     * the time when the player started to make 
+     * the time when the player started to make
      * a perfect plasma climb
      * @var uint64
      */
@@ -356,16 +368,16 @@ class Racesow_Player
     {
         if ( this.client.weapon != WEAP_PLASMAGUN )
             return 0;
-        
+
         if ( this.client.getEnt().getVelocity().z <= 0 )
             return 0;
 
         if ( (this.client.getEnt().getAngles().x) < 69 || (this.client.getEnt().getAngles().x > 73) )
             return 0;
-        
+
         if ( (this.client.getEnt().getAngles().x >= 71) && (this.client.getEnt().getAngles().x <= 72) )
             return 2;
-        
+
         if ( (this.client.getEnt().getAngles().x) >= 69 && (this.client.getEnt().getAngles().x <= 73) )
             return 1;
 
@@ -404,7 +416,7 @@ class Racesow_Player
             {
                 return 0;
             }
-    
+
         }
     }
 
@@ -553,6 +565,55 @@ class Racesow_Player
 		}
 		return true;
 	}
+
+	/**
+	 * Chrono function
+	 * @parm cString cmdString
+	 * @return bool
+	 */
+	bool chronoUse( cString cmdString )
+	{
+		cString command = cmdString.getToken( 0 );
+		if ( g_freestyle.getBool() )
+		{
+			if( command == "start" ) // chrono start
+			{
+				this.chronoStartTime = levelTime;
+				this.isUsingChrono = true;
+			}
+			else if( command == "reset" )
+			{
+				this.chronoStartTime = 0;
+				this.isUsingChrono = false;
+			}
+			else
+			{
+				this.sendMessage( S_COLOR_WHITE + "Chrono function. Usage: chrono start/reset.\n" );
+			}
+
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Chrono function
+	 * @return bool
+	 */
+	bool chronoInUse()
+	{
+		return this.isUsingChrono;
+	}
+
+	/**
+	 * Chrono time
+	 * @return uint
+	 */
+	uint chronoTime()
+	{
+		return this.chronoStartTime;
+	}
+
 
 	/**
 	 * Execute an admin command
