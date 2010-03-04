@@ -49,7 +49,7 @@ void G_Teams_Init( void )
 	memset( teamlist, 0, sizeof( teamlist ) );
 	for( team = TEAM_SPECTATOR; team < GS_MAX_TEAMS; team++ )
 		teamlist[team].playerIndices[0] = -1;
-	
+
 	for( ent = game.edicts + 1; PLAYERNUM( ent ) < gs.maxclients; ent++ )
 	{
 		if( ent->r.inuse )
@@ -63,7 +63,7 @@ void G_Teams_Init( void )
 			ent->r.client->resp.timeStamp = level.time;
 		}
 	}
-	
+
 }
 
 //=================
@@ -295,7 +295,7 @@ void G_Teams_Invite_f( edict_t *ent )
 
 		for( i = 0, e = game.edicts+1; i < gs.maxclients; i++, e++ )
 		{
-			if( !e->r.inuse ) 
+			if( !e->r.inuse )
 				continue;
 
 			Q_strncatz( msg, va( "%3i: %s\n", PLAYERNUM( e ), e->r.client->netname ), sizeof( msg ) );
@@ -343,12 +343,12 @@ void G_Teams_SetTeam( edict_t *ent, int team )
 
 	//clean scores at changing team
 	memset( &ent->r.client->level.stats, 0, sizeof( ent->r.client->level.stats ) );
-
-	memset( &ent->r.client->teamstate, 0, sizeof( ent->r.client->teamstate ) );
+//racesow: do not delete position settings
+//	memset( &ent->r.client->teamstate, 0, sizeof( ent->r.client->teamstate ) );
 	ent->r.client->team = team;
 	ent->r.client->teamstate.timeStamp = level.time;
 	G_Teams_UnInvitePlayer( team, ent );
-	
+
 	G_ClientRespawn( ent, qtrue ); // make ghost using G_ClientRespawn so team is updated at ghosting
 	G_SpawnQueue_AddClient( ent );
 
@@ -743,7 +743,7 @@ edict_t *G_Teams_BestInChallengersQueue( unsigned int lastTimeStamp, edict_t *ig
 	{
 		if( !e->r.inuse || !e->r.client )
 			continue;
-		
+
 		if( !e->r.client->queueTimeStamp || e->s.team != TEAM_SPECTATOR )
 			continue;
 
@@ -1381,7 +1381,7 @@ void G_Teams_Coach( edict_t *ent )
 				G_GhostClient( ent );
 				ent->health = ent->max_health;
 				ent->deadflag = DEAD_NO;
-				
+
 				G_ChasePlayer( ent, NULL, qtrue, 0 );
 
 				//clear up his scores
