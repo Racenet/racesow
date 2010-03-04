@@ -343,8 +343,9 @@ void G_Teams_SetTeam( edict_t *ent, int team )
 
 	//clean scores at changing team
 	memset( &ent->r.client->level.stats, 0, sizeof( ent->r.client->level.stats ) );
-//racesow: do not delete position settings
-//	memset( &ent->r.client->teamstate, 0, sizeof( ent->r.client->teamstate ) );
+
+	if( !GS_RaceGametype() )	//racesow: do not delete position settings
+		memset( &ent->r.client->teamstate, 0, sizeof( ent->r.client->teamstate ) );
 	ent->r.client->team = team;
 	ent->r.client->teamstate.timeStamp = level.time;
 	G_Teams_UnInvitePlayer( team, ent );
