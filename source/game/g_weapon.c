@@ -1194,12 +1194,6 @@ void W_Fire_Electrobolt_Combined( edict_t *self, vec3_t start, vec3_t angles, fl
 
 		// some entity was touched
 		hit = &game.edicts[tr.ent];
-		/* racesow
-		if( hit == world )  // stop dead if hit the world
-			break;
-		if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
-			break;
-		*/
 		// allow trail to go through BBOX entities (players, gibs, etc)
 		if( !ISBRUSHMODEL( hit->s.modelindex ) )
 			ignore = hit;
@@ -1215,7 +1209,12 @@ void W_Fire_Electrobolt_Combined( edict_t *self, vec3_t start, vec3_t angles, fl
 			knockback = maxknockback - ( ( maxknockback - minknockback ) * frac );
 
 			G_TakeDamage( hit, self, self, dir, dir, tr.endpos, damage, knockback, stun, dmgflags, mod );
-
+			//racesow
+			if( hit == world )  // stop dead if hit the world
+				return;
+			if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
+				return;
+			//!racesow
 			// spawn a impact event on each damaged ent
 			event = G_SpawnEvent( EV_BOLT_EXPLOSION, DirToByte( tr.plane.normal ), tr.endpos );
 			event->s.firemode = fireMode;
@@ -1297,12 +1296,6 @@ void W_Fire_Electrobolt_FullInstant( edict_t *self, vec3_t start, vec3_t angles,
 
 		// some entity was touched
 		hit = &game.edicts[tr.ent];
-		/* racesow
-		if( hit == world )  // stop dead if hit the world
-			break;
-		if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
-			break;
-		*/
 		// allow trail to go through BBOX entities (players, gibs, etc)
 		if( !ISBRUSHMODEL( hit->s.modelindex ) )
 			ignore = hit;
@@ -1327,6 +1320,12 @@ void W_Fire_Electrobolt_FullInstant( edict_t *self, vec3_t start, vec3_t angles,
 
 			G_TakeDamage( hit, self, self, dir, dir, tr.endpos, damage, knockback, stun, dmgflags, mod );
 
+			//racesow
+			if( hit == world )  // stop dead if hit the world
+				return;
+			if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
+				return;
+			//!racesow
 			// spawn a impact event on each damaged ent
 			event = G_SpawnEvent( EV_BOLT_EXPLOSION, DirToByte( tr.plane.normal ), tr.endpos );
 			event->s.firemode = FIRE_MODE_STRONG;
@@ -1674,6 +1673,3 @@ edict_t	*W_Fire_Lasergun_Weak( edict_t *self, vec3_t start, vec3_t end, float da
 
 	return laser;
 }
-
-
-
