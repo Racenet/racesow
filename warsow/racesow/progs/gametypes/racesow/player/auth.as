@@ -151,6 +151,13 @@
 			return false;
 		}
 
+		cString PlayerNick = this.player.getName().removeColorTokens();
+		if ( PlayerNick.tolower() == "player" || ( PlayerNick.length() == 9 && PlayerNick.substr(0,6).tolower() == "player" ) )
+		{
+			this.player.sendMessage( S_COLOR_RED + "You aren't allowed to register under the nick 'player'.\n" );
+			return false;
+		}
+
 		if ( G_FileLength( nickShadow ) != -1 ||
 			G_FileLength( duplicateNickCheckName ) != -1 ||
 			G_FileLength( duplicateNickCheckEmail ) != -1 )
@@ -188,6 +195,14 @@
 			}
 
 			return false;
+		}
+
+		cString PlayerNick = this.player.getName().removeColorTokens();
+		if ( PlayerNick.tolower() == "player"
+			|| ( PlayerNick.length() == 9 && PlayerNick.substr(0,6).tolower() == "player" ) )
+		{
+			this.player.sendMessage( S_COLOR_RED + "You aren't allowed to auth under the nickname 'player'.\n" );
+							return false;
 		}
 
 		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
@@ -240,7 +255,7 @@
 
 			return false;
 		}
-		
+
 		cString name = toFileName(this.player.getName().removeColorTokens());
 		cString nickFile = gameDataDir + "/nicknames/" + name.substr(0,1) + "/" + name;
 
