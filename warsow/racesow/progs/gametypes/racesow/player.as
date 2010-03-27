@@ -40,6 +40,18 @@ class Racesow_Player
 	bool isUsingChrono;
 
 	/**
+	 * Was the player Telekilled?
+	 * @var bool
+	 */
+	bool wasTelekilled;
+
+	/**
+	 * cEntity which stores the latest position after the telekill
+	 * @var cEntity
+	 */
+	cEntity@ gravestone;
+
+	/**
 	 * The time when the player started the chrono
 	 * @var uint
 	 */
@@ -122,6 +134,7 @@ class Racesow_Player
 		this.isSpawned = true;
 		this.isJoinlocked = false;
 		this.isVotemuted = false;
+		this.wasTelekilled = false;
 		this.bestRaceTime = 0;
         this.plasmaPerfectClimbSince = 0;
 		this.resetAuth();
@@ -428,6 +441,44 @@ class Racesow_Player
 	{
 		this.inOvertime = true;
 		this.sendMessage( S_COLOR_RED + "Please hurry up, the ther players are waiting for you to finish...\n" );
+	}
+
+	/**
+	 * setupTelekilled
+	 * @return void
+	 */
+	void setupTelekilled( cEntity@ gravestone)
+	{
+		@this.gravestone = @gravestone;
+		this.wasTelekilled = true;
+	}
+
+	/**
+	 * wasTelekilled
+	 * @return bool
+	 */
+	bool wasTelekilled()
+	{
+		return this.wasTelekilled;
+	}
+
+	/**
+	 * returnGravestone
+	 * @return cEntity
+	 */
+	cEntity@ returnGravestone()
+	{
+		return @this.gravestone;
+	}
+
+	/**
+	 * resetTelekilled
+	 * @return void
+	 */
+	void resetTelekilled()
+	{
+		this.gravestone.freeEntity();
+		this.wasTelekilled = false;
 	}
 
 	/**

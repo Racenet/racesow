@@ -373,8 +373,16 @@ bool GT_UpdateBotStatus( cEntity @self )
  */
 cEntity @GT_SelectSpawnPoint( cEntity @self )
 {
-	Racesow_GetPlayerByClient(self.client).onSpawn();
-	return null; // select random
+	Racesow_Player @player = Racesow_GetPlayerByClient(self.client);
+	player.onSpawn();
+	if( player.wasTelekilled )
+	{
+		return player.returnGravestone();
+	}
+	else
+	{
+		return null; // select random
+	}
 }
 
 /**
@@ -445,7 +453,22 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "kill" )
 		{
-			player.restartRace();
+			cEntity @edict = @G_GetEntity( args.getToken( 0 ).toInt() );
+			Racesow_Player @player_edict = Racesow_GetPlayerByClient( edict.client );
+			if( g_freestyle.getBool()) //telekills
+			{
+				if( !client.getEnt().inuse)
+					return;
+				cTrace tr;
+				if(	tr.doTrace( client.getEnt().getOrigin(), vec3Origin, vec3Origin, client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ), 0, MASK_DEADSOLID ))//avoid bugs
+					return;
+				//spawn a gravestone to store the postition
+				cEntity @gravestone = @G_SpawnEntity( "gravestone" );
+				// copy client position
+				gravestone.setOrigin( client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ) );
+				player_edict.setupTelekilled( @gravestone );
+			}
+			player_edict.restartRace();
 		}
 		else if ( score_event == "award" )
 		{
@@ -490,14 +513,16 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
 	cItem @item;
 	cItem @ammoItem;
-
-	Racesow_GetPlayerByClient( ent.client ).restartRace();
+	Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+	player.restartRace();
 
 	if ( ent.isGhosting() )
 	return;
 
 	if ( g_freestyle.getBool() )
 	{
+		if( player.wasTelekilled() )
+			player.resetTelekilled();
 		ent.client.inventorySetCount( WEAP_ROCKETLAUNCHER, 1 );
 		ent.client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
 
@@ -863,7 +888,6 @@ void GT_InitGametype()
 	G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "chrono" );
-
 	G_RegisterCommand( "privsay" );
 
     demoRecording = false;
