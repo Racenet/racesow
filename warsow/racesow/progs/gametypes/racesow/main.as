@@ -374,7 +374,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
 	else if ( ( cmdString == "positionrestore" ) )
     {
-		if( argsString.getToken(0) == "" )
+		if( argsString.getToken(0) == "" || !g_freestyle.getBool() )
 		{
 			sendMessage( S_COLOR_WHITE + "Usage: /positionrestore (id)\n", @client );
 			return false;
