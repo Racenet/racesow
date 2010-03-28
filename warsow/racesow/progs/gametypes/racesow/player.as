@@ -95,8 +95,6 @@ class Racesow_Player
 	 */
 	cClient @client;
 
-	cString[] storedPositionsList;
-
 	/**
 	 * Player authentication and authorization
 	 * @var Racesow_Player_Auth
