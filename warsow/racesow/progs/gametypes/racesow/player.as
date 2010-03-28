@@ -95,6 +95,8 @@ class Racesow_Player
 	 */
 	cClient @client;
 
+	cString[] storedPositionsList;
+
 	/**
 	 * Player authentication and authorization
 	 * @var Racesow_Player_Auth
@@ -471,6 +473,11 @@ class Racesow_Player
 		return @this.gravestone;
 	}
 
+	void addToStoredList( int id, cString value )
+	{
+		storedPositionsList.resize(id+1);
+		storedPositionsList[id] = value;
+	}
 	/**
 	 * resetTelekilled
 	 * @return void

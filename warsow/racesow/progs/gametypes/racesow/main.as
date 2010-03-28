@@ -343,6 +343,58 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     {
 		return weaponDefCommand( argsString, @client );
     }
+	else if ( ( cmdString == "cvarinfo" ) )
+    {
+		//token0: cVar name; token1: cVar value
+		cString cvarName = argsString.getToken(0);
+		cString cvarValue = argsString.getToken(1);
+
+		if( cvarName.substr(0,15) == "storedposition_")
+		{
+			cString positionValues = cvarValue;
+			client.execGameCommand("cmd position set " + positionValues.getToken(1) + " " + positionValues.getToken(2)
+					+ " " + positionValues.getToken(3) + " " + positionValues.getToken(4) + " "  + positionValues.getToken(5)
+					+ ";echo position '" + positionValues.getToken(0) + "' restored" );
+		}
+
+    }
+	else if ( ( cmdString == "positionstore" ) )
+    {
+		if( argsString.getToken(0) == "" || argsString.getToken(1) == "" )
+		{
+			sendMessage( S_COLOR_WHITE + "Usage: /positionstore (id) (name)\n", @client );
+			return false;
+		}
+		cVec3 position = client.getEnt().getOrigin();
+		cVec3 angles = client.getEnt().getAngles();
+		//position set <x> <y> <z> <pitch> <yaw>
+		client.execGameCommand("cmd seta storedposition_" + argsString.getToken(0)  + " \"" +  argsString.getToken(1) + " "
+				+ position.x + " " + position.y + " " + position.z + " "
+				+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
+    }
+	else if ( ( cmdString == "positionrestore" ) )
+    {
+		if( argsString.getToken(0) == "" )
+		{
+			sendMessage( S_COLOR_WHITE + "Usage: /positionrestore (id)\n", @client );
+			return false;
+		}
+		G_CmdExecute( "cvarcheck " + client.playerNum() + " storedposition_" + argsString.getToken(0) );
+    }
+	else if ( ( cmdString == "storedpositionslist" ) )
+    {
+		if( argsString.getToken(0).toInt() == 0 )
+		{
+			sendMessage( S_COLOR_WHITE + "Usage: /storedpositionslist (limit)\n", @client );
+			return false;
+		}
+		sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n", @client );
+		int i;
+		for( i = 0; i < argsString.getToken(0).toInt(); i++ )
+		{
+			client.execGameCommand("cmd  echo ~~~;echo id#" + i + ";storedposition_" + i +";echo ~~~;" );
+		}
+    }
 
     return false;
 }
@@ -454,7 +506,11 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		else if ( score_event == "kill" )
 		{
 			cEntity @edict = @G_GetEntity( args.getToken( 0 ).toInt() );
+			if( @edict.client == null )
+				return;
 			Racesow_Player @player_edict = Racesow_GetPlayerByClient( edict.client );
+			if( @player_edict == null )
+				return;
 			if( g_freestyle.getBool()) //telekills
 			{
 				if( !client.getEnt().inuse)
@@ -889,6 +945,9 @@ void GT_InitGametype()
 	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "chrono" );
 	G_RegisterCommand( "privsay" );
+	G_RegisterCommand( "positionrestore" );
+	G_RegisterCommand( "storedpositionslist" );
+	G_RegisterCommand( "positionstore" );
 
     demoRecording = false;
 
