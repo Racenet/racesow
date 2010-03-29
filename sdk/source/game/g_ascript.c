@@ -5842,6 +5842,18 @@ static void asFunc_asGeneric_G_Match_RemoveAllProjectiles( void *gen )
 	G_Match_RemoveAllProjectiles();
 }
 
+//racesow
+static void asFunc_RS_removeProjectiles( edict_t *owner )
+{
+	RS_removeProjectiles( owner );
+}
+static void asFunc_asGeneric_RS_removeProjectiles( void *gen )
+{
+	edict_t *owner = (edict_t *)G_asGeneric_GetArgAddress( gen, 0 );
+	RS_removeProjectiles( owner );
+}
+//!racesow
+
 static void asFunc_G_Match_FreeBodyQueue( void )
 {
 	G_Match_FreeBodyQueue();
@@ -6815,6 +6827,7 @@ static asglobfuncs_t asGlobFuncs[] =
 
 	// misc management utils
 	{ "void G_RemoveAllProjectiles()", asFunc_G_Match_RemoveAllProjectiles, asFunc_asGeneric_G_Match_RemoveAllProjectiles },
+	{ "void removeProjectiles( cEntity @ )", asFunc_RS_removeProjectiles, asFunc_asGeneric_RS_removeProjectiles }, //racesow
 	{ "void G_RemoveDeadBodies()", asFunc_G_Match_FreeBodyQueue, asFunc_asGeneric_G_Match_FreeBodyQueue },
 	{ "void G_Items_RespawnByType( uint typeMask, int item_tag, float delay )", asFunc_G_Items_RespawnByType, asFunc_asGeneric_G_Items_RespawnByType },
 

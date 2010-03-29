@@ -219,3 +219,20 @@ void target_relay_use (edict_t *self, edict_t *other, edict_t *activator) {
 void RS_target_relay (edict_t *self) {
     self->use = target_relay_use;
 }
+
+/*
+* RS_removeProjectiles
+*/
+void RS_removeProjectiles( edict_t *owner )
+{
+	edict_t *ent;
+
+	for( ent = game.edicts + gs.maxclients; ENTNUM( ent ) < game.numentities; ent++ )
+	{
+		if( ent->r.inuse && !ent->r.client && ent->r.svflags & SVF_PROJECTILE && ent->r.solid != SOLID_NOT
+				&& ent->r.owner == owner )
+		{
+			G_FreeEdict( ent );
+		}
+	}
+}

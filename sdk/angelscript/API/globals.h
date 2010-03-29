@@ -425,6 +425,7 @@ cEntity @G_FindEntityInRadius( cEntity @, cVec3 &, float radius );
 cEntity @G_FindEntityWithClassname( cEntity @, cString & );
 cEntity @G_FindEntityWithClassName( cEntity @, cString & );
 void G_RemoveAllProjectiles();
+void removeProjectiles( cEntity @ );
 void G_RemoveDeadBodies();
 void G_Items_RespawnByType( uint typeMask, int item_tag, float delay );
 void G_Print( cString &in );

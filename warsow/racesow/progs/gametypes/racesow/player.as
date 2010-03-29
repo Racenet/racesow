@@ -323,6 +323,9 @@ class Racesow_Player
     {
 		this.isSpawned = true;
 		@this.race = null;
+		//remove all projectiles.
+		if( @this.client.getEnt() != null )
+			removeProjectiles( this.client.getEnt() );
     }
 
 	/**
