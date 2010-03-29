@@ -726,7 +726,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			cString playerNum = cmdString.getToken( 1 );
 			G_CmdExecute("kick "+ playerNum + "\n");
 			showNotification = true;
@@ -742,7 +747,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			int playerNum = cmdString.getToken( 1 ).toInt();
 			if( playerNum > maxClients )
 				return false;
@@ -762,7 +772,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			int playerNum = cmdString.getToken( 1 ).toInt();
 			if( playerNum > maxClients )
 				return false;
@@ -783,7 +798,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			int playerNum = cmdString.getToken( 1 ).toInt();
 			if( playerNum > maxClients )
 				return false;
@@ -803,7 +823,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			int playerNum = cmdString.getToken( 1 ).toInt();
 			if( playerNum > maxClients )
 				return false;
@@ -823,7 +848,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			int playerNum = cmdString.getToken( 1 ).toInt();
 			if( playerNum > maxClients )
 				return false;
@@ -842,6 +872,12 @@ class Racesow_Player
 				this.sendMessage( S_COLOR_RED + "You are not permitted "
 					+ "to execute the command 'admin "+ cmdString +"'.\n" );
 
+				return false;
+			}
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
 				return false;
 			}
 			cString playerNum = cmdString.getToken( 1 );
@@ -863,7 +899,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			cString playerNum = cmdString.getToken( 1 );
 			if( playerNum.toInt() > maxClients )
 				return false;
@@ -883,7 +924,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			cString playerNum = cmdString.getToken( 1 );
 			if( playerNum.toInt() > maxClients )
 				return false;
@@ -903,7 +949,12 @@ class Racesow_Player
 
 				return false;
 			}
-
+			if( cmdString.getToken( 1 ) == "" )
+			{
+				this.client.execGameCommand("cmd players");
+				showNotification = false;
+				return false;
+			}
 			cString playerNum = cmdString.getToken( 1 );
 			if( playerNum.toInt() > maxClients )
 				return false;
