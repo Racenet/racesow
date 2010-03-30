@@ -20,6 +20,11 @@ bool demoRecording = false;
 const int MAX_RECORDS = 10;
 
 cString gameDataDir = "gamedata";
+cString scbmsg; //scoreboard message for custom scoreboards
+cString scb_specs;
+cString[] specwho( maxClients );
+int nextTimeUpdate = 0;
+bool scbupdated = true;
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
@@ -482,6 +487,8 @@ cString @GT_ScoreboardMessage( int maxlen )
             scoreboardMessage += entry;
     }
 
+    scbmsg = scoreboardMessage;
+    scbupdated = true;
     return scoreboardMessage;
 }
 
@@ -655,12 +662,50 @@ void GT_ThinkRules()
 	if ( map.getStatsHandler().logTime == 0 && localTime != 0 )
 		map.getStatsHandler().logTime = localTime;
 
+
+	if( levelTime > nextTimeUpdate )
+	{
+		//custom scoreboard
+		cTeam @specs;
+		@specs = @G_GetTeam( TEAM_SPECTATOR );
+		cEntity @spec_ent;
+		for( int j = 0; j < maxClients; j++ )
+		{
+			specwho[j] = "";
+		}
+
+		scb_specs = "&s ";
+		for ( int i = 0; @specs.ent( i ) != null; i++ )
+		{
+			@spec_ent = @specs.ent( i );
+			cClient @spec_client = spec_ent.client;
+			if(spec_client.connecting)
+			{
+				scb_specs += spec_client.playerNum() + " " + -1 + " ";
+			}
+			else if( spec_client.chaseActive )
+			{
+				specwho[spec_client.chaseTarget - 1] += spec_ent.client.playerNum() + " " + spec_ent.client.ping + " ";
+			}
+			else
+			{
+				scb_specs += spec_client.playerNum() + " " + spec_client.ping + " ";
+			}
+		}
+	nextTimeUpdate = levelTime + 2500;
+	}
+
     // set all clients race stats
     cClient @client;
 
     for ( int i = 0; i < maxClients; i++ )
     {
         @client = @G_GetClient( i );
+    	if( scbupdated && specwho[i] != null && specwho[i] != "" )
+    		client.execGameCommand("scb \"" + scbmsg + " &w " + specwho[i] + " " + scb_specs + " \"");
+
+
+
         if ( client.state() < CS_SPAWNED )
             continue;
 
@@ -708,7 +753,7 @@ void GT_ThinkRules()
      	  	client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
         	client.setHUDStat( STAT_TIME_RECORD, map.getStatsHandler().getHighScore(0).getTime() / 100 );
 		}
-
+		
 
         if ( map.getStatsHandler().getHighScore(0).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
