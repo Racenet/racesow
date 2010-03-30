@@ -23,7 +23,7 @@ cString gameDataDir = "gamedata";
 cString scbmsg; //scoreboard message for custom scoreboards
 cString scb_specs;
 cString[] specwho( maxClients );
-int nextTimeUpdate = 0;
+uint nextTimeUpdate;
 bool scbupdated = true;
 
 Racesow_Player[] players( maxClients );
@@ -701,7 +701,7 @@ void GT_ThinkRules()
     for ( int i = 0; i < maxClients; i++ )
     {
         @client = @G_GetClient( i );
-    	if( scbupdated && specwho[i] != null && specwho[i] != "" )
+    	if( scbupdated && specwho[i] != "" )
     		client.execGameCommand("scb \"" + scbmsg + " &w " + specwho[i] + " " + scb_specs + " \"");
 
 
@@ -753,7 +753,7 @@ void GT_ThinkRules()
      	  	client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
         	client.setHUDStat( STAT_TIME_RECORD, map.getStatsHandler().getHighScore(0).getTime() / 100 );
 		}
-		
+
 
         if ( map.getStatsHandler().getHighScore(0).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
