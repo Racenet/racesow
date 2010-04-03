@@ -683,13 +683,13 @@ void GT_ThinkRules()
 			{
 				scb_specs += spec_client.playerNum() + " " + -1 + " ";
 			}
-			else if( spec_client.chaseActive )
-			{
-				specwho[spec_client.chaseTarget - 1] += spec_ent.client.playerNum() + " " + spec_ent.client.ping + " ";
-			}
 			else
 			{
 				scb_specs += spec_client.playerNum() + " " + spec_client.ping + " ";
+			}
+			if( spec_client.chaseActive )
+			{
+				specwho[spec_client.chaseTarget - 1] += spec_ent.client.playerNum() + " " + spec_ent.client.ping + " ";
 			}
 		}
 	nextTimeUpdate = levelTime + 2500;
