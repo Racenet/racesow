@@ -487,6 +487,25 @@ class Racesow_Player
 	}
 
 	/**
+	 * noclip Command
+	 * @return bool
+	 */
+	bool noclip()
+	{
+		cEntity@ noclipEnt;
+		@noclipEnt = @this.client.getEnt();
+		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
+			return false;
+		if( this.client.getEnt().team == TEAM_SPECTATOR || !this.client.getEnt().inuse )
+					return false;
+		if( noclipEnt.moveType == MOVETYPE_NOCLIP )
+			noclipEnt.moveType = 0x1; //MOVETYPE_PLAYER
+		else
+			noclipEnt.moveType = MOVETYPE_NOCLIP;
+		return true;
+	}
+
+	/**
 	 * Send a message to console of the player
 	 * @param cString message
 	 * @return void
@@ -719,30 +738,12 @@ class Racesow_Player
 			showNotification = true;
 		}
 
-		// kick command
-		else if ( commandExists = command == "kick" )
+		// kick, votemute, remove, mute, joinlock  commands (RACESOW_AUTH_KICK)
+		else if ( command == "mute" || command == "unmute" || command == "vmute" ||
+				command == "vunmute" || command == "remove"|| command == "kick"
+					|| command == "votemute" || command == "unvotemute")
 		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			cString playerNum = cmdString.getToken( 1 );
-			G_CmdExecute("kick "+ playerNum + "\n");
-			showNotification = true;
-		}
-
-		// remove command
-		else if ( commandExists = command == "remove" )
-		{
+			commandExists = true;
 			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
 			{
 				this.sendMessage( S_COLOR_RED + "You are not permitted "
@@ -759,211 +760,27 @@ class Racesow_Player
 			int playerNum = cmdString.getToken( 1 ).toInt();
 			if( playerNum > maxClients )
 				return false;
-			if( @players[playerNum].getClient() == null )
-				return false;
-			players[playerNum].remove( cmdString.getToken( 2 ) );
-			showNotification = true;
-		}
 
-		// joinlock command
-		else if ( commandExists = command == "joinlock" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			int playerNum = cmdString.getToken( 1 ).toInt();
-			if( playerNum > maxClients )
-				return false;
-			if( @players[ playerNum ].getClient() == null )
-				return false;
-			players[playerNum].remove( cmdString.getToken( 2 ) );
-			players[playerNum].isJoinlocked = true;
-			showNotification = true;
-		}
-
-		// unjoinlock command
-		else if ( commandExists = command == "unjoinlock" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			int playerNum = cmdString.getToken( 1 ).toInt();
-			if( playerNum > maxClients )
-				return false;
-			if( @players[ playerNum ].getClient() == null )
-				return false;
-			players[playerNum].isJoinlocked = false;
-			showNotification = true;
-		}
-
-		// unjoinlock command
-		else if ( commandExists = command == "votemute" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			int playerNum = cmdString.getToken( 1 ).toInt();
-			if( playerNum > maxClients )
-				return false;
-			if( @players[ playerNum ].getClient() == null )
-				return false;
-			players[playerNum].isVotemuted = true;
-			showNotification = true;
-		}
-
-		// unvotemute command
-		else if ( commandExists = command == "unvotemute" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			int playerNum = cmdString.getToken( 1 ).toInt();
-			if( playerNum > maxClients )
-				return false;
-			if( @players[ playerNum ].getClient() == null )
-				return false;
-			players[playerNum].isVotemuted = false;
-			showNotification = true;
-		}
-
-
-		// mute command
-		else if ( commandExists = command == "mute" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum.toInt() > maxClients )
-				return false;
-			int mute = G_GetClient( playerNum.toInt() ).muted;
-			if( mute == 0 || mute == 2 )
-				G_GetClient( playerNum.toInt() ).muted = mute + 1;
-			showNotification = true;
-		}
-
-		// unmute command
-		else if ( commandExists = command == "unmute" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum.toInt() > maxClients )
-				return false;
-			int mute = G_GetClient( playerNum.toInt() ).muted;
-			if( mute == 1 || mute == 3 )
-				G_GetClient( playerNum.toInt() ).muted = mute - 1;
-			showNotification = true;
-		}
-
-		// vmute command
-		else if ( commandExists = command == "vmute" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum.toInt() > maxClients )
-				return false;
-			int mute = G_GetClient( playerNum.toInt() ).muted;
-			if( mute == 0 || mute == 1 )
-				G_GetClient( playerNum.toInt() ).muted = mute + 2;
-			showNotification = true;
-		}
-
-		// vunmute command
-		else if ( commandExists = command == "vunmute" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			cString playerNum = cmdString.getToken( 1 );
-			if( playerNum.toInt() > maxClients )
-				return false;
-			int mute = G_GetClient( playerNum.toInt() ).muted;
-			if( mute == 2 || mute == 3 )
-				G_GetClient( playerNum.toInt() ).muted = mute - 2;
+			if( command == "kick" )
+				G_CmdExecute("kick "+ playerNum + "\n");
+			else if( command == "votemute" )
+				players[playerNum].isVotemuted = true;
+			else if( command == "unvotemute" )
+				players[playerNum].isVotemuted = false;
+			else if( command == "remove" )
+				players[playerNum].remove("");
+			else if( command == "mute" )
+				G_GetClient( playerNum ).muted |= 1;
+			else if( command == "unmute" )
+				G_GetClient( playerNum ).muted &= ~1;
+			else if( command == "vmute" )
+				G_GetClient( playerNum ).muted |= 2;
+			else if( command == "vunmute" )
+				G_GetClient( playerNum ).muted &= ~2;
+			else if( command == "joinlock" )
+				players[playerNum].isJoinlocked = true;
+			else if( command == "unjoinlock" )
+				players[playerNum].isJoinlocked = false;
 			showNotification = true;
 		}
 
@@ -1012,7 +829,7 @@ class Racesow_Player
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "admin map     " + S_COLOR_YELLOW + "change to the given map immedeatly\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-
+		//TODOSOW add missing commands
 		G_PrintMsg( this.client.getEnt(), help );
 	}
 
