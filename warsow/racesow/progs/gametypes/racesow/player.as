@@ -496,7 +496,7 @@ class Racesow_Player
 		@noclipEnt = @this.client.getEnt();
 		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
 			return false;
-		if( this.client.getEnt().team == TEAM_SPECTATOR || !this.client.getEnt().inuse )
+		if( this.client.getEnt().team == TEAM_SPECTATOR || @this.client.getEnt() == null )
 					return false;
 		if( noclipEnt.moveType == MOVETYPE_NOCLIP )
 			noclipEnt.moveType = 0x1; //MOVETYPE_PLAYER
@@ -610,33 +610,38 @@ class Racesow_Player
 	 * @param cClient @client
 	 * @return bool
 	 */
-	bool ammoSwitch( cClient @client )
+	bool ammoSwitch(  )
 	{
 		if ( g_freestyle.getBool() || g_allowammoswitch.getBool() )
 		{
-			if ( client.inventoryCount( client.pendingWeapon ) == 0 )
+			if ( @this.client.getEnt() == null )
 			{
-				// something is really wrong as the client can't
-				// own a weapon which is not in his inventory
 				return false;
 			}
+			cItem @item;
+		    cItem @weakItem;
+		    cItem @strongItem;
+		    @item = @G_GetItem( this.client.getEnt().weapon );
+		    if(@item == null || this.client.getEnt().weapon == 1 )
+		    	return false;
+		    @weakItem = @G_GetItem( item.weakAmmoTag );
+		    @strongItem = @G_GetItem( item.ammoTag );
+			uint strong_ammo = this.client.pendingWeapon + 9;
+			uint weak_ammo = this.client.pendingWeapon + 18;
 
-			uint strong_ammo = client.pendingWeapon + 9;
-			uint weak_ammo = client.pendingWeapon + 18;
-
-			if ( client.inventoryCount( strong_ammo ) > 0 )
+			if ( this.client.inventoryCount( item.ammoTag ) > 0 )
 			{
-				client.inventorySetCount( weak_ammo, client.inventoryCount( strong_ammo ) );
-				client.inventorySetCount( strong_ammo, 0 );
+				this.client.inventorySetCount( item.weakAmmoTag, weakItem.inventoryMax );
+				this.client.inventorySetCount( item.ammoTag, 0 );
 			}
 			else
 			{
-				client.inventorySetCount( strong_ammo, client.inventoryCount( weak_ammo ) );
+				this.client.inventorySetCount( item.ammoTag, strongItem.inventoryMax );
 			}
 		}
 		else
 		{
-			sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n", @client );
+			sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n", @this.client );
 		}
 		return true;
 	}

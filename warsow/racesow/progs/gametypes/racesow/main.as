@@ -30,6 +30,7 @@ Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 
 cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
+cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
 /**
@@ -289,7 +290,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
 	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
 	{
-		return player.ammoSwitch( @client );
+		return player.ammoSwitch();
 	}
 	else if ( ( cmdString == "chrono" ) )
 	{
@@ -400,6 +401,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			client.execGameCommand("cmd  echo ~~~;echo id#" + i + ";storedposition_" + i +";echo ~~~;" );
 		}
     }
+	else if ( ( cmdString == "noclip" ) )
+	{
+		return player.noclip();
+	}
 
     return false;
 }
@@ -859,6 +864,8 @@ void GT_SpawnGametype()
 	// setup players
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
+
+    //TODOSOW fastcap if there are flag entitys
 }
 
 /**
@@ -993,6 +1000,8 @@ void GT_InitGametype()
 	G_RegisterCommand( "positionrestore" );
 	G_RegisterCommand( "storedpositionslist" );
 	G_RegisterCommand( "positionstore" );
+	G_RegisterCommand( "noclip" );
+
 
     demoRecording = false;
 
