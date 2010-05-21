@@ -1,0 +1,11 @@
+outputdir .\
+model tris
+# export to tris.skp
+# if export filename is not specified, you should create a config file for this model
+texturepath models/players/viciious
+export tris
+scale 1.11
+rotateyaw -90
+origin 0 0 -13.5
+scene viciious.smd
+scene anim_walk_20f.smd
