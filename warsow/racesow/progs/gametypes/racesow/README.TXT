@@ -8,7 +8,7 @@
 Project goals:
 
     - no use of external services, instead effectively based on files
-    - adapter based patter for data-storage to allow to switch to mysql etc.
+    - adapter based pattern for data-storage to allow to switch to mysql etc.
     - bring the race community together <3 (!!!!)
     - coding for fun while learning a lot
     - contribute to warsow
@@ -61,7 +61,8 @@ Racenet/Racesow team:
     
 Changelog: (items with a § require the modded game module)
 
-    2010-??-?? / racesow 0.5.2
+    2010-05-28 / racesow 0.5.2
+		- optimized overtime feature
         - diffrent scoreboards for race/freestyle
         - changed C code in order to allow noclip and position cmds
         - changed C code that projectiles can hit others in freestyle

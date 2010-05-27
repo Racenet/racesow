@@ -20,7 +20,7 @@ cString gameDataDir = "gamedata";
 cString scbmsg; //scoreboard message for custom scoreboards
 cString scb_specs;
 cString[] specwho( maxClients );
-uint nextTimeUpdate;
+uint nextTimeUpdate, nextOvertimeCheck;
 bool scbupdated = true;
 
 Racesow_Player[] players( maxClients );
@@ -29,7 +29,8 @@ Racesow_Map @map;
 cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
-
+cVar g_timelimit( "g_timelimit", "0", CVAR_SERVERINFO );
+       
 /**
  * TimeToString
  * @param uint time
@@ -167,12 +168,13 @@ int Racesow_GetClientNumber( cString playerName )
 void race_respawner_think( cEntity @respawner )
 {
     cClient @client = G_GetClient( respawner.count );
-
+    Racesow_Player @player = Racesow_GetPlayerByClient( client );
+    
     // the client may have respawned on his own. If the last time was erased, don't respawn him
-    if ( !Racesow_GetPlayerByClient( client ).isSpawned )
+    if ( !player.isSpawned )
 	{
 		client.respawn( false );
-        Racesow_GetPlayerByClient( client ).isSpawned = true;
+        player.isSpawned = true;
 	}
 
     respawner.freeEntity(); // free the respawner
@@ -205,57 +207,36 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         response += "Mod: " + fs_game.getString() + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
         response += "----------------\n";
 
-        G_PrintMsg( client.getEnt(), response );
+        player.sendMessage( response );
         return true;
     }
-    else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) )
+    else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) || ( cmdString == "join" ) )
     {
-        if ( @client != null && !player.isJoinlocked )
-        {
-        	if(client.team == TEAM_SPECTATOR)
-        	{
-        		sendMessage( S_COLOR_WHITE + "Join the game first.\n", @client );
-        	}
-        	else
-        	{
-        		player.restartRace();
-        		client.team = TEAM_PLAYERS;
-        		client.respawn( false );
-        	}
-        }
-
-        return true;
-    }
-
-    else if ( cmdString == "join" )
-    {
-        if ( @client != null && !player.isJoinlocked)
-        {
-        	if( client.team != TEAM_PLAYERS ) //spam protection
-    			G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_WHITE
-    					+ " joined the PLAYERS team.\n" ); // leave a message for everyone
-            player.restartRace();
-            client.team = TEAM_PLAYERS;
-			client.respawn( false );
-        }
-
+        if (@client == null)
+            return false;
+        
         if( player.isJoinlocked )
-        	sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n", @client );
+        {
+            player.sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n" );
+            return false;
+        }
+
+        player.restartRace();
+        client.team = TEAM_PLAYERS;
+        client.respawn( false );
 
         return true;
     }
-
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
     {
 		if( g_freestyle.getBool() )
 		{
-			sendMessage( S_COLOR_RED + "Command only available for race\n", @client );
+			player.sendMessage( S_COLOR_RED + "Command only available for race\n" );
 			return false;
 		}
 		else if( player.top_lastcmd + 30 > localTime )
 		{
-			sendMessage( S_COLOR_RED + "Flood protection. You can use the top command"
-					+"only every 30 seconds\n", @client );
+			player.sendMessage( S_COLOR_RED + "Flood protection. You can use the top command only every 30 seconds\n" );
 			return false;
 		}
 		else
@@ -639,7 +620,9 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-	if ( match.timeLimitHit() && map.allowEndGame() )
+	map.showCountDown();
+    
+    if ( match.timeLimitHit() && map.allowEndGame() )
         match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
@@ -663,8 +646,7 @@ void GT_ThinkRules()
 	// set the logTime once
 	if ( map.getStatsHandler().logTime == 0 && localTime != 0 )
 		map.getStatsHandler().logTime = localTime;
-
-
+        
 	if( levelTime > nextTimeUpdate )
 	{
 		//custom scoreboard

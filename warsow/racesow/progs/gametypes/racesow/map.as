@@ -10,6 +10,8 @@ class Racesow_Map
 
 	Racesow_Map_HighScore_Default @statsHandler;
 	
+    uint nextCountdownCheck;
+    
 	bool inOvertime;
 	
 	/**
@@ -39,6 +41,33 @@ class Racesow_Map
 		this.inOvertime = false;
 	}
 	
+    /**
+	 * Show the overtime countdown to the players
+	 * @return void
+	 */
+    void showCountDown()
+    {
+        if (levelTime < this.nextCountdownCheck)
+            return;
+        
+        this.nextCountdownCheck = levelTime + 1000;
+        
+        uint secondsLeft = (g_timelimit.getInteger() * 60000 - levelTime) / 1000 + 10;
+        switch( secondsLeft )
+        {
+            case 180:
+            case 120:
+            case 60:
+                for ( int i = 0; i < maxClients; i++ )
+    		    {
+                    if (@players[i].client != null)
+                    {
+                        players[i].client.addAward(S_COLOR_YELLOW + secondsLeft / 60 + " minute" + (secondsLeft != 60 ? "s" : "") + " left");
+                    }
+    			}
+        }
+    }   
+    
 	/**
 	 * allowEndGame
 	 * @return bool
