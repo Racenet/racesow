@@ -13,13 +13,14 @@ Project goals:
     - coding for fun while learning a lot
     - contribute to warsow
     
-    
 Sources:
 
 - development trunk: http://svn.warsow-race.net/racesow0.5/trunk
 - threaded mysql branch: http://svn.warsow-race.net/racesow0.5/branches/mysql_threaded
 - latest stable gametypescript: http://svn.warsow-race.net/racesow0.5/tags/0.5.2-stable/warsow/racesow/progs/gametypes
-- latest win32 game module: http://svn.warsow-race.net/racesow0.5/trunk/warsow/racesow/game_x86.dll
+- latest win32 game module: http://svn.warsow-race.net/racesow0.5/tags/0.5.2-stable/warsow/racesow/game_x86.dll
+- download win32 mod package: http://downloads.warsow-race.net/warsow/racesow/racesow-0.5.2-win32.zip
+    (you need to start the warsow_x86.exe or wsw_server_x86 or compile an x64 version yourself)
     
 Game cvars:
 
