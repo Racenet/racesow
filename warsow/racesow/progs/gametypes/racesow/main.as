@@ -2,10 +2,7 @@
  * Racesow Gametype Interface
  *
  * based on warsow 0.5 race gametype
- * @version 0.5.1c
- * @date 24.09.2009
- * @author soh#zolex <zolex@warsow-race.net>
- * @author you? <you@warsow-race.net>
+ * @version 0.5.2
  */
 
 const uint RACESOW_AUTH_REGISTERED	= 1;
@@ -881,7 +878,7 @@ void GT_SpawnGametype()
 void GT_InitGametype()
 {
     gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.5.1d" );
+    gametype.setVersion( "0.5.2" );
     gametype.setAuthor( "warsow-race.net" );
 
 	// initalize weapondef config

@@ -2,9 +2,7 @@
  * Racesow_Player
  *
  * @package Racesow
- * @version 0.5.1c
- * @date 23.09.2009
- * @author soh-zolex <zolex@warsow-race.net>
+ * @version 0.5.2
  */
 
 const uint RACESOW_AUTH_REGISTERED	= 1;
