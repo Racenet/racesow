@@ -81,11 +81,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
+				AdditionalDependencies="winmm.lib libmysql.lib pthreadVC2.lib mysqlclient.lib"
 				OutputFile="..\Debug\x86\basewsw\game_x86.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\win32\x86\lib\debug"
+				AdditionalLibraryDirectories="..\win32\x86\lib\debug;&quot;.\pthread_win32&quot;"
 				ManifestFile=".\Debug\x86\$(TargetFileName).intermediate.manifest"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\game.def"
@@ -188,11 +188,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
+				AdditionalDependencies="winmm.lib libmysql.lib pthreadVC2.lib mysqlclient.lib"
 				OutputFile="..\Release\x86\basewsw\game_x86.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\win32\x86\lib\release"
+				AdditionalLibraryDirectories="..\win32\x86\lib\debug;.\pthread_win32;"
+				GenerateManifest="false"
 				ManifestFile=".\Release\x86\$(TargetFileName).intermediate.manifest"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\game.def"
@@ -1037,6 +1038,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\g_racesow.c"
+				>
+			</File>
+			<File
 				RelativePath="g_spawn.c"
 				>
 				<FileConfiguration
@@ -1434,10 +1439,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mysql.c"
-				>
-			</File>
-			<File
 				RelativePath="p_client.c"
 				>
 				<FileConfiguration
@@ -1731,6 +1732,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\g_racesow.h"
+				>
+			</File>
+			<File
 				RelativePath="g_syscalls.h"
 				>
 			</File>
@@ -1748,10 +1753,6 @@
 			</File>
 			<File
 				RelativePath="..\qcommon\md5.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mysql.h"
 				>
 			</File>
 			<File
