@@ -1,6 +1,12 @@
 #include "g_local.h"
+#ifdef WIN32 
+#include "pthread_win32\pthread.h"
+#include <winsock.h>
+#else
 #include <pthread.h>
+#endif
 #include <mysql.h>
+
 
 /**
  * MySQL CVARs
@@ -61,7 +67,7 @@ void RS_MysqlLoadInfo( void )
     rs_mysqlHost = trap_Cvar_Get( "rs_mysqlHost", "localhost", CVAR_ARCHIVE );
     rs_mysqlPort = trap_Cvar_Get( "rs_mysqlPort", "0", CVAR_ARCHIVE ); // if 0 it will use the system's default port
     rs_mysqlUser = trap_Cvar_Get( "rs_mysqlUser", "root", CVAR_ARCHIVE );
-    rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "", CVAR_ARCHIVE );
+    rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "root", CVAR_ARCHIVE );
     rs_mysqlDb = trap_Cvar_Get( "rs_mysqlDb", "racesow", CVAR_ARCHIVE );
     
     rs_queryGetPlayer   = trap_Cvar_Get( "rs_queryGetPlayer",   "SELECT `id`, `auth` FROM `player` WHERE `name` = '%s' AND `password` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
@@ -154,13 +160,14 @@ qboolean RS_MysqlAuthenticate( edict_t *ent, char *authName, char *authPass )
 {
 	int returnCode;
 	pthread_t thread;
-    struct authenticationData authData;
+    struct authenticationData *authData=malloc(sizeof(struct authenticationData));
     
-    authData.ent = ent;
-    authData.authName = authName;
-    authData.authPass = authPass;
-    
-	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlAuthenticate_Thread, (void *)&authData);
+    authData->ent = ent;
+    authData->authName = _strdup(authName);	
+    authData->authPass = _strdup(authPass);
+
+	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlAuthenticate_Thread, (void *)authData);
+
 	if (returnCode) {
 
 		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
@@ -238,17 +245,14 @@ void *RS_MysqlNickProtection_Thread(void *in)
  * @param void *in
  * @return void
  */
-void *RS_MysqlAuthenticate_Thread(void *in)
+void *RS_MysqlAuthenticate_Thread(struct authenticationData *authData)
 {
     char query[1000];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
-    struct authenticationData *authData;
 
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
-
-    authData = (struct authenticationData *)in;
 	sprintf(query, rs_queryGetPlayer->string, authData->authName, authData->authPass);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
@@ -266,6 +270,9 @@ void *RS_MysqlAuthenticate_Thread(void *in)
     }
     
     mysql_free_result(mysql_res);
+	free(authData->authName);
+	free(authData->authPass);
+	free(authData);	
 	RS_EndMysqlThread();
     
     return NULL;
