@@ -5,47 +5,52 @@
 * @version 0.5.2
 */
 
-Project goals:
+General information:
 
-    - no use of external services, instead effectively based on files
-    - adapter based pattern for data-storage to allow to switch to mysql etc.
-    - bring the race community together <3 (!!!!)
-    - coding for fun while learning a lot
-    - contribute to warsow
-    
+	- For windows only 32bit is supported yet, so you need to start the warsow_x86.exe or wsw_server_x86.exe
+	- Download win32 Package here: http://downloads.warsow-race.net/warsow/racesow/racesow-0.5.2-win32.zip
+	- For Linux just checkout the latest stable release (tag), type make game in the sdk/source folder and copy the shared object to your racesow mod folder (ie. ~warsow/racesow/game_x86_64.so)
+
+	
+	
 Sources:
 
-- development trunk: http://svn.warsow-race.net/racesow0.5/trunk
-- threaded mysql branch: http://svn.warsow-race.net/racesow0.5/branches/mysql_threaded
-- latest stable gametypescript: http://svn.warsow-race.net/racesow0.5/tags/0.5.2-stable/warsow/racesow/progs/gametypes
-- latest win32 game module: http://svn.warsow-race.net/racesow0.5/tags/0.5.2-stable/warsow/racesow/game_x86.dll
-- download win32 mod package: http://downloads.warsow-race.net/warsow/racesow/racesow-0.5.2-win32.zip
-    (you need to start the warsow_x86.exe or wsw_server_x86 or compile an x64 version yourself)
+	- development trunk: http://svn.warsow-race.net/racesow0.5/trunk
+	- latest stable version: http://svn.warsow-race.net/racesow0.5/tags/0.5.2-stable
+	- threaded mysql branch: http://svn.warsow-race.net/racesow0.5/branches/mysql_threaded
     
+	
+	
 Game cvars:
 
-    g_logRaces 1|0, default 0, log all races to a file
-    g_freestyle 1|0, default 0, enables freestyle mode (not implemented yet)
-    g_allowammoswitch 1|0, allows players to convert ammo
-        
-        
-Racenet/Racesow team:
+    g_logRaces 1|0			default 0		log all races to a file
+    g_freestyle 1|0			default 0		enables freestyle mode
+    g_allowammoswitch 1|0	default 0		allow players to switch between strong and weak ammo
+	g_maprotation 1|0		default 1		if we automatically want to switch to the next map when the game has ended
+	g_timelimit	X			default 60		minutes to play the current map (only has effect when g_maprotation is 1)
+	g_overtime 1|0			default 1		if we want to use the overtime feature (only has effect when g_maprotation is 1)
+   
+   // TODO: add all cvars with descriptions
+
+
+
+Racesow team:
 
     active
         soh-zolex
         schaaf
-        R2
-        rlx|Schakal
+        r2
+        rlx|schakal
 
     inactive
-        FoV
+        fov
         weqo
         valliko
-        Zaran
+        zaran
 
     people who contributed before 0.5
         imhotep
-        Jezus
+        jezus
         joko
 
     special thanks
@@ -53,16 +58,20 @@ Racenet/Racesow team:
         learn_more
         vic
 
-    are you missing in this list? tell me...
+    we're still searching for people interested in helping with racesow or contributing their own race modifications. 
+	join us in IRC #racenet@quakenet
 
-    we're still searching for people interested in helping with racesow or contributing their own race modifications.
-    join us in IRC #racenet@quakenet
 
-    
-    
-Changelog: (items with a § require the modded game module)
 
+Changelog:
+
+	2010-XX-XX / racesow 0.5.X
+	
+		- add changes here!
+
+		
     2010-05-28 / racesow 0.5.2
+	
 		- optimized overtime feature
         - diffrent scoreboards for race/freestyle
         - changed C code in order to allow noclip and position cmds
@@ -100,6 +109,7 @@ Changelog: (items with a § require the modded game module)
 
 
     2009-09-25 / racesow 0.5.1e
+	
         - added removal of old session files
         - added creation of shadow files for registered players
         - removed goal not to use a modded game module
@@ -107,7 +117,9 @@ Changelog: (items with a § require the modded game module)
         - added ammoswitch       
         - protected admins from beeing kicked and callvoted etc...
 
+		
     2009-09-23 / racesow 0.5.1d
+	
         - extracted auth plugin from player model
         - added very nice nickname protection!
         - removed own md5 sources as they are in qcommon
@@ -115,9 +127,11 @@ Changelog: (items with a § require the modded game module)
         - changed makefile and vcproject for md5 stuff
         - changed console command workflows
 
+		
     2009-09-22 / racesow 0.5.1c
-        - added fix for memory management by vic, thanks to jal §
-        - added md5 encryption for passwords §
+	
+        - added fix for memory management by vic, thanks to jal 
+        - added md5 encryption for passwords 
         - added g_secureAuth 0 to disable md5 encryption
         - added help command
         - changed authorization to create some subfolders
@@ -126,7 +140,9 @@ Changelog: (items with a § require the modded game module)
         - changed all files to lowercase for linux
         - fixed possible authentication exploit
 
+		
     2009-09-21 / racesow 0.5.1b
+	
         - added race-overtime feature
         - added idle detection when in overtime
         - added an abstract interface for handling race highscores
@@ -135,7 +151,9 @@ Changelog: (items with a § require the modded game module)
         - added admin command "map"
         - added logging of races
 
+		
     2009-09-19 / racesow 0.5.1a
+	
         - refactored whole race gameytpe (better OOP)
         - changed racerestart command so it can be used at any time
         - changed awards for checkpoints and races
@@ -143,12 +161,12 @@ Changelog: (items with a § require the modded game module)
         
         
         
-Roadmap: (items with a § require the modded game module, or wait for stuff be added to basewsw game module)
+Roadmap: (items with a  require the modded game module, or wait for stuff be added to basewsw game module)
 
     - movement types like b1shop's mod (planned: vq3-like, cpm-like, basewsw, racesow)
     - optionally force movement type serverside
-    - weapondefs, depending on movement type (see appendix for a summary of weapondefs)§
-    - defrag like race-ghost for own, best and server best §
+    - weapondefs, depending on movement type (see appendix for a summary of weapondefs)
+    - defrag like race-ghost for own, best and server best 
     
     
     
