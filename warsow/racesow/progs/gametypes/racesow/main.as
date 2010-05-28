@@ -30,6 +30,7 @@ cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit( "g_timelimit", "0", CVAR_SERVERINFO );
+cVar g_maprotation( "g_maprotation", "0", CVAR_SERVERINFO );
        
 /**
  * TimeToString
@@ -242,7 +243,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		else
 		{
 			player.top_lastcmd = localTime;
-			G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
+			player.sendMessage( map.getStatsHandler().getStats() );
+			return true;
 		}
     }
 	else if ( ( cmdString == "register" ) )
@@ -283,7 +285,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	{
 		if( player.isVotemuted )
 		{
-			sendMessage( S_COLOR_RED + "You are votemuted\n", @client );
+			player.sendMessage( S_COLOR_RED + "You are votemuted\n" );
 			return false;
 		}
 		else
@@ -341,12 +343,13 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					+ ";echo position '" + positionValues.getToken(0) + "' restored" );
 		}
 
+		return true;
     }
 	else if ( ( cmdString == "positionstore" ) )
     {
 		if( argsString.getToken(0) == "" || argsString.getToken(1) == "" )
 		{
-			sendMessage( S_COLOR_WHITE + "Usage: /positionstore (id) (name)\n", @client );
+			player.sendMessage( S_COLOR_WHITE + "Usage: /positionstore (id) (name)\n" );
 			return false;
 		}
 		cVec3 position = client.getEnt().getOrigin();
@@ -355,33 +358,53 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		client.execGameCommand("cmd seta storedposition_" + argsString.getToken(0)  + " \"" +  argsString.getToken(1) + " "
 				+ position.x + " " + position.y + " " + position.z + " "
 				+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
+				
+		return true;
     }
 	else if ( ( cmdString == "positionrestore" ) )
     {
 		if( argsString.getToken(0) == "" || !g_freestyle.getBool() )
 		{
-			sendMessage( S_COLOR_WHITE + "Usage: /positionrestore (id)\n", @client );
+			player.sendMessage( S_COLOR_WHITE + "Usage: /positionrestore (id)\n" );
 			return false;
 		}
 		G_CmdExecute( "cvarcheck " + client.playerNum() + " storedposition_" + argsString.getToken(0) );
+		return true;
     }
 	else if ( ( cmdString == "storedpositionslist" ) )
     {
 		if( argsString.getToken(0).toInt() == 0 )
 		{
-			sendMessage( S_COLOR_WHITE + "Usage: /storedpositionslist (limit)\n", @client );
+			player.sendMessage( S_COLOR_WHITE + "Usage: /storedpositionslist (limit)\n" );
 			return false;
 		}
-		sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n", @client );
+		player.sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n" );
 		int i;
 		for( i = 0; i < argsString.getToken(0).toInt(); i++ )
 		{
 			client.execGameCommand("cmd  echo ~~~;echo id#" + i + ";storedposition_" + i +";echo ~~~;" );
 		}
+		
+		return true;
     }
-	else if ( ( cmdString == "noclip" ) )
+	else if ( ( cmdString == "timeleft" ) )
 	{
-		return player.noclip();
+		if ( !g_maprotation.getBool() )
+		{
+			player.sendMessage( S_COLOR_RED + "There is no time limit as maprotation is disabled.\n" );
+			return false;
+		}
+		
+		if ( !g_timelimit.getBool() )
+		{
+			player.sendMessage( S_COLOR_RED + "There is no timelimit.\n" );
+			return false;
+		}
+		
+		uint minutesLeft = (g_timelimit.getInteger() * 60000 - levelTime) / 60000;
+		player.sendMessage(S_COLOR_GREEN + minutesLeft + " minute" + (minutesLeft != 1 ? "s" : "") + " left.\n" );
+		
+		return true;
 	}
 
     return false;
@@ -620,27 +643,18 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-	map.showCountDown();
-    
-    if ( match.timeLimitHit() && map.allowEndGame() )
-        match.launchState( match.getState() + 1 );
-
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
 
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
-        // if there is no player in TEAM_PLAYERS finish the match and restart
-        if ( G_GetTeam( TEAM_PLAYERS ).numPlayers == 0 && demoRecording )
-        {
-            match.stopAutorecord();
-            demoRecording = false;
-        }
-        else if ( !demoRecording && G_GetTeam( TEAM_PLAYERS ).numPlayers > 0 )
-        {
-            match.startAutorecord();
-            demoRecording = true;
-        }
+		if (g_maprotation.getBool())
+		{
+			map.showCountDown();
+		
+			if ( match.timeLimitHit() && map.overTimeFinished() )
+				match.launchState( match.getState() + 1 );
+		}
     }
 
 	// set the logTime once
@@ -687,8 +701,6 @@ void GT_ThinkRules()
         @client = @G_GetClient( i );
     	if( scbupdated && specwho[i] != "" )
     		client.execGameCommand("scb \"" + scbmsg + " &w " + specwho[i] + " " + scb_specs + " \"");
-
-
 
         if ( client.state() < CS_SPAWNED )
             continue;
@@ -980,6 +992,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "storedpositionslist" );
 	G_RegisterCommand( "positionstore" );
 	G_RegisterCommand( "noclip" );
+	G_RegisterCommand( "timeleft" );
 
 
     demoRecording = false;

@@ -69,11 +69,16 @@ class Racesow_Map
     }   
     
 	/**
-	 * allowEndGame
+	 * overTimeFinished
 	 * @return bool
 	 */
-	bool allowEndGame()
+	bool overTimeFinished()
 	{
+		if (!match.timeLimitHit()) {
+		
+			return false;
+		}
+	
 		if (!this.inOvertime)
 		{
 			uint numRacing = 0;
@@ -118,8 +123,7 @@ class Racesow_Map
 					if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
 					{
 						players[i].cancelRace();
-						G_PrintMsg( players[i].getClient().getEnt(), S_COLOR_RED
-							+ "You have been moved to spectators because you were idle during overtime.\n" );
+						players[i].sendMessage(S_COLOR_RED + "You have been moved to spectators because you were idle during overtime.\n" );
 					}
 					else
 					{
