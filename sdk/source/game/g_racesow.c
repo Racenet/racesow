@@ -70,12 +70,17 @@ void RS_MysqlLoadInfo( void )
     rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "", CVAR_ARCHIVE );
     rs_mysqlDb = trap_Cvar_Get( "rs_mysqlDb", "racesow", CVAR_ARCHIVE );
     
-    rs_queryGetPlayer   = trap_Cvar_Get( "rs_queryGetPlayer",   "SELECT `id`, `auth` FROM `player` WHERE `name` = '%s' AND `password` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryAddPlayer   = trap_Cvar_Get( "rs_queryAddPlayer",   "INSERT INTO `player` (`name`, `password`, `created`) VALUES ('%s', MD5('%s'), NOW());", CVAR_ARCHIVE );
-    rs_queryAddNick     = trap_Cvar_Get( "rs_queryAddNick",     "INSERT INTO `nick` (`name`, `player_id`, `ip`, `created`) VALUES ('%s', %d, '%s', NOW());", CVAR_ARCHIVE );
-    rs_queryGetMap      = trap_Cvar_Get( "rs_queryGetMapId",    "SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryAddMap      = trap_Cvar_Get( "rs_queryAddMap",      "INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
-    rs_queryAddRace     = trap_Cvar_Get( "rs_queryAddRace",     "INSERT INTO `race` (`player_id`, `nick_id`, `map_id`, `time`, `created`) VALUES(%d, %d, %d, %d, NOW());", CVAR_ARCHIVE );
+    rs_queryGetPlayer			= trap_Cvar_Get( "rs_queryGetPlayer",			"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryAddPlayer			= trap_Cvar_Get( "rs_queryAddPlayer",			"INSERT INTO `player` (`name`, `simplified`, `auth_name`, `auth_pass`, `auth_mask`, `created`) VALUES ('%s', '%s', '%s', MD5('%s'), %d, NOW());", CVAR_ARCHIVE );
+	rs_queryAddNick				= trap_Cvar_Get( "rs_queryAddNick",				"INSERT INTO `nick` (`name`, `player_id`, `ip`, `created`) VALUES ('%s', %d, '%s', NOW());", CVAR_ARCHIVE );
+	rs_queryGetMap				= trap_Cvar_Get( "rs_queryGetMapId",			"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryAddMap				= trap_Cvar_Get( "rs_queryAddMap",				"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
+	
+	rs_queryAddRace				= trap_Cvar_Get( "rs_queryAddRace",				"INSERT INTO `race` (`player_id`, `nick_id`, `map_id`, `time`, `created`) VALUES(%d, %d, %d, %d, NOW());", CVAR_ARCHIVE );
+	rs_querySetMapRating		= trap_Cvar_Get( "rs_querySetMapRating",		"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
+	rs_queryUpdateMapRating		= trap_Cvar_Get( "rs_queryUpdateMapRating",		"UPDATE `map` SET `rating` = (SELECT SUM(`value`) / COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`), `ratings` = (SELECT COUNT(`player_id`) FROM `map_rating` WHEHRE `map_id` = `map`.`id`) WHERE `id` = %d LIMIT 1;
+
+	rs_queryUpdatePlayerMap     = trap_Cvar_Get( "rs_queryUpdatePlayerMap",     "INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `created`) VALUES(%d, %d, %d, 1, NOW()) ON DUPLICATE KEY UPDATE `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time` ), `races` = `races` + 1, `created` = NOW();", CVAR_ARCHIVE );
     
 }
 
