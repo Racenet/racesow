@@ -26,12 +26,25 @@ CREATE TABLE `map_rating` (
 
 CREATE TABLE `nick` (
   `id` int(11) unsigned NOT NULL auto_increment,
+  `player_id` int(1) NOT NULL default 0,
   `name` varchar(64) NOT NULL default '',
   `simplified` varchar(64) NOT NULL default '',
   `races` int(11) unsigned NOT NULL,
   `maps` int(11) unsigned NOT NULL default '0',
   `playtime` bigint(20) NOT NULL,
   PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+CREATE TABLE `nick_map` (
+  `nick_id` int(11) unsigned NOT NULL,
+  `map_id` int(11) unsigned NOT NULL,
+  `time` int(11) unsigned default NULL,
+  `races` int(11) unsigned NOT NULL default '0',
+  `playtime` bigint(20) unsigned NOT NULL default '0',
+  `created` datetime default NULL,
+  PRIMARY KEY  (`nick_id`,`map_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
