@@ -67,7 +67,7 @@ void RS_MysqlLoadInfo( void )
     rs_mysqlHost = trap_Cvar_Get( "rs_mysqlHost", "localhost", CVAR_ARCHIVE );
     rs_mysqlPort = trap_Cvar_Get( "rs_mysqlPort", "0", CVAR_ARCHIVE ); // if 0 it will use the system's default port
     rs_mysqlUser = trap_Cvar_Get( "rs_mysqlUser", "root", CVAR_ARCHIVE );
-    rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "root", CVAR_ARCHIVE );
+    rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "", CVAR_ARCHIVE );
     rs_mysqlDb = trap_Cvar_Get( "rs_mysqlDb", "racesow", CVAR_ARCHIVE );
     
     rs_queryGetPlayer   = trap_Cvar_Get( "rs_queryGetPlayer",   "SELECT `id`, `auth` FROM `player` WHERE `name` = '%s' AND `password` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
@@ -163,10 +163,10 @@ qboolean RS_MysqlAuthenticate( edict_t *ent, char *authName, char *authPass )
     struct authenticationData *authData=malloc(sizeof(struct authenticationData));
     
     authData->ent = ent;
-    authData->authName = _strdup(authName);	
-    authData->authPass = _strdup(authPass);
+    authData->authName = strdup(authName);	
+    authData->authPass = strdup(authPass);
 
-	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlAuthenticate_Thread, (void *)authData);
+	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlAuthenticate_Thread, authData);
 
 	if (returnCode) {
 
@@ -245,12 +245,13 @@ void *RS_MysqlNickProtection_Thread(void *in)
  * @param void *in
  * @return void
  */
-void *RS_MysqlAuthenticate_Thread(struct authenticationData *authData)
+void *RS_MysqlAuthenticate_Thread( void *in )
 {
     char query[1000];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
-
+    struct authenticationData *authData = (struct authenticationData *)in;
+    
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
 	sprintf(query, rs_queryGetPlayer->string, authData->authName, authData->authPass);

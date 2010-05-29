@@ -6949,8 +6949,6 @@ void G_asShutdownGametypeScript( void )
 void RS_MysqlAuthenticate_Callback( edict_t *ent, int playerId, int authMask )
 {
 	int error, asContextHandle;
-    asstring_t *s1;
-    
 	if( level.gametype.RS_MysqlAuthenticate_CallbackID < 0 ) {
     
         G_PrintMsg(NULL, "FAIL 1\n");
