@@ -1,0 +1,54 @@
+event: player connect
+
+    - check for nickname protection (rs_queryCheckPlayer)
+    - insert player if it does not exist (rs_queryAddPlayer) 
+    - retrieve and store player_id and auth_mask (rs_queryGetPlayer)
+    - insert nick for the player_id if it does not exist (rs_queryAddNick)
+    - retrieve and store nick_id (rs_queryGetNick)
+    - store leveltime to compute playtime later
+
+event: player authenticate
+
+    - retrieve player_id and auth_mask (rs_queryGetPlayer)
+    
+event: player disconnect
+
+    - update playtime in player, map, nick, player_map and nick_map
+        rs_queryUpdatePlayerPlaytime
+        rs_queryUpdateNickPlaytime
+        rs_queryUpdateMapPlaytime
+        rs_queryUpdatePlayerMapPlaytime
+        rs_queryUpdateNickMapPlaytime
+    
+event: player set new nickname
+
+    - check nickname protection (rs_queryCheckPlayer)
+
+    - is authed (auth_mask > 0)
+        -> insert nick for the player if it does not exist (rs_queryGetNick / rs_queryAddNick)
+    - else
+        -> add player and nick if they do not exist (rs_queryAddPlayer  / rs_queryAddNick)
+        -> retrieve and store player_id (rs_queryGetPlayer)
+        
+    - retrieve and store nick_id (rs_queryGetNick)
+        
+        
+event: player finish race
+    
+    - insert race using the stored player_id and nick_id (rs_queryAddRace)
+    - update num_races in map, player, nick, player_map and nick_map
+        rs_queryUpdatePlayerRaces
+        rs_queryUpdateNickRaces
+        rs_queryUpdateMapRaces
+        rs_queryUpdatePlayerMapRaces
+        rs_queryUpdateNickMapRaces
+    
+    
+event: next map / game shutdown
+    
+     - update playtime in player, map, nick, player_map and nick_map
+        rs_queryUpdatePlayerPlaytime
+        rs_queryUpdateNickPlaytime
+        rs_queryUpdateMapPlaytime
+        rs_queryUpdatePlayerMapPlaytime
+        rs_queryUpdateNickMapPlaytime
