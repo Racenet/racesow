@@ -51,8 +51,18 @@ struct authenticationData {
    char *authPass;
 };
 
+struct raceDataStruct {
+
+   int player_id;
+   int nick_id;
+   int map_id;
+   int race_time;
+};
+
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
 extern qboolean RS_MysqlAuthenticate( edict_t *ent, char *authName, char *authPass );
 extern void *RS_MysqlAuthenticate_Thread( void *in );
 extern void RS_MysqlAuthenticate_Callback( edict_t *ent, int playerId, int authMask );
+extern qboolean RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time );
+extern void *RS_MysqlInsertRace_Thread(void *in);

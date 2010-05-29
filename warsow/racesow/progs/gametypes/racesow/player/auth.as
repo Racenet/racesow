@@ -160,10 +160,9 @@
     /**
 	 * Callback for the authentication gets called from the game lib's worker thread
      *
-	 * @param cString &authName
-	 * @param int authMask
      * @param int playerId
-	 * @return void
+	 * @param int authMask
+     * @return void
 	 */
     void authCallback( int playerId, int authMask )
     {
@@ -311,7 +310,7 @@
 	}
 
 	/**
-	 * Check if the palyer uses a protected nickname
+	 * Check if the player uses a protected nickname
 	 * @return void
 	 */
 	void checkProtectedNickname()
@@ -324,6 +323,11 @@
 /**
  * Callback functions are called from the racesow game lib
  *
+	 * @param cEntity @ent
+     * @param int playerId
+	 * @param int authMask
+     * @return void
+
  */
 
 void RS_MysqlAuthenticate_Callback( cEntity @ent, int playerId, int authMask )

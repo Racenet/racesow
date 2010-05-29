@@ -18,8 +18,12 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	 */
 	void addRace(Racesow_Player_Race @race)
 	{
-		this.logRace(@race);
-	
+		//RS_MysqlInsertRace( -- player_id -- this.player.getClient().getEnt(), --nick_id--, --map_id--, race.getTime());
+		RS_MysqlInsertRace(race.getPlayer().getAuth().playerId, 30, 30, race.getTime());
+		
+		// below: still using the non-mysql algorithm to compute MAX_RECORDS highscores
+		// we can either keep this (pro:no mysql query needed for 'top' then, con: more code) or switch to full mysql-based highscore management
+		
 		// see if the player improved one of the top scores
 		for ( int top = 0; top < MAX_RECORDS; top++ )
 		{
@@ -43,21 +47,12 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 					this.highScores[i] = this.highScores[i-1];
 
 				this.highScores[top].fromRace( race );
-
-				this.writeStats();
 				this.updateHud();
 				break;
 			}
-		
 		}
 	}
-	
-	void logRace(Racesow_Player_Race @race)
-	{
-		cVar g_logRaces( "g_logRaces", "0", 0 );
-		if ( g_logRaces.getBool() )
-			G_AppendToFile( "gamedata/races/" + this.map.name + "_" + this.logTime, race.toString() );
-	}
+
 	
 	/**
 	 * Write the stats to the file
@@ -150,8 +145,8 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	void updateHud()
 	{
 		// removed for now - r2
-		int i_like_top_in_hud=0;
-		if (i_like_top_in_hud==1)
+		int i_like_to_see_top_in_hud=0;
+		if (i_like_to_see_top_in_hud==1)
 		{
 			for ( int i = 0; i < MAX_RECORDS; i++ )
 			{

@@ -199,6 +199,37 @@ qboolean RS_MysqlNickProtection( edict_t *ent )
 */
 
 /**
+ * Insert a new race
+ *
+ * @param int player_id
+ * @param int map_id
+ * @param int race_time
+ * @return qboolean
+ */
+qboolean RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time ) {
+
+	int returnCode;
+	pthread_t thread;
+    struct raceDataStruct *raceData=malloc(sizeof(struct raceDataStruct));
+
+    raceData->player_id = player_id;
+	raceData->nick_id= nick_id;
+	raceData->map_id = map_id;
+	raceData->race_time = race_time;
+    
+	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlInsertRace_Thread, (void *)raceData);
+
+	if (returnCode) {
+
+		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		return qfalse;
+	}
+	
+	return qtrue;
+
+}
+
+/**
  * Check if the player violates against the nickname protection
  *
  * @param void *in
@@ -240,7 +271,7 @@ void *RS_MysqlNickProtection_Thread(void *in)
 */
 
 /**
- * The test function executed in the thread
+ * Authentication thread
  *
  * @param void *in
  * @return void
@@ -251,7 +282,7 @@ void *RS_MysqlAuthenticate_Thread( void *in )
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
     struct authenticationData *authData = (struct authenticationData *)in;
-    
+
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
 	sprintf(query, rs_queryGetPlayer->string, authData->authName, authData->authPass);
@@ -262,8 +293,8 @@ void *RS_MysqlAuthenticate_Thread( void *in )
     RS_CheckMysqlThreadError();
     
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
-    
-        RS_MysqlAuthenticate_Callback(authData->ent, atoi(row[0]), atoi(row[2]));
+		if (row[0]!=NULL && row[1]!=NULL) 
+	        RS_MysqlAuthenticate_Callback(authData->ent, atoi(row[0]), atoi(row[1]));
     
     } else {
     
@@ -274,6 +305,31 @@ void *RS_MysqlAuthenticate_Thread( void *in )
 	free(authData->authName);
 	free(authData->authPass);
 	free(authData);	
+	RS_EndMysqlThread();
+    
+    return NULL;
+}
+
+/**
+ * Thread to insert a new race 
+ *
+ * @param void *in
+ * @return void
+ */
+void *RS_MysqlInsertRace_Thread(void *in)
+{
+    char query[1000];
+	struct raceDataStruct *raceData=(struct raceDataStruct *)in;
+    
+	pthread_mutex_lock(&mutexsum);
+	mysql_thread_init();
+	sprintf(query, rs_queryAddRace->string, raceData->player_id, raceData->nick_id, raceData->map_id, raceData->race_time);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+        
+	// this one has no callback, i don't think that's needed - r2
+    
+	free(raceData);	
 	RS_EndMysqlThread();
     
     return NULL;
