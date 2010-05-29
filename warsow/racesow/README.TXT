@@ -106,6 +106,11 @@ Changelog:
         - ported the noclip command to angelscript, improved ammoswitch
         - ported the teleport command to angelscript, merged position store to it
         - added target_teleport entity support to angelscript
+		- private chat added
+		- implemented weapondefs
+		- restoring .42 physics for weapons (splash function)
+		- weapons physics have been tuned
+		- added various "fixes" (read: restored .42 bugs) to enable loading of maps with overflowing entities (like 0ups_beta2a), only in freestyle
 
 
     2009-09-25 / racesow 0.5.1e
@@ -163,9 +168,9 @@ Changelog:
         
 Roadmap: (items with a  require the modded game module, or wait for stuff be added to basewsw game module)
 
-    - movement types like b1shop's mod (planned: vq3-like, cpm-like, basewsw, racesow)
+    - movement types like b1shop's mod (planned: vq3-like, cpm-like, basewsw, racesow) (comment from r2: i think it's fine to have it racesow-style only for now)
     - optionally force movement type serverside
-    - weapondefs, depending on movement type (see appendix for a summary of weapondefs)
+    - weapondefs depending on movement type (see appendix for a summary of weapondefs)
     - defrag like race-ghost for own, best and server best 
     
     
