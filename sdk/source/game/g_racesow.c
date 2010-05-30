@@ -255,7 +255,7 @@ qboolean RS_MysqlNickProtection( edict_t *ent )
  * @param int race_time
  * @return qboolean
  */
-qboolean RS_MysqlInsertRace( edict_t *ent, int player_id, int nick_id, int map_id, int race_time ) {
+qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time ) {
 
 	int returnCode;
 	pthread_t thread;
@@ -368,7 +368,7 @@ void *RS_MysqlAuthenticate_Thread( void *in )
 void *RS_MysqlInsertRace_Thread(void *in)
 {
     char query[1000];
-	uint maxPositions, currentPoints, currentRaceTime, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime;
+	unsigned int maxPositions, currentPoints, currentRaceTime, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -446,7 +446,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
         points = 0;
 		if (row[0] !=NULL && row[1] != NULL)
 		{
-            uint playerId, raceTime;
+            unsigned int playerId, raceTime;
             playerId = atoi(row[0]);
             raceTime = atoi(row[1]);
         
