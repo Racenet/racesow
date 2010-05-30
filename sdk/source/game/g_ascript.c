@@ -6112,20 +6112,20 @@ static void asFunc_asGeneric_RS_MysqlNickProtection( void *gen )
 */
 
 // RS_MysqlInsertRace
-static qboolean asFunc_RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time ) 
+static qboolean asFunc_RS_MysqlInsertRace( edict_t *ent, int player_id, int nick_id, int map_id, int race_time ) 
 {
-	return RS_MysqlInsertRace(player_id, nick_id, map_id, race_time );
+	return RS_MysqlInsertRace(ent, player_id, nick_id, map_id, race_time );
 }
 
 static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlInsertRace(
-        (int)G_asGeneric_GetArgInt(gen, 0),
+        (edict_t *)G_asGeneric_GetArgAddress(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1),
-        (int)G_asGeneric_GetArgInt(gen, 2),
-        (int)G_asGeneric_GetArgInt(gen, 3)));
+		(int)G_asGeneric_GetArgInt(gen, 2),
+        (int)G_asGeneric_GetArgInt(gen, 3),
+        (int)G_asGeneric_GetArgInt(gen, 4)));
 }
-
 
 // !racesow
 
@@ -6742,7 +6742,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	{ "void RS_MysqlAuthenticate( cEntity @, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
 	//{ "void RS_MysqlNickProtection( cEntity@ )", asFunc_RS_MysqlNickProtection, asFunc_asGeneric_RS_MysqlNickProtection },
-	{ "void RS_MysqlInsertRace( int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
+	{ "void RS_MysqlInsertRace( cEntity @, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
@@ -7751,6 +7751,7 @@ qboolean G_asInitializeGametypeScript( const char *script, const char *gametypeN
 	}
 	else
 		funcCount++;
+
 	// !racesow
 		
 	//

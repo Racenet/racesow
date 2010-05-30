@@ -9,11 +9,32 @@ cvar_t *rs_mysql_pass;
 cvar_t *rs_mysql_db;
 
 cvar_t *rs_queryGetPlayer;
+cvar_t *rs_queryCheckPlayer;
 cvar_t *rs_queryAddPlayer;
+cvar_t *rs_queryRegisterPlayer;
+cvar_t *rs_queryUpdatePlayerPlaytime;
+cvar_t *rs_queryUpdatePlayerRaces;
+cvar_t *rs_queryUpdatePlayerMaps;
+cvar_t *rs_queryGetNick;
 cvar_t *rs_queryAddNick;
+cvar_t *rs_queryUpdateNickPlaytime;
+cvar_t *rs_queryUpdateNickRaces;
+cvar_t *rs_queryUpdateNickMaps;
 cvar_t *rs_queryGetMap;
 cvar_t *rs_queryAddMap;
+cvar_t *rs_queryUpdateMapRating;
+cvar_t *rs_queryUpdateMapPlaytime;
+cvar_t *rs_queryUpdateMapRaces;
 cvar_t *rs_queryAddRace;
+cvar_t *rs_queryGetPlayerMap;
+cvar_t *rs_queryUpdatePlayerMap;
+cvar_t *rs_queryUpdatePlayerMapPlaytime;
+cvar_t *rs_queryGetPlayerMapHighscores;
+cvar_t *rs_queryResetPlayerMapPoints;
+cvar_t *rs_queryUpdatePlayerMapPoints;
+cvar_t *rs_queryUpdateNickMap;
+cvar_t *rs_queryUpdateNickMapPlaytime;
+cvar_t *rs_querySetMapRating;
 
 void RS_MysqlLoadInfo( void );
 qboolean RS_MysqlConnect( void );
@@ -53,10 +74,11 @@ struct authenticationData {
 
 struct raceDataStruct {
 
-   int player_id;
-   int nick_id;
-   int map_id;
-   int race_time;
+	edict_t *ent;
+	int player_id;
+	int nick_id;
+	int map_id;
+	int race_time;
 };
 
 extern void RS_Init( void );
@@ -64,5 +86,5 @@ extern void RS_Shutdown( void );
 extern qboolean RS_MysqlAuthenticate( edict_t *ent, char *authName, char *authPass );
 extern void *RS_MysqlAuthenticate_Thread( void *in );
 extern void RS_MysqlAuthenticate_Callback( edict_t *ent, int playerId, int authMask );
-extern qboolean RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time );
+extern qboolean RS_MysqlInsertRace( edict_t *ent, int player_id, int nick_id, int map_id, int race_time );
 extern void *RS_MysqlInsertRace_Thread(void *in);
