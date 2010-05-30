@@ -3,9 +3,7 @@
  *
  * @package Racesow
  * @subpackage Player
- * @version 0.5.1c
- * @date 24.09.2009
- * @author soh-zolex <zolex@warsow-race.net>
+ * @version 0.5.2
  */
 class Racesow_Player_Race : Racesow_Player_Implemented
 {
@@ -227,7 +225,49 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         this.stopTime = levelTime;
 		this.timeStamp = localTime;
 		this.player.inOvertime = false;
+		
+		uint newTime = this.getTime();
+		//uint bestTime = this.player.getBestTime(); // diff to own best
+		uint bestTime = map.getStatsHandler().getHighScore(0).getTime(); // diff to server best
+		uint personalBestTime = this.player.getBestTime();
+		
+		bool noDelta = 0 == bestTime;
+		
+        if ( noDelta || newTime < bestTime )
+        {
+			this.delta = newTime;
+            str = S_COLOR_GREEN + (noDelta ? "" : "-");
+        }
+		else if ( newTime == bestTime )
+		{
+		    this.delta = 0;
+            str = S_COLOR_YELLOW + "+-";
+		}
+        else
+        {
+            this.delta = newTime - bestTime;
+            str = S_COLOR_RED + "+";
+        }
 
+        G_CenterPrintMsg( this.player.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
+			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
+	
+		this.triggerAward( S_COLOR_CYAN + "Race Finished!" );
+		G_PrintMsg(this.player.getClient().getEnt(), S_COLOR_WHITE
+			+ "race finished: " + TimeToString( newTime ) + "\n");
+		
+        if ( newTime < bestTime || bestTime == 0 )
+        {
+            player.setBestTime(newTime);
+			this.triggerAward( S_COLOR_GREEN + "New server record!" );
+			G_PrintMsg(null, player.getName() + " " + S_COLOR_YELLOW
+				+ "made a new server record: " + TimeToString( newTime ) + "\n");
+        }
+        else if ( newTime < personalBestTime || personalBestTime == 0 )
+        {
+            player.setBestTime(newTime);
+			this.triggerAward( "Personal record!" );
+        }
 		
 		return true;
 	}

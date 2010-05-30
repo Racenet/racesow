@@ -3,9 +3,7 @@
  *
  * @package Racesow
  * @subpackage Map_HighScore
- * @version 0.5.1d
- * @date 24.09.2009
- * @author soh-zolex <zolex@warsow-race.net>
+ * @version 0.5.2
  */
 class Racesow_Map_HighScore_Abstract
 {
