@@ -161,6 +161,24 @@ class Racesow_Player
 		}
 	}
 
+    /**
+	 * Get the player's id
+	 * @return int
+	 */
+    int getId()
+    {
+        return this.auth.playerId;
+    }
+    
+    /**
+	 * Get the id of the current nickname
+	 * @return int
+	 */
+    int getNickId()
+    {
+        return 30;
+    }
+    
 	/**
 	 * Set the player's client
 	 * @return void

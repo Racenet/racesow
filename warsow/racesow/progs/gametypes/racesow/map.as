@@ -13,6 +13,8 @@ class Racesow_Map
 	Racesow_Map_HighScore_Default @statsHandler;
 	
 	bool inOvertime;
+    
+    uint id;
 	
 	/**
 	 * Constructor
@@ -31,12 +33,22 @@ class Racesow_Map
 	{
 	}
 
+    /**
+     * get the map's ID
+     * @return uint
+     */
+    uint getId()
+    {
+        return this.id;
+    }
+    
 	void reset()
 	{
 		@this.statsHandler = Racesow_Map_HighScore_Default();
 		this.statsHandler.setMap(@this);
 	
 		cVar mapName( "mapname", "", 0 );
+        this.id = 0;
 		this.name = mapName.getString();
 		this.inOvertime = false;
 	}
