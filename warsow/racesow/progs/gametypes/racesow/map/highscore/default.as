@@ -18,39 +18,7 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	 */
 	void addRace(Racesow_Player_Race @race)
 	{
-		//RS_MysqlInsertRace( -- player_id -- this.player.getClient().getEnt(), --nick_id--, --map_id--, race.getTime());
-		RS_MysqlInsertRace(race.getPlayer().getAuth().playerId, 30, 30, race.getTime());
-		
-		// below: still using the non-mysql algorithm to compute MAX_RECORDS highscores
-		// we can either keep this (pro:no mysql query needed for 'top' then, con: more code) or switch to full mysql-based highscore management
-		
-		// see if the player improved one of the top scores
-		for ( int top = 0; top < MAX_RECORDS; top++ )
-		{
-			uint oldTime = this.highScores[top].getTime();
-			
-			// if the same player already has a better time, don't do anything
-			if (this.highScores[top].getPlayerName()==race.getPlayer().getClient().getName() && race.getTime() > oldTime )
-					break;
-			
-			if ( oldTime == 0 || race.getTime() < oldTime )
-			{
-							
-				// check if the same player has a worse time, to define from where the list has to be moved down
-				int startShift=MAX_RECORDS-1;
-				for ( int i = top; i < MAX_RECORDS; i++ )
-						if (this.highScores[i].getPlayerName()==race.getPlayer().getClient().getName() )
-							startShift=i;
-
-				// move the other records down
-				for ( int i = startShift; i > top; i-- )
-					this.highScores[i] = this.highScores[i-1];
-
-				this.highScores[top].fromRace( race );
-				this.updateHud();
-				break;
-			}
-		}
+		RS_MysqlInsertRace(race.getPlayer().getClient().getEnt(), race.getPlayer().getId(), race.getPlayer().getNickId(), map.getId(), race.getTime());
 	}
 
 	
