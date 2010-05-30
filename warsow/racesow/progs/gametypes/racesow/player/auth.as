@@ -3,7 +3,9 @@
  *
  * @package Racesow
  * @subpackage Player
- * @version 0.5.2
+ * @version 0.5.1c
+ * @date 23.09.2009
+ * @author soh-zolex <zolex@warsow-race.net>
  */
 
  class Racesow_Player_Auth : Racesow_Player_Implemented
@@ -19,8 +21,14 @@
 	 * @var cString
 	 */
 	cString authenticationName;
-
+    
 	/**
+	 * The Player's unique ID
+	 * @var int
+	 */
+	int playerId;
+    
+    /**
 	 * Racesow authorizations bitmask
 	 * @var uint
 	 */
@@ -73,9 +81,9 @@
 	{
 	}
 
-	/*
-	* Convert a string to an allowed filename
-	*/
+    /**
+	 * Convert a string to an allowed filename
+	 */
 	cString toFileName(cString fileName)
 	{
 		cString outName="";
@@ -91,7 +99,7 @@
 		}
 		return outName;
 	}
-
+    
 	/**
 	 * Register a new server account
 	 *
@@ -108,73 +116,8 @@
 	 */
 	bool signUp(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
-		cString nickName = toFileName(this.player.getName().removeColorTokens());
-
-		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
-		cString mailShadow = gameDataDir + "/emails/" + authEmail.substr(0,1) + "/" + authEmail;
-		cString nickShadow = gameDataDir + "/nicknames/" + nickName.substr(0,1) + "/" + nickName;
-
-		cString duplicateNameCheckNick = gameDataDir + "/auths/" + nickName.substr(0,1) + "/" + nickName;
-		cString duplicateNameCheckEmail = gameDataDir + "/auths/" + authEmail.substr(0,1) + "/" + authEmail;
-		cString duplicateEmailCheckName = gameDataDir + "/emails/" + authName.substr(0,1) + "/" + authName;
-		cString duplicateEmailCheckNick = gameDataDir + "/emails/" + nickName.substr(0,1) + "/" + nickName;
-		cString duplicateNickCheckEmail = gameDataDir + "/nicknames/" + authEmail.substr(0,1) + "/" + authEmail;
-		cString duplicateNickCheckName = gameDataDir + "/nicknames/" + authName.substr(0,1) + "/" + authName;
-
-		if ( authName == "" || authEmail == "" || password == "" || confirmation == "" )
-		{
-			this.player.sendMessage( S_COLOR_RED + "usage: register <account name> <account email> <password> <confirm password>\n" );
-			return false;
-		}
-
-		if ( password != confirmation )
-		{
-			this.player.sendMessage( S_COLOR_RED + "Error: passwords do not match\n" );
-			return false;
-		}
-
-	    if ( G_FileLength( authFile ) != -1 ||
-			 G_FileLength( duplicateNameCheckNick ) != -1 ||
-			 G_FileLength( duplicateNameCheckEmail ) != -1 )
-		{
-			this.player.sendMessage( S_COLOR_RED + "Error: Your login '" + authName + "' is already registered.\n" );
-			return false;
-		}
-
-		if ( G_FileLength( mailShadow ) != -1 ||
-			G_FileLength( duplicateEmailCheckName ) != -1 ||
-			G_FileLength( duplicateEmailCheckNick ) != -1 )
-		{
-			this.player.sendMessage( S_COLOR_RED + "Error: Your email '" + authEmail + "' is already registered.\n" );
-			return false;
-		}
-
-		cString PlayerNick = this.player.getName().removeColorTokens();
-		if ( PlayerNick.tolower() == "player" || ( PlayerNick.length() == 9 && PlayerNick.substr(0,6).tolower() == "player" ) )
-		{
-			this.player.sendMessage( S_COLOR_RED + "You aren't allowed to register under the nick 'player'.\n" );
-			return false;
-		}
-
-		if ( G_FileLength( nickShadow ) != -1 ||
-			G_FileLength( duplicateNickCheckName ) != -1 ||
-			G_FileLength( duplicateNickCheckEmail ) != -1 )
-		{
-			this.player.sendMessage( "Your nickname '" + this.player.getName() + "' is already registered.\n" );
-			return false;
-		}
-
-		// TODO: check email for valid format
-
-		// "authenticationName" "email" "password" "authorizationsMask" "currentTimestamp"
-		G_WriteFile( authFile, '"'+ authName + '" "' + authEmail + '" "' + G_Md5( password ) + '" "' + 1 + '" "' + localTime + '"\n' + nickName);
-		G_WriteFile( mailShadow, authName );
-		G_WriteFile( nickShadow, authName );
-
-		this.player.sendMessage( S_COLOR_GREEN + "Successfully registered as "
-			+ authName + ". " + S_COLOR_WHITE + "Don't forget your password...\n" );
-
-		return true;
+		this.player.sendMessage( S_COLOR_RED + "Registration is currently not available\n" );
+		return false;
 	}
 
 	/**
@@ -196,92 +139,54 @@
 		}
 
 		cString PlayerNick = this.player.getName().removeColorTokens();
-		if ( PlayerNick.tolower() == "player"
-			|| ( PlayerNick.length() == 9 && PlayerNick.substr(0,6).tolower() == "player" ) )
+		
+        this.authenticationName = authName;
+        RS_MysqlAuthenticate(this.player.getClient().getEnt(), authName, authPass);
+        return true;
+	}
+    
+    void nickProtectCallback( bool hasValidNickname )
+    {
+        if ( !hasValidNickname )
 		{
-			this.player.sendMessage( S_COLOR_RED + "You aren't allowed to auth under the nickname 'player'.\n" );
-							return false;
+			this.violateNickProtectionSince = localTime;
+            this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
+			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
+				+ "If you don't authenticate or change your nickname you will be kicked.\n" );
+
+		}
+    }
+    
+    /**
+	 * Callback for the authentication gets called from the game lib's worker thread
+     *
+     * @param int playerId
+	 * @param int authMask
+     * @return void
+	 */
+    void authCallback( int playerId, int authMask )
+    {
+        if (playerId == 0) {
+        
+            G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate as "+ this.authenticationName +"\n" );
+            this.authenticationName = "";
+            return;
+        }
+        
+        if ( this.lastViolateProtectionMessage != 0 )
+		{
+            this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
 		}
 
-		cString authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
-
-		if ( G_FileLength( authFile ) == -1 )
-		{
-			authFile = gameDataDir + "/emails/" + authName.substr(0,1) + "/" + authName;
-			if ( G_FileLength( authFile ) == -1 )
-			{
-				authFile = gameDataDir + "/nicknames/" + authName.substr(0,1) + "/" + authName;
-				if ( G_FileLength( authFile ) != -1 )
-				{
-					authName = G_LoadFile( authFile );
-					authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
-				}
-			}
-			else
-			{
-				authName =  G_LoadFile( authFile );
-				authFile = gameDataDir + "/auths/" + authName.substr(0,1) + "/" + authName;
-			}
-
-			if ( G_FileLength( authFile ) == -1 )
-			{
-				this.player.sendMessage( S_COLOR_RED + "Error: "+ authName +" is not registered\n" );
-				return false;
-			}
-		}
-
-		cString authContent = G_LoadFile( authFile );
-		if ( G_Md5( authPass ) != authContent.getToken( 2 ) )
-		{
-			if ( this.authorizationsMask > 0 )
-			{
-				this.player.sendMessage(S_COLOR_RED + "Your authentication info changed but is invalid now.\n");
-				return false;
-			}
-
-			this.failCount++;
-
-			if ( this.failCount >= 3 )
-			{
-				player.kick( "Too many failed logins." );
-			}
-			else
-			{
-				G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED
-					+ " failed in authenticating as "+ authName +"\n" );
-			}
-
-			return false;
-		}
-
-		cString name = toFileName(this.player.getName().removeColorTokens());
-		cString nickFile = gameDataDir + "/nicknames/" + name.substr(0,1) + "/" + name;
-
-		if ( G_FileLength( nickFile ) != -1 && G_LoadFile( nickFile ) != authName )
-		{
-			G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED
-				+ " does not have permission to authenticate as "+ authName +"\n" );
-			return false;
-		}
-
-		if ( this.lastViolateProtectionMessage != 0 )
-		{
-			this.player.getClient().addAward( S_COLOR_GREEN + "Countdown stopped." );
-		}
-
+        this.playerId = playerId;
 		this.failCount = 0;
 		this.violateNickProtectionSince = 0;
 		this.lastViolateProtectionMessage = 0;
-		this.authenticationName = authName;
-		this.authorizationsMask = uint( authContent.getToken( 3 ).toInt() );
-
+		this.authorizationsMask = uint(authMask);
 		this.writeSession();
-
-		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN
-			+ " successfully authenticated as "+ authName +"\n" );
-
-		return true;
-	}
+        
+		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
+    }
 
 	/**
 	 * isAuthenticated
@@ -296,22 +201,26 @@
 	 * Refresh the authentication when it changed
 	 * @return void
 	 */
-	void refresh( cString &args )
+	void refresh( cString &nick )
 	{
 		// when authentication information changed, try to authenticate again
 		if ( @this.player == null || @this.player.getClient() == null )
 			return;
 
+        /*
 		cString authName = this.player.getClient().getUserInfoKey("auth_name");
 		cString authPass = this.player.getClient().getUserInfoKey("auth_pass");
 		if ( authName != this.lastRefreshName && authPass != this.lastRefreshPass )
 		{
+            this.player.sendMessage("Authenticate: " + authName + ", " + authPass + "\n");
+        
 			this.lastRefreshName = authName;
 			this.lastRefreshPass = authPass;
 			this.authenticate( authName, authPass, true );
 		}
-
-		if ( args.getToken(0).removeColorTokens() != this.player.getName().removeColorTokens() )
+        */
+        
+		if ( nick.getToken(0).removeColorTokens() != this.player.getName().removeColorTokens() )
 		{
 			this.checkProtectedNickname();
 		}
@@ -362,7 +271,7 @@
 	{
 		return ( this.authorizationsMask & permission != 0 );
 	}
-
+    
 	/**
 	 * Get the player's status concerning nickname protection
 	 * @return int
@@ -380,7 +289,7 @@
 
 		this.lastViolateProtectionMessage = seconds;
 
-		if ( seconds < 11 )
+		if ( seconds < 21 )
 			return 1;
 
 		return 2;
@@ -397,33 +306,53 @@
 		else
 			color = S_COLOR_GREEN;
 
-		return color + (11 - (localTime - this.violateNickProtectionSince)) + " seconds remaining...";
+		return color + (21 - (localTime - this.violateNickProtectionSince)) + " seconds remaining...";
 	}
 
 	/**
-	 * Check if the palyer uses a protected nickname
+	 * Check if the player uses a protected nickname
 	 * @return void
 	 */
 	void checkProtectedNickname()
 	{
-		cString name = toFileName(this.player.getName().removeColorTokens());
-		cString authFile = gameDataDir + "/nicknames/" + name.substr(0,1) + "/" + name;
-
-		if ( G_FileLength( authFile ) != -1 && G_LoadFile( authFile ) != this.authenticationName )
-		{
-			this.violateNickProtectionSince = localTime;
-			this.player.getClient().addAward(S_COLOR_RED + "NICKNAME PROTECTION!");
-			this.player.getClient().addAward(S_COLOR_RED + "CHECK THE CONSOLE NOW!");
-			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
-				+ "If you don't authenticate or change your nickname within X TIMEUNIT you will be kicked.\n" );
-
-		}
-		// if authenticated, add new nickShadow
-		else if ( this.authorizationsMask > 0 )
-		{
-			cString nickName = toFileName(this.player.getName().removeColorTokens());
-			cString nickShadow = gameDataDir + "/nicknames/" + nickName.substr(0,1) + "/" + nickName;
-			G_WriteFile( nickShadow, this.authenticationName );
-		}
+        // RS_MysqlNickProtection(this.player.getClient().getEnt());
 	}
- }
+}
+
+
+/**
+ * Callback functions are called from the racesow game lib
+ *
+	 * @param cEntity @ent
+     * @param int playerId
+	 * @param int authMask
+     * @return void
+
+ */
+
+void RS_MysqlAuthenticate_Callback( cEntity @ent, int playerId, int authMask )
+{
+    if (@ent != null) {
+    
+        Racesow_GetPlayerByClient(ent.client).getAuth().authCallback( playerId, authMask );
+    
+    } else {
+    
+        G_PrintMsg(null, S_COLOR_RED + "error while authenticating playerId " + playerId + "\n");
+    }
+}
+
+/*
+void RS_MysqlNickprotection_Callback( cEntity @ent, bool result )
+{
+    if (@ent != null) {
+    
+        Racesow_GetPlayerByClient(ent.client).getAuth().nickProtectCallback( result );
+    
+    } else {
+    
+        G_PrintMsg(null, S_COLOR_RED + "error while checking nickname protection\n");
+    }
+}
+/*
+

@@ -2,7 +2,9 @@
  * Racesow_Player
  *
  * @package Racesow
- * @version 0.5.2
+ * @version 0.5.1c
+ * @date 24.09.2009
+ * @author soh-zolex <zolex@warsow-race.net>
  */
 class Racesow_Player
 {
@@ -214,6 +216,24 @@ class Racesow_Player
 		return @this.auth;
 	}
 
+    /**
+	 * Get the player's id
+	 * @return int
+	 */
+    int getId()
+    {
+        return this.auth.playerId;
+    }
+    
+    /**
+	 * Get the id of the current nickname
+	 * @return int
+	 */
+    int getNickId()
+    {
+        return 30;
+    }
+    
 	/**
 	 * getBestCheckPoint
 	 * @param uint id
@@ -827,18 +847,12 @@ class Racesow_Player
 	void displayAdminHelp()
 	{
 		cString help;
-		help += S_COLOR_WHITE + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "ADMIN HELP for " + gametype.getName() + "\n";
-		help += S_COLOR_WHITE + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "admin map            " + S_COLOR_YELLOW + "change to the given map immedeatly\n";
-		help += S_COLOR_RED + "admin kick           " + S_COLOR_YELLOW + "kicks a certain player\n";
-		help += S_COLOR_RED + "admin votemute     " + S_COLOR_YELLOW + "a certain player gets refused to do a callvote (Opposite: 'admin voteunmute')\n";
-		help += S_COLOR_RED + "admin mute           " + S_COLOR_YELLOW + "mutes a certain player (Opposite: 'admin unmute')\n";
-		help += S_COLOR_RED + "admin vmute         " + S_COLOR_YELLOW + "vmutes a certain player (Opposite: 'admin vunmute')\n";
-		help += S_COLOR_RED + "admin remove        " + S_COLOR_YELLOW + "removes a certain player\n";
-		help += S_COLOR_RED + "admin joinlock      " + S_COLOR_YELLOW + "a certain player gets refused to join the game\n";
-		help += S_COLOR_WHITE + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-		
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_RED + "admin map     " + S_COLOR_YELLOW + "change to the given map immedeatly\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
+		//TODOSOW add missing commands
 		G_PrintMsg( this.client.getEnt(), help );
 	}
 
@@ -849,30 +863,20 @@ class Racesow_Player
 	bool displayHelp()
 	{
 		cString help;
-		help += S_COLOR_WHITE + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "HELP for " + gametype.getName() + "\n";
-		help += S_COLOR_WHITE + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_WHITE + "Race Commands:\n";
-		help += S_COLOR_RED + "help            " + S_COLOR_YELLOW + "Displays this help ;)\n";
-		help += S_COLOR_RED + "top              " + S_COLOR_YELLOW + "Displays the top 10 times on this map ('highscores' is possible too)\n";
-        help += S_COLOR_RED + "racerestart  " + S_COLOR_YELLOW + "Go back to the start-area whenever you want\n";
-		help += S_COLOR_RED + "privsay       " + S_COLOR_YELLOW + "Send private messages to another player\n";
-		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "Register a new account on this server\n";
-		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "Authenticate to the server (alternatively you can use setu\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+		help += S_COLOR_RED + "help           " + S_COLOR_YELLOW + "display this help ;)\n";
+		help += S_COLOR_RED + "top             " + S_COLOR_YELLOW + "display the top 30 times on this map\n";
+        help += S_COLOR_RED + "racerestart " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
+		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
+		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate to the server (alternatively you can use setu\n";
 		help += "                  " + S_COLOR_YELLOW + "to set auth_name and auth_pass in your autoexec.cfg)\n";
-		help += S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "More info with 'admin help'\n";
-        help += S_COLOR_RED + "weapondef    " + S_COLOR_YELLOW + "Change the weapon values, more info with 'weapondef help'\n";
-		help += S_COLOR_RED + "gametype     " + S_COLOR_YELLOW + "Infos about the version\n";
-		this.sendMessage( help );
-		help = "";
-		help += S_COLOR_WHITE + "Freestyle Commands:\n";
-		help += S_COLOR_RED + "ammoswitch " + S_COLOR_YELLOW + "Change between Weak and Strong Ammo (Other Command: 'classaction1')\n";
-		help += S_COLOR_RED + "chrono         " + S_COLOR_YELLOW + "Stop watch: /chrono start for Start the Chrono ('reset' for Timereset)\n";
-		help += S_COLOR_RED + "noclip        " + S_COLOR_YELLOW + "You can fly :)\n";
-		help += S_COLOR_RED + "position      " + S_COLOR_YELLOW + "Position Command with extra Features\n";
-		help += S_COLOR_WHITE + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-		
-		this.sendMessage( help );
+		help += S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
+        help += S_COLOR_RED + "weapondef   " + S_COLOR_YELLOW + "change the weapon values, more info with 'weapondef help'\n";
+		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
+
+		G_PrintMsg( this.client.getEnt(), help );
 		return true;
 	}
 }

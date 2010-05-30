@@ -3,7 +3,9 @@
  *
  * @package Racesow
  * @subpackage Player
- * @version 0.5.2
+ * @version 0.5.1c
+ * @date 24.09.2009
+ * @author soh-zolex <zolex@warsow-race.net>
  */
 class Racesow_Player_Implemented
 {
