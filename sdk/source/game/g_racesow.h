@@ -67,7 +67,7 @@ void RS_removeProjectiles( edict_t *owner ); //remove the projectiles by an owne
 
 struct authenticationData {
 
-   edict_t *ent;
+   unsigned int playerNum;
    char *authName;
    char *authPass;
 };
@@ -83,8 +83,8 @@ struct raceDataStruct {
 
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
-extern qboolean RS_MysqlAuthenticate( edict_t *ent, char *authName, char *authPass );
+extern qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *authPass );
 extern void *RS_MysqlAuthenticate_Thread( void *in );
-extern void RS_MysqlAuthenticate_Callback( edict_t *ent, unsigned int playerId, unsigned int authMask );
+extern void RS_MysqlAuthenticate_Callback( unsigned int playerNum, unsigned int playerId, unsigned int authMask );
 extern qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time );
 extern void *RS_MysqlInsertRace_Thread(void *in);

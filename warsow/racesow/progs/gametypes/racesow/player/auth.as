@@ -141,7 +141,8 @@
 		cString PlayerNick = this.player.getName().removeColorTokens();
 		
         this.authenticationName = authName;
-        RS_MysqlAuthenticate(this.player.getClient().getEnt(), authName, authPass);
+		// passing playerNum(), but there's a very small risk that the same playerNum switches to another player if he disconnects before auth finishes..
+        RS_MysqlAuthenticate(this.player.getClient().playerNum(), authName, authPass); 
         return true;
 	}
     
@@ -323,23 +324,17 @@
 /**
  * Callback functions are called from the racesow game lib
  *
-	 * @param cEntity @ent
+	 * @param int playerNum
      * @param int playerId
 	 * @param int authMask
      * @return void
 
  */
 
-void RS_MysqlAuthenticate_Callback( cEntity @ent, int playerId, int authMask )
+void RS_MysqlAuthenticate_Callback( int playerNum, int playerId, int authMask )
 {
-    if (@ent != null) {
-    
-        Racesow_GetPlayerByClient(ent.client).getAuth().authCallback( playerId, authMask );
-    
-    } else {
-    
-        G_PrintMsg(null, S_COLOR_RED + "error while authenticating playerId " + playerId + "\n");
-    }
+	G_PrintMsg( null, " player number "+ playerId +" " +authMask+"\n" );
+    Racesow_GetPlayerByNumber(playerNum).getAuth().authCallback( playerId, authMask );
 }
 
 /*

@@ -205,13 +205,13 @@ void RS_Shutdown()
  * @param char *authPass
  * @return qboolean
  */
-qboolean RS_MysqlAuthenticate( edict_t *ent, char *authName, char *authPass )
+qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *authPass )
 {
 	int returnCode;
 	pthread_t thread;
     struct authenticationData *authData=malloc(sizeof(struct authenticationData));
     
-    authData->ent = ent;
+    authData->playerNum = playerNum;
     authData->authName = strdup(authName);	
     authData->authPass = strdup(authPass);
 
@@ -343,11 +343,11 @@ void *RS_MysqlAuthenticate_Thread( void *in )
     
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
 		if (row[0]!=NULL && row[1]!=NULL) 
-	        RS_MysqlAuthenticate_Callback(authData->ent, atoi(row[0]), atoi(row[1]));
+	        RS_MysqlAuthenticate_Callback(authData->playerNum, atoi(row[0]), atoi(row[1]));
     
     } else {
     
-        RS_MysqlAuthenticate_Callback(authData->ent, 0, 0);
+        RS_MysqlAuthenticate_Callback(authData->playerNum, 0, 0);
     }
     
     mysql_free_result(mysql_res);

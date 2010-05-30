@@ -139,6 +139,19 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
 	return @players[ client.playerNum() ].setClient( @client );
 }
 
+/**
+ * Racesow_GetPlayerByNumber
+ * @param int playerNum
+ * @return Racesow_Player
+ */
+Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
+{
+    if ( playerNum < 0 )
+        return null;
+
+	return @players[ playerNum ];
+}
+
 
 /**
  * Racesow_GetPlayerNumber

@@ -6085,15 +6085,15 @@ static void asFunc_asGeneric_RS_removeProjectiles( void *gen )
 }
 
 // RS_MysqlAuthenticate
-static qboolean asFunc_RS_MysqlAuthenticate( edict_t *ent, asstring_t  *authName, asstring_t  *authPass )
+static qboolean asFunc_RS_MysqlAuthenticate( unsigned int playerNum, asstring_t  *authName, asstring_t  *authPass )
 {
-	return RS_MysqlAuthenticate(ent, authName->buffer, authPass->buffer);
+	return RS_MysqlAuthenticate(playerNum, authName->buffer, authPass->buffer);
 }
 
 static void asFunc_asGeneric_RS_MysqlAuthenticate( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlAuthenticate(
-        (edict_t *)G_asGeneric_GetArgAddress(gen, 0),
+        (unsigned int)G_asGeneric_GetArgInt(gen, 0),
         (asstring_t *)G_asGeneric_GetArgAddress(gen, 1),
         (asstring_t *)G_asGeneric_GetArgAddress(gen, 2)));
 }
@@ -6740,7 +6740,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	// racesow
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
-	{ "void RS_MysqlAuthenticate( cEntity @, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
+	{ "void RS_MysqlAuthenticate( int, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
 	//{ "void RS_MysqlNickProtection( cEntity@ )", asFunc_RS_MysqlNickProtection, asFunc_asGeneric_RS_MysqlNickProtection },
 	{ "void RS_MysqlInsertRace( cEntity @, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	// !racesow
@@ -6958,12 +6958,12 @@ void G_asShutdownGametypeScript( void )
 /**
  * Call the angelscript callback function to return the auth result
  *
- * @param edict_t *ent
+ * @param int playerNum
  * @param int playerID
  * @param int authMask
  * @return void
  */
-void RS_MysqlAuthenticate_Callback( edict_t *ent, unsigned int playerId, unsigned int authMask )
+void RS_MysqlAuthenticate_Callback( unsigned int playerNum, unsigned int playerId, unsigned int authMask )
 {
 	int error, asContextHandle;
 	if( level.gametype.RS_MysqlAuthenticate_CallbackID < 0 ) {
@@ -6980,7 +6980,8 @@ void RS_MysqlAuthenticate_Callback( edict_t *ent, unsigned int playerId, unsigne
         return;
     }
         
-	angelExport->asSetArgObject( asContextHandle, 0, ent );
+	
+	angelExport->asSetArgDWord( asContextHandle, 0, playerNum );
     angelExport->asSetArgDWord( asContextHandle, 1, playerId );
     angelExport->asSetArgDWord( asContextHandle, 2, authMask );
     
@@ -7742,7 +7743,7 @@ qboolean G_asInitializeGametypeScript( const char *script, const char *gametypeN
 		funcCount++;
 		
 	// racesow 
-	fdeclstr = "void RS_MysqlAuthenticate_Callback( cEntity @ent, int playerId, int authMask )";
+	fdeclstr = "void RS_MysqlAuthenticate_Callback( int playerNum, int playerId, int authMask )";
 	level.gametype.RS_MysqlAuthenticate_CallbackID = angelExport->asGetFunctionIDByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
 	if( level.gametype.RS_MysqlAuthenticate_CallbackID < 0 )
 	{
