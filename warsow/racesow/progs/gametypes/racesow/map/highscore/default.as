@@ -18,7 +18,6 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	 */
 	void addRace(Racesow_Player_Race @race)
 	{
-		// RS_MysqlInsertRace(client, player_id, nick_id, map_id, race_time);
 		RS_MysqlInsertRace(race.getPlayer().getClient().getEnt(), race.getPlayer().getId(), race.getPlayer().getNickId(), map.getId(), race.getTime());
 	}
 	
