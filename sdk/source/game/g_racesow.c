@@ -61,6 +61,7 @@ pthread_attr_t threadAttr;
  * handler for thread synchronization
  */
 pthread_mutex_t mutexsum;
+pthread_mutex_t mutex_callback;
 
 /**
  * Initializes racesow specific stuff
@@ -71,6 +72,7 @@ void RS_Init()
 {
 	// initialize threading
     pthread_mutex_init(&mutexsum, NULL);
+	pthread_mutex_init(&mutex_callback, NULL);
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     
@@ -195,6 +197,72 @@ void RS_Shutdown()
     // shutdown threading
 	pthread_mutex_destroy(&mutexsum);
 	pthread_exit(NULL);
+}
+
+
+
+/**
+ * callback queue variables used for de-threadization of mysql calls 
+ */
+#define MAX_SIZE_CALLBACK_QUEUE 50
+int callback_queue_size=0;
+int callback_queue_index=0;
+int callback_queue[MAX_SIZE_CALLBACK_QUEUE][4];
+
+/**
+ * callback commands (should be similar to callback.as!)
+ */
+const unsigned int RACESOW_CALLBACK_AUTHENTICATE=0;
+
+/**
+ *
+ * Add a command to the callback queue
+ * 
+ * @return void
+ */
+void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3)
+{
+	pthread_mutex_lock(&mutex_callback);
+	if (callback_queue_size<MAX_SIZE_CALLBACK_QUEUE)
+	{
+		// push!
+		callback_queue_size++;
+		callback_queue_index=(callback_queue_index+1)%MAX_SIZE_CALLBACK_QUEUE;
+		callback_queue[callback_queue_index][0]=command;
+		callback_queue[callback_queue_index][1]=arg1;
+		callback_queue[callback_queue_index][2]=arg2;
+		callback_queue[callback_queue_index][3]=arg3;
+	}
+	else
+		printf("Error: callback queue overflow\n");
+	pthread_mutex_unlock(&mutex_callback);
+}
+
+/**
+ *
+ * "Is there a callback result to execute?"
+ * queried at each game frame
+ * 
+ * @return qboolean
+ */
+qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3)
+{
+
+	// if the queue is empty, do nothing this time
+	// (a push might have happened, but it doesn't matter, we'll catch it next time!)
+	if (callback_queue_size==0)
+		return qfalse;
+
+	// retrieving a callback result
+	pthread_mutex_lock(&mutex_callback);
+	// pop!
+	*command=callback_queue[callback_queue_index][0];
+	*arg1=callback_queue[callback_queue_index][1];
+	*arg2=callback_queue[callback_queue_index][2];
+	*arg3=callback_queue[callback_queue_index][3];
+	callback_queue_size--;
+	pthread_mutex_unlock(&mutex_callback);
+	return qtrue;
 }
 
 /**
@@ -343,11 +411,10 @@ void *RS_MysqlAuthenticate_Thread( void *in )
     
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
 		if (row[0]!=NULL && row[1]!=NULL) 
-	        RS_MysqlAuthenticate_Callback(authData->playerNum, atoi(row[0]), atoi(row[1]));
+			RS_PushCallbackQueue(RACESOW_CALLBACK_AUTHENTICATE,authData->playerNum, atoi(row[0]), atoi(row[1]));
     
     } else {
-    
-        RS_MysqlAuthenticate_Callback(authData->playerNum, 0, 0);
+		RS_PushCallbackQueue(RACESOW_CALLBACK_AUTHENTICATE,authData->playerNum, 0,0);
     }
     
     mysql_free_result(mysql_res);

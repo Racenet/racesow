@@ -333,7 +333,6 @@
 
 void RS_MysqlAuthenticate_Callback( int playerNum, int playerId, int authMask )
 {
-	G_PrintMsg( null, " player number "+ playerId +" " +authMask+"\n" );
     Racesow_GetPlayerByNumber(playerNum).getAuth().authCallback( playerId, authMask );
 }
 

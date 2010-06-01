@@ -799,6 +799,9 @@ void GT_ThinkRules()
 	    	G_GetClient( i ).inventorySetCount( AMMO_GUNBLADE, 10 );
 	    }
 	}
+	
+	// perform a Mysql callback if there is one pending
+	Racesow_ThinkCallbackQueue();
 }
 
 /**

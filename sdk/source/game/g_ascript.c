@@ -6127,6 +6127,21 @@ static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
         (int)G_asGeneric_GetArgInt(gen, 4)));
 }
 
+// RS_QueryCallbackQueue
+static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3)
+{
+	return RS_PopCallbackQueue(command, arg1, arg2, arg3);
+}
+
+static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
+{
+	G_asGeneric_SetReturnBool(gen, asFunc_RS_PopCallbackQueue(
+        (int *)G_asGeneric_GetArgAddress(gen, 0),
+		(int *)G_asGeneric_GetArgAddress(gen, 1),
+		(int *)G_asGeneric_GetArgAddress(gen, 2),
+		(int *)G_asGeneric_GetArgAddress(gen, 3)));
+}
+
 // !racesow
 
 static int asFunc_FileLength( asstring_t *path )
@@ -6743,6 +6758,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlAuthenticate( int, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
 	//{ "void RS_MysqlNickProtection( cEntity@ )", asFunc_RS_MysqlNickProtection, asFunc_asGeneric_RS_MysqlNickProtection },
 	{ "void RS_MysqlInsertRace( cEntity @, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
+	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
@@ -6755,6 +6771,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "cEntity @G_FindEntityInRadius( cEntity @, cEntity @, cVec3 &, float radius )", asFunc_FindEntityInRadiusExt, asFunc_asGeneric_FindEntityInRadiusExt },
 	{ "cEntity @G_FindEntityInRadius( cEntity @, cVec3 &, float radius )", asFunc_FindEntityInRadius, asFunc_asGeneric_FindEntityInRadius },
 	{ "cEntity @G_FindEntityWithClassname( cEntity @, cString & )", asFunc_FindEntityWithClassname, asFunc_asGeneric_FindEntityWithClassname },
+	// FIXME: dupe function?
 	{ "cEntity @G_FindEntityWithClassName( cEntity @, cString & )", asFunc_FindEntityWithClassname, asFunc_asGeneric_FindEntityWithClassname },
 
 	// misc management utils
@@ -6939,7 +6956,6 @@ static void G_ResetGametypeScriptData( void )
 	level.gametype.clientCommandFuncID = -1;
 	level.gametype.botStatusFuncID = -1;
 	level.gametype.shutdownFuncID = -1;
-	level.gametype.RS_MysqlAuthenticate_CallbackID = -1;
 }
 
 void G_asShutdownGametypeScript( void )
@@ -6952,45 +6968,6 @@ void G_asShutdownGametypeScript( void )
 
 	G_ResetGametypeScriptData();
 }
-
-// racesow 
-
-/**
- * Call the angelscript callback function to return the auth result
- *
- * @param int playerNum
- * @param int playerID
- * @param int authMask
- * @return void
- */
-void RS_MysqlAuthenticate_Callback( unsigned int playerNum, unsigned int playerId, unsigned int authMask )
-{
-	int error, asContextHandle;
-	if( level.gametype.RS_MysqlAuthenticate_CallbackID < 0 ) {
-    
-        G_PrintMsg(NULL, "FAIL 1\n");
-		return;
-    }
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.RS_MysqlAuthenticate_CallbackID );
-	if( error < 0 ) {
-		G_PrintMsg(NULL, "FAIL 2\n");
-        return;
-    }
-        
-	
-	angelExport->asSetArgDWord( asContextHandle, 0, playerNum );
-    angelExport->asSetArgDWord( asContextHandle, 1, playerId );
-    angelExport->asSetArgDWord( asContextHandle, 2, authMask );
-    
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-}
-
-// !racesow
 
 //"void GT_SpawnGametype()"
 void G_asCallLevelSpawnScript( void )
