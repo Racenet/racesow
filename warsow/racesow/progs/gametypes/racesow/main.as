@@ -562,7 +562,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		{
 			if ( !player.getAuth().isAuthenticated() )
 			{
-				player.getAuth().loadSession();
+				//player.getAuth().loadSession();
 			}
 
 			player.getAuth().checkProtectedNickname();

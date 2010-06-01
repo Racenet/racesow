@@ -208,18 +208,19 @@
 		if ( @this.player == null || @this.player.getClient() == null )
 			return;
 
-        /*
+        
 		cString authName = this.player.getClient().getUserInfoKey("auth_name");
 		cString authPass = this.player.getClient().getUserInfoKey("auth_pass");
-		if ( authName != this.lastRefreshName && authPass != this.lastRefreshPass )
-		{
-            this.player.sendMessage("Authenticate: " + authName + ", " + authPass + "\n");
+		if ( authName != "" && authPass != "")
+			if ( (isAuthenticated() == false) || (authName != this.lastRefreshName || authPass != this.lastRefreshPass) )
+			{
+				this.player.sendMessage("Authenticate: " + authName + ", " + authPass + "\n");
+			
+				this.lastRefreshName = authName;
+				this.lastRefreshPass = authPass;
+				this.authenticate( authName, authPass, true );
+			}
         
-			this.lastRefreshName = authName;
-			this.lastRefreshPass = authPass;
-			this.authenticate( authName, authPass, true );
-		}
-        */
         
 		if ( nick.getToken(0).removeColorTokens() != this.player.getName().removeColorTokens() )
 		{
