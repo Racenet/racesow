@@ -146,28 +146,6 @@
         return true;
 	}
     
-    void nickProtectCallback( int playerId )
-    {
-        this.player.sendMessage( "nickProtectCallback: " + playerId + "\n");
-        if (playerId == this.playerId)
-        {
-            if ( this.lastViolateProtectionMessage != 0 )
-    		{
-                this.violateNickProtectionSince = 0;
-                this.lastViolateProtectionMessage = 0;
-                this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
-    		}
-        }
-        else if ( playerId != 0 )
-		{
-			this.violateNickProtectionSince = localTime;
-            this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
-			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
-				+ "If you don't authenticate or change your nickname you will be kicked.\n" );
-
-		}
-    }
-    
     /**
 	 * Callback for the authentication gets called from the game lib's worker thread
      *
@@ -198,6 +176,42 @@
         
 		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
         this.checkProtectedNickname();
+    }
+    
+	/**
+	 * Check if the player uses a protected nickname
+	 * @return void
+	 */
+	void checkProtectedNickname()
+	{
+        RS_MysqlNickProtection(this.player.getClient().getEnt());
+	}
+    
+    /**
+	 * Callback for the nickname protection
+     *
+     * @param int playerId
+     * @return void
+	 */
+    void nickProtectCallback( int playerId )
+    {
+        if (playerId == this.playerId)
+        {
+            if ( this.lastViolateProtectionMessage != 0 )
+    		{
+                this.violateNickProtectionSince = 0;
+                this.lastViolateProtectionMessage = 0;
+                this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
+    		}
+        }
+        else if ( playerId != 0 )
+		{
+			this.violateNickProtectionSince = localTime;
+            this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
+			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
+				+ "If you don't authenticate or change your nickname you will be kicked.\n" );
+
+		}
     }
 
 	/**
@@ -319,14 +333,5 @@
 			color = S_COLOR_GREEN;
 
 		return color + (21 - (localTime - this.violateNickProtectionSince)) + " seconds remaining...";
-	}
-
-	/**
-	 * Check if the player uses a protected nickname
-	 * @return void
-	 */
-	void checkProtectedNickname()
-	{
-        RS_MysqlNickProtection(this.player.getClient().getEnt());
 	}
 }
