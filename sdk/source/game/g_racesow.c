@@ -50,6 +50,7 @@ cvar_t *rs_querySetMapRating;
  */
 const unsigned int RACESOW_CALLBACK_AUTHENTICATE = 0;
 const unsigned int RACESOW_CALLBACK_NICKPROTECT = 1;
+const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
 
 /**
  * MySQL Socket
@@ -321,8 +322,7 @@ qboolean RS_MysqlNickProtection( edict_t *ent )
 void *RS_MysqlNickProtection_Thread(void *in)
 {
     char query[250];
-    char player_s[64];
-    char player_s_escaped[64];
+    char name[64];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
     edict_t *ent;
@@ -331,10 +331,10 @@ void *RS_MysqlNickProtection_Thread(void *in)
 	mysql_thread_init();
 
     ent = (edict_t *)in;
-    Q_strncpyz ( player_s, COM_RemoveColorTokens( ent->r.client->netname ), sizeof(player_s) );
-    mysql_real_escape_string(&mysql, player_s_escaped, player_s, strlen(player_s));
+    Q_strncpyz ( name, COM_RemoveColorTokens( ent->r.client->netname ), sizeof(name) );
+    mysql_real_escape_string(&mysql, name, name, strlen(name));
     
-	sprintf(query, rs_queryCheckPlayer->string, player_s_escaped);
+	sprintf(query, rs_queryCheckPlayer->string, name);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
@@ -348,6 +348,70 @@ void *RS_MysqlNickProtection_Thread(void *in)
     } else {
     
         RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, PLAYERNUM(ent), 0, 0);
+    }
+    
+    mysql_free_result(mysql_res);
+	RS_EndMysqlThread();
+    
+    return NULL;
+}
+
+/**
+ * Calls the load-map thread
+ *
+ * @param char *name
+ * @return void
+ */
+qboolean RS_MysqlLoadMap()
+{
+	pthread_t thread;
+	int returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadMap_Thread, NULL);
+	if (returnCode) {
+
+		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		return qfalse;
+	}
+	
+	return qtrue;
+}
+
+/**
+ * Check if the player violates against the nickname protection
+ *
+ * @param void *in
+ * @return void
+ */
+void *RS_MysqlLoadMap_Thread(void *in)
+{
+    char query[250];
+    char name[64];
+    MYSQL_ROW  row;
+    MYSQL_RES  *mysql_res;
+
+	pthread_mutex_lock(&mutexsum);
+	mysql_thread_init();
+
+    Q_strncpyz ( name, COM_RemoveColorTokens( level.mapname ), sizeof(name) );
+    mysql_real_escape_string(&mysql, name, name, strlen(name));
+    
+	sprintf(query, rs_queryGetMap->string, name);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    
+    if ((row = mysql_fetch_row(mysql_res)) != NULL) {
+    
+        RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, atoi(row[0]), 0, 0);
+    
+    } else {
+    
+        sprintf(query, rs_queryAddMap->string, name);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        
+        RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, (int)mysql_insert_id(&mysql), 0, 0);
     }
     
     mysql_free_result(mysql_res);
@@ -374,10 +438,10 @@ void *RS_MysqlAuthenticate_Thread( void *in )
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
     
-    Q_strncpyz ( name, COM_RemoveColorTokens( authData->authName ), sizeof(name) );
+    Q_strncpyz ( name, authData->authName, sizeof(name) );
     mysql_real_escape_string(&mysql, name, name, strlen(name));   
     
-    Q_strncpyz ( pass, COM_RemoveColorTokens( authData->authPass ), sizeof(pass) );
+    Q_strncpyz ( pass, authData->authPass, sizeof(pass) );
     mysql_real_escape_string(&mysql, pass, pass, strlen(pass));
     
 	sprintf(query, rs_queryGetPlayer->string, name, pass);
@@ -466,6 +530,28 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
 
+    if( raceData->player_id == 0 )
+    {
+        // hmmm
+        return NULL;
+        
+        /*
+        // insert player
+        char name[64];
+        char simplified[64];
+        
+        Q_strncpyz ( name, raceData->ent->r.client->netname, sizeof(name) );
+        mysql_real_escape_string(&mysql, name, name, strlen(name));    
+        
+        Q_strncpyz ( simplified, COM_RemoveColorTokens( raceData->ent->r.client->netname ), sizeof(simplified) );
+        mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
+        
+        sprintf(query, rs_queryAddPlayer->string, name, simplified);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        */
+    }
+    
 	// insert race
 	sprintf(query, rs_queryAddRace->string, raceData->player_id, raceData->nick_id, raceData->map_id, raceData->race_time);
     mysql_real_query(&mysql, query, strlen(query));

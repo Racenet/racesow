@@ -90,6 +90,9 @@ extern void *RS_MysqlAuthenticate_Thread( void *in );
 extern qboolean RS_MysqlNickProtection( edict_t *ent );
 extern void *RS_MysqlNickProtection_Thread( void *in );
 
+extern qboolean RS_MysqlLoadMap();
+extern void *RS_MysqlLoadMap_Thread( void *in );
+
 extern qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time );
 extern void *RS_MysqlInsertRace_Thread( void *in );
 
