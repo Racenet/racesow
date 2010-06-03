@@ -321,6 +321,8 @@ qboolean RS_MysqlNickProtection( edict_t *ent )
 void *RS_MysqlNickProtection_Thread(void *in)
 {
     char query[250];
+    char player_s[64];
+    char player_s_escaped[64];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
     edict_t *ent;
@@ -329,7 +331,10 @@ void *RS_MysqlNickProtection_Thread(void *in)
 	mysql_thread_init();
 
     ent = (edict_t *)in;
-	sprintf(query, rs_queryCheckPlayer->string, ent->r.client->netname);
+    Q_strncpyz ( player_s, COM_RemoveColorTokens( ent->r.client->netname ), sizeof(player_s) );
+    mysql_real_escape_string(&mysql, player_s_escaped, player_s, strlen(player_s));
+    
+	sprintf(query, rs_queryCheckPlayer->string, player_s_escaped);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
@@ -360,13 +365,22 @@ void *RS_MysqlNickProtection_Thread(void *in)
 void *RS_MysqlAuthenticate_Thread( void *in )
 {
     char query[1000];
+    char name[64];
+    char pass[64];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
     struct authenticationData *authData = (struct authenticationData *)in;
 
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
-	sprintf(query, rs_queryGetPlayer->string, authData->authName, authData->authPass);
+    
+    Q_strncpyz ( name, COM_RemoveColorTokens( authData->authName ), sizeof(name) );
+    mysql_real_escape_string(&mysql, name, name, strlen(name));   
+    
+    Q_strncpyz ( pass, COM_RemoveColorTokens( authData->authPass ), sizeof(pass) );
+    mysql_real_escape_string(&mysql, pass, pass, strlen(pass));
+    
+	sprintf(query, rs_queryGetPlayer->string, name, pass);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
