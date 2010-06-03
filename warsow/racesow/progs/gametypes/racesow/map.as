@@ -42,6 +42,15 @@ class Racesow_Map
         return this.id;
     }
     
+    /**
+     * get the map's ID
+     * @return uint
+     */
+    void setId(uint id)
+    {
+        this.id = id;
+    }
+    
 	void reset()
 	{
 		@this.statsHandler = Racesow_Map_HighScore_Mysql();

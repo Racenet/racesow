@@ -12,6 +12,7 @@
  */
 const uint RACESOW_CALLBACK_AUTHENTICATE = 0;
 const uint RACESOW_CALLBACK_NICKPROTECT = 1;
+const uint RACESOW_CALLBACK_LOADMAP = 2;
  
  /**
  * Racesow_ThinkCallbackQueue()
@@ -31,7 +32,11 @@ void Racesow_ThinkCallbackQueue()
             break;
             
         case RACESOW_CALLBACK_NICKPROTECT:
-            Racesow_GetPlayerByNumber(arg1).getAuth().nickProtectCallback( arg2 );
+            Racesow_GetPlayerByNumber(arg1).getAuth().nickProtectCallback( arg2, arg3 );
+            break;    
+
+        case RACESOW_CALLBACK_LOADMAP:
+            map.setId( arg2 );
             break;
     }
 }

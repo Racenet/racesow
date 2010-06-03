@@ -193,7 +193,7 @@
      * @param int playerId
      * @return void
 	 */
-    void nickProtectCallback( int playerId )
+    void nickProtectCallback( int playerId, int dummy )
     {
         if (playerId == this.playerId)
         {
