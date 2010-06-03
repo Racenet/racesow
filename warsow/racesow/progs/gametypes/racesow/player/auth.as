@@ -146,9 +146,19 @@
         return true;
 	}
     
-    void nickProtectCallback( bool hasValidNickname )
+    void nickProtectCallback( int playerId )
     {
-        if ( !hasValidNickname )
+        this.player.sendMessage( "nickProtectCallback: " + playerId + "\n");
+        if (playerId == this.playerId)
+        {
+            if ( this.lastViolateProtectionMessage != 0 )
+    		{
+                this.violateNickProtectionSince = 0;
+                this.lastViolateProtectionMessage = 0;
+                this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
+    		}
+        }
+        else if ( playerId != 0 )
 		{
 			this.violateNickProtectionSince = localTime;
             this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
@@ -187,6 +197,7 @@
 		this.writeSession();
         
 		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
+        this.checkProtectedNickname();
     }
 
 	/**
@@ -208,19 +219,18 @@
 		if ( @this.player == null || @this.player.getClient() == null )
 			return;
 
-        
+        /*
 		cString authName = this.player.getClient().getUserInfoKey("auth_name");
 		cString authPass = this.player.getClient().getUserInfoKey("auth_pass");
-		if ( authName != "" && authPass != "")
-			if ( (isAuthenticated() == false) || (authName != this.lastRefreshName || authPass != this.lastRefreshPass) )
-			{
-				this.player.sendMessage("Authenticate: " + authName + ", " + authPass + "\n");
-			
-				this.lastRefreshName = authName;
-				this.lastRefreshPass = authPass;
-				this.authenticate( authName, authPass, true );
-			}
+		if ( authName != this.lastRefreshName && authPass != this.lastRefreshPass )
+		{
+            this.player.sendMessage("Authenticate: " + authName + ", " + authPass + "\n");
         
+			this.lastRefreshName = authName;
+			this.lastRefreshPass = authPass;
+			this.authenticate( authName, authPass, true );
+		}
+        */
         
 		if ( nick.getToken(0).removeColorTokens() != this.player.getName().removeColorTokens() )
 		{
@@ -317,37 +327,6 @@
 	 */
 	void checkProtectedNickname()
 	{
-        // RS_MysqlNickProtection(this.player.getClient().getEnt());
+        RS_MysqlNickProtection(this.player.getClient().getEnt());
 	}
 }
-
-
-/**
- * Callback functions are called from the racesow game lib
- *
-	 * @param int playerNum
-     * @param int playerId
-	 * @param int authMask
-     * @return void
-
- */
-
-void RS_MysqlAuthenticate_Callback( int playerNum, int playerId, int authMask )
-{
-    Racesow_GetPlayerByNumber(playerNum).getAuth().authCallback( playerId, authMask );
-}
-
-/*
-void RS_MysqlNickprotection_Callback( cEntity @ent, bool result )
-{
-     if (@ent != null) {
-    
-        Racesow_GetPlayerByClient(ent.client).getAuth().nickProtectCallback( result );
-    
-    } else {
-    
-        G_PrintMsg(null, S_COLOR_RED + "error while checking nickname protection\n");
-    }
-}
-/*
-

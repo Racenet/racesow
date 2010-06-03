@@ -228,6 +228,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		this.timeStamp = localTime;
 		this.player.inOvertime = false;
 		
+        /*
 		uint newTime = this.getTime();
 		//uint bestTime = this.player.getBestTime(); // diff to own best
 		uint bestTime = map.getStatsHandler().getHighScore(0).getTime(); // diff to server best
@@ -270,7 +271,8 @@ class Racesow_Player_Race : Racesow_Player_Implemented
             player.setBestTime(newTime);
 			this.triggerAward( "Personal record!" );
         }
-		
+		*/
+        
 		return true;
 	}
 	

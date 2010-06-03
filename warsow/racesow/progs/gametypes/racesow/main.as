@@ -562,7 +562,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		{
 			if ( !player.getAuth().isAuthenticated() )
 			{
-				//player.getAuth().loadSession();
+                player.getAuth().loadSession();
 			}
 
 			player.getAuth().checkProtectedNickname();
@@ -917,28 +917,6 @@ void GT_InitGametype()
         // the config file doesn't exist or it's empty, create it
         config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
                  + "// This config will be executed each time the gametype is started\n"
-                 + "\n\n// map rotation\n"
-                 + "set g_maplist \"\" // list of maps in automatic rotation\n"
-                 + "set g_maprotation \"0\"   // 0 = same map, 1 = in order, 2 = random\n"
-                 + "\n// game settings\n"
-                 + "set g_scorelimit \"0\"\n"
-                 + "set g_timelimit \"60\"\n"
-                 + "set g_warmup_enabled \"0\"\n"
-                 + "set g_warmup_timelimit \"0\"\n"
-                 + "set g_match_extendedtime \"0\"\n"
-                 + "set g_allow_falldamage \"0\"\n"
-                 + "set g_allow_selfdamage \"0\"\n"
-                 + "set g_allow_teamdamage \"0\"\n"
-                 + "set g_allow_stun \"0\"\n"
-                 + "set g_teams_maxplayers \"0\"\n"
-                 + "set g_teams_allow_uneven \"0\"\n"
-                 + "set g_countdown_time \"5\"\n"
-                 + "set g_maxtimeouts \"0\" // -1 = unlimited\n"
-                 + "set g_challengers_queue \"0\"\n"
-				 + "set g_logRaces \"0\"\n"
-				 + "set g_secureAuth \"0\"\n"
-				 + "set g_freestyle \"0\"\n"
-				 + "set g_allowammoswitch \"0\"\n"
 				 + "exec configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg silent\n"
 				 + "\necho " + gametype.getName() + ".cfg executed\n";
 
@@ -1005,7 +983,6 @@ void GT_InitGametype()
 	}
 
     // add commands
-    G_RegisterCommand( "thread" );
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
     G_RegisterCommand( "join" );

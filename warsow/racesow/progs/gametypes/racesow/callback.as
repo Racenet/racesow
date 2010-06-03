@@ -10,7 +10,8 @@
 /**
  * callback codes
  */
-const uint RACESOW_CALLBACK_AUTHENTICATE=0;
+const uint RACESOW_CALLBACK_AUTHENTICATE = 0;
+const uint RACESOW_CALLBACK_NICKPROTECT = 1;
  
  /**
  * Racesow_ThinkCallbackQueue()
@@ -18,14 +19,19 @@ const uint RACESOW_CALLBACK_AUTHENTICATE=0;
  */
 void Racesow_ThinkCallbackQueue()
 {
-	int command;
-	int arg1;
-	int arg2;
-	int arg3;
-	bool do_action;
-	do_action=RS_QueryCallbackQueue(command,arg1,arg2,arg3);
-	if (do_action)
-		if (command==RACESOW_CALLBACK_AUTHENTICATE)	
-			RS_MysqlAuthenticate_Callback(arg1,arg2,arg3);
-
+	int command, arg1, arg2, arg3;
+    
+    if( !RS_QueryCallbackQueue( command, arg1, arg2, arg3 ) )
+        return;
+        
+    switch( command )	
+    {
+        case RACESOW_CALLBACK_AUTHENTICATE:
+            Racesow_GetPlayerByNumber(arg1).getAuth().authCallback( arg2, arg3 );
+            break;
+            
+        case RACESOW_CALLBACK_NICKPROTECT:
+            Racesow_GetPlayerByNumber(arg1).getAuth().nickProtectCallback( arg2 );
+            break;
+    }
 }
