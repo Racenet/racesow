@@ -6099,7 +6099,6 @@ static void asFunc_asGeneric_RS_MysqlAuthenticate( void *gen )
 }
 
 // RS_MysqlNickProtection
-/*
 static qboolean asFunc_RS_MysqlNickProtection( edict_t *ent )
 {
 	return RS_MysqlNickProtection(ent);
@@ -6107,9 +6106,9 @@ static qboolean asFunc_RS_MysqlNickProtection( edict_t *ent )
 
 static void asFunc_asGeneric_RS_MysqlNickProtection( void *gen )
 {
-	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlAuthenticate((edict_t *)G_asGeneric_GetArgAddress(gen, 0));
+	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlNickProtection(
+        (unsigned int)G_asGeneric_GetArgAddress(gen, 0)));
 }
-*/
 
 // RS_MysqlInsertRace
 static qboolean asFunc_RS_MysqlInsertRace( edict_t *ent, int player_id, int nick_id, int map_id, int race_time ) 
@@ -6756,7 +6755,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	{ "void RS_MysqlAuthenticate( int, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
-	//{ "void RS_MysqlNickProtection( cEntity@ )", asFunc_RS_MysqlNickProtection, asFunc_asGeneric_RS_MysqlNickProtection },
+	{ "void RS_MysqlNickProtection( cEntity @ )", asFunc_RS_MysqlNickProtection, asFunc_asGeneric_RS_MysqlNickProtection },
 	{ "void RS_MysqlInsertRace( cEntity @, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	// !racesow

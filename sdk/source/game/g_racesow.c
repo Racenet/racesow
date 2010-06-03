@@ -45,7 +45,11 @@ cvar_t *rs_queryUpdateNickMap;
 cvar_t *rs_queryUpdateNickMapPlaytime;
 cvar_t *rs_querySetMapRating;
     
-
+/**
+ * as callback commands (must be similar to callback.as!)
+ */
+const unsigned int RACESOW_CALLBACK_AUTHENTICATE = 0;
+const unsigned int RACESOW_CALLBACK_NICKPROTECT = 1;
 
 /**
  * MySQL Socket
@@ -210,11 +214,6 @@ int callback_queue_index=0;
 int callback_queue[MAX_SIZE_CALLBACK_QUEUE][4];
 
 /**
- * callback commands (should be similar to callback.as!)
- */
-const unsigned int RACESOW_CALLBACK_AUTHENTICATE=0;
-
-/**
  *
  * Add a command to the callback queue
  * 
@@ -300,11 +299,10 @@ qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *aut
  * @param edict_t *ent
  * @return void
  */
- /*
 qboolean RS_MysqlNickProtection( edict_t *ent )
 {
 	pthread_t thread;
-	int returnCode = pthread_create(&thread, &threadAttr, RS_MysqlNickProtection_Thread, (void *)&ent);
+	int returnCode = pthread_create(&thread, &threadAttr, RS_MysqlNickProtection_Thread, (void *)ent);
 	if (returnCode) {
 
 		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
@@ -312,38 +310,6 @@ qboolean RS_MysqlNickProtection( edict_t *ent )
 	}
 	
 	return qtrue;
-}
-*/
-
-/**
- * Insert a new race
- *
- * @param int player_id
- * @param int map_id
- * @param int race_time
- * @return qboolean
- */
-qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time ) {
-
-	int returnCode;
-	pthread_t thread;
-    struct raceDataStruct *raceData=malloc(sizeof(struct raceDataStruct));
-
-    raceData->player_id = player_id;
-	raceData->nick_id= nick_id;
-	raceData->map_id = map_id;
-	raceData->race_time = race_time;
-    
-	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlInsertRace_Thread, (void *)raceData);
-
-	if (returnCode) {
-
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
-		return qfalse;
-	}
-	
-	return qtrue;
-
 }
 
 /**
@@ -352,19 +318,18 @@ qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int 
  * @param void *in
  * @return void
  */
- /*
 void *RS_MysqlNickProtection_Thread(void *in)
 {
     char query[250];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
     edict_t *ent;
-
+    
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
 
     ent = (edict_t *)in;
-	sprintf(query, rs_queryCheckNick->string, ent->r.client->netname);
+	sprintf(query, rs_queryCheckPlayer->string, ent->r.client->netname);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
@@ -373,11 +338,11 @@ void *RS_MysqlNickProtection_Thread(void *in)
     
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
     
-        RS_MysqlAuthenticate_Callback(authData->ent, atoi(row[0]), atoi(row[2]));
+        RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, PLAYERNUM(ent), atoi(row[0]), 0);
     
     } else {
     
-        RS_MysqlAuthenticate_Callback(authData->ent, 0, 0);
+        RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, PLAYERNUM(ent), 0, 0);
     }
     
     mysql_free_result(mysql_res);
@@ -385,7 +350,6 @@ void *RS_MysqlNickProtection_Thread(void *in)
     
     return NULL;
 }
-*/
 
 /**
  * Authentication thread
@@ -427,6 +391,38 @@ void *RS_MysqlAuthenticate_Thread( void *in )
 }
 
 /**
+ * Insert a new race
+ *
+ * @param int player_id
+ * @param int map_id
+ * @param int race_time
+ * @return qboolean
+ */
+qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time ) {
+
+	int returnCode;
+    struct raceDataStruct *raceData=malloc(sizeof(struct raceDataStruct));
+	pthread_t thread;
+
+    raceData->ent = ent;
+    raceData->player_id = player_id;
+	raceData->nick_id= nick_id;
+	raceData->map_id = map_id;
+	raceData->race_time = race_time;
+    
+	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlInsertRace_Thread, (void *)raceData);
+
+	if (returnCode) {
+
+		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		return qfalse;
+	}
+	
+	return qtrue;
+
+}
+
+/**
  * Thread to insert a new race 
  *
  * @param void *in
@@ -436,7 +432,10 @@ void *RS_MysqlInsertRace_Thread(void *in)
 {
     char query[1000];
 	unsigned int maxPositions, currentPoints, currentRaceTime, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime;
+    int milli, min, sec, dmilli, dmin, dsec;
 	struct raceDataStruct *raceData;
+    char draw_time[16];
+    char diff_time[16];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	
@@ -483,7 +482,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
 
-	// read current points
+	// read current points and time
 	sprintf(query, rs_queryGetPlayerMap->string, raceData->player_id, raceData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();    
@@ -553,23 +552,61 @@ void *RS_MysqlInsertRace_Thread(void *in)
 		}
     }
 
-    if (raceData->race_time < bestTime)
+    // convert time into MM:SS:mmm
+    milli = (int)raceData->race_time;
+    min = milli / 60000;
+    milli -= min * 60000;
+    sec = milli / 1000;
+    milli -= sec * 1000;
+    
+    if (raceData->race_time < bestTime || bestTime == 0)
     {
-        G_PlayerAward( raceData->ent, va("%New server record.", S_COLOR_GREEN) );
-        //G_PrintMsg( NULL, va("%s %smade a new server reord.\n", raceData->ent->r.client->netname, S_COLOR_YELLOW) );
-    }
-    else if (raceData->race_time < currentRaceTime || currentRaceTime == 0)
-    {
-        //G_PlayerAward( &raceData->ent, va("%sNew personal record!\n", S_COLOR_YELLOW) );
-        G_PrintMsg( raceData->ent, "new personal record.\n" );
+        dmilli = (int)raceData->race_time - (int)bestTime;
     }
     else
     {
-        //G_PlayerAward( &raceData->ent, va("%sRace finished!\n", S_COLOR_WHITE) );
-        G_PrintMsg( raceData->ent, "race finished.\n" );
+        dmilli = (int)raceData->race_time - (int)currentRaceTime;
     }
-
-     G_PrintMsg( raceData->ent, va("%sYou earned %d points.\n", S_COLOR_GREEN, (newPoints - currentPoints)) );
+    
+    dmin = dmilli / 60000;
+    dmilli -= dmin * 60000;
+    dsec = dmilli / 1000;
+    dmilli -= dsec * 1000;
+    Q_strncpyz( draw_time, va( "%d:%d.%03d", min, sec, milli ), sizeof(draw_time) );
+    Q_strncpyz( diff_time, va( "%d:%d.%03d", dmin, dsec, dmilli ), sizeof(diff_time) );
+    
+    if (raceData->race_time < bestTime)
+    {
+        G_PlayerAward( raceData->ent, va("%New server record!", S_COLOR_GREEN) );
+        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s-%s", draw_time, S_COLOR_GREEN, diff_time ) );
+    }
+    else if (bestTime == 0)
+    {
+        G_PlayerAward( raceData->ent, va("%New server record!", S_COLOR_GREEN) );
+        G_CenterPrintMsg( raceData->ent, va("Time: %s", S_COLOR_GREEN, draw_time ) );
+    }
+    else if (raceData->race_time == bestTime)
+    {
+        G_PlayerAward( raceData->ent, va("%Server record!", S_COLOR_GREEN) );
+        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s+-%s", draw_time, S_COLOR_GREEN, diff_time ) );
+    }
+    else if (raceData->race_time < currentRaceTime)
+    {
+        G_PlayerAward( raceData->ent, va("%sNew personal record!\n", S_COLOR_YELLOW) );
+        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s-%s", draw_time, S_COLOR_YELLOW, diff_time ) );
+    }
+    else if (currentRaceTime == 0)
+    {
+        G_PlayerAward( raceData->ent, va("%sPersonal record!\n", S_COLOR_YELLOW) );
+        G_CenterPrintMsg( raceData->ent, va("%sTime: %s", S_COLOR_YELLOW, draw_time ) );
+    }
+    else
+    {
+        G_PlayerAward( raceData->ent, va("%sRace finished!\n", S_COLOR_WHITE) );
+        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s+%s", draw_time, S_COLOR_RED, diff_time ) );
+    }
+    
+    G_PrintMsg( NULL, va("You earned %d points.\n", (newPoints - currentPoints)) );
     
 	free(raceData);	
 	RS_EndMysqlThread();

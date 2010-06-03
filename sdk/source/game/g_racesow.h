@@ -83,10 +83,15 @@ struct raceDataStruct {
 
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
+
 extern qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *authPass );
 extern void *RS_MysqlAuthenticate_Thread( void *in );
-extern void RS_MysqlAuthenticate_Callback( unsigned int playerNum, unsigned int playerId, unsigned int authMask );
+
+extern qboolean RS_MysqlNickProtection( edict_t *ent );
+extern void *RS_MysqlNickProtection_Thread( void *in );
+
 extern qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time );
-extern void *RS_MysqlInsertRace_Thread(void *in);
-extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3);
-extern qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3);
+extern void *RS_MysqlInsertRace_Thread( void *in );
+
+extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
+extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );
