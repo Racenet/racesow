@@ -1,15 +1,14 @@
-event: player connect
+event: player enter race
 
-    - check for nickname protection (rs_queryCheckPlayer)
-    - insert player if it does not exist (rs_queryAddPlayer) 
-    - retrieve and store player_id and auth_mask (rs_queryGetPlayer)
-    - insert nick for the player_id if it does not exist (rs_queryAddNick)
-    - retrieve and store nick_id (rs_queryGetNick)
-    - store leveltime to compute playtime later
-
+	- retrieve and store nick_id (rs_queryGetNick) (do that first! because nick may already be associated with a player)
+    - if nick doesnt exist, insert it as well as a new player (rs_queryAddPlayer) (rs_queryGetPlayer) (rs_queryAddNick)
+	- if nick exists, check for nickname protection (rs_queryCheckPlayer)
+    - (in AS) store leveltime to compute playtime later (in AS)
+	
 event: player authenticate
 
     - retrieve player_id and auth_mask (rs_queryGetPlayer)
+	- insert nick for the player if it does not exist (rs_queryGetNick / rs_queryAddNick)
     
 event: player disconnect
 
@@ -22,7 +21,7 @@ event: player disconnect
     
 event: player set new nickname
 
-    - check nickname protection (rs_queryCheckPlayer)
+    - (called in AS) check nickname protection (rs_queryCheckPlayer)
 
     - is authed (auth_mask > 0)
         -> insert nick for the player if it does not exist (rs_queryGetNick / rs_queryAddNick)
@@ -30,7 +29,7 @@ event: player set new nickname
         -> add player and nick if they do not exist (rs_queryAddPlayer  / rs_queryAddNick)
         -> retrieve and store player_id (rs_queryGetPlayer)
         
-    - retrieve and store nick_id (rs_queryGetNick)
+    - (why?) retrieve and store nick_id (rs_queryGetNick)
         
         
 event: player finish race
@@ -46,9 +45,4 @@ event: player finish race
     
 event: next map / game shutdown
     
-     - update playtime in player, map, nick, player_map and nick_map
-        rs_queryUpdatePlayerPlaytime
-        rs_queryUpdateNickPlaytime
-        rs_queryUpdateMapPlaytime
-        rs_queryUpdatePlayerMapPlaytime
-        rs_queryUpdateNickMapPlaytime
+     - do the "player disconnect" event for all players

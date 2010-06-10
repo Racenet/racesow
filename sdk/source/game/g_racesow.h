@@ -96,5 +96,9 @@ extern void *RS_MysqlLoadMap_Thread( void *in );
 extern qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time );
 extern void *RS_MysqlInsertRace_Thread( void *in );
 
+extern qboolean RS_MysqlPlayerConnect( edict_t *ent );
+extern void *RS_MysqlPlayerConnect_Thread( void *in );
+
+
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );
