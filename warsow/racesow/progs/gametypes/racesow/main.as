@@ -560,15 +560,12 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-			if ( !player.getAuth().isAuthenticated() )
-			{
-                player.getAuth().loadSession();
-			}
-
-			player.getAuth().checkProtectedNickname();
+			player.joinedTime=levelTime;
+			RS_MysqlPlayerAppear(player.getName(),client.playerNum(),player.getAuth().playerId);
 		}
 		else if ( score_event == "disconnect" )
 		{
+			RS_MysqlPlayerDisappear(player.getName(),levelTime-player.joinedTime,player.getAuth().playerId,map.getId());
 			player.resetAuth();
 		}
 		else if ( score_event == "userinfochanged" )
@@ -869,6 +866,12 @@ void GT_MatchStateStarted()
  */
 void GT_Shutdown()
 {
+    for ( int i = 0; i < maxClients; i++ )
+		if ( @players[i].getClient() != null )
+		{
+			G_PrintMsg(null, "disappearing " + players[i].getName()  + "\n");
+			RS_MysqlPlayerDisappear(players[i].getName(),levelTime-players[i].joinedTime,players[i].getAuth().playerId,map.getId());
+		}
 }
 
 /**

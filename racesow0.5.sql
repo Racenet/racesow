@@ -3,8 +3,8 @@ CREATE TABLE `map` (
   `name` varchar(40) NOT NULL default '',
   `freestyle` enum('true','false') NOT NULL default 'false',
   `status` enum('enabled','disabled') NOT NULL default 'enabled',
-  `races` int(11) unsigned NOT NULL,
-  `playtime` bigint(20) unsigned NOT NULL,
+  `races` int(11) unsigned NOT NULL default '0',
+  `playtime` bigint(20) unsigned NOT NULL default '0',
   `rating` tinyint(1) NOT NULL default '0',
   `ratings` int(11) NOT NULL default '0',
   `created` timestamp NOT NULL default CURRENT_TIMESTAMP,
@@ -29,9 +29,10 @@ CREATE TABLE `nick` (
   `player_id` int(1) NOT NULL default 0,
   `name` varchar(64) NOT NULL default '',
   `simplified` varchar(64) NOT NULL default '',
-  `races` int(11) unsigned NOT NULL,
+  `races` int(11) unsigned NOT NULL default '0',
   `maps` int(11) unsigned NOT NULL default '0',
-  `playtime` bigint(20) NOT NULL,
+  `playtime` bigint(20) NOT NULL default '0',
+  `created` datetime default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -57,10 +58,11 @@ CREATE TABLE `player` (
   `name` varchar(64) NOT NULL default '',
   `simplified` varchar(64) NOT NULL default '',
   `points` int(11) NOT NULL default '0',
-  `races` int(11) unsigned NOT NULL,
+  `races` int(11) unsigned NOT NULL default '0',
   `maps` int(11) unsigned NOT NULL default '0',
-  `diff_points` mediumint(9) NOT NULL,
-  `playtime` bigint(20) NOT NULL,
+  `diff_points` mediumint(9) NOT NULL default '0',
+  `playtime` bigint(20) NOT NULL default '0',
+  `created` datetime default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

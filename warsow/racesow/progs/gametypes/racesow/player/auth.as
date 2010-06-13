@@ -172,21 +172,10 @@
 		this.violateNickProtectionSince = 0;
 		this.lastViolateProtectionMessage = 0;
 		this.authorizationsMask = uint(authMask);
-		this.writeSession();
         
 		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
-        this.checkProtectedNickname();
-    }
-    
-	/**
-	 * Check if the player uses a protected nickname
-	 * @return void
-	 */
-	void checkProtectedNickname()
-	{
-        RS_MysqlNickProtection(this.player.getClient().getEnt());
 	}
-    
+
     /**
 	 * Callback for the nickname protection
      *
@@ -224,68 +213,20 @@
 	}
 
 	/**
-	 * Refresh the authentication when it changed
+	 * Check for a nickname changed event
 	 * @return void
 	 */
-	void refresh( cString &nick )
+	void refresh( cString &nick)
 	{
-		// when authentication information changed, try to authenticate again
 		if ( @this.player == null || @this.player.getClient() == null )
 			return;
 
-        /*
-		cString authName = this.player.getClient().getUserInfoKey("auth_name");
-		cString authPass = this.player.getClient().getUserInfoKey("auth_pass");
-		if ( authName != this.lastRefreshName && authPass != this.lastRefreshPass )
+		if ( nick.removeColorTokens() != this.player.getName().removeColorTokens() )
 		{
-            this.player.sendMessage("Authenticate: " + authName + ", " + authPass + "\n");
-        
-			this.lastRefreshName = authName;
-			this.lastRefreshPass = authPass;
-			this.authenticate( authName, authPass, true );
+			RS_MysqlPlayerDisappear(nick,levelTime-player.joinedTime,player.getAuth().playerId,map.getId());
+			player.joinedTime = levelTime;
+			RS_MysqlPlayerAppear(this.player.getName(),this.player.getClient().playerNum(),this.player.getAuth().playerId);
 		}
-        */
-        
-		if ( nick.getToken(0).removeColorTokens() != this.player.getName().removeColorTokens() )
-		{
-			this.checkProtectedNickname();
-		}
-	}
-
-	void writeSession()
-	{
-		this.sessionName = toFileName(this.player.getName().removeColorTokens());
-		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
-		G_WriteFile( sessionFile, '"' + this.player.getClient().getUserInfoKey("ip") + '" "' + this.authenticationName + '" "' + this.authorizationsMask +'"\n' );
-	}
-
-	bool loadSession()
-	{
-		this.sessionName = toFileName(this.player.getName().removeColorTokens());
-		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
-		cString sessionContent = G_LoadFile( sessionFile );
-
-		if ( this.player.getClient().getUserInfoKey("ip") == sessionContent.getToken( 0 ) ) {
-
-			this.failCount = 0;
-			this.violateNickProtectionSince = 0;
-			this.lastViolateProtectionMessage = 0;
-			this.authenticationName = sessionContent.getToken( 1 );
-			this.authorizationsMask = uint( sessionContent.getToken( 2 ).toInt() );
-
-			G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN
-				+ " successfully loaded session for "+ this.authenticationName +"\n" );
-
-			return true;
-		}
-
-		return false;
-	}
-
-	void killSession()
-	{
-		cString sessionFile = gameDataDir + "/sessions/" + this.sessionName.substr(0,1) + "/" + this.sessionName;
-		G_WriteFile( sessionFile, "0" );
 	}
 
 	/**

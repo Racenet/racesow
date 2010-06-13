@@ -36,7 +36,7 @@ void Racesow_ThinkCallbackQueue()
             break;    
 
         case RACESOW_CALLBACK_LOADMAP:
-            map.setId( arg2 );
+            map.setId( arg1 );
             break;
     }
 }

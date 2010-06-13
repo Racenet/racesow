@@ -81,6 +81,21 @@ struct raceDataStruct {
 	unsigned int race_time;
 };
 
+struct playerDataStruct {
+
+	char *name;
+	int player_id;
+	int playerNum;
+};
+
+struct playtimeDataStruct {
+
+	char *name;
+	unsigned int playtime;
+	unsigned int map_id;
+	unsigned int player_id;
+};
+
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
 
@@ -96,9 +111,11 @@ extern void *RS_MysqlLoadMap_Thread( void *in );
 extern qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time );
 extern void *RS_MysqlInsertRace_Thread( void *in );
 
-extern qboolean RS_MysqlPlayerConnect( edict_t *ent );
-extern void *RS_MysqlPlayerConnect_Thread( void *in );
+qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int is_authed );
+extern void *RS_MysqlPlayerAppear_Thread( void *in );
 
+qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int map_id);
+extern void *RS_MysqlPlayerDisappear_Thread( void *in );
 
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );
