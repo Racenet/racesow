@@ -96,6 +96,12 @@ struct playtimeDataStruct {
 	unsigned int player_id;
 };
 
+struct highscoresDataStruct {
+
+	int playerNum;
+	unsigned int map_id;
+};
+
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
 
@@ -116,6 +122,11 @@ extern void *RS_MysqlPlayerAppear_Thread( void *in );
 
 qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int map_id);
 extern void *RS_MysqlPlayerDisappear_Thread( void *in );
+
+qboolean RS_MysqlLoadHighscores( int playerNum, int map_id );
+extern void *RS_MysqlLoadHighscores_Thread( void *in );
+
+qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum );
 
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );

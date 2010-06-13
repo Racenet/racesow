@@ -53,6 +53,7 @@ cvar_t *rs_querySetMapRating;
 const unsigned int RACESOW_CALLBACK_AUTHENTICATE = 0;
 const unsigned int RACESOW_CALLBACK_NICKPROTECT = 1;
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
+const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
 
 /**
  * MySQL Socket
@@ -536,6 +537,8 @@ void *RS_MysqlInsertRace_Thread(void *in)
     if( raceData->player_id == 0 )
     {
         // hmmm
+		// FIXME : currently it only records races from registered players. 
+		// solution: see the TODO in PlayerDisappear_Thread
         return NULL;
         
         /*
@@ -598,6 +601,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
             currentRaceTime = atoi(row[1]);
         }
     }
+	mysql_free_result(mysql_res);
 
 	// reset points in player_map
     sprintf(query, rs_queryResetPlayerMapPoints->string);
@@ -800,6 +804,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 			nick_id=atoi(row[0]);
 			player_id=atoi(row[1]);
 		}
+	mysql_free_result(mysql_res);
 
 	if (is_authed)
 	{
@@ -840,6 +845,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 		if ((row = mysql_fetch_row(mysql_res)) != NULL) 
 			if (row[0]!=NULL)
 				player_id=atoi(row[0]);
+		mysql_free_result(mysql_res);
 
 		// add his nick
 		sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
@@ -868,6 +874,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 				if (original_player_id!=player_id)
 					RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, original_player_id, 0);
 			}
+		mysql_free_result(mysql_res);
 	}
 	free(playerData->name);
 	free(playerData);
@@ -927,6 +934,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 	nick_id=0;
 	map_id=0;
 	playtime=0;
+	auth_mask=0;
 	
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
@@ -960,6 +968,8 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 				player_id=atoi(row[0]);
 				auth_mask=atoi(row[1]);
 			}
+		mysql_free_result(mysql_res);
+
 		if (auth_mask>0)
 		{
 			// well well.. he was using a registered nick, so he was under nickprotection warning.
@@ -990,6 +1000,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
 		if (row[0]!=NULL) 
 			nick_id=atoi(row[0]);
+	mysql_free_result(mysql_res);
 
 	//printf("%s disappeared, got nick id: %d\n",name,nick_id);
 	
@@ -1020,6 +1031,161 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     return NULL;
 }
 
+/**
+ * Calls the highscores thread
+ *
+ * @param edict_t *ent
+ * @param int map_id
+ * @return void
+ */
+qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
+{
+	pthread_t thread;
+	int returnCode;
+
+	struct highscoresDataStruct *highscoresData=malloc(sizeof(struct highscoresDataStruct));
+
+    highscoresData->map_id=map_id;
+	highscoresData->playerNum=playerNum;
+    
+	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadHighscores_Thread, (void *)highscoresData);
+	if (returnCode) {
+
+		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		return qfalse;
+	}
+	
+	return qtrue;
+}
+
+
+//=================
+//RS_MysqlLoadHighScores
+// straight from 0.42 with some changes
+//=================
+
+char *highscores_players[256]={0}; // no more than 256 players at the same time on a server, right?
+
+void *RS_MysqlLoadHighscores_Thread( void* in ) {
+    
+		MYSQL_ROW  row;
+        MYSQL_RES  *mysql_res;
+        char query[1024];
+		int playerNum;
+		int map_id;
+		int limit;
+		char highscores[10000];
+		struct highscoresDataStruct *highscoresData;
+
+
+		highscoresData=(struct highscoresDataStruct *)in;
+		playerNum=highscoresData->playerNum;
+		map_id=highscoresData->map_id;
+
+		limit=30;
+		
+		pthread_mutex_lock(&mutexsum);
+		mysql_thread_init();
+
+        
+
+        // get top players on map
+        Q_strncpyz ( query, va( "SELECT  MIN( time ) AS time, p.name, r.created FROM race AS r LEFT JOIN player AS p ON p.id = r.player_id LEFT JOIN map AS m ON m.id = r.map_id WHERE m.id = %i GROUP BY p.id ORDER BY time ASC LIMIT %i", map_id, limit ), sizeof(query) );
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        
+        if( (unsigned long)mysql_num_rows( mysql_res ) == 0 )
+            Q_strncatz(highscores, va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores));
+        
+        else {
+            unsigned int position = 0;
+            unsigned int last_position = 0;
+            unsigned int draw_position = 0;
+            char last_time[16];
+            char draw_time[16];
+            char diff_time[16];
+            int min, sec, milli, dmin, dsec, dmilli;
+			int replay_record;
+			
+			replay_record=0;
+ 
+            Q_strncatz(highscores, va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, level.mapname, S_COLOR_WHITE ), sizeof(highscores));
+
+            while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
+			{
+				
+				if( /*load_replay_record && */	!position && row[0] ) {
+                    replay_record = atoi( row[0] );
+                    /*
+					Q_strncpyz(level_items.record_player, row[1], sizeof(level_items.record_player));
+                    if( rs_restoreHighscores->integer )
+                        game.race_record = atoi( row[0] );
+					*/
+                } 
+                position++;
+
+                // convert time into MM:SS:mmm
+                milli = atoi( row[0] );
+                min = milli / 60000;
+                milli -= min * 60000;
+                sec = milli / 1000;
+                milli -= sec * 1000;
+
+				dmilli = atoi( row[0] ) - replay_record;
+                dmin = dmilli / 60000;
+                dmilli -= dmin * 60000;
+                dsec = dmilli / 1000;
+                dmilli -= dsec * 1000;
+
+                Q_strncpyz( draw_time, va( "%d:%d.%03d", min, sec, milli ), sizeof(draw_time) );
+                Q_strncpyz( diff_time, va( "+%d:%d.%03d", dmin, dsec, dmilli ), sizeof(diff_time) );
+
+                if( !Q_stricmp( va( "%s", last_time ), va( "%s", draw_time ) ) )
+                    draw_position = last_position;
+                else
+                    draw_position = position;
+
+                last_position = draw_position;
+                Q_strncpyz( last_time, va( "%d:%d.%d", min, sec, milli ), sizeof(last_time) );
+
+                if( position <= 10 )
+                    Q_strncatz( highscores,  va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
+                else if( position <= 20 )
+                    Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
+                else if( position <= 30 )
+                    Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
+            }
+			}
+
+        mysql_free_result(mysql_res);
+		
+		highscores_players[playerNum]=malloc(strlen(highscores));
+		Q_strncpyz( highscores_players[playerNum],highscores, strlen(highscores));
+		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0);
+		
+		free(highscoresData);	
+		RS_EndMysqlThread();
+		return NULL;
+}
+
+/**
+ * Print highscores to a player
+ * 
+ * @param edict_t *ent
+ * @param int playerNum
+ * @return void
+ */
+
+qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
+{
+	if( ent != NULL )
+      G_PrintMsg( ent, highscores_players[playerNum] );
+	free(highscores_players[playerNum]);
+	highscores_players[playerNum]=NULL;
+	return qtrue;
+}
 
 /**
  * Cleanly end the mysql thread

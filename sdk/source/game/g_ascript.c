@@ -6151,7 +6151,7 @@ static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 2)));
 }
 
-// RS_MysqlPlayerDisppear
+// RS_MysqlPlayerDisappear
 static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int player_id, int map_id)
 {
 	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, player_id, map_id);
@@ -6165,6 +6165,33 @@ static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 2),
 		(int)G_asGeneric_GetArgInt(gen, 3)));
 }
+
+// RS_MysqlLoadHighScores
+static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int map_id)
+{
+	return RS_MysqlLoadHighscores(playerNum, map_id);
+}
+
+static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
+{
+	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlLoadHighscores(
+		(int)G_asGeneric_GetArgInt(gen, 0),
+		(int)G_asGeneric_GetArgInt(gen, 1)));
+}
+
+// RS_MysqlPrintHighscoresTo
+static qboolean asFunc_RS_MysqlPrintHighscoresTo( edict_t *ent, int playerNum)
+{
+	return RS_PrintHighscoresTo(ent, playerNum);
+}
+
+static void asFunc_asGeneric_RS_MysqlPrintHighscoresTo( void *gen )
+{
+	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlPrintHighscoresTo(
+		(edict_t *)G_asGeneric_GetArgAddress( gen, 0 ),
+		(int)G_asGeneric_GetArgInt(gen, 1)));
+}
+
 
 // RS_QueryCallbackQueue
 static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3)
@@ -6800,6 +6827,8 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "void RS_MysqlInsertRace( cEntity @, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
+	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
+	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	// !racesow
 

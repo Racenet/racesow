@@ -87,6 +87,14 @@ class Racesow_Player
 	 * @var uint
 	 */
     uint top_lastcmd;
+	
+	/**
+	 * Is the player waiting for the result of a command (like "top")?
+	 * (this is another kind of flood protection)
+	 * @var bool
+	 */
+	bool isWaitingForCommand;
+
 
 	/**
 	 * The player's best checkpoints
@@ -142,6 +150,7 @@ class Racesow_Player
 		this.isJoinlocked = false;
 		this.isVotemuted = false;
 		this.wasTelekilled = false;
+		this.isWaitingForCommand = false;
 		this.bestRaceTime = 0;
         this.plasmaPerfectClimbSince = 0;
 		this.resetAuth();

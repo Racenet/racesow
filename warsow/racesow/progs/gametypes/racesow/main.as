@@ -268,6 +268,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			sendMessage( S_COLOR_RED + "Command only available for race\n", @client );
 			return false;
 		}
+			/*
+				// this was attempt 1 to print highscores
 		else if( player.top_lastcmd + 30 > localTime )
 		{
 			sendMessage( S_COLOR_RED + "Flood protection. You can use the top command"
@@ -278,6 +280,18 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		{
 			player.top_lastcmd = localTime;
 			G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
+			*/
+			// attempt 2:
+		else if( player.isWaitingForCommand )
+		{
+			sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
+					+"results of your previous top command\n", @client );
+			return false;
+		}
+		else
+		{
+			player.isWaitingForCommand=true;
+			RS_MysqlLoadHighscores(player.getClient().playerNum(),map.getId());
 		}
     }
 	else if ( ( cmdString == "register" ) )
