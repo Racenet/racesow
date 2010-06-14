@@ -17,9 +17,8 @@ cvar_t *rs_mysqlUser;
 cvar_t *rs_mysqlPass;
 cvar_t *rs_mysqlDb;
 
+cvar_t *rs_queryGetPlayerAuth;
 cvar_t *rs_queryGetPlayer;
-cvar_t *rs_queryCheckPlayer;
-cvar_t *rs_queryExistsPlayer;
 cvar_t *rs_queryAddPlayer;
 cvar_t *rs_queryRegisterPlayer;
 cvar_t *rs_queryUpdatePlayerPlaytime;
@@ -54,6 +53,8 @@ const unsigned int RACESOW_CALLBACK_AUTHENTICATE = 0;
 const unsigned int RACESOW_CALLBACK_NICKPROTECT = 1;
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
 const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
+const unsigned int RACESOW_CALLBACK_APPEAR = 4;
+const unsigned int RACESOW_CALLBACK_RACEFINISH = 5;
 
 /**
  * MySQL Socket
@@ -102,9 +103,8 @@ void RS_MysqlLoadInfo( void )
     rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "", CVAR_ARCHIVE );
     rs_mysqlDb = trap_Cvar_Get( "rs_mysqlDb", "racesow", CVAR_ARCHIVE );
     
-    rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",				"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryCheckPlayer				= trap_Cvar_Get( "rs_queryCheckPlayer",				"SELECT `id` FROM `player` WHERE `simplified` = '%s' AND auth_mask > 0 LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryExistsPlayer			= trap_Cvar_Get( "rs_queryExistsPlayer",			"SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",				"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			"SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
 	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s'), `auth_mask` = 1 WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL) LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = playtime + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
@@ -448,7 +448,7 @@ void *RS_MysqlAuthenticate_Thread( void *in )
     Q_strncpyz ( pass, authData->authPass, sizeof(pass) );
     mysql_real_escape_string(&mysql, pass, pass, strlen(pass));
     
-	sprintf(query, rs_queryGetPlayer->string, name, pass);
+	sprintf(query, rs_queryGetPlayerAuth->string, name, pass);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
@@ -480,17 +480,17 @@ void *RS_MysqlAuthenticate_Thread( void *in )
  * @param int race_time
  * @return qboolean
  */
-qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time ) {
+qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum ) {
 
 	int returnCode;
     struct raceDataStruct *raceData=malloc(sizeof(struct raceDataStruct));
 	pthread_t thread;
 
-    raceData->ent = ent;
     raceData->player_id = player_id;
 	raceData->nick_id= nick_id;
 	raceData->map_id = map_id;
 	raceData->race_time = race_time;
+	raceData->playerNum = playerNum;
     
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlInsertRace_Thread, (void *)raceData);
 
@@ -514,10 +514,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 {
     char query[1000];
 	unsigned int maxPositions, currentPoints, currentRaceTime, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime;
-    int milli, min, sec, dmilli, dmin, dsec;
 	struct raceDataStruct *raceData;
-    char draw_time[16];
-    char diff_time[16];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	
@@ -536,9 +533,10 @@ void *RS_MysqlInsertRace_Thread(void *in)
 
     if( raceData->player_id == 0 )
     {
-        // hmmm
-		// FIXME : currently it only records races from registered players. 
-		// solution: see the TODO in PlayerDisappear_Thread
+        // don't insert a race if the player doesn't have a player_id (ie. he's under nick protection)
+		G_Printf(va("did not insert race for a null player (time %d)\n",raceData->race_time));
+		free(raceData);	
+		RS_EndMysqlThread();
         return NULL;
         
         /*
@@ -658,6 +656,15 @@ void *RS_MysqlInsertRace_Thread(void *in)
             RS_CheckMysqlThreadError();
 		}
     }
+	mysql_free_result(mysql_res);
+
+	// awards are now handled by a AS callback (it was unsafe to do this in a thread)
+
+	// TODO: instead of returning the current best time, retrieve and return the -previous- best time,
+	// so the correct delta can be printed
+	RS_PushCallbackQueue(RACESOW_CALLBACK_RACEFINISH,raceData->playerNum, raceData->race_time, bestTime);
+
+	/*
 
     // convert time into MM:SS:mmm
     milli = (int)raceData->race_time;
@@ -682,9 +689,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
     Q_strncpyz( draw_time, va( "%d:%d.%03d", min, sec, milli ), sizeof(draw_time) );
     Q_strncpyz( diff_time, va( "%d:%d.%03d", dmin, dsec, dmilli ), sizeof(diff_time) );
     
-
-	// below this line: this should be a AS callback function (not safe to call AS code in a thread)
-
     if (raceData->race_time < bestTime)
     {
         G_PlayerAward( raceData->ent, va("%New server record!", S_COLOR_GREEN) );
@@ -715,9 +719,15 @@ void *RS_MysqlInsertRace_Thread(void *in)
         G_PlayerAward( raceData->ent, va("%sRace finished!\n", S_COLOR_WHITE) );
         G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s+%s", draw_time, S_COLOR_RED, diff_time ) );
     }
+	*/
 
+	// should be printed in AS. TODO: another callback for that
+
+	/*
     G_PrintMsg( NULL, va("You earned %d points.\n", (newPoints - currentPoints)) );
-    
+    */
+
+
 	free(raceData);	
 	RS_EndMysqlThread();
     
@@ -731,7 +741,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
  * @param int is_authed
  * @return void
  */
-qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id )
+qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int is_authed )
 {
 	pthread_t thread;
 	int returnCode;
@@ -740,6 +750,7 @@ qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id )
     playerData->name = strdup(name);
     playerData->player_id = player_id;
 	playerData->playerNum = playerNum;
+	playerData->is_authed = is_authed;
 
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlPlayerAppear_Thread, (void *)playerData);
 	if (returnCode) {
@@ -754,7 +765,9 @@ qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id )
 /**
  * Thread when player appear,
  *
- * it does what's written in mysql concept.txt 
+ * the player just arrived, so his nick_id was not previously stored in AS
+ * however, if he's authed, the player_id won't change.
+ * if he's not authed, his player_id will jump to another player_id 
  *
  * @param void *in
  * @return void
@@ -767,20 +780,21 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	int is_authed,playerNum;
-	int nick_id,player_id;
+	int nick_id,player_id, auth_mask;
 	struct playerDataStruct *playerData;
 
 	playerNum=0;
 	is_authed=0;
 	nick_id=0;
 	player_id=0;
+	auth_mask=0;
 	
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
 
     playerData = (struct playerDataStruct*)in;
 	player_id=playerData->player_id;
-	is_authed=(player_id>0);
+	is_authed=playerData->is_authed;
 	playerNum=playerData->playerNum;
 
     Q_strncpyz ( simplified, COM_RemoveColorTokens( playerData->name), sizeof(simplified) );
@@ -790,7 +804,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
 	//printf("%s appeared (player num: %d) %s\n",name,playerNum, is_authed?", authed":"");
 
-	// check if that nick already exists
+	// check if that nick already exists and retrieve the nick_id 
 	sprintf(query, rs_queryGetNick->string, simplified);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
@@ -800,82 +814,79 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     
     if ((row = mysql_fetch_row(mysql_res)) != NULL) 
 		if (row[0]!=NULL && row[1]!=NULL) 
-		{
 			nick_id=atoi(row[0]);
-			player_id=atoi(row[1]);
-		}
 	mysql_free_result(mysql_res);
 
 	if (is_authed)
-	{
-		if (nick_id==0)
 		{
+		if (nick_id==0)
+			{
 			// new nick but registered player, so add it
-	
-			// add this new nick to reference the player
 			sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
 			mysql_real_query(&mysql, query, strlen(query));
 			RS_CheckMysqlThreadError();   
-		}
-	
-		// since the player is authed, we don't have to do anything else
-		free(playerData->name);
-		free(playerData);
-		RS_EndMysqlThread();
-		return NULL;
-
-	}
-
-	// now, if the player is not authed
-	
-	if (nick_id==0)
-	{
-		// it's a new nick, hence, a new player, so add it
-
-		sprintf(query, rs_queryAddPlayer->string, name,simplified);
-		mysql_real_query(&mysql, query, strlen(query));
-		RS_CheckMysqlThreadError();    
-
-		// retrieve the new player_id
-		sprintf(query, rs_queryExistsPlayer->string, simplified);
-		mysql_real_query(&mysql, query, strlen(query));
-		RS_CheckMysqlThreadError();
-		mysql_res = mysql_store_result(&mysql);
-		RS_CheckMysqlThreadError();
-		if ((row = mysql_fetch_row(mysql_res)) != NULL) 
-			if (row[0]!=NULL)
-				player_id=atoi(row[0]);
-		mysql_free_result(mysql_res);
-
-		// add his nick
-		sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
-		mysql_real_query(&mysql, query, strlen(query));
-		RS_CheckMysqlThreadError();    
-	}
-	else
-	{
-		// that nick already exists, hence it belongs to a player P. 
-		// if P is registered (authmask>0), then trigger nick protection
-		// if P is not registered (authmask==0), then don't do anything
-
-		// retrieve player_id corresponding to that name
-		int original_player_id;
-		sprintf(query, rs_queryCheckPlayer->string, simplified);
-		mysql_real_query(&mysql, query, strlen(query));
-		RS_CheckMysqlThreadError();
-		mysql_res = mysql_store_result(&mysql);
-		RS_CheckMysqlThreadError();
-		if ((row = mysql_fetch_row(mysql_res)) != NULL) 
-			if (row[0]!=NULL)
-			{
-				original_player_id=atoi(row[0]);
-			
-				// player numbers not matched: trigger nick protection!
-				if (original_player_id!=player_id)
-					RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, original_player_id, 0);
 			}
-		mysql_free_result(mysql_res);
-	}
+
+		// since the player is authed, we don't have to do anything else
+		RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerNum, player_id, nick_id);
+		}
+	else
+		{
+		// now, if the player is not authed
+
+		if (nick_id==0)
+			{
+			// it's a new nick, hence, a new player, so add both
+			sprintf(query, rs_queryAddPlayer->string, name,simplified);
+			mysql_real_query(&mysql, query, strlen(query));
+			RS_CheckMysqlThreadError();    
+
+			// retrieve the new player_id
+			player_id=(int)mysql_insert_id(&mysql);
+
+			// add his nick
+			sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
+			mysql_real_query(&mysql, query, strlen(query));
+			RS_CheckMysqlThreadError();    
+
+			// retrieve the new nick_id
+			nick_id=(int)mysql_insert_id(&mysql);
+			}
+		else
+			{
+			// that nick already exists, hence it belongs to a player P. 
+			// if P is registered (authmask>0), then trigger nick protection
+			// if P is not registered (authmask==0), then don't do anything
+
+			// retrieve player_id corresponding to that name
+			int player_id_for_nick=0;
+			sprintf(query, rs_queryGetPlayer->string, simplified);
+			mysql_real_query(&mysql, query, strlen(query));
+			RS_CheckMysqlThreadError();
+			mysql_res = mysql_store_result(&mysql);
+			RS_CheckMysqlThreadError();
+			if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+				if (row[0]!=NULL && row[1]!=NULL )
+					{
+					player_id_for_nick=atoi(row[0]);
+					auth_mask=atoi(row[1]);
+					}
+			mysql_free_result(mysql_res);
+
+			if (auth_mask > 0) 
+				{
+				if (player_id_for_nick!=player_id)
+						// player numbers not matched: trigger nick protection!
+						RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, player_id_for_nick, 0);
+				}
+			else 
+				player_id=player_id_for_nick;
+			}
+		}
+
+	// store player_id and nick_id in AS
+	RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerNum, player_id, nick_id);
+
 	free(playerData->name);
 	free(playerData);
 	RS_EndMysqlThread();
@@ -891,7 +902,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
  * @param int map_id
  * @return void
  */
-qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int map_id)
+qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int nick_id, int map_id, int is_authed)
 {
 	pthread_t thread;
 	int returnCode;
@@ -900,7 +911,9 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int m
     playtimeData->name=strdup(name);
     playtimeData->map_id=map_id;
 	playtimeData->player_id=player_id;
+	playtimeData->nick_id=nick_id;
 	playtimeData->playtime=playtime;
+	playtimeData->is_authed=is_authed;
 
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlPlayerDisappear_Thread, (void *)playtimeData);
 	if (returnCode) {
@@ -925,9 +938,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     char query[1000];
 	char name[100];
 	char simplified[100];
-    MYSQL_ROW  row;
-    MYSQL_RES  *mysql_res;
-	unsigned int player_id, map_id, playtime, nick_id, auth_mask;
+	unsigned int player_id, map_id, playtime, nick_id, auth_mask, is_authed;
 	struct playtimeDataStruct *playtimeData;
 
 	player_id=0;
@@ -935,6 +946,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 	map_id=0;
 	playtime=0;
 	auth_mask=0;
+	is_authed=0;
 	
 	pthread_mutex_lock(&mutexsum);
 	mysql_thread_init();
@@ -942,6 +954,8 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     playtimeData = (struct playtimeDataStruct*)in;
 	map_id=playtimeData->map_id;
 	player_id=playtimeData->player_id;
+	nick_id=playtimeData->nick_id;
+	is_authed=playtimeData->is_authed;
 	playtime=playtimeData->playtime;
 
     Q_strncpyz ( simplified, COM_RemoveColorTokens( playtimeData->name ), sizeof(simplified) );
@@ -949,29 +963,10 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 	Q_strncpyz ( name, playtimeData->name, sizeof(name) );
     mysql_real_escape_string(&mysql, name, name, strlen(name));
 
-	//printf("%s disappeared, gonna update playtime (%d) for player_id %d and map_id %d\n",name,playtime,player_id,map_id);
+	//printf("%s disappeared, gonna update playtime (%d) for player_id %d nick_id %d is_authed %d and map_id %d\n",name,playtime,player_id,nick_id,is_authed,map_id);
 
-	if (player_id==0)
+	if (player_id!=0 && !is_authed)
 	{
-		// player_id is 0 in AS when the player has not authenticated.
-		// so we'll have to retrieve it from the nick he's currently using
-		// TODO: we could store player_id in AS as a PlayerAppear callback
-
-		sprintf(query, rs_queryExistsPlayer->string, simplified);
-		mysql_real_query(&mysql, query, strlen(query));
-		RS_CheckMysqlThreadError();
-		mysql_res = mysql_store_result(&mysql);
-		RS_CheckMysqlThreadError();
-		if ((row = mysql_fetch_row(mysql_res)) != NULL) 
-			if (row[0]!=NULL)
-			{
-				player_id=atoi(row[0]);
-				auth_mask=atoi(row[1]);
-			}
-		mysql_free_result(mysql_res);
-
-		if (auth_mask>0)
-		{
 			// well well.. he was using a registered nick, so he was under nickprotection warning.
 			// let's not record any playtime in this situation
 
@@ -980,30 +975,13 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 			RS_EndMysqlThread();
 	    
 			return NULL;
-		}
-
 	}
-	
-	//printf("%s disappeared, got player_id: %d\n",name,player_id);
 
 	// increment player playtime
 	sprintf(query, rs_queryUpdatePlayerPlaytime->string, playtime, player_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
 
-	// retrieve nick_id ( TODO : nick_id could be stored somewhere in AS and passed here)
-	sprintf(query, rs_queryGetNick->string, simplified);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
-    mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
-    if ((row = mysql_fetch_row(mysql_res)) != NULL)
-		if (row[0]!=NULL) 
-			nick_id=atoi(row[0]);
-	mysql_free_result(mysql_res);
-
-	//printf("%s disappeared, got nick id: %d\n",name,nick_id);
-	
 	// increment nick playtime
 	sprintf(query, rs_queryUpdateNickPlaytime->string, playtime, nick_id);
     mysql_real_query(&mysql, query, strlen(query));
@@ -1084,10 +1062,8 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 
 		limit=30;
 		
-		pthread_mutex_lock(&mutexsum);
+		pthread_mutex_lock(&mutexsum);	  
 		mysql_thread_init();
-
-        
 
         // get top players on map
         Q_strncpyz ( query, va( "SELECT  MIN( time ) AS time, p.name, r.created FROM race AS r LEFT JOIN player AS p ON p.id = r.player_id LEFT JOIN map AS m ON m.id = r.map_id WHERE m.id = %i GROUP BY p.id ORDER BY time ASC LIMIT %i", map_id, limit ), sizeof(query) );
@@ -1182,6 +1158,7 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 {
 	if( ent != NULL )
       G_PrintMsg( ent, highscores_players[playerNum] );
+	G_PrintMsg( ent, "\n" );
 	free(highscores_players[playerNum]);
 	highscores_players[playerNum]=NULL;
 	return qtrue;

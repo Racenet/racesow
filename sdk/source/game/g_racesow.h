@@ -74,11 +74,11 @@ struct authenticationData {
 
 struct raceDataStruct {
 
-	edict_t *ent;
 	unsigned int player_id;
 	unsigned int nick_id;
 	unsigned int map_id;
 	unsigned int race_time;
+	unsigned int playerNum;
 };
 
 struct playerDataStruct {
@@ -86,6 +86,7 @@ struct playerDataStruct {
 	char *name;
 	int player_id;
 	int playerNum;
+	int is_authed;
 };
 
 struct playtimeDataStruct {
@@ -94,6 +95,8 @@ struct playtimeDataStruct {
 	unsigned int playtime;
 	unsigned int map_id;
 	unsigned int player_id;
+	unsigned int nick_id;
+	unsigned int is_authed;
 };
 
 struct highscoresDataStruct {
@@ -114,19 +117,19 @@ extern void *RS_MysqlNickProtection_Thread( void *in );
 extern qboolean RS_MysqlLoadMap();
 extern void *RS_MysqlLoadMap_Thread( void *in );
 
-extern qboolean RS_MysqlInsertRace( edict_t *ent, unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time );
+extern qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum );
 extern void *RS_MysqlInsertRace_Thread( void *in );
 
-qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int is_authed );
+extern qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int is_authed );
 extern void *RS_MysqlPlayerAppear_Thread( void *in );
 
-qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int map_id);
+extern qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int nick_id, int map_id, int is_authed);
 extern void *RS_MysqlPlayerDisappear_Thread( void *in );
 
-qboolean RS_MysqlLoadHighscores( int playerNum, int map_id );
+extern qboolean RS_MysqlLoadHighscores( int playerNum, int map_id );
 extern void *RS_MysqlLoadHighscores_Thread( void *in );
 
-qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum );
+extern qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum );
 
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );

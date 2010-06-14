@@ -14,6 +14,8 @@ const uint RACESOW_CALLBACK_AUTHENTICATE = 0;
 const uint RACESOW_CALLBACK_NICKPROTECT = 1;
 const uint RACESOW_CALLBACK_LOADMAP = 2;
 const uint RACESOW_CALLBACK_HIGHSCORES = 3;
+const uint RACESOW_CALLBACK_APPEAR = 4;
+const uint RACESOW_CALLBACK_RACEFINISH = 5;
  
  /**
  * Racesow_ThinkCallbackQueue()
@@ -31,13 +33,13 @@ void Racesow_ThinkCallbackQueue()
     {
         case RACESOW_CALLBACK_AUTHENTICATE:
 			@player = Racesow_GetPlayerByNumber(arg1);
-			if ( @player != null)
+			if ( @player != null )
 	            player.getAuth().authCallback( arg2, arg3 );
             break;
             
         case RACESOW_CALLBACK_NICKPROTECT:
             @player = Racesow_GetPlayerByNumber(arg1);
-			if ( @player != null)
+			if ( @player != null )
 	            player.getAuth().nickProtectCallback( arg2, arg3 );
             break;    
 
@@ -47,11 +49,26 @@ void Racesow_ThinkCallbackQueue()
 			
 		case RACESOW_CALLBACK_HIGHSCORES:
 			@player = Racesow_GetPlayerByNumber(arg1);
-			if ( @player != null)
+			if ( @player != null )
 			{
 				RS_PrintHighscoresTo(player.getClient().getEnt(),arg1);
 				player.isWaitingForCommand=false;
 			}
             break;
+			
+		case RACESOW_CALLBACK_APPEAR:
+			@player = Racesow_GetPlayerByNumber(arg1);
+			if ( @player != null )
+			{
+				player.setId(arg2);
+				player.setNickId(arg3);
+			}
+            break;
+			
+		case RACESOW_CALLBACK_RACEFINISH:
+			@player = Racesow_GetPlayerByNumber(arg1);
+			if ( @player != null )
+				player.race.displayAward(arg2,arg3);
+			break;
     }
 }

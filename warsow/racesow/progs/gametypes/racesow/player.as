@@ -191,7 +191,25 @@ class Racesow_Player
 	 */
     int getNickId()
     {
-        return 30;
+        return this.auth.nickId;
+    }
+	
+	/**
+	 * SGet the player's id
+	 * @return int
+	 */
+    void setId(int playerId)
+    {
+        this.auth.playerId=playerId;
+    }
+    
+    /**
+	 * Set the id of the current nickname
+	 * @return int
+	 */
+    void setNickId(int nickId)
+    {
+        this.auth.nickId=nickId;
     }
     
 	/**

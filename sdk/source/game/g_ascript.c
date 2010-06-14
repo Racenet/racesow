@@ -6122,25 +6122,25 @@ static void asFunc_asGeneric_RS_MysqlLoadMap( void *gen )
 }
 
 // RS_MysqlInsertRace
-static qboolean asFunc_RS_MysqlInsertRace( edict_t *ent, int player_id, int nick_id, int map_id, int race_time ) 
+static qboolean asFunc_RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time, int playerNum ) 
 {
-	return RS_MysqlInsertRace(ent, player_id, nick_id, map_id, race_time );
+	return RS_MysqlInsertRace(player_id, nick_id, map_id, race_time, playerNum );
 }
 
 static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlInsertRace(
-        (edict_t *)G_asGeneric_GetArgAddress(gen, 0),
+		(int)G_asGeneric_GetArgInt(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1),
-		(int)G_asGeneric_GetArgInt(gen, 2),
-        (int)G_asGeneric_GetArgInt(gen, 3),
+        (int)G_asGeneric_GetArgInt(gen, 2),
+		(int)G_asGeneric_GetArgInt(gen, 3),
         (int)G_asGeneric_GetArgInt(gen, 4)));
 }
 
 // RS_MysqlPlayerAppear
-static qboolean asFunc_RS_MysqlPlayerAppear( asstring_t *playerName, int playerNum, int player_id )
+static qboolean asFunc_RS_MysqlPlayerAppear( asstring_t *playerName, int playerNum, int player_id, int is_authed )
 {
-	return RS_MysqlPlayerAppear(playerName->buffer, playerNum, player_id);
+	return RS_MysqlPlayerAppear(playerName->buffer, playerNum, player_id, is_authed);
 }
 
 static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
@@ -6148,13 +6148,14 @@ static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlPlayerAppear(
         (asstring_t *)G_asGeneric_GetArgAddress(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1),
-		(int)G_asGeneric_GetArgInt(gen, 2)));
+		(int)G_asGeneric_GetArgInt(gen, 2),
+		(int)G_asGeneric_GetArgInt(gen, 3)));
 }
 
 // RS_MysqlPlayerDisappear
-static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int player_id, int map_id)
+static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int player_id, int nick_id, int map_id, int is_authed)
 {
-	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, player_id, map_id);
+	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, player_id, nick_id, map_id, is_authed );
 }
 
 static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
@@ -6163,7 +6164,9 @@ static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
         (asstring_t *)G_asGeneric_GetArgAddress(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1),
 		(int)G_asGeneric_GetArgInt(gen, 2),
-		(int)G_asGeneric_GetArgInt(gen, 3)));
+		(int)G_asGeneric_GetArgInt(gen, 3),
+		(int)G_asGeneric_GetArgInt(gen, 4),
+		(int)G_asGeneric_GetArgInt(gen, 5)));
 }
 
 // RS_MysqlLoadHighScores
@@ -6823,10 +6826,10 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	{ "void RS_MysqlAuthenticate( int, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
 	{ "void RS_MysqlNickProtection( cEntity @ )", asFunc_RS_MysqlNickProtection, asFunc_asGeneric_RS_MysqlNickProtection },
-	{ "void RS_MysqlPlayerAppear( cString &, int, int )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
-	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
+	{ "void RS_MysqlPlayerAppear( cString &, int, int, bool )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
+	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
-	{ "void RS_MysqlInsertRace( cEntity @, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
+	{ "void RS_MysqlInsertRace( int, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },

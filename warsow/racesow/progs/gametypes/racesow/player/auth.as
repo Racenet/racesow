@@ -27,6 +27,12 @@
 	 * @var int
 	 */
 	int playerId;
+	
+	/**
+	 * The Player's nick unique ID
+	 * @var int
+	 */
+	int nickId;
     
     /**
 	 * Racesow authorizations bitmask
@@ -75,6 +81,7 @@
 		this.authenticationName = "";
 		this.authorizationsMask = 0;
 		this.failCount = 0;
+		this.playerId = 0;
 	}
 
 	~Racesow_Player_Auth()
@@ -213,7 +220,7 @@
 	}
 
 	/**
-	 * Check for a nickname changed event
+	 * Check for a nickname change event
 	 * @return void
 	 */
 	void refresh( cString &nick)
@@ -223,9 +230,9 @@
 
 		if ( nick.removeColorTokens() != this.player.getName().removeColorTokens() )
 		{
-			RS_MysqlPlayerDisappear(nick,levelTime-player.joinedTime,player.getAuth().playerId,map.getId());
+			RS_MysqlPlayerDisappear(nick, levelTime-this.player.joinedTime, this.player.getId(), this.player.getNickId() , map.getId(), this.player.getAuth().isAuthenticated());
 			player.joinedTime = levelTime;
-			RS_MysqlPlayerAppear(this.player.getName(),this.player.getClient().playerNum(),this.player.getAuth().playerId);
+			RS_MysqlPlayerAppear(this.player.getName(), this.player.getClient().playerNum(), this.player.getId(), this.player.getAuth().isAuthenticated());
 		}
 	}
 
