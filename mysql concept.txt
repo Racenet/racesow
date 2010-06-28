@@ -1,0 +1,40 @@
+event: player appears (enter race or change nickname), parameter: is_authed
+
+	- if the player is authed, and the nick doesnt already exist, add it and return
+	- else:
+	- retrieve and store nick_id (rs_queryGetNick) (do that first! because nick may already be associated with a player)
+    - if nick doesnt exist, insert it as well as a new player (rs_queryAddPlayer) (rs_queryGetPlayer) (rs_queryAddNick)
+	- if nick exists, check for nickname protection (rs_queryCheckPlayer)
+    - (in AS) store leveltime to compute playtime later (in AS)
+	
+event: player authenticate
+
+    - retrieve player_id and auth_mask (rs_queryGetPlayer)
+    
+event: player disappears (disconnect or change nickname)
+
+    - update playtime in player, map, nick, player_map and nick_map
+        rs_queryUpdatePlayerPlaytime
+        rs_queryUpdateNickPlaytime
+        rs_queryUpdateMapPlaytime
+        rs_queryUpdatePlayerMapPlaytime
+        rs_queryUpdateNickMapPlaytime
+    
+event: player set new nickname
+
+	- do player finish, then player begin        
+        
+event: player finish race
+    
+    - insert race using the stored player_id and nick_id (rs_queryAddRace)
+    - update num_races in map, player, nick, player_map and nick_map
+        rs_queryUpdatePlayerRaces
+        rs_queryUpdateNickRaces
+        rs_queryUpdateMapRaces
+        rs_queryUpdatePlayerMapRaces
+        rs_queryUpdateNickMapRaces
+    
+    
+event: next map / game shutdown
+    
+     - do the "player finish" event for all players

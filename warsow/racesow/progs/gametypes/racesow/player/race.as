@@ -3,7 +3,7 @@
  *
  * @package Racesow
  * @subpackage Player
- * @version 0.5.2
+ * @version 0.5.3
  */
 class Racesow_Player_Race : Racesow_Player_Implemented
 {
@@ -226,9 +226,17 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		this.timeStamp = localTime;
 		this.player.inOvertime = false;
 		
+		return true;
+	}
+	
+	bool displayAward( uint newTime, uint bestTime )
+	{
+        /*
 		uint newTime = this.getTime();
 		//uint bestTime = this.player.getBestTime(); // diff to own best
 		uint bestTime = map.getStatsHandler().getHighScore(0).getTime(); // diff to server best
+		*/
+		cString str;
 		uint personalBestTime = this.player.getBestTime();
 		
 		bool noDelta = 0 == bestTime;
@@ -256,7 +264,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		G_PrintMsg(this.player.getClient().getEnt(), S_COLOR_WHITE
 			+ "race finished: " + TimeToString( newTime ) + "\n");
 		
-        if ( newTime < bestTime || bestTime == 0 )
+        if ( newTime == bestTime )
         {
             player.setBestTime(newTime);
 			this.triggerAward( S_COLOR_GREEN + "New server record!" );
@@ -268,7 +276,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
             player.setBestTime(newTime);
 			this.triggerAward( "Personal record!" );
         }
-		
+
 		return true;
 	}
 	

@@ -2,7 +2,7 @@
 * Racesow README file
 *
 * @package Racesow
-* @version 0.5.2
+* @version 0.5.3
 */
 
 General information:
@@ -17,7 +17,6 @@ Sources:
 
 	- development trunk: http://svn.warsow-race.net/racesow0.5/trunk
 	- latest stable version: http://svn.warsow-race.net/racesow0.5/tags/0.5.2-stable
-	- threaded mysql branch: http://svn.warsow-race.net/racesow0.5/branches/mysql_threaded
     
 	
 	
@@ -65,10 +64,9 @@ Racesow team:
 
 Changelog:
 
-	2010-XX-XX / racesow 0.5.X
+	2010-06-28 / racesow 0.5.3
 	
-		- add changes here!
-
+		- added threaded mysql statistics support
 		
     2010-05-28 / racesow 0.5.2
 	

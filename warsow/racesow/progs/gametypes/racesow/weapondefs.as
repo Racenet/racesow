@@ -1,15 +1,15 @@
 /**
- * Racesow weapondefs cvar interface file
- *
- * @package Racesow
- * @version 0.5.2
+* Racesow weapondefs cvar interface file
+*
+* @package Racesow
+* @version 0.5.3
 */
 
 /**
- * Execute a weapondef command
- * @param cString &cmdString, cClient @client
- * @return bool
- */
+	* Execute a weapondef command
+	* @param cString &cmdString, cClient @client
+	* @return bool
+*/
 bool weaponDefCommand( cString &cmdString, cClient @client )
 {
 	bool commandExists = false;

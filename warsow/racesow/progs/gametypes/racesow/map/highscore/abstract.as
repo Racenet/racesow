@@ -3,7 +3,7 @@
  *
  * @package Racesow
  * @subpackage Map_HighScore
- * @version 0.5.2
+ * @version 0.5.3
  */
 class Racesow_Map_HighScore_Abstract
 {

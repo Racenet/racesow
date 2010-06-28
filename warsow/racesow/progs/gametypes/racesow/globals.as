@@ -2,7 +2,7 @@
  * Racesow_Player
  *
  * @package Racesow
- * @version 0.5.2
+ * @version 0.5.3
  */
 
 const uint RACESOW_AUTH_REGISTERED	= 1;

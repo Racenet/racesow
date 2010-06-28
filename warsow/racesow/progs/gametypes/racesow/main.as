@@ -2,7 +2,7 @@
  * Racesow Gametype Interface
  *
  * based on warsow 0.5 race gametype
- * @version 0.5.2
+ * @version 0.5.3
  */
 
 const uint RACESOW_AUTH_REGISTERED	= 1;
@@ -20,18 +20,16 @@ cString gameDataDir = "gamedata";
 cString scbmsg; //scoreboard message for custom scoreboards
 cString scb_specs;
 cString[] specwho( maxClients );
-uint nextTimeUpdate, nextOvertimeCheck;
+uint nextTimeUpdate;
 bool scbupdated = true;
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 
-cVar g_freestyle( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
+cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
-cVar g_timelimit( "g_timelimit", "0", CVAR_SERVERINFO );
-cVar g_maprotation( "g_maprotation", "0", CVAR_SERVERINFO );
-       
+
 /**
  * TimeToString
  * @param uint time
@@ -138,6 +136,19 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
 	return @players[ client.playerNum() ].setClient( @client );
 }
 
+/**
+ * Racesow_GetPlayerByNumber
+ * @param int playerNum
+ * @return Racesow_Player
+ */
+Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
+{
+    if ( playerNum < 0 )
+        return null;
+
+	return @players[ playerNum ];
+}
+
 
 /**
  * Racesow_GetPlayerNumber
@@ -169,13 +180,12 @@ int Racesow_GetClientNumber( cString playerName )
 void race_respawner_think( cEntity @respawner )
 {
     cClient @client = G_GetClient( respawner.count );
-    Racesow_Player @player = Racesow_GetPlayerByClient( client );
-    
+
     // the client may have respawned on his own. If the last time was erased, don't respawn him
-    if ( !player.isSpawned )
+    if ( !Racesow_GetPlayerByClient( client ).isSpawned )
 	{
 		client.respawn( false );
-        player.isSpawned = true;
+        Racesow_GetPlayerByClient( client ).isSpawned = true;
 	}
 
     respawner.freeEntity(); // free the respawner
@@ -194,7 +204,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 {
 	Racesow_Player @player = Racesow_GetPlayerByClient( client );
 
-    if ( cmdString == "gametype" )
+	if ( cmdString == "gametype" )
     {
         cString response = "";
         cVar fs_game( "fs_game", "", 0 );
@@ -208,43 +218,77 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         response += "Mod: " + fs_game.getString() + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
         response += "----------------\n";
 
-        player.sendMessage( response );
+        G_PrintMsg( client.getEnt(), response );
         return true;
     }
-    else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) || ( cmdString == "join" ) )
+    else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) )
     {
-        if (@client == null)
-            return false;
-        
-        if( player.isJoinlocked )
+        if ( @client != null && !player.isJoinlocked )
         {
-            player.sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n" );
-            return false;
+        	if(client.team == TEAM_SPECTATOR)
+        	{
+        		sendMessage( S_COLOR_WHITE + "Join the game first.\n", @client );
+        	}
+        	else
+        	{
+        		player.restartRace();
+        		client.team = TEAM_PLAYERS;
+        		client.respawn( false );
+        	}
         }
 
-        player.restartRace();
-        client.team = TEAM_PLAYERS;
-        client.respawn( false );
+        return true;
+    }
+
+    else if ( cmdString == "join" )
+    {
+        if ( @client != null && !player.isJoinlocked)
+        {
+        	if( client.team != TEAM_PLAYERS ) //spam protection
+    			G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_WHITE
+    					+ " joined the PLAYERS team.\n" ); // leave a message for everyone
+            player.restartRace();
+            client.team = TEAM_PLAYERS;
+			client.respawn( false );
+        }
+
+        if( player.isJoinlocked )
+        	sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n", @client );
 
         return true;
     }
+
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
     {
 		if( g_freestyle.getBool() )
 		{
-			player.sendMessage( S_COLOR_RED + "Command only available for race\n" );
+			sendMessage( S_COLOR_RED + "Command only available for race\n", @client );
 			return false;
 		}
+			/*
+				// this was attempt 1 to print highscores
 		else if( player.top_lastcmd + 30 > localTime )
 		{
-			player.sendMessage( S_COLOR_RED + "Flood protection. You can use the top command only every 30 seconds\n" );
+			sendMessage( S_COLOR_RED + "Flood protection. You can use the top command"
+					+"only every 30 seconds\n", @client );
 			return false;
 		}
 		else
 		{
 			player.top_lastcmd = localTime;
-			player.sendMessage( map.getStatsHandler().getStats() );
-			return true;
+			G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
+			*/
+			// attempt 2:
+		else if( player.isWaitingForCommand )
+		{
+			sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
+					+"results of your previous top command\n", @client );
+			return false;
+		}
+		else
+		{
+			player.isWaitingForCommand=true;
+			RS_MysqlLoadHighscores(player.getClient().playerNum(),map.getId());
 		}
     }
 	else if ( ( cmdString == "register" ) )
@@ -285,7 +329,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	{
 		if( player.isVotemuted )
 		{
-			player.sendMessage( S_COLOR_RED + "You are votemuted\n" );
+			sendMessage( S_COLOR_RED + "You are votemuted\n", @client );
 			return false;
 		}
 		else
@@ -343,13 +387,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					+ ";echo position '" + positionValues.getToken(0) + "' restored" );
 		}
 
-		return true;
     }
 	else if ( ( cmdString == "positionstore" ) )
     {
 		if( argsString.getToken(0) == "" || argsString.getToken(1) == "" )
 		{
-			player.sendMessage( S_COLOR_WHITE + "Usage: /positionstore (id) (name)\n" );
+			sendMessage( S_COLOR_WHITE + "Usage: /positionstore (id) (name)\n", @client );
 			return false;
 		}
 		cVec3 position = client.getEnt().getOrigin();
@@ -358,53 +401,33 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		client.execGameCommand("cmd seta storedposition_" + argsString.getToken(0)  + " \"" +  argsString.getToken(1) + " "
 				+ position.x + " " + position.y + " " + position.z + " "
 				+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
-				
-		return true;
     }
 	else if ( ( cmdString == "positionrestore" ) )
     {
 		if( argsString.getToken(0) == "" || !g_freestyle.getBool() )
 		{
-			player.sendMessage( S_COLOR_WHITE + "Usage: /positionrestore (id)\n" );
+			sendMessage( S_COLOR_WHITE + "Usage: /positionrestore (id)\n", @client );
 			return false;
 		}
 		G_CmdExecute( "cvarcheck " + client.playerNum() + " storedposition_" + argsString.getToken(0) );
-		return true;
     }
 	else if ( ( cmdString == "storedpositionslist" ) )
     {
 		if( argsString.getToken(0).toInt() == 0 )
 		{
-			player.sendMessage( S_COLOR_WHITE + "Usage: /storedpositionslist (limit)\n" );
+			sendMessage( S_COLOR_WHITE + "Usage: /storedpositionslist (limit)\n", @client );
 			return false;
 		}
-		player.sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n" );
+		sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n", @client );
 		int i;
 		for( i = 0; i < argsString.getToken(0).toInt(); i++ )
 		{
 			client.execGameCommand("cmd  echo ~~~;echo id#" + i + ";storedposition_" + i +";echo ~~~;" );
 		}
-		
-		return true;
     }
-	else if ( ( cmdString == "timeleft" ) )
+	else if ( ( cmdString == "noclip" ) )
 	{
-		if ( !g_maprotation.getBool() )
-		{
-			player.sendMessage( S_COLOR_RED + "There is no time limit as maprotation is disabled.\n" );
-			return false;
-		}
-		
-		if ( !g_timelimit.getBool() )
-		{
-			player.sendMessage( S_COLOR_RED + "There is no timelimit.\n" );
-			return false;
-		}
-		
-		uint minutesLeft = (g_timelimit.getInteger() * 60000 - levelTime) / 60000;
-		player.sendMessage(S_COLOR_GREEN + minutesLeft + " minute" + (minutesLeft != 1 ? "s" : "") + " left.\n" );
-		
-		return true;
+		return player.noclip();
 	}
 
     return false;
@@ -548,21 +571,20 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-			if ( !player.getAuth().isAuthenticated() )
-			{
-				player.getAuth().loadSession();
-			}
-
-			player.getAuth().checkProtectedNickname();
+			player.joinedTime=levelTime;
+			RS_MysqlPlayerAppear(player.getName(),client.playerNum(),player.getAuth().playerId,player.getAuth().isAuthenticated());
 		}
 		else if ( score_event == "disconnect" )
 		{
+			RS_MysqlPlayerDisappear(player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
 			player.resetAuth();
 		}
 		else if ( score_event == "userinfochanged" )
 		{
-			if( !client.connecting )
-			player.getAuth().refresh( args );
+			if( !client.connecting ) {
+            
+                player.getAuth().refresh( args );
+            }
 		}
 	}
 }
@@ -643,24 +665,32 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
+	if ( match.timeLimitHit() && map.allowEndGame() )
+        match.launchState( match.getState() + 1 );
+
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
 
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
-		if (g_maprotation.getBool())
-		{
-			map.showCountDown();
-		
-			if ( match.timeLimitHit() && map.overTimeFinished() )
-				match.launchState( match.getState() + 1 );
-		}
+        // if there is no player in TEAM_PLAYERS finish the match and restart
+        if ( G_GetTeam( TEAM_PLAYERS ).numPlayers == 0 && demoRecording )
+        {
+            match.stopAutorecord();
+            demoRecording = false;
+        }
+        else if ( !demoRecording && G_GetTeam( TEAM_PLAYERS ).numPlayers > 0 )
+        {
+            match.startAutorecord();
+            demoRecording = true;
+        }
     }
 
 	// set the logTime once
 	if ( map.getStatsHandler().logTime == 0 && localTime != 0 )
 		map.getStatsHandler().logTime = localTime;
-        
+
+
 	if( levelTime > nextTimeUpdate )
 	{
 		//custom scoreboard
@@ -699,6 +729,7 @@ void GT_ThinkRules()
     for ( int i = 0; i < maxClients; i++ )
     {
         @client = @G_GetClient( i );
+        
     	if( scbupdated && specwho[i] != "" )
     		client.execGameCommand("scb \"" + scbmsg + " &w " + specwho[i] + " " + scb_specs + " \"");
 
@@ -711,9 +742,14 @@ void GT_ThinkRules()
 		if ( 0 != ( countdownState = player.getAuth().wontGiveUpViolatingNickProtection() ) )
 		{
 		    if ( countdownState == 1 )
-		        player.getClient().addAward(player.getAuth().getViolateCountDown());
-		    else if ( countdownState == 2 )
+            {
+		        //player.getClient().addAward(player.getAuth().getViolateCountDown());
+                G_PrintMsg( player.getClient().getEnt(), player.getAuth().getViolateCountDown() + "\n" );
+            }
+            else if ( countdownState == 2 )
+            {
 		        player.kick( "You violated against the nickname protection." );
+            }
 		}
 
         int status;
@@ -771,6 +807,9 @@ void GT_ThinkRules()
 	    	G_GetClient( i ).inventorySetCount( AMMO_GUNBLADE, 10 );
 	    }
 	}
+	
+	// perform a Mysql callback if there is one pending
+	Racesow_ThinkCallbackQueue();
 }
 
 /**
@@ -838,6 +877,12 @@ void GT_MatchStateStarted()
  */
 void GT_Shutdown()
 {
+    for ( int i = 0; i < maxClients; i++ )
+		if ( @players[i].getClient() != null )
+		{
+			G_PrintMsg(null, "disappearing " + players[i].getName()  + "\n");
+			RS_MysqlPlayerDisappear(players[i].getName(), levelTime-players[i].joinedTime, players[i].getId(), players[i].getNickId() , map.getId(), players[i].getAuth().isAuthenticated());
+		}
 }
 
 /**
@@ -872,7 +917,7 @@ void GT_SpawnGametype()
 void GT_InitGametype()
 {
     gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.5.2" );
+    gametype.setVersion( "0.5.1d" );
     gametype.setAuthor( "warsow-race.net" );
 
 	// initalize weapondef config
@@ -886,28 +931,6 @@ void GT_InitGametype()
         // the config file doesn't exist or it's empty, create it
         config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
                  + "// This config will be executed each time the gametype is started\n"
-                 + "\n\n// map rotation\n"
-                 + "set g_maplist \"\" // list of maps in automatic rotation\n"
-                 + "set g_maprotation \"0\"   // 0 = same map, 1 = in order, 2 = random\n"
-                 + "\n// game settings\n"
-                 + "set g_scorelimit \"0\"\n"
-                 + "set g_timelimit \"60\"\n"
-                 + "set g_warmup_enabled \"0\"\n"
-                 + "set g_warmup_timelimit \"0\"\n"
-                 + "set g_match_extendedtime \"0\"\n"
-                 + "set g_allow_falldamage \"0\"\n"
-                 + "set g_allow_selfdamage \"0\"\n"
-                 + "set g_allow_teamdamage \"0\"\n"
-                 + "set g_allow_stun \"0\"\n"
-                 + "set g_teams_maxplayers \"0\"\n"
-                 + "set g_teams_allow_uneven \"0\"\n"
-                 + "set g_countdown_time \"5\"\n"
-                 + "set g_maxtimeouts \"0\" // -1 = unlimited\n"
-                 + "set g_challengers_queue \"0\"\n"
-				 + "set g_logRaces \"0\"\n"
-				 + "set g_secureAuth \"0\"\n"
-				 + "set g_freestyle \"0\"\n"
-				 + "set g_allowammoswitch \"0\"\n"
 				 + "exec configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg silent\n"
 				 + "\necho " + gametype.getName() + ".cfg executed\n";
 
@@ -992,7 +1015,6 @@ void GT_InitGametype()
 	G_RegisterCommand( "storedpositionslist" );
 	G_RegisterCommand( "positionstore" );
 	G_RegisterCommand( "noclip" );
-	G_RegisterCommand( "timeleft" );
 
 
     demoRecording = false;

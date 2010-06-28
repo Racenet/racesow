@@ -3,7 +3,7 @@
  * based on Warsow 0.5 race gametype
  *
  * @package Racesow
- * @version 0.5.2
+ * @version 0.5.3
  */
 
 // This sucks: some defrag maps have the entity classname with pseudo camel notation 

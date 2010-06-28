@@ -9,10 +9,10 @@ racesow/entities.as;
 racesow/map.as;
 racesow/map/highscore.as;
 racesow/map/highscore/abstract.as;
-racesow/map/highscore/default.as;
+racesow/map/highscore/mysql.as;
 racesow/player/implemented.as;
 racesow/player.as;
 racesow/player/auth.as;
 racesow/player/race.as;
-
 racesow/weapondefs.as;
+racesow/callback.as;

@@ -5,6 +5,7 @@
  *
  * @package Racesow
  * @subpackage Map_HighScore
+ * @version 0.5.3
  */
 class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 {
@@ -15,46 +16,9 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	 */
 	void addRace(Racesow_Player_Race @race)
 	{
-		this.logRace(@race);
-	
-		// see if the player improved one of the top scores
-		for ( int top = 0; top < MAX_RECORDS; top++ )
-		{
-			uint oldTime = this.highScores[top].getTime();
-			
-			// if the same player already has a better time, don't do anything
-			if (this.highScores[top].getPlayerName()==race.getPlayer().getClient().getName() && race.getTime() > oldTime )
-					break;
-			
-			if ( oldTime == 0 || race.getTime() < oldTime )
-			{
-							
-				// check if the same player has a worse time, to define from where the list has to be moved down
-				int startShift=MAX_RECORDS-1;
-				for ( int i = top; i < MAX_RECORDS; i++ )
-						if (this.highScores[i].getPlayerName()==race.getPlayer().getClient().getName() )
-							startShift=i;
-
-				// move the other records down
-				for ( int i = startShift; i > top; i-- )
-					this.highScores[i] = this.highScores[i-1];
-
-				this.highScores[top].fromRace( race );
-
-				this.writeStats();
-				this.updateHud();
-				break;
-			}
-		
-		}
+		RS_MysqlInsertRace(race.getPlayer().getClient().getEnt(), race.getPlayer().getId(), race.getPlayer().getNickId(), map.getId(), race.getTime());
 	}
-	
-	void logRace(Racesow_Player_Race @race)
-	{
-		cVar g_logRaces( "g_logRaces", "0", 0 );
-		if ( g_logRaces.getBool() )
-			G_AppendToFile( "gamedata/races/" + this.map.name + "_" + this.logTime, race.toString() );
-	}
+
 	
 	/**
 	 * Write the stats to the file
@@ -147,8 +111,8 @@ class Racesow_Map_HighScore_Default : Racesow_Map_HighScore_Abstract
 	void updateHud()
 	{
 		// removed for now - r2
-		int i_like_top_in_hud=0;
-		if (i_like_top_in_hud==1)
+		int i_like_to_see_top_in_hud=0;
+		if (i_like_to_see_top_in_hud==1)
 		{
 			for ( int i = 0; i < MAX_RECORDS; i++ )
 			{

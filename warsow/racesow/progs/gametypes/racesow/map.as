@@ -2,17 +2,17 @@
  * Racesow_Map
  *
  * @package Racesow
- * @version 0.5.2
+ * @version 0.5.3
  */
 class Racesow_Map
 {
 	cString name;
 
-	Racesow_Map_HighScore_Default @statsHandler;
+	Racesow_Map_HighScore_Mysql @statsHandler;
 	
-    uint nextCountdownCheck;
-    
 	bool inOvertime;
+    
+    uint id;
 	
 	/**
 	 * Constructor
@@ -31,54 +31,41 @@ class Racesow_Map
 	{
 	}
 
+    /**
+     * get the map's ID
+     * @return uint
+     */
+    uint getId()
+    {
+        return this.id;
+    }
+    
+    /**
+     * get the map's ID
+     * @return uint
+     */
+    void setId(uint id)
+    {
+        this.id = id;
+    }
+    
 	void reset()
 	{
-		@this.statsHandler = Racesow_Map_HighScore_Default();
+		@this.statsHandler = Racesow_Map_HighScore_Mysql();
 		this.statsHandler.setMap(@this);
 	
 		cVar mapName( "mapname", "", 0 );
+        this.id = 0;
 		this.name = mapName.getString();
 		this.inOvertime = false;
 	}
 	
-    /**
-	 * Show the overtime countdown to the players
-	 * @return void
-	 */
-    void showCountDown()
-    {
-        if (levelTime < this.nextCountdownCheck)
-            return;
-        
-        this.nextCountdownCheck = levelTime + 1000;
-        
-        uint secondsLeft = (g_timelimit.getInteger() * 60000 - levelTime) / 1000 + 10;
-        switch( secondsLeft )
-        {
-            case 180:
-            case 120:
-            case 60:
-                for ( int i = 0; i < maxClients; i++ )
-    		    {
-                    if (@players[i].client != null)
-                    {
-                        players[i].client.addAward(S_COLOR_YELLOW + secondsLeft / 60 + " minute" + (secondsLeft != 60 ? "s" : "") + " left");
-                    }
-    			}
-        }
-    }   
-    
 	/**
-	 * overTimeFinished
+	 * allowEndGame
 	 * @return bool
 	 */
-	bool overTimeFinished()
+	bool allowEndGame()
 	{
-		if (!match.timeLimitHit()) {
-		
-			return false;
-		}
-	
 		if (!this.inOvertime)
 		{
 			uint numRacing = 0;
@@ -123,7 +110,8 @@ class Racesow_Map
 					if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
 					{
 						players[i].cancelRace();
-						players[i].sendMessage(S_COLOR_RED + "You have been moved to spectators because you were idle during overtime.\n" );
+						G_PrintMsg( players[i].getClient().getEnt(), S_COLOR_RED
+							+ "You have been moved to spectators because you were idle during overtime.\n" );
 					}
 					else
 					{
