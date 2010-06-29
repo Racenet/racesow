@@ -2,7 +2,6 @@
 /shared/files.as;
 
 generic/matchstates.as;
-legacy/quake1.as;
 
 racesow/main.as;
 racesow/entities.as;

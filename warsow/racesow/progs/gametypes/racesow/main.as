@@ -554,7 +554,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		else if ( score_event == "userinfochanged" )
 		{
 			if( !client.connecting ) {
-            
+
                 player.getAuth().refresh( args );
             }
 		}
@@ -701,7 +701,7 @@ void GT_ThinkRules()
     for ( int i = 0; i < maxClients; i++ )
     {
         @client = @G_GetClient( i );
-        
+
     	if( scbupdated && specwho[i] != "" )
     		client.execGameCommand("scb \"" + scbmsg + " &w " + specwho[i] + " " + scb_specs + " \"");
 
@@ -779,7 +779,7 @@ void GT_ThinkRules()
 	    	G_GetClient( i ).inventorySetCount( AMMO_GUNBLADE, 10 );
 	    }
 	}
-	
+
 	// perform a Mysql callback if there is one pending
 	Racesow_ThinkCallbackQueue();
 }
@@ -983,9 +983,6 @@ void GT_InitGametype()
 	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "chrono" );
 	G_RegisterCommand( "privsay" );
-	G_RegisterCommand( "positionrestore" );
-	G_RegisterCommand( "storedpositionslist" );
-	G_RegisterCommand( "positionstore" );
 	G_RegisterCommand( "noclip" );
 	G_RegisterCommand( "position" );
 
