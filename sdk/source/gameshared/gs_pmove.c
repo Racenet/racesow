@@ -524,7 +524,11 @@ static void PM_AirAccelerate( vec3_t wishdir, float wishspeed )
 	float bunnyaccel = 0.1586f; // (0.42 0.1593f) Default: 0.1585f how fast you accelerate after reaching pm_maxspeed
 	// (it gets harder as you near bunnytopspeed)
 	float bunnytopspeed = 900; // (0.42: 925) soft speed limit (can get faster with rjs and on ramps)
-	float turnaccel = 6.0f;    // (0.42: 9.0) Default: 7 max sharpness of turns
+
+	// racesow: changed that back to 9.0 to allow high speed new_movement turns
+	float turnaccel = 9.0f;    // (0.42: 9.0) Default: 7 max sharpness of turns
+	// !racesow
+
 	float backtosideratio = 0.9f; // (0.42: 0.8) Default: 0.8f lower values make it easier to change direction without
 	// losing speed; the drawback is "understeering" in sharp turns
 
@@ -767,7 +771,7 @@ static void PM_Move( void )
 	{ 
 		// walking on ground
 		if( pml.velocity[2] > 0 )
-			pml.velocity[2] = 0; //!!! this is before the accel
+				pml.velocity[2] = 0; //!!! this is before the accel
 
 		PM_Accelerate( wishdir, wishspeed, pm_accelerate );
 
