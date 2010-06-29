@@ -432,6 +432,7 @@ static const asEnumVal_t asSolidEnumVals[] =
 static const asEnumVal_t asMovetypeEnumVals[] =
 {
 	SCRIPT_ENUM_VAL( MOVETYPE_NONE ),
+	SCRIPT_ENUM_VAL( MOVETYPE_PLAYER ),//racesow: fix from jal will be proably included in the next versions
 	SCRIPT_ENUM_VAL( MOVETYPE_NOCLIP ),
 	SCRIPT_ENUM_VAL( MOVETYPE_PUSH ),
 	SCRIPT_ENUM_VAL( MOVETYPE_STOP ),
@@ -4821,7 +4822,16 @@ static void objectGameEntity_asGeneric_GetVelocity( void *gen )
 
 static void objectGameEntity_SetVelocity( asvec3_t *vel, edict_t *self )
 {
-	VectorCopy( vel->v, self->velocity );
+//racesow: fix from jal will be proably included in the next versions
+    GS_SnapVelocity( self->velocity );
+
+     VectorCopy( vel->v, self->velocity );
+
+    if( self->r.client && trap_GetClientState( PLAYERNUM(self) ) >= CS_SPAWNED )
+    {
+        VectorCopy( vel->v, self->r.client->ps.pmove.velocity );
+    }
+
 }
 
 static void objectGameEntity_asGeneric_SetVelocity( void *gen )
@@ -4925,7 +4935,19 @@ static void objectGameEntity_asGeneric_GetAngles( void *gen )
 
 static void objectGameEntity_SetAngles( asvec3_t *vec, edict_t *self )
 {
+//racesow: fix from jal will be proably included in the next versions
 	VectorCopy( vec->v, self->s.angles );
+	    if( self->r.client && trap_GetClientState( PLAYERNUM(self) ) >= CS_SPAWNED )
+    {
+        int i;
+
+        VectorCopy( vec->v, self->r.client->ps.viewangles );
+
+        // update the delta angle
+        for( i = 0; i < 3; i++ )
+            self->r.client->ps.pmove.delta_angles[i] = ANGLE2SHORT( self->r.client->ps.viewangles[i] ) - self->r.client->ucmd.angles[i];
+    }
+
 }
 
 static void objectGameEntity_asGeneric_SetAngles( void *gen )
@@ -6619,12 +6641,19 @@ static void asFunc_asGeneric_G_AnnouncerSound( void *gen )
 	asFunc_G_AnnouncerSound( target, soundindex, team, queued, ignore );
 }
 
-static asstring_t *asFunc_G_SpawnTempValue( asstring_t *key )
+static asstring_t *asFunc_G_SpawnTempValue( asstring_t *key )//racesow is included in .51
 {
-	char *s = G_SpawnTempValue( key->buffer );
-	asstring_t *self = objectString_FactoryBuffer( s, strlen( s ) );
+    const char *val;
 
-	return self;
+    if( !key )
+        return objectString_FactoryBuffer( NULL, 0 );
+
+    if( level.spawning_entity == NULL )
+        G_Printf( "WARNING: G_SpawnTempValue: Spawn temp values can only be grabbed during the entity spawning process\n" );
+
+    val = G_GetEntitySpawnKey( key->buffer, level.spawning_entity );
+
+    return objectString_FactoryBuffer( val, strlen( val ) );
 }
 
 static void asFunc_asGeneric_G_SpawnTempValue( void *gen )

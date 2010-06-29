@@ -120,6 +120,34 @@ class Racesow_Player
 	Racesow_Player_Race @race;
 
 	/**
+	 * The weapon which was used before the noclip command, in order to restore it
+	 * @var int
+	 */
+	int noclip_weapon;
+
+	/**
+	 * When is he allowed to trigger again?(= leveltime + timeout)
+	 * @var uint
+	 */
+	uint trigger_timeout;
+
+	/**
+	 * Storage for the triggerd entity
+	 * @var @cEntity
+	 */
+	cEntity @trigger_entity;
+
+
+	/**
+	 * Variables for the position function
+	 */
+	uint position_lastcmd; //flood protection
+	bool position_saved; //is a position saved?
+	cVec3 position_origin; //stored origin
+	cVec3 position_angles; //stored angles
+	int position_weapon; //stored weapon
+
+	/**
 	 * Constructor
 	 *
 	 */
@@ -160,6 +188,9 @@ class Racesow_Player
 		}
 		if(@this.gravestone != null)
 			this.gravestone.freeEntity();
+		this.position_saved = false;
+		@this.trigger_entity = null;
+		this.trigger_timeout = 0;
 	}
 
 	/**
@@ -498,6 +529,42 @@ class Racesow_Player
 	}
 
 	/**
+	 * set Trigger Timout for map entitys
+	 * @return void
+	 */
+	void setTrigger_Timeout(uint timeout)
+	{
+		this.trigger_timeout = timeout;
+	}
+
+	/**
+	 * get the Trigger Timout
+	 * @return uint
+	 */
+	uint getTrigger_Timeout()
+	{
+		return this.trigger_timeout;
+	}
+
+	/**
+	 * set the Triggered map Entity
+	 * @return void
+	 */
+	void setTrigger_Entity( cEntity @ent )
+	{
+		@this.trigger_entity = @ent;
+	}
+
+	/**
+	 * return the Triggerd map Entity
+	 * @return cEntity@
+	 */
+	cEntity@ getTrigger_Entity()
+	{
+		return @this.trigger_entity;
+	}
+
+	/**
 	 * setupTelekilled
 	 * @return void
 	 */
@@ -541,16 +608,165 @@ class Racesow_Player
 	 */
 	bool noclip()
 	{
-		cEntity@ noclipEnt;
-		@noclipEnt = @this.client.getEnt();
 		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
 			return false;
+		cEntity@ noclipEnt;
+		@noclipEnt = @this.client.getEnt();
 		if( this.client.getEnt().team == TEAM_SPECTATOR || @this.client.getEnt() == null )
 					return false;
 		if( noclipEnt.moveType == MOVETYPE_NOCLIP )
-			noclipEnt.moveType = 0x1; //MOVETYPE_PLAYER
+		{
+			noclipEnt.moveType = MOVETYPE_PLAYER;
+			this.client.selectWeapon( this.noclip_weapon );
+		}
 		else
+		{
 			noclipEnt.moveType = MOVETYPE_NOCLIP;
+			this.noclip_weapon = client.weapon;
+		}
+
+		return true;
+	}
+
+	/**
+	 * teleport the player
+	 * @return bool
+	 */
+	bool teleport( cVec3 origin, cVec3 angles, bool keepVelocity, bool kill )
+	{
+		cEntity@ ent = @this.client.getEnt();
+		if( @ent == null )
+			return false;
+		if( ent.team != TEAM_SPECTATOR )
+		{
+			cVec3 mins, maxs;
+			ent.getSize(mins, maxs);
+			cTrace tr;
+			if(	g_freestyle.getBool() && tr.doTrace( origin, mins, maxs, origin, 0, MASK_PLAYERSOLID ))
+			{
+				cEntity @other = @G_GetEntity(tr.entNum);
+				if(@other == @ent)
+				{
+					//do nothing
+				}
+				else if(!kill) // we aren't allowed to kill :(
+					return false;
+				else // kill! >:D
+				{
+					if(@other != null && other.type == ET_PLAYER )
+					{
+						other.takeDamage( @other, null, cVec3(0,0,0), 9999, 0, 0, MOD_TELEFRAG );
+						//spawn a gravestone to store the postition
+						cEntity @gravestone = @G_SpawnEntity( "gravestone" );
+						// copy client position
+						gravestone.setOrigin( other.getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ) );
+						Racesow_GetPlayerByClient( other.client ).setupTelekilled( @gravestone );
+					}
+
+				}
+			}
+			ent.teleportEffect( false );
+		}
+		if(!keepVelocity)
+			ent.setVelocity( cVec3(0,0,0) );
+		ent.setOrigin( origin );
+		ent.setAngles( angles );
+		if( ent.team != TEAM_SPECTATOR )
+			ent.teleportEffect( true );
+		return true;
+	}
+
+	/**
+	 * position Command
+	 * @return bool
+	 */
+	bool position( cString argsString )
+	{
+		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
+			return false;
+		if( this.position_lastcmd + 500 > realTime )
+			return false;
+		this.position_lastcmd = realTime;
+
+		cString action = argsString.getToken( 0 );
+
+		if( action == "save" )
+		{
+			this.position_saved = true;
+			cEntity@ ent = @this.client.getEnt();
+			if( @ent == null )
+				return false;
+			this.position_origin = ent.getOrigin();
+			this.position_angles = ent.getAngles();
+			this.position_weapon = client.weapon;
+		}
+		else if( action == "load" )
+		{
+			if(!this.position_saved)
+				return false;
+			if( this.teleport( this.position_origin, this.position_angles, false, false ) )
+				this.client.selectWeapon( this.position_weapon );
+			return true;
+		}
+		else if( action == "set" && argsString.getToken( 5 ) != "" )
+		{
+			cVec3 origin, angles;
+
+			origin.x = argsString.getToken( 1 ).toFloat();
+			origin.y = argsString.getToken( 2 ).toFloat();
+			origin.z = argsString.getToken( 3 ).toFloat();
+			angles.x = argsString.getToken( 4 ).toFloat();
+			angles.y = argsString.getToken( 5 ).toFloat();
+
+			return this.teleport( origin, angles, false, false );
+		}
+		else if( action == "store" && argsString.getToken( 2 ) != "" )
+		{
+			cVec3 position = client.getEnt().getOrigin();
+			cVec3 angles = client.getEnt().getAngles();
+			//position set <x> <y> <z> <pitch> <yaw>
+			this.client.execGameCommand("cmd seta storedposition_" + argsString.getToken(1)
+					+ " \"" +  argsString.getToken(2) + " "
+					+ position.x + " " + position.y + " " + position.z + " "
+					+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
+		}
+		else if( action == "restore" && argsString.getToken( 1 ) != "" )
+		{
+			G_CmdExecute( "cvarcheck " + this.client.playerNum()
+					+ " storedposition_" + argsString.getToken(1) );
+		}
+		else if( action == "storedlist" && argsString.getToken( 1 ) != "" )
+		{
+			if( argsString.getToken(1).toInt() > 50 )
+			{
+				this.sendMessage( S_COLOR_WHITE + "You can only list the 50 the most\n" );
+				return false;
+			}
+			this.sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n" );
+			int i;
+			for( i = 0; i < argsString.getToken(1).toInt(); i++ )
+			{
+				this.client.execGameCommand("cmd  echo ~~~;echo id#" + i
+						+ ";storedposition_" + i +";echo ~~~;" );
+			}
+		}
+		else
+		{
+			cEntity@ ent = @this.client.getEnt();
+			if( @ent == null )
+				return false;
+			cString msg;
+			msg = "Usage:\nposition save - Save current position\n";
+			msg += "position load - Teleport to saved position\n";
+			msg += "position set <x> <y> <z> <pitch> <yaw> - Teleport to specified position\n";
+			msg += "position store <id> <name> - Store a position for another session\n";
+			msg += "position restore <id> - Restore a stored position from another session\n";
+			msg += "position storedlist <limit> - Sends you a list of your stored positions\n";
+			msg += "Current position: " + " " + ent.getOrigin().x + " " + ent.getOrigin().y + " " +
+		ent.getOrigin().z + " " + ent.getAngles().x + " " + ent.getAngles().y + "\n";
+			this.sendMessage( msg );
+		}
+
 		return true;
 	}
 

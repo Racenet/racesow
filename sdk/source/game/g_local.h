@@ -208,6 +208,7 @@ typedef struct
 	qboolean forceStart;    // force starting the game, when warmup timelimit is up
 	qboolean forceExit;     // just exit, ignore extended time checks
 
+	edict_t	*spawning_entity;    // entity being spawned from G_InitLevel; racesow is included in .51
 	edict_t	*current_entity;    // entity running from G_RunFrame
 	int body_que;               // dead bodies
 
@@ -1280,6 +1281,8 @@ struct edict_s
 	unsigned int trigger_timeout;
 
 	qboolean linked;
+
+	const char *spawnString;            // keep track of string definition of this entity; racesow is included in .51
 
 	int asRefCount, asFactored;
 	qboolean scriptSpawned;

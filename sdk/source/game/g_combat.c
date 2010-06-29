@@ -386,7 +386,8 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 			take = save = 0;
 		}
 		// don't get damage from players in race
-		else if( ( GS_RaceGametype() ) && attacker->r.client && targ->r.client )
+		else if( ( GS_RaceGametype() ) && attacker->r.client && targ->r.client
+				&& attacker->r.client != targ->r.client  )
 		{
 			take = save = 0;
 		}

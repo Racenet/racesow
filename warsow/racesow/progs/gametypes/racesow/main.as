@@ -382,52 +382,24 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		if( cvarName.substr(0,15) == "storedposition_")
 		{
 			cString positionValues = cvarValue;
-			client.execGameCommand("cmd position set " + positionValues.getToken(1) + " " + positionValues.getToken(2)
-					+ " " + positionValues.getToken(3) + " " + positionValues.getToken(4) + " "  + positionValues.getToken(5)
-					+ ";echo position '" + positionValues.getToken(0) + "' restored" );
+			cVec3 origin, angles;
+			origin.x = positionValues.getToken(1).toFloat();
+			origin.y = positionValues.getToken(2).toFloat();
+			origin.z = positionValues.getToken(3).toFloat();
+			angles.x = positionValues.getToken(4).toFloat();
+			angles.y = positionValues.getToken(5).toFloat();
+			player.teleport( origin, angles, false, false );
 		}
 
     }
-	else if ( ( cmdString == "positionstore" ) )
-    {
-		if( argsString.getToken(0) == "" || argsString.getToken(1) == "" )
-		{
-			sendMessage( S_COLOR_WHITE + "Usage: /positionstore (id) (name)\n", @client );
-			return false;
-		}
-		cVec3 position = client.getEnt().getOrigin();
-		cVec3 angles = client.getEnt().getAngles();
-		//position set <x> <y> <z> <pitch> <yaw>
-		client.execGameCommand("cmd seta storedposition_" + argsString.getToken(0)  + " \"" +  argsString.getToken(1) + " "
-				+ position.x + " " + position.y + " " + position.z + " "
-				+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
-    }
-	else if ( ( cmdString == "positionrestore" ) )
-    {
-		if( argsString.getToken(0) == "" || !g_freestyle.getBool() )
-		{
-			sendMessage( S_COLOR_WHITE + "Usage: /positionrestore (id)\n", @client );
-			return false;
-		}
-		G_CmdExecute( "cvarcheck " + client.playerNum() + " storedposition_" + argsString.getToken(0) );
-    }
-	else if ( ( cmdString == "storedpositionslist" ) )
-    {
-		if( argsString.getToken(0).toInt() == 0 )
-		{
-			sendMessage( S_COLOR_WHITE + "Usage: /storedpositionslist (limit)\n", @client );
-			return false;
-		}
-		sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n", @client );
-		int i;
-		for( i = 0; i < argsString.getToken(0).toInt(); i++ )
-		{
-			client.execGameCommand("cmd  echo ~~~;echo id#" + i + ";storedposition_" + i +";echo ~~~;" );
-		}
-    }
+
 	else if ( ( cmdString == "noclip" ) )
 	{
 		return player.noclip();
+	}
+	else if ( ( cmdString == "position" ) )
+	{
+		return player.position( argsString );
 	}
 
     return false;
@@ -547,9 +519,9 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 			Racesow_Player @player_edict = Racesow_GetPlayerByClient( edict.client );
 			if( @player_edict == null )
 				return;
-			if( g_freestyle.getBool()) //telekills
+			if( g_freestyle.getBool() && @edict.client != @client ) //telekills
 			{
-				if( !client.getEnt().inuse)
+				if( @client.getEnt() == null)
 					return;
 				cTrace tr;
 				if(	tr.doTrace( client.getEnt().getOrigin(), vec3Origin, vec3Origin, client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ), 0, MASK_DEADSOLID ))//avoid bugs
@@ -1015,6 +987,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "storedpositionslist" );
 	G_RegisterCommand( "positionstore" );
 	G_RegisterCommand( "noclip" );
+	G_RegisterCommand( "position" );
 
 
     demoRecording = false;

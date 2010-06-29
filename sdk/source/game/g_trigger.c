@@ -65,7 +65,7 @@ static void multi_trigger( edict_t *ent )
 
 	G_UseTargets( ent, ent->activator );
 
-	if( ent->wait <= 0 )
+	if( ent->wait <= 0 && !GS_RaceGametype() ) //racesow
 	{
 		// we can't just remove (self) here, because this is a touch function
 		// called while looping through area links...

@@ -141,14 +141,6 @@ spawn_t	spawns[] = {
 
 	{ "worldspawn", SP_worldspawn },
 
-	// Racesow
-	{ "target_relay", RS_target_relay },
-	{ "target_delay", RS_target_delay },
-	{ "shooter_rocket", RS_shooter_rocket },
-	{ "shooter_grenade", RS_shooter_grenade },
-	{ "shooter_plasma", RS_shooter_plasma },
-	// !Racesow
-
 	{ "light", SP_light },
 	{ "light_mine1", SP_light_mine },
 	{ "info_null", SP_info_null },
@@ -334,6 +326,56 @@ char *G_SpawnTempValue( const char *key )
 	return value;
 }
 
+const char *G_GetEntitySpawnKey( const char *key, edict_t *self )//racesow is included in .51
+{
+    static char value[MAX_TOKEN_CHARS];
+    char keyname[MAX_TOKEN_CHARS];
+    char *com_token;
+    const char *data = NULL;
+
+    value[0] = 0;
+
+    if( self )
+        data = self->spawnString;
+
+    if( data && data[0] && key && key[0] )
+    {
+        // go through all the dictionary pairs
+        while( 1 )
+        {
+            // parse key
+            com_token = COM_Parse( &data );
+            if( com_token[0] == '}' )
+                break;
+
+            if( !data )
+                G_Error( "G_GetEntitySpawnKey: EOF without closing brace" );
+
+            Q_strncpyz( keyname, com_token, sizeof( keyname ) );
+
+            // parse value
+            com_token = COM_Parse( &data );
+            if( !data )
+                G_Error( "G_GetEntitySpawnKey: EOF without closing brace" );
+
+            if( com_token[0] == '}' )
+                G_Error( "G_GetEntitySpawnKey: closing brace without data" );
+
+            // key names with a leading underscore are used for utility comments and are immediately discarded
+            if( keyname[0] == '_' )
+                continue;
+
+            if( !Q_stricmp( key, keyname ) )
+            {
+                Q_strncpyz( value, com_token, sizeof( value ) );
+                break;
+            }
+        }
+    }
+
+    return value;
+}
+
 //=============
 //ED_NewString
 //=============
@@ -443,6 +485,7 @@ static char *ED_ParseEdict( char *data, edict_t *ent )
 
 	init = qfalse;
 	memset( &st, 0, sizeof( st ) );
+	level.spawning_entity = ent;//racesow is included in .51
 
 	// go through all the dictionary pairs
 	while( 1 )
@@ -884,6 +927,8 @@ void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int lev
 		}
 		else
 			ent = G_Spawn();
+
+		 ent->spawnString = entities; // keep track of string definition of this entity; racesow is included in .51
 
 		entities = ED_ParseEdict( entities, ent );
 		if( !ent->classname )
