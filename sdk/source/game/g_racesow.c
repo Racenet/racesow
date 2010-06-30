@@ -1276,3 +1276,27 @@ void RS_removeProjectiles( edict_t *owner )
 		}
 	}
 }
+/*
+ * racesow 0.42 time prestep function
+*/
+void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta )
+{
+	vec3_t forward, start;
+	trace_t	trace;
+	int i;
+	edict_t *passent=projectile->r.owner;
+
+	VectorScale( projectile->velocity, -( timeDelta )*0.001, forward );
+	VectorMA( projectile->s.origin, 1, forward, start );
+
+	G_Trace4D( &trace, projectile->s.origin, projectile->r.mins, projectile->r.maxs, start, passent, MASK_SHOT, 0 );
+
+	for( i = 0; i < 3; i++ )
+		projectile->s.origin[i] = projectile->s.origin2[i] = projectile->olds.origin[i] = trace.endpos[i];
+
+	GClip_LinkEntity( projectile );
+	SV_Impact( projectile, &trace );
+
+	if( projectile->r.inuse )
+		projectile->waterlevel = ( G_PointContents4D( projectile->s.origin, projectile->timeDelta ) & MASK_WATER ) ? qtrue : qfalse;
+}

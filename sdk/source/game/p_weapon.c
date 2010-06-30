@@ -882,7 +882,10 @@ void G_FireWeapon( edict_t *ent, int parm )
 		if( projectile->s.linearProjectile )
 			projectile->s.modelindex2 = 0;
 
-		G_ProjectileTimePrestep( projectile, timeOffset );
+		// racesow: testing .42 time prestep function, because im really not sure it is equivalent to the .5 one; the difference is not that major anyway..
+		//	G_ProjectileTimePrestep( projectile, timeOffset );
+		rs_TimeDeltaPrestepProjectile(projectile,-timeOffset);
+		// !racesow
 	}
 #endif
 }

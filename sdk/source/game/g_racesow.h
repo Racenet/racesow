@@ -121,3 +121,5 @@ extern qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum );
 
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );
+
+void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
