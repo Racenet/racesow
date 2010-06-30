@@ -201,11 +201,15 @@ qboolean RS_MysqlError( edict_t *ent )
  */
 void RS_Shutdown()
 {
-    // TODO: shutdown mysql
-    
+	RS_MysqlDisconnect();
+
     // shutdown threading
 	pthread_mutex_destroy(&mutexsum);
-	pthread_exit(NULL);
+	pthread_mutex_destroy(&mutex_callback);
+	
+	// removed it because of crash in win32 implementation, also this may be not necessary at all because this isnt in a thread
+	//pthread_exit(NULL);
+
 }
 
 
