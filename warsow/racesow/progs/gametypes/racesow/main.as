@@ -242,7 +242,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
     else if ( cmdString == "join" )
     {
-        if ( @client != null && !player.isJoinlocked)
+        if ( @client != null && !player.isJoinlocked && !player.inOvertime)
         {
         	if( client.team != TEAM_PLAYERS ) //spam protection
     			G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_WHITE
@@ -255,7 +255,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         if( player.isJoinlocked )
         	sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n", @client );
 
-        return true;
+        if( player.inOvertime )
+        	sendMessage( S_COLOR_RED + "You can't join during overtime period.\n", @client );
+
+		return true;
     }
 
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
@@ -637,8 +640,13 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-	if ( match.timeLimitHit() && map.allowEndGame() )
-        match.launchState( match.getState() + 1 );
+
+	// perform a Mysql callback if there is one pending
+	Racesow_ThinkCallbackQueue();
+
+	if ( match.timeLimitHit() )
+		if ( map.allowEndGame() )
+			match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
@@ -779,9 +787,6 @@ void GT_ThinkRules()
 	    	G_GetClient( i ).inventorySetCount( AMMO_GUNBLADE, 10 );
 	    }
 	}
-
-	// perform a Mysql callback if there is one pending
-	Racesow_ThinkCallbackQueue();
 }
 
 /**

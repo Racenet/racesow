@@ -224,7 +224,6 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		cString str;
         this.stopTime = levelTime;
 		this.timeStamp = localTime;
-		this.player.inOvertime = false;
 		
 		return true;
 	}

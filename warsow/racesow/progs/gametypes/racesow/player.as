@@ -417,7 +417,7 @@ class Racesow_Player
 	 */
     void cancelRace()
     {
-		this.client.team = TEAM_SPECTATOR;
+		this.remove("");
 		@this.race = null;
     }
 
