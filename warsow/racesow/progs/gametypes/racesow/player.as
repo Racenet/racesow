@@ -352,6 +352,9 @@ class Racesow_Player
     {
 		if ( this.isRacing() )
             return;
+			
+		if ( g_freestyle.getBool() )
+			return;
 
 		@this.race = Racesow_Player_Race();
 		this.race.setPlayer(@this);

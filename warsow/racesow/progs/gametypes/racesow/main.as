@@ -852,7 +852,6 @@ void GT_Shutdown()
     for ( int i = 0; i < maxClients; i++ )
 		if ( @players[i].getClient() != null )
 		{
-			G_PrintMsg(null, "disappearing " + players[i].getName()  + "\n");
 			RS_MysqlPlayerDisappear(players[i].getName(), levelTime-players[i].joinedTime, players[i].getId(), players[i].getNickId() , map.getId(), players[i].getAuth().isAuthenticated());
 		}
 }
