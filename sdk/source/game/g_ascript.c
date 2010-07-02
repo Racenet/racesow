@@ -6095,6 +6095,18 @@ static void asFunc_asGeneric_G_Md5( void *gen )
 	G_asGeneric_SetReturnAddress( gen, asFunc_G_Md5( G_asGeneric_GetArgAddress( gen, 0 ) ) );
 }
 
+// RS_LoadMapList
+static asstring_t *asFunc_RS_LoadMapList(int is_freestyle)
+{
+	char *maplist;
+	maplist=RS_MysqlLoadMaplist(is_freestyle);
+	return objectString_FactoryBuffer(maplist, strlen(maplist));
+}
+static void asFunc_asGeneric_RS_LoadMapList( void *gen )
+{
+	G_asGeneric_SetReturnAddress( gen, asFunc_RS_LoadMapList((unsigned int)G_asGeneric_GetArgInt(gen, 0)) );
+}
+
 // RS_removeProjectiles
 static void asFunc_RS_removeProjectiles( edict_t *owner )
 {
@@ -6862,6 +6874,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
+	{ "cString @RS_LoadMapList( bool )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },

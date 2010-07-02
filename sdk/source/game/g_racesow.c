@@ -384,7 +384,7 @@ qboolean RS_MysqlLoadMap()
 }
 
 /**
- * Check if the player violates against the nickname protection
+ * Getting map id and returning it as a callback
  *
  * @param void *in
  * @return void
@@ -1166,6 +1166,73 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 	free(highscores_players[playerNum]);
 	highscores_players[playerNum]=NULL;
 	return qtrue;
+}
+
+
+/* map-list related global variables */
+
+unsigned int mapcount;
+char maplist[50000]; // around 5000 maps..
+
+//=================
+//RS_MysqlLoadMaplist
+// straight from 0.42 with some changes
+// maplist is loaded only once at the beginning of a map, so we don't really need to thread it, also because threads dont support string output.
+//=================
+char *RS_MysqlLoadMaplist( int is_freestyle ) {
+        MYSQL_ROW  row;
+        MYSQL_RES  *mysql_res;
+        char query[1024];
+        char orderby[10];
+
+	    maplist[0] = 0;
+	    mapcount = 0;
+
+        
+		/*
+		// not implemented
+        switch( g_maprotation->integer ) {
+        
+            case 2:
+                Q_strncpyz( orderby, "RAND()", sizeof(orderby) );
+                break;
+            
+            case 1:
+            default:
+                Q_strncpyz( orderby, "name", sizeof(orderby) );  
+                break;      
+        }
+		*/
+		// replaced by:
+		Q_strncpyz( orderby, "name", sizeof(orderby) );  
+        
+        Q_strncpyz( query, va( "SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", ( is_freestyle ? "true" : "false" ), orderby ), sizeof(query) );
+        mysql_real_query(&mysql, query, strlen(query));
+       	if (mysql_errno(&mysql) != 0) {
+            printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+	    }
+        mysql_res = mysql_store_result(&mysql);
+       	if (mysql_errno(&mysql) != 0) {
+            printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+	    }
+        if( (unsigned long)mysql_num_rows( mysql_res ) != 0 ) {
+        
+            while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
+                Q_strncatz( maplist, va( "%s ", row[0] ), sizeof( maplist ) );
+                mapcount++;
+            }
+        
+        }
+        mysql_free_result(mysql_res);
+        G_Printf( va( "Found %i maps in databse.\n", mapcount ) );
+    
+ 
+    /*
+	// not implemented (should we?)
+	if(!mapcount)
+        RS_LoadConfigMaplist();
+	*/
+	return maplist;
 }
 
 /**

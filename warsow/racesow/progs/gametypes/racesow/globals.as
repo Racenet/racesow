@@ -4,7 +4,28 @@
  * @package Racesow
  * @version 0.5.3
  */
+/*
 
+
+
+
+
+
+
+
+
+
+this file is deprecated, right?
+to zolex: if so, delete it
+
+
+
+
+
+
+
+
+*/
 const uint RACESOW_AUTH_REGISTERED	= 1;
 const uint RACESOW_AUTH_MAP			= 2;
 const uint RACESOW_AUTH_KICK		= 4;

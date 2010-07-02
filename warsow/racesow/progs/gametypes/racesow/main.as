@@ -22,6 +22,7 @@ cString scb_specs;
 cString[] specwho( maxClients );
 uint nextTimeUpdate;
 bool scbupdated = true;
+cString maplist;
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
@@ -1001,6 +1002,8 @@ void GT_InitGametype()
 	{
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
+	
+	maplist=RS_LoadMapList(false);
 
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }

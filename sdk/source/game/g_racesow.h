@@ -123,3 +123,5 @@ extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );
 
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
+
+char *RS_MysqlLoadMaplist( int is_freestyle );
