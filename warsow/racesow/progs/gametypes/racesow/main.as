@@ -896,7 +896,7 @@ void GT_SpawnGametype()
 void GT_InitGametype()
 {
     gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.5.1d" );
+    gametype.setVersion( "0.5.3" );
     gametype.setAuthor( "warsow-race.net" );
 
 	// initalize weapondef config
