@@ -6107,6 +6107,18 @@ static void asFunc_asGeneric_RS_LoadMapList( void *gen )
 	G_asGeneric_SetReturnAddress( gen, asFunc_RS_LoadMapList((unsigned int)G_asGeneric_GetArgInt(gen, 0)) );
 }
 
+// RS_GetNumberOfMaps
+static int asFunc_RS_GetNumberOfMaps()
+{
+	int mapcount;
+	mapcount=RS_GetNumberOfMaps();
+	return mapcount;
+}
+static void asFunc_asGeneric_RS_GetNumberOfMaps( void *gen )
+{
+	 G_asGeneric_SetReturnInt(gen, asFunc_RS_GetNumberOfMaps() );
+}
+
 // RS_removeProjectiles
 static void asFunc_RS_removeProjectiles( edict_t *owner )
 {
@@ -6875,6 +6887,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "cString @RS_LoadMapList( bool )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
+	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },

@@ -125,3 +125,4 @@ extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *ar
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 
 char *RS_MysqlLoadMaplist( int is_freestyle );
+unsigned int RS_GetNumberOfMaps();

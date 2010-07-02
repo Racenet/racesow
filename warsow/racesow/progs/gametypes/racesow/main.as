@@ -22,7 +22,9 @@ cString scb_specs;
 cString[] specwho( maxClients );
 uint nextTimeUpdate;
 bool scbupdated = true;
+
 cString maplist;
+uint mapcount;
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
@@ -1004,6 +1006,7 @@ void GT_InitGametype()
 	}
 	
 	maplist=RS_LoadMapList(false);
+	mapcount=RS_GetNumberOfMaps();
 
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }

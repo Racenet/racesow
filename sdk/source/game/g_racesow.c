@@ -1171,7 +1171,7 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 
 /* map-list related global variables */
 
-unsigned int mapcount;
+unsigned int mapcount=0;
 char maplist[50000]; // around 5000 maps..
 
 //=================
@@ -1233,6 +1233,11 @@ char *RS_MysqlLoadMaplist( int is_freestyle ) {
         RS_LoadConfigMaplist();
 	*/
 	return maplist;
+}
+
+unsigned int RS_GetNumberOfMaps()
+{
+	return mapcount;
 }
 
 /**
