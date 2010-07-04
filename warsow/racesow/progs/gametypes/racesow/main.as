@@ -348,7 +348,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
                 int i = 0;
                 while ( (i < 20) && (mapNumber < mapcount) )
                 {
-                    clinet.printMessage ( S_COLOR_ORANGE + "Printing page " + arg + "/" + numPages );
+                    clinet.printMessage ( S_COLOR_ORANGE + "Printing page " + arg + "/" + numPages + "\n");
                     client.printMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + maplist.getToken(mapNumber) + "\n");
                     i++;
                     mapNumber++;
