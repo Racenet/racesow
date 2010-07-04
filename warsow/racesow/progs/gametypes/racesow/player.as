@@ -60,7 +60,7 @@ class Racesow_Player
 	 * @var uint
 	 */
 	uint idleTime;
-	
+
 	/**
 	 * Time when the player joined (used to compute playtime)
 	 * @var uint
@@ -85,7 +85,7 @@ class Racesow_Player
 	 * @var uint
 	 */
     uint top_lastcmd;
-	
+
 	/**
 	 * Is the player waiting for the result of a command (like "top")?
 	 * (this is another kind of flood protection)
@@ -213,7 +213,7 @@ class Racesow_Player
     {
         return this.auth.playerId;
     }
-    
+
     /**
 	 * Get the id of the current nickname
 	 * @return int
@@ -222,7 +222,7 @@ class Racesow_Player
     {
         return this.auth.nickId;
     }
-	
+
 	/**
 	 * SGet the player's id
 	 * @return int
@@ -231,7 +231,7 @@ class Racesow_Player
     {
         this.auth.playerId=playerId;
     }
-    
+
     /**
 	 * Set the id of the current nickname
 	 * @return int
@@ -240,7 +240,7 @@ class Racesow_Player
     {
         this.auth.nickId=nickId;
     }
-    
+
 	/**
 	 * Set the player's client
 	 * @return void
@@ -352,7 +352,7 @@ class Racesow_Player
     {
 		if ( this.isRacing() )
             return;
-			
+
 		if ( g_freestyle.getBool() )
 			return;
 
@@ -530,6 +530,16 @@ class Racesow_Player
 		this.inOvertime = true;
 		this.sendMessage( S_COLOR_RED + "Please hurry up, the ther players are waiting for you to finish...\n" );
 	}
+
+	/**
+	 * resetOvertime
+	 * @return void
+	 */
+	void cancelOvertime()
+	{
+		this.inOvertime = false;
+	}
+
 
 	/**
 	 * set Trigger Timout for map entitys

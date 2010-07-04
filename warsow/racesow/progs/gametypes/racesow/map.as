@@ -9,11 +9,11 @@ class Racesow_Map
 	cString name;
 
 	Racesow_Map_HighScore_Mysql @statsHandler;
-	
+
 	bool inOvertime;
-    
+
     uint id;
-	
+
 	/**
 	 * Constructor
 	 *
@@ -22,7 +22,7 @@ class Racesow_Map
 	{
 		this.reset();
 	}
-	
+
 	/**
 	 * Destructor
 	 *
@@ -39,7 +39,7 @@ class Racesow_Map
     {
         return this.id;
     }
-    
+
     /**
      * get the map's ID
      * @return uint
@@ -48,18 +48,18 @@ class Racesow_Map
     {
         this.id = id;
     }
-    
+
 	void reset()
 	{
 		@this.statsHandler = Racesow_Map_HighScore_Mysql();
 		this.statsHandler.setMap(@this);
-	
+
 		cVar mapName( "mapname", "", 0 );
         this.id = 0;
 		this.name = mapName.getString();
 		this.inOvertime = false;
 	}
-	
+
 	/**
 	 * allowEndGame
 	 * @return bool
@@ -69,7 +69,7 @@ class Racesow_Map
 		if (!this.inOvertime)
 		{
 			uint numRacing = 0;
-			
+
 			for ( int i = 0; i < maxClients; i++ )
 		    {
 				if ( players[i].isRacing() )
@@ -78,7 +78,7 @@ class Racesow_Map
 					numRacing++;
 				}
 			}
-			
+
 			if ( numRacing != 0 )
 			{
 				this.inOvertime = true;
@@ -88,13 +88,13 @@ class Racesow_Map
 		else
 		{
 			uint numInOvertime = 0;
-		
+
 			for ( int i = 0; i < maxClients; i++ )
 		    {
 				if ( players[i].inOvertime )
 				{
 					cVec3 velocity = players[i].getClient().getEnt().getVelocity();
-					
+
 					if ( velocity.x == 0 && velocity.y == 0 && velocity.z == 0 )
 					{
 						if ( !players[i].startedIdling() )
@@ -106,7 +106,7 @@ class Racesow_Map
 					{
 						players[i].stopIdling();
 					}
-					
+
 					if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
 					{
 						players[i].cancelRace();
@@ -119,21 +119,31 @@ class Racesow_Map
 					}
 				}
 			}
-			
+
 			if ( numInOvertime == 0 )
 			{
 				this.inOvertime = false;
 			}
 		}
-		
+
 		return !this.inOvertime;
 	}
-	
+
+	/**
+	 * cancelEndGame
+	 * @return void
+	 */
+
+	void cancelEndGame()
+	{
+		this.inOvertime = false;
+	}
+
 	Racesow_Map_HighScore_Abstract @getStatsHandler()
 	{
 		return @this.statsHandler;
 	}
-	
+
 	/**
 	 * setUpMatch
 	 * @return void

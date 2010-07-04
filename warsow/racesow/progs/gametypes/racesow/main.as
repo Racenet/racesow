@@ -33,6 +33,11 @@ Racesow_Map @map;
 cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
+cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
+cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
+
+int oldTimelimit; //for restoring the old value
 
 /**
  * TimeToString
@@ -332,7 +337,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return player.privSay( argsString, @client );
 
         }
-        
+
         else if ( ( cmdString == "maplist") )
         {
             cString arg = argsString.getToken( 0 );
@@ -343,7 +348,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             }
             else
             {
-                player.printMapList ( arg.toInt() , mapcount , MAPS_PER_PAGE , maplist);                
+                player.printMapList ( arg.toInt() , mapcount , MAPS_PER_PAGE , maplist);
             }
         }
 	else if ( ( cmdString == "callvotecheckpermission" ) )
@@ -398,6 +403,24 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             {
                 return true;
             }
+            else if ( vote == "extend_time" )
+            {
+            	if( g_timelimit.getInteger() <= 0 )
+            	{
+            		client.printMessage( "This vote is only available for timelimits.\n");
+            		return false;
+            	}
+            	uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+            	uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
+            	uint time = levelTime - match.startTime(); //in ms
+            	uint remainingtime = timelimit - time;
+            	if( remainingtime > extendtimeperiod )
+            	{
+            		client.printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
+            		return false;
+            	}
+            	return true;
+            }
             client.printMessage( "Unknown callvote " + vote + "\n" );
             return false;
         }
@@ -409,9 +432,18 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             {
                 int rand = brandom(0, mapcount);
                 cString mapname = maplist.getToken(rand);
-                client.printMessage (mapname + "\n");      
-                G_CmdExecute ("map " + mapname );   
+                client.printMessage (mapname + "\n");
+                G_CmdExecute ("map " + mapname );
                 return true;
+            }
+            else if ( vote == "extend_time" )
+            {
+            	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+				for ( int i = 0; i < maxClients; i++ )
+				{
+					players[i].cancelOvertime();
+				}
+				map.cancelEndGame();
             }
             return true;
         }
@@ -447,7 +479,46 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	{
 		return player.position( argsString );
 	}
+    else if ( cmdString == "callvotevalidate" )
+    {
+    	cString votename = argsString.getToken( 0 );
+    	if ( votename == "extend_time" )
+    	{
+    		if( g_timelimit.getInteger() <= 0 )
+    		{
+    			client.printMessage( "This vote is only available for timelimits.\n");
+    			return false;
+    		}
+    		uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+    		uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
+    		uint time = levelTime - match.startTime(); //in ms
+    		uint remainingtime = timelimit - time;
+    		if( remainingtime > extendtimeperiod )
+    		{
+    			client.printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
+    			return false;
+    		}
+    		return true;
+        }
+        client.printMessage( "Unknown callvote " + votename + "\n" );
+        return false;
+    }
+    else if ( cmdString == "callvotepassed" )
+    {
+        cString votename = argsString.getToken( 0 );
 
+        if ( votename == "extend_time" )
+        {
+        	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+			for ( int i = 0; i < maxClients; i++ )
+		    {
+				players[i].cancelOvertime();
+			}
+			map.cancelEndGame();
+        }
+
+        return true;
+    }
     return false;
 }
 
@@ -847,6 +918,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
 {
     if ( match.getState() == MATCH_STATE_POSTMATCH )
     {
+    	g_timelimit.set(oldTimelimit); //restore the old timelimit
         match.stopAutorecord();
         demoRecording = false;
 
@@ -1032,11 +1104,11 @@ void GT_InitGametype()
 	G_RegisterCommand( "privsay" );
 	G_RegisterCommand( "noclip" );
 	G_RegisterCommand( "position" );
-        G_RegisterCommand( "maplist" );
+    G_RegisterCommand( "maplist" );
 
 	//add callvotes
 	G_RegisterCallvote( "randmap", "", "Change to a random map");
-
+	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
 
 
     demoRecording = false;
@@ -1049,9 +1121,12 @@ void GT_InitGametype()
 	{
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
-	
+
 	maplist=RS_LoadMapList(false);
 	mapcount=RS_GetNumberOfMaps();
+	if(g_freestyle.getBool())
+		g_timelimit.set( "0" );
+	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }
