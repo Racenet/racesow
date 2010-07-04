@@ -2252,7 +2252,7 @@ void G_RegisterGametypeScriptCallvote( const char *name, const char *usage, cons
 		return;
 
 	vote = G_RegisterCallvote( name );
-	vote->expectedargs = 1;
+	vote->expectedargs = (usage[0]=='\0') ? 0 : 1; //racesow : allow to register callvotes without values
 	vote->validate = G_VoteFromScriptValidate;
 	vote->execute = G_VoteFromScriptPassed;
 	vote->current = NULL;

@@ -375,6 +375,31 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		}
 
 	}
+
+        else if ( cmdString == "callvotevalidate" )
+        {
+            cString vote = argsString.getToken( 0 );
+            if ( vote == "randmap" )
+            {
+                return true;
+            }
+            client.printMessage( "Unknown callvote " + vote + "\n" );
+            return false;
+        }
+
+	else if ( cmdString == "callvotepassed" )
+	{
+            cString vote = argsString.getToken( 0 );
+            if ( vote == "randmap")
+            {
+                int rand = brandom(0, mapcount);
+                cString mapname = maplist.getToken(rand);
+                client.printMessage (mapname + "\n");      
+                G_CmdExecute ("map " + mapname );   
+                return true;
+            }
+            return true;
+        }
 	else if ( ( cmdString == "weapondef" ) )
     {
 		return weaponDefCommand( argsString, @client );
@@ -992,6 +1017,10 @@ void GT_InitGametype()
 	G_RegisterCommand( "privsay" );
 	G_RegisterCommand( "noclip" );
 	G_RegisterCommand( "position" );
+
+	//add callvotes
+	G_RegisterCallvote( "randmap", "", "Change to a random map");
+
 
 
     demoRecording = false;
