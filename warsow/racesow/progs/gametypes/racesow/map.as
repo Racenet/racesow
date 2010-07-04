@@ -91,7 +91,7 @@ class Racesow_Map
 
 			for ( int i = 0; i < maxClients; i++ )
 		    {
-				if ( players[i].inOvertime )
+				if ( ( players[i].inOvertime ) && ( players[i].getClient().team != TEAM_SPECTATOR ))
 				{
 					cVec3 velocity = players[i].getClient().getEnt().getVelocity();
 
