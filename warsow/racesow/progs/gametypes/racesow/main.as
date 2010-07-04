@@ -328,31 +328,22 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return player.chronoUse( argsString );
 	}
 	else if ( ( cmdString == "privsay" ) )
-    {
+        {
 		return player.privSay( argsString, @client );
 
-    }
+        }
         
         else if ( ( cmdString == "maplist") )
         {
-            int numPages = mapcount/MAPS_PER_PAGE + 1;
             cString arg = argsString.getToken( 0 );
             if ( arg.len() < 1 )
             {
-                client.printMessage( "Choose a page number between 1 and " + numPages + "\n" );
-                return true;
+                client.printMessage( "Usage : maplist <pagenum>.\n");
+                player.printMapList ( 1 , mapcount , MAPS_PER_PAGE , maplist);
             }
             else
             {
-                uint mapNumber = ( arg.toInt() - 1 )*(MAPS_PER_PAGE);
-                int i = 0;
-                client.printMessage ( S_COLOR_ORANGE + "Printing page " + arg + "/" + numPages + "\n");
-                while ( (i < 20) && (mapNumber < mapcount) )
-                {
-                    client.printMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + maplist.getToken(mapNumber) + "\n");
-                    i++;
-                    mapNumber++;
-                }
+                player.printMapList ( arg.toInt() , mapcount , MAPS_PER_PAGE , maplist);                
             }
         }
 	else if ( ( cmdString == "callvotecheckpermission" ) )

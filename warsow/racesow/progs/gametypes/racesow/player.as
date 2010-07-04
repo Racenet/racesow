@@ -1090,6 +1090,28 @@ class Racesow_Player
 		return true;
 	}
 
+        /**
+         * Print the printMapList
+         * @param uint pageNum
+         * @param uint mapCount
+         * @param uint pagesPerPage
+         * @param cString mapList
+         * @return bool
+         */
+        
+        void printMapList(uint pageNum,uint mapCount, uint pagesPerPage, cString mapList )
+        {
+            uint numPages = mapCount/pagesPerPage + 1;
+            this.sendMessage( "Printing page " + pageNum + "/" + numPages + " : \n" );
+            uint mapNumber = ( pageNum - 1 )*( pagesPerPage);
+            uint i = 0 ;
+                while ( ( i < pagesPerPage ) && (mapNumber < mapCount) )
+                {
+                    this.sendMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + mapList.getToken(mapNumber) + "\n");
+                    i++;
+                    mapNumber++;
+                }
+        }
 	/**
 	 * Display the help to the player
 	 * @return bool
