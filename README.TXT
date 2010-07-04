@@ -28,7 +28,8 @@ Game cvars:
 	g_maprotation 1|0		default 1		if we automatically want to switch to the next map when the game has ended
 	g_timelimit	X			default 60		minutes to play the current map (only has effect when g_maprotation is 1)
 	g_overtime 1|0			default 1		if we want to use the overtime feature (only has effect when g_maprotation is 1)
-   
+    g_extendtime X			default	10		the amount of minutes that will be added after a extend_time vote
+    rs_extendtimeperiod X	default 3		allows the extend_time x minutes before the end of timelimit
    // TODO: add all cvars with descriptions
 
 
