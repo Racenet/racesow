@@ -479,46 +479,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	{
 		return player.position( argsString );
 	}
-    else if ( cmdString == "callvotevalidate" )
-    {
-    	cString votename = argsString.getToken( 0 );
-    	if ( votename == "extend_time" )
-    	{
-    		if( g_timelimit.getInteger() <= 0 )
-    		{
-    			client.printMessage( "This vote is only available for timelimits.\n");
-    			return false;
-    		}
-    		uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
-    		uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
-    		uint time = levelTime - match.startTime(); //in ms
-    		uint remainingtime = timelimit - time;
-    		if( remainingtime > extendtimeperiod )
-    		{
-    			client.printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
-    			return false;
-    		}
-    		return true;
-        }
-        client.printMessage( "Unknown callvote " + votename + "\n" );
-        return false;
-    }
-    else if ( cmdString == "callvotepassed" )
-    {
-        cString votename = argsString.getToken( 0 );
-
-        if ( votename == "extend_time" )
-        {
-        	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
-			for ( int i = 0; i < maxClients; i++ )
-		    {
-				players[i].cancelOvertime();
-			}
-			map.cancelEndGame();
-        }
-
-        return true;
-    }
     return false;
 }
 
