@@ -251,7 +251,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
     else if ( cmdString == "join" )
     {
-        if ( @client != null && !player.isJoinlocked && !player.inOvertime)
+        if ( @client != null && !player.isJoinlocked && !map.inOvertime)
         {
         	if( client.team != TEAM_PLAYERS ) //spam protection
     			G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_WHITE
@@ -264,7 +264,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         if( player.isJoinlocked )
         	sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n", @client );
 
-        if( player.inOvertime )
+        if( map.inOvertime )
         	sendMessage( S_COLOR_RED + "You can't join during overtime period.\n", @client );
 
 		return true;
@@ -744,6 +744,13 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
 	// make dash 450
 	ent.client.setPMoveDashSpeed( 450 );
+
+	if( map.inOvertime )
+	{
+		player.remove("You were removed due to overtime.\n");
+		player.cancelOvertime();
+		return;
+	}
 }
 
 /**
@@ -890,17 +897,12 @@ void GT_ThinkRules()
 
     	if( player.chronoInUse() )
     		client.setHUDStat( STAT_TIME_ALPHA, (levelTime - player.chronoTime()) / 100 );
-    }
 
-	if ( g_freestyle.getBool() )
-	{
-	    for ( int i = 0; i < maxClients; i++ )  // charge gunblade for freestyle
-	    {
-	        if ( G_GetClient( i ).inventoryCount( WEAP_GUNBLADE ) == 0 )
-	            continue;
-	    	G_GetClient( i ).inventorySetCount( AMMO_GUNBLADE, 10 );
-	    }
-	}
+    	if ( g_freestyle.getBool() && client.inventoryCount( WEAP_GUNBLADE ) != 0)
+    	{
+			client.inventorySetCount( AMMO_GUNBLADE, 10 );
+    	}
+    }
 }
 
 /**
