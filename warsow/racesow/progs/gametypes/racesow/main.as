@@ -15,6 +15,7 @@ const uint RACESOW_AUTH_ADMIN		= 30;
 int numCheckpoints = 0;
 bool demoRecording = false;
 const int MAX_RECORDS = 10;
+const int MAPS_PER_PAGE = 20;
 
 cString gameDataDir = "gamedata";
 cString scbmsg; //scoreboard message for custom scoreboards
@@ -331,6 +332,29 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return player.privSay( argsString, @client );
 
     }
+        
+        else if ( ( cmdString == "maplist") )
+        {
+            int numPages = mapcount/MAPS_PER_PAGE + 1;
+            cString arg = argsString.getToken( 0 );
+            if ( arg.len() < 1 )
+            {
+                client.printMessage( "Choose a page number beetween 1 and " + numPages + "\n" );
+                return true;
+            }
+            else
+            {
+                uint mapNumber = ( arg.toInt() - 1 )*(MAPS_PER_PAGE);
+                int i = 0;
+                while ( (i < 20) && (mapNumber < mapcount) )
+                {
+                    clinet.printMessage ( S_COLOR_ORANGE + "Printing page " + arg + "/" + numPages );
+                    client.printMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + maplist.getToken(mapNumber) + "\n");
+                    i++;
+                    mapNumber++;
+                }
+            }
+        }
 	else if ( ( cmdString == "callvotecheckpermission" ) )
 	{
 		if( player.isVotemuted )
@@ -1017,6 +1041,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "privsay" );
 	G_RegisterCommand( "noclip" );
 	G_RegisterCommand( "position" );
+        G_RegisterCommand( "maplist" );
 
 	//add callvotes
 	G_RegisterCallvote( "randmap", "", "Change to a random map");
