@@ -1101,17 +1101,20 @@ class Racesow_Player
 	}
 
         /**
-         * Print the printMapList
+         * Print the map list
          * @param uint pageNum
          * @param uint mapCount
          * @param uint pagesPerPage
          * @param cString mapList
-         * @return bool
+         * @return void
          */
         
         void printMapList(uint pageNum,uint mapCount, uint pagesPerPage, cString mapList )
         {
             uint numPages = mapCount/pagesPerPage + 1;
+            if ( (pageNum > numPages) || (pageNum < 1)) {
+                this.sendMessage ( "There are only " + numPages + ".\n" );
+            }
             this.sendMessage( "Printing page " + pageNum + "/" + numPages + " : \n" );
             uint mapNumber = ( pageNum - 1 )*( pagesPerPage);
             uint i = 0 ;
@@ -1121,6 +1124,39 @@ class Racesow_Player
                     i++;
                     mapNumber++;
                 }
+        }
+
+        /** Filter the map list
+         * @param cString filter
+         * @param cString mapList
+         * @param uint mapCount
+         * @return void
+         */
+
+        void filterMapList(cString filter, cString mapList, uint mapCount)
+        {
+            uint mapNumber = 0;
+            uint filterLength = filter.len();
+            this.sendMessage ( "Printing maps containing " + S_COLOR_ORANGE + filter + " :\n");
+ 
+            while (mapNumber < mapCount)
+            {
+                cString mapName = mapList.getToken( mapNumber );
+                uint mapNameLength = mapName.len();
+
+                if ( mapNameLength >= filterLength ) 
+                {
+                    for ( uint k = 0 ; k < (mapNameLength - filterLength ) ; k++ )
+                    {
+                        if ( mapName.substr( k,filterLength ) == filter ) 
+                        {
+                            this.sendMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + mapName + "\n");
+                            break;
+                        }
+                    }
+                }
+                mapNumber++;
+            }
         }
 	/**
 	 * Display the help to the player
@@ -1150,7 +1186,8 @@ class Racesow_Player
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "help           " + S_COLOR_YELLOW + "display this help ;)\n";
 		help += S_COLOR_RED + "top             " + S_COLOR_YELLOW + "display the top 30 times on this map\n";
-                help += S_COLOR_RED + "maplist        " + S_COLOR_YELLOW + "display the maplist by pages\n";
+                help += S_COLOR_RED + "maplist       " + S_COLOR_YELLOW + "display the maplist by pages\n";
+                help += S_COLOR_RED + "mapfilter   " + S_COLOR_YELLOW + "list the maps containing a specific string.\n";
         help += S_COLOR_RED + "racerestart " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
 		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
 		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate to the server (alternatively you can use setu\n";

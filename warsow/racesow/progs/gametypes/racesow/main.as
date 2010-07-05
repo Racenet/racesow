@@ -351,6 +351,18 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
                 player.printMapList ( arg.toInt() , mapcount , MAPS_PER_PAGE , maplist);
             }
         }
+        else if ( ( cmdString == "mapfilter") )
+        {
+            cString arg = argsString.getToken( 0 );
+            if ( arg.len() < 1 )
+            {
+                player.sendMessage( "Usage : mapfilter <filter>.\n" );
+            }
+            else
+            {
+                player.filterMapList( arg , maplist, mapcount );
+            }
+        }
 	else if ( ( cmdString == "callvotecheckpermission" ) )
 	{
 		if( player.isVotemuted )
@@ -1055,7 +1067,7 @@ void GT_InitGametype()
     G_RegisterCommand( "join" );
     G_RegisterCommand( "top" );
 	G_RegisterCommand( "highscores" );
-    G_RegisterCommand( "register" );
+        G_RegisterCommand( "register" );
 	G_RegisterCommand( "auth" );
 	G_RegisterCommand( "admin" );
 	G_RegisterCommand( "help" );
@@ -1066,7 +1078,8 @@ void GT_InitGametype()
 	G_RegisterCommand( "privsay" );
 	G_RegisterCommand( "noclip" );
 	G_RegisterCommand( "position" );
-    G_RegisterCommand( "maplist" );
+        G_RegisterCommand( "maplist" );
+        G_RegisterCommand( "mapfilter" );
 
 	//add callvotes
 	G_RegisterCallvote( "randmap", "", "Change to a random map");
