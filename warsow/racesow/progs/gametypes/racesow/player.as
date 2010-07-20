@@ -166,7 +166,6 @@ class Racesow_Player
 
 	/**
 	 * Reset the player, just f*ckin remove this and use the constructor...
-	 * r2: well it's more complicated than that: the n=maxClient players are constructed only when the server starts, yet reset is needed as soon as a new player comes
 	 * @return void
 	 */
 	void reset()

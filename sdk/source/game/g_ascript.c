@@ -6199,9 +6199,9 @@ static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
 }
 
 // RS_MysqlPlayerDisappear
-static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int player_id, int nick_id, int map_id, int is_authed)
+static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int player_id, int nick_id, int map_id, qboolean is_authed)
 {
-	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, player_id, nick_id, map_id, is_authed );
+	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, player_id, nick_id, map_id, (int)(is_authed==qtrue) );
 }
 
 static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
@@ -6212,7 +6212,7 @@ static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 2),
 		(int)G_asGeneric_GetArgInt(gen, 3),
 		(int)G_asGeneric_GetArgInt(gen, 4),
-		(int)G_asGeneric_GetArgInt(gen, 5)));
+		(qboolean)G_asGeneric_GetArgBool(gen, 5)));
 }
 
 // RS_MysqlLoadHighScores

@@ -37,7 +37,7 @@ cvar_t *rs_queryUpdateMapPlaytime;
 cvar_t *rs_queryUpdateMapRaces;
 cvar_t *rs_queryAddRace;
 cvar_t *rs_queryGetPlayerMap;
-cvar_t *rs_queryUpdatePlayerMap;
+	cvar_t *rs_queryUpdatePlayerMap;
 cvar_t *rs_queryUpdatePlayerMapPlaytime;
 cvar_t *rs_queryGetPlayerMapHighscores;
 cvar_t *rs_queryResetPlayerMapPoints;
@@ -335,8 +335,7 @@ void *RS_MysqlNickProtection_Thread(void *in)
     MYSQL_RES  *mysql_res;
     edict_t *ent;
 
-	pthread_mutex_lock(&mutexsum);
-	mysql_thread_init();
+	RS_StartMysqlThread();
 
     ent = (edict_t *)in;
     Q_strncpyz ( name, COM_RemoveColorTokens( ent->r.client->netname ), sizeof(name) );
@@ -396,8 +395,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 
-	pthread_mutex_lock(&mutexsum);
-	mysql_thread_init();
+	RS_StartMysqlThread();
 
     Q_strncpyz ( name, COM_RemoveColorTokens( level.mapname ), sizeof(name) );
     mysql_real_escape_string(&mysql, name, name, strlen(name));
@@ -425,7 +423,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
     mysql_free_result(mysql_res);
 	RS_EndMysqlThread();
     
-    return NULL;
+	return NULL;
 }
 
 /**
@@ -443,8 +441,7 @@ void *RS_MysqlAuthenticate_Thread( void *in )
     MYSQL_RES  *mysql_res;
     struct authenticationData *authData = (struct authenticationData *)in;
 
-	pthread_mutex_lock(&mutexsum);
-	mysql_thread_init();
+	RS_StartMysqlThread();
     
     Q_strncpyz ( name, authData->authName, sizeof(name) );
     mysql_real_escape_string(&mysql, name, name, strlen(name));   
@@ -473,7 +470,7 @@ void *RS_MysqlAuthenticate_Thread( void *in )
 	free(authData);	
 	RS_EndMysqlThread();
     
-    return NULL;
+	return NULL;
 }
 
 /**
@@ -532,8 +529,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     lastRaceTime = 0;
 	raceData =(struct raceDataStruct *)in;
     
-	pthread_mutex_lock(&mutexsum);
-	mysql_thread_init();
+	RS_StartMysqlThread();
 
     if( raceData->player_id == 0 )
     {
@@ -734,7 +730,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 
 	free(raceData);	
 	RS_EndMysqlThread();
-    
+  
     return NULL;
 }
 
@@ -793,8 +789,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	player_id=0;
 	auth_mask=0;
 	
-	pthread_mutex_lock(&mutexsum);
-	mysql_thread_init();
+	RS_StartMysqlThread();
 
     playerData = (struct playerDataStruct*)in;
 	player_id=playerData->player_id;
@@ -894,7 +889,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	free(playerData->name);
 	free(playerData);
 	RS_EndMysqlThread();
-    
+	   
     return NULL;
 }
 
@@ -952,8 +947,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 	auth_mask=0;
 	is_authed=0;
 	
-	pthread_mutex_lock(&mutexsum);
-	mysql_thread_init();
+	RS_StartMysqlThread();
 
     playtimeData = (struct playtimeDataStruct*)in;
 	map_id=playtimeData->map_id;
@@ -977,7 +971,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 			free(playtimeData->name);	
 			free(playtimeData);	
 			RS_EndMysqlThread();
-	    
+
 			return NULL;
 	}
 
@@ -1066,8 +1060,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 
 		limit=30;
 		
-		pthread_mutex_lock(&mutexsum);	  
-		mysql_thread_init();
+		RS_StartMysqlThread();
 
         // get top players on map
         Q_strncpyz ( query, va( "SELECT  MIN( time ) AS time, p.name, r.created FROM race AS r LEFT JOIN player AS p ON p.id = r.player_id LEFT JOIN map AS m ON m.id = r.map_id WHERE m.id = %i GROUP BY p.id ORDER BY time ASC LIMIT %i", map_id, limit ), sizeof(query) );
@@ -1241,14 +1234,25 @@ unsigned int RS_GetNumberOfMaps()
 }
 
 /**
+ * Start the mysql thread
+ * 
+ * @param void 
+ * @return void
+ */
+void RS_StartMysqlThread()
+{
+    pthread_mutex_lock(&mutexsum);
+}
+
+/**
  * Cleanly end the mysql thread
  * 
- * @param void *threadid
+ * @param void 
  * @return void
  */
 void RS_EndMysqlThread()
 {
-	mysql_thread_end();
+	//mysql_thread_end(); // looks like thread_init and thread_end are not really needed, saw that on some webpage
     pthread_mutex_unlock(&mutexsum);
 	pthread_exit(NULL);
 }

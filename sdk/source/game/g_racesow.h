@@ -42,6 +42,7 @@ qboolean RS_MysqlDisconnect( void );
 qboolean RS_MysqlQuery( char *query );
 qboolean RS_MysqlError( edict_t *ent );
 
+void RS_StartMysqlThread( void );
 void RS_EndMysqlThread( void );
 void RS_CheckMysqlThreadError( void );
 

@@ -639,6 +639,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		{
 			RS_MysqlPlayerDisappear(player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
 			player.resetAuth();
+			player.setClient(null);
 		}
 		else if ( score_event == "userinfochanged" )
 		{
