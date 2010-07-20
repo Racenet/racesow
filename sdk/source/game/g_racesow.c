@@ -219,7 +219,8 @@ void RS_Shutdown()
  */
 #define MAX_SIZE_CALLBACK_QUEUE 50
 int callback_queue_size=0;
-int callback_queue_index=0;
+int callback_queue_write_index=0;
+int callback_queue_read_index=0;
 int callback_queue[MAX_SIZE_CALLBACK_QUEUE][4];
 
 /**
@@ -234,12 +235,13 @@ void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3)
 	if (callback_queue_size<MAX_SIZE_CALLBACK_QUEUE)
 	{
 		// push!
+		callback_queue[callback_queue_write_index][0]=command;
+		callback_queue[callback_queue_write_index][1]=arg1;
+		callback_queue[callback_queue_write_index][2]=arg2;
+		callback_queue[callback_queue_write_index][3]=arg3;
+		
+		callback_queue_write_index=(callback_queue_write_index+1)%MAX_SIZE_CALLBACK_QUEUE;
 		callback_queue_size++;
-		callback_queue_index=(callback_queue_index+1)%MAX_SIZE_CALLBACK_QUEUE;
-		callback_queue[callback_queue_index][0]=command;
-		callback_queue[callback_queue_index][1]=arg1;
-		callback_queue[callback_queue_index][2]=arg2;
-		callback_queue[callback_queue_index][3]=arg3;
 	}
 	else
 		printf("Error: callback queue overflow\n");
@@ -264,10 +266,12 @@ qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3)
 	// retrieving a callback result
 	pthread_mutex_lock(&mutex_callback);
 	// pop!
-	*command=callback_queue[callback_queue_index][0];
-	*arg1=callback_queue[callback_queue_index][1];
-	*arg2=callback_queue[callback_queue_index][2];
-	*arg3=callback_queue[callback_queue_index][3];
+	*command=callback_queue[callback_queue_read_index][0];
+	*arg1=callback_queue[callback_queue_read_index][1];
+	*arg2=callback_queue[callback_queue_read_index][2];
+	*arg3=callback_queue[callback_queue_read_index][3];
+
+	callback_queue_read_index=(callback_queue_read_index+1)%MAX_SIZE_CALLBACK_QUEUE;
 	callback_queue_size--;
 	pthread_mutex_unlock(&mutex_callback);
 	return qtrue;
@@ -873,7 +877,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 			mysql_free_result(mysql_res);
 
 			if (auth_mask > 0) 
-				{
+				{	
 				if (player_id_for_nick!=player_id)
 						// player numbers not matched: trigger nick protection!
 						RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, player_id_for_nick, 0);
