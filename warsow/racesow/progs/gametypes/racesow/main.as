@@ -36,6 +36,7 @@ cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|C
 cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
+cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
 
 int oldTimelimit; //for restoring the old value
 
@@ -739,7 +740,7 @@ void GT_ThinkRules()
 	Racesow_ThinkCallbackQueue();
 
 	if ( match.timeLimitHit() )
-		if ( map.allowEndGame() )
+		if ( map.allowEndGame() && g_maprotation.getBool())
 			match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
@@ -1068,7 +1069,7 @@ void GT_InitGametype()
     G_RegisterCommand( "join" );
     G_RegisterCommand( "top" );
 	G_RegisterCommand( "highscores" );
-        G_RegisterCommand( "register" );
+    G_RegisterCommand( "register" );
 	G_RegisterCommand( "auth" );
 	G_RegisterCommand( "admin" );
 	G_RegisterCommand( "help" );
@@ -1079,8 +1080,8 @@ void GT_InitGametype()
 	G_RegisterCommand( "privsay" );
 	G_RegisterCommand( "noclip" );
 	G_RegisterCommand( "position" );
-        G_RegisterCommand( "maplist" );
-        G_RegisterCommand( "mapfilter" );
+	G_RegisterCommand( "maplist" );
+	G_RegisterCommand( "mapfilter" );
 
 	//add callvotes
 	G_RegisterCallvote( "randmap", "", "Change to a random map");
