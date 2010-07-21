@@ -45,6 +45,8 @@ cvar_t *rs_queryUpdatePlayerMapPoints;
 cvar_t *rs_queryUpdateNickMap;
 cvar_t *rs_queryUpdateNickMapPlaytime;
 cvar_t *rs_querySetMapRating;
+cvar_t *rs_queryLoadMapList;
+cvar_t *rs_queryLoadMapHighscores;
     
 /**
  * as callback commands (must be similar to callback.as!)
@@ -136,6 +138,8 @@ void RS_MysqlLoadInfo( void )
 	rs_queryUpdateNickMapPlaytime	= trap_Cvar_Get( "rs_queryUpdateNickMapPlaytime",	"INSERT INTO `nick_map` (`nick_id`, `map_id`, `playtime`) VALUES(%d, %d, %d) ON DUPLICATE KEY UPDATE  `playtime` = `playtime` + VALUES(`playtime`);", CVAR_ARCHIVE );
 
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
+	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
+	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT  MIN( time ) AS time, p.name, r.created FROM race AS r LEFT JOIN player AS p ON p.id = r.player_id LEFT JOIN map AS m ON m.id = r.map_id WHERE m.id = %i GROUP BY p.id ORDER BY time ASC LIMIT %i", CVAR_ARCHIVE );
     
 }
 
@@ -832,37 +836,19 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
 		// since the player is authed, we don't have to do anything else
 		RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerNum, player_id, nick_id);
-		}
+	}
 	else
 		{
 		// now, if the player is not authed
-
-		if (nick_id==0)
+		
+		int player_id_for_nick=0;
+		if (nick_id!=0)
 			{
-			// it's a new nick, hence, a new player, so add both
-			sprintf(query, rs_queryAddPlayer->string, name,simplified);
-			mysql_real_query(&mysql, query, strlen(query));
-			RS_CheckMysqlThreadError();    
-
-			// retrieve the new player_id
-			player_id=(int)mysql_insert_id(&mysql);
-
-			// add his nick
-			sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
-			mysql_real_query(&mysql, query, strlen(query));
-			RS_CheckMysqlThreadError();    
-
-			// retrieve the new nick_id
-			nick_id=(int)mysql_insert_id(&mysql);
-			}
-		else
-			{
-			// that nick already exists, hence it belongs to a player P. 
-			// if P is registered (authmask>0), then trigger nick protection
-			// if P is not registered (authmask==0), then don't do anything
+			// that nick already exists, it may belong to a player P. 
+			//	if it does AND P is registered (authmask>0), then trigger nick protection
+			//	if it doesn't OR P is not registered (authmask==0), treat it as a new player
 
 			// retrieve player_id corresponding to that name
-			int player_id_for_nick=0;
 			sprintf(query, rs_queryGetPlayer->string, simplified);
 			mysql_real_query(&mysql, query, strlen(query));
 			RS_CheckMysqlThreadError();
@@ -870,10 +856,10 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 			RS_CheckMysqlThreadError();
 			if ((row = mysql_fetch_row(mysql_res)) != NULL) 
 				if (row[0]!=NULL && row[1]!=NULL )
-					{
+				{
 					player_id_for_nick=atoi(row[0]);
 					auth_mask=atoi(row[1]);
-					}
+				}
 			mysql_free_result(mysql_res);
 
 			if (auth_mask > 0) 
@@ -882,10 +868,33 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 						// player numbers not matched: trigger nick protection!
 						RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, player_id_for_nick, 0);
 				}
-			else 
-				player_id=player_id_for_nick;
-			}
 		}
+		if (player_id_for_nick==0)
+		{
+			// no player was associated with this nick, so create a new one
+			sprintf(query, rs_queryAddPlayer->string, name,simplified);
+			mysql_real_query(&mysql, query, strlen(query));
+			RS_CheckMysqlThreadError();   
+
+			// retrieve the new player_id
+			player_id=(int)mysql_insert_id(&mysql);
+		}
+		else
+			player_id=player_id_for_nick;
+
+		if (nick_id==0)
+		{
+			// it's also a new nick, so create an entry
+
+			// add his nick
+			sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
+			mysql_real_query(&mysql, query, strlen(query));
+			RS_CheckMysqlThreadError();    
+
+			// retrieve the new nick_id
+			nick_id=(int)mysql_insert_id(&mysql);
+		}
+	}
 
 	// store player_id and nick_id in AS
 	RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerNum, player_id, nick_id);
@@ -1067,7 +1076,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		RS_StartMysqlThread();
 
         // get top players on map
-        Q_strncpyz ( query, va( "SELECT  MIN( time ) AS time, p.name, r.created FROM race AS r LEFT JOIN player AS p ON p.id = r.player_id LEFT JOIN map AS m ON m.id = r.map_id WHERE m.id = %i GROUP BY p.id ORDER BY time ASC LIMIT %i", map_id, limit ), sizeof(query) );
+		sprintf(query, rs_queryLoadMapHighscores->string, map_id, limit);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
@@ -1203,7 +1212,8 @@ char *RS_MysqlLoadMaplist( int is_freestyle ) {
 		// replaced by:
 		Q_strncpyz( orderby, "name", sizeof(orderby) );  
         
-        Q_strncpyz( query, va( "SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", ( is_freestyle ? "true" : "false" ), orderby ), sizeof(query) );
+        
+		sprintf(query, rs_queryLoadMapList->string, ( is_freestyle ? "true" : "false" ), orderby);
         mysql_real_query(&mysql, query, strlen(query));
        	if (mysql_errno(&mysql) != 0) {
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
