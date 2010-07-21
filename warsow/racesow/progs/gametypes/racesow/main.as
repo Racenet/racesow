@@ -37,6 +37,7 @@ cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
+cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 
 int oldTimelimit; //for restoring the old value
 
@@ -740,8 +741,9 @@ void GT_ThinkRules()
 	Racesow_ThinkCallbackQueue();
 
 	if ( match.timeLimitHit() )
-		if ( map.allowEndGame() && g_maprotation.getBool())
-			match.launchState( match.getState() + 1 );
+		if ( g_maprotation.getBool() )
+			if ( map.allowEndGame() )
+				match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
@@ -1101,6 +1103,7 @@ void GT_InitGametype()
 
 	maplist=RS_LoadMapList(false);
 	mapcount=RS_GetNumberOfMaps();
+	
 	if(g_freestyle.getBool())
 		g_timelimit.set( "0" );
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later

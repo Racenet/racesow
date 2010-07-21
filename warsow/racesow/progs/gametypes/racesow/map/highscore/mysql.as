@@ -17,6 +17,16 @@ class Racesow_Map_HighScore_Mysql : Racesow_Map_HighScore_Abstract
 	void addRace(Racesow_Player_Race @race)
 	{
 		RS_MysqlInsertRace( race.getPlayer().getId(), race.getPlayer().getNickId(), map.getId(), race.getTime(), race.getPlayer().getClient().playerNum());
+
+		uint raceTime = race.getTime();
+		uint servBest = this.highScores[0].getTime();
+		
+		// display an award using the old servBest
+		race.displayAward( raceTime, servBest );
+		
+		// update servBest
+		if (servBest==0 || raceTime<servBest)
+			this.highScores[0].fromRace(race);
 	}
 
 	
@@ -30,12 +40,12 @@ class Racesow_Map_HighScore_Mysql : Racesow_Map_HighScore_Abstract
 	}
 
 	/**
-	 * For mysql adapter we only need the map id
+	 * Load map id and server best
 	 * @return void
 	 */
 	void loadStats()
 	{
-        RS_MysqlLoadMap();
+        RS_MysqlLoadMap( );
 	}
 	
 	/**

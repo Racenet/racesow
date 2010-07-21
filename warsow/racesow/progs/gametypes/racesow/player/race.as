@@ -263,7 +263,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		G_PrintMsg(this.player.getClient().getEnt(), S_COLOR_WHITE
 			+ "race finished: " + TimeToString( newTime ) + "\n");
 		
-        if ( newTime == bestTime )
+        if ( bestTime==0 || newTime <= bestTime )
         {
             player.setBestTime(newTime);
 			this.triggerAward( S_COLOR_GREEN + "New server record!" );

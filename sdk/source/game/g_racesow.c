@@ -56,7 +56,6 @@ const unsigned int RACESOW_CALLBACK_NICKPROTECT = 1;
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
 const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
 const unsigned int RACESOW_CALLBACK_APPEAR = 4;
-const unsigned int RACESOW_CALLBACK_RACEFINISH = 5;
 
 /**
  * MySQL Socket
@@ -391,7 +390,7 @@ qboolean RS_MysqlLoadMap()
 }
 
 /**
- * Getting map id and returning it as a callback
+ * Getting map id and servbest, and returning them as a callback
  *
  * @param void *in
  * @return void
@@ -402,6 +401,8 @@ void *RS_MysqlLoadMap_Thread(void *in)
     char name[64];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
+	int map_id=0;
+	unsigned int bestTime=0;
 
 	RS_StartMysqlThread();
 
@@ -411,24 +412,39 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	sprintf(query, rs_queryGetMap->string, name);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-    
     mysql_res = mysql_store_result(&mysql);
     RS_CheckMysqlThreadError();
-    
-    if ((row = mysql_fetch_row(mysql_res)) != NULL) {
-    
-        RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, atoi(row[0]), 0, 0);
-    
+
+	if ((row = mysql_fetch_row(mysql_res)) != NULL) {
+        map_id=atoi(row[0]);
     } else {
     
         sprintf(query, rs_queryAddMap->string, name);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         
-        RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, (int)mysql_insert_id(&mysql), 0, 0);
+		map_id=(int)mysql_insert_id(&mysql);
     }
-    
     mysql_free_result(mysql_res);
+	
+    // retrieve server best
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    while ((row = mysql_fetch_row(mysql_res)) != NULL)
+	{
+		if (row[0] !=NULL && row[1] != NULL)
+		{
+            if (bestTime == 0)
+                bestTime = atoi(row[1]);
+		}
+	}
+	mysql_free_result(mysql_res);
+
+	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, map_id, bestTime, 0);
+
 	RS_EndMysqlThread();
     
 	return NULL;
@@ -546,22 +562,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
 		free(raceData);	
 		RS_EndMysqlThread();
         return NULL;
-        
-        /*
-        // insert player
-        char name[64];
-        char simplified[64];
-        
-        Q_strncpyz ( name, raceData->ent->r.client->netname, sizeof(name) );
-        mysql_real_escape_string(&mysql, name, name, strlen(name));    
-        
-        Q_strncpyz ( simplified, COM_RemoveColorTokens( raceData->ent->r.client->netname ), sizeof(simplified) );
-        mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
-        
-        sprintf(query, rs_queryAddPlayer->string, name, simplified);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
-        */
     }
     
 	// insert race
@@ -665,69 +665,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
 		}
     }
 	mysql_free_result(mysql_res);
-
-	// awards are now handled by a AS callback (it was unsafe to do this in a thread)
-
-	// TODO: instead of returning the current best time, retrieve and return the -previous- best time,
-	// so the correct delta can be printed
-	RS_PushCallbackQueue(RACESOW_CALLBACK_RACEFINISH,raceData->playerNum, raceData->race_time, bestTime);
-
-	/*
-
-    // convert time into MM:SS:mmm
-    milli = (int)raceData->race_time;
-    min = milli / 60000;
-    milli -= min * 60000;
-    sec = milli / 1000;
-    milli -= sec * 1000;
-    
-    if (raceData->race_time < bestTime || bestTime == 0)
-    {
-        dmilli = (int)raceData->race_time - (int)bestTime;
-    }
-    else
-    {
-        dmilli = (int)raceData->race_time - (int)currentRaceTime;
-    }
-    
-    dmin = dmilli / 60000;
-    dmilli -= dmin * 60000;
-    dsec = dmilli / 1000;
-    dmilli -= dsec * 1000;
-    Q_strncpyz( draw_time, va( "%d:%d.%03d", min, sec, milli ), sizeof(draw_time) );
-    Q_strncpyz( diff_time, va( "%d:%d.%03d", dmin, dsec, dmilli ), sizeof(diff_time) );
-    
-    if (raceData->race_time < bestTime)
-    {
-        G_PlayerAward( raceData->ent, va("%New server record!", S_COLOR_GREEN) );
-        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s-%s", draw_time, S_COLOR_GREEN, diff_time ) );
-    }
-    else if (bestTime == 0)
-    {
-        G_PlayerAward( raceData->ent, va("%New server record!", S_COLOR_GREEN) );
-        G_CenterPrintMsg( raceData->ent, va("Time: %s", S_COLOR_GREEN, draw_time ) );
-    }
-    else if (raceData->race_time == bestTime)
-    {
-        G_PlayerAward( raceData->ent, va("%Server record!", S_COLOR_GREEN) );
-        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s+-%s", draw_time, S_COLOR_GREEN, diff_time ) );
-    }
-    else if (raceData->race_time < currentRaceTime)
-    {
-        G_PlayerAward( raceData->ent, va("%sNew personal record!\n", S_COLOR_YELLOW) );
-        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s-%s", draw_time, S_COLOR_YELLOW, diff_time ) );
-    }
-    else if (currentRaceTime == 0)
-    {
-        G_PlayerAward( raceData->ent, va("%sPersonal record!\n", S_COLOR_YELLOW) );
-        G_CenterPrintMsg( raceData->ent, va("%sTime: %s", S_COLOR_YELLOW, draw_time ) );
-    }
-    else
-    {
-        G_PlayerAward( raceData->ent, va("%sRace finished!\n", S_COLOR_WHITE) );
-        G_CenterPrintMsg( raceData->ent, va("Time: %s\n%s+%s", draw_time, S_COLOR_RED, diff_time ) );
-    }
-	*/
 
 	// should be printed in AS. TODO: another callback for that
 
