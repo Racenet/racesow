@@ -56,6 +56,7 @@ const unsigned int RACESOW_CALLBACK_NICKPROTECT = 1;
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
 const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
 const unsigned int RACESOW_CALLBACK_APPEAR = 4;
+const unsigned int RACESOW_CALLBACK_PERSONALBEST = 5;
 
 /**
  * MySQL Socket
@@ -138,6 +139,8 @@ void RS_MysqlLoadInfo( void )
 
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
 	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
+	
+	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT  MIN( time ) AS time, p.name, r.created FROM race AS r LEFT JOIN player AS p ON p.id = r.player_id LEFT JOIN map AS m ON m.id = r.map_id WHERE m.id = %i GROUP BY p.id ORDER BY time ASC LIMIT %i", CVAR_ARCHIVE );
     
 }
@@ -437,8 +440,12 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	{
 		if (row[0] !=NULL && row[1] != NULL)
 		{
+			unsigned int playerId, raceTime;
+            playerId = atoi(row[0]);
+            raceTime = atoi(row[1]);
+
             if (bestTime == 0)
-                bestTime = atoi(row[1]);
+                bestTime = raceTime;
 		}
 	}
 	mysql_free_result(mysql_res);
@@ -686,7 +693,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
  * @param int is_authed
  * @return void
  */
-qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int is_authed )
+qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int map_id, int is_authed )
 {
 	pthread_t thread;
 	int returnCode;
@@ -694,6 +701,7 @@ qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int is_
 
     playerData->name = strdup(name);
     playerData->player_id = player_id;
+	playerData->map_id = map_id;
 	playerData->playerNum = playerNum;
 	playerData->is_authed = is_authed;
 
@@ -724,20 +732,24 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	char simplified[100];
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
-	int is_authed,playerNum;
-	int nick_id,player_id, auth_mask;
+	unsigned int is_authed,playerNum;
+	unsigned int nick_id, player_id, map_id, auth_mask;
+	unsigned int personalBest;
 	struct playerDataStruct *playerData;
 
 	playerNum=0;
 	is_authed=0;
 	nick_id=0;
 	player_id=0;
+	map_id=0;
 	auth_mask=0;
+	personalBest=0;
 	
 	RS_StartMysqlThread();
 
     playerData = (struct playerDataStruct*)in;
 	player_id=playerData->player_id;
+	map_id=playerData->map_id;
 	is_authed=playerData->is_authed;
 	playerNum=playerData->playerNum;
 
@@ -778,7 +790,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 		{
 		// now, if the player is not authed
 		
-		int player_id_for_nick=0;
+		unsigned int player_id_for_nick=0;
 		if (nick_id!=0)
 			{
 			// that nick already exists, it may belong to a player P. 
@@ -801,7 +813,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
 			if (auth_mask > 0) 
 				{	
-				if (player_id_for_nick!=player_id)
+				if ( player_id_for_nick != player_id )
 						// player numbers not matched: trigger nick protection!
 						RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, player_id_for_nick, 0);
 				}
@@ -835,6 +847,29 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
 	// store player_id and nick_id in AS
 	RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerNum, player_id, nick_id);
+
+	// retrieve personal best
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    while ((row = mysql_fetch_row(mysql_res)) != NULL)
+	{
+		if (row[0] !=NULL && row[1] != NULL)
+		{
+			unsigned int playerId, raceTime;
+            playerId = atoi(row[0]);
+            raceTime = atoi(row[1]);
+
+            if (playerId == player_id)
+                personalBest = raceTime;
+		}
+	}
+	mysql_free_result(mysql_res);
+
+	// store personal best in AS
+	RS_PushCallbackQueue(RACESOW_CALLBACK_PERSONALBEST, playerNum, personalBest, 0);
 
 	free(playerData->name);
 	free(playerData);

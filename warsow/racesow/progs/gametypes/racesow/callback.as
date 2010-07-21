@@ -13,6 +13,7 @@ const uint RACESOW_CALLBACK_NICKPROTECT = 1;
 const uint RACESOW_CALLBACK_LOADMAP = 2;
 const uint RACESOW_CALLBACK_HIGHSCORES = 3;
 const uint RACESOW_CALLBACK_APPEAR = 4;
+const uint RACESOW_CALLBACK_PERSONALBEST = 5;
 
  /**
  * Racesow_ThinkCallbackQueue()
@@ -64,6 +65,17 @@ void Racesow_ThinkCallbackQueue()
 			{
 				player.setId(arg2);
 				player.setNickId(arg3);
+			}
+            break;
+
+		case RACESOW_CALLBACK_PERSONALBEST:
+			@player = Racesow_GetPlayerByNumber(arg1);
+			if ( @player != null )
+			{
+				if ( rs_loadHighscores.getBool() )
+				{
+					player.bestRaceTime = arg2;
+				}
 			}
             break;
    }

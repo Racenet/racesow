@@ -230,7 +230,7 @@
 		{
 			RS_MysqlPlayerDisappear(nick, levelTime-this.player.joinedTime, this.player.getId(), this.player.getNickId() , map.getId(), this.player.getAuth().isAuthenticated());
 			player.joinedTime = levelTime;
-			RS_MysqlPlayerAppear(this.player.getName(), this.player.getClient().playerNum(), this.player.getId(), this.player.getAuth().isAuthenticated());
+			RS_MysqlPlayerAppear(this.player.getName(), this.player.getClient().playerNum(), this.player.getId(), map.getId(), this.player.getAuth().isAuthenticated());
 		}
 	}
 
