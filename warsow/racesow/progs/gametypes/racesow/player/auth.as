@@ -187,9 +187,9 @@
      * @param int playerId
      * @return void
 	 */
-    void nickProtectCallback( int playerId, int dummy )
+    void nickProtectCallback( int wanted_playerId, int current_playerId )
     {
-        if (playerId == this.playerId)
+        if ( ( wanted_playerId == current_playerId && this.isAuthenticated() ) || ( wanted_playerId == 0 ))
         {
             if ( this.lastViolateProtectionMessage != 0 )
     		{
@@ -198,12 +198,15 @@
                 this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
     		}
         }
-        else if ( playerId != 0 )
+        else if ( wanted_playerId != 0 )
 		{
-			this.violateNickProtectionSince = localTime;
-            this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
-			this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
+			if ( this.violateNickProtectionSince == 0 )
+			{
+				this.violateNickProtectionSince = localTime;
+				this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
+				this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
 				+ "If you don't authenticate or change your nickname you will be kicked.\n" );
+			}
 
 		}
     }

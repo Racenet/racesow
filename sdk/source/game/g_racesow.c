@@ -313,67 +313,6 @@ qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *aut
 }
 
 /**
- * Calls the nickname protection thread
- *
- * @param edict_t *ent
- * @return void
- */
-qboolean RS_MysqlNickProtection( edict_t *ent )
-{
-	pthread_t thread;
-	int returnCode = pthread_create(&thread, &threadAttr, RS_MysqlNickProtection_Thread, (void *)ent);
-	if (returnCode) {
-
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
-		return qfalse;
-	}
-	
-	return qtrue;
-}
-
-/**
- * Check if the player violates against the nickname protection
- *
- * @param void *in
- * @return void
- */
-void *RS_MysqlNickProtection_Thread(void *in)
-{
-    char query[250];
-    char name[64];
-    MYSQL_ROW  row;
-    MYSQL_RES  *mysql_res;
-    edict_t *ent;
-
-	RS_StartMysqlThread();
-
-    ent = (edict_t *)in;
-    Q_strncpyz ( name, COM_RemoveColorTokens( ent->r.client->netname ), sizeof(name) );
-    mysql_real_escape_string(&mysql, name, name, strlen(name));
-    
-	sprintf(query, rs_queryCheckPlayer->string, name);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
-
-    mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
-    
-    if ((row = mysql_fetch_row(mysql_res)) != NULL) {
-    
-        RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, PLAYERNUM(ent), atoi(row[0]), 0);
-    
-    } else {
-    
-        RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, PLAYERNUM(ent), 0, 0);
-    }
-    
-    mysql_free_result(mysql_res);
-	RS_EndMysqlThread();
-    
-    return NULL;
-}
-
-/**
  * Calls the load-map thread
  *
  * @param char *name
@@ -735,6 +674,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	unsigned int is_authed,playerNum;
 	unsigned int nick_id, player_id, map_id, auth_mask;
 	unsigned int personalBest;
+	unsigned int player_id_for_nick;
 	struct playerDataStruct *playerData;
 
 	playerNum=0;
@@ -744,6 +684,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	map_id=0;
 	auth_mask=0;
 	personalBest=0;
+	player_id_for_nick=0;
 	
 	RS_StartMysqlThread();
 
@@ -773,76 +714,55 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 			nick_id=atoi(row[0]);
 	mysql_free_result(mysql_res);
 
-	if (is_authed)
+	if ( nick_id != 0 )
 		{
-		if (nick_id==0)
-			{
-			// new nick but registered player, so add it
-			sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
-			mysql_real_query(&mysql, query, strlen(query));
-			RS_CheckMysqlThreadError();   
-			}
+		// that nick already exists, it may belong to a player P. 
+		//	if it does AND P is registered (authmask>0), then nick protection will be triggered later
+		//	if it doesn't OR P is not registered (authmask==0), treat it as a new player
 
-		// since the player is authed, we don't have to do anything else
-		RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerNum, player_id, nick_id);
+		// retrieve player_id corresponding to that name
+		sprintf(query, rs_queryGetPlayer->string, simplified);
+		mysql_real_query(&mysql, query, strlen(query));
+		RS_CheckMysqlThreadError();
+		mysql_res = mysql_store_result(&mysql);
+		RS_CheckMysqlThreadError();
+		if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+			if (row[0]!=NULL && row[1]!=NULL )
+			{
+				player_id_for_nick=atoi(row[0]);
+				auth_mask=atoi(row[1]);
+			}
+		mysql_free_result(mysql_res);
+	}
+	if ( player_id_for_nick == 0 )
+	{
+		// no player was associated with this nick, so create a new one
+		sprintf(query, rs_queryAddPlayer->string, name,simplified);
+		mysql_real_query(&mysql, query, strlen(query));
+		RS_CheckMysqlThreadError();   
+		// retrieve the new player_id
+		player_id=(int)mysql_insert_id(&mysql);
+		player_id_for_nick=player_id;
 	}
 	else
+		// if the player is authed, he keeps his player_id, else here is his new one if it's readily available (auth_mask==0)
+		if ( ! is_authed  )
 		{
-		// now, if the player is not authed
+				if ( auth_mask == 0 )
+					player_id=player_id_for_nick;
+				else
+					player_id=0;
+		}
 		
-		unsigned int player_id_for_nick=0;
-		if (nick_id!=0)
-			{
-			// that nick already exists, it may belong to a player P. 
-			//	if it does AND P is registered (authmask>0), then trigger nick protection
-			//	if it doesn't OR P is not registered (authmask==0), treat it as a new player
-
-			// retrieve player_id corresponding to that name
-			sprintf(query, rs_queryGetPlayer->string, simplified);
-			mysql_real_query(&mysql, query, strlen(query));
-			RS_CheckMysqlThreadError();
-			mysql_res = mysql_store_result(&mysql);
-			RS_CheckMysqlThreadError();
-			if ((row = mysql_fetch_row(mysql_res)) != NULL) 
-				if (row[0]!=NULL && row[1]!=NULL )
-				{
-					player_id_for_nick=atoi(row[0]);
-					auth_mask=atoi(row[1]);
-				}
-			mysql_free_result(mysql_res);
-
-			if (auth_mask > 0) 
-				{	
-				if ( player_id_for_nick != player_id )
-						// player numbers not matched: trigger nick protection!
-						RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, player_id_for_nick, 0);
-				}
-		}
-		if (player_id_for_nick==0)
-		{
-			// no player was associated with this nick, so create a new one
-			sprintf(query, rs_queryAddPlayer->string, name,simplified);
-			mysql_real_query(&mysql, query, strlen(query));
-			RS_CheckMysqlThreadError();   
-
-			// retrieve the new player_id
-			player_id=(int)mysql_insert_id(&mysql);
-		}
-		else
-			player_id=player_id_for_nick;
-
-		if (nick_id==0)
-		{
-			// it's also a new nick, so create an entry
-
-			// add his nick
-			sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
-			mysql_real_query(&mysql, query, strlen(query));
-			RS_CheckMysqlThreadError();    
-
-			// retrieve the new nick_id
-			nick_id=(int)mysql_insert_id(&mysql);
-		}
+	
+	if ( nick_id == 0 )
+	{
+		// it's also a new nick, so create an entry
+		sprintf(query, rs_queryAddNick->string, player_id,name,simplified);
+		mysql_real_query(&mysql, query, strlen(query));
+		RS_CheckMysqlThreadError();    
+		// retrieve the new nick_id
+		nick_id=(int)mysql_insert_id(&mysql);
 	}
 
 	// store player_id and nick_id in AS
@@ -870,6 +790,12 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
 	// store personal best in AS
 	RS_PushCallbackQueue(RACESOW_CALLBACK_PERSONALBEST, playerNum, personalBest, 0);
+
+	// do nick protection stuff
+	if ( auth_mask > 0 )
+		RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerNum, player_id_for_nick, player_id);
+	else
+		RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerNum, 0, 0);
 
 	free(playerData->name);
 	free(playerData);

@@ -635,7 +635,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		else if ( score_event == "enterGame" )
 		{
 			player.joinedTime = levelTime;
-			RS_MysqlPlayerAppear( player.getName(), client.playerNum(), player.getAuth().playerId, map.getId(), player.getAuth().isAuthenticated());
+			RS_MysqlPlayerAppear( player.getName(), client.playerNum(), player.getId(), map.getId(), player.getAuth().isAuthenticated());
 		}
 		else if ( score_event == "disconnect" )
 		{

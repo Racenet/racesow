@@ -9,7 +9,6 @@ cvar_t *rs_mysql_pass;
 cvar_t *rs_mysql_db;
 
 cvar_t *rs_queryGetPlayer;
-cvar_t *rs_queryCheckPlayer;
 cvar_t *rs_queryAddPlayer;
 cvar_t *rs_queryRegisterPlayer;
 cvar_t *rs_queryUpdatePlayerPlaytime;
@@ -100,9 +99,6 @@ extern void RS_Shutdown( void );
 
 extern qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *authPass );
 extern void *RS_MysqlAuthenticate_Thread( void *in );
-
-extern qboolean RS_MysqlNickProtection( edict_t *ent );
-extern void *RS_MysqlNickProtection_Thread( void *in );
 
 extern qboolean RS_MysqlLoadMap();
 extern void *RS_MysqlLoadMap_Thread( void *in );

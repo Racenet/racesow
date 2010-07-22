@@ -6144,18 +6144,6 @@ static void asFunc_asGeneric_RS_MysqlAuthenticate( void *gen )
         (asstring_t *)G_asGeneric_GetArgAddress(gen, 2)));
 }
 
-// RS_MysqlNickProtection
-static qboolean asFunc_RS_MysqlNickProtection( edict_t *ent )
-{
-	return RS_MysqlNickProtection(ent);
-}
-
-static void asFunc_asGeneric_RS_MysqlNickProtection( void *gen )
-{
-	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlNickProtection(
-        (edict_t *)G_asGeneric_GetArgAddress(gen, 0)));
-}
-
 // RS_MysqlLoadMap
 static qboolean asFunc_RS_MysqlLoadMap()
 {
@@ -6879,7 +6867,6 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	{ "void RS_MysqlAuthenticate( int, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
-	{ "void RS_MysqlNickProtection( cEntity @ )", asFunc_RS_MysqlNickProtection, asFunc_asGeneric_RS_MysqlNickProtection },
 	{ "void RS_MysqlPlayerAppear( cString &, int, int, int, bool )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
 	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
