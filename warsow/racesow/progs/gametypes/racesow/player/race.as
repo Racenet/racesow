@@ -240,10 +240,15 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		
 		bool noDelta = 0 == bestTime;
 		
-        if ( noDelta || newTime < bestTime )
+        if ( noDelta )
+		{
+			this.delta = bestTime - newTime;
+            str = S_COLOR_GREEN ;
+		}
+		else if ( newTime < bestTime )
         {
-			this.delta = newTime;
-            str = S_COLOR_GREEN + (noDelta ? "" : "-");
+			this.delta = bestTime - newTime;
+            str = S_COLOR_GREEN + "-";
         }
 		else if ( newTime == bestTime )
 		{

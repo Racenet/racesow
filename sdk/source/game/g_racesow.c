@@ -951,7 +951,7 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
 // straight from 0.42 with some changes
 //=================
 
-char *highscores_players[256]={0}; // no more than 256 players at the same time on a server, right?
+char *highscores_players[3][256]={0}; // no more than 256 players at the same time on a server, right?
 
 void *RS_MysqlLoadHighscores_Thread( void* in ) {
     
@@ -961,8 +961,9 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		int playerNum;
 		int map_id;
 		int limit;
-		char highscores[10000];
+		char highscores[3][10000];
 		struct highscoresDataStruct *highscoresData;
+		int highscore_part;
 
 
 		highscoresData=(struct highscoresDataStruct *)in;
@@ -979,9 +980,13 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
+
+		highscores[0][0]='\0';
+		highscores[1][0]='\0';
+		highscores[2][0]='\0';
         
         if( (unsigned long)mysql_num_rows( mysql_res ) == 0 )
-            Q_strncatz(highscores, va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores));
+            Q_strncatz(highscores[0], va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores[0]));
         
         else {
             unsigned int position = 0;
@@ -995,7 +1000,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 			
 			replay_record=0;
  
-            Q_strncatz(highscores, va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, level.mapname, S_COLOR_WHITE ), sizeof(highscores));
+            Q_strncatz(highscores[0], va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, level.mapname, S_COLOR_WHITE ), sizeof(highscores[0]));
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
 			{
@@ -1035,18 +1040,23 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                 Q_strncpyz( last_time, va( "%d:%d.%d", min, sec, milli ), sizeof(last_time) );
 
                 if( position <= 10 )
-                    Q_strncatz( highscores,  va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
+                    Q_strncatz( highscores[0],  va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[0]) );
                 else if( position <= 20 )
-                    Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
+                    Q_strncatz( highscores[1], va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[1]) );
                 else if( position <= 30 )
-                    Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
+                    Q_strncatz( highscores[2], va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[2]) );
             }
 			}
 
         mysql_free_result(mysql_res);
-		
-		highscores_players[playerNum]=malloc(strlen(highscores));
-		Q_strncpyz( highscores_players[playerNum],highscores, strlen(highscores));
+
+		for (highscore_part=0;highscore_part<3;highscore_part++)
+		{
+				highscores_players[highscore_part][playerNum]=malloc(strlen(highscores[highscore_part]));
+				highscores_players[highscore_part][playerNum][0]='\0';
+				Q_strncpyz( highscores_players[highscore_part][playerNum],highscores[highscore_part], strlen(highscores[highscore_part]));
+		}
+
 		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0);
 		
 		free(highscoresData);	
@@ -1064,11 +1074,19 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 
 qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 {
+	int highscore_part;
 	if( ent != NULL )
-      G_PrintMsg( ent, highscores_players[playerNum] );
-	G_PrintMsg( ent, "\n" );
-	free(highscores_players[playerNum]);
-	highscores_players[playerNum]=NULL;
+	{
+		G_PrintMsg( ent, va( "\n%s\n", highscores_players[0][playerNum]) );
+		G_PrintMsg( ent, va( "%s\n", highscores_players[1][playerNum]) ); 
+		G_PrintMsg( ent, va( "%s\n",highscores_players[2][playerNum]) );
+	}
+	
+	for (highscore_part=0;highscore_part<3;highscore_part++)
+	{
+		free(highscores_players[highscore_part][playerNum]);
+		highscores_players[highscore_part][playerNum]=NULL;
+	}
 	return qtrue;
 }
 
