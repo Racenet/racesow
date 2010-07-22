@@ -741,8 +741,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 		mysql_real_query(&mysql, query, strlen(query));
 		RS_CheckMysqlThreadError();   
 		// retrieve the new player_id
-		player_id=(int)mysql_insert_id(&mysql);
-		player_id_for_nick=player_id;
+		player_id_for_nick=(int)mysql_insert_id(&mysql);;
 	}
 	else
 		// if the player is authed, he keeps his player_id, else here is his new one if it's readily available (auth_mask==0)
@@ -782,7 +781,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
             playerId = atoi(row[0]);
             raceTime = atoi(row[1]);
 
-            if (playerId == player_id)
+			// compute it for the current nick, even if it's under nick protection
+			// alternatively, to display personal best only after auth, one could copypaste this code into the RS_MysqlAuthenticate_Thread thread
+            if (playerId == player_id_for_nick)
                 personalBest = raceTime;
 		}
 	}
