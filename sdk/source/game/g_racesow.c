@@ -1132,10 +1132,12 @@ char *RS_MysqlLoadMaplist( int is_freestyle ) {
         
 		sprintf(query, rs_queryLoadMapList->string, ( is_freestyle ? "true" : "false" ), orderby);
         mysql_real_query(&mysql, query, strlen(query));
+		RS_CheckMysqlThreadError();
        	if (mysql_errno(&mysql) != 0) {
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
 	    }
         mysql_res = mysql_store_result(&mysql);
+		RS_CheckMysqlThreadError();
        	if (mysql_errno(&mysql) != 0) {
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
 	    }
@@ -1152,7 +1154,7 @@ char *RS_MysqlLoadMaplist( int is_freestyle ) {
     
  
     /*
-	// not implemented (should we?)
+	// (from .42) not implemented (should we?)
 	if(!mapcount)
         RS_LoadConfigMaplist();
 	*/
