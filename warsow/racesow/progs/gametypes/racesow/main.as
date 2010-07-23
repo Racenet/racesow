@@ -459,6 +459,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					players[i].cancelOvertime();
 				}
 				map.cancelEndGame();
+				G_PrintMsg( null, S_COLOR_WHITE + "The matchtime got extended by " + g_extendtime.getInteger() + " minutes.\n" );
             }
             return true;
         }
@@ -1129,8 +1130,8 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	maplist=RS_LoadMapList(false);
-	mapcount=RS_GetNumberOfMaps();
+	maplist = RS_LoadMapList( g_freestyle.getBool() );
+	mapcount = RS_GetNumberOfMaps();
 
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );

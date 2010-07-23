@@ -68,8 +68,10 @@ Changelog:
 	2010-07-XX / racesow 0.5.4
 	
 		- added "position" command
-		- switched C shotter entities to AS and implemented some more (trigger_push_velocity, trigger_delay, trigger_teleporter)
+		- switched C shooter entities to AS and implemented some more (trigger_push_velocity, trigger_delay, trigger_teleporter)
 		- fixed newmovement (the turnaccel variable)
+		- added overtime (including extend_time)
+		- added a mapfilter and maplist command, the randmap vote
 
 	2010-06-28 / racesow 0.5.3
 	
