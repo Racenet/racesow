@@ -37,7 +37,6 @@ cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
-cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 
 int oldTimelimit; //for restoring the old value
 
@@ -428,7 +427,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
 			uint time = levelTime - match.startTime(); //in ms
 			uint remainingtime = timelimit - time;
-			if( remainingtime > extendtimeperiod )
+			bool isNegative = (timelimit < time ) ? true : false;
+			if( remainingtime > extendtimeperiod && !isNegative )
 			{
 				client.printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
 				return false;
@@ -492,6 +492,27 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	else if ( ( cmdString == "position" ) )
 	{
 		return player.position( argsString );
+	}
+	else if ( ( cmdString == "timeleft" ) )
+	{
+		if( g_timelimit.getInteger() <= 0 )
+		{
+			client.printMessage( "There is no timelimit set.\n");
+			return false;
+		}
+		uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+		uint time = levelTime - match.startTime(); //in ms
+		uint timeleft = timelimit - time;
+		bool isNegative = (timelimit < time ) ? true : false;
+		if( isNegative )
+		{
+			client.printMessage( "We are already in overtime.\n" );
+			return false;
+		}
+		else
+		{
+			client.printMessage( "Time left: " + TimeToString( timeleft ) + "\n" );
+		}
 	}
     return false;
 }
@@ -634,12 +655,12 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-			player.joinedTime = levelTime;
-			RS_MysqlPlayerAppear( player.getName(), client.playerNum(), player.getId(), map.getId(), player.getAuth().isAuthenticated());
+			player.joinedTime=levelTime;
+			RS_MysqlPlayerAppear(player.getName(),client.playerNum(),player.getAuth().playerId,player.getAuth().isAuthenticated());
 		}
 		else if ( score_event == "disconnect" )
 		{
-			RS_MysqlPlayerDisappear( player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
+			RS_MysqlPlayerDisappear(player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
 			player.resetAuth();
 			player.setClient(null);
 		}
@@ -722,7 +743,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
 	if( map.inOvertime )
 	{
-		player.remove("You were removed due to overtime.\n");
+		player.remove("You were removed due to overtime.");
 		player.cancelOvertime();
 		return;
 	}
@@ -741,7 +762,7 @@ void GT_ThinkRules()
 	Racesow_ThinkCallbackQueue();
 
 	if ( match.timeLimitHit() )
-		if ( map.allowEndGame() )
+		if ( map.allowEndGame() && g_maprotation.getBool())
 			match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
@@ -1083,6 +1104,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "position" );
 	G_RegisterCommand( "maplist" );
 	G_RegisterCommand( "mapfilter" );
+	G_RegisterCommand( "timeleft" );
 
 	//add callvotes
 	G_RegisterCallvote( "randmap", "", "Change to a random map");
@@ -1102,8 +1124,7 @@ void GT_InitGametype()
 
 	maplist=RS_LoadMapList(false);
 	mapcount=RS_GetNumberOfMaps();
-	
-	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
+	if(g_freestyle.getBool())
 		g_timelimit.set( "0" );
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
