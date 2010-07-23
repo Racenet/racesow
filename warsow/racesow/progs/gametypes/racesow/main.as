@@ -496,6 +496,11 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	}
 	else if ( ( cmdString == "timeleft" ) )
 	{
+		if( match.getState() == MATCH_STATE_POSTMATCH )
+		{
+			client.printMessage( "The command isn't available in this match state.\n");
+			return false;
+		}
 		if( g_timelimit.getInteger() <= 0 )
 		{
 			client.printMessage( "There is no timelimit set.\n");
@@ -513,6 +518,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		else
 		{
 			client.printMessage( "Time left: " + TimeToString( timeleft ) + "\n" );
+			return true;
 		}
 	}
     return false;
