@@ -66,6 +66,17 @@ class Racesow_Map
 	 */
 	bool allowEndGame()
 	{
+        if (!g_maprotation.getBool()) return false;
+        
+        uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+        uint time = levelTime - match.startTime(); //in ms
+        int timeleft = timelimit - time;
+        
+        // G_PrintMsg(null, "timeleft: " + timeleft +"\n" );
+        
+        
+        if (timeleft > 0) return false;
+    
 		if (!this.inOvertime)
 		{
 			uint numRacing = 0;

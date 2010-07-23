@@ -448,7 +448,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
                 int rand = brandom(0, mapcount);
                 cString mapname = maplist.getToken(rand);
                 client.printMessage (mapname + "\n");
-                G_CmdExecute ("map " + mapname );
+                // G_CmdExecute ("map " + mapname );
+                match.launchState(MATCH_STATE_POSTMATCH);
                 return true;
             }
             else if ( vote == "extend_time" )
@@ -459,7 +460,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					players[i].cancelOvertime();
 				}
 				map.cancelEndGame();
-				G_PrintMsg( null, S_COLOR_WHITE + "The matchtime got extended by " + g_extendtime.getInteger() + " minutes.\n" );
             }
             return true;
         }
@@ -765,13 +765,16 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-
 	// perform a Mysql callback if there is one pending
 	Racesow_ThinkCallbackQueue();
 
-	if ( match.timeLimitHit() )
-		if ( map.allowEndGame() )
-			match.launchState( match.getState() + 1 );
+	if ( g_maprotation.getBool() ) {
+    
+        if (map.allowEndGame() ) {
+       
+			match.launchState( MATCH_STATE_POSTMATCH );
+        }
+    }
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
@@ -1130,8 +1133,8 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	maplist = RS_LoadMapList( g_freestyle.getBool() );
-	mapcount = RS_GetNumberOfMaps();
+	maplist=RS_LoadMapList(false);
+	mapcount=RS_GetNumberOfMaps();
 
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );
