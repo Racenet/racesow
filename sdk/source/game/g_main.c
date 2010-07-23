@@ -45,7 +45,6 @@ cvar_t *sv_cheats;
 cvar_t *cm_mapHeader;
 cvar_t *cm_mapVersion;
 
-cvar_t *g_maplist;
 cvar_t *g_maprotation;
 
 cvar_t *g_enforce_map_pool;
@@ -317,7 +316,6 @@ void G_Init( unsigned int seed, unsigned int framemsec, int protocol )
 	g_floodprotection_penalty->modified = qtrue;
 
 	// map list
-	g_maplist = trap_Cvar_Get( "g_maplist", "", CVAR_ARCHIVE );
 	g_maprotation = trap_Cvar_Get( "g_maprotation", "1", CVAR_ARCHIVE );
 
 	// map pool
@@ -470,7 +468,7 @@ static edict_t *G_ChooseNextMap( void )
 		return CreateTargetChangeLevel( level.forcemap );
 	}
 
-	if( !( *g_maplist->string ) || strlen( g_maplist->string ) == 0 || g_maprotation->integer == 0 )
+	if( !maplist || strlen( maplist ) == 0 || g_maprotation->integer == 0 ) // racesow
 	{
 		// same map again
 		return CreateTargetChangeLevel( level.mapname );
@@ -478,7 +476,7 @@ static edict_t *G_ChooseNextMap( void )
 	else if( g_maprotation->integer == 1 )
 	{
 		// next map in list
-		s = G_CopyString( g_maplist->string );
+		s = G_CopyString( maplist ); // racesow
 		f = NULL;
 		t = strtok( s, seps );
 
@@ -514,7 +512,7 @@ static edict_t *G_ChooseNextMap( void )
 	{
 		// random from the list, but not the same
 		int count = 0;
-		s = G_CopyString( g_maplist->string );
+		s = G_CopyString( maplist ); // racesow
 
 		t = strtok( s, seps );
 		while( t != NULL )
@@ -525,7 +523,7 @@ static edict_t *G_ChooseNextMap( void )
 		}
 
 		G_Free( s );
-		s = G_CopyString( g_maplist->string );
+		s = G_CopyString( maplist ); // racesow
 
 		if( count < 1 )
 		{

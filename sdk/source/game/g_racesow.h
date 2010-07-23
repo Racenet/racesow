@@ -35,6 +35,8 @@ cvar_t *rs_queryUpdateNickMap;
 cvar_t *rs_queryUpdateNickMapPlaytime;
 cvar_t *rs_querySetMapRating;
 
+char maplist[50000];
+
 void RS_MysqlLoadInfo( void );
 qboolean RS_MysqlConnect( void );
 qboolean RS_MysqlDisconnect( void );
