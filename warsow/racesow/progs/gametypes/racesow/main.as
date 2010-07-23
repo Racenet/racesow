@@ -741,9 +741,8 @@ void GT_ThinkRules()
 	Racesow_ThinkCallbackQueue();
 
 	if ( match.timeLimitHit() )
-		if ( g_maprotation.getBool() )
-			if ( map.allowEndGame() )
-				match.launchState( match.getState() + 1 );
+		if ( map.allowEndGame() )
+			match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
@@ -1104,7 +1103,7 @@ void GT_InitGametype()
 	maplist=RS_LoadMapList(false);
 	mapcount=RS_GetNumberOfMaps();
 	
-	if(g_freestyle.getBool())
+	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
