@@ -1129,8 +1129,8 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	//maplist=RS_LoadMapList(false);
-	//mapcount=RS_GetNumberOfMaps();
+	maplist=RS_LoadMapList(false);
+	mapcount=RS_GetNumberOfMaps();
 
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );
