@@ -37,6 +37,7 @@ cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
+cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 
 int oldTimelimit; //for restoring the old value
 
@@ -655,12 +656,12 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-			player.joinedTime=levelTime;
-			RS_MysqlPlayerAppear(player.getName(),client.playerNum(),player.getAuth().playerId,player.getAuth().isAuthenticated());
+			player.joinedTime = levelTime;
+			RS_MysqlPlayerAppear( player.getName(), client.playerNum(), player.getId(), map.getId(), player.getAuth().isAuthenticated());
 		}
 		else if ( score_event == "disconnect" )
 		{
-			RS_MysqlPlayerDisappear(player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
+			RS_MysqlPlayerDisappear( player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
 			player.resetAuth();
 			player.setClient(null);
 		}
@@ -762,7 +763,7 @@ void GT_ThinkRules()
 	Racesow_ThinkCallbackQueue();
 
 	if ( match.timeLimitHit() )
-		if ( map.allowEndGame() && g_maprotation.getBool())
+		if ( map.allowEndGame() )
 			match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
@@ -1122,9 +1123,10 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	maplist=RS_LoadMapList(false);
-	mapcount=RS_GetNumberOfMaps();
-	if(g_freestyle.getBool())
+	//maplist=RS_LoadMapList(false);
+	//mapcount=RS_GetNumberOfMaps();
+
+	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
