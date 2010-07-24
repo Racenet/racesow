@@ -19,8 +19,6 @@
 	 * @var cString
 	 */
 	cString authenticationName;
-    
-    bool autoAuth;
 
 	/**
 	 * The Player's unique ID
@@ -82,7 +80,6 @@
 		this.authorizationsMask = 0;
 		this.failCount = 0;
 		this.playerId = 0;
-        this.autoAuth = false;
 	}
 
 	~Racesow_Player_Auth()
@@ -145,12 +142,9 @@
 
 			return false;
 		}
-
-		cString PlayerNick = this.player.getName().removeColorTokens();
 		
         this.lastRefreshName = authName;
         this.lastRefreshPass = authPass;
-        this.autoAuth = autoAuth;
         this.authenticationName = authName;
         
 		// passing playerNum(), but there's a very small risk that the same playerNum switches to another player if he disconnects before auth finishes..
@@ -187,11 +181,9 @@
         
 		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
         
-        if (this.autoAuth) {
-        
-            this.autoAuth = false;
-            RS_MysqlPlayerAppear( this.player.getName(), this.player.getClient().playerNum(), this.player.getId(), map.getId(), this.player.getAuth().isAuthenticated());
-        }
+        RS_MysqlPlayerDisappear(nick, levelTime-this.player.joinedTime, this.player.getId(), this.player.getNickId() , map.getId(), this.player.getAuth().isAuthenticated());
+        player.joinedTime = levelTime;
+		RS_MysqlPlayerAppear(this.player.getName(), this.player.getClient().playerNum(), this.player.getId(), map.getId(), this.player.getAuth().isAuthenticated());
 	}
 
     /**
@@ -254,7 +246,6 @@
         cString newPass = this.player.getClient().getUserInfoKey("auth_pass");
         if (this.lastRefreshName != newName || this.lastRefreshPass != newPass)
         {
-        
             this.authenticate( newName, newPass, true );
         }
 	}
