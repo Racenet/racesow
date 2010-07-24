@@ -37,8 +37,9 @@ cvar_t *rs_queryUpdateMapPlaytime;
 cvar_t *rs_queryUpdateMapRaces;
 cvar_t *rs_queryAddRace;
 cvar_t *rs_queryGetPlayerMap;
-	cvar_t *rs_queryUpdatePlayerMap;
+cvar_t *rs_queryUpdatePlayerMap;
 cvar_t *rs_queryUpdatePlayerMapPlaytime;
+cvar_t *rs_queryGetPlayerMapHighscore;
 cvar_t *rs_queryGetPlayerMapHighscores;
 cvar_t *rs_queryResetPlayerMapPoints;
 cvar_t *rs_queryUpdatePlayerMapPoints;
@@ -130,7 +131,8 @@ void RS_MysqlLoadInfo( void )
 	rs_queryGetPlayerMap			= trap_Cvar_Get( "rs_queryGetPlayerMap",			"SELECT `points`, `time`, `races`, `playtime`, `created` FROM `player_map` WHERE `player_id` = %d AND `map_id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `created`) VALUES(%d, %d, %d, 1, NOW()) ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time` )", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMapPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPlaytime",	"INSERT INTO `player_map` (`player_id`, `map_id`, `playtime`) VALUES(%d, %d, %d) ON DUPLICATE KEY UPDATE `playtime` = `playtime` + VALUES(`playtime`);", CVAR_ARCHIVE );
-	rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
+	rs_queryGetPlayerMapHighscore	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScore",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`map_id` = %d AND `pm`.`player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
     rs_queryResetPlayerMapPoints	= trap_Cvar_Get( "rs_queryResetPlayerMapPoints",	"UPDATE `player_map` SET `points` = 0 WHERE `map_id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     
@@ -767,13 +769,24 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	// store player_id and nick_id in AS
 	RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerNum, player_id, nick_id);
 
+	// update the nicks's number of played maps
+    // FIXME: would be nice to do this when the player hits the start-timer (also the player update)
+    sprintf(query, rs_queryUpdateNickMaps->string, nick_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    
+    // update the players's number of played maps
+    sprintf(query, rs_queryUpdatePlayerMaps->string, player_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    
 	// retrieve personal best
-	sprintf(query, rs_queryGetPlayerMapHighscores->string, map_id);
+    sprintf(query, rs_queryGetPlayerMapHighscore->string, map_id, player_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
     RS_CheckMysqlThreadError();
-    while ((row = mysql_fetch_row(mysql_res)) != NULL)
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	{
 		if (row[0] !=NULL && row[1] != NULL)
 		{
@@ -781,10 +794,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
             playerId = atoi(row[0]);
             raceTime = atoi(row[1]);
 
-			// compute it for the current nick, even if it's under nick protection
-			// alternatively, to display personal best only after auth, one could copypaste this code into the RS_MysqlAuthenticate_Thread thread
-            if (playerId == player_id_for_nick)
-                personalBest = raceTime;
+			// set it for the current nick, even if it's under nick protection
+            personalBest = raceTime;
 		}
 	}
 	mysql_free_result(mysql_res);
