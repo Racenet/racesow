@@ -665,7 +665,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		{
 			player.joinedTime = levelTime;
             if (!player.getAuth().authenticate( client.getUserInfoKey("auth_name"), client.getUserInfoKey("auth_pass"), true )) {
-            
+
                 RS_MysqlPlayerAppear( player.getName(), client.playerNum(), player.getId(), map.getId(), player.getAuth().isAuthenticated());
             }
 		}
@@ -771,13 +771,9 @@ void GT_ThinkRules()
 	// perform a Mysql callback if there is one pending
 	Racesow_ThinkCallbackQueue();
 
-	if ( g_maprotation.getBool() ) {
-    
-        if (map.allowEndGame() ) {
-       
-			match.launchState( MATCH_STATE_POSTMATCH );
-        }
-    }
+	if ( match.timeLimitHit() )
+		if ( map.allowEndGame() )
+			match.launchState( match.getState() + 1 );
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
@@ -1136,8 +1132,8 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	maplist=RS_LoadMapList(false);
-	mapcount=RS_GetNumberOfMaps();
+	maplist = RS_LoadMapList( g_freestyle.getBool() );
+	mapcount = RS_GetNumberOfMaps();
 
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );
