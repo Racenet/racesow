@@ -32,6 +32,13 @@ Game cvars:
     rs_extendtimeperiod X	default 3		allows the extend_time x minutes before the end of timelimit
    // TODO: add all cvars with descriptions
 
+mysql cvars:
+	
+	rs_mysqlHost 	default localhost
+	rs_mysqlPort 	default 0			0 will use the system default port
+	rs_mysqlUser 	default root
+	rs_mysqlPass 	default ""
+	rs_mysqlDb 		default racesow
 
 
 Racesow team:
