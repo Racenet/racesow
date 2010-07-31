@@ -202,7 +202,6 @@ static qboolean Pickup_Ammo( edict_t *ent, edict_t *other )
 {
 	int oldcount;
 	int count;
-	int max;
 	qboolean weapon;
 
 	// ammo packs are special
@@ -217,14 +216,6 @@ static qboolean Pickup_Ammo( edict_t *ent, edict_t *other )
 		count = ent->item->quantity;
 
 	oldcount = other->r.client->ps.inventory[ent->item->tag];
-
-	max = ent->item->inventory_max;
-
-	if( max <= 0 )
-		max = 255;
-
-	if( (int)oldcount >= max )
-		return qfalse; //racesow: player already has max amount of ammo
 
 	if( !Add_Ammo( other->r.client, ent->item, count, qtrue ) )
 		return qfalse;
@@ -383,9 +374,6 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 {
 	qboolean taken;
 
-	int oldcount;
-	int max;
-
 	if( !other->r.client || G_ISGHOSTING( other ) )
 		return;
 
@@ -398,13 +386,23 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 	if( !G_Gametype_CanPickUpItem( ent->item ) )
 		return;
 
-
-	oldcount = other->r.client->ps.inventory[ent->item->tag];
-	max = ent->item->inventory_max;
-	if( max <= 0 )
-		max = 255;
-	if( (int)oldcount >= max )
-		return; //racesow: player already has max amount of the weapon
+	//racesow
+	if( GS_RaceGametype() )
+	{
+		if( ent->item->type & IT_WEAPON )
+		{
+			//check if the player already has as much as inventory_max allows
+			int weak_inventorymax = GS_FindItemByTag( ent->item->weakammo_tag)->inventory_max;
+			int max = ( weak_inventorymax <= 0 ) ? 255 : weak_inventorymax;
+			if( other->r.client->ps.inventory[ent->item->weakammo_tag] >= max )
+				return;
+		}
+		else if(( ent->item->type & IT_POWERUP ) && other->r.client->ps.inventory[ent->item->tag] > 0 )
+		{ //do not give a powerup if he already has it, no matter how much
+			return;
+		}
+	}
+	//!racesow
 
 	taken = G_PickupItem( ent, other );
 

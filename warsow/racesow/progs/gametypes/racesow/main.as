@@ -1038,7 +1038,7 @@ void GT_InitGametype()
         G_CmdExecute( "exec configs/server/gametypes/" + gametype.getName() + ".cfg silent" );
     }
 
-    gametype.spawnableItemsMask = ( IT_AMMO | IT_WEAPON | IT_POWERUP );
+    gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
         gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
 
@@ -1052,11 +1052,11 @@ void GT_InitGametype()
     gametype.maxPlayersPerTeam = 0;
 
     gametype.ammoRespawn = 0;
-    gametype.armorRespawn = 1;
+    gametype.armorRespawn = 0;
     gametype.weaponRespawn = 0;
-    gametype.healthRespawn = 1;
+    gametype.healthRespawn = 0;
     gametype.powerupRespawn = 0;
-    gametype.megahealthRespawn = 1;
+    gametype.megahealthRespawn = 0;
     gametype.ultrahealthRespawn = 0;
 
     gametype.readyAnnouncementEnabled = false;
