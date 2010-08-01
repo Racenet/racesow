@@ -833,8 +833,8 @@ static void door_killed( edict_t *self, edict_t *inflictor, edict_t *attacker, i
 {
 	edict_t	*ent;
 
-	if( self->teammaster )
-		return; // racesow: door is connected
+	if( GS_RaceGametype() ) //racesow: defrag support: do not trigger if the door got killed
+		return;
 
 	for( ent = self->teammaster; ent; ent = ent->teamchain )
 	{
