@@ -386,8 +386,8 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 			take = save = 0;
 		}
 		// don't get damage from players in race
-		else if( ( GS_RaceGametype() ) && attacker->r.client && targ->r.client
-				&& targ != world )//racesow: allow damage on buttons with health
+		else if( ( GS_RaceGametype() ) && attacker->r.client && targ->r.client )
+			//allow damage on things that have no client
 		{
 			take = save = 0;
 		}
