@@ -386,24 +386,6 @@ void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 	if( !G_Gametype_CanPickUpItem( ent->item ) )
 		return;
 
-	//racesow
-	if( GS_RaceGametype() )
-	{
-		if( ent->item->type & IT_WEAPON )
-		{
-			//check if the player already has as much as inventory_max allows
-			int weak_inventorymax = GS_FindItemByTag( ent->item->weakammo_tag)->inventory_max;
-			int max = ( weak_inventorymax <= 0 ) ? 255 : weak_inventorymax;
-			if( other->r.client->ps.inventory[ent->item->weakammo_tag] >= max )
-				return;
-		}
-		else if(( ent->item->type & IT_POWERUP ) && other->r.client->ps.inventory[ent->item->tag] > 0 )
-		{ //do not give a powerup if he already has it, no matter how much
-			return;
-		}
-	}
-	//!racesow
-
 	taken = G_PickupItem( ent, other );
 
 	if( !( ent->spawnflags & ITEM_TARGETS_USED ) )

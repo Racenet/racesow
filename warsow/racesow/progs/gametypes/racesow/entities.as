@@ -29,6 +29,29 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 	return false;
 }
 
+void replacementItem( cEntity @oldItem )
+{
+	cEntity @ent = @G_SpawnEntity( oldItem.getClassname() );
+	@ent.item = @oldItem.item;
+	ent.setOrigin( oldItem.getOrigin() );
+	ent.setSize(cVec3(-16, -16, -16) , cVec3(16, 16, 40));
+	//ent.modelindex = G_ModelIndex( ent.item.getModelString() );
+	//ent.modelindex2 = G_ModelIndex( ent.item.getModel2String() );
+	ent.solid = SOLID_TRIGGER;
+	ent.moveType = MOVETYPE_TOSS;
+	//ent.svflags &= ~SVF_NOCLIENT;
+	//ent.effects = EF_ROTATE_AND_BOB;
+	ent.count = oldItem.count;
+	ent.spawnFlags = oldItem.spawnFlags;
+	//ent.type = oldItem.type;
+	oldItem.solid = SOLID_NOT;
+	oldItem.setClassname( "ASmodel_" + ent.item.getClassname() );
+	//oldItem.freeEntity();
+	ent.linkEntity();
+	if(( ent.spawnFlags & 1 ) == 1)
+		ent.moveType = MOVETYPE_FLY;
+}
+
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
 // and classname->function is case sensitive so we need some shadow functions
 
@@ -62,7 +85,7 @@ void target_init_use( cEntity @self, cEntity @other, cEntity @activator )
     // health
     if ( ( self.spawnFlags & 2 ) == 0 )
     {
-        activator.health = activator.maxHealth;
+		activator.health = activator.maxHealth;
     }
 
     // weapons
@@ -491,4 +514,129 @@ void target_relay_use( cEntity @ent, cEntity @other, cEntity @activator )
 void target_relay( cEntity @ent )
 {
 	//the rest does the use code
+}
+
+void AS_weapon_gunblade_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_weapon_machinegun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_weapon_riotgun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_weapon_grenadelauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_weapon_rocketlauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_weapon_plasmagun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_weapon_lasergun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_weapon_electrobolt_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_gunblade_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_machinegun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_riotgun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_grenadelauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_rocketlauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_plasmagun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_lasergun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_ammo_electrobolt_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_quad_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_warshell_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void replacementItem_touch( cEntity @ent, cEntity @other )
+{
+	if( @other.client == null || other.moveType != MOVETYPE_PLAYER )
+		return;
+	int count = other.client.inventoryCount( ent.item.tag );
+	int inventoryMax = ent.item.inventoryMax;
+	if( ( ent.item.type & IT_WEAPON ) == IT_WEAPON )
+	{
+		int weakcount = other.client.inventoryCount( ent.item.weakAmmoTag );
+		int weakinventoryMax = G_GetItem( ent.item.weakAmmoTag ).inventoryMax;
+		if( count >= inventoryMax && weakcount >= weakinventoryMax )
+			return;
+		if( count == 0 || other.client.canSelectWeapon( ent.item.tag ) )
+			other.client.inventoryGiveItem( ent.item.tag, inventoryMax );
+		other.client.inventorySetCount( ent.item.weakAmmoTag, weakinventoryMax );
+		if( other.client.pendingWeapon == WEAP_GUNBLADE )
+			other.client.selectWeapon( ent.item.tag );
+	}
+	else if( ( ent.item.type & IT_AMMO ) == IT_AMMO )
+	{
+		if( count >= inventoryMax )
+			return;
+		other.client.inventorySetCount( ent.item.tag, inventoryMax );
+	}
+	else
+	{
+		if( count > 0 )
+			return;
+		int amount = ( ent.count == 0 ) ? ent.item.quantity : ent.count;
+		other.client.inventorySetCount( ent.item.tag, amount );
+	}
+	G_Sound( other, CHAN_ITEM, G_SoundIndex( ent.item.getPickupSoundString() ), 0.875 );
+	ent.respawnEffect();
 }
