@@ -34,22 +34,13 @@ void replacementItem( cEntity @oldItem )
 	cEntity @ent = @G_SpawnEntity( oldItem.getClassname() );
 	@ent.item = @oldItem.item;
 	ent.setOrigin( oldItem.getOrigin() );
-	ent.setSize(cVec3(-16, -16, -16) , cVec3(16, 16, 40));
-	//ent.modelindex = G_ModelIndex( ent.item.getModelString() );
-	//ent.modelindex2 = G_ModelIndex( ent.item.getModel2String() );
 	ent.solid = SOLID_TRIGGER;
-	ent.moveType = MOVETYPE_TOSS;
-	//ent.svflags &= ~SVF_NOCLIENT;
-	//ent.effects = EF_ROTATE_AND_BOB;
+	ent.moveType = MOVETYPE_NONE;
 	ent.count = oldItem.count;
 	ent.spawnFlags = oldItem.spawnFlags;
-	//ent.type = oldItem.type;
 	oldItem.solid = SOLID_NOT;
 	oldItem.setClassname( "ASmodel_" + ent.item.getClassname() );
-	//oldItem.freeEntity();
 	ent.linkEntity();
-	if(( ent.spawnFlags & 1 ) == 1)
-		ent.moveType = MOVETYPE_FLY;
 }
 
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
@@ -606,13 +597,58 @@ void AS_item_warshell_touch( cEntity @ent, cEntity @other, const cVec3 @planeNor
 	replacementItem_touch( @ent, @other );
 }
 
+void AS_item_armor_ga_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_armor_ya_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_armor_ra_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_armor_shard_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	//we don't want to have them.
+}
+
+void AS_item_health_small_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	//we don't want to have them.
+}
+
+void AS_item_health_medium_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_health_large_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_health_mega_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
+void AS_item_health_ultra_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+{
+	replacementItem_touch( @ent, @other );
+}
+
 void replacementItem_touch( cEntity @ent, cEntity @other )
 {
 	if( @other.client == null || other.moveType != MOVETYPE_PLAYER )
 		return;
 	int count = other.client.inventoryCount( ent.item.tag );
 	int inventoryMax = ent.item.inventoryMax;
-	if( ( ent.item.type & IT_WEAPON ) == IT_WEAPON )
+	if( ( ent.item.type & IT_WEAPON ) == uint(IT_WEAPON) )
 	{
 		int weakcount = other.client.inventoryCount( ent.item.weakAmmoTag );
 		int weakinventoryMax = G_GetItem( ent.item.weakAmmoTag ).inventoryMax;
@@ -624,18 +660,30 @@ void replacementItem_touch( cEntity @ent, cEntity @other )
 		if( other.client.pendingWeapon == WEAP_GUNBLADE )
 			other.client.selectWeapon( ent.item.tag );
 	}
-	else if( ( ent.item.type & IT_AMMO ) == IT_AMMO )
+	else if( ( ent.item.type & IT_AMMO ) == uint(IT_AMMO) )
 	{
 		if( count >= inventoryMax )
 			return;
 		other.client.inventorySetCount( ent.item.tag, inventoryMax );
 	}
-	else
+	else if( ( ent.item.type & IT_ARMOR ) == uint(IT_ARMOR) )
+	{
+		if( other.client.armor >= ent.item.quantity )
+			return;
+		int amount = ( ent.count == 0 ) ? ent.item.quantity : ent.count;
+		other.client.armor = amount;
+	}
+	else if( ( ent.item.type & IT_POWERUP ) == uint(IT_POWERUP) )
 	{
 		if( count > 0 )
 			return;
 		int amount = ( ent.count == 0 ) ? ent.item.quantity : ent.count;
 		other.client.inventorySetCount( ent.item.tag, amount );
+	}
+	else if( ( ent.item.type & IT_HEALTH ) == uint(IT_HEALTH) )
+	{
+		return;
+		//TODO. Discuss: health system similar to armors??
 	}
 	G_Sound( other, CHAN_ITEM, G_SoundIndex( ent.item.getPickupSoundString() ), 0.875 );
 	ent.respawnEffect();

@@ -1001,52 +1001,31 @@ void GT_SpawnGametype()
         players[i].reset();
 
     //TODOSOW fastcap if there are flag entitys
-    for( int tag = WEAP_NONE; tag < AMMO_TOTAL; tag++ )
+    for( int tag = WEAP_NONE; tag < POWERUP_TOTAL; tag++ )
     {
-    	cItem @weaponItem = G_GetItem( tag );
-    	if( @weaponItem == null)
+    	cItem @Item = G_GetItem( tag );
+    	if( @Item == null)
     		continue;
-    	cString weaponClassname = weaponItem.getClassname();
+    	cString itemClassname = Item.getClassname();
     	cEntity @from = null;
-		while( true )
+    	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
+    	if( @item == null )
+    		continue;
+		do
 		{
-			cEntity @weapon = @G_FindEntityWithClassname( @from, weaponClassname );
-			if( @weapon == null )
-				break;
-			if( weapon.solid == SOLID_NOT ) //connected
+			if( item.solid == SOLID_NOT ) //connected
 			{
-				@from = @weapon;
+				@from = @item;
 			}
 			else
 			{
-				weapon.setClassname( "AS_" + weaponClassname );
-				replacementItem( @weapon );
+				item.setClassname( "AS_" + itemClassname );
+				replacementItem( @item );
+				@from = @item;
 			}
-		}
-    }
-    for( int tag = HEALTH_ULTRA; tag < POWERUP_TOTAL; tag++ )
-    {
-    	cItem @powerupItem = G_GetItem( tag );
-    	if( @powerupItem == null)
-    		continue;
-    	cString powerupClassname = powerupItem.getClassname();
-    	cEntity @from = null;
-		while( true )
-		{
-			cEntity @powerup = @G_FindEntityWithClassname( @from, powerupClassname );
-			if( @powerup == null )
-				break;
-			if( powerup.solid == SOLID_NOT ) //connected
-			{
-				@from = @powerup;
-			}
-			else
-			{
-				powerup.setClassname( "AS_" + powerupClassname );
-				replacementItem( @powerup );
-			}
-		}
-    }
+			@item = @G_FindEntityWithClassname( @from, itemClassname );
+		} while( @item != null );
+	}
 }
 
 /**
