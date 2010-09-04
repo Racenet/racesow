@@ -520,14 +520,8 @@ qboolean G_Teams_JoinAnyTeam( edict_t *ent, qboolean silent )
 			}
 			return qfalse;
 		}
-		if( G_Teams_JoinTeam( ent, TEAM_PLAYERS ) )
-		{
-			if( !silent )
-			{
-				G_PrintMsg( NULL, "%s%s joined the %s team.\n",
-					ent->r.client->netname, S_COLOR_WHITE, GS_TeamName( ent->s.team ) );
-			}
-		}
+        
+		G_Teams_JoinTeam( ent, TEAM_PLAYERS );
 		return qtrue;
 
 	}
@@ -563,11 +557,6 @@ qboolean G_Teams_JoinAnyTeam( edict_t *ent, qboolean silent )
 		{
 			if( G_Teams_JoinTeam( ent, team ) )
 			{
-				if( !silent )
-				{
-					G_PrintMsg( NULL, "%s%s joined the %s team.\n",
-						ent->r.client->netname, S_COLOR_WHITE, GS_TeamName( ent->s.team ) );
-				}
 				return qtrue;
 			}
 		}
@@ -615,8 +604,6 @@ void G_Teams_Join_Cmd( edict_t *ent )
 		}
 		if( G_Teams_JoinTeam( ent, team ) )
 		{
-			G_PrintMsg( NULL, "%s%s joined the %s%s team.\n", ent->r.client->netname, S_COLOR_WHITE,
-				GS_TeamName( ent->s.team ), S_COLOR_WHITE );
 			return;
 		}
 	}

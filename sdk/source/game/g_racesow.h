@@ -35,6 +35,10 @@ cvar_t *rs_queryUpdateNickMap;
 cvar_t *rs_queryUpdateNickMapPlaytime;
 cvar_t *rs_querySetMapRating;
 
+cvar_t *rs_authField_Name;
+cvar_t *rs_authField_Pass;
+cvar_t *rs_authField_Token;
+
 char maplist[50000];
 
 void RS_MysqlLoadInfo( void );

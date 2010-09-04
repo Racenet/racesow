@@ -41,7 +41,11 @@ cvar_t *rs_queryUpdatePlayerMapPoints;
 cvar_t *rs_querySetMapRating;
 cvar_t *rs_queryLoadMapList;
 cvar_t *rs_queryLoadMapHighscores;
-    
+
+cvar_t *rs_authField_Name;
+cvar_t *rs_authField_Pass;
+cvar_t *rs_authField_Token;
+
 /**
  * as callback commands (must be similar to callback.as!)
  */
@@ -98,6 +102,17 @@ void RS_MysqlLoadInfo( void )
     rs_mysqlUser = trap_Cvar_Get( "rs_mysqlUser", "root", CVAR_ARCHIVE );
     rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "", CVAR_ARCHIVE );
     rs_mysqlDb = trap_Cvar_Get( "rs_mysqlDb", "racesow", CVAR_ARCHIVE );
+    
+    rs_authField_Name = trap_Cvar_Get( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    rs_authField_Pass = trap_Cvar_Get( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    rs_authField_Token = trap_Cvar_Get( "rs_authField_Token", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    
+    if (!Q_stricmp( rs_authField_Name->string, "" ) || !Q_stricmp( rs_authField_Pass->string, "" ) ||!Q_stricmp( rs_authField_Token->string, "" ))
+    {
+        G_Error("\033[31;40m\nthe cVars rs_authField_Name, rs_authField_Pass and rs_authField_Token must be set and should be unique for your database!\n\nie. racenet uses the following settings:\n\tset rs_authField_Name \"racenet_user\"\n\tset rs_authField_Pass \"racenet_pass\"\n\tset rs_authField_Token \"racenet_token\"\n\nlike that you can store authentications for multiple servers in a single config.\n\033[0m\n");
+    }
+    
+    G_Printf("-------------------------------------\nClient authentication via userinfo:\nsetu %s \"username\"\nsetu %s \"password\"\nor the more secure method using an enrypted token\nsetu %s \"token\"\n-------------------------------------\n", rs_authField_Name->string, rs_authField_Pass->string, rs_authField_Token->string);
     
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
@@ -691,8 +706,6 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         hasUserinfo = qtrue;
         sprintf(query, rs_queryGetPlayerAuthByToken->string, authToken);
         mysql_real_query(&mysql, query, strlen(query));
-        
-        G_PrintMsg(NULL, "QUERY: %s\n", query);
         
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
