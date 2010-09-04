@@ -30,7 +30,12 @@ uint mapcount;
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 
-cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); // move to where it's needed...
+cVar rs_authField_Name( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+cVar rs_authField_Token( "rs_authField_Token", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+
+
+cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
@@ -234,40 +239,35 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     }
     else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) )
     {
-        if ( @client != null && !player.isJoinlocked )
+        if (player.isJoinlocked)
         {
-        	if(client.team == TEAM_SPECTATOR)
-        	{
-        		sendMessage( S_COLOR_WHITE + "Join the game first.\n", @client );
-        	}
-        	else
-        	{
-        		player.restartRace();
-        		client.team = TEAM_PLAYERS;
-        		client.respawn( false );
-        	}
+            player.sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n");
+        }
+        else if ( @client != null )
+        {
+       		player.restartRace();
+       		client.team = TEAM_PLAYERS;
+       		client.respawn( false );
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     else if ( cmdString == "join" )
     {
         if ( @client != null && !player.isJoinlocked && !map.inOvertime)
         {
-        	if( client.team != TEAM_PLAYERS ) //spam protection
-    			G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_WHITE
-    					+ " joined the PLAYERS team.\n" ); // leave a message for everyone
             player.restartRace();
             client.team = TEAM_PLAYERS;
 			client.respawn( false );
         }
 
         if( player.isJoinlocked )
-        	sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n", @client );
+        	player.sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n");
 
         if( map.inOvertime )
-        	sendMessage( S_COLOR_RED + "You can't join during overtime period.\n", @client );
+        	player.sendMessage( S_COLOR_RED + "You can't join during overtime period.\n" );
 
 		return true;
     }
@@ -663,9 +663,9 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-            player.getAuth().setName(client.getUserInfoKey("auth_name"));
-            player.getAuth().setPass(client.getUserInfoKey("auth_pass"));
-            player.getAuth().setToken(client.getUserInfoKey("auth_token"));
+            player.getAuth().setName(client.getUserInfoKey(rs_authField_Name.getString()));
+            player.getAuth().setPass(client.getUserInfoKey(rs_authField_Pass.getString()));
+            player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.getString()));
                 
             player.appear();
 		}

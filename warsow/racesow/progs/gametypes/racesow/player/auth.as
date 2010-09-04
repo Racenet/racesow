@@ -210,7 +210,14 @@
             this.authorizationsMask = uint(authMask);
             this.appearCallback(playerId);
             
-            G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
+            if (this.authenticationToken != "")
+            {
+                G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated via token\n" );
+            }
+            else
+            {
+                G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
+            }
         }
 	}
 
@@ -223,19 +230,11 @@
 	 */
     void nickProtectCallback( int player_id_for_nick, int player_id )
     {
-        if (player_id_for_nick != player_id)
+        if (player_id_for_nick != player_id && this.violateNickProtectionSince == 0)
         {
-            if ( this.violateNickProtectionSince == 0 )
-			{
-				this.violateNickProtectionSince = localTime;
-				this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
-				this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
-				+ "If you don't authenticate or change your nickname you will be kicked.\n" );
-			}
-        }
-        else
-        {
-            //this.appearCallback(player_id);
+            this.violateNickProtectionSince = localTime;
+			this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n" + S_COLOR_RED + "If you don't authenticate or change your nickname you will be kicked.\n" );
+			G_PrintMsg(null, this.player.getName() + S_COLOR_RED + " is using a protected nickname which does not belong to him.\n");
         }
     }
     
@@ -248,7 +247,7 @@
     void appearCallback(int playerId)
     {
         this.playerId = playerId;
-        this.player.sendMessage( S_COLOR_BLUE + "your playerId: "+ playerId +"\n" );
+        // this.player.sendMessage( S_COLOR_BLUE + "your playerId: "+ playerId +"\n" );
         
         if ( this.lastViolateProtectionMessage != 0 )
         {
