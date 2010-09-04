@@ -38,6 +38,7 @@ cvar_t *rs_querySetMapRating;
 cvar_t *rs_authField_Name;
 cvar_t *rs_authField_Pass;
 cvar_t *rs_authField_Token;
+cvar_t *rs_tokenSalt;
 
 char maplist[50000];
 

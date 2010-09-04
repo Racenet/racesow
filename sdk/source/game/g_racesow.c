@@ -45,6 +45,7 @@ cvar_t *rs_queryLoadMapHighscores;
 cvar_t *rs_authField_Name;
 cvar_t *rs_authField_Pass;
 cvar_t *rs_authField_Token;
+cvar_t *rs_tokenSalt;
 
 /**
  * as callback commands (must be similar to callback.as!)
@@ -106,6 +107,7 @@ void RS_MysqlLoadInfo( void )
     rs_authField_Name = trap_Cvar_Get( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_authField_Pass = trap_Cvar_Get( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_authField_Token = trap_Cvar_Get( "rs_authField_Token", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    rs_tokenSalt = trap_Cvar_Get( "rs_tokenSalt", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     
     if (!Q_stricmp( rs_authField_Name->string, "" ) || !Q_stricmp( rs_authField_Pass->string, "" ) ||!Q_stricmp( rs_authField_Token->string, "" ))
     {
@@ -114,11 +116,11 @@ void RS_MysqlLoadInfo( void )
     
     G_Printf("-------------------------------------\nClient authentication via userinfo:\nsetu %s \"username\"\nsetu %s \"password\"\nor the more secure method using an enrypted token\nsetu %s \"token\"\n-------------------------------------\n", rs_authField_Name->string, rs_authField_Pass->string, rs_authField_Token->string);
     
-    rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s') LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
-	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s'), `auth_mask` = 1 WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL) LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL) LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = playtime + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMaps		= trap_Cvar_Get( "rs_queryUpdatePlayerMaps",		"UPDATE `player` SET `maps` = (SELECT COUNT(`map_id`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
@@ -421,7 +423,7 @@ void *RS_MysqlAuthenticate_Thread( void *in )
     Q_strncpyz ( pass, authData->authPass, sizeof(pass) );
     mysql_real_escape_string(&mysql, pass, pass, strlen(pass));
     
-	sprintf(query, rs_queryGetPlayerAuth->string, name, pass);
+	sprintf(query, rs_queryGetPlayerAuth->string, name, pass, rs_tokenSalt->string);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
@@ -704,7 +706,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     if (Q_stricmp( authToken, "" ))
     {
         hasUserinfo = qtrue;
-        sprintf(query, rs_queryGetPlayerAuthByToken->string, authToken);
+        sprintf(query, rs_queryGetPlayerAuthByToken->string, authToken, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
         
         RS_CheckMysqlThreadError();
