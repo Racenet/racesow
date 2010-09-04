@@ -205,6 +205,26 @@ class Racesow_Player
 	}
 
     /**
+     * The player appears in the game
+     * @return void
+     */
+    void appear()
+    {
+        this.joinedTime = levelTime;
+        
+        RS_MysqlPlayerAppear(
+            this.getName(),
+            this.getClient().playerNum(),
+            this.getId(),
+            map.getId(),
+            this.getAuth().isAuthenticated(),
+            this.getAuth().authenticationName,
+            this.getAuth().authenticationPass,
+            this.getAuth().authenticationToken
+        );
+    }
+    
+    /**
 	 * Get the player's id
 	 * @return int
 	 */
@@ -228,6 +248,8 @@ class Racesow_Player
 	 */
     void setId(int playerId)
     {
+        // G_PrintMsg( this.client.getEnt(), "setting playerID: " + playerId + "\n" );
+    
         this.auth.playerId=playerId;
     }
 
@@ -283,7 +305,12 @@ class Racesow_Player
 	 */
 	cString getName()
 	{
-		return this.client.getName();
+		if (@this.client != null)
+        {
+            return this.client.getName();
+        }
+        
+        return "";
 	}
 
 	/**
@@ -789,7 +816,10 @@ class Racesow_Player
 	 */
 	void sendMessage( cString message )
 	{
-		// just send to original func
+		if (@this.client == null)
+            return;
+        
+        // just send to original func
 		G_PrintMsg( this.client.getEnt(), message );
 
 		// maybe log messages for some reason to figure out ;)
@@ -855,10 +885,9 @@ class Racesow_Player
 	 */
 	void kick( cString message )
 	{
-		G_PrintMsg( null, S_COLOR_RED + message + "\n" );
-		G_CmdExecute( "kick " + this.client.playerNum() );
-		this.auth.lastViolateProtectionMessage = 0;
-		this.auth.violateNickProtectionSince = 0;
+		G_PrintMsg( null, S_COLOR_RED + "Kicked "+ this.getName() + S_COLOR_RED + " Reason: " + message + "\n" );
+        G_CmdExecute( "kick " + this.client.playerNum() );
+		this.reset();
 	}
 
 	/**

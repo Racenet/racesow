@@ -8,17 +8,24 @@
 
  class Racesow_Player_Auth : Racesow_Player_Implemented
  {
-	/**
-	 * Session name
-	 * @var cString
-	 */
-	cString sessionName;
-
-	/**
+    /**
 	 * Racesow account name
 	 * @var cString
 	 */
 	cString authenticationName;
+    
+    /**
+	 * Racesow account pass
+	 * @var cString
+	 */
+	cString authenticationPass; 
+  
+    
+    /**
+	 * Racesow account token
+	 * @var cString
+	 */
+	cString authenticationToken;
 
 	/**
 	 * The Player's unique ID
@@ -37,18 +44,6 @@
 	 * @var uint
 	 */
 	uint authorizationsMask;
-
-	/**
-	 * The last auth name found in userinfo
-	 * @var cString
-	 */
-	cString lastRefreshName;
-
-	/**
-	 * The last auth pass found in userinfo
-	 * @var cString
-	 */
-	cString lastRefreshPass;
 
 	/**
 	 * Number of failed auths in a row
@@ -76,16 +71,39 @@
 
 	void reset()
 	{
-		this.authenticationName = "";
-		this.authorizationsMask = 0;
-		this.failCount = 0;
-		this.playerId = 0;
+        this.violateNickProtectionSince = 0;
+        this.lastViolateProtectionMessage = 0;
+        this.failCount = 0;
+        this.authorizationsMask = 0;
+        this.nickId = 0;
+        this.playerId = 0;
+        this.authenticationToken = "";
+        this.authenticationPass = "";
+        this.authenticationName = "";
 	}
 
 	~Racesow_Player_Auth()
 	{
 	}
 
+    Racesow_Player_Auth setName(cString name)
+    {
+        this.authenticationName = name;
+        return this;
+    }
+    
+    Racesow_Player_Auth setPass(cString pass)
+    {
+        this.authenticationPass = pass;
+        return this;
+    }
+    
+    Racesow_Player_Auth setToken(cString token)
+    {
+        this.authenticationToken = token;
+        return this;
+    }
+    
     /**
 	 * Convert a string to an allowed filename
 	 */
@@ -142,13 +160,29 @@
 
 			return false;
 		}
-		
-        this.lastRefreshName = authName;
-        this.lastRefreshPass = authPass;
-        this.authenticationName = authName;
         
-		// passing playerNum(), but there's a very small risk that the same playerNum switches to another player if he disconnects before auth finishes..
-        RS_MysqlAuthenticate(this.player.getClient().playerNum(), authName, authPass); 
+        if (authName == this.authenticationName)
+        {
+            if ( !autoAuth )
+			{
+				this.player.sendMessage( S_COLOR_RED + "You are already authed as " + authName + "\n" );
+			}
+            return false;
+        }
+
+        RS_MysqlPlayerDisappear(
+            this.player.getName(),
+            levelTime-this.player.joinedTime,
+            this.player.getId(),
+            this.player.getNickId(),
+            map.getId(),
+            this.isAuthenticated()
+        );
+        
+        this.setName(authName);
+        this.setPass(authPass);
+        this.player.appear();
+        
         return true;
 	}
     
@@ -161,61 +195,69 @@
 	 */
     void authCallback( int playerId, int authMask )
     {
-        if (playerId == 0) {
-        
+        if (playerId == 0)
+        {
             G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate as "+ this.authenticationName +"\n" );
-            this.authenticationName = "";
-            return;
+            
+            if (++this.failCount >= 3)
+            {
+                this.player.kick( "Multiple invalid login tries." );
+            }
         }
-        
-        if ( this.lastViolateProtectionMessage != 0 )
-		{
-            this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
-		}
-
-        this.playerId = playerId;
-		this.failCount = 0;
-		this.violateNickProtectionSince = 0;
-		this.lastViolateProtectionMessage = 0;
-		this.authorizationsMask = uint(authMask);
-        
-		G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
-        
-        RS_MysqlPlayerDisappear(this.player.getName(), levelTime-this.player.joinedTime, this.player.getId(), this.player.getNickId() , map.getId(), this.player.getAuth().isAuthenticated());
-        player.joinedTime = levelTime;
-		RS_MysqlPlayerAppear(this.player.getName(), this.player.getClient().playerNum(), this.player.getId(), map.getId(), this.player.getAuth().isAuthenticated());
+        else
+        {
+            this.failCount = 0;
+            this.authorizationsMask = uint(authMask);
+            this.appearCallback(playerId);
+            
+            G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
+        }
 	}
 
     /**
 	 * Callback for the nickname protection
      *
-     * @param int playerId
+     * @param int player_id_for_nick
+     * @param int player_id
      * @return void
 	 */
-    void nickProtectCallback( int wanted_playerId, int current_playerId )
+    void nickProtectCallback( int player_id_for_nick, int player_id )
     {
-        if ( ( wanted_playerId == current_playerId && this.isAuthenticated() ) || ( wanted_playerId == 0 ))
+        if (player_id_for_nick != player_id)
         {
-            if ( this.lastViolateProtectionMessage != 0 )
-    		{
-                this.violateNickProtectionSince = 0;
-                this.lastViolateProtectionMessage = 0;
-                this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
-    		}
-        }
-        else if ( wanted_playerId != 0 )
-		{
-			if ( this.violateNickProtectionSince == 0 )
+            if ( this.violateNickProtectionSince == 0 )
 			{
 				this.violateNickProtectionSince = localTime;
 				this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION!\n");
 				this.player.sendMessage( S_COLOR_RED + "You are using a protected nickname which does not belong to you.\n"
 				+ "If you don't authenticate or change your nickname you will be kicked.\n" );
 			}
-
-		}
+        }
+        else
+        {
+            //this.appearCallback(player_id);
+        }
     }
-
+    
+    /**
+     * Callback when a player "appeared"
+     *
+     * @param int playerId
+     * @return void
+     */
+    void appearCallback(int playerId)
+    {
+        this.playerId = playerId;
+        this.player.sendMessage( S_COLOR_BLUE + "your playerId: "+ playerId +"\n" );
+        
+        if ( this.lastViolateProtectionMessage != 0 )
+        {
+            this.violateNickProtectionSince = 0;
+            this.lastViolateProtectionMessage = 0;
+            this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
+        }
+    }
+    
 	/**
 	 * isAuthenticated
 	 * @return bool
@@ -229,24 +271,23 @@
 	 * Check for a nickname change event
 	 * @return void
 	 */
-	void refresh( cString &nick)
+	void refresh( cString &oldNick)
 	{
 		if ( @this.player == null || @this.player.getClient() == null )
 			return;
 
-		if ( nick.removeColorTokens() != this.player.getName().removeColorTokens() )
+		if ( oldNick.removeColorTokens() != this.player.getName().removeColorTokens() )
 		{
-			RS_MysqlPlayerDisappear(nick, levelTime-this.player.joinedTime, this.player.getId(), this.player.getNickId() , map.getId(), this.player.getAuth().isAuthenticated());
-			player.joinedTime = levelTime;
-			RS_MysqlPlayerAppear(this.player.getName(), this.player.getClient().playerNum(), this.player.getId(), map.getId(), this.player.getAuth().isAuthenticated());
-		
-        }
-        
-        cString newName = this.player.getClient().getUserInfoKey("auth_name");
-        cString newPass = this.player.getClient().getUserInfoKey("auth_pass");
-        if (this.lastRefreshName != newName || this.lastRefreshPass != newPass)
-        {
-            this.authenticate( newName, newPass, true );
+			RS_MysqlPlayerDisappear(
+                oldNick,
+                levelTime-this.player.joinedTime,
+                this.player.getId(),
+                this.player.getNickId(),
+                map.getId(),
+                this.isAuthenticated()
+            );
+            
+            this.player.appear();
         }
 	}
 

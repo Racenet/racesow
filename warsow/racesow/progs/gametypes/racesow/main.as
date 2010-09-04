@@ -663,17 +663,16 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-			player.joinedTime = levelTime;
-            if (!player.getAuth().authenticate( client.getUserInfoKey("auth_name"), client.getUserInfoKey("auth_pass"), true )) {
-
-                RS_MysqlPlayerAppear( player.getName(), client.playerNum(), player.getId(), map.getId(), player.getAuth().isAuthenticated());
-            }
+            player.getAuth().setName(client.getUserInfoKey("auth_name"));
+            player.getAuth().setPass(client.getUserInfoKey("auth_pass"));
+            player.getAuth().setToken(client.getUserInfoKey("auth_token"));
+                
+            player.appear();
 		}
 		else if ( score_event == "disconnect" )
 		{
 			RS_MysqlPlayerDisappear( player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
-			player.resetAuth();
-			player.setClient(null);
+			player.reset();
 		}
 		else if ( score_event == "userinfochanged" )
 		{

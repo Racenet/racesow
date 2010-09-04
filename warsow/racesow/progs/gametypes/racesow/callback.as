@@ -63,8 +63,7 @@ void Racesow_ThinkCallbackQueue()
 			@player = Racesow_GetPlayerByNumber(arg1);
 			if ( @player != null )
 			{
-				player.setId(arg2);
-				player.setNickId(arg3);
+                player.getAuth().appearCallback(arg2);
 			}
             break;
 
