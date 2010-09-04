@@ -812,19 +812,23 @@ void GT_ThinkRules()
 		for ( int i = 0; @specs.ent( i ) != null; i++ )
 		{
 			@spec_ent = @specs.ent( i );
-			cClient @spec_client = spec_ent.client;
-			if(spec_client.connecting)
-			{
-				scb_specs += spec_client.playerNum() + " " + -1 + " ";
-			}
-			else
-			{
-				scb_specs += spec_client.playerNum() + " " + spec_client.ping + " ";
-			}
-			if( spec_client.chaseActive )
-			{
-				specwho[spec_client.chaseTarget - 1] += spec_ent.client.playerNum() + " " + spec_ent.client.ping + " ";
-			}
+            if (@spec_ent != null && @spec_ent.client != null)
+            {
+            
+                cClient @spec_client = spec_ent.client;
+                if(spec_client.connecting)
+                {
+                    scb_specs += spec_client.playerNum() + " " + -1 + " ";
+                }
+                else
+                {
+                    scb_specs += spec_client.playerNum() + " " + spec_client.ping + " ";
+                }
+                if( spec_client.chaseActive )
+                {
+                    specwho[spec_client.chaseTarget - 1] += spec_ent.client.playerNum() + " " + spec_ent.client.ping + " ";
+                }
+            }
 		}
 	nextTimeUpdate = levelTime + 2500;
 	}
