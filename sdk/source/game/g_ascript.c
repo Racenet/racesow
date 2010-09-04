@@ -6172,9 +6172,9 @@ static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
 }
 
 // RS_MysqlPlayerAppear
-static qboolean asFunc_RS_MysqlPlayerAppear( asstring_t *playerName, int playerNum, int player_id, int map_id, int is_authed)
+static qboolean asFunc_RS_MysqlPlayerAppear( asstring_t *playerName, int playerNum, int player_id, int map_id, int is_authed, asstring_t *authName, asstring_t *authPass, asstring_t *authToken)
 {
-	return RS_MysqlPlayerAppear(playerName->buffer, playerNum, player_id, map_id, is_authed);
+	return RS_MysqlPlayerAppear(playerName->buffer, playerNum, player_id, map_id, is_authed, authName->buffer, authPass->buffer, authToken->buffer);
 }
 
 static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
@@ -6184,7 +6184,10 @@ static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 1),
 		(int)G_asGeneric_GetArgInt(gen, 2),
 		(int)G_asGeneric_GetArgInt(gen, 3),
-		(int)G_asGeneric_GetArgInt(gen, 4)));
+		(int)G_asGeneric_GetArgInt(gen, 4),
+        (asstring_t *)G_asGeneric_GetArgAddress(gen, 5),
+        (asstring_t *)G_asGeneric_GetArgAddress(gen, 6),
+        (asstring_t *)G_asGeneric_GetArgAddress(gen, 7)));
 }
 
 // RS_MysqlPlayerDisappear
@@ -6867,7 +6870,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	{ "void RS_MysqlAuthenticate( int, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
-	{ "void RS_MysqlPlayerAppear( cString &, int, int, int, bool )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
+	{ "void RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
 	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "void RS_MysqlInsertRace( int, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
