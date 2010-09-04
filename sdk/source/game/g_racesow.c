@@ -727,7 +727,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     else if (Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
     {
         hasUserinfo = qtrue;
-        sprintf(query, rs_queryGetPlayerAuth->string, authName, authPass);
+        sprintf(query, rs_queryGetPlayerAuth->string, authName, authPass, rs_tokenSalt->string);
         
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
