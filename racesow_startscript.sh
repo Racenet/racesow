@@ -1,0 +1,1 @@
+cd /home/warsow/warsow-0.5 && ./wsw_server.x86_64 +set fs_game racesow +exec cfgs/port_50001.cfg
