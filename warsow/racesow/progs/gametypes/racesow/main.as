@@ -931,8 +931,6 @@ void GT_ThinkRules()
  */
 bool GT_MatchStateFinished( int incomingMatchState )
 {
-    G_PrintMsg(null, "State " + incomingMatchState + "Finished?\n");
-
     if (incomingMatchState == MATCH_STATE_POSTMATCH)
     {
         if (!map.inOvertime)
