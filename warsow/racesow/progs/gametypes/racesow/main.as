@@ -16,6 +16,7 @@ int numCheckpoints = 0;
 bool demoRecording = false;
 const int MAX_RECORDS = 10;
 const int MAPS_PER_PAGE = 20;
+int oldTimelimit; //for restoring the old value
 
 cString gameDataDir = "gamedata";
 cString scbmsg; //scoreboard message for custom scoreboards
@@ -33,18 +34,17 @@ Racesow_Map @map;
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Token( "rs_authField_Token", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
-
+cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
+cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 
 cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
-cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
-cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
-cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 
-int oldTimelimit; //for restoring the old value
+cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+
 
 /**
  * TimeToString

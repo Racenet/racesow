@@ -64,44 +64,76 @@
 	 */
 	uint64 violateNickProtectionSince;
 
+    /**
+     * Constructor
+     */
 	Racesow_Player_Auth()
 	{
 		this.reset();
 	}
 
-	void reset()
-	{
-        this.violateNickProtectionSince = 0;
-        this.lastViolateProtectionMessage = 0;
-        this.failCount = 0;
-        this.authorizationsMask = 0;
-        this.nickId = 0;
-        this.playerId = 0;
-        this.authenticationToken = "";
-        this.authenticationPass = "";
-        this.authenticationName = "";
-	}
-
+        
+    /**
+     * Descructor
+     */
 	~Racesow_Player_Auth()
 	{
 	}
+    
+    /**
+     * Reset the whole auth object
+     *
+     */
+	void reset()
+	{
+        this.killAuthentication();
+        this.resetViolateState();
+	}
 
-    Racesow_Player_Auth setName(cString name)
+    /**
+     * Don't blame the player nomore
+     *
+     * @return void
+     */
+    void resetViolateState()
+    {
+        this.violateNickProtectionSince = 0;
+        this.lastViolateProtectionMessage = 0;
+        this.failCount = 0;
+    }
+    
+    /**
+     * Remove all information about the authentication
+     * and the authorizations of the player
+     *
+     * @return void
+     */
+    void killAuthentication()
+    {
+        this.nickId = 0;
+        this.playerId = 0;
+        this.authenticationName = "";
+        this.authenticationPass = "";
+        this.authenticationToken = "";
+        this.authorizationsMask = 0;
+    }
+
+    Racesow_Player_Auth @setName(cString name)
     {
         this.authenticationName = name;
-        return this;
+        return @this;
     }
     
-    Racesow_Player_Auth setPass(cString pass)
+    Racesow_Player_Auth @setPass(cString pass)
     {
         this.authenticationPass = pass;
-        return this;
+        return @this;
     }
     
-    Racesow_Player_Auth setToken(cString token)
+    Racesow_Player_Auth @setToken(cString token)
     {
         this.authenticationToken = token;
-        return this;
+        return @this;
     }
     
     /**
@@ -147,15 +179,16 @@
 	 * Authenticate server account
 	 * @param cString &authName
 	 * @param cString &password
+     * @param bool silent
 	 * @return bool
 	 */
-	bool authenticate( cString &authName, cString &authPass, bool autoAuth )
+	bool authenticate( cString &authName, cString &authPass, bool silent )
 	{
-		if ( authName == "" || authPass == "" )
+		if ( authName == "" || authName == "" && authPass == "" )
 		{
-			if ( !autoAuth )
+			if ( !silent )
 			{
-				this.player.sendMessage( S_COLOR_RED + "usage: auth <account name> <password>\n" );
+				this.player.sendMessage( S_COLOR_RED + "usage: auth <account name> <password> OR auth <token>\n" );
 			}
 
 			return false;
@@ -163,13 +196,22 @@
         
         if (authName == this.authenticationName)
         {
-            if ( !autoAuth )
+            if ( !silent )
 			{
 				this.player.sendMessage( S_COLOR_RED + "You are already authed as " + authName + "\n" );
 			}
             return false;
         }
-
+        
+        if (authName == this.authenticationToken)
+        {
+            if ( !silent )
+			{
+				this.player.sendMessage( S_COLOR_RED + "You are already authed with that token\n" );
+			}
+            return false;
+        }
+        
         RS_MysqlPlayerDisappear(
             this.player.getName(),
             levelTime-this.player.joinedTime,
@@ -179,12 +221,26 @@
             this.isAuthenticated()
         );
         
-        this.setName(authName);
-        this.setPass(authPass);
+        // if only one param was passed, handle it as an authToken
+        if (authPass == "")
+        {
+            this.setToken(authName);
+            this.setName("");
+            this.setPass("");
+        }
+        // otherwise it's username/password
+        else
+        {
+            this.setToken("");
+            this.setName(authName);
+            this.setPass(authPass);
+        }
+        
         this.player.appear();
         
         return true;
 	}
+    
     
     /**
 	 * Callback for the authentication gets called from the game lib's worker thread
@@ -197,16 +253,24 @@
     {
         if (playerId == 0)
         {
-            G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate as "+ this.authenticationName +"\n" );
+            if (this.authenticationToken != "")
+            {
+                G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate via token\n" );
+            }
+            else
+            {
+                G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate as "+ this.authenticationName +"\n" );
+            }
             
             if (++this.failCount >= 3)
             {
                 this.player.kick( "Multiple invalid login tries." );
             }
+            
+            this.killAuthentication();
         }
         else
         {
-            this.failCount = 0;
             this.authorizationsMask = uint(authMask);
             this.appearCallback(playerId);
             
@@ -247,12 +311,11 @@
     void appearCallback(int playerId)
     {
         this.playerId = playerId;
-        // this.player.sendMessage( S_COLOR_BLUE + "your playerId: "+ playerId +"\n" );
+        this.player.sendMessage( S_COLOR_BLUE + "your playerId: "+ playerId +"\n" );
         
         if ( this.lastViolateProtectionMessage != 0 )
         {
-            this.violateNickProtectionSince = 0;
-            this.lastViolateProtectionMessage = 0;
+            this.resetViolateState();
             this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
         }
     }
