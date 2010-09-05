@@ -770,15 +770,19 @@ void GT_ThinkRules()
 	// perform a Mysql callback if there is one pending
 	Racesow_ThinkCallbackQueue();
 
+    map.allowEndGame();
+    
 	if ( match.timeLimitHit() )
-		if ( map.allowEndGame() )
-			match.launchState( match.getState() + 1 );
+    {
+        match.launchState( match.getState() + 1 );
+    }
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
 
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
+    
         // if there is no player in TEAM_PLAYERS finish the match and restart
         if ( G_GetTeam( TEAM_PLAYERS ).numPlayers == 0 && demoRecording )
         {
@@ -927,7 +931,17 @@ void GT_ThinkRules()
  */
 bool GT_MatchStateFinished( int incomingMatchState )
 {
-    if ( match.getState() == MATCH_STATE_POSTMATCH )
+    G_PrintMsg(null, "State " + incomingMatchState + "Finished?\n");
+
+    if (incomingMatchState == MATCH_STATE_POSTMATCH)
+    {
+        if (!map.inOvertime)
+            map.startOvertime();
+            
+        return map.allowEndGame();
+    }
+
+    if ( match.getState() == MATCH_STATE_POSTMATCH ) // LOL this should not be in here ;)
     {
     	g_timelimit.set(oldTimelimit); //restore the old timelimit
         match.stopAutorecord();

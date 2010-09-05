@@ -60,82 +60,82 @@ class Racesow_Map
 		this.inOvertime = false;
 	}
 
+    void startOvertime()
+    {
+        if (this.inOvertime)
+		{
+            return;
+        }
+        
+        uint numRacing = 0;
+
+        for ( int i = 0; i < maxClients; i++ )
+        {
+            if ( players[i].isRacing() )
+            {
+                players[i].startOvertime();
+                numRacing++;
+            }
+        }
+
+        if ( numRacing != 0 )
+        {
+            this.inOvertime = true;
+            G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime.ogg"), GS_MAX_TEAMS, false, null );
+        }
+    }
+    
 	/**
 	 * allowEndGame
 	 * @return bool
 	 */
 	bool allowEndGame()
 	{
-        uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
-        uint time = levelTime - match.startTime(); //in ms
-        int timeleft = timelimit - time;
+        if (!this.inOvertime)
+        {
+            return true;
+        }
+    
+		uint numInOvertime = 0;
+        for ( int i = 0; i < maxClients; i++ )
+        {
+            if ( ( players[i].inOvertime ) && ( players[i].getClient().team != TEAM_SPECTATOR ))
+            {
+                cVec3 velocity = players[i].getClient().getEnt().getVelocity();
 
-        // G_PrintMsg(null, "timeleft: " + timeleft +"\n" );
+                if ( velocity.x == 0 && velocity.y == 0 && velocity.z == 0 )
+                {
+                    if ( !players[i].startedIdling() )
+                    {
+                        players[i].startIdling();
+                    }
+                }
+                else if ( players[i].startedIdling() )
+                {
+                    players[i].stopIdling();
+                }
 
-
-        if (timeleft > 0) return false;
-
-		if (!this.inOvertime)
-		{
-			uint numRacing = 0;
-
-			for ( int i = 0; i < maxClients; i++ )
-		    {
-				if ( players[i].isRacing() )
-				{
-					players[i].startOvertime();
-					numRacing++;
-				}
-			}
-
-			if ( numRacing != 0 )
-			{
-				this.inOvertime = true;
-				G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime.ogg"), GS_MAX_TEAMS, false, null );
-			}
-		}
-		else
-		{
-			uint numInOvertime = 0;
-
-			for ( int i = 0; i < maxClients; i++ )
-		    {
-				if ( ( players[i].inOvertime ) && ( players[i].getClient().team != TEAM_SPECTATOR ))
-				{
-					cVec3 velocity = players[i].getClient().getEnt().getVelocity();
-
-					if ( velocity.x == 0 && velocity.y == 0 && velocity.z == 0 )
-					{
-						if ( !players[i].startedIdling() )
-						{
-							players[i].startIdling();
-						}
-					}
-					else if ( players[i].startedIdling() )
-					{
-						players[i].stopIdling();
-					}
-
-					if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
-					{
-						players[i].cancelRace();
-						G_PrintMsg( players[i].getClient().getEnt(), S_COLOR_RED
-							+ "You have been moved to spectators because you were idle during overtime.\n" );
-					}
-					else
-					{
-						numInOvertime++;
-					}
-				}
-			}
+                if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
+                {
+                    players[i].cancelRace();
+                    G_PrintMsg( players[i].getClient().getEnt(), S_COLOR_RED
+                        + "You have been moved to spectators because you were idle during overtime.\n" );
+                }
+                else
+                {
+                    numInOvertime++;
+                }
+            }
 
 			if ( numInOvertime == 0 )
 			{
-				this.inOvertime = false; //TODO fix this... (¿launch next state?)
+                this.inOvertime = false;
+                match.launchState(MATCH_STATE_POSTMATCH);
+				return true;
 			}
 		}
 
-		return !this.inOvertime;
+		return false;
 	}
 
 	/**

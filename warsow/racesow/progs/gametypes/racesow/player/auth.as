@@ -360,6 +360,8 @@
 	 */
 	bool allow( const uint permission )
 	{
+        this.player.sendMessage("mask: " + this.authorizationsMask + "\n");
+    
 		return ( this.authorizationsMask & permission != 0 );
 	}
     
