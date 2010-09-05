@@ -1,0 +1,85 @@
+.. contents::
+
+===============
+General concept
+===============
+
+Since version 0.5, warsow allows to extend the game by programming your own
+gametypes. These are coded in AngelScript, a library that allows programs to
+extend their functionalities by interfacing with C or C++. Angelscript syntax
+is very similar to C++.
+
+A gametype consists of one or several angelscript files (extension .as) calling
+the game interface functions. These files are then loaded dynamically at game
+startup.
+
+Racesow is both a gametype for warsow and a modification of the base warsow
+program. Indeed, the game interface accessible through angelscript was not
+extended enough for a good gametype, that's why some modifications (mainly
+mysql support and physics tweaks) were made directly in the warsow code.
+
+==============
+Code structure
+==============
+
+Inside each branch of the svn repositories, you will find two subdirectories :
+
+* **sdk** : this directory contains the warsow code (written in C) with the
+  racesow specific modifications
+* **warsow** : this directory contains the racesow gametype code written
+  in AngelScript
+
+See subsections for more details.
+
+sdk
+===
+
+warsow
+======
+
+============
+Coding style
+============
+
+* indentation : 4 spaces, no tabs
+* newline for brackets
+* spaces around operators
+* spaces inside parenthesis
+* use doxygen-like comments
+* camel-case with first letter lower-case for variables and function names
+* class names : words separated by underscores,
+  each word starting with uper-case letter
+  
+Example::
+
+    class Test_Class
+    {
+        /**
+         * This is a test variable.
+         */
+        int testInt;
+        
+        /**
+         * This is a test function.
+         *
+         * more details about testFunction
+         * @param testArg the only argument of the function
+         * @return some stupid bool
+         */
+        bool testFunction( int testArg )
+        {
+            if ( testArg == 0 )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+    
+.. note:: 
+    This document is written using ReStructuredText markup language, which is
+    part of the docutils package. If you have this package installed, you can
+    easily get an html version of this document using the ``rst2html`` command.
