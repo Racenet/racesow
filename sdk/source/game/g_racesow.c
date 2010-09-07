@@ -552,7 +552,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	mysql_free_result(mysql_res);
 
 	// reset points in player_map
-    sprintf(query, rs_queryResetPlayerMapPoints->string);
+    sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
