@@ -21,26 +21,14 @@ const uint RACESOW_CALLBACK_PERSONALBEST = 5;
  */
 void Racesow_ThinkCallbackQueue()
 {
-	int command, arg1, arg2, arg3;
+	int command, arg1, arg2, arg3, arg4, arg5, arg6;
     Racesow_Player @player;
 	
-    if( !RS_QueryCallbackQueue( command, arg1, arg2, arg3 ) )
+    if( !RS_QueryCallbackQueue( command, arg1, arg2, arg3, arg4, arg5, arg6 ) )
         return;
         
     switch( command )	
     {
-        case RACESOW_CALLBACK_AUTHENTICATE:
-			@player = Racesow_GetPlayerByNumber(arg1);
-			if ( @player != null )
-	            player.getAuth().authCallback( arg2, arg3 );
-            break;
-            
-        case RACESOW_CALLBACK_NICKPROTECT:
-            @player = Racesow_GetPlayerByNumber(arg1);
-			if ( @player != null )
-	            player.getAuth().nickProtectCallback( arg2, arg3 );
-            break;    
-
         case RACESOW_CALLBACK_LOADMAP:
             map.setId( arg1 );
 			if ( rs_loadHighscores.getBool() )
@@ -63,18 +51,7 @@ void Racesow_ThinkCallbackQueue()
 			@player = Racesow_GetPlayerByNumber(arg1);
 			if ( @player != null )
 			{
-                player.getAuth().appearCallback(arg2);
-			}
-            break;
-
-		case RACESOW_CALLBACK_PERSONALBEST:
-			@player = Racesow_GetPlayerByNumber(arg1);
-			if ( @player != null )
-			{
-				if ( rs_loadHighscores.getBool() )
-				{
-					player.bestRaceTime = arg2;
-				}
+                player.getAuth().appearCallback(arg2, arg3, arg4, arg5, arg6);
 			}
             break;
    }

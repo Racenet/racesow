@@ -211,7 +211,6 @@ class Racesow_Player
     void appear()
     {
         this.joinedTime = levelTime;
-        
         RS_MysqlPlayerAppear(
             this.getName(),
             this.getClient().playerNum(),
@@ -221,6 +220,18 @@ class Racesow_Player
             this.getAuth().authenticationName,
             this.getAuth().authenticationPass,
             this.getAuth().authenticationToken
+        );
+    }
+    
+    void disappear(cString nickName)
+    {
+        RS_MysqlPlayerDisappear(
+            nickName,
+            levelTime-this.joinedTime,
+            this.getId(),
+            this.getNickId(),
+            map.getId(),
+            this.getAuth().isAuthenticated()
         );
     }
     
@@ -248,9 +259,8 @@ class Racesow_Player
 	 */
     void setId(int playerId)
     {
-        // G_PrintMsg( this.client.getEnt(), "setting playerID: " + playerId + "\n" );
-    
-        this.auth.playerId=playerId;
+        this.sendMessage( S_COLOR_BLUE + "Your PlayerID: "+ playerId +"\n" );
+        this.auth.setPlayerId(playerId);
     }
 
     /**
@@ -885,9 +895,10 @@ class Racesow_Player
 	 */
 	void kick( cString message )
 	{
+        int playerNum = this.client.playerNum();
 		G_PrintMsg( null, S_COLOR_RED + "Kicked "+ this.getName() + S_COLOR_RED + " Reason: " + message + "\n" );
-        G_CmdExecute( "kick " + this.client.playerNum() );
 		this.reset();
+        G_CmdExecute( "kick " + playerNum );
 	}
 
 	/**

@@ -674,7 +674,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "disconnect" )
 		{
-			RS_MysqlPlayerDisappear( player.getName(), levelTime-player.joinedTime, player.getId(), player.getNickId(), map.getId(), player.getAuth().isAuthenticated());
+			player.disappear(player.getName());
 			player.reset();
 		}
 		else if ( score_event == "userinfochanged" )
@@ -998,7 +998,7 @@ void GT_Shutdown()
     for ( int i = 0; i < maxClients; i++ )
 		if ( @players[i].getClient() != null )
 		{
-			RS_MysqlPlayerDisappear(players[i].getName(), levelTime-players[i].joinedTime, players[i].getId(), players[i].getNickId() , map.getId(), players[i].getAuth().isAuthenticated());
+			players[i].disappear(players[i].getName());
 		}
 }
 
