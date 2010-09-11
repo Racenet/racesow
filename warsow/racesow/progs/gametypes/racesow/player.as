@@ -43,6 +43,12 @@ class Racesow_Player
 	 */
 	bool wasTelekilled;
 
+    /**
+     * Is the player using the quad command?
+     * @var bool
+     */
+    bool onQuad;
+	
 	/**
 	 * cEntity which stores the latest position after the telekill
 	 * @var cEntity
@@ -84,7 +90,7 @@ class Racesow_Player
 	 * Local time of the last top command (flood protection)
 	 * @var uint
 	 */
-    uint top_lastcmd;
+    uint topLastcmd;
 
 	/**
 	 * Is the player waiting for the result of a command (like "top")?
@@ -123,29 +129,29 @@ class Racesow_Player
 	 * The weapon which was used before the noclip command, in order to restore it
 	 * @var int
 	 */
-	int noclip_weapon;
+	int noclipWeapon;
 
 	/**
 	 * When is he allowed to trigger again?(= leveltime + timeout)
 	 * @var uint
 	 */
-	uint trigger_timeout;
+	uint triggerTimeout;
 
 	/**
 	 * Storage for the triggerd entity
 	 * @var @cEntity
 	 */
-	cEntity @trigger_entity;
+	cEntity @triggerEntity;
 
 
 	/**
 	 * Variables for the position function
 	 */
-	uint position_lastcmd; //flood protection
-	bool position_saved; //is a position saved?
-	cVec3 position_origin; //stored origin
-	cVec3 position_angles; //stored angles
-	int position_weapon; //stored weapon
+	uint positionLastcmd; //flood protection
+	bool positionSaved; //is a position saved?
+	cVec3 positionOrigin; //stored origin
+	cVec3 positionAngles; //stored angles
+	int positionWeapon; //stored weapon
 
 	/**
 	 * Constructor
@@ -175,6 +181,7 @@ class Racesow_Player
 		this.isJoinlocked = false;
 		this.isVotemuted = false;
 		this.wasTelekilled = false;
+		this.onQuad = false;
 		this.isWaitingForCommand = false;
 		this.bestRaceTime = 0;
         this.plasmaPerfectClimbSince = 0;
@@ -187,9 +194,9 @@ class Racesow_Player
 		}
 		if(@this.gravestone != null)
 			this.gravestone.freeEntity();
-		this.position_saved = false;
-		@this.trigger_entity = null;
-		this.trigger_timeout = 0;
+		this.positionSaved = false;
+		@this.triggerEntity = null;
+		this.triggerTimeout = 0;
 	}
 
 	/**
@@ -581,64 +588,37 @@ class Racesow_Player
 	 * set Trigger Timout for map entitys
 	 * @return void
 	 */
-	void setTrigger_Timeout(uint timeout)
+	void setTriggerTimeout(uint timeout)
 	{
-		this.trigger_timeout = timeout;
+		this.triggerTimeout = timeout;
 	}
 
 	/**
 	 * get the Trigger Timout
 	 * @return uint
-	 */
-	uint getTrigger_Timeout()
+    */
+	uint getTriggerTimeout()
 	{
-		return this.trigger_timeout;
+		return this.triggerTimeout;
 	}
 
 	/**
 	 * set the Triggered map Entity
 	 * @return void
 	 */
-	void setTrigger_Entity( cEntity @ent )
+	void setTriggerEntity( cEntity @ent )
 	{
-		@this.trigger_entity = @ent;
-	}
-
-	/**
-	 * return the Triggerd map Entity
-	 * @return cEntity@
-	 */
-	cEntity@ getTrigger_Entity()
-	{
-		return @this.trigger_entity;
+		@this.triggerEntity = @ent;
 	}
 
 	/**
 	 * setupTelekilled
 	 * @return void
 	 */
-	void setupTelekilled( cEntity@ gravestone)
+	void setupTelekilled( cEntity @gravestone)
 	{
 		@this.gravestone = @gravestone;
 		this.wasTelekilled = true;
-	}
-
-	/**
-	 * wasTelekilled
-	 * @return bool
-	 */
-	bool wasTelekilled()
-	{
-		return this.wasTelekilled;
-	}
-
-	/**
-	 * returnGravestone
-	 * @return cEntity
-	 */
-	cEntity@ returnGravestone()
-	{
-		return @this.gravestone;
 	}
 
 	/**
@@ -659,11 +639,10 @@ class Racesow_Player
 	{
 		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
 			return false;
-		cEntity@ noclipEnt;
-		@noclipEnt = @this.client.getEnt();
-		if( this.client.getEnt().team == TEAM_SPECTATOR || @this.client.getEnt() == null )
+		cEntity @ent = @this.client.getEnt();
+		if( @ent == null || ent.team == TEAM_SPECTATOR )
 			return false;
-		if( noclipEnt.moveType == MOVETYPE_NOCLIP )
+		if( ent.moveType == MOVETYPE_NOCLIP )
 		{
 		    cVec3 mins, maxs;
 		    client.getEnt().getSize( mins, maxs );
@@ -672,19 +651,42 @@ class Racesow_Player
                     this.client.getEnt().getOrigin(), 0, MASK_PLAYERSOLID ))
                 //don't allow players to end noclip inside others or the world
                 return false;
-			noclipEnt.moveType = MOVETYPE_PLAYER;
-			noclipEnt.solid = SOLID_YES;
-			this.client.selectWeapon( this.noclip_weapon );
+			ent.moveType = MOVETYPE_PLAYER;
+			ent.solid = SOLID_YES;
+			this.client.selectWeapon( this.noclipWeapon );
 		}
 		else
 		{
-			noclipEnt.moveType = MOVETYPE_NOCLIP;
-            noclipEnt.solid = SOLID_NOT;//don't get hit by projectiles/splash damage; don't block
-			this.noclip_weapon = client.weapon;
+			ent.moveType = MOVETYPE_NOCLIP;
+            ent.solid = SOLID_NOT;//don't get hit by projectiles/splash damage; don't block
+			this.noclipWeapon = client.weapon;
 		}
 
 		return true;
 	}
+	
+   /**
+     * quad Command
+     * @return bool
+     */
+    bool quad()
+    {
+        if( !g_freestyle.getBool() && !sv_cheats.getBool() )
+            return false;
+        cEntity @ent = @this.client.getEnt();
+        if( @ent == null || ent.team == TEAM_SPECTATOR )
+            return false;
+        if( this.onQuad )
+        {
+            this.onQuad = false;
+        }
+        else
+        {
+            this.onQuad = true;
+        }
+
+        return true;
+    }
 
 	/**
 	 * teleport the player
@@ -742,28 +744,28 @@ class Racesow_Player
 	{
 		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
 			return false;
-		if( this.position_lastcmd + 500 > realTime )
+		if( this.positionLastcmd + 500 > realTime )
 			return false;
-		this.position_lastcmd = realTime;
+		this.positionLastcmd = realTime;
 
 		cString action = argsString.getToken( 0 );
 
 		if( action == "save" )
 		{
-			this.position_saved = true;
+			this.positionSaved = true;
 			cEntity@ ent = @this.client.getEnt();
 			if( @ent == null )
 				return false;
-			this.position_origin = ent.getOrigin();
-			this.position_angles = ent.getAngles();
-			this.position_weapon = client.weapon;
+			this.positionOrigin = ent.getOrigin();
+			this.positionAngles = ent.getAngles();
+			this.positionWeapon = client.weapon;
 		}
 		else if( action == "load" )
 		{
-			if(!this.position_saved)
+			if(!this.positionSaved)
 				return false;
-			if( this.teleport( this.position_origin, this.position_angles, false, false ) )
-				this.client.selectWeapon( this.position_weapon );
+			if( this.teleport( this.positionOrigin, this.positionAngles, false, false ) )
+				this.client.selectWeapon( this.positionWeapon );
 			return true;
 		}
 		else if( action == "set" && argsString.getToken( 5 ) != "" )
@@ -1005,11 +1007,11 @@ class Racesow_Player
 	/**
 	 * Chrono function
 	 * @return bool
-	 */
+	 
 	bool chronoInUse()
 	{
 		return this.isUsingChrono;
-	}
+	}*/
 
 	/**
 	 * Chrono time

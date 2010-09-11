@@ -488,11 +488,9 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	{
 		return player.noclip();
 	}
-   else if ( ( cmdString == "ghost" ) )
+    else if ( ( cmdString == "quad" ) )
     {
-       client.setPMoveFeatures( client.pmoveFeatures | PMFEAT_GHOSTMOVE );
-       client.getEnt().solid = MASK_DEADSOLID;
-       client.getEnt().linkEntity();
+       return player.quad();
     }
 	else if ( ( cmdString == "position" ) )
 	{
@@ -558,7 +556,7 @@ cEntity @GT_SelectSpawnPoint( cEntity @self )
 	player.onSpawn();
 	if( player.wasTelekilled )
 	{
-		return player.returnGravestone();
+		return @player.gravestone;
 	}
 	else
 	{
@@ -710,7 +708,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
 	if ( g_freestyle.getBool() )
 	{
-		if( player.wasTelekilled() )
+		if( player.wasTelekilled )
 			player.resetTelekilled();
 		ent.client.inventorySetCount( WEAP_ROCKETLAUNCHER, 1 );
 		ent.client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
@@ -911,12 +909,16 @@ void GT_ThinkRules()
         if ( map.getStatsHandler().getHighScore(2).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
 
-    	if( player.chronoInUse() )
+    	if( player.isUsingChrono )
     		client.setHUDStat( STAT_TIME_ALPHA, (levelTime - player.chronoTime()) / 100 );
 
     	if ( g_freestyle.getBool() && client.inventoryCount( WEAP_GUNBLADE ) != 0)
     	{
 			client.inventorySetCount( AMMO_GUNBLADE, 10 );
+			if( player.onQuad )
+			    client.inventorySetCount( POWERUP_QUAD, 30 );
+			else
+			    client.inventorySetCount( POWERUP_QUAD, 0 );
     	}
     }
 }
@@ -1159,7 +1161,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "maplist" );
 	G_RegisterCommand( "mapfilter" );
 	G_RegisterCommand( "timeleft" );
-	G_RegisterCommand( "ghost" );
+	G_RegisterCommand( "quad" );
 
 	//add callvotes
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
@@ -1176,8 +1178,8 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	maplist = RS_LoadMapList( g_freestyle.getBool() );
-	mapcount = RS_GetNumberOfMaps();
+	//maplist = RS_LoadMapList( g_freestyle.getBool() );
+	//mapcount = RS_GetNumberOfMaps();
 
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );

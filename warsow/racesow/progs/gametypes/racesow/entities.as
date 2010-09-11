@@ -6,14 +6,14 @@
  * @version 0.5.3
  */
 
-cString[] ent_storage(maxEntities);
+cString[] entStorage(maxEntities);
 
 void addToEntStorage( int id, cString string)
 {
-	int i = ent_storage.length();
+	int i = entStorage.length();
 	if( i < id )
-		ent_storage.resize(id);
-	ent_storage[id] = string;
+		entStorage.resize(id);
+	entStorage[id] = string;
 }
 
 bool TriggerWait( cEntity @ent, cEntity @activator )
@@ -21,11 +21,11 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 	if( @activator.client == null || @Racesow_GetPlayerByClient( activator.client ) == null )
 		return false;
 	Racesow_Player @player = @Racesow_GetPlayerByClient( activator.client );
-	if( @player.getTrigger_Entity() == @ent && player.getTrigger_Timeout() != 0
-			&& player.getTrigger_Timeout() >= levelTime )
+	if( @player.triggerEntity == @ent && player.getTriggerTimeout() != 0
+			&& player.getTriggerTimeout() >= levelTime )
 		return true;
-	player.setTrigger_Entity( @ent );
-	player.setTrigger_Timeout( levelTime + 1000 * ent.wait );
+	player.setTriggerEntity( @ent );
+	player.setTriggerTimeout( levelTime + 1000 * ent.wait );
 	return false;
 }
 
@@ -295,12 +295,12 @@ void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const cVec3 @pla
 		return;
 	if(TriggerWait( @ent, @other ))
 			return;
-	int speed = ent_storage[ent.entNum()].getToken(0).toInt();
+	int speed = entStorage[ent.entNum()].getToken(0).toInt();
 	if(velocity.x == 0 && velocity.y == 0)
 		return;
 	velocity.x += (speed * velocity.x)/sqrt(pow(velocity.x, 2) + pow(velocity.y, 2));
 	velocity.y += (speed * velocity.y)/sqrt(pow(velocity.x, 2) + pow(velocity.y, 2));
-	velocity.z += ent_storage[ent.entNum()].getToken(1).toInt();
+	velocity.z += entStorage[ent.entNum()].getToken(1).toInt();
 	other.setVelocity( velocity );
 
 }
@@ -483,7 +483,7 @@ void target_smallprint( cEntity @ent )
 void target_smallprint_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
 	if(@activator.client != null)
-		G_CenterPrintMsg( activator, ent_storage[ent.entNum()] );
+		G_CenterPrintMsg( activator, entStorage[ent.entNum()] );
 }
 
 void target_kill( cEntity @ent )
