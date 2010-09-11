@@ -222,7 +222,7 @@ class Racesow_Player
             this.getAuth().authenticationToken
         );
     }
-    
+
     void disappear(cString nickName)
     {
         RS_MysqlPlayerDisappear(
@@ -234,7 +234,7 @@ class Racesow_Player
             this.getAuth().isAuthenticated()
         );
     }
-    
+
     /**
 	 * Get the player's id
 	 * @return int
@@ -319,7 +319,7 @@ class Racesow_Player
         {
             return this.client.getName();
         }
-        
+
         return "";
 	}
 
@@ -662,15 +662,24 @@ class Racesow_Player
 		cEntity@ noclipEnt;
 		@noclipEnt = @this.client.getEnt();
 		if( this.client.getEnt().team == TEAM_SPECTATOR || @this.client.getEnt() == null )
-					return false;
+			return false;
 		if( noclipEnt.moveType == MOVETYPE_NOCLIP )
 		{
+		    cVec3 mins, maxs;
+		    client.getEnt().getSize( mins, maxs );
+		    cTrace tr;
+            if( tr.doTrace( this.client.getEnt().getOrigin(), mins, maxs,
+                    this.client.getEnt().getOrigin(), 0, MASK_PLAYERSOLID ))
+                //don't allow players to end noclip inside others or the world
+                return false;
 			noclipEnt.moveType = MOVETYPE_PLAYER;
+			noclipEnt.solid = SOLID_YES;
 			this.client.selectWeapon( this.noclip_weapon );
 		}
 		else
 		{
 			noclipEnt.moveType = MOVETYPE_NOCLIP;
+            noclipEnt.solid = SOLID_NOT;//don't get hit by projectiles/splash damage; don't block
 			this.noclip_weapon = client.weapon;
 		}
 
@@ -828,7 +837,7 @@ class Racesow_Player
 	{
 		if (@this.client == null)
             return;
-        
+
         // just send to original func
 		G_PrintMsg( this.client.getEnt(), message );
 
@@ -1147,7 +1156,7 @@ class Racesow_Player
          * @param cString mapList
          * @return void
          */
-        
+
         void printMapList(uint pageNum,uint mapCount, uint pagesPerPage, cString mapList )
         {
             uint numPages = mapCount/pagesPerPage + 1;
@@ -1177,17 +1186,17 @@ class Racesow_Player
             uint mapNumber = 0;
             uint filterLength = filter.len();
             this.sendMessage ( "Printing maps containing " + S_COLOR_ORANGE + filter + " :\n");
- 
+
             while (mapNumber < mapCount)
             {
                 cString mapName = mapList.getToken( mapNumber );
                 uint mapNameLength = mapName.len();
 
-                if ( mapNameLength >= filterLength ) 
+                if ( mapNameLength >= filterLength )
                 {
                     for ( uint k = 0 ; k < (mapNameLength - filterLength ) ; k++ )
                     {
-                        if ( mapName.substr( k,filterLength ) == filter ) 
+                        if ( mapName.substr( k,filterLength ) == filter )
                         {
                             this.sendMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + mapName + "\n");
                             break;
@@ -1229,17 +1238,17 @@ class Racesow_Player
                 help += S_COLOR_RED + "mapfilter   " + S_COLOR_YELLOW + "list the maps containing a specific string.\n";
         help += S_COLOR_RED + "racerestart " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
 		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
-        
+
         if (rs_registrationDisabled.getBool()) {
-        
+
             help += S_COLOR_YELLOW + "                   " + rs_registrationInfo.getString() + "\n";
         }
-        
+
 		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate with the server (alternatively you can use setu to save your login\n";
 		help += "                  " + S_COLOR_YELLOW + rs_authField_Name.getString() +" AND "+ rs_authField_Pass.getString() +" OR solely "+ rs_authField_Token.getString() +" in your racesow autoexec.cfg)\n";
 		help += S_COLOR_RED + "token            " + S_COLOR_YELLOW + "only when authenticated, shows your unique login token you may setu in your config\n";
         G_PrintMsg( this.client.getEnt(), help );
-        
+
 		help = S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
 		help += S_COLOR_RED + "position save " + S_COLOR_YELLOW + "freestyle only, save the current poisition in the map\n";
 		help += S_COLOR_RED + "position load " + S_COLOR_YELLOW + "freestyle only, load the last saved position in the map\n";
