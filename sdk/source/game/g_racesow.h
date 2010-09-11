@@ -109,9 +109,6 @@ struct highscoresDataStruct {
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
 
-extern qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *authPass );
-extern void *RS_MysqlAuthenticate_Thread( void *in );
-
 extern qboolean RS_MysqlLoadMap();
 extern void *RS_MysqlLoadMap_Thread( void *in );
 
@@ -129,8 +126,8 @@ extern void *RS_MysqlLoadHighscores_Thread( void *in );
 
 extern qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum );
 
-extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3 );
-extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3 );
+extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6 );
+extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6 );
 
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 

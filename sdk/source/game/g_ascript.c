@@ -6130,20 +6130,6 @@ static void asFunc_asGeneric_RS_removeProjectiles( void *gen )
 	RS_removeProjectiles( owner );
 }
 
-// RS_MysqlAuthenticate
-static qboolean asFunc_RS_MysqlAuthenticate( unsigned int playerNum, asstring_t  *authName, asstring_t  *authPass )
-{
-	return RS_MysqlAuthenticate(playerNum, authName->buffer, authPass->buffer);
-}
-
-static void asFunc_asGeneric_RS_MysqlAuthenticate( void *gen )
-{
-	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlAuthenticate(
-        (unsigned int)G_asGeneric_GetArgInt(gen, 0),
-        (asstring_t *)G_asGeneric_GetArgAddress(gen, 1),
-        (asstring_t *)G_asGeneric_GetArgAddress(gen, 2)));
-}
-
 // RS_MysqlLoadMap
 static qboolean asFunc_RS_MysqlLoadMap()
 {
@@ -6235,9 +6221,9 @@ static void asFunc_asGeneric_RS_MysqlPrintHighscoresTo( void *gen )
 
 
 // RS_QueryCallbackQueue
-static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3)
+static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6 )
 {
-	return RS_PopCallbackQueue(command, arg1, arg2, arg3);
+	return RS_PopCallbackQueue(command, arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
@@ -6246,7 +6232,10 @@ static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
         (int *)G_asGeneric_GetArgAddress(gen, 0),
 		(int *)G_asGeneric_GetArgAddress(gen, 1),
 		(int *)G_asGeneric_GetArgAddress(gen, 2),
-		(int *)G_asGeneric_GetArgAddress(gen, 3)));
+		(int *)G_asGeneric_GetArgAddress(gen, 3),
+		(int *)G_asGeneric_GetArgAddress(gen, 4),
+		(int *)G_asGeneric_GetArgAddress(gen, 5),
+		(int *)G_asGeneric_GetArgAddress(gen, 6)));
 }
 
 // !racesow
@@ -6869,14 +6858,13 @@ static asglobfuncs_t asGlobFuncs[] =
 	// racesow
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
-	{ "void RS_MysqlAuthenticate( int, cString &, cString & )", asFunc_RS_MysqlAuthenticate, asFunc_asGeneric_RS_MysqlAuthenticate },
 	{ "void RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
 	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "void RS_MysqlInsertRace( int, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
-	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
+	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "cString @RS_LoadMapList( bool )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},
 	// !racesow
@@ -7838,19 +7826,6 @@ qboolean G_asInitializeGametypeScript( const char *script, const char *gametypeN
 	}
 	else
 		funcCount++;
-		
-	// racesow 
-	fdeclstr = "void RS_MysqlAuthenticate_Callback( int playerNum, int playerId, int authMask )";
-	level.gametype.RS_MysqlAuthenticate_CallbackID = angelExport->asGetFunctionIDByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( level.gametype.RS_MysqlAuthenticate_CallbackID < 0 )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	// !racesow
 		
 	//
 	// execute the GT_InitGametype function

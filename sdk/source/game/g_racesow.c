@@ -51,12 +51,10 @@ cvar_t *rs_tokenSalt;
 /**
  * as callback commands (must be similar to callback.as!)
  */
-const unsigned int RACESOW_CALLBACK_AUTHENTICATE = 0;
-const unsigned int RACESOW_CALLBACK_NICKPROTECT = 1;
+const unsigned int RACESOW_CALLBACK_RACE = 1;
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
 const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
 const unsigned int RACESOW_CALLBACK_APPEAR = 4;
-const unsigned int RACESOW_CALLBACK_PERSONALBEST = 5;
 
 /**
  * MySQL Socket
@@ -117,7 +115,7 @@ void RS_MysqlLoadInfo( void )
     
     G_Printf("-------------------------------------\nClient authentication via userinfo:\nsetu %s \"username\"\nsetu %s \"password\"\nor the more secure method using an enrypted token\nsetu %s \"token\"\n-------------------------------------\n", rs_authField_Name->string, rs_authField_Pass->string, rs_authField_Token->string);
     
-    rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
@@ -232,7 +230,7 @@ void RS_Shutdown()
 int callback_queue_size=0;
 int callback_queue_write_index=0;
 int callback_queue_read_index=0;
-int callback_queue[MAX_SIZE_CALLBACK_QUEUE][4];
+int callback_queue[MAX_SIZE_CALLBACK_QUEUE][7];
 
 /**
  *
@@ -240,7 +238,7 @@ int callback_queue[MAX_SIZE_CALLBACK_QUEUE][4];
  * 
  * @return void
  */
-void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3)
+void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6)
 {
 	pthread_mutex_lock(&mutex_callback);
 	if (callback_queue_size<MAX_SIZE_CALLBACK_QUEUE)
@@ -250,6 +248,9 @@ void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3)
 		callback_queue[callback_queue_write_index][1]=arg1;
 		callback_queue[callback_queue_write_index][2]=arg2;
 		callback_queue[callback_queue_write_index][3]=arg3;
+		callback_queue[callback_queue_write_index][4]=arg4;
+		callback_queue[callback_queue_write_index][5]=arg5;
+		callback_queue[callback_queue_write_index][6]=arg6;
 		
 		callback_queue_write_index=(callback_queue_write_index+1)%MAX_SIZE_CALLBACK_QUEUE;
 		callback_queue_size++;
@@ -266,7 +267,7 @@ void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3)
  * 
  * @return qboolean
  */
-qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3)
+qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6)
 {
 
 	// if the queue is empty, do nothing this time
@@ -281,39 +282,13 @@ qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3)
 	*arg1=callback_queue[callback_queue_read_index][1];
 	*arg2=callback_queue[callback_queue_read_index][2];
 	*arg3=callback_queue[callback_queue_read_index][3];
+	*arg4=callback_queue[callback_queue_read_index][4];
+	*arg5=callback_queue[callback_queue_read_index][5];
+	*arg6=callback_queue[callback_queue_read_index][6];
 
 	callback_queue_read_index=(callback_queue_read_index+1)%MAX_SIZE_CALLBACK_QUEUE;
 	callback_queue_size--;
 	pthread_mutex_unlock(&mutex_callback);
-	return qtrue;
-}
-
-/**
- * Authenticate the player
- *
- * @param edict_t *ent
- * @param char *authName
- * @param char *authPass
- * @return qboolean
- */
-qboolean RS_MysqlAuthenticate( unsigned int playerNum, char *authName, char *authPass )
-{
-	int returnCode;
-	pthread_t thread;
-    struct authenticationData *authData=malloc(sizeof(struct authenticationData));
-    
-    authData->playerNum = playerNum;
-    authData->authName = strdup(authName);	
-    authData->authPass = strdup(authPass);
-
-	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlAuthenticate_Thread, authData);
-
-	if (returnCode) {
-
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
-		return qfalse;
-	}
-	
 	return qtrue;
 }
 
@@ -394,57 +369,8 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	}
 	mysql_free_result(mysql_res);
 
-	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, map_id, bestTime, 0);
+	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, map_id, bestTime, 0, 0, 0, 0);
 
-	RS_EndMysqlThread();
-    
-	return NULL;
-}
-
-/**
- * Authentication thread
- *
- * @param void *in
- * @return void
- */
-void *RS_MysqlAuthenticate_Thread( void *in )
-{
-    char query[1000];
-    char name[64];
-    char pass[64];
-    MYSQL_ROW  row;
-    MYSQL_RES  *mysql_res;
-    struct authenticationData *authData = (struct authenticationData *)in;
-
-	RS_StartMysqlThread();
-    
-    Q_strncpyz ( name, authData->authName, sizeof(name) );
-    mysql_real_escape_string(&mysql, name, name, strlen(name));   
-    
-    Q_strncpyz ( pass, authData->authPass, sizeof(pass) );
-    mysql_real_escape_string(&mysql, pass, pass, strlen(pass));
-    
-	sprintf(query, rs_queryGetPlayerAuth->string, name, pass, rs_tokenSalt->string);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
-    
-    // player ids checken
-    
-    mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
-    
-    if ((row = mysql_fetch_row(mysql_res)) != NULL) {
-		if (row[0]!=NULL && row[1]!=NULL) 
-			RS_PushCallbackQueue(RACESOW_CALLBACK_AUTHENTICATE,authData->playerNum, atoi(row[0]), atoi(row[1]));
-    
-    } else {
-		RS_PushCallbackQueue(RACESOW_CALLBACK_AUTHENTICATE,authData->playerNum, 0,0);
-    }
-    
-    mysql_free_result(mysql_res);
-	free(authData->authName);
-	free(authData->authPass);
-	free(authData);	
 	RS_EndMysqlThread();
     
 	return NULL;
@@ -639,7 +565,6 @@ qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int map
     playerData->player_id = player_id;
 	playerData->map_id = map_id;
 	playerData->playerNum = playerNum;
-	playerData->is_authed = is_authed;
     playerData->authName = strdup(authName);
     playerData->authPass = strdup(authPass);
     playerData->authToken = strdup(authToken);
@@ -675,7 +600,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     qboolean hasUserinfo;
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
-	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick;
+	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest;
 	struct playerDataStruct *playerData;
 
 	RS_StartMysqlThread();
@@ -685,6 +610,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	auth_mask = 0;
 	player_id_for_nick = 0;
 	auth_mask_for_nick = 0;
+    personalBest = 0;
     playerData = (struct playerDataStruct*)in;
 
     // escape strings
@@ -707,6 +633,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     if (Q_stricmp( authToken, "" ))
     {
         hasUserinfo = qtrue;
+        
         sprintf(query, rs_queryGetPlayerAuthByToken->string, authToken, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
         
@@ -724,8 +651,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         mysql_free_result(mysql_res);
     }
-    // when no token is given try by username and password
-    else if (Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
+    
+    // when no token is given or was invalid, try by username and password
+    if (!hasUserinfo && Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
     {
         hasUserinfo = qtrue;
         sprintf(query, rs_queryGetPlayerAuth->string, authName, authPass, rs_tokenSalt->string);
@@ -736,7 +664,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         RS_CheckMysqlThreadError();
         if ((row = mysql_fetch_row(mysql_res)) != NULL) 
         {
-            if (row[0]!=NULL && row[1]!=NULL )
+            if (row[0]!=NULL && row[1]!=NULL) // token may be null
             {
                 player_id = atoi(row[0]);
                 auth_mask = atoi(row[1]);
@@ -745,13 +673,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         mysql_free_result(mysql_res);
     }
-    
-    // if authentication information was provided in the userinfo
-    if (hasUserinfo)
-    {
-        // ... give a response
-        RS_PushCallbackQueue(RACESOW_CALLBACK_AUTHENTICATE, playerData->playerNum, player_id, auth_mask);
-    }
+        
     
     // try to get information about the player the nickname belongs to
     sprintf(query, rs_queryGetPlayer->string, simplified);
@@ -767,11 +689,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
             auth_mask_for_nick = atoi(row[1]);
         }
     }
-    // if no player was found for the nick
-    // and the player is not authenticated....
+    // and only add a new player if the player isn't already authed
     else if (player_id == 0)
     {
-        // ...create a new player/nick
         sprintf(query, rs_queryAddPlayer->string, name, simplified);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();  
@@ -779,26 +699,12 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         player_id_for_nick = (int)mysql_insert_id(&mysql);
     }
     mysql_free_result(mysql_res);
+
     
-    // if the nickname is protected...
-    if (auth_mask_for_nick != 0)
-    {
-        // triggers the nichname-protection countdown if the player_ids don't match
-        RS_PushCallbackQueue(RACESOW_CALLBACK_NICKPROTECT, playerData->playerNum, player_id_for_nick, player_id);
-    }
-    // otherwise it is an existing nick wich is not protected or a new one
-    else if (player_id_for_nick != 0)
-    {
-        player_id = player_id_for_nick;
-    }
     
+    /*
     if (player_id != 0)
     {
-        if (!hasUserinfo) 
-        {
-            RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, 0);
-        }
-    
         // update the players's number of played maps
         sprintf(query, rs_queryUpdatePlayerMaps->string, player_id);
         mysql_real_query(&mysql, query, strlen(query));
@@ -814,12 +720,15 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         {
             if (row[0] !=NULL && row[1] != NULL)
             {
-                RS_PushCallbackQueue(RACESOW_CALLBACK_PERSONALBEST, playerData->playerNum, atoi(row[1]), 0);
+                personalBest = atoi(row[1]);
             }
         }
         
         mysql_free_result(mysql_res);
     }
+    */
+    
+    RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest);
     
 	free(playerData->name);
 	free(playerData);
@@ -860,9 +769,7 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int n
 }
 
 /**
- * Thread when player disappear,
- *
- * it does what's written in mysql concept.txt 
+ * Thread when player disappears
  *
  * @param void *in
  * @return void
@@ -1048,7 +955,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 				Q_strncpyz( highscores_players[highscore_part][playerNum],highscores[highscore_part], strlen(highscores[highscore_part]));
 		}
 
-		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0);
+		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0, 0, 0, 0);
 		
 		free(highscoresData);	
 		RS_EndMysqlThread();
