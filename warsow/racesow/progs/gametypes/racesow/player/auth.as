@@ -171,10 +171,26 @@
 	 */
 	bool signUp(cString &authName, cString &authEmail, cString &password, cString &confirmation)
 	{
-		this.player.sendMessage( S_COLOR_RED + "Registration is currently not available\n" );
-		return false;
+        if (rs_registrationDisabled.getBool()) {
+        
+            this.player.sendMessage( S_COLOR_RED + rs_registrationInfo.getString() );
+            return false;
+        }
+    
+		// TODO:
+        return true;
 	}
 
+    /**
+	 * Show the login token to the player
+     *
+	 */
+    bool showToken()
+    {
+        this.player.sendMessage( "The generation of tokens is not yet implemenmted. If you somehow got a working token you can ignore this message.\n" );
+        return false;
+    }
+    
 	/**
 	 * Authenticate server account
 	 * @param cString &authName

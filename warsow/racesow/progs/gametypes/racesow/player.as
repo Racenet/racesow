@@ -1194,7 +1194,7 @@ class Racesow_Player
 	{
 		cString help;
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "ADMIN HELP for " + gametype.getName() + "\n";
+		help += S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "admin map     " + S_COLOR_YELLOW + "change to the given map immedeatly\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
@@ -1210,7 +1210,7 @@ class Racesow_Player
 	{
 		cString help;
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "HELP for " + gametype.getName() + "\n";
+		help += S_COLOR_RED + "HELP for Racesow " + gametype.getVersion() + "\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "help           " + S_COLOR_YELLOW + "display this help ;)\n";
 		help += S_COLOR_RED + "top             " + S_COLOR_YELLOW + "display the top 30 times on this map\n";
@@ -1218,13 +1218,25 @@ class Racesow_Player
                 help += S_COLOR_RED + "mapfilter   " + S_COLOR_YELLOW + "list the maps containing a specific string.\n";
         help += S_COLOR_RED + "racerestart " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
 		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
-		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate with the server (alternatively you can use setu\n";
-		help += "                  " + S_COLOR_YELLOW + "to eigther set "+ rs_authField_Name.getString() +" AND "+ rs_authField_Pass.getString() +" OR "+ rs_authField_Token.getString() +" in your racesow autoexec.cfg)\n";
-		help += S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
-        help += S_COLOR_RED + "weapondef   " + S_COLOR_YELLOW + "change the weapon values, more info with 'weapondef help'\n";
+        
+        if (rs_registrationDisabled.getBool()) {
+        
+            help += S_COLOR_YELLOW + "                   " + rs_registrationInfo.getString() + "\n";
+        }
+        
+		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate with the server (alternatively you can use setu to save your login\n";
+		help += "                  " + S_COLOR_YELLOW + rs_authField_Name.getString() +" AND "+ rs_authField_Pass.getString() +" OR solely "+ rs_authField_Token.getString() +" in your racesow autoexec.cfg)\n";
+		help += S_COLOR_RED + "token            " + S_COLOR_YELLOW + "only when authenticated, shows your unique login token you may setu in your config\n";
+        G_PrintMsg( this.client.getEnt(), help );
+        
+		help = S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
+		help += S_COLOR_RED + "position save " + S_COLOR_YELLOW + "freestyle only, save the current poisition in the map\n";
+		help += S_COLOR_RED + "position load " + S_COLOR_YELLOW + "freestyle only, load the last saved position in the map\n";
+		help += S_COLOR_RED + "noclip       " + S_COLOR_YELLOW + "freestyle only, switch clip/noclip mode\n";
+//        help += S_COLOR_RED + "weapondef   " + S_COLOR_YELLOW + "change the weapon values, more info with 'weapondef help'\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-
 		G_PrintMsg( this.client.getEnt(), help );
+
 		return true;
 	}
 }

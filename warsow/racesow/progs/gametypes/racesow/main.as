@@ -43,6 +43,9 @@ cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
 
+cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
 
@@ -318,6 +321,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     {
 		return player.getAuth().authenticate( argsString.getToken( 0 ).removeColorTokens(), argsString.getToken( 1 ), false );
     }
+    else if ( ( cmdString == "token" ) )
+    {
+		return player.getAuth().showToken();
+    }
 	else if ( ( cmdString == "admin" ) )
     {
 		return player.adminCommand( argsString );
@@ -463,10 +470,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             }
             return true;
         }
+    /*
 	else if ( ( cmdString == "weapondef" ) )
     {
 		return weaponDefCommand( argsString, @client );
     }
+    */
 	else if ( ( cmdString == "cvarinfo" ) )
     {
 		//token0: cVar name; token1: cVar value
@@ -486,11 +495,16 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		}
 
     }
-
 	else if ( ( cmdString == "noclip" ) )
 	{
 		return player.noclip();
 	}
+   else if ( ( cmdString == "ghost" ) )
+    {
+       client.setPMoveFeatures( client.pmoveFeatures | PMFEAT_GHOSTMOVE );
+       client.getEnt().solid = MASK_DEADSOLID;
+       client.getEnt().linkEntity();
+    }
 	else if ( ( cmdString == "position" ) )
 	{
 		return player.position( argsString );
@@ -1143,10 +1157,11 @@ void GT_InitGametype()
 	G_RegisterCommand( "highscores" );
     G_RegisterCommand( "register" );
 	G_RegisterCommand( "auth" );
+	G_RegisterCommand( "token" );
 	G_RegisterCommand( "admin" );
 	G_RegisterCommand( "help" );
 	G_RegisterCommand( "ammoswitch" );
-	G_RegisterCommand( "weapondef" );
+	//G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "chrono" );
 	G_RegisterCommand( "privsay" );
@@ -1155,6 +1170,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "maplist" );
 	G_RegisterCommand( "mapfilter" );
 	G_RegisterCommand( "timeleft" );
+	G_RegisterCommand( "ghost" );
 
 	//add callvotes
 	G_RegisterCallvote( "randmap", "", "Change to a random map");
