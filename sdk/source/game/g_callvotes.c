@@ -82,65 +82,10 @@ callvotetype_t *callvotesHeadNode = NULL;
 
 static void G_VoteMapExtraHelp( edict_t *ent )
 {
-	char *s;
-	char buffer[MAX_STRING_CHARS];
-	char message[MAX_STRING_CHARS / 4 * 3];    // use buffer to send only one print message
-	int nummaps, i, start;
-	size_t length, msglength;
-
-	// update the maplist
-	trap_ML_Update ();
-
-	if( g_enforce_map_pool->integer && strlen( g_map_pool->string ) > 2 )
-	{
-		G_PrintMsg( ent, "Maps available [map pool enforced]:\n %s\n", g_map_pool->string );
-		return;
-	}
-
-	// don't use Q_strncatz and Q_strncpyz below because we
-	// check length of the message string manually
-
-	memset( message, 0, sizeof( message ) );
-	strcpy( message, "- Available maps:" );
-
-	for( nummaps = 0; trap_ML_GetMapByNum( nummaps, NULL, 0 ); nummaps++ )
-		;
-
-	if( trap_Cmd_Argc() > 2 )
-	{
-		start = atoi( trap_Cmd_Argv( 2 ) ) - 1;
-		if( start < 0 )
-			start = 0;
-	}
-	else
-	{
-		start = 0;
-	}
-
-	i = start;
-	msglength = strlen( message );
-	while( trap_ML_GetMapByNum( i, buffer, sizeof( buffer ) ) )
-	{
-		i++;
-		s = buffer;
-		length = strlen( s );
-		if( msglength + length + 3 >= sizeof( message ) )
-			break;
-
-		strcat( message, " " );
-		strcat( message, s );
-
-		msglength += length + 1;
-	}
-
-	if( i == start )
-		strcat( message, "\nNone" );
-
-	G_PrintMsg( ent, "%s", message );
-	G_PrintMsg( ent, "\n", message );
-
-	if( i < nummaps )
-		G_PrintMsg( ent, "Type 'callvote map %i' for more maps\n", i+1 );
+    // racesow
+    G_PrintMsg( ent, "Type 'help' for information on how to find a map you can vote for.\n" );
+    return;
+    // !racesow
 }
 
 static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
@@ -182,10 +127,10 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 			static const char *seps = " ,";
 
 			// if map pool is empty, basically turn it off
-			if( strlen(g_map_pool->string) < 2 )
+			if( strlen(maplist) < 2 ) // racesow
 				return qtrue;
 
-			s = G_CopyString( g_map_pool->string );
+			s = G_CopyString( maplist ); // racesow
 			tok = strtok( s, seps );
 			while ( tok != NULL )
 			{
