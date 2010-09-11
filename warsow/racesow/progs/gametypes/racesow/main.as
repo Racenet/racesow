@@ -420,11 +420,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	else if ( cmdString == "callvotevalidate" )
 	{
 		cString vote = argsString.getToken( 0 );
-		if ( vote == "randmap" )
-		{
-			return true;
-		}
-		else if ( vote == "extend_time" )
+
+		if ( vote == "extend_time" )
 		{
 			if( g_timelimit.getInteger() <= 0 )
 			{
@@ -450,16 +447,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	else if ( cmdString == "callvotepassed" )
 	{
             cString vote = argsString.getToken( 0 );
-            if ( vote == "randmap")
-            {
-                int rand = brandom(0, mapcount);
-                cString mapname = maplist.getToken(rand);
-                client.printMessage (mapname + "\n");
-                // G_CmdExecute ("map " + mapname );
-                match.launchState(MATCH_STATE_POSTMATCH);
-                return true;
-            }
-            else if ( vote == "extend_time" )
+
+            if ( vote == "extend_time" )
             {
             	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
 				for ( int i = 0; i < maxClients; i++ )
@@ -1173,7 +1162,6 @@ void GT_InitGametype()
 	G_RegisterCommand( "ghost" );
 
 	//add callvotes
-	G_RegisterCallvote( "randmap", "", "Change to a random map");
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
 
 

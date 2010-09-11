@@ -41,6 +41,7 @@ cvar_t *rs_queryUpdatePlayerMapPoints;
 cvar_t *rs_querySetMapRating;
 cvar_t *rs_queryLoadMapList;
 cvar_t *rs_queryLoadMapHighscores;
+cvar_t *rs_queryMapFilter;
 
 cvar_t *rs_authField_Name;
 cvar_t *rs_authField_Pass;
@@ -142,8 +143,8 @@ void RS_MysqlLoadInfo( void )
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
-	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = %d AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
-	
+	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
+	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT `id`, `name` FROM `map` WHERE `name` LIKE '%%%s%%' LIMIT %d, %d;", CVAR_ARCHIVE );
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
     
@@ -1118,8 +1119,7 @@ char *RS_MysqlLoadMaplist( int is_freestyle ) {
 		// replaced by:
 		Q_strncpyz( orderby, "name", sizeof(orderby) );  
         
-        
-		sprintf(query, rs_queryLoadMapList->string, is_freestyle, orderby);
+		sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", orderby);
         mysql_real_query(&mysql, query, strlen(query));
 		RS_CheckMysqlThreadError();
        	if (mysql_errno(&mysql) != 0) {

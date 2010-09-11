@@ -41,6 +41,7 @@ cvar_t *rs_authField_Token;
 cvar_t *rs_tokenSalt;
 
 char maplist[50000];
+unsigned int mapcount;
 
 void RS_MysqlLoadInfo( void );
 qboolean RS_MysqlConnect( void );
