@@ -148,7 +148,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 	{
 		cString help;
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "WEAPONDEF HELP for " + gametype.getName() + "\n";
+		help += S_COLOR_RED + "WEAPONDEF HELP for racesow\n";
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "weapondef weapon [property] [value], where:\n";
 		help += S_COLOR_RED + "  weapon = ( rocket | plasma | grenade )[weak]\n";
@@ -164,7 +164,7 @@ bool weaponDefCommand( cString &cmdString, cClient @client )
 	else if( commandExists = command == "restore" )
 	{
 		weaponDefInitCfg("_original");
-		G_CmdExecute( "exec configs/server/gametypes/" + gametype.getName() + "_weapondef_original.cfg silent" );
+		G_CmdExecute( "exec configs/server/gametypes/racesow_weapondefs_original.cfg silent" );
 		showNotification = true;
 	}
 	else if( commandExists = command == "save" )
@@ -215,49 +215,56 @@ void weaponDefInitCfg(cString suffix)
 {
 	cString config_wpdef;
 
-	config_wpdef = "// racesow weapon defs, with tweaked values frm weqo server\n"
-	+ "\n"
-	+ "// rocket weak\n"
-	+ "set rs_rocketweak_knockback \"95\"\n"
-	+ "set rs_rocketweak_splash \"140\"\n"
-	+ "set rs_rocketweak_minknockback \"5\"\n"
-	+ "// rocket strong\n"
-	+ "set rs_rocket_knockback \"100\"\n"
-	+ "set rs_rocket_splash \"120\"\n"
-	+ "set rs_rocket_minknockback \"1\"\n"
-	+ "set rs_rocket_prestep \"10\"\n"
-	+ "set rs_rocket_antilag \"0\"\n"
-	+ "// plasma weak\n"
-	+ "set rs_plasmaweak_knockback \"14\"\n"
-	+ "set rs_plasmaweak_splash \"45\"\n"
-	+ "set rs_plasmaweak_minknockback \"1\"\n"
-	+ "set rs_plasmaweak_speed \"1700\"\n"
-	+ "// plasma strong\n"
-	+ "set rs_plasma_knockback \"23\"\n"
-	+ "set rs_plasma_splash \"40\"\n"
-	+ "set rs_plasma_minknockback \"1\"\n"
-	+ "set rs_plasma_speed \"1700\"\n"
-	+ "set rs_plasma_prestep \"32\"\n"
-	+ "set rs_plasma_hack \"1\"\n"
-	+ "// grenade weak\n"
-	+ "set rs_grenadeweak_timeout \"1650\"\n"
-	+ "set rs_grenadeweak_knockback \"90\"\n"
-	+ "set rs_grenadeweak_splash \"160\"\n"
-	+ "set rs_grenadeweak_minknockback \"10\"\n"
-	+ "set rs_grenadeweak_speed \"800\"\n"
-	+ "// grenade strong\n"
-	+ "set rs_grenade_timeout \"1650\"\n"
-	+ "set rs_grenade_knockback \"120\"\n"
-	+ "set rs_grenade_splash \"170\"\n"
-	+ "set rs_grenade_minknockback \"1\"\n"
-	+ "set rs_grenade_speed \"800\"\n"
-	+ "set rs_grenade_friction \"0.85\"\n"
-	+ "set rs_grenade_gravity \"1.22\"\n"
-	+ "set rs_grenade_prestep \"24\"\n"
-	+ "\necho " + gametype.getName() + "_weapondef.cfg executed\n";
+	config_wpdef = "//*\n"
+        + "//* Weapondefs\n"
+        + "//*\n"
+        + "// HINT: theese values were determined and tweaked\n"
+        + "// while playing at weqo's testserver.\n"
+        + "// you should only touch this config if you want\n"
+        + "// to help us to improove the weapons-phsysics\n"
+        + "\n"
+        + "// rocket weak\n"
+        + "set rs_rocketweak_knockback \"95\"\n"
+        + "set rs_rocketweak_splash \"140\"\n"
+        + "set rs_rocketweak_minknockback \"5\"\n"
+        + "// rocket strong\n"
+        + "set rs_rocket_knockback \"100\"\n"
+        + "set rs_rocket_splash \"120\"\n"
+        + "set rs_rocket_minknockback \"1\"\n"
+        + "set rs_rocket_prestep \"10\"\n"
+        + "set rs_rocket_antilag \"0\"\n"
+        + "// plasma weak\n"
+        + "set rs_plasmaweak_knockback \"14\"\n"
+        + "set rs_plasmaweak_splash \"45\"\n"
+        + "set rs_plasmaweak_minknockback \"1\"\n"
+        + "set rs_plasmaweak_speed \"1700\"\n"
+        + "// plasma strong\n"
+        + "set rs_plasma_knockback \"23\"\n"
+        + "set rs_plasma_splash \"40\"\n"
+        + "set rs_plasma_minknockback \"1\"\n"
+        + "set rs_plasma_speed \"1700\"\n"
+        + "set rs_plasma_prestep \"32\"\n"
+        + "set rs_plasma_hack \"1\"\n"
+        + "// grenade weak\n"
+        + "set rs_grenadeweak_timeout \"1650\"\n"
+        + "set rs_grenadeweak_knockback \"90\"\n"
+        + "set rs_grenadeweak_splash \"160\"\n"
+        + "set rs_grenadeweak_minknockback \"10\"\n"
+        + "set rs_grenadeweak_speed \"800\"\n"
+        + "// grenade strong\n"
+        + "set rs_grenade_timeout \"1650\"\n"
+        + "set rs_grenade_knockback \"120\"\n"
+        + "set rs_grenade_splash \"170\"\n"
+        + "set rs_grenade_minknockback \"1\"\n"
+        + "set rs_grenade_speed \"800\"\n"
+        + "set rs_grenade_friction \"0.85\"\n"
+        + "set rs_grenade_gravity \"1.22\"\n"
+        + "set rs_grenade_prestep \"24\"\n"
+        + "\n"
+        + "\necho racesow_weapondefs.cfg executed\n";
 	
-	G_WriteFile( "configs/server/gametypes/" + gametype.getName() + "_weapondef"+suffix+".cfg", config_wpdef );
-	G_Print( "Created default weapondef file for '" + gametype.getName() + "'\n" );
+	G_WriteFile( "configs/server/gametypes/racesow_weapondefs"+suffix+".cfg", config_wpdef );
+	G_Print( "Created default weapondefs config for 'racesow'\n" );
 }
 
 /**
@@ -353,10 +360,10 @@ void weaponDefSave()
 		+ "set rs_grenade_friction \""+sfr+"\"\n"
 		+ "set rs_grenade_gravity \""+sgr+"\"\n"
 		+ "set rs_grenade_prestep \""+sps+"\"\n"
-		+ "\necho " + gametype.getName() + "_weapondef.cfg executed\n";;
+		+ "\necho racesow_weapondefs.cfg executed\n";;
 	}
-	G_WriteFile( "configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg", config_wpdef );
-	G_Print( "Saved weapondef file in '" + gametype.getName() + "'\n" );
+	G_WriteFile( "configs/server/gametypes/racesow_weapondefs.cfg", config_wpdef );
+	G_Print( "Saved weapondef file in 'racesow'\n" );
 }
 
 /**
@@ -369,6 +376,6 @@ void weaponDefSave()
 void weaponDefInit()
 {
 	// if weapondefs don't have a config file, create it
-	if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg" ) )
+	if ( !G_FileExists( "configs/server/gametypes/racesow_weapondefs.cfg" ) )
 		weaponDefInitCfg("");
 }

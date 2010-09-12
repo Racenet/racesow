@@ -1053,6 +1053,39 @@ void GT_InitGametype()
 
 	// initalize weapondef config
 	weaponDefInit();
+    
+    // if the gametype doesn't have a config file, create it
+    if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
+    {
+        cString config;
+
+        // the config file doesn't exist or it's empty, create it
+        config = "//*\n"
+                 + "//* Racesow Base settings\n"
+                 + "//*\n"
+                 + "// WARNING: if you touch any of theese settings\n"
+                 + "// it can really have a very negative impact on\n"
+                 + "// racesow's gameplay!\n"
+                 + "\n"
+                 + "set g_gametype \"race\"\n"
+                 + "set g_allow_falldamage \"0\" // suxx\n"
+                 + "set g_allow_selfdamage \"0\" // meeeh\n"
+                 + "set g_allow_stun \"0\" // LOL!\n"
+                 + "set g_allow_bunny \"0\" // learn it!\n"
+                 + "set g_antilag \"0\" // do NEVER touch!\n"
+                 + "set g_scorelimit \"0\" // a new feature..?\n"
+                 + "set g_warmup_enabled \"0\" // ...\n"
+                 + "set rs_projectilePrestep \"24\" // is it used?\n"
+                 + "set rs_movementStyle \"1\"\n"
+                 + "\n"
+                 + "exec configs/server/gametypes/racesow_weapondefs.cfg"
+                 + "\n"
+				 + "echo racesow.cfg executed\n";
+
+        G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
+        G_Print( "Created default base config file for racesow\n" );
+        G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
+    }
 
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
