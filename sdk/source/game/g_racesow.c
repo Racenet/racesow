@@ -319,7 +319,7 @@ qboolean RS_MysqlLoadMap()
  */
 void *RS_MysqlLoadMap_Thread(void *in)
 {
-    char query[250];
+    char query[2000];
     char name[64];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -1046,7 +1046,7 @@ char *RS_MysqlLoadMaplist( int is_freestyle ) {
         
         }
         mysql_free_result(mysql_res);
-        G_Printf( va( "Found %i maps in databse.\n", mapcount ) );
+        G_Printf( va( "Found %i maps in database.\n", mapcount ) );
     
  
     /*

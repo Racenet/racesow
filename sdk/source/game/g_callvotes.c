@@ -202,16 +202,16 @@ static qboolean G_MapnameValidate( char *mapname) {
  */
 static qboolean G_VoteRandmapValidate( callvotedata_t *data, qboolean first )
 {
-    int mapNumber = brandom( 0, mapcount );
+    unsigned int mapNumber = brandom( 0, mapcount );
     char *s, *tok;
     static const char *seps = " ";
+	unsigned int i;
 
     if( !first )
         return qtrue;
 
     s = G_CopyString( maplist ); // racesow
     tok = strtok( s, seps );
-    int i;
 
     for ( i = 0; i < mapcount; i++ )
     {
