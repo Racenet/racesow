@@ -904,8 +904,6 @@ void GT_ThinkRules()
 			client.inventorySetCount( AMMO_GUNBLADE, 10 );
 			if( player.onQuad )
 			    client.inventorySetCount( POWERUP_QUAD, 30 );
-			else
-			    client.inventorySetCount( POWERUP_QUAD, 0 );
     	}
     }
 }

@@ -650,8 +650,11 @@ class Racesow_Player
 		    cTrace tr;
             if( tr.doTrace( this.client.getEnt().getOrigin(), mins, maxs,
                     this.client.getEnt().getOrigin(), 0, MASK_PLAYERSOLID ))
+            {
                 //don't allow players to end noclip inside others or the world
+                this.sendMessage( S_COLOR_WHITE + "WARNING: can't switch noclip back when being in something solid.\n" );
                 return false;
+            }
 			ent.moveType = MOVETYPE_PLAYER;
 			ent.solid = SOLID_YES;
 			this.client.selectWeapon( this.noclipWeapon );
@@ -679,6 +682,7 @@ class Racesow_Player
             return false;
         if( this.onQuad )
         {
+            this.client.inventorySetCount( POWERUP_QUAD, 0 );
             this.onQuad = false;
         }
         else
