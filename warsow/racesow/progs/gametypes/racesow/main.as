@@ -1054,22 +1054,6 @@ void GT_InitGametype()
 	// initalize weapondef config
 	weaponDefInit();
 
-    // if the gametype doesn't have a config file, create it
-    if ( !G_FileExists( "configs/server/gametypes/" + gametype.getName() + ".cfg" ) )
-    {
-        cString config;
-
-        // the config file doesn't exist or it's empty, create it
-        config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
-                 + "// This config will be executed each time the gametype is started\n"
-				 + "exec configs/server/gametypes/" + gametype.getName() + "_weapondef.cfg silent\n"
-				 + "\necho " + gametype.getName() + ".cfg executed\n";
-
-        G_WriteFile( "configs/server/gametypes/" + gametype.getName() + ".cfg", config );
-        G_Print( "Created default config file for '" + gametype.getName() + "'\n" );
-        G_CmdExecute( "exec configs/server/gametypes/" + gametype.getName() + ".cfg silent" );
-    }
-
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
         gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
