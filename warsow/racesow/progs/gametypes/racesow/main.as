@@ -282,20 +282,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			sendMessage( S_COLOR_RED + "Command only available for race\n", @client );
 			return false;
 		}
-			/*
-				// this was attempt 1 to print highscores
-		else if( player.top_lastcmd + 30 > localTime )
-		{
-			sendMessage( S_COLOR_RED + "Flood protection. You can use the top command"
-					+"only every 30 seconds\n", @client );
-			return false;
-		}
-		else
-		{
-			player.top_lastcmd = localTime;
-			G_PrintMsg( client.getEnt(), map.getStatsHandler().getStats() );
-			*/
-			// attempt 2:
 		else if( player.isWaitingForCommand )
 		{
 			sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
@@ -754,7 +740,6 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
 	if( map.inOvertime )
 	{
-		player.remove("You were removed due to overtime.");
 		player.cancelOvertime();
 		return;
 	}
@@ -771,16 +756,18 @@ void GT_ThinkRules()
 	// perform a Mysql callback if there is one pending
 	Racesow_ThinkCallbackQueue();
 
-    map.allowEndGame();
     
 	if ( match.timeLimitHit() )
     {
         match.launchState( match.getState() + 1 );
     }
 
+    map.allowEndGame();
+    
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
 
+    
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
     
@@ -940,8 +927,8 @@ bool GT_MatchStateFinished( int incomingMatchState )
     {
         if (!map.inOvertime)
             map.startOvertime();
-            
-        return map.allowEndGame();
+
+          return map.allowEndGame();
     }
 
     if ( match.getState() == MATCH_STATE_POSTMATCH ) // LOL this should not be in here ;)
@@ -1178,8 +1165,8 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	//maplist = RS_LoadMapList( g_freestyle.getBool() );
-	//mapcount = RS_GetNumberOfMaps();
+	maplist = RS_LoadMapList( g_freestyle.getBool() );
+	mapcount = RS_GetNumberOfMaps();
 
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );

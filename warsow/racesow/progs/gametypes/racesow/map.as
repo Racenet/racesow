@@ -71,7 +71,9 @@ class Racesow_Map
 
         for ( int i = 0; i < maxClients; i++ )
         {
-            if ( players[i].isRacing() )
+            if ( @players[i] != null &&
+                 @players[i].getClient() != null &&
+                 players[i].isRacing() )
             {
                 players[i].startOvertime();
                 numRacing++;
@@ -99,8 +101,11 @@ class Racesow_Map
 		uint numInOvertime = 0;
         for ( int i = 0; i < maxClients; i++ )
         {
-            if ( ( players[i].inOvertime ) && ( players[i].getClient().team != TEAM_SPECTATOR ))
-            {
+            if (@players[i] != null &&
+                @players[i].getClient() != null &&
+                players[i].getClient().team != TEAM_SPECTATOR &&
+                players[i].inOvertime) {
+                 
                 cVec3 velocity = players[i].getClient().getEnt().getVelocity();
 
                 if ( velocity.x == 0 && velocity.y == 0 && velocity.z == 0 )
@@ -126,15 +131,15 @@ class Racesow_Map
                     numInOvertime++;
                 }
             }
-
-			if ( numInOvertime == 0 )
-			{
-                this.inOvertime = false;
-                match.launchState(MATCH_STATE_POSTMATCH);
-				return true;
-			}
 		}
-
+        
+        if ( numInOvertime == 0 )
+        {
+            this.inOvertime = false;
+            match.launchState(MATCH_STATE_POSTMATCH);
+            return true;
+        }
+        
 		return false;
 	}
 

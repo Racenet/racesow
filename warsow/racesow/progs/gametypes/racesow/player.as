@@ -179,6 +179,7 @@ class Racesow_Player
 		this.idleTime = 0;
 		this.isSpawned = true;
 		this.isJoinlocked = false;
+        this.inOvertime = false;
 		this.isVotemuted = false;
 		this.wasTelekilled = false;
 		this.onQuad = false;
@@ -571,7 +572,7 @@ class Racesow_Player
 	void startOvertime()
 	{
 		this.inOvertime = true;
-		this.sendMessage( S_COLOR_RED + "Please hurry up, the ther players are waiting for you to finish...\n" );
+		this.sendMessage( S_COLOR_RED + "Please hurry up, the other players are waiting for you to finish...\n" );
 	}
 
 	/**
