@@ -835,6 +835,7 @@ void *RS_MysqlMapFilter_Thread( void *in)
     int page = filterData->start/mapsPerPage+1;
 
     //first count the total number of matching maps
+    mysql_real_escape_string(&mysql, filterData->filter, filterData->filter, strlen(filterData->filter));
     sprintf(query, rs_queryMapFilterCount->string, filterData->filter);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
