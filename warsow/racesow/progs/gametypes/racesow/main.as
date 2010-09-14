@@ -349,15 +349,40 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         else if ( ( cmdString == "mapfilter") )
         {
             cString arg = argsString.getToken( 0 );
-            if ( arg.len() < 1 )
+            cString pageString = argsString.getToken( 1 );
+            int page = 0;
+            if ( pageString.len() < 1 )
             {
-                player.sendMessage( "Usage : mapfilter <filter>.\n" );
+                page = 1;
             }
             else
             {
-                player.filterMapList( arg , maplist, mapcount );
+                page = pageString.toInt();
+            }
+            int mapsPerPage = 10;
+
+            if ( arg.len() < 1 )
+            {
+                player.sendMessage( "Usage : mapfilter <filter> <pagenum>.\n" );
+            }
+            else
+            {
+                RS_MysqlMapFilter(client.playerNum(),arg,(page-1)*10,10);
             }
         }
+
+        else if ( ( cmdString == "testing") )
+        {
+            int arg = argsString.getToken( 0 ).toInt();
+            cString result;
+            for (int i=0; i<arg; i++)
+            {
+                cString test = i;
+                result = result + i +" : test\n";
+            }
+                player.sendMessage( result);
+           }
+
 	else if ( ( cmdString == "callvotecheckpermission" ) )
 	{
 		if( player.isVotemuted )
@@ -1166,6 +1191,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "mapfilter" );
 	G_RegisterCommand( "timeleft" );
 	G_RegisterCommand( "quad" );
+	G_RegisterCommand( "testing" );
 
 	//add callvotes
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );

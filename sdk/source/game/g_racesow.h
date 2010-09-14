@@ -34,6 +34,8 @@ cvar_t *rs_queryUpdatePlayerMapPoints;
 cvar_t *rs_queryUpdateNickMap;
 cvar_t *rs_queryUpdateNickMapPlaytime;
 cvar_t *rs_querySetMapRating;
+cvar_t *rs_queryMapFilter;
+cvar_t *rs_queryMapFilterCount;
 
 cvar_t *rs_authField_Name;
 cvar_t *rs_authField_Pass;
@@ -106,6 +108,14 @@ struct highscoresDataStruct {
 	unsigned int map_id;
 };
 
+struct filterDataStruct {
+
+    char *filter;
+    int player_id;
+    unsigned int start;
+    unsigned int end;
+};
+
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
 
@@ -133,3 +143,7 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 
 char *RS_MysqlLoadMaplist( int is_freestyle );
 unsigned int RS_GetNumberOfMaps();
+
+extern qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int start,unsigned int end);
+extern void *RS_MysqlMapFilter_Thread( void *in );
+extern char *RS_MysqlMapFilterCallback(int player_id);

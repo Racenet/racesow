@@ -14,6 +14,7 @@ const uint RACESOW_CALLBACK_LOADMAP = 2;
 const uint RACESOW_CALLBACK_HIGHSCORES = 3;
 const uint RACESOW_CALLBACK_APPEAR = 4;
 const uint RACESOW_CALLBACK_PERSONALBEST = 5;
+const uint RACESOW_CALLBACK_MAPFILTER = 6;
 
  /**
  * Racesow_ThinkCallbackQueue()
@@ -54,5 +55,15 @@ void Racesow_ThinkCallbackQueue()
                 player.getAuth().appearCallback(arg2, arg3, arg4, arg5, arg6);
 			}
             break;
+
+		case RACESOW_CALLBACK_MAPFILTER:
+		    @player = Racesow_GetPlayerByNumber( arg1 );
+		    if ( @player != null )
+		    {
+		        cString result = RS_MysqlMapFilterCallback(arg1);
+		        player.sendMessage(result);
+		        player.isWaitingForCommand=false;
+		    }
+		    break;
    }
 }

@@ -42,6 +42,7 @@ cvar_t *rs_querySetMapRating;
 cvar_t *rs_queryLoadMapList;
 cvar_t *rs_queryLoadMapHighscores;
 cvar_t *rs_queryMapFilter;
+cvar_t *rs_queryMapFilterCount;
 
 cvar_t *rs_authField_Name;
 cvar_t *rs_authField_Pass;
@@ -55,6 +56,7 @@ const unsigned int RACESOW_CALLBACK_RACE = 1;
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
 const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
 const unsigned int RACESOW_CALLBACK_APPEAR = 4;
+const unsigned int RACESOW_CALLBACK_MAPFILTER = 6;
 
 /**
  * MySQL Socket
@@ -142,7 +144,8 @@ void RS_MysqlLoadInfo( void )
     
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
 	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
-	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT `id`, `name` FROM `map` WHERE `name` LIKE '%%%s%%' LIMIT %d, %d;", CVAR_ARCHIVE );
+	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' LIMIT %u, %u;", CVAR_ARCHIVE );
+	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%';", CVAR_ARCHIVE );
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
     
@@ -816,6 +819,103 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     return NULL;
 }
 
+char *filter_players[256]={0};
+
+void *RS_MysqlMapFilter_Thread( void *in)
+{
+    MYSQL_ROW  row;
+    MYSQL_RES  *mysql_res;
+    char query[1024];
+    struct filterDataStruct *filterData = (struct filterDataStruct *)in;
+    char result[10000];
+    result[0]='\0';
+    int mapsPerPage = 10;
+    int count = 0;
+    int totalPages = 0;
+    int page = filterData->start/mapsPerPage+1;
+
+    //first count the total number of matching maps
+    sprintf(query, rs_queryMapFilterCount->string, filterData->filter);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    if (mysql_errno(&mysql) != 0) {
+        printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+    }
+    mysql_res = mysql_store_result(&mysql);
+
+    while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
+        count = atoi(row[0]);
+        break;
+    }
+
+    if ( count == 0 )
+    {
+        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_ORANGE, filterData->filter ),  sizeof(result));
+    }
+    else
+    {
+        totalPages = count/mapsPerPage+1;
+        Q_strncatz( result, va( "Printing page %d/%d of maps matching %s.\nUse mapfilter %s <pagenum> to see other pages.\n", page, totalPages, filterData->filter, filterData->filter),  sizeof(result));
+        //now fetch the matching maps
+        sprintf(query, rs_queryMapFilter->string, filterData->filter, filterData->start, filterData->end);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        if (mysql_errno(&mysql) != 0) {
+            printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+        }
+        mysql_res = mysql_store_result(&mysql);
+
+        while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
+            Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, atoi(row[0]), S_COLOR_WHITE, row[1] ),  sizeof(result));
+        }
+    }
+
+    unsigned int size = strlen(result)+1;
+    filter_players[filterData->player_id]=malloc(size);
+    Q_strncpyz( filter_players[filterData->player_id], result, size);
+    RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, count, 0, 0, 0, 0);
+
+
+    mysql_free_result(mysql_res);
+    free(filterData->filter);
+    free(filterData);
+    RS_EndMysqlThread();
+
+    return NULL;
+}
+
+qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int start,unsigned int end)
+{
+    pthread_t thread;
+    int returnCode;
+
+    struct filterDataStruct *filterdata=malloc(sizeof(struct filterDataStruct));
+    filterdata->player_id = player_id;
+    filterdata->filter = strdup(filter);
+    filterdata->start = start;
+    filterdata->end = end;
+
+    returnCode = pthread_create(&thread, &threadAttr, RS_MysqlMapFilter_Thread, (void *)filterdata);
+
+    if (returnCode) {
+
+        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        return qfalse;
+    }
+
+    return qtrue;
+}
+
+char *RS_MysqlMapFilterCallback(int player_id )
+{
+    unsigned int size = strlen(filter_players[player_id])+1;
+    char *result=malloc(size);
+    Q_strncpyz(result, filter_players[player_id] , size);
+    free(filter_players[player_id]);
+    filter_players[player_id] = NULL;
+    return result;
+}
+
 /**
  * Calls the highscores thread
  *
@@ -938,7 +1038,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                 Q_strncpyz( last_time, va( "%d:%d.%d", min, sec, milli ), sizeof(last_time) );
 
                 if( position <= 10 )
-                    Q_strncatz( highscores[0],  va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[0]) );
+                    Q_strncatz( highscores[0], va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[0]) );
                 else if( position <= 20 )
                     Q_strncatz( highscores[1], va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[1]) );
                 else if( position <= 30 )
@@ -1008,23 +1108,7 @@ char *RS_MysqlLoadMaplist( int is_freestyle ) {
 	    maplist[0] = 0;
 	    mapcount = 0;
 
-        
-		/*
-		// not implemented
-        switch( g_maprotation->integer ) {
-        
-            case 2:
-                Q_strncpyz( orderby, "RAND()", sizeof(orderby) );
-                break;
-            
-            case 1:
-            default:
-                Q_strncpyz( orderby, "name", sizeof(orderby) );  
-                break;      
-        }
-		*/
-		// replaced by:
-		Q_strncpyz( orderby, "name", sizeof(orderby) );  
+       	Q_strncpyz( orderby, "name", sizeof(orderby) );
         
 		sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", orderby);
         mysql_real_query(&mysql, query, strlen(query));
