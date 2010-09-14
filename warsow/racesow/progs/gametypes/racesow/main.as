@@ -328,60 +328,48 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return player.chronoUse( argsString );
 	}
 	else if ( ( cmdString == "privsay" ) )
-        {
+    {
 		return player.privSay( argsString, @client );
+    }
 
-        }
-
-        else if ( ( cmdString == "maplist") )
+    else if ( ( cmdString == "maplist") )
+    {
+        cString arg = argsString.getToken( 0 );
+        if ( arg.len() < 1 )
         {
-            cString arg = argsString.getToken( 0 );
-            if ( arg.len() < 1 )
-            {
-                client.printMessage( "Usage : maplist <pagenum>.\n");
-                player.printMapList ( 1 , mapcount , MAPS_PER_PAGE , maplist);
-            }
-            else
-            {
-                player.printMapList ( arg.toInt() , mapcount , MAPS_PER_PAGE , maplist);
-            }
+            client.printMessage( "Usage : maplist <pagenum>.\n");
+            player.printMapList ( 1 , mapcount , MAPS_PER_PAGE , maplist);
         }
-        else if ( ( cmdString == "mapfilter") )
+        else
         {
-            cString arg = argsString.getToken( 0 );
-            cString pageString = argsString.getToken( 1 );
-            int page = 0;
-            if ( pageString.len() < 1 )
-            {
-                page = 1;
-            }
-            else
-            {
-                page = pageString.toInt();
-            }
-            int mapsPerPage = 10;
-
-            if ( arg.len() < 1 )
-            {
-                player.sendMessage( "Usage : mapfilter <filter> <pagenum>.\n" );
-            }
-            else
-            {
-                RS_MysqlMapFilter(client.playerNum(),arg,(page-1)*10,10);
-            }
+            player.printMapList ( arg.toInt() , mapcount , MAPS_PER_PAGE , maplist);
         }
+    }
 
-        else if ( ( cmdString == "testing") )
+    else if ( ( cmdString == "mapfilter") )
+    {
+        cString arg = argsString.getToken( 0 );
+        cString pageString = argsString.getToken( 1 );
+        int page = 0;
+        if ( pageString.len() < 1 )
         {
-            int arg = argsString.getToken( 0 ).toInt();
-            cString result;
-            for (int i=0; i<arg; i++)
-            {
-                cString test = i;
-                result = result + i +" : test\n";
-            }
-                player.sendMessage( result);
-           }
+            page = 1;
+        }
+        else
+        {
+            page = pageString.toInt();
+        }
+        int mapsPerPage = 10;
+
+        if ( arg.len() < 1 )
+        {
+            player.sendMessage( "Usage : mapfilter <filter> <pagenum>.\n" );
+        }
+        else
+        {
+            RS_MysqlMapFilter(client.playerNum(),arg,(page-1)*10,10);
+        }
+    }
 
 	else if ( ( cmdString == "callvotecheckpermission" ) )
 	{
@@ -1191,7 +1179,6 @@ void GT_InitGametype()
 	G_RegisterCommand( "mapfilter" );
 	G_RegisterCommand( "timeleft" );
 	G_RegisterCommand( "quad" );
-	G_RegisterCommand( "testing" );
 
 	//add callvotes
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
