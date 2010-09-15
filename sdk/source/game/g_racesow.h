@@ -112,8 +112,7 @@ struct filterDataStruct {
 
     char *filter;
     int player_id;
-    unsigned int start;
-    unsigned int end;
+    unsigned int page;
 };
 
 extern void RS_Init( void );
@@ -144,6 +143,6 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 char *RS_MysqlLoadMaplist( int is_freestyle );
 unsigned int RS_GetNumberOfMaps();
 
-extern qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int start,unsigned int end);
+extern qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page);
 extern void *RS_MysqlMapFilter_Thread( void *in );
 extern char *RS_MysqlMapFilterCallback(int player_id);

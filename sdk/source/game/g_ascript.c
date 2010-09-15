@@ -6096,17 +6096,16 @@ static void asFunc_asGeneric_G_Md5( void *gen )
 }
 
 // RS_MysqlMapFilter
-static qboolean asFunc_RS_MysqlMapFilter(int player_id,asstring_t *filter,unsigned int start,unsigned int end )
+static qboolean asFunc_RS_MysqlMapFilter(int player_id,asstring_t *filter,unsigned int page )
 {
-     return RS_MysqlMapFilter( player_id, filter->buffer, start, end);
+     return RS_MysqlMapFilter( player_id, filter->buffer, page);
 }
 static void asFunc_asGeneric_RS_MysqlMapFilter( void *gen )
 {
     G_asGeneric_SetReturnBool( gen, asFunc_RS_MysqlMapFilter(
             (int)G_asGeneric_GetArgInt(gen, 0),
             (asstring_t *)G_asGeneric_GetArgAddress(gen, 1),
-            (unsigned int)G_asGeneric_GetArgInt(gen, 2),
-            (unsigned int)G_asGeneric_GetArgInt(gen, 3)));
+            (unsigned int)G_asGeneric_GetArgInt(gen, 2)));
 }
 
 // RS_MysqlMapFilterCallback
@@ -6893,7 +6892,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
-	{ "void RS_MysqlMapFilter(int, cString &, int, int )", asFunc_RS_MysqlMapFilter, asFunc_asGeneric_RS_MysqlMapFilter},
+	{ "void RS_MysqlMapFilter( int, cString &, int )", asFunc_RS_MysqlMapFilter, asFunc_asGeneric_RS_MysqlMapFilter},
     { "cString @RS_MysqlMapFilterCallback( int )", asFunc_RS_MysqlMapFilterCallback, asFunc_asGeneric_RS_MysqlMapFilterCallback },
 	{ "cString @RS_LoadMapList( bool )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},

@@ -1241,8 +1241,8 @@ class Racesow_Player
 		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 		help += S_COLOR_RED + "help           " + S_COLOR_YELLOW + "display this help ;)\n";
 		help += S_COLOR_RED + "top             " + S_COLOR_YELLOW + "display the top 30 times on this map\n";
-                help += S_COLOR_RED + "maplist       " + S_COLOR_YELLOW + "display the maplist by pages\n";
-                help += S_COLOR_RED + "mapfilter   " + S_COLOR_YELLOW + "list the maps containing a specific string.\n";
+        help += S_COLOR_RED + "maplist       " + S_COLOR_YELLOW + "display the maplist by pages\n";
+        help += S_COLOR_RED + "mapfilter   " + S_COLOR_YELLOW + "List the maps containing a specific string.\n";
         help += S_COLOR_RED + "racerestart " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
 		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
 

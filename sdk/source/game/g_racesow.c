@@ -819,8 +819,21 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     return NULL;
 }
 
+/**
+ * Store the result of filter requests from players.
+ * 256 players at max.
+ */
 char *filter_players[256]={0};
 
+/**
+ * Thread for filter request.
+ *
+ * Store the result in filter_players and push RACESOW_CALLBACK_MAPFILTER
+ * to the callback queue.
+ *
+ * @param in The input data, cast to filterDataStruct
+ * @return NULL on success
+ */
 void *RS_MysqlMapFilter_Thread( void *in)
 {
     MYSQL_ROW  row;
@@ -829,10 +842,11 @@ void *RS_MysqlMapFilter_Thread( void *in)
     struct filterDataStruct *filterData = (struct filterDataStruct *)in;
     char result[10000];
     result[0]='\0';
-    int mapsPerPage = 10;
+    const int MAPS_PER_PAGE = 10;
     int count = 0;
     int totalPages = 0;
-    int page = filterData->start/mapsPerPage+1;
+    int page = filterData->page;
+    int start = (page-1)*MAPS_PER_PAGE;
 
     //first count the total number of matching maps
     mysql_real_escape_string(&mysql, filterData->filter, filterData->filter, strlen(filterData->filter));
@@ -851,14 +865,22 @@ void *RS_MysqlMapFilter_Thread( void *in)
 
     if ( count == 0 )
     {
-        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_ORANGE, filterData->filter ),  sizeof(result));
+        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_YELLOW, filterData->filter ),  sizeof(result));
     }
     else
     {
-        totalPages = count/mapsPerPage+1;
-        Q_strncatz( result, va( "Printing page %d/%d of maps matching %s.\nUse mapfilter %s <pagenum> to see other pages.\n", page, totalPages, filterData->filter, filterData->filter),  sizeof(result));
+        totalPages = count/MAPS_PER_PAGE+1;
+        Q_strncatz( result, va( "Printing page %d/%d of maps matching %s%s.\n%sUse %smapfilter %s <pagenum> %sto print other pages.\n",
+                page,
+                totalPages,
+                S_COLOR_YELLOW,
+                filterData->filter,
+                S_COLOR_WHITE,
+                S_COLOR_YELLOW,
+                filterData->filter,
+                S_COLOR_WHITE),  sizeof(result));
         //now fetch the matching maps
-        sprintf(query, rs_queryMapFilter->string, filterData->filter, filterData->start, filterData->end);
+        sprintf(query, rs_queryMapFilter->string, filterData->filter, start, MAPS_PER_PAGE);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         if (mysql_errno(&mysql) != 0) {
@@ -885,16 +907,24 @@ void *RS_MysqlMapFilter_Thread( void *in)
     return NULL;
 }
 
-qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int start,unsigned int end)
+/**
+ * Mapfilter function registered in AS API.
+ *
+ * Calls RS_MysqlMapFilter
+ *
+ * @param player_id Id of the player making the request
+ * @param filter String used to filter maplist
+ * @param page Number of the result page
+ * @return Sucess boolean
+ */
+qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page)
 {
     pthread_t thread;
     int returnCode;
-
     struct filterDataStruct *filterdata=malloc(sizeof(struct filterDataStruct));
     filterdata->player_id = player_id;
     filterdata->filter = strdup(filter);
-    filterdata->start = start;
-    filterdata->end = end;
+    filterdata->page = page;
 
     returnCode = pthread_create(&thread, &threadAttr, RS_MysqlMapFilter_Thread, (void *)filterdata);
 
@@ -907,6 +937,13 @@ qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int start,unsign
     return qtrue;
 }
 
+/**
+ * This function is called from angelscript when RACESOW_CALLBACK_MAPFILTER is
+ * popped out of the callback queue.
+ *
+ * @param player_id Id of the player making the request
+ * @return the result string to print to the player
+ */
 char *RS_MysqlMapFilterCallback(int player_id )
 {
     unsigned int size = strlen(filter_players[player_id])+1;

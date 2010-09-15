@@ -346,28 +346,26 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         }
     }
 
-    else if ( ( cmdString == "mapfilter") )
+    else if ( cmdString == "mapfilter" )
     {
-        cString arg = argsString.getToken( 0 );
-        cString pageString = argsString.getToken( 1 );
-        int page = 0;
-        if ( pageString.len() < 1 )
-        {
-            page = 1;
-        }
-        else
-        {
-            page = pageString.toInt();
-        }
-        int mapsPerPage = 10;
+        cString usage = S_COLOR_ORANGE + "Usage : " + S_COLOR_WHITE + "mapfilter <filter> <pagenum>.\n";
 
-        if ( arg.len() < 1 )
+        if ( argsString.len() == 0 )
         {
-            player.sendMessage( "Usage : mapfilter <filter> <pagenum>.\n" );
+            player.sendMessage( S_COLOR_RED + "Error : " + S_COLOR_WHITE + "no filter string specified.\n");
+            player.sendMessage( usage);
         }
         else
         {
-            RS_MysqlMapFilter(client.playerNum(),arg,(page-1)*10,10);
+            cString filter = argsString.getToken( 0 );
+            cString pageString = argsString.getToken( 1 );
+            int page = 0;
+            if ( pageString.len() < 1 )
+                page = 1;
+            else
+                page = pageString.toInt();
+
+            RS_MysqlMapFilter(client.playerNum(),filter,page);
         }
     }
 

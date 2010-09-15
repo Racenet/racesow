@@ -58,9 +58,10 @@ void Racesow_ThinkCallbackQueue()
 
 		case RACESOW_CALLBACK_MAPFILTER:
 		    @player = Racesow_GetPlayerByNumber( arg1 );
+
 		    if ( @player != null )
 		    {
-		        cString result = RS_MysqlMapFilterCallback(arg1);
+		        cString result = RS_MysqlMapFilterCallback( arg1 );
 		        player.sendMessage(result);
 		        player.isWaitingForCommand=false;
 		    }
