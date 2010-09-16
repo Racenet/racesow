@@ -422,9 +422,8 @@
         else 
         {
             this.destroyBackup();
-            this.setPlayerId(playerId);
-            this.authorizationsMask = uint(authMask);
-            
+			
+			// print sucess if the player is not already authed or re-authenticating
             if (!this.isAuthenticated() || playerId != this.playerId)
             {
                 if (hasToken)
@@ -432,6 +431,10 @@
                 else if (hasLogin)
                     G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
             }
+			
+			// now the player is authed!
+            this.setPlayerId(playerId);			
+			this.authorizationsMask = uint(authMask);
         }
         
         

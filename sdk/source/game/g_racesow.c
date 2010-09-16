@@ -654,7 +654,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         mysql_free_result(mysql_res);
     }
-    
+   
     // when no token is given or was invalid, try by username and password
     if (!hasUserinfo && Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
     {
@@ -841,12 +841,14 @@ void *RS_MysqlMapFilter_Thread( void *in)
     char query[1024];
     struct filterDataStruct *filterData = (struct filterDataStruct *)in;
     char result[10000];
-    result[0]='\0';
     const int MAPS_PER_PAGE = 10;
     int count = 0;
     int totalPages = 0;
     int page = filterData->page;
     int start = (page-1)*MAPS_PER_PAGE;
+	unsigned int size = strlen(result)+1;
+
+	result[0]='\0';
 
     //first count the total number of matching maps
     mysql_real_escape_string(&mysql, filterData->filter, filterData->filter, strlen(filterData->filter));
@@ -1088,7 +1090,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 
 		for (highscore_part=0;highscore_part<3;highscore_part++)
 		{
-				highscores_players[highscore_part][playerNum]=malloc(strlen(highscores[highscore_part]));
+				highscores_players[highscore_part][playerNum]=malloc(strlen(highscores[highscore_part])+1);
 				highscores_players[highscore_part][playerNum][0]='\0';
 				Q_strncpyz( highscores_players[highscore_part][playerNum],highscores[highscore_part], strlen(highscores[highscore_part]));
 		}
