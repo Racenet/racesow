@@ -895,7 +895,6 @@ void *RS_MysqlMapFilter_Thread( void *in)
         }
     }
 
-    unsigned int size = strlen(result)+1;
     filter_players[filterData->player_id]=malloc(size);
     Q_strncpyz( filter_players[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, count, 0, 0, 0, 0);
