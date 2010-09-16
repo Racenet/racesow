@@ -461,6 +461,53 @@ void SP_trigger_push( edict_t *self )
 		self->wait = MIN_TRIGGER_PUSH_REBOUNCE_TIME * 0.001f;
 }
 
+void Use_target_push( edict_t *self, edict_t *other, edict_t *activator ) {
+	if ( !activator->r.client ) {
+		return;
+	}
+
+	if( activator->r.client->ps.pmove.pm_type != PM_NORMAL )
+		return;
+
+	VectorCopy (self->s.origin2, activator->velocity);
+
+	// play fly sound every 1.5 seconds - No sound yet.
+	/*if ( activator->fly_sound_debounce_time < level.time ) {
+		activator->fly_sound_debounce_time = level.time + 1500;
+		G_Sound( activator, CHAN_AUTO, self->noise_index, ATTN_NORM );
+	}*/
+}
+
+/*QUAKED target_push (.5 .5 .5) (-8 -8 -8) (8 8 8) bouncepad
+Pushes the activator in the direction.of angle, or towards a target apex.
+"speed"		defaults to 1000
+if "bouncepad", play bounce noise instead of windfly
+*/
+void SP_target_push( edict_t *self ) {
+	if (!self->speed) {
+		self->speed = 1000;
+	}
+
+	G_SetMovedir (self->s.angles, self->s.origin2);
+	VectorScale (self->s.origin2, self->speed, self->s.origin2);
+
+	// No sound yet.
+	/*if ( self->spawnflags & 1 ) {
+		self->noise_index = "sound/world/jumppad.wav";
+	} else {
+		self->noise_index = "sound/misc/windfly.wav";
+	}*/
+	if ( self->target ) {
+		VectorCopy( self->s.origin, self->r.absmin );
+		VectorCopy( self->s.origin, self->r.absmax );
+		self->r.svflags |= SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+		self->think = trigger_push_setup;
+		self->nextThink = level.time + 1;
+	}
+	self->use = Use_target_push;
+}
+
+
 //==============================================================================
 //
 //trigger_hurt
