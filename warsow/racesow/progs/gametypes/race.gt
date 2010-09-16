@@ -1,7 +1,12 @@
 /shared/constants.as;
 /shared/files.as;
 
+generic/items.as;
 generic/matchstates.as;
+
+legacy/quake1_items.as;
+legacy/quake2_items.as;
+legacy/quake3_items.as;
 
 racesow/main.as;
 racesow/entities.as;
