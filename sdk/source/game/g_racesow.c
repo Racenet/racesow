@@ -11,6 +11,7 @@
 /**
  * MySQL CVARs
  */
+cvar_t *rs_mysqlEnabled;
 cvar_t *rs_mysqlHost;
 cvar_t *rs_mysqlPort;
 cvar_t *rs_mysqlUser;
@@ -87,9 +88,13 @@ void RS_Init()
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     
-    // initialize mysql
-    RS_MysqlLoadInfo();
-    RS_MysqlConnect();
+	rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1",CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+    if ( rs_mysqlEnabled->integer )//initialize mysql
+    {
+        RS_MysqlLoadInfo();
+        RS_MysqlConnect();
+    }
+
 }
 
 /**
@@ -143,7 +148,7 @@ void RS_MysqlLoadInfo( void )
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
-	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
+	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT id, name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%';", CVAR_ARCHIVE );
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
@@ -846,7 +851,7 @@ void *RS_MysqlMapFilter_Thread( void *in)
     int totalPages = 0;
     int page = filterData->page;
     int start = (page-1)*MAPS_PER_PAGE;
-	unsigned int size = strlen(result)+1;
+	unsigned int size = 0;
 
 	result[0]='\0';
 
@@ -855,10 +860,8 @@ void *RS_MysqlMapFilter_Thread( void *in)
     sprintf(query, rs_queryMapFilterCount->string, filterData->filter);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-    if (mysql_errno(&mysql) != 0) {
-        printf("MySQL ERROR: %s\n", mysql_error(&mysql));
-    }
     mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
 
     while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
         count = atoi(row[0]);
@@ -885,16 +888,15 @@ void *RS_MysqlMapFilter_Thread( void *in)
         sprintf(query, rs_queryMapFilter->string, filterData->filter, start, MAPS_PER_PAGE);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
-        if (mysql_errno(&mysql) != 0) {
-            printf("MySQL ERROR: %s\n", mysql_error(&mysql));
-        }
         mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
 
         while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
             Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, atoi(row[0]), S_COLOR_WHITE, row[1] ),  sizeof(result));
         }
     }
 
+    size = strlen(result)+1;
     filter_players[filterData->player_id]=malloc(size);
     Q_strncpyz( filter_players[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, count, 0, 0, 0, 0);
@@ -1128,56 +1130,107 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 }
 
 
-/* map-list related global variables */
+/**
+ * map-list related global variables
+ */
+unsigned int mapcount = 0;
+char *maplist[5000] = {0}; // around 5000 maps..
 
-unsigned int mapcount=0;
-char maplist[50000]; // around 5000 maps..
-
-//=================
-//RS_MysqlLoadMaplist
-// straight from 0.42 with some changes
-// maplist is loaded only once at the beginning of a map, so we don't really need to thread it, also because threads dont support string output.
-//=================
-char *RS_MysqlLoadMaplist( int is_freestyle ) {
+/**
+ * Load Maplist from mysql database.
+ *
+ * maplist is loaded only once at the beginning of a map, so we don't really
+ * need to thread it, also because threads dont support string output.
+ *
+ * @param is_freestyle
+ * @return success boolean
+ */
+qboolean RS_MysqlLoadMaplist( int is_freestyle )
+{
         MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
         char query[1024];
-        char orderby[10];
-
-	    maplist[0] = 0;
-	    mapcount = 0;
-
-       	Q_strncpyz( orderby, "name", sizeof(orderby) );
+        mapcount = 0; //if not the mapcount increases each time we call the function
         
-		sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", orderby);
+		sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", "name");
         mysql_real_query(&mysql, query, strlen(query));
 		RS_CheckMysqlThreadError();
        	if (mysql_errno(&mysql) != 0) {
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+            return qfalse;
 	    }
         mysql_res = mysql_store_result(&mysql);
 		RS_CheckMysqlThreadError();
        	if (mysql_errno(&mysql) != 0) {
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+            return qfalse;
 	    }
+
         if( (unsigned long)mysql_num_rows( mysql_res ) != 0 ) {
-        
+            int index = 0;
+
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
-                Q_strncatz( maplist, va( "%s ", row[0] ), sizeof( maplist ) );
+                index = atoi( row[0] );
+                unsigned int size = strlen( row[1] )+1;
+                maplist[index]=malloc( size );
+                Q_strncpyz( maplist[index], va( "%s ", row[1] ), size );
                 mapcount++;
             }
         
         }
+
         mysql_free_result(mysql_res);
-        G_Printf( va( "Found %i maps in database.\n", mapcount ) );
-    
- 
-    /*
-	// (from .42) not implemented (should we?)
-	if(!mapcount)
-        RS_LoadConfigMaplist();
-	*/
-	return maplist;
+        return qtrue;
+}
+
+/**
+ * Load the maplist from a given string map list
+ *
+ * @param stringMapList a list of map names separated with spaces
+ * @return boolean success
+ */
+qboolean RS_BasicLoadMaplist(char *stringMapList)
+{
+    char *s, *t;
+    static const char *seps = " ,\n\r";
+    mapcount = 0;
+
+    s = G_CopyString( stringMapList );
+    t = strtok( s, seps );
+
+    while( t != NULL )
+    {
+        unsigned int size = strlen( t ) + 1;
+        maplist[mapcount]= malloc( size );
+        Q_strncpyz( maplist[mapcount], t, size);
+        mapcount++;
+        t = strtok( NULL, seps);
+    }
+
+    G_Free( s );
+    return qtrue;
+}
+
+/**
+ * General maplist load function
+ */
+void RS_LoadMaplist( int is_freestyle)
+{
+
+    if ( g_enforce_map_pool->integer )
+    {
+        RS_BasicLoadMaplist( g_map_pool->string );
+    }
+    else if ( rs_mysqlEnabled->integer )
+    {
+        RS_MysqlLoadMaplist( is_freestyle );
+    }
+    else
+    {
+        RS_BasicLoadMaplist( g_maplist->string );
+    }
+
+    G_Printf( "Maplist loaded : %u maps found.\n", mapcount );
 }
 
 unsigned int RS_GetNumberOfMaps()
@@ -1331,4 +1384,85 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta )
 
 	if( projectile->r.inuse )
 		projectile->waterlevel = ( G_PointContents4D( projectile->s.origin, projectile->timeDelta ) & MASK_WATER ) ? qtrue : qfalse;
+}
+
+char *RS_ChooseNextMap( void )
+{
+    edict_t *ent = NULL;
+
+    if( *level.forcemap )//this happens after callvote map and callvote randmap
+    {
+        return level.forcemap;
+    }
+
+    if( mapcount == 0 || g_maprotation->integer == 0 )
+    {
+        //same map again
+        return level.mapname;
+    }
+
+    else if( g_maprotation->integer == 1 )//follow the order given
+    {
+        int index = 0;
+        int foundMaps = 0;
+        int foundSentinel = 0;
+        while ( ( index < sizeof( maplist ) ) && ( foundMaps < mapcount ) )
+        {
+            if ( !( maplist[index] == NULL ) )
+            {
+                if ( !Q_stricmp( maplist[index], level.mapname ) )
+                    foundSentinel = 1;
+                else
+                {
+                    if ( foundSentinel )
+                        return maplist[index];
+                }
+                foundMaps++;
+            }
+            index++;
+        }
+
+        //end of the maplist reached take the first from start
+        index = 0;
+        while (index < sizeof( maplist ) )
+        {
+            if ( !( maplist[index] == NULL ) )
+                return maplist[index];
+
+            index++;
+        }
+    }
+
+    else if( g_maprotation->integer == 2 )// random from the list, but not the same
+    {
+            int seed = game.realtime;
+            int index = (int)Q_brandom( &seed, 0, mapcount ); // this should give random integer from 0 to count-1
+            int i = 0;
+
+            while( i < sizeof( maplist ) )
+            {
+                if( !( maplist[i] == NULL ) && Q_stricmp( maplist[i], level.mapname ) )
+                {
+                    if ( index == 0)
+                        return maplist[i];
+
+                    index--;
+                }
+                i++;
+            }
+
+    }
+
+    if( level.nextmap[0] )  // go to a specific map
+        return level.nextmap;
+
+    // search for a changelevel
+    ent = G_Find( NULL, FOFS( classname ), "target_changelevel" );
+    if( !ent )
+    {
+        // the map designer didn't include a changelevel,
+        // so return current mapname
+        return level.mapname;
+    }
+    return ent->map;
 }

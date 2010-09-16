@@ -43,6 +43,7 @@ cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
 
+cVar rs_mysqlEnabled( "rs_mysqlEnabled", "1",CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
@@ -1010,7 +1011,10 @@ void GT_Shutdown()
 void GT_SpawnGametype()
 {
     @map = Racesow_Map();
-    map.getStatsHandler().loadStats();
+    if ( rs_mysqlEnabled.getBool() )
+    {
+        map.getStatsHandler().loadStats();
+    }
 
 	// setup players
     for ( int i = 0; i < maxClients; i++ )
@@ -1193,12 +1197,10 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	maplist = RS_LoadMapList( g_freestyle.getBool() );
-	mapcount = RS_GetNumberOfMaps();
-
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
 		g_timelimit.set( "0" );
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
+	RS_LoadMapList( g_freestyle.getBool() );
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }

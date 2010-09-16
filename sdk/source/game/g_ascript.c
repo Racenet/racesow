@@ -6123,15 +6123,14 @@ static void asFunc_asGeneric_RS_MysqlMapFilterCallback( void *gen )
 }
 
 // RS_LoadMapList
-static asstring_t *asFunc_RS_LoadMapList(int is_freestyle)
+static void asFunc_RS_LoadMapList( int is_freestyle )
 {
-	char *maplist;
-	maplist=RS_MysqlLoadMaplist(is_freestyle);
-	return objectString_FactoryBuffer(maplist, strlen(maplist));
+	RS_LoadMaplist( is_freestyle );
 }
+
 static void asFunc_asGeneric_RS_LoadMapList( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, asFunc_RS_LoadMapList((unsigned int)G_asGeneric_GetArgInt(gen, 0)) );
+	asFunc_RS_LoadMapList( (int)G_asGeneric_GetArgInt( gen, 0 ) );
 }
 
 // RS_GetNumberOfMaps
@@ -6894,7 +6893,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "void RS_MysqlMapFilter( int, cString &, int )", asFunc_RS_MysqlMapFilter, asFunc_asGeneric_RS_MysqlMapFilter},
     { "cString @RS_MysqlMapFilterCallback( int )", asFunc_RS_MysqlMapFilterCallback, asFunc_asGeneric_RS_MysqlMapFilterCallback },
-	{ "cString @RS_LoadMapList( bool )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
+	{ "void RS_LoadMapList( bool )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},
 	// !racesow
 

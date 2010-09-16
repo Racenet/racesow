@@ -123,29 +123,19 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 		// check if valid map is in map pool when on
 		if( g_enforce_map_pool->integer )
 		{
-			char *s, *tok;
-			static const char *seps = " ,";
+			int i = 0;
 
-			// if map pool is empty, basically turn it off
-			if( strlen(maplist) < 2 ) // racesow
-				return qtrue;
-
-			s = G_CopyString( maplist ); // racesow
-			tok = strtok( s, seps );
-			while ( tok != NULL )
+			for ( i = 0 ; i < mapcount ; i++ )
 			{
-				if ( !Q_stricmp( tok, mapname ) )
-				{
-					G_Free( s );
-					return qtrue;
-				}
-				else
-					tok = strtok( NULL, seps );
+			    if ( !Q_stricmp( maplist[i], mapname ) )
+			        return qtrue;
 			}
-			G_Free( s );
-			G_PrintMsg( data->caller, "%sMap is not in map pool.\n", S_COLOR_RED );
-			return qfalse;
+
+			//map wasn't found in map list
+            G_PrintMsg( data->caller, "%sMap is not in map pool.\n", S_COLOR_RED );
+            return qfalse;
 		}
+
 		else
 			return qtrue;
 	}
@@ -171,7 +161,6 @@ static char *G_VoteMapCurrent( void )
 //====================
 // randmap
 //====================
-
 /*
  * Test the validity of a mapname.
  */
@@ -196,64 +185,40 @@ static qboolean G_MapnameValidate( char *mapname) {
 
     return qtrue;
 }
-
 /**
  * Choose a valid random map in the map list.
  */
-static qboolean G_VoteRandmapValidate( callvotedata_t *data, qboolean first )
+static qboolean G_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
 {
-    unsigned int mapNumber = brandom( 0, mapcount );
-    char *s, *tok;
-    static const char *seps = " ";
-	unsigned int i;
+    int index = brandom( 0, mapcount );
+	int i = 0;
 
     if( !first )
         return qtrue;
 
-    s = G_CopyString( maplist ); // racesow
-    tok = strtok( s, seps );
-
-    for ( i = 0; i < mapcount; i++ )
+    while( i < sizeof( maplist ) )
     {
-        if ( ( i >= mapNumber ) && ( G_MapnameValidate( tok ) ) )
+        if( !( maplist[i] == NULL ) && Q_stricmp( maplist[i], level.mapname ) && G_MapnameValidate( maplist[i] ))
         {
-            data->data = G_Malloc( MAX_CONFIGSTRING_CHARS );
-            memcpy( data->data, tok, MAX_CONFIGSTRING_CHARS );
-            return qtrue;
-
+            if ( index == 0){
+                vote->data = G_Malloc( MAX_CONFIGSTRING_CHARS );
+                memcpy( vote->data, maplist[i], MAX_CONFIGSTRING_CHARS );
+                return qtrue;
+            }
+            index--;
         }
-
-        tok = strtok( NULL, seps );
+        i++;
     }
 
-    //if still not returned, start back from start
-    tok = strtok( s, seps );
-
-    for ( i=0; i < mapNumber; i++)
-    {
-        if ( G_MapnameValidate( tok ) )
-        {
-            data->data = G_Malloc( MAX_CONFIGSTRING_CHARS );
-            memcpy( data->data, tok, MAX_CONFIGSTRING_CHARS );
-            return qtrue;
-
-        }
-
-        tok = strtok( NULL, seps );
-    }
-
-    //here we are doomed
-    G_Free( s );
-    G_PrintMsg(data->caller,"No map found, check your databse.\n");
     return qfalse;
 }
 
 /**
  * Execute the randmap vote
  */
-
 static void G_VoteRandmapPassed( callvotedata_t *vote){
-    Q_strncpyz( level.forcemap, Q_strlwr( vote->data ), sizeof( level.forcemap ) );
+    G_Printf("%s\n",vote->data);
+    Q_strncpyz( level.forcemap, Q_strlwr(vote->data) , sizeof( level.forcemap ) );
     G_EndMatch();
 }
 

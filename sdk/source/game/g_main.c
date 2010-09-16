@@ -46,6 +46,7 @@ cvar_t *cm_mapHeader;
 cvar_t *cm_mapVersion;
 
 cvar_t *g_maprotation;
+cvar_t *g_maplist;
 
 cvar_t *g_enforce_map_pool;
 cvar_t *g_map_pool;
@@ -317,6 +318,7 @@ void G_Init( unsigned int seed, unsigned int framemsec, int protocol )
 
 	// map list
 	g_maprotation = trap_Cvar_Get( "g_maprotation", "1", CVAR_ARCHIVE );
+	g_maplist = trap_Cvar_Get( "g_maplist", "", CVAR_ARCHIVE );
 
 	// map pool
 	g_enforce_map_pool = trap_Cvar_Get( "g_enforce_map_pool", "0", CVAR_ARCHIVE );
@@ -459,115 +461,115 @@ static edict_t *CreateTargetChangeLevel( char *map )
 //=================
 static edict_t *G_ChooseNextMap( void )
 {
-	edict_t	*ent = NULL;
-	char *s, *t, *f;
-	static const char *seps = " ,\n\r";
+    edict_t *ent = NULL;
+    char *s, *t, *f;
+    static const char *seps = " ,\n\r";
 
-	if( *level.forcemap )
-	{
-		return CreateTargetChangeLevel( level.forcemap );
-	}
+    if( *level.forcemap )
+    {
+        return CreateTargetChangeLevel( level.forcemap );
+    }
 
-	if( !maplist || strlen( maplist ) == 0 || g_maprotation->integer == 0 ) // racesow
-	{
-		// same map again
-		return CreateTargetChangeLevel( level.mapname );
-	}
-	else if( g_maprotation->integer == 1 )
-	{
-		// next map in list
-		s = G_CopyString( maplist ); // racesow
-		f = NULL;
-		t = strtok( s, seps );
+    if( !( *g_maplist->string ) || strlen( g_maplist->string ) == 0 || g_maprotation->integer == 0 )
+    {
+        // same map again
+        return CreateTargetChangeLevel( level.mapname );
+    }
+    else if( g_maprotation->integer == 1 )
+    {
+        // next map in list
+        s = G_CopyString( g_maplist->string );
+        f = NULL;
+        t = strtok( s, seps );
 
-		while( t != NULL )
-		{
-			if( !Q_stricmp( t, level.mapname ) )
-			{
-				// it's in the list, go to the next one
-				t = strtok( NULL, seps );
-				if( t == NULL )
-				{ // end of list, go to first one
-					if( f == NULL )  // there isn't a first one, same level
-						ent = CreateTargetChangeLevel( level.mapname );
-					else
-						ent = CreateTargetChangeLevel( f );
-				}
-				else
-					ent = CreateTargetChangeLevel( t );
-				G_Free( s );
-				return ent;
-			}
-			if( !f )
-				f = t;
-			t = strtok( NULL, seps );
-		}
+        while( t != NULL )
+        {
+            if( !Q_stricmp( t, level.mapname ) )
+            {
+                // it's in the list, go to the next one
+                t = strtok( NULL, seps );
+                if( t == NULL )
+                { // end of list, go to first one
+                    if( f == NULL )  // there isn't a first one, same level
+                        ent = CreateTargetChangeLevel( level.mapname );
+                    else
+                        ent = CreateTargetChangeLevel( f );
+                }
+                else
+                    ent = CreateTargetChangeLevel( t );
+                G_Free( s );
+                return ent;
+            }
+            if( !f )
+                f = t;
+            t = strtok( NULL, seps );
+        }
 
-		// not in the list, we go for the first one
-		ent = CreateTargetChangeLevel( f );
-		G_Free( s );
-		return ent;
-	}
-	else if( g_maprotation->integer == 2 )
-	{
-		// random from the list, but not the same
-		int count = 0;
-		s = G_CopyString( maplist ); // racesow
+        // not in the list, we go for the first one
+        ent = CreateTargetChangeLevel( f );
+        G_Free( s );
+        return ent;
+    }
+    else if( g_maprotation->integer == 2 )
+    {
+        // random from the list, but not the same
+        int count = 0;
+        s = G_CopyString( g_maplist->string );
 
-		t = strtok( s, seps );
-		while( t != NULL )
-		{
-			if( Q_stricmp( t, level.mapname ) )
-				count++;
-			t = strtok( NULL, seps );
-		}
+        t = strtok( s, seps );
+        while( t != NULL )
+        {
+            if( Q_stricmp( t, level.mapname ) )
+                count++;
+            t = strtok( NULL, seps );
+        }
 
-		G_Free( s );
-		s = G_CopyString( maplist ); // racesow
+        G_Free( s );
+        s = G_CopyString( g_maplist->string );
 
-		if( count < 1 )
-		{
-			// no other maps found, restart
-			ent = CreateTargetChangeLevel( level.mapname );
-		}
-		else
-		{
-			int seed = game.realtime;
-			count -= (int)Q_brandom( &seed, 0, count ); // this should give random integer from 0 to count-1
-			ent = NULL; // shutup compiler warning;
+        if( count < 1 )
+        {
+            // no other maps found, restart
+            ent = CreateTargetChangeLevel( level.mapname );
+        }
+        else
+        {
+            int seed = game.realtime;
+            count -= (int)Q_brandom( &seed, 0, count ); // this should give random integer from 0 to count-1
+            ent = NULL; // shutup compiler warning;
 
-			t = strtok( s, seps );
-			while( t != NULL )
-			{
-				if( Q_stricmp( t, level.mapname ) )
-				{
-					count--;
-					if( count == 0 )
-					{
-						ent = CreateTargetChangeLevel( t );
-						break;
-					}
-				}
-				t = strtok( NULL, seps );
-			}
-		}
+            t = strtok( s, seps );
+            while( t != NULL )
+            {
+                if( Q_stricmp( t, level.mapname ) )
+                {
+                    count--;
+                    if( count == 0 )
+                    {
+                        ent = CreateTargetChangeLevel( t );
+                        break;
+                    }
+                }
+                t = strtok( NULL, seps );
+            }
+        }
 
-		G_Free( s );
-		return ent;
-	}
+        G_Free( s );
+        return ent;
+    }
 
-	if( level.nextmap[0] )  // go to a specific map
-		return CreateTargetChangeLevel( level.nextmap );
+    if( level.nextmap[0] )  // go to a specific map
+        return CreateTargetChangeLevel( level.nextmap );
 
-	// search for a changelevel
-	ent = G_Find( NULL, FOFS( classname ), "target_changelevel" );
-	if( !ent )
-	{
-		// the map designer didn't include a changelevel,
-		// so create a fake ent that goes back to the same level
-		return CreateTargetChangeLevel( level.mapname );
-	}
-	return ent;
+    // search for a changelevel
+    ent = G_Find( NULL, FOFS( classname ), "target_changelevel" );
+    if( !ent )
+    {
+        // the map designer didn't include a changelevel,
+        // so create a fake ent that goes back to the same level
+        return CreateTargetChangeLevel( level.mapname );
+    }
+    return ent;
 }
 
 //=================
@@ -575,10 +577,14 @@ static edict_t *G_ChooseNextMap( void )
 //=================
 static char *G_SelectNextMapName( void )
 {
+    /* racesow
 	edict_t *changelevel;
 
 	changelevel = G_ChooseNextMap();
-	return changelevel->map;
+    return changelevel->map;
+    */
+	return RS_ChooseNextMap(); //racesow
+
 }
 
 //=============

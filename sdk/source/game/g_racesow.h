@@ -2,6 +2,7 @@
  * MySQL CVARs
  * @var cvar_t*
  */
+cvar_t *rs_mysqlEnabled;
 cvar_t *rs_mysql_host;
 cvar_t *rs_mysql_port;
 cvar_t *rs_mysql_user;
@@ -42,7 +43,7 @@ cvar_t *rs_authField_Pass;
 cvar_t *rs_authField_Token;
 cvar_t *rs_tokenSalt;
 
-char maplist[50000];
+char *maplist[5000];
 unsigned int mapcount;
 
 void RS_MysqlLoadInfo( void );
@@ -140,9 +141,10 @@ extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *ar
 
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 
-char *RS_MysqlLoadMaplist( int is_freestyle );
-unsigned int RS_GetNumberOfMaps();
+extern void RS_LoadMaplist( int is_freestyle);
+extern unsigned int RS_GetNumberOfMaps();
 
 extern qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page);
-extern void *RS_MysqlMapFilter_Thread( void *in );
 extern char *RS_MysqlMapFilterCallback(int player_id);
+
+char *RS_ChooseNextMap( void );
