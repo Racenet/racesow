@@ -18,17 +18,10 @@ class Racesow_Map_HighScore_Mysql : Racesow_Map_HighScore_Abstract
 	{
 		RS_MysqlInsertRace( race.getPlayer().getId(), race.getPlayer().getNickId(), map.getId(), race.getTime(), race.getPlayer().getClient().playerNum());
 
-		uint raceTime = race.getTime();
-		uint servBest = this.highScores[0].getTime();
-		
-		// display an award using the old servBest
-		race.displayAward( raceTime, servBest );
-		
-		// update servBest
-		if (servBest==0 || raceTime<servBest)
-			this.highScores[0].fromRace(race);
+		race.getPlayer().getClient().addAward( S_COLOR_CYAN + "Race Finished!" );
+		G_PrintMsg(race.getPlayer().getClient().getEnt(), S_COLOR_WHITE
+			+ "race finished: " + TimeToString( race.getTime() ) + "\n");
 	}
-
 	
 	/**
 	 * Write the stats to the file

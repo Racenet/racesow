@@ -91,15 +91,6 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	}
 	
 	/**
-	 * Get the race delta
-	 * @return void
-	 */
-	int getDelta()
-	{
-		return this.delta;
-	}	
-	
-	/**
 	 * getCheckPoint
 	 * @param uint id
 	 * @return uint
@@ -225,62 +216,6 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         this.stopTime = levelTime;
 		this.timeStamp = localTime;
 		
-		return true;
-	}
-	
-	bool displayAward( uint newTime, uint bestTime )
-	{
-        /*
-		uint newTime = this.getTime();
-		//uint bestTime = this.player.getBestTime(); // diff to own best
-		uint bestTime = map.getStatsHandler().getHighScore(0).getTime(); // diff to server best
-		*/
-		cString str;
-		uint personalBestTime = this.player.getBestTime();
-		
-		bool noDelta = 0 == bestTime;
-		
-        if ( noDelta )
-		{
-			this.delta = bestTime - newTime;
-            str = S_COLOR_GREEN ;
-		}
-		else if ( newTime < bestTime )
-        {
-			this.delta = bestTime - newTime;
-            str = S_COLOR_GREEN + "-";
-        }
-		else if ( newTime == bestTime )
-		{
-		    this.delta = 0;
-            str = S_COLOR_YELLOW + "+-";
-		}
-        else
-        {
-            this.delta = newTime - bestTime;
-            str = S_COLOR_RED + "+";
-        }
-
-        G_CenterPrintMsg( this.player.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
-			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
-	
-		this.triggerAward( S_COLOR_CYAN + "Race Finished!" );
-		G_PrintMsg(this.player.getClient().getEnt(), S_COLOR_WHITE
-			+ "race finished: " + TimeToString( newTime ) + "\n");
-		
-        if ( bestTime==0 || newTime <= bestTime )
-        {
-            player.setBestTime(newTime);
-			this.triggerAward( S_COLOR_GREEN + "New server record!" );
-			G_PrintMsg(null, player.getName() + " " + S_COLOR_YELLOW
-				+ "made a new server record: " + TimeToString( newTime ) + "\n");
-        }
-        else if ( newTime < personalBestTime || personalBestTime == 0 )
-        {
-            player.setBestTime(newTime);
-			this.triggerAward( "Personal record!" );
-        }
-
 		return true;
 	}
 	

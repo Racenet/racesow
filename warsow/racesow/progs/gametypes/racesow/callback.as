@@ -8,12 +8,11 @@
 /**
  * callback codes
  */
-const uint RACESOW_CALLBACK_AUTHENTICATE = 0;
-const uint RACESOW_CALLBACK_NICKPROTECT = 1;
+
 const uint RACESOW_CALLBACK_LOADMAP = 2;
 const uint RACESOW_CALLBACK_HIGHSCORES = 3;
 const uint RACESOW_CALLBACK_APPEAR = 4;
-const uint RACESOW_CALLBACK_PERSONALBEST = 5;
+const uint RACESOW_CALLBACK_RACE = 5;
 const uint RACESOW_CALLBACK_MAPFILTER = 6;
 
  /**
@@ -22,10 +21,10 @@ const uint RACESOW_CALLBACK_MAPFILTER = 6;
  */
 void Racesow_ThinkCallbackQueue()
 {
-	int command, arg1, arg2, arg3, arg4, arg5, arg6;
+	int command, arg1, arg2, arg3, arg4, arg5, arg6, arg7;
     Racesow_Player @player;
 	
-    if( !RS_QueryCallbackQueue( command, arg1, arg2, arg3, arg4, arg5, arg6 ) )
+    if( !RS_QueryCallbackQueue( command, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ) )
         return;
         
     switch( command )	
@@ -55,13 +54,21 @@ void Racesow_ThinkCallbackQueue()
                 player.getAuth().appearCallback(arg2, arg3, arg4, arg5, arg6);
 			}
             break;
+			
+		case RACESOW_CALLBACK_RACE:
+			@player = Racesow_GetPlayerByNumber(arg1);
+			if ( @player != null )
+			{
+                player.raceCallback(arg2, arg3, arg4, arg5, arg6, arg7);
+			}
+            break;
 
 		case RACESOW_CALLBACK_MAPFILTER:
-		    @player = Racesow_GetPlayerByNumber( arg1 );
+		    @player = Racesow_GetPlayerByNumber(arg1);
 
 		    if ( @player != null )
 		    {
-		        cString result = RS_MysqlMapFilterCallback( arg1 );
+		        cString result = RS_MysqlMapFilterCallback(arg1);
 		        player.sendMessage(result);
 		        player.isWaitingForCommand=false;
 		    }

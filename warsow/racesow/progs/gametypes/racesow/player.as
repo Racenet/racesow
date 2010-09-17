@@ -242,6 +242,69 @@ class Racesow_Player
             this.getAuth().isAuthenticated()
         );
     }
+    
+    /**
+     * Callback for a finished race
+     * @return void
+     */
+    void raceCallback(uint allPoints, uint newPoints, uint newPosition, uint oldTime, uint oldBestTime, uint newTime)
+    {
+        cString str;
+		uint personalBestTime = this.getBestTime();
+		uint bestTime;
+        uint delta;
+        
+        bestTime = oldTime; // diff to own best
+        //bestTime = oldBestTime // diff to server best
+        
+		bool noDelta = 0 == bestTime;
+		
+        if ( noDelta )
+		{
+			delta = bestTime - newTime;
+            str = S_COLOR_GREEN ;
+		}
+		else if ( newTime < bestTime )
+        {
+			delta = bestTime - newTime;
+            str = S_COLOR_GREEN + "-";
+        }
+		else if ( newTime == bestTime )
+		{
+		    delta = 0;
+            str = S_COLOR_YELLOW + "+-";
+		}
+        else
+        {
+            delta = newTime - bestTime;
+            str = S_COLOR_RED + "+";
+        }
+		
+        if ( bestTime==0 || newTime <= bestTime )
+        {
+            this.setBestTime(newTime);
+			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
+			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
+				+ "made a new server record: " + TimeToString( newTime ) + "\n");
+        }
+        else if ( newTime < personalBestTime || personalBestTime == 0 )
+        {
+            this.setBestTime(newTime);
+			this.getClient().addAward( "Personal record!" );
+        }
+        
+                
+        G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
+			+ ( noDelta ? "" : str + TimeToString( delta ) ) );
+        
+        /*
+		// update servBest
+		if (servBest==0 || raceTime<servBest)
+        {
+			this.highScores[0].fromRace(race);
+        }
+        */
+    }
 
     /**
 	 * Get the player's id

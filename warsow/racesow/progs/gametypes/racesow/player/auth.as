@@ -401,10 +401,12 @@
         if (playerId == 0)
         {
             if (hasToken)
+            {
                 msg = S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate via token";
+            }
             else if (hasLogin)
             {
-                msg=S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate as '"+ this.authenticationName +"'";
+                msg = S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + " failed to authenticate as '"+ this.authenticationName +"'";
             }
                 
             if (this.restoreBackup())
@@ -447,7 +449,7 @@
             }
             
 			this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION: \n" + S_COLOR_RED + "Please login for the nick '"+ this.player.getName() +"' or change it. Otherwise you will get gicked.\n" );
-			G_PrintMsg(null, this.player.getName() + S_COLOR_RED + " is using a protected nickname which seems not belong to him.\n");
+			G_PrintMsg(null, this.player.getName() + S_COLOR_RED + " is not authenticated...\n");
             
         }
         
