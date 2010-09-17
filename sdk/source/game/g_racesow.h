@@ -104,4 +104,4 @@ extern unsigned int RS_GetNumberOfMaps();
 extern qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page);
 extern char *RS_MysqlMapFilterCallback(int player_id);
 
-char *RS_ChooseNextMap( void );
+extern char *RS_ChooseNextMap( void );

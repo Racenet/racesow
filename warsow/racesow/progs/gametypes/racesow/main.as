@@ -1201,6 +1201,6 @@ void GT_InitGametype()
 		g_timelimit.set( "0" );
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
-	RS_LoadMapList( g_freestyle.getBool() );
+	RS_LoadMapList( g_freestyle.getInteger() );
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }

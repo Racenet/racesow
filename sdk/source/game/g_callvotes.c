@@ -97,7 +97,7 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 
 	int mapnumber = atoi( data->argv[0] );
 
-    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) ) && ( mapnumber < sizeof( maplist ) ) )
+    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) ) && ( mapnumber < ( sizeof( maplist )/sizeof( char* ) ) ) )
     {
         G_Free( data->argv[0] );
         data->argv[0] = G_Malloc( strlen (maplist[mapnumber]) + 1 );
@@ -132,9 +132,9 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 		{
 			int i = 0;
 
-			for ( i = 0 ; i < mapcount ; i++ )
+			for ( i = 0 ; i < ( sizeof( maplist )/sizeof( char* ) ) ; i++ )
 			{
-			    if ( !Q_stricmp( maplist[i], mapname ) )
+			    if ( !(maplist[i] == NULL) && !Q_stricmp( maplist[i], mapname ) )
 			        return qtrue;
 			}
 
@@ -203,7 +203,7 @@ static qboolean G_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
     if( !first )
         return qtrue;
 
-    while( i < sizeof( maplist ) )
+    while( i < ( sizeof( maplist )/sizeof( char* ) ) )
     {
         if( !( maplist[i] == NULL ) && Q_stricmp( maplist[i], level.mapname ) && G_MapnameValidate( maplist[i] ))
         {
