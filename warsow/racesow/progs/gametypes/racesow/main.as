@@ -366,7 +366,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             else
                 page = pageString.toInt();
 
-            RS_MysqlMapFilter(client.playerNum(),filter,page);
+            RS_MapFilter(client.playerNum(),filter,page);
         }
     }
 

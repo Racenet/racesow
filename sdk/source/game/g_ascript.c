@@ -6096,29 +6096,29 @@ static void asFunc_asGeneric_G_Md5( void *gen )
 }
 
 // RS_MysqlMapFilter
-static qboolean asFunc_RS_MysqlMapFilter(int player_id,asstring_t *filter,unsigned int page )
+static qboolean asFunc_RS_MapFilter(int player_id,asstring_t *filter,unsigned int page )
 {
-     return RS_MysqlMapFilter( player_id, filter->buffer, page);
+     return RS_MapFilter( player_id, filter->buffer, page);
 }
-static void asFunc_asGeneric_RS_MysqlMapFilter( void *gen )
+static void asFunc_asGeneric_RS_MapFilter( void *gen )
 {
-    G_asGeneric_SetReturnBool( gen, asFunc_RS_MysqlMapFilter(
+    G_asGeneric_SetReturnBool( gen, asFunc_RS_MapFilter(
             (int)G_asGeneric_GetArgInt(gen, 0),
             (asstring_t *)G_asGeneric_GetArgAddress(gen, 1),
             (unsigned int)G_asGeneric_GetArgInt(gen, 2)));
 }
 
 // RS_MysqlMapFilterCallback
-static asstring_t *asFunc_RS_MysqlMapFilterCallback(int player_id )
+static asstring_t *asFunc_RS_MapFilterCallback(int player_id )
 {
      char *result;
-     result = RS_MysqlMapFilterCallback(player_id);
+     result = RS_MapFilterCallback(player_id);
      return objectString_FactoryBuffer(result, strlen(result));
 }
 
-static void asFunc_asGeneric_RS_MysqlMapFilterCallback( void *gen )
+static void asFunc_asGeneric_RS_MapFilterCallback( void *gen )
 {
-    G_asGeneric_SetReturnAddress( gen, asFunc_RS_MysqlMapFilterCallback(
+    G_asGeneric_SetReturnAddress( gen, asFunc_RS_MapFilterCallback(
             (unsigned int)G_asGeneric_GetArgInt(gen, 0)));
 }
 
@@ -6892,8 +6892,8 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
-	{ "void RS_MysqlMapFilter( int, cString &, int )", asFunc_RS_MysqlMapFilter, asFunc_asGeneric_RS_MysqlMapFilter},
-    { "cString @RS_MysqlMapFilterCallback( int )", asFunc_RS_MysqlMapFilterCallback, asFunc_asGeneric_RS_MysqlMapFilterCallback },
+	{ "void RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
+    { "cString @RS_MapFilterCallback( int )", asFunc_RS_MapFilterCallback, asFunc_asGeneric_RS_MapFilterCallback },
 	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},
 	// !racesow

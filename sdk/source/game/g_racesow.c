@@ -92,7 +92,7 @@ void RS_Init()
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
     rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
-    g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    g_freestyle = trap_Cvar_Get( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
 
     if ( rs_mysqlEnabled->integer )
     {
@@ -215,7 +215,6 @@ qboolean RS_MysqlError( edict_t *ent )
     }
     return qfalse;
 }
-
 
 /**
  * Shutdown racesow specific stuff
@@ -349,7 +348,6 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	unsigned int bestTime=0;
 
 	RS_StartMysqlThread();
-
     Q_strncpyz ( name, COM_RemoveColorTokens( level.mapname ), sizeof(name) );
     mysql_real_escape_string(&mysql, name, name, strlen(name));
     
@@ -892,7 +890,7 @@ void *RS_MysqlMapFilter_Thread( void *in)
     int totalPages = 0;
     int page = filterData->page;
     int start = (page-1)*MAPS_PER_PAGE;
-	unsigned int size = strlen(result)+1;
+	int size = 0;
 
 	result[0]='\0';
 
@@ -941,6 +939,7 @@ void *RS_MysqlMapFilter_Thread( void *in)
         }
     }
 
+    size = strlen( result )+1;
     filter_players[filterData->player_id]=malloc(size);
     Q_strncpyz( filter_players[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, count, 0, 0, 0, 0, 0);
@@ -955,16 +954,82 @@ void *RS_MysqlMapFilter_Thread( void *in)
 }
 
 /**
+ * Map filter thread if no mysql
+ *
+ */
+void *RS_BasicMapFilter_Thread( void *in)
+{
+    struct filterDataStruct *filterData = (struct filterDataStruct *)in ;
+    int i = 0;
+    int mapsFound = 0;
+    int filterCount = 0;
+    int totalPages = 0;
+    int size = 0;
+    const int MAPS_PER_PAGE = 10;
+    int page = filterData->page;
+    char result[10000];
+    char buffer[10000];
+    result[0]='\0';
+    buffer[0]='\0';
+
+    while( ( i < ( sizeof( maplist ) / sizeof( char* ) ) ) && ( mapsFound <= mapcount ) )
+    {
+        if ( !( maplist[i] == NULL ) )
+        {
+            mapsFound++;
+            if ( !( strstr( maplist[i], filterData->filter ) == NULL ) )
+            {
+                filterCount++;
+                Q_strncatz( buffer, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof(result));
+            }
+
+        }
+        i++;
+    }
+
+    if ( filterCount == 0 )
+    {
+        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_YELLOW, filterData->filter ),  sizeof(result));
+    }
+    else
+    {
+        totalPages = filterCount/MAPS_PER_PAGE+1;
+        Q_strncatz( result, va( "Printing page %d/%d of maps matching %s%s.\n%sUse %smapfilter %s <pagenum> %sto print other pages.\n",
+                     page,
+                     totalPages,
+                     S_COLOR_YELLOW,
+                     filterData->filter,
+                     S_COLOR_WHITE,
+                     S_COLOR_YELLOW,
+                     filterData->filter,
+                     S_COLOR_WHITE),  sizeof(result));
+        Q_strncatz( result, buffer,  sizeof(result));
+    }
+
+    size = strlen( result )+1;
+    filter_players[filterData->player_id]=malloc(size);
+    Q_strncpyz( filter_players[filterData->player_id], result, size);
+    RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, filterCount, 0, 0, 0, 0, 0);
+
+    free(filterData->filter);
+    free(filterData);
+    RS_EndMysqlThread();
+
+    return NULL;
+}
+
+/**
  * Mapfilter function registered in AS API.
  *
- * Calls RS_MysqlMapFilter
+ * Calls RS_MysqlMapFilter_Thread or RS_BasicMapFilter
+ * wether mysql is enabled or not
  *
  * @param player_id Id of the player making the request
  * @param filter String used to filter maplist
  * @param page Number of the result page
  * @return Sucess boolean
  */
-qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page)
+qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
 {
     pthread_t thread;
     int returnCode;
@@ -973,7 +1038,11 @@ qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page)
     filterdata->filter = strdup(filter);
     filterdata->page = page;
 
-    returnCode = pthread_create(&thread, &threadAttr, RS_MysqlMapFilter_Thread, (void *)filterdata);
+    if ( MysqlConnected )
+        returnCode = pthread_create(&thread, &threadAttr, RS_MysqlMapFilter_Thread, (void *)filterdata);
+
+    else
+        returnCode = pthread_create(&thread, &threadAttr, RS_BasicMapFilter_Thread, (void *)filterdata);
 
     if (returnCode) {
 
@@ -991,7 +1060,7 @@ qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page)
  * @param player_id Id of the player making the request
  * @return the result string to print to the player
  */
-char *RS_MysqlMapFilterCallback(int player_id )
+char *RS_MapFilterCallback(int player_id )
 {
     unsigned int size = strlen(filter_players[player_id])+1;
     char *result=malloc(size);

@@ -101,7 +101,7 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 extern void RS_LoadMaplist( int is_freestyle);
 extern unsigned int RS_GetNumberOfMaps();
 
-extern qboolean RS_MysqlMapFilter(int player_id, char *filter,unsigned int page);
-extern char *RS_MysqlMapFilterCallback(int player_id);
+extern qboolean RS_MapFilter(int player_id, char *filter,unsigned int page);
+extern char *RS_MapFilterCallback(int player_id);
 
 extern char *RS_ChooseNextMap( void );
