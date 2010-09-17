@@ -22,6 +22,7 @@ cvar_t *rs_queryGetPlayerAuth;
 cvar_t *rs_queryGetPlayerAuthByToken;
 cvar_t *rs_queryGetPlayer;
 cvar_t *rs_queryAddPlayer;
+cvar_t *rs_queryGetPlayerPoints;
 cvar_t *rs_queryRegisterPlayer;
 cvar_t *rs_queryUpdatePlayerPlaytime;
 cvar_t *rs_queryUpdatePlayerRaces;
@@ -53,10 +54,10 @@ cvar_t *rs_tokenSalt;
 /**
  * as callback commands (must be similar to callback.as!)
  */
-const unsigned int RACESOW_CALLBACK_RACE = 1;
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
 const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
 const unsigned int RACESOW_CALLBACK_APPEAR = 4;
+const unsigned int RACESOW_CALLBACK_RACE = 5;
 const unsigned int RACESOW_CALLBACK_MAPFILTER = 6;
 
 /**
@@ -88,13 +89,9 @@ void RS_Init()
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     
-	rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1",CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
-    if ( rs_mysqlEnabled->integer )//initialize mysql
-    {
-        RS_MysqlLoadInfo();
-        RS_MysqlConnect();
-    }
-
+    // initialize mysql
+    RS_MysqlLoadInfo();
+    RS_MysqlConnect();
 }
 
 /**
@@ -126,6 +123,7 @@ void RS_MysqlLoadInfo( void )
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
+	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL) LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = playtime + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
@@ -148,7 +146,7 @@ void RS_MysqlLoadInfo( void )
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
-	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT id, name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
+	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%';", CVAR_ARCHIVE );
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
@@ -245,7 +243,7 @@ void RS_Shutdown()
 int callback_queue_size=0;
 int callback_queue_write_index=0;
 int callback_queue_read_index=0;
-int callback_queue[MAX_SIZE_CALLBACK_QUEUE][7];
+int callback_queue[MAX_SIZE_CALLBACK_QUEUE][8];
 
 /**
  *
@@ -253,7 +251,7 @@ int callback_queue[MAX_SIZE_CALLBACK_QUEUE][7];
  * 
  * @return void
  */
-void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6)
+void RS_PushCallbackQueue(int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7)
 {
 	pthread_mutex_lock(&mutex_callback);
 	if (callback_queue_size<MAX_SIZE_CALLBACK_QUEUE)
@@ -266,6 +264,7 @@ void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, 
 		callback_queue[callback_queue_write_index][4]=arg4;
 		callback_queue[callback_queue_write_index][5]=arg5;
 		callback_queue[callback_queue_write_index][6]=arg6;
+		callback_queue[callback_queue_write_index][7]=arg7;
 		
 		callback_queue_write_index=(callback_queue_write_index+1)%MAX_SIZE_CALLBACK_QUEUE;
 		callback_queue_size++;
@@ -282,7 +281,7 @@ void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, 
  * 
  * @return qboolean
  */
-qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6)
+qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7)
 {
 
 	// if the queue is empty, do nothing this time
@@ -300,6 +299,7 @@ qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3, int 
 	*arg4=callback_queue[callback_queue_read_index][4];
 	*arg5=callback_queue[callback_queue_read_index][5];
 	*arg6=callback_queue[callback_queue_read_index][6];
+	*arg7=callback_queue[callback_queue_read_index][7];
 
 	callback_queue_read_index=(callback_queue_read_index+1)%MAX_SIZE_CALLBACK_QUEUE;
 	callback_queue_size--;
@@ -384,7 +384,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	}
 	mysql_free_result(mysql_res);
 
-	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, map_id, bestTime, 0, 0, 0, 0);
+	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, map_id, bestTime, 0, 0, 0, 0, 0);
 
 	RS_EndMysqlThread();
     
@@ -432,19 +432,22 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 void *RS_MysqlInsertRace_Thread(void *in)
 {
     char query[1000];
-	unsigned int maxPositions, currentPoints, currentRaceTime, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime;
+	unsigned int maxPositions, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime, oldTime, oldPoints, oldBestTime, allPoints, newPosition;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	
-    currentRaceTime = 0;
+    oldTime = 0;
     bestTime = 0;
     maxPositions = 30;
+    oldBestTime = 0;
     offset = 0;
+    newPosition = 0;
 	newPoints = 0;
-	currentPoints = 0;
+	oldPoints = 0;
 	currentPosition = 0;
     lastRaceTime = 0;
+    allPoints = 0;
 	raceData =(struct raceDataStruct *)in;
     
 	RS_StartMysqlThread();
@@ -487,12 +490,27 @@ void *RS_MysqlInsertRace_Thread(void *in)
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
 		if (row[0] != NULL && row[1] != NULL)
         {
-			currentPoints = atoi(row[0]);
-            currentRaceTime = atoi(row[1]);
+			oldPoints = atoi(row[0]);
+            oldTime = atoi(row[1]);
         }
     }
 	mysql_free_result(mysql_res);
 
+    // retrieve server best
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
+	{
+		if (row[1] !=NULL)
+		{
+            oldBestTime = atoi(row[1]);
+		}
+	}
+	mysql_free_result(mysql_res);
+    
 	// reset points in player_map
     sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
@@ -537,8 +555,11 @@ void *RS_MysqlInsertRace_Thread(void *in)
 					break;
 			}
 			
-			if (playerId == raceData->player_id)
+			if (playerId == raceData->player_id) {
+            
 				newPoints = points;
+                newPosition = realPosition;
+            }
 
 			lastRaceTime = raceTime;
             
@@ -549,13 +570,21 @@ void *RS_MysqlInsertRace_Thread(void *in)
 		}
     }
 	mysql_free_result(mysql_res);
-
-	// should be printed in AS. TODO: another callback for that
-
-	/*
-    G_PrintMsg( NULL, va("You earned %d points.\n", (newPoints - currentPoints)) );
-    */
-
+   
+    sprintf(query, rs_queryGetPlayerPoints->string, raceData->player_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
+	{
+		if (row[0] !=NULL)
+        {
+            allPoints = atoi(row[0]);
+        }
+    }
+    
+    RS_PushCallbackQueue(RACESOW_CALLBACK_RACE, raceData->playerNum, allPoints, newPoints, newPosition, oldTime, oldBestTime, raceData->race_time);
 
 	free(raceData);	
 	RS_EndMysqlThread();
@@ -714,36 +743,24 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         player_id_for_nick = (int)mysql_insert_id(&mysql);
     }
     mysql_free_result(mysql_res);
-
     
-    
-    /*
-    if (player_id != 0)
+    // retrieve personal best
+    sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_nick);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
     {
-        // update the players's number of played maps
-        sprintf(query, rs_queryUpdatePlayerMaps->string, player_id);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
-        
-        // retrieve personal best
-        sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
-        mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
-        if ((row = mysql_fetch_row(mysql_res)) != NULL)
+        if (row[0] !=NULL && row[1] != NULL)
         {
-            if (row[0] !=NULL && row[1] != NULL)
-            {
-                personalBest = atoi(row[1]);
-            }
+            personalBest = atoi(row[1]);
         }
-        
-        mysql_free_result(mysql_res);
     }
-    */
     
-    RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest);
+    mysql_free_result(mysql_res);
+    
+    RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, 0);
     
 	free(playerData->name);
 	free(playerData);
@@ -810,19 +827,20 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
-    // TODO: do we need to check if it's allowed to update the player playtime?
-    if (qtrue)
-    {
-        // increment player playtime
-        sprintf(query, rs_queryUpdatePlayerPlaytime->string, playtimeData->playtime, playtimeData->player_id);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
-        
-        // increment player map playtime
-        sprintf(query, rs_queryUpdatePlayerMapPlaytime->string, playtimeData->player_id, playtimeData->map_id, playtimeData->playtime);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
-    }
+    // increment player playtime
+    sprintf(query, rs_queryUpdatePlayerPlaytime->string, playtimeData->playtime, playtimeData->player_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    
+    // increment player map playtime
+    sprintf(query, rs_queryUpdatePlayerMapPlaytime->string, playtimeData->player_id, playtimeData->map_id, playtimeData->playtime);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    
+    // update the players's number of played maps
+    sprintf(query, rs_queryUpdatePlayerMaps->string,  playtimeData->player_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
 
 	free(playtimeData->name);	
 	free(playtimeData);	
@@ -858,7 +876,7 @@ void *RS_MysqlMapFilter_Thread( void *in)
     int totalPages = 0;
     int page = filterData->page;
     int start = (page-1)*MAPS_PER_PAGE;
-	unsigned int size = 0;
+	unsigned int size = strlen(result)+1;
 
 	result[0]='\0';
 
@@ -867,8 +885,10 @@ void *RS_MysqlMapFilter_Thread( void *in)
     sprintf(query, rs_queryMapFilterCount->string, filterData->filter);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
+    if (mysql_errno(&mysql) != 0) {
+        printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+    }
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
 
     while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
         count = atoi(row[0]);
@@ -895,18 +915,19 @@ void *RS_MysqlMapFilter_Thread( void *in)
         sprintf(query, rs_queryMapFilter->string, filterData->filter, start, MAPS_PER_PAGE);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
+        if (mysql_errno(&mysql) != 0) {
+            printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+        }
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
 
         while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
             Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, atoi(row[0]), S_COLOR_WHITE, row[1] ),  sizeof(result));
         }
     }
 
-    size = strlen(result)+1;
     filter_players[filterData->player_id]=malloc(size);
     Q_strncpyz( filter_players[filterData->player_id], result, size);
-    RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, count, 0, 0, 0, 0);
+    RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, count, 0, 0, 0, 0, 0);
 
 
     mysql_free_result(mysql_res);
@@ -1103,7 +1124,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 				Q_strncpyz( highscores_players[highscore_part][playerNum],highscores[highscore_part], strlen(highscores[highscore_part]));
 		}
 
-		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0, 0, 0, 0);
+		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0, 0, 0, 0, 0);
 		
 		free(highscoresData);	
 		RS_EndMysqlThread();
@@ -1135,7 +1156,6 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 	}
 	return qtrue;
 }
-
 
 /**
  * map-list related global variables
@@ -1479,3 +1499,4 @@ char *RS_ChooseNextMap( void )
     }
     return ent->map;
 }
+

@@ -1,48 +1,3 @@
-/**
- * MySQL CVARs
- * @var cvar_t*
- */
-cvar_t *rs_mysqlEnabled;
-cvar_t *rs_mysql_host;
-cvar_t *rs_mysql_port;
-cvar_t *rs_mysql_user;
-cvar_t *rs_mysql_pass;
-cvar_t *rs_mysql_db;
-
-cvar_t *rs_queryGetPlayer;
-cvar_t *rs_queryAddPlayer;
-cvar_t *rs_queryRegisterPlayer;
-cvar_t *rs_queryUpdatePlayerPlaytime;
-cvar_t *rs_queryUpdatePlayerRaces;
-cvar_t *rs_queryUpdatePlayerMaps;
-cvar_t *rs_queryGetNick;
-cvar_t *rs_queryAddNick;
-cvar_t *rs_queryUpdateNickPlaytime;
-cvar_t *rs_queryUpdateNickRaces;
-cvar_t *rs_queryUpdateNickMaps;
-cvar_t *rs_queryGetMap;
-cvar_t *rs_queryAddMap;
-cvar_t *rs_queryUpdateMapRating;
-cvar_t *rs_queryUpdateMapPlaytime;
-cvar_t *rs_queryUpdateMapRaces;
-cvar_t *rs_queryAddRace;
-cvar_t *rs_queryGetPlayerMap;
-cvar_t *rs_queryUpdatePlayerMap;
-cvar_t *rs_queryUpdatePlayerMapPlaytime;
-cvar_t *rs_queryGetPlayerMapHighscores;
-cvar_t *rs_queryResetPlayerMapPoints;
-cvar_t *rs_queryUpdatePlayerMapPoints;
-cvar_t *rs_queryUpdateNickMap;
-cvar_t *rs_queryUpdateNickMapPlaytime;
-cvar_t *rs_querySetMapRating;
-cvar_t *rs_queryMapFilter;
-cvar_t *rs_queryMapFilterCount;
-
-cvar_t *rs_authField_Name;
-cvar_t *rs_authField_Pass;
-cvar_t *rs_authField_Token;
-cvar_t *rs_tokenSalt;
-
 char *maplist[5000];
 unsigned int mapcount;
 
@@ -131,13 +86,15 @@ extern void *RS_MysqlPlayerAppear_Thread( void *in );
 extern qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int nick_id, int map_id, int is_authed);
 extern void *RS_MysqlPlayerDisappear_Thread( void *in );
 
+extern qboolean RS_MysqlLoadMaplist( int is_freestyle );
+
 extern qboolean RS_MysqlLoadHighscores( int playerNum, int map_id );
 extern void *RS_MysqlLoadHighscores_Thread( void *in );
 
 extern qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum );
 
-extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6 );
-extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6 );
+extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7 );
+extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7 );
 
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 

@@ -6127,11 +6127,11 @@ static void asFunc_RS_LoadMapList( int is_freestyle )
 {
 	RS_LoadMaplist( is_freestyle );
 }
-
 static void asFunc_asGeneric_RS_LoadMapList( void *gen )
 {
 	asFunc_RS_LoadMapList( (int)G_asGeneric_GetArgInt( gen, 0 ) );
 }
+
 
 // RS_GetNumberOfMaps
 static int asFunc_RS_GetNumberOfMaps()
@@ -6247,9 +6247,9 @@ static void asFunc_asGeneric_RS_MysqlPrintHighscoresTo( void *gen )
 
 
 // RS_QueryCallbackQueue
-static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6 )
+static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7 )
 {
-	return RS_PopCallbackQueue(command, arg1, arg2, arg3, arg4, arg5, arg6);
+	return RS_PopCallbackQueue(command, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
 static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
@@ -6261,7 +6261,8 @@ static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
 		(int *)G_asGeneric_GetArgAddress(gen, 3),
 		(int *)G_asGeneric_GetArgAddress(gen, 4),
 		(int *)G_asGeneric_GetArgAddress(gen, 5),
-		(int *)G_asGeneric_GetArgAddress(gen, 6)));
+		(int *)G_asGeneric_GetArgAddress(gen, 6),
+		(int *)G_asGeneric_GetArgAddress(gen, 7)));
 }
 
 // !racesow
@@ -6890,7 +6891,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlInsertRace( int, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
-	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out)", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
+	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "void RS_MysqlMapFilter( int, cString &, int )", asFunc_RS_MysqlMapFilter, asFunc_asGeneric_RS_MysqlMapFilter},
     { "cString @RS_MysqlMapFilterCallback( int )", asFunc_RS_MysqlMapFilterCallback, asFunc_asGeneric_RS_MysqlMapFilterCallback },
 	{ "void RS_LoadMapList( bool )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
