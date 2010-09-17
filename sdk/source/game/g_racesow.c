@@ -218,6 +218,13 @@ qboolean RS_MysqlError( edict_t *ent )
  */
 void RS_Shutdown()
 {
+    int i;
+
+    for ( i = 0 ; i < mapcount ; i++)
+    {
+        free(maplist[i]);
+    }
+
 	RS_MysqlDisconnect();
 
     // shutdown threading
@@ -1216,6 +1223,12 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
  */
 void RS_LoadMaplist( int is_freestyle)
 {
+    int i;
+
+    for ( i = 0 ; i < mapcount ; i++)
+    {
+        free(maplist[i]);
+    }
 
     if ( g_enforce_map_pool->integer )
     {
