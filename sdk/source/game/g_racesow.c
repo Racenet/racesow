@@ -644,7 +644,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     qboolean hasUserinfo;
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
-	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest;
+	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, player_id_for_time;
 	struct playerDataStruct *playerData;
 
 	RS_StartMysqlThread();
@@ -654,6 +654,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	auth_mask = 0;
 	player_id_for_nick = 0;
 	auth_mask_for_nick = 0;
+    player_id_for_time = 0;
     personalBest = 0;
     playerData = (struct playerDataStruct*)in;
 
@@ -745,7 +746,15 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     mysql_free_result(mysql_res);
     
     // retrieve personal best
-    sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_nick);
+    if (player_id != 0) {
+    
+        player_id_for_time = player_id; 
+    
+    } else {
+    
+        player_id_for_time = player_id_for_nick;
+    }
+    sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
