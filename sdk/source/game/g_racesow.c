@@ -53,6 +53,12 @@ cvar_t *rs_tokenSalt;
 cvar_t *g_freestyle;
 
 /**
+ * map-list related global variables
+ */
+unsigned int mapcount = 0;
+char *maplist[5000] = {0}; // around 5000 maps..
+
+/**
  * as callback commands (must be similar to callback.as!)
  */
 const unsigned int RACESOW_CALLBACK_LOADMAP = 2;
@@ -1241,12 +1247,6 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 	}
 	return qtrue;
 }
-
-/**
- * map-list related global variables
- */
-unsigned int mapcount = 0;
-char *maplist[5000] = {0}; // around 5000 maps..
 
 /**
  * Load Maplist from mysql database.
