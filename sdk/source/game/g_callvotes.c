@@ -91,18 +91,23 @@ static void G_VoteMapExtraHelp( edict_t *ent )
 static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 {
     char mapname[MAX_CONFIGSTRING_CHARS];
+    int i;
 
 	if( !first )  // map can't become invalid while voting
 		return qtrue;
 
+	// racesow : vote a map number
 	int mapnumber = atoi( data->argv[0] );
 
-    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) ) && ( mapnumber < ( sizeof( maplist )/sizeof( char* ) ) ) )
+    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) )
+            && ( mapnumber < ( sizeof( maplist )/sizeof( char* ) ) )
+            && !( maplist[mapnumber] == NULL ) )
     {
         G_Free( data->argv[0] );
         data->argv[0] = G_Malloc( strlen (maplist[mapnumber]) + 1 );
         Q_strncpyz( data->argv[0], maplist[mapnumber], strlen (maplist[mapnumber]) + 1 );
     }
+    // !racesow
 
 	if( strlen( "maps/" ) + strlen( data->argv[0] ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
 	{
@@ -130,7 +135,8 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 		// check if valid map is in map pool when on
 		if( g_enforce_map_pool->integer )
 		{
-			int i = 0;
+		    //racesow : check in maplist
+			i = 0;
 
 			for ( i = 0 ; i < ( sizeof( maplist )/sizeof( char* ) ) ; i++ )
 			{
@@ -141,6 +147,7 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 			//map wasn't found in map list
             G_PrintMsg( data->caller, "%sMap is not in map pool.\n", S_COLOR_RED );
             return qfalse;
+            // ! racesow
 		}
 
 		else
@@ -163,49 +170,22 @@ static char *G_VoteMapCurrent( void )
 	return level.mapname;
 }
 
-// racesow
+// racesow : randmap
 
-//====================
-// randmap
-//====================
-/*
- * Test the validity of a mapname.
- */
-static qboolean G_MapnameValidate( char *mapname) {
-
-    if( strlen( "maps/" ) + strlen( mapname ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
-    {
-        return qfalse;
-    }
-
-    COM_SanitizeFilePath( mapname );
-
-    if( !Q_stricmp( level.mapname, mapname ) )
-    {
-        return qfalse;
-    }
-
-    if( !COM_ValidateRelativeFilename( mapname ) || strchr( mapname, '/' ) || strchr( mapname, '.' ) )
-    {
-        return qfalse;
-    }
-
-    return qtrue;
-}
 /**
  * Choose a valid random map in the map list.
  */
-static qboolean G_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
+qboolean RS_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
 {
     int index = brandom( 0, mapcount );
-	int i = 0;
+    int i = 0;
 
     if( !first )
         return qtrue;
 
     while( i < ( sizeof( maplist )/sizeof( char* ) ) )
     {
-        if( !( maplist[i] == NULL ) && Q_stricmp( maplist[i], level.mapname ) && G_MapnameValidate( maplist[i] ))
+        if( !( maplist[i] == NULL ) && Q_stricmp( maplist[i], level.mapname ) )
         {
             if ( index == 0){
                 vote->data = G_Malloc( MAX_CONFIGSTRING_CHARS );
@@ -223,7 +203,7 @@ static qboolean G_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
 /**
  * Execute the randmap vote
  */
-static void G_VoteRandmapPassed( callvotedata_t *vote){
+void RS_VoteRandmapPassed( callvotedata_t *vote){
     G_Printf("%s\n",vote->data);
     Q_strncpyz( level.forcemap, Q_strlwr(vote->data) , sizeof( level.forcemap ) );
     G_EndMatch();
@@ -2295,8 +2275,8 @@ void G_CallVotes_Init( void )
 	// racesow
     callvote = G_RegisterCallvote( "randmap" );
     callvote->expectedargs = 0;
-    callvote->validate = G_VoteRandmapValidate;
-    callvote->execute = G_VoteRandmapPassed;
+    callvote->validate = RS_VoteRandmapValidate;
+    callvote->execute = RS_VoteRandmapPassed;
     callvote->current = NULL;
     callvote->extraHelp = NULL;
     callvote->argument_format = NULL;

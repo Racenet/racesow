@@ -71,6 +71,8 @@ struct filterDataStruct {
     unsigned int page;
 };
 
+qboolean RS_MapValidate( char *mapname);
+
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
 

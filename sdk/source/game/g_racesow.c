@@ -1044,7 +1044,7 @@ qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
     filterdata->filter = strdup(filter);
     filterdata->page = page;
 
-    if ( MysqlConnected )
+    if ( MysqlConnected && !g_enforce_map_pool->integer )
         returnCode = pthread_create(&thread, &threadAttr, RS_MysqlMapFilter_Thread, (void *)filterdata);
 
     else
@@ -1109,7 +1109,7 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
 // straight from 0.42 with some changes
 //=================
 
-char *highscores_players[3][256]={0}; // no more than 256 players at the same time on a server, right?
+char *highscores_players[3][256]={{0}}; // no more than 256 players at the same time on a server, right?
 
 void *RS_MysqlLoadHighscores_Thread( void* in ) {
     
@@ -1249,6 +1249,37 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 }
 
 /**
+ * Test if a map name is valid and print some warnings if it's not.
+ */
+qboolean RS_MapValidate( char *mapname)
+{
+    char local[MAX_CONFIGSTRING_CHARS];
+
+    if( strlen( "maps/" ) + strlen( mapname ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
+    {
+        G_Printf("%sWarning :%s %s, map name is too long\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        return qfalse;
+    }
+
+    Q_strncpyz( local, mapname, sizeof( local ) );
+    COM_SanitizeFilePath( local );
+
+    if( !COM_ValidateRelativeFilename( local ) || strchr( local, '/' ) || strchr( local, '.' ) )
+    {
+        G_Printf("%sWarning :%s %s, invalid filename\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        return qfalse;
+    }
+
+    if ( !trap_ML_FilenameExists( local ) )
+    {
+        G_Printf("%sWarning :%s %s, file doesn't exist\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        return qfalse;
+    }
+
+    return qtrue;
+}
+
+/**
  * Load Maplist from mysql database.
  *
  * maplist is loaded only once at the beginning of a map, so we don't really
@@ -1284,6 +1315,9 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
 
+                if ( !RS_MapValidate( row[1] ) )
+                    continue;
+
                 index = atoi( row[0] );
                 size = strlen( row[1] )+1;
                 maplist[index]=malloc( size );
@@ -1308,13 +1342,17 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
     char *s, *t;
     static const char *seps = " ,\n\r";
     mapcount = 0;
+    int size = 0;
 
     s = G_CopyString( stringMapList );
     t = strtok( s, seps );
 
     while( t != NULL )
     {
-        unsigned int size = strlen( t ) + 1;
+        if ( !RS_MapValidate( t ) )
+            continue;
+
+        size = strlen( t ) + 1;
         maplist[mapcount]= malloc( size );
         Q_strncpyz( maplist[mapcount], t, size);
         mapcount++;

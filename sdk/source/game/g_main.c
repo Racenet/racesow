@@ -456,6 +456,7 @@ static edict_t *CreateTargetChangeLevel( char *map )
 	return ent;
 }
 
+/* racesow : replaced by RS_ChooseNextMap
 //=================
 //G_ChooseNextMap
 //=================
@@ -571,6 +572,7 @@ static edict_t *G_ChooseNextMap( void )
     }
     return ent;
 }
+racesow */
 
 //=================
 //G_SelectNextMapName
