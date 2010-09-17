@@ -90,12 +90,19 @@ static void G_VoteMapExtraHelp( edict_t *ent )
 
 static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 {
-	char mapname[MAX_CONFIGSTRING_CHARS];
+    char mapname[MAX_CONFIGSTRING_CHARS];
 
 	if( !first )  // map can't become invalid while voting
 		return qtrue;
-	if( Q_isdigit( data->argv[0] ) )  // FIXME
-		return qfalse;
+
+	int mapnumber = atoi( data->argv[0] );
+
+    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) ) && ( mapnumber < sizeof( maplist ) ) )
+    {
+        G_Free( data->argv[0] );
+        data->argv[0] = G_Malloc( strlen (maplist[mapnumber]) + 1 );
+        Q_strncpyz( data->argv[0], maplist[mapnumber], strlen (maplist[mapnumber]) + 1 );
+    }
 
 	if( strlen( "maps/" ) + strlen( data->argv[0] ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
 	{
@@ -147,7 +154,7 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 
 static void G_VoteMapPassed( callvotedata_t *vote )
 {
-	Q_strncpyz( level.forcemap, Q_strlwr( vote->argv[0] ), sizeof( level.forcemap ) );
+    Q_strncpyz( level.forcemap, Q_strlwr( vote->argv[0] ), sizeof( level.forcemap ) );
 	G_EndMatch();
 }
 
