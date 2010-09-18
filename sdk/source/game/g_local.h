@@ -892,6 +892,7 @@ qboolean G_CallSpawn( edict_t *ent );
 qboolean G_RespawnLevel( void );
 void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int levelTime, unsigned int serverTime, unsigned int realTime );
 char *G_SpawnTempValue( const char *key );
+const char *G_GetEntitySpawnKey( const char *key, edict_t *self );
 
 //
 // g_awards.c
