@@ -1304,6 +1304,7 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 qboolean RS_MapValidate( char *mapname)
 {
     char local[MAX_CONFIGSTRING_CHARS];
+    local[0]='\0';
 
     if( strlen( "maps/" ) + strlen( mapname ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
     {
@@ -1316,13 +1317,13 @@ qboolean RS_MapValidate( char *mapname)
 
     if( !COM_ValidateRelativeFilename( local ) || strchr( local, '/' ) || strchr( local, '.' ) )
     {
-        G_Printf("%sWarning :%s %s, invalid filename\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        G_Printf("%sWarning :%s %s, invalid filename\n", S_COLOR_RED, S_COLOR_WHITE, local );
         return qfalse;
     }
 
     if ( !trap_ML_FilenameExists( local ) )
     {
-        G_Printf("%sWarning :%s %s, file doesn't exist\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        G_Printf("%sWarning :%s %s, file doesn't exist\n", S_COLOR_RED, S_COLOR_WHITE, local );
         return qfalse;
     }
 
