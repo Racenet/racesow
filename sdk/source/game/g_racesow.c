@@ -984,11 +984,7 @@ void *RS_BasicMapFilter_Thread( void *in)
         {
             mapsFound++;
             if ( !( strstr( maplist[i], filterData->filter ) == NULL ) )
-            {
                 filterCount++;
-                Q_strncatz( buffer, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof(result));
-            }
-
         }
         i++;
     }
@@ -1009,7 +1005,22 @@ void *RS_BasicMapFilter_Thread( void *in)
                      S_COLOR_YELLOW,
                      filterData->filter,
                      S_COLOR_WHITE),  sizeof(result));
-        Q_strncatz( result, buffer,  sizeof(result));
+
+        mapsFound = 0;
+        i = 0;
+        while( ( i < ( sizeof( maplist ) / sizeof( char* ) ) ) && ( mapsFound <= page*MAPS_PER_PAGE ) )
+        {
+            if ( !( maplist[i] == NULL ) && !( strstr( maplist[i], filterData->filter ) == NULL ) )
+            {
+                mapsFound++;
+                G_Printf("%d\n",mapsFound);
+                if ( ( mapsFound >= ((page-1)*MAPS_PER_PAGE + 1) ) && ( mapsFound <= page*MAPS_PER_PAGE  ) )
+                {
+                    Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof(result));
+                }
+            }
+            i++;
+        }
     }
 
     size = strlen( result )+1;
