@@ -26,6 +26,7 @@ cvar_t *rs_queryRegisterPlayer;
 cvar_t *rs_queryUpdatePlayerPlaytime;
 cvar_t *rs_queryUpdatePlayerRaces;
 cvar_t *rs_queryUpdatePlayerMaps;
+cvar_t *rs_queryUpdatePlayerPoints;
 cvar_t *rs_queryGetMap;
 cvar_t *rs_queryAddMap;
 cvar_t *rs_queryUpdateMapRating;
@@ -142,6 +143,7 @@ void RS_MysqlLoadInfo( void )
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = playtime + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMaps		= trap_Cvar_Get( "rs_queryUpdatePlayerMaps",		"UPDATE `player` SET `maps` = (SELECT COUNT(`map_id`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryUpdatePlayerPoints		= trap_Cvar_Get( "rs_queryUpdatePlayerpoints",		"UPDATE `player` SET `points` = (SELECT SUM(`points`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` IN(%s);", CVAR_ARCHIVE );
 
 	rs_queryGetMap					= trap_Cvar_Get( "rs_queryGetMapId",				"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddMap					= trap_Cvar_Get( "rs_queryAddMap",					"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
@@ -443,11 +445,13 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 void *RS_MysqlInsertRace_Thread(void *in)
 {
     char query[1000];
+    char affectedPlayerIds[500];
 	unsigned int maxPositions, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime, oldTime, oldPoints, oldBestTime, allPoints, newPosition;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	
+    affectedPlayerIds[0] = '\0';
     oldTime = 0;
     bestTime = 0;
     maxPositions = 30;
@@ -472,6 +476,36 @@ void *RS_MysqlInsertRace_Thread(void *in)
         return NULL;
     }
     
+    // read current points and time
+	sprintf(query, rs_queryGetPlayerMap->string, raceData->player_id, raceData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();    
+	mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL) {
+		if (row[0] != NULL && row[1] != NULL)
+        {
+			oldPoints = atoi(row[0]);
+            oldTime = atoi(row[1]);
+        }
+    }
+	mysql_free_result(mysql_res);
+    
+    // retrieve server best
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
+	{
+		if (row[1] !=NULL)
+		{
+            oldBestTime = atoi(row[1]);
+		}
+	}
+	mysql_free_result(mysql_res);
+    
 	// insert race
 	sprintf(query, rs_queryAddRace->string, raceData->player_id, raceData->map_id, raceData->race_time);
     mysql_real_query(&mysql, query, strlen(query));
@@ -491,36 +525,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();    
-
-	// read current points and time
-	sprintf(query, rs_queryGetPlayerMap->string, raceData->player_id, raceData->map_id);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();    
-	mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
-    if ((row = mysql_fetch_row(mysql_res)) != NULL) {
-		if (row[0] != NULL && row[1] != NULL)
-        {
-			oldPoints = atoi(row[0]);
-            oldTime = atoi(row[1]);
-        }
-    }
-	mysql_free_result(mysql_res);
-
-    // retrieve server best
-	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
-    mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
-    if ((row = mysql_fetch_row(mysql_res)) != NULL)
-	{
-		if (row[1] !=NULL)
-		{
-            oldBestTime = atoi(row[1]);
-		}
-	}
-	mysql_free_result(mysql_res);
     
 	// reset points in player_map
     sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
@@ -541,6 +545,12 @@ void *RS_MysqlInsertRace_Thread(void *in)
             unsigned int playerId, raceTime;
             playerId = atoi(row[0]);
             raceTime = atoi(row[1]);
+            
+            if (Q_stricmp( affectedPlayerIds, "" )) {
+            
+                Q_strncatz( affectedPlayerIds, ",",  sizeof(affectedPlayerIds));
+            }
+            Q_strncatz( affectedPlayerIds, row[0],  sizeof(affectedPlayerIds));
         
             if (bestTime == 0)
                 bestTime = raceTime;
@@ -582,6 +592,11 @@ void *RS_MysqlInsertRace_Thread(void *in)
     }
 	mysql_free_result(mysql_res);
    
+    // update points for affected players
+    sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+   
     sprintf(query, rs_queryGetPlayerPoints->string, raceData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
@@ -595,7 +610,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
         }
     }
     
-    RS_PushCallbackQueue(RACESOW_CALLBACK_RACE, raceData->playerNum, allPoints, newPoints, newPosition, oldTime, oldBestTime, raceData->race_time);
+    RS_PushCallbackQueue(RACESOW_CALLBACK_RACE, raceData->playerNum, allPoints, oldPoints, newPoints, oldTime, oldBestTime, raceData->race_time);
 
 	free(raceData);	
 	RS_EndMysqlThread();
@@ -871,8 +886,9 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 
 /**
  * Store the result of filter requests from players.
+ * 256 players at max.
  */
-char *filter_players[MAX_CLIENTS]={0};
+char *filter_players[256]={0};
 
 /**
  * Thread for filter request.
@@ -882,6 +898,7 @@ char *filter_players[MAX_CLIENTS]={0};
  *
  * @param in The input data, cast to filterDataStruct
  * @return NULL on success
+ */
 void *RS_MysqlMapFilter_Thread( void *in)
 {
     MYSQL_ROW  row;
@@ -956,101 +973,62 @@ void *RS_MysqlMapFilter_Thread( void *in)
 
     return NULL;
 }
-*/
 
 /**
- * Map filter thread if no mysql, parse the maplist array
+ * Map filter thread if no mysql
  *
- * @param in Input data, cast to filterDataStruct
- * @return NULL on success
  */
 void *RS_BasicMapFilter_Thread( void *in)
 {
     struct filterDataStruct *filterData = (struct filterDataStruct *)in ;
-    int i = 0, mapsFound = 0, filterCount = 0, totalPages = 0, size = 0;
+    int i = 0;
+    int mapsFound = 0;
+    int filterCount = 0;
+    int totalPages = 0;
+    int size = 0;
+    const int MAPS_PER_PAGE = 10;
     int page = filterData->page;
-    const int MAPS_PER_PAGE = 15;
-    char result[MAX_STRING_CHARS]; //stores the result string
-    char filter[MAX_CONFIGSTRING_CHARS]; //stores the lowercase version of the filter
-    char temp[MAX_CONFIGSTRING_CHARS]; //stores the lowercase version of the map name
-
+    char result[10000];
+    char buffer[10000];
     result[0]='\0';
-    filter[0]='\0';
-    temp[0]='\0';
-    Q_strncpyz(filter,filterData->filter, sizeof( filter ) );
-    Q_strlwr(filter);
+    buffer[0]='\0';
 
-    //first get the count of maps matching the search
     while( ( i < ( sizeof( maplist ) / sizeof( char* ) ) ) && ( mapsFound <= mapcount ) )
     {
         if ( !( maplist[i] == NULL ) )
         {
-            Q_strncpyz( temp, maplist[i], sizeof( temp ) );
-            Q_strlwr( temp );
             mapsFound++;
-
-            if ( !( strstr( temp, filter ) == NULL ) )
+            if ( !( strstr( maplist[i], filterData->filter ) == NULL ) )
+            {
                 filterCount++;
+                Q_strncatz( buffer, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof(result));
+            }
+
         }
         i++;
     }
 
     if ( filterCount == 0 )
-        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_YELLOW, filterData->filter ), sizeof( result ) );
-
+    {
+        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_YELLOW, filterData->filter ),  sizeof(result));
+    }
     else
     {
-        //dirty hack to compute the number of pages, should use ceil function
-        if ( (filterCount/MAPS_PER_PAGE)*MAPS_PER_PAGE == filterCount )
-            totalPages = filterCount/MAPS_PER_PAGE;
-        else
-            totalPages = filterCount/MAPS_PER_PAGE + 1;
-
-        if ( page > totalPages )
-        {
-            Q_strncatz( result , va( "There are only%s %d%s pages for your search on%s %s%s\n",
-                    S_COLOR_YELLOW,
-                    totalPages,
-                    S_COLOR_WHITE,
-                    S_COLOR_YELLOW,
-                    filterData->filter,
-                    S_COLOR_WHITE ), sizeof ( result ) );
-        }
-        else
-        {
-            Q_strncatz( result, va( "Printing page %d/%d of maps matching %s %s.\n%s Use %s mapfilter %s <pagenum> %s to print other pages.\n",
-                    page,
-                    totalPages,
-                    S_COLOR_YELLOW,
-                    filterData->filter,
-                    S_COLOR_WHITE,
-                    S_COLOR_YELLOW,
-                    filterData->filter,
-                    S_COLOR_WHITE),  sizeof( result ) );
-
-            mapsFound = 0, i = 0;
-
-            while( ( i < ( sizeof( maplist ) / sizeof( char* ) ) ) && ( mapsFound <= page*MAPS_PER_PAGE ) )
-            {
-                if ( !( maplist[i] == NULL ) )
-                {
-                    Q_strncpyz( temp, maplist[i], sizeof( temp ) );
-                    Q_strlwr( temp );
-                    if ( !( strstr( temp, filter ) == NULL ) )
-                    {
-                        mapsFound++;
-                        if ( ( mapsFound >= ((page-1)*MAPS_PER_PAGE + 1) ) && ( mapsFound <= page*MAPS_PER_PAGE  ) )
-                            Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof( result ) );
-
-                    }
-                }
-                i++;
-            }
-        }
+        totalPages = filterCount/MAPS_PER_PAGE+1;
+        Q_strncatz( result, va( "Printing page %d/%d of maps matching %s%s.\n%sUse %smapfilter %s <pagenum> %sto print other pages.\n",
+                     page,
+                     totalPages,
+                     S_COLOR_YELLOW,
+                     filterData->filter,
+                     S_COLOR_WHITE,
+                     S_COLOR_YELLOW,
+                     filterData->filter,
+                     S_COLOR_WHITE),  sizeof(result));
+        Q_strncatz( result, buffer,  sizeof(result));
     }
 
-    size = strlen( result ) + 1;
-    filter_players[filterData->player_id] = malloc( size );
+    size = strlen( result )+1;
+    filter_players[filterData->player_id]=malloc(size);
     Q_strncpyz( filter_players[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, filterCount, 0, 0, 0, 0, 0);
 
@@ -1064,7 +1042,8 @@ void *RS_BasicMapFilter_Thread( void *in)
 /**
  * Mapfilter function registered in AS API.
  *
- * Calls RS_BasicMapFilter
+ * Calls RS_MysqlMapFilter_Thread or RS_BasicMapFilter
+ * wether mysql is enabled or not
  *
  * @param player_id Id of the player making the request
  * @param filter String used to filter maplist
@@ -1079,7 +1058,12 @@ qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
     filterdata->player_id = player_id;
     filterdata->filter = strdup(filter);
     filterdata->page = page;
-    returnCode = pthread_create(&thread, &threadAttr, RS_BasicMapFilter_Thread, (void *)filterdata);
+
+    if ( MysqlConnected )
+        returnCode = pthread_create(&thread, &threadAttr, RS_MysqlMapFilter_Thread, (void *)filterdata);
+
+    else
+        returnCode = pthread_create(&thread, &threadAttr, RS_BasicMapFilter_Thread, (void *)filterdata);
 
     if (returnCode) {
 
@@ -1140,7 +1124,7 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
 // straight from 0.42 with some changes
 //=================
 
-char *highscores_players[3][256]={{0}}; // no more than 256 players at the same time on a server, right?
+char *highscores_players[3][256]={0}; // no more than 256 players at the same time on a server, right?
 
 void *RS_MysqlLoadHighscores_Thread( void* in ) {
     
@@ -1280,37 +1264,6 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 }
 
 /**
- * Test if a map name is valid and print some warnings if it's not.
- */
-qboolean RS_MapValidate( char *mapname)
-{
-    char local[MAX_CONFIGSTRING_CHARS];
-
-    if( strlen( "maps/" ) + strlen( mapname ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
-    {
-        G_Printf("%sWarning :%s %s, map name is too long\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
-        return qfalse;
-    }
-
-    Q_strncpyz( local, mapname, sizeof( local ) );
-    COM_SanitizeFilePath( local );
-
-    if( !COM_ValidateRelativeFilename( local ) || strchr( local, '/' ) || strchr( local, '.' ) )
-    {
-        G_Printf("%sWarning :%s %s, invalid filename\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
-        return qfalse;
-    }
-
-    if ( !trap_ML_FilenameExists( local ) )
-    {
-        G_Printf("%sWarning :%s %s, file doesn't exist\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
-        return qfalse;
-    }
-
-    return qtrue;
-}
-
-/**
  * Load Maplist from mysql database.
  *
  * maplist is loaded only once at the beginning of a map, so we don't really
@@ -1323,7 +1276,7 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
 {
         MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
-        char query[MAX_STRING_CHARS];
+        char query[1024];
         int size = 0;
         mapcount = 0; //if not the mapcount increases each time we call the function
 
@@ -1345,9 +1298,6 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
             int index = 0;
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
-
-                if ( !RS_MapValidate( row[1] ) )
-                  continue;
 
                 index = atoi( row[0] );
                 size = strlen( row[1] )+1;
@@ -1373,17 +1323,13 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
     char *s, *t;
     static const char *seps = " ,\n\r";
     mapcount = 0;
-    int size = 0;
 
     s = G_CopyString( stringMapList );
     t = strtok( s, seps );
 
     while( t != NULL )
     {
-        if ( !RS_MapValidate( t ) )
-            continue;
-
-        size = strlen( t ) + 1;
+        unsigned int size = strlen( t ) + 1;
         maplist[mapcount]= malloc( size );
         Q_strncpyz( maplist[mapcount], t, size);
         mapcount++;
@@ -1577,7 +1523,6 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta )
 char *RS_ChooseNextMap( void )
 {
     edict_t *ent = NULL;
-    int index = 0, foundMaps = 0, foundSentinel = 0, seed = 0, i = 0;
 
     if( *level.forcemap )//this happens after callvote map and callvote randmap
     {
@@ -1592,6 +1537,9 @@ char *RS_ChooseNextMap( void )
 
     else if( g_maprotation->integer == 1 )//follow the order given
     {
+        int index = 0;
+        int foundMaps = 0;
+        int foundSentinel = 0;
         while ( ( index < ( sizeof( maplist )/sizeof( char* ) ) ) && ( foundMaps < mapcount ) )
         {
             if ( !( maplist[index] == NULL ) )
@@ -1621,9 +1569,9 @@ char *RS_ChooseNextMap( void )
 
     else if( g_maprotation->integer == 2 )// random from the list, but not the same
     {
-            seed = game.realtime;
-            index = (int)Q_brandom( &seed, 0, mapcount ); // this should give random integer from 0 to count-1
-            i = 0;
+            int seed = game.realtime;
+            int index = (int)Q_brandom( &seed, 0, mapcount ); // this should give random integer from 0 to count-1
+            int i = 0;
 
             while( i < ( sizeof( maplist )/sizeof( char* ) ) )
             {
