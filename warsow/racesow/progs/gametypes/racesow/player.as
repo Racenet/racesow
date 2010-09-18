@@ -247,12 +247,13 @@ class Racesow_Player
      * Callback for a finished race
      * @return void
      */
-    void raceCallback(uint allPoints, uint newPoints, uint newPosition, uint oldTime, uint oldBestTime, uint newTime)
+    void raceCallback(uint allPoints, uint oldPoints, uint newPoints, uint oldTime, uint oldBestTime, uint newTime)
     {
         cString str;
-		uint personalBestTime = this.getBestTime();
 		uint bestTime;
         uint delta;
+        
+        G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
         
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
@@ -280,19 +281,18 @@ class Racesow_Player
             str = S_COLOR_RED + "+";
         }
 		
-        if ( bestTime==0 || newTime <= bestTime )
+        if ( oldBestTime == 0 || newTime < oldBestTime )
         {
             this.setBestTime(newTime);
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
         }
-        else if ( newTime < personalBestTime || personalBestTime == 0 )
+        else if ( oldTime == 0 || newTime < oldTime )
         {
             this.setBestTime(newTime);
 			this.getClient().addAward( "Personal record!" );
         }
-        
                 
         G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( delta ) ) );
