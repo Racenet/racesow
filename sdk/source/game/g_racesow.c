@@ -890,9 +890,8 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 
 /**
  * Store the result of filter requests from players.
- * 256 players at max.
  */
-char *filter_players[256]={0};
+char *filter_players[MAX_CLIENTS]={0};
 
 /**
  * Thread for filter request.
@@ -902,7 +901,6 @@ char *filter_players[256]={0};
  *
  * @param in The input data, cast to filterDataStruct
  * @return NULL on success
- */
 void *RS_MysqlMapFilter_Thread( void *in)
 {
     MYSQL_ROW  row;
@@ -977,62 +975,101 @@ void *RS_MysqlMapFilter_Thread( void *in)
 
     return NULL;
 }
+*/
 
 /**
- * Map filter thread if no mysql
+ * Map filter thread if no mysql, parse the maplist array
  *
+ * @param in Input data, cast to filterDataStruct
+ * @return NULL on success
  */
 void *RS_BasicMapFilter_Thread( void *in)
 {
     struct filterDataStruct *filterData = (struct filterDataStruct *)in ;
-    int i = 0;
-    int mapsFound = 0;
-    int filterCount = 0;
-    int totalPages = 0;
-    int size = 0;
-    const int MAPS_PER_PAGE = 10;
+    int i = 0, mapsFound = 0, filterCount = 0, totalPages = 0, size = 0;
     int page = filterData->page;
-    char result[10000];
-    char buffer[10000];
-    result[0]='\0';
-    buffer[0]='\0';
+    const int MAPS_PER_PAGE = 15;
+    char result[MAX_STRING_CHARS]; //stores the result string
+    char filter[MAX_CONFIGSTRING_CHARS]; //stores the lowercase version of the filter
+    char temp[MAX_CONFIGSTRING_CHARS]; //stores the lowercase version of the map name
 
+    result[0]='\0';
+    filter[0]='\0';
+    temp[0]='\0';
+    Q_strncpyz(filter,filterData->filter, sizeof( filter ) );
+    Q_strlwr(filter);
+
+    //first get the count of maps matching the search
     while( ( i < ( sizeof( maplist ) / sizeof( char* ) ) ) && ( mapsFound <= mapcount ) )
     {
         if ( !( maplist[i] == NULL ) )
         {
+            Q_strncpyz( temp, maplist[i], sizeof( temp ) );
+            Q_strlwr( temp );
             mapsFound++;
-            if ( !( strstr( maplist[i], filterData->filter ) == NULL ) )
-            {
-                filterCount++;
-                Q_strncatz( buffer, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof(result));
-            }
 
+            if ( !( strstr( temp, filter ) == NULL ) )
+                filterCount++;
         }
         i++;
     }
 
     if ( filterCount == 0 )
-    {
-        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_YELLOW, filterData->filter ),  sizeof(result));
-    }
+        Q_strncatz( result, va( "No maps found for your search on %s%s.\n", S_COLOR_YELLOW, filterData->filter ), sizeof( result ) );
+
     else
     {
-        totalPages = filterCount/MAPS_PER_PAGE+1;
-        Q_strncatz( result, va( "Printing page %d/%d of maps matching %s%s.\n%sUse %smapfilter %s <pagenum> %sto print other pages.\n",
-                     page,
-                     totalPages,
-                     S_COLOR_YELLOW,
-                     filterData->filter,
-                     S_COLOR_WHITE,
-                     S_COLOR_YELLOW,
-                     filterData->filter,
-                     S_COLOR_WHITE),  sizeof(result));
-        Q_strncatz( result, buffer,  sizeof(result));
+        //dirty hack to compute the number of pages, should use ceil function
+        if ( (filterCount/MAPS_PER_PAGE)*MAPS_PER_PAGE == filterCount )
+            totalPages = filterCount/MAPS_PER_PAGE;
+        else
+            totalPages = filterCount/MAPS_PER_PAGE + 1;
+
+        if ( page > totalPages )
+        {
+            Q_strncatz( result , va( "There are only%s %d%s pages for your search on%s %s%s\n",
+                    S_COLOR_YELLOW,
+                    totalPages,
+                    S_COLOR_WHITE,
+                    S_COLOR_YELLOW,
+                    filterData->filter,
+                    S_COLOR_WHITE ), sizeof ( result ) );
+        }
+        else
+        {
+            Q_strncatz( result, va( "Printing page %d/%d of maps matching %s %s.\n%s Use %s mapfilter %s <pagenum> %s to print other pages.\n",
+                    page,
+                    totalPages,
+                    S_COLOR_YELLOW,
+                    filterData->filter,
+                    S_COLOR_WHITE,
+                    S_COLOR_YELLOW,
+                    filterData->filter,
+                    S_COLOR_WHITE),  sizeof( result ) );
+
+            mapsFound = 0, i = 0;
+
+            while( ( i < ( sizeof( maplist ) / sizeof( char* ) ) ) && ( mapsFound <= page*MAPS_PER_PAGE ) )
+            {
+                if ( !( maplist[i] == NULL ) )
+                {
+                    Q_strncpyz( temp, maplist[i], sizeof( temp ) );
+                    Q_strlwr( temp );
+                    if ( !( strstr( temp, filter ) == NULL ) )
+                    {
+                        mapsFound++;
+                        if ( ( mapsFound >= ((page-1)*MAPS_PER_PAGE + 1) ) && ( mapsFound <= page*MAPS_PER_PAGE  ) )
+                            Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof( result ) );
+
+                    }
+                }
+                i++;
+            }
+        }
     }
 
-    size = strlen( result )+1;
-    filter_players[filterData->player_id]=malloc(size);
+    size = strlen( result ) + 1;
+    filter_players[filterData->player_id] = malloc( size );
     Q_strncpyz( filter_players[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, filterCount, 0, 0, 0, 0, 0);
 
@@ -1046,8 +1083,7 @@ void *RS_BasicMapFilter_Thread( void *in)
 /**
  * Mapfilter function registered in AS API.
  *
- * Calls RS_MysqlMapFilter_Thread or RS_BasicMapFilter
- * wether mysql is enabled or not
+ * Calls RS_BasicMapFilter
  *
  * @param player_id Id of the player making the request
  * @param filter String used to filter maplist
@@ -1062,12 +1098,7 @@ qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
     filterdata->player_id = player_id;
     filterdata->filter = strdup(filter);
     filterdata->page = page;
-
-    if ( MysqlConnected )
-        returnCode = pthread_create(&thread, &threadAttr, RS_MysqlMapFilter_Thread, (void *)filterdata);
-
-    else
-        returnCode = pthread_create(&thread, &threadAttr, RS_BasicMapFilter_Thread, (void *)filterdata);
+    returnCode = pthread_create(&thread, &threadAttr, RS_BasicMapFilter_Thread, (void *)filterdata);
 
     if (returnCode) {
 
@@ -1128,7 +1159,7 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
 // straight from 0.42 with some changes
 //=================
 
-char *highscores_players[3][256]={0}; // no more than 256 players at the same time on a server, right?
+char *highscores_players[3][256]={{0}}; // no more than 256 players at the same time on a server, right?
 
 void *RS_MysqlLoadHighscores_Thread( void* in ) {
     
@@ -1268,6 +1299,37 @@ qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
 }
 
 /**
+ * Test if a map name is valid and print some warnings if it's not.
+ */
+qboolean RS_MapValidate( char *mapname)
+{
+    char local[MAX_CONFIGSTRING_CHARS];
+
+    if( strlen( "maps/" ) + strlen( mapname ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
+    {
+        G_Printf("%sWarning :%s %s, map name is too long\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        return qfalse;
+    }
+
+    Q_strncpyz( local, mapname, sizeof( local ) );
+    COM_SanitizeFilePath( local );
+
+    if( !COM_ValidateRelativeFilename( local ) || strchr( local, '/' ) || strchr( local, '.' ) )
+    {
+        G_Printf("%sWarning :%s %s, invalid filename\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        return qfalse;
+    }
+
+    if ( !trap_ML_FilenameExists( local ) )
+    {
+        G_Printf("%sWarning :%s %s, file doesn't exist\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        return qfalse;
+    }
+
+    return qtrue;
+}
+
+/**
  * Load Maplist from mysql database.
  *
  * maplist is loaded only once at the beginning of a map, so we don't really
@@ -1280,7 +1342,7 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
 {
         MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
-        char query[1024];
+        char query[MAX_STRING_CHARS];
         int size = 0;
         mapcount = 0; //if not the mapcount increases each time we call the function
 
@@ -1302,6 +1364,9 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
             int index = 0;
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
+
+                if ( !RS_MapValidate( row[1] ) )
+                  continue;
 
                 index = atoi( row[0] );
                 size = strlen( row[1] )+1;
@@ -1327,13 +1392,17 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
     char *s, *t;
     static const char *seps = " ,\n\r";
     mapcount = 0;
+    int size = 0;
 
     s = G_CopyString( stringMapList );
     t = strtok( s, seps );
 
     while( t != NULL )
     {
-        unsigned int size = strlen( t ) + 1;
+        if ( !RS_MapValidate( t ) )
+            continue;
+
+        size = strlen( t ) + 1;
         maplist[mapcount]= malloc( size );
         Q_strncpyz( maplist[mapcount], t, size);
         mapcount++;
@@ -1527,6 +1596,7 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta )
 char *RS_ChooseNextMap( void )
 {
     edict_t *ent = NULL;
+    int index = 0, foundMaps = 0, foundSentinel = 0, seed = 0, i = 0;
 
     if( *level.forcemap )//this happens after callvote map and callvote randmap
     {
@@ -1541,9 +1611,6 @@ char *RS_ChooseNextMap( void )
 
     else if( g_maprotation->integer == 1 )//follow the order given
     {
-        int index = 0;
-        int foundMaps = 0;
-        int foundSentinel = 0;
         while ( ( index < ( sizeof( maplist )/sizeof( char* ) ) ) && ( foundMaps < mapcount ) )
         {
             if ( !( maplist[index] == NULL ) )
@@ -1573,9 +1640,9 @@ char *RS_ChooseNextMap( void )
 
     else if( g_maprotation->integer == 2 )// random from the list, but not the same
     {
-            int seed = game.realtime;
-            int index = (int)Q_brandom( &seed, 0, mapcount ); // this should give random integer from 0 to count-1
-            int i = 0;
+            seed = game.realtime;
+            index = (int)Q_brandom( &seed, 0, mapcount ); // this should give random integer from 0 to count-1
+            i = 0;
 
             while( i < ( sizeof( maplist )/sizeof( char* ) ) )
             {
