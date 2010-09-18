@@ -526,76 +526,80 @@ void *RS_MysqlInsertRace_Thread(void *in)
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();    
     
-	// reset points in player_map
-    sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    // when the new time is better than the old one, recompute the points
+    if (oldTime == 0 || raceData->race_time < oldTime) {
     
-    // update points in player_map
-	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
-    mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
-    while ((row = mysql_fetch_row(mysql_res)) != NULL)
-	{
-        points = 0;
-		if (row[0] !=NULL && row[1] != NULL)
-		{
-            unsigned int playerId, raceTime;
-            playerId = atoi(row[0]);
-            raceTime = atoi(row[1]);
-            
-            if (Q_stricmp( affectedPlayerIds, "" )) {
-            
-                Q_strncatz( affectedPlayerIds, ",",  sizeof(affectedPlayerIds));
-            }
-            Q_strncatz( affectedPlayerIds, row[0],  sizeof(affectedPlayerIds));
+        // reset points in player_map
+        sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
         
-            if (bestTime == 0)
-                bestTime = raceTime;
-        
-			if (raceTime == lastRaceTime)
-				offset++;
-			else
-				offset = 0;
-
-			currentPosition++;
-            realPosition = currentPosition - offset;
-            points = (maxPositions + 1) - realPosition;
-			switch (realPosition)
-			{
-				case 1:
-					points += 10;
-					break;
-				case 2:
-					points += 5;
-					break;
-				case 3:
-					points += 3;
-					break;
-			}
-			
-			if (playerId == raceData->player_id) {
+        // update points in player_map
+        sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        while ((row = mysql_fetch_row(mysql_res)) != NULL)
+        {
+            points = 0;
+            if (row[0] !=NULL && row[1] != NULL)
+            {
+                unsigned int playerId, raceTime;
+                playerId = atoi(row[0]);
+                raceTime = atoi(row[1]);
+                
+                if (Q_stricmp( affectedPlayerIds, "" )) {
+                
+                    Q_strncatz( affectedPlayerIds, ",",  sizeof(affectedPlayerIds));
+                }
+                Q_strncatz( affectedPlayerIds, row[0],  sizeof(affectedPlayerIds));
             
-				newPoints = points;
-                newPosition = realPosition;
+                if (bestTime == 0)
+                    bestTime = raceTime;
+            
+                if (raceTime == lastRaceTime)
+                    offset++;
+                else
+                    offset = 0;
+
+                currentPosition++;
+                realPosition = currentPosition - offset;
+                points = (maxPositions + 1) - realPosition;
+                switch (realPosition)
+                {
+                    case 1:
+                        points += 10;
+                        break;
+                    case 2:
+                        points += 5;
+                        break;
+                    case 3:
+                        points += 3;
+                        break;
+                }
+                
+                if (playerId == raceData->player_id) {
+                
+                    newPoints = points;
+                    newPosition = realPosition;
+                }
+
+                lastRaceTime = raceTime;
+                
+                // set points in player_map
+                sprintf(query, rs_queryUpdatePlayerMapPoints->string, points, raceData->map_id, playerId);
+                mysql_real_query(&mysql, query, strlen(query));
+                RS_CheckMysqlThreadError();
             }
-
-			lastRaceTime = raceTime;
-            
-            // set points in player_map
-            sprintf(query, rs_queryUpdatePlayerMapPoints->string, points, raceData->map_id, playerId);
-            mysql_real_query(&mysql, query, strlen(query));
-            RS_CheckMysqlThreadError();
-		}
+        }
+        mysql_free_result(mysql_res);
+       
+        // update points for affected players
+        sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
     }
-	mysql_free_result(mysql_res);
-   
-    // update points for affected players
-    sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
    
     sprintf(query, rs_queryGetPlayerPoints->string, raceData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
