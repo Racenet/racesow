@@ -11,6 +11,8 @@ class Racesow_Map
 	Racesow_Map_HighScore_Mysql @statsHandler;
 
 	bool inOvertime;
+    
+    bool overtimeFinished;
 
     uint id;
 
@@ -58,6 +60,7 @@ class Racesow_Map
         this.id = 0;
 		this.name = mapName.getString();
 		this.inOvertime = false;
+        this.overtimeFinished = false;
 	}
 
     void startOvertime()
@@ -94,6 +97,10 @@ class Racesow_Map
 	bool allowEndGame()
 	{
         if (!this.inOvertime)
+        {
+            return true;
+        }
+        else if (this.overtimeFinished)
         {
             return true;
         }
@@ -135,7 +142,7 @@ class Racesow_Map
         
         if ( numInOvertime == 0 )
         {
-            this.inOvertime = false;
+            this.overtimeFinished = true;
             match.launchState(MATCH_STATE_POSTMATCH);
             return true;
         }
@@ -144,11 +151,11 @@ class Racesow_Map
 	}
 
 	/**
-	 * cancelEndGame
+	 * cancelOvertime
 	 * @return void
 	 */
 
-	void cancelEndGame()
+	void cancelOvertime()
 	{
 		this.inOvertime = false;
 	}

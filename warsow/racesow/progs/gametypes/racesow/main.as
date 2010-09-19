@@ -249,7 +249,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         }
         else if ( @client != null )
         {
-       		player.restartRace();
        		client.team = TEAM_PLAYERS;
        		client.respawn( false );
             return true;
@@ -257,14 +256,13 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
         return false;
     }
-
     else if ( cmdString == "join" )
     {
         if ( @client != null && !player.isJoinlocked && !map.inOvertime)
         {
-            player.restartRace();
             client.team = TEAM_PLAYERS;
 			client.respawn( false );
+            return true;
         }
 
         if( player.isJoinlocked )
@@ -273,7 +271,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         if( map.inOvertime )
         	player.sendMessage( S_COLOR_RED + "You can't join during overtime period.\n" );
 
-		return true;
+		return false;
     }
 
 	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
@@ -449,11 +447,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             if ( vote == "extend_time" )
             {
             	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+				
+                map.cancelOvertime();
 				for ( int i = 0; i < maxClients; i++ )
 				{
 					players[i].cancelOvertime();
 				}
-				map.cancelEndGame();
             }
             return true;
         }
@@ -635,9 +634,11 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 			cEntity @edict = @G_GetEntity( args.getToken( 0 ).toInt() );
 			if( @edict.client == null )
 				return;
+                
 			Racesow_Player @player_edict = Racesow_GetPlayerByClient( edict.client );
 			if( @player_edict == null )
 				return;
+                
 			if( g_freestyle.getBool() && @edict.client != @client ) //telekills
 			{
 				if( @client.getEnt() == null)
@@ -651,7 +652,6 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 				gravestone.setOrigin( client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ) );
 				player_edict.setupTelekilled( @gravestone );
 			}
-			player_edict.restartRace();
 		}
 		else if ( score_event == "award" )
 		{
@@ -699,7 +699,14 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	cItem @item;
 	cItem @ammoItem;
 	Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
-	player.restartRace();
+    
+    if (new_team == TEAM_PLAYERS) {
+    
+        if (map.inOvertime) {
+            player.remove("No spawning in overtime. Pleasse wait for the other players to finish.");
+            return;
+        }
+    }
 
 	if ( ent.isGhosting() )
 	return;
@@ -749,12 +756,8 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
 	// make dash 450
 	ent.client.setPMoveDashSpeed( 450 );
-
-	if( map.inOvertime )
-	{
-		player.cancelOvertime();
-		return;
-	}
+    
+    player.restartRace();
 }
 
 /**
@@ -935,10 +938,8 @@ bool GT_MatchStateFinished( int incomingMatchState )
 {
     if (incomingMatchState == MATCH_STATE_POSTMATCH)
     {
-        if (!map.inOvertime)
-            map.startOvertime();
-
-          return map.allowEndGame();
+        map.startOvertime();
+        return map.allowEndGame();
     }
 
     if ( match.getState() == MATCH_STATE_POSTMATCH ) // LOL this should not be in here ;)
@@ -1198,7 +1199,10 @@ void GT_InitGametype()
 	}
 
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
+    {
 		g_timelimit.set( "0" );
+    }
+        
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
 	RS_LoadMapList( g_freestyle.getInteger() );
