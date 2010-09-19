@@ -1,3 +1,5 @@
+#include "../qcommon/md5.h"
+
 char *maplist[5000];
 unsigned int mapcount;
 

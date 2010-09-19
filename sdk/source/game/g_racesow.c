@@ -19,6 +19,8 @@ cvar_t *rs_mysqlDb;
 
 cvar_t *rs_queryGetPlayerAuth;
 cvar_t *rs_queryGetPlayerAuthByToken;
+cvar_t *rs_queryGetPlayerByToken;
+cvar_t *rs_querySetTokenForPlayer;
 cvar_t *rs_queryGetPlayer;
 cvar_t *rs_queryAddPlayer;
 cvar_t *rs_queryGetPlayerPoints;
@@ -86,6 +88,15 @@ pthread_attr_t threadAttr;
 pthread_mutex_t mutexsum;
 pthread_mutex_t mutex_callback;
 
+/**
+ * callback queue variables used for de-threadization of mysql calls 
+ */
+#define MAX_SIZE_CALLBACK_QUEUE 50
+int callback_queue_size=0;
+int callback_queue_write_index=0;
+int callback_queue_read_index=0;
+int callback_queue[MAX_SIZE_CALLBACK_QUEUE][8];
+
 static int MysqlConnected;
 /**
  * Initializes racesow specific stuff
@@ -139,6 +150,8 @@ void RS_MysqlLoadInfo( void )
     
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryGetPlayerByToken        = trap_Cvar_Get( "rs_queryGetPlayerByToken",	    "SELECT `id` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
+    rs_querySetTokenForPlayer       = trap_Cvar_Get( "rs_querySetTokenForPlayer",	    "UPDATE `player` SET `auth_token` = MD5('%s%s') WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
 	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
@@ -168,6 +181,7 @@ void RS_MysqlLoadInfo( void )
 	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT id, name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s';", CVAR_ARCHIVE );
+    
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
     
@@ -250,17 +264,6 @@ void RS_Shutdown()
 	// removed it because of crash in win32 implementation, also this may be not necessary at all because this isnt in a thread
 	//pthread_exit(NULL);
 }
-
-
-
-/**
- * callback queue variables used for de-threadization of mysql calls 
- */
-#define MAX_SIZE_CALLBACK_QUEUE 50
-int callback_queue_size=0;
-int callback_queue_write_index=0;
-int callback_queue_read_index=0;
-int callback_queue[MAX_SIZE_CALLBACK_QUEUE][8];
 
 /**
  *
@@ -803,6 +806,15 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         mysql_free_result(mysql_res);
     }
     
+    edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
+    G_PrintMsg(NULL, "test1\n");
+    if( ent->r.inuse && ent->r.client )
+    {
+        G_PrintMsg(NULL, "test2\n");
+        Info_SetValueForKey( ent->r.client->userinfo, "test", "test123456" );
+        ClientUserinfoChanged( ent, ent->r.client->userinfo );
+    }
+    
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, 0);
     
 	free(playerData->name);
@@ -812,6 +824,44 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     return NULL;
 }
 
+// should return a new UNIQUE token for the playerId
+/*
+RS_GenerateNewToken(int playerId)
+{
+    char query[1024];
+
+    while (qtrue)
+    {
+        md5_state_t state;
+        md5_byte_t digest[16];                
+        char hex_output[16*2 + 1];
+        int di;
+
+        md5_init(&state);
+        md5_append(&state, (const md5_byte_t *)in->buffer, in->len);
+        md5_finish(&state, digest);
+        for (di = 0; di < 16; ++di)
+        {
+	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
+        }
+    
+        sprintf(query, rs_queryGetPlayerByToken->string, hex_output, rs_tokenSalt->string);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        if (mysql_fetch_row(mysql_res) == NULL)
+        {
+            sprintf(query, rs_querySetTokenForPlayer->string, hex_output, rs_tokenSalt->string, playerId);
+            mysql_real_query(&mysql, query, strlen(query));
+            RS_CheckMysqlThreadError();
+            return qtrue;
+        }
+    }
+    
+    return qfalse;
+}
+*/
 
 /**
  * Calls the player disappear thread
