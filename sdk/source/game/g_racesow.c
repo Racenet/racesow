@@ -806,6 +806,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         mysql_free_result(mysql_res);
     }
     
+    /*
     edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
     G_PrintMsg(NULL, "test1\n");
     if( ent->r.inuse && ent->r.client )
@@ -814,6 +815,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         Info_SetValueForKey( ent->r.client->userinfo, "test", "test123456" );
         ClientUserinfoChanged( ent, ent->r.client->userinfo );
     }
+    */
     
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, 0);
     
