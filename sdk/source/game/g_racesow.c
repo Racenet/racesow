@@ -1308,7 +1308,7 @@ qboolean RS_MapValidate( char *mapname)
 
     if( strlen( "maps/" ) + strlen( mapname ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
     {
-        G_Printf("%sWarning :%s %s, map name is too long\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
+        G_Printf("%sWarning: %s%s, map name is too long\n", S_COLOR_RED, S_COLOR_WHITE, mapname );
         return qfalse;
     }
 
@@ -1317,13 +1317,13 @@ qboolean RS_MapValidate( char *mapname)
 
     if( !COM_ValidateRelativeFilename( local ) || strchr( local, '/' ) || strchr( local, '.' ) )
     {
-        G_Printf("%sWarning :%s %s, invalid filename\n", S_COLOR_RED, S_COLOR_WHITE, local );
+        G_Printf("%sWarning: %s%s, invalid map-name\n", S_COLOR_RED, S_COLOR_WHITE, local );
         return qfalse;
     }
 
     if ( !trap_ML_FilenameExists( local ) )
     {
-        G_Printf("%sWarning :%s %s, file doesn't exist\n", S_COLOR_RED, S_COLOR_WHITE, local );
+        G_Printf("%sWarning: %s%s, map does not exist\n", S_COLOR_RED, S_COLOR_WHITE, local );
         return qfalse;
     }
 
@@ -1361,7 +1361,9 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
 
        	while( ( row = mysql_fetch_row( mysql_res ) ) ) {
 
-       	    if ( !RS_MapValidate( row[1] ) )
+            G_Printf(va("%smysql check map: %s\n", S_COLOR_WHITE, row[1]));
+        
+            if ( !RS_MapValidate( row[1] ) )
        	        continue;
 
        	    index = atoi( row[0] );
@@ -1394,12 +1396,14 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
     while( t != NULL )
     {
         if ( !RS_MapValidate( t ) )
-            continue;
-
-        size = strlen( t ) + 1;
-        maplist[mapcount]= malloc( size );
-        Q_strncpyz( maplist[mapcount], t, size);
-        mapcount++;
+        {
+        
+            size = strlen( t ) + 1;
+            maplist[mapcount]= malloc( size );
+            Q_strncpyz( maplist[mapcount], t, size);
+            mapcount++;
+        }
+        
         t = strtok( NULL, seps);
     }
 
