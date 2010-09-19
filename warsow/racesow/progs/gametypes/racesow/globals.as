@@ -2,7 +2,7 @@
  * Racesow_Player
  *
  * @package Racesow
- * @version 0.5.4
+ * @version 0.5.5
  */
 /*
 
