@@ -1344,42 +1344,35 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
         MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
         char query[MAX_STRING_CHARS];
-        int size = 0;
+        int size = 0, index = 0;
         mapcount = 0; //if not the mapcount increases each time we call the function
 
         sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", "name");
         mysql_real_query(&mysql, query, strlen(query));
-		RS_CheckMysqlThreadError();
-       	if (mysql_errno(&mysql) != 0) {
+       	if ( mysql_errno(&mysql) ) {
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
             return qfalse;
 	    }
         mysql_res = mysql_store_result(&mysql);
-		RS_CheckMysqlThreadError();
-       	if (mysql_errno(&mysql) != 0) {
+       	if ( mysql_errno(&mysql) ) {
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
             return qfalse;
 	    }
 
-       	if( (unsigned long)mysql_num_rows( mysql_res ) != 0 ) {
-            int index = 0;
+       	while( ( row = mysql_fetch_row( mysql_res ) ) ) {
 
-            while( ( row = mysql_fetch_row( mysql_res ) ) != NULL ) {
+       	    if ( !RS_MapValidate( row[1] ) )
+       	        continue;
 
-                if ( !RS_MapValidate( row[1] ) )
-                  continue;
+       	    index = atoi( row[0] );
+       	    size = strlen( row[1] )+1;
+       	    maplist[index]=malloc( size );
+       	    Q_strncpyz( maplist[index], va( "%s", row[1] ), size );
+       	    mapcount++;
+       	}
 
-                index = atoi( row[0] );
-                size = strlen( row[1] )+1;
-                maplist[index]=malloc( size );
-                Q_strncpyz( maplist[index], va( "%s ", row[1] ), size );
-                mapcount++;
-            }
-        
-        }
-
-        mysql_free_result(mysql_res);
-        return qtrue;
+       	mysql_free_result(mysql_res);
+       	return qtrue;
 }
 
 /**
