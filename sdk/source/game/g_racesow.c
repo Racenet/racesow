@@ -140,7 +140,7 @@ void RS_MysqlLoadInfo( void )
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
 	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL) LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = playtime + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = `playtime` + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMaps		= trap_Cvar_Get( "rs_queryUpdatePlayerMaps",		"UPDATE `player` SET `maps` = (SELECT COUNT(`map_id`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPoints		= trap_Cvar_Get( "rs_queryUpdatePlayerpoints",		"UPDATE `player` SET `points` = (SELECT SUM(`points`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` IN(%s);", CVAR_ARCHIVE );
@@ -418,6 +418,12 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
     struct raceDataStruct *raceData=malloc(sizeof(struct raceDataStruct));
 	pthread_t thread;
 
+    // player finished a race while using a protected nickname
+    if (player_id == 0) {
+    
+        return qfalse;
+    }
+    
     raceData->player_id = player_id;
 	raceData->nick_id= nick_id;
 	raceData->map_id = map_id;
@@ -466,15 +472,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	raceData =(struct raceDataStruct *)in;
     
 	RS_StartMysqlThread();
-
-    if( raceData->player_id == 0 )
-    {
-        // don't insert a race if the player doesn't have a player_id (ie. he's under nick protection)
-		G_Printf(va("did not insert race for a null player (time %d)\n",raceData->race_time));
-		free(raceData);	
-		RS_EndMysqlThread();
-        return NULL;
-    }
     
     // read current points and time
 	sprintf(query, rs_queryGetPlayerMap->string, raceData->player_id, raceData->map_id);
@@ -526,7 +523,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();    
     
-    // when the new time is better than the old one, recompute the points
+    // only when the new time is better than the old one, recompute the points
     if (oldTime == 0 || raceData->race_time < oldTime) {
     
         // reset points in player_map
@@ -822,6 +819,12 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int n
 	int returnCode;
 	struct playtimeDataStruct *playtimeData=malloc(sizeof(struct playtimeDataStruct));
 
+    // player disappeard while using a protected nickname
+    if (player_id == 0) {
+    
+        return qfalse;
+    }
+    
     playtimeData->name=strdup(name);
     playtimeData->map_id=map_id;
 	playtimeData->player_id=player_id;
@@ -860,7 +863,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
 	Q_strncpyz ( name, playtimeData->name, sizeof(name) );
     mysql_real_escape_string(&mysql, name, name, strlen(name));
-
+    
     // increment map playtime
 	sprintf(query, rs_queryUpdateMapPlaytime->string, playtimeData->playtime, playtimeData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
@@ -870,6 +873,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     sprintf(query, rs_queryUpdatePlayerPlaytime->string, playtimeData->playtime, playtimeData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
+    
     
     // increment player map playtime
     sprintf(query, rs_queryUpdatePlayerMapPlaytime->string, playtimeData->player_id, playtimeData->map_id, playtimeData->playtime);
@@ -1433,7 +1437,7 @@ void RS_LoadMaplist( int is_freestyle)
         RS_BasicLoadMaplist( g_maplist->string );
     }
 
-    G_Printf( "Maplist loaded : %u maps found.\n", mapcount );
+    G_Printf( "Maplist loaded: %u maps found.\n", mapcount );
 }
 
 unsigned int RS_GetNumberOfMaps()
