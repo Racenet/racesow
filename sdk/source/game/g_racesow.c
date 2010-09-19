@@ -485,6 +485,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
         {
 			oldPoints = atoi(row[0]);
             oldTime = atoi(row[1]);
+            newPoints = oldPoints; 
         }
     }
 	mysql_free_result(mysql_res);
