@@ -253,8 +253,9 @@ class Racesow_Player
         cString str;
 		uint bestTime;
         uint delta;
+        uint earnedPonts;
         
-        G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
+        // G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
         
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
@@ -299,6 +300,13 @@ class Racesow_Player
                 
         G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( delta ) ) );
+            
+        earnedPonts = newPoints - oldPoints;
+        if (earnedPonts > 0) {
+        
+            this.getClient().addAward( S_COLOR_BLUE + "You earned "+ earnedPonts +" points!" );
+            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPonts +" points!" );
+        }
     }
 
     void setLastRace(Racesow_Player_Race @race)
