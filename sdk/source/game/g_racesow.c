@@ -52,6 +52,7 @@ cvar_t *rs_authField_Token;
 cvar_t *rs_tokenSalt;
 
 cvar_t *g_freestyle;
+cvar_t *rs_loadHighscores;
 
 /**
  * map-list related global variables
@@ -101,6 +102,7 @@ void RS_Init()
 
     rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     g_freestyle = trap_Cvar_Get( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
 
     if ( rs_mysqlEnabled->integer )
     {
@@ -774,29 +776,32 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     }
     mysql_free_result(mysql_res);
     
-    // retrieve personal best
-    if (player_id != 0) {
-    
-        player_id_for_time = player_id; 
-    
-    } else {
-    
-        player_id_for_time = player_id_for_nick;
-    }
-    sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
-    mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
-    if ((row = mysql_fetch_row(mysql_res)) != NULL)
+    if (rs_loadHighscores->integer)
     {
-        if (row[0] !=NULL && row[1] != NULL)
-        {
-            personalBest = atoi(row[1]);
+        // retrieve personal best
+        if (player_id != 0) {
+        
+            player_id_for_time = player_id; 
+        
+        } else {
+        
+            player_id_for_time = player_id_for_nick;
         }
+        sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        if ((row = mysql_fetch_row(mysql_res)) != NULL)
+        {
+            if (row[0] !=NULL && row[1] != NULL)
+            {
+                personalBest = atoi(row[1]);
+            }
+        }
+        
+        mysql_free_result(mysql_res);
     }
-    
-    mysql_free_result(mysql_res);
     
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, 0);
     
