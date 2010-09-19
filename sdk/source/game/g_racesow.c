@@ -1358,11 +1358,9 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
             return qfalse;
 	    }
-
+        
        	while( ( row = mysql_fetch_row( mysql_res ) ) ) {
 
-            G_Printf(va("%smysql check map: %s\n", S_COLOR_WHITE, row[1]));
-        
             if ( !RS_MapValidate( row[1] ) )
        	        continue;
 
