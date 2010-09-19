@@ -305,7 +305,7 @@ class Racesow_Player
         if (earnedPonts > 0) {
         
             this.getClient().addAward( S_COLOR_BLUE + "You earned "+ earnedPonts +" points!" );
-            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPonts +" points!" );
+            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPonts +" points!\n" );
         }
     }
 
