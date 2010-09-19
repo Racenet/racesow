@@ -6122,6 +6122,33 @@ static void asFunc_asGeneric_RS_MapFilterCallback( void *gen )
             (unsigned int)G_asGeneric_GetArgInt(gen, 0)));
 }
 
+// RS_Maplist
+static qboolean asFunc_RS_Maplist(int player_id, unsigned int page )
+{
+     return RS_Maplist( player_id, page);
+}
+
+static void asFunc_asGeneric_RS_Maplist( void *gen )
+{
+    G_asGeneric_SetReturnBool( gen, asFunc_RS_Maplist(
+            (int)G_asGeneric_GetArgInt(gen, 0),
+            (unsigned int)G_asGeneric_GetArgInt(gen, 1)));
+}
+
+// RS_MaplistCallback
+static asstring_t *asFunc_RS_MaplistCallback(int player_id )
+{
+     char *result;
+     result = RS_MaplistCallback(player_id);
+     return objectString_FactoryBuffer(result, strlen(result));
+}
+
+static void asFunc_asGeneric_RS_MaplistCallback( void *gen )
+{
+    G_asGeneric_SetReturnAddress( gen, asFunc_RS_MaplistCallback(
+            (unsigned int)G_asGeneric_GetArgInt(gen, 0)));
+}
+
 // RS_LoadMapList
 static void asFunc_RS_LoadMapList( int is_freestyle )
 {
@@ -6893,7 +6920,9 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "void RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
+	{ "void RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},
     { "cString @RS_MapFilterCallback( int )", asFunc_RS_MapFilterCallback, asFunc_asGeneric_RS_MapFilterCallback },
+    { "cString @RS_MaplistCallback( int )", asFunc_RS_MaplistCallback, asFunc_asGeneric_RS_MaplistCallback },
 	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},
 	// !racesow

@@ -67,6 +67,7 @@ const unsigned int RACESOW_CALLBACK_HIGHSCORES = 3;
 const unsigned int RACESOW_CALLBACK_APPEAR = 4;
 const unsigned int RACESOW_CALLBACK_RACE = 5;
 const unsigned int RACESOW_CALLBACK_MAPFILTER = 6;
+const unsigned int RACESOW_CALLBACK_MAPLIST = 7;
 
 /**
  * MySQL Socket
@@ -895,12 +896,12 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 /**
  * Store the result of filter requests from players.
  */
-char *filter_players[MAX_CLIENTS]={0};
+char *players_query[MAX_CLIENTS]={0};
 
 /**
  * Thread for filter request.
  *
- * Store the result in filter_players and push RACESOW_CALLBACK_MAPFILTER
+ * Store the result in players_query and push RACESOW_CALLBACK_MAPFILTER
  * to the callback queue.
  *
  * @param in The input data, cast to filterDataStruct
@@ -967,8 +968,8 @@ void *RS_MysqlMapFilter_Thread( void *in)
     }
 
     size = strlen( result )+1;
-    filter_players[filterData->player_id]=malloc(size);
-    Q_strncpyz( filter_players[filterData->player_id], result, size);
+    players_query[filterData->player_id]=malloc(size);
+    Q_strncpyz( players_query[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, count, 0, 0, 0, 0, 0);
 
 
@@ -1073,8 +1074,8 @@ void *RS_BasicMapFilter_Thread( void *in)
     }
 
     size = strlen( result ) + 1;
-    filter_players[filterData->player_id] = malloc( size );
-    Q_strncpyz( filter_players[filterData->player_id], result, size);
+    players_query[filterData->player_id] = malloc( size );
+    Q_strncpyz( players_query[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, filterCount, 0, 0, 0, 0, 0);
 
     free(filterData->filter);
@@ -1122,11 +1123,118 @@ qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
  */
 char *RS_MapFilterCallback(int player_id )
 {
-    unsigned int size = strlen(filter_players[player_id])+1;
+    unsigned int size = strlen(players_query[player_id])+1;
     char *result=malloc(size);
-    Q_strncpyz(result, filter_players[player_id] , size);
-    free(filter_players[player_id]);
-    filter_players[player_id] = NULL;
+    Q_strncpyz(result, players_query[player_id] , size);
+    free(players_query[player_id]);
+    players_query[player_id] = NULL;
+    return result;
+}
+
+/**
+ * Maplist thread, parse the maplist array
+ *
+ * @param in Input data, cast to maplistDataStruct
+ */
+void *RS_Maplist_Thread(void *in)
+{
+    struct maplistDataStruct *maplistData = (struct maplistDataStruct *)in ;
+    int i = 0, mapsFound = 0, totalPages = 0, size = 0;
+    int page = maplistData->page;
+    const int MAPS_PER_PAGE = 15;
+    char result[MAX_STRING_CHARS]; //stores the result string
+    result[0]='\0';
+
+    if ( (mapcount/MAPS_PER_PAGE)*MAPS_PER_PAGE == mapcount )
+        totalPages = mapcount/MAPS_PER_PAGE;
+    else
+        totalPages = mapcount/MAPS_PER_PAGE + 1;
+
+    if ( ( page > totalPages ) || (page < 1 ) )
+    {
+        Q_strncatz( result , va( "You should enter a page number between%s %d%s and%s %d%s\n",
+                S_COLOR_YELLOW,
+                1,
+                S_COLOR_WHITE,
+                S_COLOR_YELLOW,
+                totalPages,
+                S_COLOR_WHITE ), sizeof ( result ) );
+    }
+    else
+    {
+        Q_strncatz( result, va( "Printing page%s %d/%d%s \n",
+                S_COLOR_YELLOW,
+                page,
+                totalPages,
+                S_COLOR_YELLOW ),  sizeof( result ) );
+
+        mapsFound = 0, i = 0;
+
+        while( ( i < ( sizeof( maplist ) / sizeof( char* ) ) ) && ( mapsFound <= page*MAPS_PER_PAGE ) )
+        {
+            if ( !( maplist[i] == NULL ) )
+            {
+                mapsFound++;
+                if ( ( mapsFound >= ((page-1)*MAPS_PER_PAGE + 1) ) && ( mapsFound <= page*MAPS_PER_PAGE  ) )
+                    Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof( result ) );
+
+            }
+            i++;
+        }
+    }
+
+    size = strlen( result ) + 1;
+    players_query[maplistData->player_id] = malloc( size );
+    Q_strncpyz( players_query[maplistData->player_id], result, size);
+    RS_PushCallbackQueue(RACESOW_CALLBACK_MAPLIST, maplistData->player_id, 0, 0, 0, 0, 0, 0);
+
+    free(maplistData);
+    RS_EndMysqlThread();
+
+    return NULL;
+}
+
+/**
+ * Maplist function registered in AS API.
+ *
+ * Calls RS_Maplist
+ *
+ * @param player_id Id of the player making the request
+ * @param Page number of the result page
+ * @return Success boolean
+ */
+qboolean RS_Maplist(int player_id, unsigned int page)
+{
+    pthread_t thread;
+    int returnCode;
+    struct maplistDataStruct *maplistdata=malloc(sizeof(struct maplistDataStruct));
+    maplistdata->player_id = player_id;
+    maplistdata->page = page;
+    returnCode = pthread_create(&thread, &threadAttr, RS_Maplist_Thread, (void *)maplistdata);
+
+    if (returnCode) {
+
+        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        return qfalse;
+    }
+
+    return qtrue;
+}
+
+/**
+ * This function is called from angelscript when RACESOW_CALLBACK_MAPLIST is
+ * popped out of the callback queue.
+ *
+ * @param player_id Id of the player making the request
+ * @return the result string to print to the player
+ */
+char *RS_MaplistCallback(int player_id )
+{
+    unsigned int size = strlen(players_query[player_id])+1;
+    char *result=malloc(size);
+    Q_strncpyz(result, players_query[player_id] , size);
+    free(players_query[player_id]);
+    players_query[player_id] = NULL;
     return result;
 }
 

@@ -14,6 +14,7 @@ const uint RACESOW_CALLBACK_HIGHSCORES = 3;
 const uint RACESOW_CALLBACK_APPEAR = 4;
 const uint RACESOW_CALLBACK_RACE = 5;
 const uint RACESOW_CALLBACK_MAPFILTER = 6;
+const uint RACESOW_CALLBACK_MAPLIST = 7;
 
  /**
  * Racesow_ThinkCallbackQueue()
@@ -73,5 +74,16 @@ void Racesow_ThinkCallbackQueue()
 		        player.isWaitingForCommand=false;
 		    }
 		    break;
+
+        case RACESOW_CALLBACK_MAPLIST:
+            @player = Racesow_GetPlayerByNumber(arg1);
+
+            if ( @player != null )
+            {
+                cString result = RS_MaplistCallback(arg1);
+                player.sendMessage(result);
+                player.isWaitingForCommand=false;
+            }
+            break;
    }
 }

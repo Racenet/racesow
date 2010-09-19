@@ -333,16 +333,22 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
     else if ( ( cmdString == "maplist") )
     {
-        cString arg = argsString.getToken( 0 );
-        if ( arg.len() < 1 )
+        cString pagenumString = argsString.getToken( 0 );
+        if( player.isWaitingForCommand )
         {
-            client.printMessage( "Usage : maplist <pagenum>.\n");
-            player.printMapList ( 1 , mapcount , MAPS_PER_PAGE , maplist);
+            player.sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous top command\n");
+            return false;
         }
+
+        player.isWaitingForCommand=true;
+        int page = 0;
+        if ( pagenumString.len() < 1 )
+            page = 1;
         else
-        {
-            player.printMapList ( arg.toInt() , mapcount , MAPS_PER_PAGE , maplist);
-        }
+            page = pagenumString.toInt();
+
+        RS_Maplist(client.playerNum(),page);
     }
 
     else if ( cmdString == "mapfilter" )
@@ -356,6 +362,14 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         }
         else
         {
+            if( player.isWaitingForCommand )
+            {
+                player.sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
+                        +"results of your previous top command\n");
+                return false;
+            }
+
+            player.isWaitingForCommand=true;
             cString filter = argsString.getToken( 0 );
             cString pageString = argsString.getToken( 1 );
             int page = 0;

@@ -71,6 +71,12 @@ struct filterDataStruct {
     unsigned int page;
 };
 
+struct maplistDataStruct {
+
+    int player_id;
+    unsigned int page;
+};
+
 qboolean RS_MapValidate( char *mapname);
 
 extern void RS_Init( void );
@@ -105,5 +111,8 @@ extern unsigned int RS_GetNumberOfMaps();
 
 extern qboolean RS_MapFilter(int player_id, char *filter,unsigned int page);
 extern char *RS_MapFilterCallback(int player_id);
+
+extern qboolean RS_Maplist(int player_id, unsigned int page);
+extern char *RS_MaplistCallback(int player_id);
 
 extern char *RS_ChooseNextMap( void );
