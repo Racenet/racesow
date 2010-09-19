@@ -1393,7 +1393,7 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
 
     while( t != NULL )
     {
-        if ( !RS_MapValidate( t ) )
+        if ( RS_MapValidate( t ) )
         {
         
             size = strlen( t ) + 1;
