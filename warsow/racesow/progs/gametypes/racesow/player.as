@@ -124,6 +124,7 @@ class Racesow_Player
 	 * @var Racesow_Player_Race
 	 */
 	Racesow_Player_Race @race;
+	Racesow_Player_Race @lastRace;
 
 	/**
 	 * The weapon which was used before the noclip command, in order to restore it
@@ -287,6 +288,8 @@ class Racesow_Player
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
+                
+            map.getStatsHandler().getHighScore(0).fromRace(this.lastRace);
         }
         else if ( oldTime == 0 || newTime < oldTime )
         {
@@ -296,16 +299,13 @@ class Racesow_Player
                 
         G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : str + TimeToString( delta ) ) );
-        
-        /*
-		// update servBest
-		if (servBest==0 || raceTime<servBest)
-        {
-			this.highScores[0].fromRace(race);
-        }
-        */
     }
 
+    void setLastRace(Racesow_Player_Race @race)
+    {
+        @this.lastRace = @race;
+    }
+    
     /**
 	 * Get the player's id
 	 * @return int

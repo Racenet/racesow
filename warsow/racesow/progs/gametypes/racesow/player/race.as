@@ -216,6 +216,8 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         this.stopTime = levelTime;
 		this.timeStamp = localTime;
 		
+        this.player.setLastRace(@this);
+        
 		return true;
 	}
 	
