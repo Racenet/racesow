@@ -6135,7 +6135,7 @@ static void asFunc_asGeneric_RS_Maplist( void *gen )
 }
 
 // RS_MaplistCallback
-static asstring_t *asFunc_RS_MaplistCallback(int player_id )
+static asstring_t *asFunc_RS_MaplistCallback( int player_id )
 {
      char *result;
      result = RS_MaplistCallback(player_id);
@@ -6148,6 +6148,19 @@ static void asFunc_asGeneric_RS_MaplistCallback( void *gen )
             (unsigned int)G_asGeneric_GetArgInt(gen, 0)));
 }
 
+// RS_NextMap
+static asstring_t *asFunc_RS_NextMap( )
+{
+     char *result;
+     result = RS_ChooseNextMap( );
+     return objectString_FactoryBuffer(result, strlen(result));
+}
+
+static void asFunc_asGeneric_RS_NextMap( void *gen )
+{
+    G_asGeneric_SetReturnAddress( gen, asFunc_RS_NextMap( ) );
+}
+
 // RS_LoadMapList
 static void asFunc_RS_LoadMapList( int is_freestyle )
 {
@@ -6157,7 +6170,6 @@ static void asFunc_asGeneric_RS_LoadMapList( void *gen )
 {
 	asFunc_RS_LoadMapList( (int)G_asGeneric_GetArgInt( gen, 0 ) );
 }
-
 
 // RS_GetNumberOfMaps
 static int asFunc_RS_GetNumberOfMaps()
@@ -6270,7 +6282,6 @@ static void asFunc_asGeneric_RS_MysqlPrintHighscoresTo( void *gen )
 		(edict_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(int)G_asGeneric_GetArgInt(gen, 1)));
 }
-
 
 // RS_QueryCallbackQueue
 static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7 )
@@ -6922,6 +6933,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},
     { "cString @RS_MapFilterCallback( int )", asFunc_RS_MapFilterCallback, asFunc_asGeneric_RS_MapFilterCallback },
     { "cString @RS_MaplistCallback( int )", asFunc_RS_MaplistCallback, asFunc_asGeneric_RS_MaplistCallback },
+    { "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },
 	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},
 	// !racesow
