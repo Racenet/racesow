@@ -437,6 +437,10 @@
 			// now the player is authed!
             this.setPlayerId(playerId);			
 			this.authorizationsMask = uint(authMask);
+			if ( rs_loadHighscores.getBool() && ( this.player.bestRaceTime < personalBest ) )
+			{
+			    this.player.bestRaceTime = personalBest;
+			}
         }
         
         
