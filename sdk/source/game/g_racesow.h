@@ -117,4 +117,4 @@ extern char *RS_MapFilterCallback(int player_id);
 extern qboolean RS_Maplist(int player_id, unsigned int page);
 extern char *RS_MaplistCallback(int player_id);
 
-extern char *RS_ChooseNextMap( void );
+extern char *RS_ChooseNextMap();

@@ -351,6 +351,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         RS_Maplist(client.playerNum(),page);
     }
 
+    else if ( ( cmdString == "nextmap" ) )
+    {
+        player.sendMessage( RS_NextMap() + "\n" );
+        return true;
+    }
+
     else if ( cmdString == "mapfilter" )
     {
         cString usage = S_COLOR_ORANGE + "Usage : " + S_COLOR_WHITE + "mapfilter <filter> <pagenum>.\n";
@@ -1194,6 +1200,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "position" );
 	G_RegisterCommand( "maplist" );
 	G_RegisterCommand( "mapfilter" );
+	G_RegisterCommand( "nextmap" );
 	G_RegisterCommand( "timeleft" );
 	G_RegisterCommand( "quad" );
 

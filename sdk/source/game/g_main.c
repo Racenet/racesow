@@ -445,6 +445,7 @@ qboolean G_AllowDownload( edict_t *ent, const char *requestname, const char *upl
 //
 //Returns the created target changelevel
 //=================
+/* racesow : was only used in next function, comment to avoid warning
 static edict_t *CreateTargetChangeLevel( char *map )
 {
 	edict_t *ent;
@@ -455,6 +456,7 @@ static edict_t *CreateTargetChangeLevel( char *map )
 	ent->map = level.nextmap;
 	return ent;
 }
+*/
 
 /* racesow : replaced by RS_ChooseNextMap
 //=================

@@ -1675,7 +1675,7 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta )
 		projectile->waterlevel = ( G_PointContents4D( projectile->s.origin, projectile->timeDelta ) & MASK_WATER ) ? qtrue : qfalse;
 }
 
-char *RS_ChooseNextMap( void )
+char *RS_ChooseNextMap()
 {
     edict_t *ent = NULL;
     int index = 0, foundMaps = 0, foundSentinel = 0, seed = 0, i = 0;
