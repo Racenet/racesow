@@ -177,27 +177,31 @@ static char *G_VoteMapCurrent( void )
  */
 qboolean RS_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
 {
-    int index = brandom( 0, mapcount );
-    int i = 0;
+    int index = brandom( 1, mapcount );
+    int i = 0, size = 0;
 
     if( !first )
         return qtrue;
 
-    while( i < ( sizeof( maplist )/sizeof( char* ) ) )
+    while( i < ( sizeof( maplist )/sizeof( char* ) )  && ( index > 0 ))
     {
-        if( !( maplist[i] == NULL ) && Q_stricmp( maplist[i], level.mapname ) )
-        {
-            if ( index == 0){
-                vote->data = G_Malloc( MAX_CONFIGSTRING_CHARS );
-                memcpy( vote->data, maplist[i], MAX_CONFIGSTRING_CHARS );
-                return qtrue;
-            }
+        if( ( maplist[i] != NULL ) && Q_stricmp( maplist[i], level.mapname ) )
             index--;
-        }
+
         i++;
     }
 
-    return qfalse;
+    if ( index == 0){
+        size = strlen( maplist[i-1] ) + 1;
+        vote->data = G_Malloc( size );
+        Q_strncpyz(vote->data, maplist[i-1], size);
+        return qtrue;
+    }
+    else
+    {
+        G_PrintMsg( vote->caller, "%sCouldn't find a random map, maybe try again.\n", S_COLOR_RED );
+        return qfalse;
+    }
 }
 
 /**

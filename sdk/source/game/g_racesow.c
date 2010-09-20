@@ -178,7 +178,7 @@ void RS_MysqlLoadInfo( void )
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
-	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT id, name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
+	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s';", CVAR_ARCHIVE );
     
@@ -1038,7 +1038,7 @@ void *RS_BasicMapFilter_Thread( void *in)
                     {
                         mapsFound++;
                         if ( ( mapsFound >= ((page-1)*MAPS_PER_PAGE + 1) ) && ( mapsFound <= page*MAPS_PER_PAGE  ) )
-                            Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof( result ) );
+                            Q_strncatz( result, va( "%s#%4d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof( result ) );
 
                     }
                 }
@@ -1115,7 +1115,7 @@ void *RS_Maplist_Thread(void *in)
     struct maplistDataStruct *maplistData = (struct maplistDataStruct *)in ;
     int i = 0, mapsFound = 0, totalPages = 0, size = 0;
     int page = maplistData->page;
-    const int MAPS_PER_PAGE = 15;
+    const int MAPS_PER_PAGE = 20;
     char result[MAX_STRING_CHARS]; //stores the result string
     result[0]='\0';
 
@@ -1150,7 +1150,7 @@ void *RS_Maplist_Thread(void *in)
             {
                 mapsFound++;
                 if ( ( mapsFound >= ((page-1)*MAPS_PER_PAGE + 1) ) && ( mapsFound <= page*MAPS_PER_PAGE  ) )
-                    Q_strncatz( result, va( "%s#%02d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof( result ) );
+                    Q_strncatz( result, va( "%s#%4d%s : %s\n", S_COLOR_ORANGE, i, S_COLOR_WHITE, maplist[i] ),  sizeof( result ) );
 
             }
             i++;
@@ -1430,7 +1430,7 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
         MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
         char query[MAX_STRING_CHARS];
-        int size = 0, index = 0;
+        int size = 0;
         mapcount = 0; //if not the mapcount increases each time we call the function
 
         sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", "name");
@@ -1447,14 +1447,13 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
         
        	while( ( row = mysql_fetch_row( mysql_res ) ) ) {
 
-            if ( !RS_MapValidate( row[1] ) )
+            if ( !RS_MapValidate( row[0] ) )
        	        continue;
 
-       	    index = atoi( row[0] );
-       	    size = strlen( row[1] )+1;
-       	    maplist[index]=malloc( size );
-       	    Q_strncpyz( maplist[index], va( "%s", row[1] ), size );
-       	    mapcount++;
+       	    size = strlen( row[0] )+1;
+       	    maplist[mapcount]=malloc( size );
+       	    Q_strncpyz( maplist[mapcount], va( "%s", row[0] ), size );
+            mapcount++;
        	}
 
        	mysql_free_result(mysql_res);
