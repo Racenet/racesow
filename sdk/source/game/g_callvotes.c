@@ -183,18 +183,21 @@ qboolean RS_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
     if( !first )
         return qtrue;
 
-    while( i < ( sizeof( maplist )/sizeof( char* ) )  && ( index > 0 ))
+    while( i < ( sizeof( maplist )/sizeof( char* ) ) )
     {
         if( ( maplist[i] != NULL ) && Q_stricmp( maplist[i], level.mapname ) )
             index--;
+
+        if ( index == 0)
+            break;
 
         i++;
     }
 
     if ( index == 0){
-        size = strlen( maplist[i-1] ) + 1;
+        size = strlen( maplist[i] ) + 1;
         vote->data = G_Malloc( size );
-        Q_strncpyz(vote->data, maplist[i-1], size);
+        Q_strncpyz(vote->data, maplist[i], size);
         return qtrue;
     }
     else
@@ -208,8 +211,7 @@ qboolean RS_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
  * Execute the randmap vote
  */
 void RS_VoteRandmapPassed( callvotedata_t *vote){
-    G_Printf("%s\n",vote->data);
-    Q_strncpyz( level.forcemap, Q_strlwr(vote->data) , sizeof( level.forcemap ) );
+    Q_strncpyz( level.forcemap, Q_strlwr(vote->data) , strlen(vote->data)+1 );
     G_EndMatch();
 }
 
