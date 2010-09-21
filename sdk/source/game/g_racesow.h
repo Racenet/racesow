@@ -84,6 +84,8 @@ qboolean RS_MapValidate( char *mapname);
 extern void RS_Init( void );
 extern void RS_Shutdown( void );
 
+char * RS_GenerateNewToken( int );
+
 extern qboolean RS_MysqlLoadMap();
 extern void *RS_MysqlLoadMap_Thread( void *in );
 

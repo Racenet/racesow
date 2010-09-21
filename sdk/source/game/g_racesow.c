@@ -150,7 +150,6 @@ void RS_MysqlLoadInfo( void )
     
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryGetPlayerByToken        = trap_Cvar_Get( "rs_queryGetPlayerByToken",	    "SELECT `id` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_querySetTokenForPlayer       = trap_Cvar_Get( "rs_querySetTokenForPlayer",	    "UPDATE `player` SET `auth_token` = MD5('%s%s') WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
@@ -747,12 +746,31 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
             {
                 player_id = atoi(row[0]);
                 auth_mask = atoi(row[1]);
+                
+                if (row[2] != NULL) 
+                {
+                    Q_strncpyz(authToken, row[2], sizeof(authToken));
+                }
             }
         }
         
         mysql_free_result(mysql_res);
     }
+    
+    if (!Q_stricmp( authToken, "" ) && player_id != 0)
+    {
+        char *newToken = RS_GenerateNewToken(player_id);
+        Q_strncpyz ( authToken, newToken, sizeof(authToken) );
+        free(newToken);
         
+        edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
+        if( ent->r.inuse && ent->r.client )
+        {
+            // G_PrintMsg(ent, "Your NEW TOKEN  is '%s' keep it secure!\n", authToken);
+            //Info_SetValueForKey( ent->r.client->userinfo, "test", "test123456" );
+            //ClientUserinfoChanged( ent, ent->r.client->userinfo );
+        }
+    }
     
     // try to get information about the player the nickname belongs to
     sprintf(query, rs_queryGetPlayer->string, simplified);
@@ -806,17 +824,6 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         mysql_free_result(mysql_res);
     }
     
-    /*
-    edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
-    G_PrintMsg(NULL, "test1\n");
-    if( ent->r.inuse && ent->r.client )
-    {
-        G_PrintMsg(NULL, "test2\n");
-        Info_SetValueForKey( ent->r.client->userinfo, "test", "test123456" );
-        ClientUserinfoChanged( ent, ent->r.client->userinfo );
-    }
-    */
-    
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, 0);
     
 	free(playerData->name);
@@ -826,28 +833,44 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     return NULL;
 }
 
+
 // should return a new UNIQUE token for the playerId
-/*
-RS_GenerateNewToken(int playerId)
+char *RS_GenerateNewToken(int playerId)
 {
     char query[1024];
 
     while (qtrue)
     {
+        static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+        
+        MYSQL_ROW  row;
+        MYSQL_RES  *mysql_res;
+        
+        int di, i;
         md5_state_t state;
-        md5_byte_t digest[16];                
-        char hex_output[16*2 + 1];
-        int di;
+        md5_byte_t digest[16];
+        char *str = (char *)malloc(33);
+        char *hex_output = (char *)malloc(16*2+1);
 
+        srand((unsigned)time(NULL));
+        for (i = 0; i < 32; ++i)
+        {
+            str[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+        }
+        str[32] = 0;
+        
         md5_init(&state);
-        md5_append(&state, (const md5_byte_t *)in->buffer, in->len);
+        md5_append(&state, (const md5_byte_t *)str, 32);
         md5_finish(&state, digest);
         for (di = 0; di < 16; ++di)
         {
 	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
         }
     
-        sprintf(query, rs_queryGetPlayerByToken->string, hex_output, rs_tokenSalt->string);
+        sprintf(query, rs_queryGetPlayerAuthByToken->string, hex_output, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
@@ -857,13 +880,16 @@ RS_GenerateNewToken(int playerId)
             sprintf(query, rs_querySetTokenForPlayer->string, hex_output, rs_tokenSalt->string, playerId);
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError();
-            return qtrue;
+            
+            mysql_free_result(mysql_res);
+            return hex_output;
         }
+        
+        mysql_free_result(mysql_res);
     }
     
-    return qfalse;
+    return NULL;
 }
-*/
 
 /**
  * Calls the player disappear thread
