@@ -397,6 +397,11 @@
     
         //this.player.sendMessage("PlayerId: " + playerId + ", mask: " + authMask + ". idForNick: " + playerIdForNick + ", mask: " + authMaskForNick + ". authd: "+ (this.isAuthenticated() ? "yes" : "no"));
     
+        if ( rs_loadHighscores.getBool() )
+		{
+		    this.player.bestRaceTime = personalBest;
+		}
+    
         // if no authentication in teh callback
         if (playerId == 0)
         {
@@ -437,12 +442,7 @@
 			// now the player is authed!
             this.setPlayerId(playerId);			
 			this.authorizationsMask = uint(authMask);
-			if ( rs_loadHighscores.getBool() && ( this.player.bestRaceTime < personalBest ) )
-			{
-			    this.player.bestRaceTime = personalBest;
-			}
         }
-        
         
         // nick is protected, players is logged in but the nick does not belong to him!
         if ( authMaskForNick != 0 && playerId != playerIdForNick)
@@ -456,7 +456,5 @@
 			G_PrintMsg(null, this.player.getName() + S_COLOR_RED + " is not authenticated...\n");
             
         }
-        
-        
     }
 }
