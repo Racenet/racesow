@@ -766,7 +766,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
         if( ent->r.inuse && ent->r.client )
         {
-            // G_PrintMsg(ent, "Your NEW TOKEN  is '%s' keep it secure!\n", authToken);
+            //G_PrintMsg(ent, "Your NEW TOKEN  is '%s' keep it secure!\n", authToken);
             //Info_SetValueForKey( ent->r.client->userinfo, "test", "test123456" );
             //ClientUserinfoChanged( ent, ent->r.client->userinfo );
         }
@@ -846,9 +846,7 @@ char *RS_GenerateNewToken(int playerId)
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz";
         
-        MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
-        
         int di, i;
         md5_state_t state;
         md5_byte_t digest[16];
@@ -869,6 +867,7 @@ char *RS_GenerateNewToken(int playerId)
         {
 	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
         }
+        free(str);
     
         sprintf(query, rs_queryGetPlayerAuthByToken->string, hex_output, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
