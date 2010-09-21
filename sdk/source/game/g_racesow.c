@@ -838,6 +838,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 char *RS_GenerateNewToken(int playerId)
 {
     char query[1024];
+    char *hex_output = (char *)malloc(16*2+1);
+    srand((unsigned)time(NULL));
 
     while (qtrue)
     {
@@ -850,10 +852,9 @@ char *RS_GenerateNewToken(int playerId)
         int di, i;
         md5_state_t state;
         md5_byte_t digest[16];
-        char *str = (char *)malloc(33);
-        char *hex_output = (char *)malloc(16*2+1);
+        char str[33];
+        hex_output[0] = 0;
 
-        srand((unsigned)time(NULL));
         for (i = 0; i < 32; ++i)
         {
             str[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
@@ -867,7 +868,6 @@ char *RS_GenerateNewToken(int playerId)
         {
 	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
         }
-        free(str);
     
         sprintf(query, rs_queryGetPlayerAuthByToken->string, hex_output, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
