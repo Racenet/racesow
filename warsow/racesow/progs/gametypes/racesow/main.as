@@ -14,6 +14,9 @@ const uint RACESOW_AUTH_ADMIN		= 30;
 
 int numCheckpoints = 0;
 bool demoRecording = false;
+bool firstAnnouncement = false;
+bool secondAnnouncement = false;
+bool thirdAnnouncement = false;
 const int MAX_RECORDS = 10;
 const int MAPS_PER_PAGE = 20;
 int oldTimelimit; //for restoring the old value
@@ -823,6 +826,21 @@ void GT_ThinkRules()
 	if ( map.getStatsHandler().logTime == 0 && localTime != 0 )
 		map.getStatsHandler().logTime = localTime;
 
+	if ( !firstAnnouncement && ( ( match.duration() - levelTime ) < 180000 ) && ( match.duration() >= 180000 ) )
+	{
+	    firstAnnouncement = true;
+	    G_PrintMsg( null, S_COLOR_GREEN + "3 minutes left...\n");
+	}
+    if ( !secondAnnouncement && ( ( match.duration() - levelTime ) < 120000 ) && ( match.duration() >= 120000 ) )
+    {
+        secondAnnouncement = true;
+        G_PrintMsg( null, S_COLOR_YELLOW + "2 minutes left...\n");
+    }
+    if ( !thirdAnnouncement && ( ( match.duration() - levelTime ) < 60000 ) && ( match.duration() >= 60000 ) )
+    {
+        thirdAnnouncement = true;
+        G_PrintMsg( null, S_COLOR_RED + "1 minute left...\n");
+    }
 
 	if( levelTime > nextTimeUpdate )
 	{

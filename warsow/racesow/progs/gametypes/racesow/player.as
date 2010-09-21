@@ -1226,64 +1226,6 @@ class Racesow_Player
 		return true;
 	}
 
-        /**
-         * Print the map list
-         * @param uint pageNum
-         * @param uint mapCount
-         * @param uint pagesPerPage
-         * @param cString mapList
-         * @return void
-         */
-
-        void printMapList(uint pageNum,uint mapCount, uint pagesPerPage, cString mapList )
-        {
-            uint numPages = mapCount/pagesPerPage + 1;
-            if ( (pageNum > numPages) || (pageNum < 1)) {
-                this.sendMessage ( "There are only " + numPages + ".\n" );
-            }
-            this.sendMessage( "Printing page " + pageNum + "/" + numPages + " : \n" );
-            uint mapNumber = ( pageNum - 1 )*( pagesPerPage);
-            uint i = 0 ;
-                while ( ( i < pagesPerPage ) && (mapNumber < mapCount) )
-                {
-                    this.sendMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + mapList.getToken(mapNumber) + "\n");
-                    i++;
-                    mapNumber++;
-                }
-        }
-
-        /** Filter the map list
-         * @param cString filter
-         * @param cString mapList
-         * @param uint mapCount
-         * @return void
-         */
-
-        void filterMapList(cString filter, cString mapList, uint mapCount)
-        {
-            uint mapNumber = 0;
-            uint filterLength = filter.len();
-            this.sendMessage ( "Printing maps containing " + S_COLOR_ORANGE + filter + " :\n");
-
-            while (mapNumber < mapCount)
-            {
-                cString mapName = mapList.getToken( mapNumber );
-                uint mapNameLength = mapName.len();
-
-                if ( mapNameLength >= filterLength )
-                {
-                    for ( uint k = 0 ; k < (mapNameLength - filterLength ) ; k++ )
-                    {
-                        if ( mapName.substr( k,filterLength ) == filter )
-                        {
-                            this.sendMessage ( S_COLOR_ORANGE + "#" + mapNumber + S_COLOR_WHITE +" : " + mapName + "\n");
-                            break;
-                        }
-                    }
-                }
-                mapNumber++;
-            }
-        }
 	/**
 	 * Display the help to the player
 	 * @return bool
