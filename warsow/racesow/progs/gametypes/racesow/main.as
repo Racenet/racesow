@@ -1088,7 +1088,7 @@ void GT_InitGametype()
 	// initalize weapondef config
 	weaponDefInit();
     
-    G_WriteFile( "configs/server/gametypes/race.cfg", "exec configs/server/gametypes/racesow.cfg" );
+    G_WriteFile( "configs/server/gametypes/race.cfg", "" );
     
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
