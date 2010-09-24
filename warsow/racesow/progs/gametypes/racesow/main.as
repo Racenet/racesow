@@ -1072,7 +1072,7 @@ void GT_SpawnGametype()
     		continue;
 		do
 		{
-			if( item.solid == SOLID_NOT ) //connected
+			if( ( item.solid == SOLID_NOT ) && ( ( @item.findTargetingEntity( null ) != null ) && ( item.findTargetingEntity( null ).getClassname() == "target_give" ) ) ) //connected to target_give
 			{
 				@from = @item;
 			}

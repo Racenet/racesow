@@ -32,15 +32,51 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 void replacementItem( cEntity @oldItem )
 {
 	cEntity @ent = @G_SpawnEntity( oldItem.getClassname() );
-	@ent.item = @oldItem.item;
+	cItem @item = @G_GetItem( oldItem.item.tag );
+	@ent.item = @item;
 	ent.setOrigin( oldItem.getOrigin() );
+	ent.type = ET_ITEM;
 	ent.solid = SOLID_TRIGGER;
 	ent.moveType = MOVETYPE_NONE;
 	ent.count = oldItem.count;
 	ent.spawnFlags = oldItem.spawnFlags;
+	ent.svflags &= ~SVF_NOCLIENT;
+	ent.style = oldItem.style;
+	ent.setTargetString( oldItem.getTargetString() );
+	ent.setTargetnameString( oldItem.getTargetnameString() );
+    ent.setupModel( oldItem.item.getModelString(), oldItem.item.getModel2String() );
 	oldItem.solid = SOLID_NOT;
 	oldItem.setClassname( "ASmodel_" + ent.item.getClassname() );
+	ent.wait = oldItem.wait;
+
+	if( ent.wait > 0 )
+	{
+        ent.nextThink = levelTime + ent.wait;
+	}
+
+	if( oldItem.item.type == uint(IT_WEAPON) )
+	{
+        ent.skinNum = oldItem.skinNum;
+        oldItem.freeEntity();
+	}
 	ent.linkEntity();
+}
+
+void replacementItem_think( cEntity @ent )
+{
+    ent.respawnEffect();
+}
+
+void replacementItem_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    if( ent.wait > 0 )
+    {
+        ent.nextThink = levelTime + ent.wait;
+    }
+    else
+    {
+        ent.nextThink = levelTime + 1;
+    }
 }
 
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
@@ -507,6 +543,86 @@ void target_relay( cEntity @ent )
 	//the rest does the use code
 }
 
+void AS_weapon_gunblade_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_machinegun_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_riotgun_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_grenadelauncher_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_rocketlauncher_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_plasmagun_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_lasergun_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_electrobolt_use( cEntity @ent, cEntity @other, cEntity @activator )
+{
+    replacementItem_use( @ent, @other, @activator );
+}
+
+void AS_weapon_gunblade__think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
+void AS_weapon_machinegun_think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
+void AS_weapon_riotgun_think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
+void AS_weapon_grenadelauncher_think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
+void AS_weapon_rocketlauncher_think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
+void AS_weapon_plasmagun_think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
+void AS_weapon_lasergun_think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
+void AS_weapon_electrobolt_think( cEntity @ent )
+{
+    replacementItem_think( @ent );
+}
+
 void AS_weapon_gunblade_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
@@ -686,5 +802,4 @@ void replacementItem_touch( cEntity @ent, cEntity @other )
 		//TODO. Discuss: health system similar to armors??
 	}
 	G_Sound( other, CHAN_ITEM, G_SoundIndex( ent.item.getPickupSoundString() ), 0.875 );
-	ent.respawnEffect();
 }
