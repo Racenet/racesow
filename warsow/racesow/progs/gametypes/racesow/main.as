@@ -932,6 +932,9 @@ void GT_ThinkRules()
         client.setHUDStat( STAT_MESSAGE_BETA, 0 );
 
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
+        if( ( player.client.team == TEAM_SPECTATOR ) && !( player.client.chaseActive ) )
+            @player.race = null;
+
         if ( player.isRacing() )
             client.setHUDStat( STAT_TIME_SELF, (levelTime - player.race.getStartTime()) / 100 );
 
