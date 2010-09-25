@@ -68,6 +68,7 @@ CREATE TABLE `player` (
   `auth_pass` varchar(255) default NULL,
   `auth_token` varchar(255) default NULL,
   `auth_mask` int(11) NOT NULL default '0',
+  `session_token` varchar(255) default NULL,
   `points` int(11) NOT NULL default '0',
   `races` int(11) NOT NULL default '0',
   `playtime` int(11) NOT NULL default '0',
