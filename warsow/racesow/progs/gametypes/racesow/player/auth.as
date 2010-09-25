@@ -395,8 +395,6 @@
         bool hasLogin = this.authenticationName != "" || this.authenticationPass != "";
         cString msg;
     
-        //this.player.sendMessage("PlayerId: " + playerId + ", mask: " + authMask + ". idForNick: " + playerIdForNick + ", mask: " + authMaskForNick + ". authd: "+ (this.isAuthenticated() ? "yes" : "no"));
-    
         if ( rs_loadHighscores.getBool() )
 		{
 		    this.player.bestRaceTime = personalBest;
@@ -437,6 +435,8 @@
                     G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated via token\n" );
                 else if (hasLogin)
                     G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated as "+ this.authenticationName +"\n" );
+                else
+                    G_PrintMsg( null, S_COLOR_WHITE + this.player.getName() + S_COLOR_GREEN + " successfully authenticated via session\n" );
             }
 			
 			// now the player is authed!
@@ -452,7 +452,7 @@
                 this.violateNickProtectionSince = localTime;
             }
             
-			this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION: \n" + S_COLOR_RED + "Please login for the nick '"+ this.player.getName() +"' or change it. Otherwise you will get gicked.\n" );
+			this.player.sendMessage( S_COLOR_RED + "NICKNAME PROTECTION: \n" + S_COLOR_RED + "Please login for the nick '"+ S_COLOR_WHITE + this.player.getName() + S_COLOR_RED + "' or change it. Otherwise you will get gicked.\n" );
 			G_PrintMsg(null, this.player.getName() + S_COLOR_RED + " is not authenticated...\n");
             
         }
