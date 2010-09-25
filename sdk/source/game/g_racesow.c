@@ -19,8 +19,10 @@ cvar_t *rs_mysqlDb;
 
 cvar_t *rs_queryGetPlayerAuth;
 cvar_t *rs_queryGetPlayerAuthByToken;
+cvar_t *rs_queryGetPlayerAuthBySession;
 cvar_t *rs_queryGetPlayerByToken;
 cvar_t *rs_querySetTokenForPlayer;
+cvar_t *rs_querySetSessionForPlayer;
 cvar_t *rs_queryGetPlayer;
 cvar_t *rs_queryAddPlayer;
 cvar_t *rs_queryGetPlayerPoints;
@@ -150,7 +152,9 @@ void RS_MysqlLoadInfo( void )
     
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryGetPlayerAuthBySession  = trap_Cvar_Get( "rs_queryGetPlayerAuthBySession",	"SELECT `id`, `auth_mask` FROM `player` WHERE `session_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
     rs_querySetTokenForPlayer       = trap_Cvar_Get( "rs_querySetTokenForPlayer",	    "UPDATE `player` SET `auth_token` = MD5('%s%s') WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
+    rs_querySetSessionForPlayer     = trap_Cvar_Get( "rs_querySetSessionForPlayer",	    "UPDATE `player` SET `session_token` = '%s' WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
 	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
@@ -674,7 +678,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	char authName[64];
 	char authPass[64];
 	char authToken[64];
-    qboolean hasUserinfo;
+	char sessionToken[64];
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, player_id_for_time;
@@ -682,7 +686,6 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
 	RS_StartMysqlThread();
     
-    hasUserinfo = qfalse;
 	player_id = 0;
 	auth_mask = 0;
 	player_id_for_nick = 0;
@@ -691,6 +694,16 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     personalBest = 0;
     playerData = (struct playerDataStruct*)in;
 
+    edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
+    
+    if( ent->r.client )
+    {
+        char *existingSession = Info_ValueForKey( ent->r.client->userinfo, "racesow_session" );
+        if (existingSession) {
+            Q_strncpyz(sessionToken, existingSession, sizeof(sessionToken));
+        }
+    }
+    
     // escape strings
     Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
     mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
@@ -707,11 +720,30 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     Q_strncpyz ( authToken, playerData->authToken, sizeof(authToken) );
     mysql_real_escape_string(&mysql, authToken, authToken, strlen(authToken));
     
-    // try to authenticate by token
-    if (Q_stricmp( authToken, "" ))
+    // try to authenticate by session
+    if (Q_stricmp( sessionToken, "" ))
     {
-        hasUserinfo = qtrue;
+        sprintf(query, rs_queryGetPlayerAuthBySession->string, sessionToken);
+        mysql_real_query(&mysql, query, strlen(query));
         
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        {
+            if (row[0]!=NULL && row[1]!=NULL )
+            {
+                player_id = atoi(row[0]);
+                auth_mask = atoi(row[1]);
+            }
+        }
+        
+        mysql_free_result(mysql_res);
+    }
+    
+    // try to authenticate by token
+    if (player_id == 0 && Q_stricmp( authToken, "" ))
+    {
         sprintf(query, rs_queryGetPlayerAuthByToken->string, authToken, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
         
@@ -731,9 +763,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     }
    
     // when no token is given or was invalid, try by username and password
-    if (!hasUserinfo && Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
+    if (player_id == 0 && Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
     {
-        hasUserinfo = qtrue;
         sprintf(query, rs_queryGetPlayerAuth->string, authName, authPass, rs_tokenSalt->string);
         
         mysql_real_query(&mysql, query, strlen(query));
@@ -762,14 +793,12 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         char *newToken = RS_GenerateNewToken(player_id);
         Q_strncpyz ( authToken, newToken, sizeof(authToken) );
         free(newToken);
-        
-        edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
+        /*
         if( ent->r.inuse && ent->r.client )
         {
-            //G_PrintMsg(ent, "Your NEW TOKEN  is '%s' keep it secure!\n", authToken);
-            //Info_SetValueForKey( ent->r.client->userinfo, "test", "test123456" );
-            //ClientUserinfoChanged( ent, ent->r.client->userinfo );
+            G_PrintMsg(ent, "%san AUTHENTICATION TOKEN  has been generated for you: '%s' keep it secure!\n", S_COLOR_BLUE, authToken);
         }
+        */
     }
     
     // try to get information about the player the nickname belongs to
@@ -822,6 +851,23 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         }
         
         mysql_free_result(mysql_res);
+    }
+    
+    if (player_id != 0 && ent->r.inuse && ent->r.client)
+    {
+        if (!Q_stricmp(sessionToken, "")) {
+        
+            char *newSession = RS_StartPlayerSession(player_id);
+            if (newSession) {
+                Q_strncpyz(sessionToken, newSession, sizeof(sessionToken));
+                free(newSession);
+            }
+        }
+        
+        // always set him his session token... (may be lost when client changes his userinfo, so better set it immediately before changing a map etc.)
+        // also maybe better do this outside the thread?
+        Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
+        ClientUserinfoChanged( ent, ent->r.client->userinfo );
     }
     
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, 0);
@@ -877,6 +923,62 @@ char *RS_GenerateNewToken(int playerId)
         if (mysql_fetch_row(mysql_res) == NULL)
         {
             sprintf(query, rs_querySetTokenForPlayer->string, hex_output, rs_tokenSalt->string, playerId);
+            mysql_real_query(&mysql, query, strlen(query));
+            RS_CheckMysqlThreadError();
+            
+            mysql_free_result(mysql_res);
+            return hex_output;
+        }
+        
+        mysql_free_result(mysql_res);
+    }
+    
+    return NULL;
+}
+
+// should return a new UNIQUE token for the playerId
+char *RS_StartPlayerSession(int playerId)
+{
+    char query[1024];
+    char *hex_output = (char *)malloc(16*2+1);
+    srand((unsigned)time(NULL));
+
+    while (qtrue)
+    {
+        static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+        
+        MYSQL_RES  *mysql_res;
+        int di, i;
+        md5_state_t state;
+        md5_byte_t digest[16];
+        char str[33];
+        hex_output[0] = 0;
+
+        for (i = 0; i < 32; ++i)
+        {
+            str[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+        }
+        str[32] = 0;
+        
+        md5_init(&state);
+        md5_append(&state, (const md5_byte_t *)str, 32);
+        md5_finish(&state, digest);
+        for (di = 0; di < 16; ++di)
+        {
+	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
+        }
+    
+        sprintf(query, rs_queryGetPlayerAuthBySession->string, hex_output);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        if (mysql_fetch_row(mysql_res) == NULL)
+        {
+            sprintf(query, rs_querySetSessionForPlayer->string, hex_output, playerId);
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError();
             
