@@ -30,6 +30,8 @@ static angelwrap_api_t *angelExport = NULL;
 #define SCRIPT_METHOD_NULL						{ SCRIPT_FUNCTION_NULL, NULL, 0 }
 #define SCRIPT_PROPERTY_NULL					{ NULL, 0 }
 
+//#define GETUNUSED
+
 typedef struct asEnumVal_s
 {
 	const char * const name;
@@ -99,7 +101,7 @@ static qboolean G_asGeneric_GetArgBool( void *gen, unsigned int arg )
 {
 	return (qboolean)G_asGeneric_GetArgByte( gen, arg );
 }
-
+#ifdef GETUNUSED
 static short G_asGeneric_GetArgShort( void *gen, unsigned int arg )
 {
 	qas_argument_t *argument = angelExport->asIScriptGeneric_GetArg( gen, arg, QAS_ARG_UINT16 );
@@ -107,6 +109,7 @@ static short G_asGeneric_GetArgShort( void *gen, unsigned int arg )
 
 	return ( (unsigned short)argument->integer );
 }
+#endif
 
 static int G_asGeneric_GetArgInt( void *gen, unsigned int arg )
 {
@@ -139,7 +142,7 @@ static double G_asGeneric_GetArgDouble( void *gen, unsigned int arg )
 
 	return argument->dvalue;
 }
-
+#ifdef GETUNUSED
 static void *G_asGeneric_GetArgObject( void *gen, unsigned int arg )
 {
 	qas_argument_t *argument = angelExport->asIScriptGeneric_GetArg( gen, arg, QAS_ARG_OBJECT );
@@ -147,6 +150,7 @@ static void *G_asGeneric_GetArgObject( void *gen, unsigned int arg )
 
 	return argument->ptr;
 }
+#endif
 
 static void *G_asGeneric_GetArgAddress( void *gen, unsigned int arg )
 {
@@ -155,7 +159,7 @@ static void *G_asGeneric_GetArgAddress( void *gen, unsigned int arg )
 
 	return argument->ptr;
 }
-
+#ifdef GETUNUSED
 static void *G_asGeneric_GetAddressOfArg( void *gen, unsigned int arg )
 {
 	qas_argument_t *argument = angelExport->asIScriptGeneric_GetArg( gen, arg, QAS_ARG_POINTER );
@@ -163,6 +167,7 @@ static void *G_asGeneric_GetAddressOfArg( void *gen, unsigned int arg )
 
 	return argument->ptr;
 }
+#endif
 
 static void G_asGeneric_SetReturnByte( void *gen, qbyte value )
 {
@@ -193,6 +198,7 @@ static void G_asGeneric_SetReturnInt( void *gen, unsigned int value )
 	assert( error >= 0 );
 }
 
+#ifdef GETUNUSED
 static void G_asGeneric_SetReturnInt64( void *gen, quint64 value )
 {
 	int error;
@@ -204,6 +210,7 @@ static void G_asGeneric_SetReturnInt64( void *gen, quint64 value )
 	error = angelExport->asIScriptGeneric_SetReturn( gen, &argument );
 	assert( error >= 0 );
 }
+#endif
 
 static void G_asGeneric_SetReturnFloat( void *gen, float value )
 {
@@ -217,6 +224,7 @@ static void G_asGeneric_SetReturnFloat( void *gen, float value )
 	assert( error >= 0 );
 }
 
+#ifdef GETUNUSED
 static void G_asGeneric_SetReturnDouble( void *gen, double value )
 {
 	int error;
@@ -240,6 +248,7 @@ static void G_asGeneric_SetReturnObject( void *gen, void *ptr )
 	error = angelExport->asIScriptGeneric_SetReturn( gen, &argument );
 	assert( error >= 0 );
 }
+#endif
 
 static void G_asGeneric_SetReturnAddress( void *gen, void *ptr )
 {
@@ -253,6 +262,7 @@ static void G_asGeneric_SetReturnAddress( void *gen, void *ptr )
 	assert( error >= 0 );
 }
 
+#ifdef GETUNUSED
 static void G_asGeneric_SetReturnShort( void *gen, unsigned short value )
 {
 	int error;
@@ -276,6 +286,7 @@ static void G_asGeneric_SetReturnPointer( void *gen, void *ptr )
 	error = angelExport->asIScriptGeneric_SetReturn( gen, &argument );
 	assert( error >= 0 );
 }
+#endif
 
 //=======================================================================
 
@@ -4784,7 +4795,7 @@ static void objectGameEntity_asGeneric_Release( void *gen )
 {
 	objectGameEntity_Release( (edict_t *)G_asGeneric_GetObject( gen ) );
 }
-
+#ifdef GETUNUSED
 static qboolean objectGameEntity_EqualBehaviour( edict_t *first, edict_t *second )
 {
 	return ( first == second );
@@ -4804,7 +4815,7 @@ static void objectGameEntity_asGeneric_NotEqualBehaviour( void *gen )
 {
 	G_asGeneric_SetReturnBool( gen, objectGameEntity_NotEqualBehaviour( (edict_t *)G_asGeneric_GetArgAddress( gen, 0 ), (edict_t *)G_asGeneric_GetArgAddress( gen, 1 ) ) );
 }
-
+#endif
 static asvec3_t *objectGameEntity_GetVelocity( edict_t *obj )
 {
 	asvec3_t *velocity = objectVector_Factory();

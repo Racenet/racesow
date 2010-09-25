@@ -1000,7 +1000,7 @@ void Matrix_Rotate( vec3_t m[3], vec_t angle, vec_t x, vec_t y, vec_t z )
 	t[2][1] = t1 - t2;
 
 	Matrix_Copy( m, b );
-	Matrix_Multiply( b, t, m );
+	Matrix_Multiply( (const vec_t (*) [3]) b, (const vec_t (*) [3]) t, m );
 }
 
 void Matrix_FromPoints( vec3_t v1, vec3_t v2, vec3_t v3, vec3_t m[3] )

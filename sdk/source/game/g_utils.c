@@ -21,6 +21,8 @@
 
 #include "g_local.h"
 
+//#define GETUNUSED
+
 /*
 ==============================================================================
 
@@ -211,6 +213,7 @@ static void *G_Z_Malloc( int size, const char *filename, int fileline )
 	return buf;
 }
 
+#ifdef GETUNUSED
 /*
 * G_Z_Print
 */
@@ -234,6 +237,7 @@ static void G_Z_Print( memzone_t *zone )
 			G_Printf( "ERROR: two consecutive free blocks\n");
 	}
 }
+#endif
 
 //==============================================================================
 
