@@ -31,10 +31,13 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 
 void replacementItem( cEntity @oldItem )
 {
+  	cVec3 min, max;
 	cEntity @ent = @G_SpawnEntity( oldItem.getClassname() );
 	cItem @item = @G_GetItem( oldItem.item.tag );
 	@ent.item = @item;
 	ent.setOrigin( oldItem.getOrigin() );
+	oldItem.getSize( min, max );
+	ent.setSize( min, max );
 	ent.type = ET_ITEM;
 	ent.solid = SOLID_TRIGGER;
 	ent.moveType = MOVETYPE_NONE;
