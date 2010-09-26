@@ -1052,6 +1052,11 @@ void GT_Shutdown()
  */
 void GT_SpawnGametype()
 {
+    cEntity @trigger_multiple;
+    cEntity @from = null;
+    cEntity @from2 = null;
+    bool found = false;
+
     @map = Racesow_Map();
     if ( rs_mysqlEnabled.getBool() )
     {
@@ -1062,6 +1067,27 @@ void GT_SpawnGametype()
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
 
+    @trigger_multiple = @G_FindEntityWithClassname( null, "trigger_multiple" );
+
+    while( @trigger_multiple != null )
+    {
+        @trigger_multiple = @G_FindEntityWithClassname( from, "trigger_multiple" );
+        while( ( @trigger_multiple.findTargetEntity( @from2 ) != null ) )
+        {
+            if( ( trigger_multiple.findTargetEntity( @from2 ).getClassname() == "target_startTimer" )
+                || ( trigger_multiple.findTargetEntity( @from2 ).getClassname() == "target_starttimer" ) )
+            {
+                trigger_multiple.wait = 0;
+                found = true;
+                break;
+            }
+            @from2 = @trigger_multiple.findTargetEntity( @from2 );
+        }
+        if( found == true )
+            break;
+        @from = @trigger_multiple;
+    }
+
     //TODOSOW fastcap if there are flag entitys
     for( int tag = WEAP_NONE; tag < POWERUP_TOTAL; tag++ )
     {
@@ -1069,7 +1095,7 @@ void GT_SpawnGametype()
     	if( @Item == null)
     		continue;
     	cString itemClassname = Item.getClassname();
-    	cEntity @from = null;
+    	@from = null;
     	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
     	if( @item == null )
     		continue;
