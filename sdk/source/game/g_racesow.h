@@ -1,6 +1,6 @@
 #include "../qcommon/md5.h"
 
-char *maplist[5000];
+char maplist[50000];
 unsigned int mapcount;
 
 void RS_MysqlLoadInfo( void );
@@ -121,3 +121,4 @@ extern qboolean RS_Maplist(int player_id, unsigned int page);
 extern char *RS_MaplistCallback(int player_id);
 
 extern char *RS_ChooseNextMap();
+extern char *RS_GetMapByNum(int num);

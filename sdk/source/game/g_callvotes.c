@@ -91,7 +91,7 @@ static void G_VoteMapExtraHelp( edict_t *ent )
 static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 {
     char mapname[MAX_CONFIGSTRING_CHARS];
-    int i;
+    char *map;
 
 	if( !first )  // map can't become invalid while voting
 		return qtrue;
@@ -99,13 +99,18 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 	// racesow : vote a map number
 	int mapnumber = atoi( data->argv[0] );
 
-    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) )
-            && ( mapnumber < ( sizeof( maplist )/sizeof( char* ) ) )
-            && !( maplist[mapnumber] == NULL ) )
+    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) ) && ( mapnumber <= mapcount ) )
     {
-        G_Free( data->argv[0] );
-        data->argv[0] = G_Malloc( strlen (maplist[mapnumber]) + 1 );
-        Q_strncpyz( data->argv[0], maplist[mapnumber], strlen (maplist[mapnumber]) + 1 );
+        map = RS_GetMapByNum(mapnumber);
+
+        if ( map != NULL )
+        {
+            G_Free( data->argv[0] );
+            data->argv[0] = G_Malloc( strlen (map) + 1 );
+            Q_strncpyz( data->argv[0], map, strlen (map) + 1 );
+        }
+
+        free(map);
     }
     // !racesow
 
@@ -135,19 +140,28 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 		// check if valid map is in map pool when on
 		if( g_enforce_map_pool->integer )
 		{
-		    //racesow : check in maplist
-			i = 0;
+		    char *s, *tok;
+		    static const char *seps = " ,";
 
-			for ( i = 0 ; i < ( sizeof( maplist )/sizeof( char* ) ) ; i++ )
-			{
-			    if ( !(maplist[i] == NULL) && !Q_stricmp( maplist[i], mapname ) )
-			        return qtrue;
-			}
+		    // if map pool is empty, basically turn it off
+		    if( strlen(maplist) < 2 ) // racesow
+		        return qtrue;
 
-			//map wasn't found in map list
-            G_PrintMsg( data->caller, "%sMap is not in map pool.\n", S_COLOR_RED );
-            return qfalse;
-            // ! racesow
+		    s = G_CopyString( maplist ); // racesow
+		    tok = strtok( s, seps );
+		    while ( tok != NULL )
+		    {
+		        if ( !Q_stricmp( tok, mapname ) )
+		        {
+		            G_Free( s );
+		            return qtrue;
+		        }
+		        else
+		            tok = strtok( NULL, seps );
+		    }
+		    G_Free( s );
+		    G_PrintMsg( data->caller, "%sMap is not in map pool.\n", S_COLOR_RED );
+		    return qfalse;
 		}
 
 		else
@@ -178,26 +192,33 @@ static char *G_VoteMapCurrent( void )
 qboolean RS_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
 {
     int index = brandom( 1, mapcount );
-    int i = 0, size = 0;
+    int size = 0;
+    char *s, *tok;
+    static const char *seps = " ,\n\r";
 
     if( !first )
         return qtrue;
 
-    while( i < ( sizeof( maplist )/sizeof( char* ) ) )
+    s = G_CopyString( maplist );
+    tok = strtok( s, seps );
+
+    while ( tok != NULL )
     {
-        if( ( maplist[i] != NULL ) && Q_stricmp( maplist[i], level.mapname ) )
+        if( Q_stricmp( tok, level.mapname ) )
             index--;
 
         if ( index == 0)
             break;
 
-        i++;
+        tok = strtok( NULL, seps );
     }
 
+    G_Free(s);
+
     if ( index == 0){
-        size = strlen( maplist[i] ) + 1;
+        size = strlen( tok ) + 1;
         vote->data = G_Malloc( size );
-        Q_strncpyz(vote->data, maplist[i], size);
+        Q_strncpyz(vote->data, tok, size);
         return qtrue;
     }
     else

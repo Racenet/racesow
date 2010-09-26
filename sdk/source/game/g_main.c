@@ -445,7 +445,6 @@ qboolean G_AllowDownload( edict_t *ent, const char *requestname, const char *upl
 //
 //Returns the created target changelevel
 //=================
-/* racesow : was only used in next function, comment to avoid warning
 static edict_t *CreateTargetChangeLevel( char *map )
 {
 	edict_t *ent;
@@ -456,9 +455,7 @@ static edict_t *CreateTargetChangeLevel( char *map )
 	ent->map = level.nextmap;
 	return ent;
 }
-*/
 
-/* racesow : replaced by RS_ChooseNextMap
 //=================
 //G_ChooseNextMap
 //=================
@@ -473,7 +470,7 @@ static edict_t *G_ChooseNextMap( void )
         return CreateTargetChangeLevel( level.forcemap );
     }
 
-    if( !( *g_maplist->string ) || strlen( g_maplist->string ) == 0 || g_maprotation->integer == 0 )
+    if( !( *maplist ) || strlen( maplist ) == 0 || g_maprotation->integer == 0 )//racesow : use maplist
     {
         // same map again
         return CreateTargetChangeLevel( level.mapname );
@@ -481,7 +478,7 @@ static edict_t *G_ChooseNextMap( void )
     else if( g_maprotation->integer == 1 )
     {
         // next map in list
-        s = G_CopyString( g_maplist->string );
+        s = G_CopyString( maplist );//racesow : use maplist
         f = NULL;
         t = strtok( s, seps );
 
@@ -517,7 +514,7 @@ static edict_t *G_ChooseNextMap( void )
     {
         // random from the list, but not the same
         int count = 0;
-        s = G_CopyString( g_maplist->string );
+        s = G_CopyString( maplist );//racesow : use maplist
 
         t = strtok( s, seps );
         while( t != NULL )
@@ -528,7 +525,7 @@ static edict_t *G_ChooseNextMap( void )
         }
 
         G_Free( s );
-        s = G_CopyString( g_maplist->string );
+        s = G_CopyString( maplist ); //racesow : use maplist
 
         if( count < 1 )
         {
@@ -574,21 +571,16 @@ static edict_t *G_ChooseNextMap( void )
     }
     return ent;
 }
-racesow */
 
 //=================
 //G_SelectNextMapName
 //=================
 static char *G_SelectNextMapName( void )
 {
-    /* racesow
 	edict_t *changelevel;
 
 	changelevel = G_ChooseNextMap();
     return changelevel->map;
-    */
-	return RS_ChooseNextMap(); //racesow
-
 }
 
 //=============
