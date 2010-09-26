@@ -690,6 +690,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
     edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
     
+    /*
     if( ent->r.client )
     {
         char *existingSession = Info_ValueForKey( ent->r.client->userinfo, "racesow_session" );
@@ -697,6 +698,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
             Q_strncpyz(sessionToken, existingSession, sizeof(sessionToken));
         }
     }
+    */
     
     // escape strings
     Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
@@ -714,6 +716,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     Q_strncpyz ( authToken, playerData->authToken, sizeof(authToken) );
     mysql_real_escape_string(&mysql, authToken, authToken, strlen(authToken));
     
+    /*
     // try to authenticate by session
     if (Q_stricmp( sessionToken, "" ))
     {
@@ -734,6 +737,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         mysql_free_result(mysql_res);
     }
+    */
     
     // try to authenticate by token
     if (player_id == 0 && Q_stricmp( authToken, "" ))
