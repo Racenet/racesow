@@ -20,3 +20,4 @@ racesow/player/auth.as;
 racesow/player/race.as;
 racesow/weapondefs.as;
 racesow/callback.as;
+racesow/commands.as;

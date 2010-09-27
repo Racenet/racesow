@@ -226,39 +226,13 @@ void race_respawner_think( cEntity @respawner )
 bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int argc )
 {
 	Racesow_Player @player = Racesow_GetPlayerByClient( client );
+	Racesow_Command@ command = RS_GetCommandByName( cmdString );
 
-	if ( cmdString == "gametype" )
-    {
-        cString response = "";
-        cVar fs_game( "fs_game", "", 0 );
-        cString manifest = gametype.getManifest();
+	if ( command !is null )
+	{
+	    player.executeCommand(command, argsString, argc);
+	}
 
-        response += "\n";
-        response += "Gametype " + gametype.getName() + " : " + gametype.getTitle() + "\n";
-        response += "----------------\n";
-        response += "Version: " + gametype.getVersion() + "\n";
-        response += "Author: " + gametype.getAuthor() + "\n";
-        response += "Mod: " + fs_game.getString() + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
-        response += "----------------\n";
-
-        G_PrintMsg( client.getEnt(), response );
-        return true;
-    }
-    else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) )
-    {
-        if (player.isJoinlocked)
-        {
-            player.sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n");
-        }
-        else if ( @client != null )
-        {
-       		client.team = TEAM_PLAYERS;
-       		client.respawn( false );
-            return true;
-        }
-
-        return false;
-    }
     else if ( cmdString == "join" )
     {
         if ( @client != null && !player.isJoinlocked && !map.inOvertime)
@@ -277,121 +251,22 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return false;
     }
 
-	else if ( ( cmdString == "top" ) || ( cmdString == "highscores" ) )
-    {
-		if( g_freestyle.getBool() )
-		{
-			sendMessage( S_COLOR_RED + "Command only available for race\n", @client );
-			return false;
-		}
-		else if( player.isWaitingForCommand )
-		{
-			sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
-					+"results of your previous top command\n", @client );
-			return false;
-		}
-		else
-		{
-			player.isWaitingForCommand=true;
-			RS_MysqlLoadHighscores(player.getClient().playerNum(),map.getId());
-		}
-    }
-	else if ( ( cmdString == "register" ) )
-    {
-		cString authName = argsString.getToken( 0 ).removeColorTokens();
-		cString authEmail = argsString.getToken( 1 );
-		cString password = argsString.getToken( 2 );
-		cString confirmation = argsString.getToken( 3 );
-
-		return player.getAuth().signUp( authName, authEmail, password, confirmation );
-    }
-	else if ( ( cmdString == "auth" ) )
-    {
-		return player.getAuth().authenticate( argsString.getToken( 0 ).removeColorTokens(), argsString.getToken( 1 ), false );
-    }
-    else if ( ( cmdString == "token" ) )
-    {
-		return player.getAuth().showToken();
-    }
 	else if ( ( cmdString == "admin" ) )
     {
 		return player.adminCommand( argsString );
     }
-	else if ( ( cmdString == "help" ) )
-    {
-		return player.displayHelp();
-    }
+
 	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
 	{
 		return player.ammoSwitch();
 	}
-	else if ( ( cmdString == "chrono" ) )
-	{
-		return player.chronoUse( argsString );
-	}
+
 	else if ( ( cmdString == "privsay" ) )
     {
 		return player.privSay( argsString, @client );
     }
 
-    else if ( ( cmdString == "maplist") )
-    {
-        cString pagenumString = argsString.getToken( 0 );
-        if( player.isWaitingForCommand )
-        {
-            player.sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
-                    +"results of your previous top command\n");
-            return false;
-        }
-
-        player.isWaitingForCommand=true;
-        int page = 0;
-        if ( pagenumString.len() < 1 )
-            page = 1;
-        else
-            page = pagenumString.toInt();
-
-        RS_Maplist(client.playerNum(),page);
-    }
-
-    else if ( ( cmdString == "nextmap" ) )
-    {
-        player.sendMessage( RS_NextMap() + "\n" );
-        return true;
-    }
-
-    else if ( cmdString == "mapfilter" )
-    {
-        cString usage = S_COLOR_ORANGE + "Usage : " + S_COLOR_WHITE + "mapfilter <filter> <pagenum>.\n";
-
-        if ( argsString.len() == 0 )
-        {
-            player.sendMessage( S_COLOR_RED + "Error : " + S_COLOR_WHITE + "no filter string specified.\n");
-            player.sendMessage( usage);
-        }
-        else
-        {
-            if( player.isWaitingForCommand )
-            {
-                player.sendMessage( S_COLOR_RED + "Flood protection. Slow down cowboy, wait for the "
-                        +"results of your previous top command\n");
-                return false;
-            }
-
-            player.isWaitingForCommand=true;
-            cString filter = argsString.getToken( 0 );
-            cString pageString = argsString.getToken( 1 );
-            int page = 0;
-            if ( pageString.len() < 1 )
-                page = 1;
-            else
-                page = pageString.toInt();
-
-            RS_MapFilter(client.playerNum(),filter,page);
-        }
-    }
-
-	else if ( ( cmdString == "callvotecheckpermission" ) )
+   	else if ( ( cmdString == "callvotecheckpermission" ) )
 	{
 		if( player.isVotemuted )
 		{
@@ -433,7 +308,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 				return true;
 			}
 		}
-
 	}
 
 	else if ( cmdString == "callvotevalidate" )
@@ -478,7 +352,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 				}
             }
             return true;
-        }
+    }
     /*
 	else if ( ( cmdString == "weapondef" ) )
     {
@@ -1230,26 +1104,15 @@ void GT_InitGametype()
 	}
 
     // add commands
-    G_RegisterCommand( "gametype" );
-    G_RegisterCommand( "racerestart" );
+	RS_InitCommands();
     G_RegisterCommand( "join" );
-    G_RegisterCommand( "top" );
-	G_RegisterCommand( "highscores" );
-    G_RegisterCommand( "register" );
-	G_RegisterCommand( "auth" );
-	G_RegisterCommand( "token" );
 	G_RegisterCommand( "admin" );
-	G_RegisterCommand( "help" );
 	G_RegisterCommand( "ammoswitch" );
 	//G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
-	G_RegisterCommand( "chrono" );
 	G_RegisterCommand( "privsay" );
 	G_RegisterCommand( "noclip" );
 	G_RegisterCommand( "position" );
-	G_RegisterCommand( "maplist" );
-	G_RegisterCommand( "mapfilter" );
-	G_RegisterCommand( "nextmap" );
 	G_RegisterCommand( "timeleft" );
 	G_RegisterCommand( "quad" );
 

@@ -922,6 +922,20 @@ class Racesow_Player
 		// maybe log messages for some reason to figure out ;)
 	}
 
+    /**
+     * Send an error message with red warning.
+     * @param cString message
+     * @return void
+     */
+    void sendErrorMessage( cString message )
+    {
+        if (@this.client == null)
+            return;
+
+        G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Error: " + S_COLOR_WHITE
+                + message +"\n");
+    }
+
 	/**
 	* Send a message to another player's console
 	* @param cString message, cClient @client
@@ -1049,45 +1063,6 @@ class Racesow_Player
 		}
 		return true;
 	}
-
-	/**
-	 * Chrono function
-	 * @parm cString cmdString
-	 * @return bool
-	 */
-	bool chronoUse( cString cmdString )
-	{
-		cString command = cmdString.getToken( 0 );
-		if ( g_freestyle.getBool() )
-		{
-			if( command == "start" ) // chrono start
-			{
-				this.chronoStartTime = levelTime;
-				this.isUsingChrono = true;
-			}
-			else if( command == "reset" )
-			{
-				this.chronoStartTime = 0;
-				this.isUsingChrono = false;
-			}
-			else
-			{
-				this.sendMessage( S_COLOR_WHITE + "Chrono function. Usage: chrono start/reset.\n" );
-			}
-
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Chrono function
-	 * @return bool
-	 
-	bool chronoInUse()
-	{
-		return this.isUsingChrono;
-	}*/
 
 	/**
 	 * Chrono time
@@ -1243,32 +1218,38 @@ class Racesow_Player
 	}
 
 	/**
+	 * execute a Racesow_Command
+	 * @param command Command to execute
+	 * @param argsString Arguments passed to the command
+	 * @param argc Number of arguments
+	 * @return Success boolean
+	 */
+	bool executeCommand(Racesow_Command@ command, cString &argsString, int argc)
+	{
+	    if(command.validate(@this, argsString, argc))
+	    {
+	        if(command.execute(@this, argsString, argc))
+	        {
+	            return true;
+	        }
+	        else
+	        {
+	            this.sendMessage(S_COLOR_ORANGE + "Usage: " + S_COLOR_WHITE + command.usage + "\n");
+	            return false;
+	        }
+	    }
+
+	    this.sendMessage(S_COLOR_ORANGE + "Usage: " + S_COLOR_WHITE + command.usage + "\n");
+	    return true;
+	}
+
+	/**
 	 * Display the help to the player
 	 * @return bool
 	 */
 	bool displayHelp()
 	{
 		cString help;
-		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "HELP for Racesow " + gametype.getVersion() + "\n";
-		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "help           " + S_COLOR_YELLOW + "display this help ;)\n";
-		help += S_COLOR_RED + "top             " + S_COLOR_YELLOW + "display the top 30 times on this map\n";
-        help += S_COLOR_RED + "maplist       " + S_COLOR_YELLOW + "display the maplist by pages\n";
-        help += S_COLOR_RED + "mapfilter   " + S_COLOR_YELLOW + "List the maps containing a specific string.\n";
-        help += S_COLOR_RED + "racerestart " + S_COLOR_YELLOW + "go back to the start-area whenever you want\n";
-		help += S_COLOR_RED + "register      " +  S_COLOR_YELLOW + "register a new account on this server\n";
-
-        if (rs_registrationDisabled.getBool()) {
-
-            help += S_COLOR_YELLOW + "                   " + rs_registrationInfo.getString() + "\n";
-        }
-
-		help += S_COLOR_RED + "auth            " + S_COLOR_YELLOW + "authenticate with the server (alternatively you can use setu to save your login\n";
-		help += "                  " + S_COLOR_YELLOW + rs_authField_Name.getString() +" AND "+ rs_authField_Pass.getString() +" OR solely "+ rs_authField_Token.getString() +" in your racesow autoexec.cfg)\n";
-		help += S_COLOR_RED + "token            " + S_COLOR_YELLOW + "only when authenticated, shows your unique login token you may setu in your config\n";
-        G_PrintMsg( this.client.getEnt(), help );
-
 		help = S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
 		help += S_COLOR_RED + "position save " + S_COLOR_YELLOW + "freestyle only, save the current poisition in the map\n";
 		help += S_COLOR_RED + "position load " + S_COLOR_YELLOW + "freestyle only, load the last saved position in the map\n";
