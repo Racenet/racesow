@@ -915,7 +915,8 @@ void GT_Shutdown()
     for ( int i = 0; i < maxClients; i++ )
 		if ( @players[i].getClient() != null )
 		{
-			players[i].disappear(players[i].getName());
+		    // run it unthreaded to prevent a mysql crash
+			players[i].disappear(players[i].getName(),false);
 		}
 }
 

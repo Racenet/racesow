@@ -240,7 +240,21 @@ class Racesow_Player
             this.getId(),
             this.getNickId(),
             map.getId(),
-            this.getAuth().isAuthenticated()
+            this.getAuth().isAuthenticated(),
+			true // default behavior is threaded
+        );
+    }
+	
+	void disappear(cString nickName, bool is_threaded)
+    {
+        RS_MysqlPlayerDisappear(
+            nickName,
+            levelTime-this.joinedTime,
+            this.getId(),
+            this.getNickId(),
+            map.getId(),
+            this.getAuth().isAuthenticated(),
+			is_threaded
         );
     }
     

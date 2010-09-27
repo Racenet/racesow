@@ -92,12 +92,13 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 {
     char mapname[MAX_CONFIGSTRING_CHARS];
     char *map;
+	int mapnumber;
 
 	if( !first )  // map can't become invalid while voting
 		return qtrue;
 
 	// racesow : vote a map number
-	int mapnumber = atoi( data->argv[0] );
+	mapnumber = atoi( data->argv[0] );
 
     if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) ) && ( mapnumber <= mapcount ) )
     {

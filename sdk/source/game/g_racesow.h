@@ -58,6 +58,7 @@ struct playtimeDataStruct {
 	unsigned int player_id;
 	unsigned int nick_id;
 	unsigned int is_authed;
+	int is_threaded;
 };
 
 struct highscoresDataStruct {
@@ -96,7 +97,7 @@ extern void *RS_MysqlInsertRace_Thread( void *in );
 extern qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int map_id, int is_authed, char* authName, char* authPass, char* authToken );
 extern void *RS_MysqlPlayerAppear_Thread( void *in );
 
-extern qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int nick_id, int map_id, int is_authed);
+extern qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int nick_id, int map_id, int is_authed, int is_threaded);
 extern void *RS_MysqlPlayerDisappear_Thread( void *in );
 
 extern qboolean RS_MysqlLoadMaplist( int is_freestyle );

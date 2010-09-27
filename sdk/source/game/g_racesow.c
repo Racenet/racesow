@@ -158,17 +158,17 @@ void RS_MysqlLoadInfo( void )
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
 	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL) LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL);", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = `playtime` + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryUpdatePlayerMaps		= trap_Cvar_Get( "rs_queryUpdatePlayerMaps",		"UPDATE `player` SET `maps` = (SELECT COUNT(`map_id`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
+	rs_queryUpdatePlayerMaps		= trap_Cvar_Get( "rs_queryUpdatePlayerMaps",		"UPDATE `player` SET `maps` = (SELECT COUNT(`map_id`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPoints		= trap_Cvar_Get( "rs_queryUpdatePlayerpoints",		"UPDATE `player` SET `points` = (SELECT SUM(`points`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` IN(%s);", CVAR_ARCHIVE );
 
 	rs_queryGetMap					= trap_Cvar_Get( "rs_queryGetMapId",				"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddMap					= trap_Cvar_Get( "rs_queryAddMap",					"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
-	rs_queryUpdateMapRating			= trap_Cvar_Get( "rs_queryUpdateMapRating",			"UPDATE `map` SET `rating` = (SELECT SUM(`value`) / COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`), `ratings` = (SELECT COUNT(`player_id`) FROM `map_rating` WHEHRE `map_id` = `map`.`id`) WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryUpdateMapPlaytime		= trap_Cvar_Get( "rs_queryUpdateMapPlaytime",		"UPDATE `map` SET `playtime` = `playtime` + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryUpdateMapRaces			= trap_Cvar_Get( "rs_queryUpdateMapRaces",			"UPDATE `map` SET `races` = `races` + 1 WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryUpdateMapRating			= trap_Cvar_Get( "rs_queryUpdateMapRating",			"UPDATE `map` SET `rating` = (SELECT SUM(`value`) / COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`), `ratings` = (SELECT COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`) WHERE `id` = %d;", CVAR_ARCHIVE );
+	rs_queryUpdateMapPlaytime		= trap_Cvar_Get( "rs_queryUpdateMapPlaytime",		"UPDATE `map` SET `playtime` = `playtime` + %d WHERE `id` = %d;", CVAR_ARCHIVE );
+    rs_queryUpdateMapRaces			= trap_Cvar_Get( "rs_queryUpdateMapRaces",			"UPDATE `map` SET `races` = `races` + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
 
 	rs_queryAddRace					= trap_Cvar_Get( "rs_queryAddRace",					"INSERT INTO `race` (`player_id`, `map_id`, `time`, `created`) VALUES(%d, %d, %d, NOW());", CVAR_ARCHIVE );
 	
@@ -178,7 +178,7 @@ void RS_MysqlLoadInfo( void )
 	rs_queryGetPlayerMapHighscore	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScore",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`map_id` = %d AND `pm`.`player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
     rs_queryResetPlayerMapPoints	= trap_Cvar_Get( "rs_queryResetPlayerMapPoints",	"UPDATE `player_map` SET `points` = 0 WHERE `map_id` = %d;", CVAR_ARCHIVE );
-    rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d;", CVAR_ARCHIVE );
     
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
 	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
@@ -257,7 +257,7 @@ void RS_Shutdown()
     // shutdown threading
 	pthread_mutex_destroy(&mutexsum);
 	pthread_mutex_destroy(&mutex_callback);
-	
+
 	// removed it because of crash in win32 implementation, also this may be not necessary at all because this isnt in a thread
 	//pthread_exit(NULL);
 }
@@ -475,8 +475,8 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	raceData =(struct raceDataStruct *)in;
     
 	RS_StartMysqlThread();
-    
-    // read current points and time
+
+	// read current points and time
 	sprintf(query, rs_queryGetPlayerMap->string, raceData->player_id, raceData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();    
@@ -491,7 +491,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
         }
     }
 	mysql_free_result(mysql_res);
-    
+
     // retrieve server best
 	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
@@ -530,72 +530,72 @@ void *RS_MysqlInsertRace_Thread(void *in)
     // only when the new time is better than the old one, recompute the points
     if (oldTime == 0 || raceData->race_time < oldTime) {
     
-        // reset points in player_map
-        sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+	// reset points in player_map
+    sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    
+    // update points in player_map
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    while ((row = mysql_fetch_row(mysql_res)) != NULL)
+	{
+        points = 0;
+		if (row[0] !=NULL && row[1] != NULL)
+		{
+            unsigned int playerId, raceTime;
+            playerId = atoi(row[0]);
+            raceTime = atoi(row[1]);
         
-        // update points in player_map
-        sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
-        mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
-        while ((row = mysql_fetch_row(mysql_res)) != NULL)
-        {
-            points = 0;
-            if (row[0] !=NULL && row[1] != NULL)
-            {
-                unsigned int playerId, raceTime;
-                playerId = atoi(row[0]);
-                raceTime = atoi(row[1]);
-                
                 if (Q_stricmp( affectedPlayerIds, "" )) {
                 
                     Q_strncatz( affectedPlayerIds, ",",  sizeof(affectedPlayerIds));
                 }
                 Q_strncatz( affectedPlayerIds, row[0],  sizeof(affectedPlayerIds));
             
-                if (bestTime == 0)
-                    bestTime = raceTime;
+            if (bestTime == 0)
+                bestTime = raceTime;
+        
+			if (raceTime == lastRaceTime)
+				offset++;
+			else
+				offset = 0;
+
+			currentPosition++;
+            realPosition = currentPosition - offset;
+            points = (maxPositions + 1) - realPosition;
+			switch (realPosition)
+			{
+				case 1:
+					points += 10;
+					break;
+				case 2:
+					points += 5;
+					break;
+				case 3:
+					points += 3;
+					break;
+			}
+			
+			if (playerId == raceData->player_id) {
             
-                if (raceTime == lastRaceTime)
-                    offset++;
-                else
-                    offset = 0;
-
-                currentPosition++;
-                realPosition = currentPosition - offset;
-                points = (maxPositions + 1) - realPosition;
-                switch (realPosition)
-                {
-                    case 1:
-                        points += 10;
-                        break;
-                    case 2:
-                        points += 5;
-                        break;
-                    case 3:
-                        points += 3;
-                        break;
-                }
-                
-                if (playerId == raceData->player_id) {
-                
-                    newPoints = points;
-                    newPosition = realPosition;
-                }
-
-                lastRaceTime = raceTime;
-                
-                // set points in player_map
-                sprintf(query, rs_queryUpdatePlayerMapPoints->string, points, raceData->map_id, playerId);
-                mysql_real_query(&mysql, query, strlen(query));
-                RS_CheckMysqlThreadError();
+				newPoints = points;
+                newPosition = realPosition;
             }
-        }
-        mysql_free_result(mysql_res);
-       
+
+			lastRaceTime = raceTime;
+            
+            // set points in player_map
+            sprintf(query, rs_queryUpdatePlayerMapPoints->string, points, raceData->map_id, playerId);
+            mysql_real_query(&mysql, query, strlen(query));
+            RS_CheckMysqlThreadError();
+		}
+    }
+	mysql_free_result(mysql_res);
+   
         // update points for affected players
         sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
         mysql_real_query(&mysql, query, strlen(query));
@@ -677,6 +677,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     MYSQL_RES  *mysql_res;
 	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, player_id_for_time;
 	struct playerDataStruct *playerData;
+	edict_t *ent;
 
 	RS_StartMysqlThread();
     
@@ -688,7 +689,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     personalBest = 0;
     playerData = (struct playerDataStruct*)in;
 
-    edict_t *ent = &game.edicts[ playerData->playerNum + 1 ];
+    ent = &game.edicts[ playerData->playerNum + 1 ];
     
     /*
     if( ent->r.client )
@@ -779,13 +780,13 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
                 if (row[2] != NULL) 
                 {
                     Q_strncpyz(authToken, row[2], sizeof(authToken));
-                }
             }
+        }
         }
         
         mysql_free_result(mysql_res);
     }
-    
+        
     if (!Q_stricmp( authToken, "" ) && player_id != 0)
     {
         char *newToken = RS_GenerateNewToken(player_id);
@@ -826,29 +827,29 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     
     if (rs_loadHighscores->integer)
     {
-        // retrieve personal best
-        if (player_id != 0) {
-        
-            player_id_for_time = player_id; 
-        
-        } else {
-        
-            player_id_for_time = player_id_for_nick;
-        }
-        sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
-        mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
-        mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
-        if ((row = mysql_fetch_row(mysql_res)) != NULL)
+    // retrieve personal best
+    if (player_id != 0) {
+    
+        player_id_for_time = player_id; 
+    
+    } else {
+    
+        player_id_for_time = player_id_for_nick;
+    }
+    sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
+    {
+        if (row[0] !=NULL && row[1] != NULL)
         {
-            if (row[0] !=NULL && row[1] != NULL)
-            {
-                personalBest = atoi(row[1]);
-            }
+            personalBest = atoi(row[1]);
         }
-        
-        mysql_free_result(mysql_res);
+    }
+    
+    mysql_free_result(mysql_res);
     }
     
     if (player_id != 0 && ent->r.inuse && ent->r.client)
@@ -997,7 +998,7 @@ char *RS_StartPlayerSession(int playerId)
  * @param int map_id
  * @return void
  */
-qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int nick_id, int map_id, int is_authed)
+qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int nick_id, int map_id, int is_authed, int is_threaded)
 {
 	pthread_t thread;
 	int returnCode;
@@ -1015,6 +1016,13 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int player_id, int n
 	playtimeData->nick_id=nick_id;
 	playtimeData->playtime=playtime;
 	playtimeData->is_authed=is_authed;
+	playtimeData->is_threaded=is_threaded;
+
+	if (!is_threaded)
+	{
+		RS_MysqlPlayerDisappear_Thread(playtimeData);
+		return qtrue;
+	}
 
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlPlayerDisappear_Thread, (void *)playtimeData);
 	if (returnCode) {
@@ -1038,16 +1046,22 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 	char name[64];
 	char simplified[64];
 	struct playtimeDataStruct *playtimeData;
-	
-	RS_StartMysqlThread();
-    
-    playtimeData = (struct playtimeDataStruct*)in;
+	int is_threaded;
+
+	playtimeData = (struct playtimeDataStruct*)in;
+	is_threaded=playtimeData->is_threaded;
+
+	// allow unthreaded behavior to prevent a mysql crash when GT_Shutdown()
+	if (is_threaded)
+		RS_StartMysqlThread();
+	else
+		pthread_mutex_lock(&mutexsum);
 
     Q_strncpyz ( simplified, COM_RemoveColorTokens( playtimeData->name ), sizeof(simplified) );
     mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
 	Q_strncpyz ( name, playtimeData->name, sizeof(name) );
     mysql_real_escape_string(&mysql, name, name, strlen(name));
-    
+
     // increment map playtime
 	sprintf(query, rs_queryUpdateMapPlaytime->string, playtimeData->playtime, playtimeData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
@@ -1071,7 +1085,12 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 
 	free(playtimeData->name);	
 	free(playtimeData);	
-	RS_EndMysqlThread();
+
+	if (is_threaded)
+		RS_EndMysqlThread();
+	else
+		pthread_mutex_unlock(&mutexsum);
+		
     
     return NULL;
 }
@@ -1089,7 +1108,7 @@ char *players_query[MAX_CLIENTS]={0};
  */
 void *RS_BasicMapFilter_Thread( void *in)
 {
-    struct filterDataStruct *filterData = (struct filterDataStruct *)in ;
+    struct filterDataStruct *filterData = (struct filterDataStruct *)in;
     int filterCount = 0, totalPages = 0, mapCount = 0, size = 0;
     static const char *seps = " ,\n\r";
     char *s, *t;
@@ -1099,7 +1118,7 @@ void *RS_BasicMapFilter_Thread( void *in)
     char filter[MAX_CONFIGSTRING_CHARS]; //stores the lowercase version of the filter
     char temp[MAX_CONFIGSTRING_CHARS]; //stores the lowercase version of the map name
 
-    result[0]='\0';
+	result[0]='\0';
     filter[0]='\0';
     temp[0]='\0';
     Q_strncpyz(filter,filterData->filter, sizeof( filter ) );
@@ -1142,18 +1161,18 @@ void *RS_BasicMapFilter_Thread( void *in)
                     S_COLOR_YELLOW,
                     filterData->filter,
                     S_COLOR_WHITE ), sizeof ( result ) );
-        }
-        else
-        {
-            Q_strncatz( result, va( "Printing page %d/%d of maps matching %s %s.\n%s Use %s mapfilter %s <pagenum> %s to print other pages.\n",
-                    page,
-                    totalPages,
-                    S_COLOR_YELLOW,
-                    filterData->filter,
-                    S_COLOR_WHITE,
-                    S_COLOR_YELLOW,
-                    filterData->filter,
-                    S_COLOR_WHITE),  sizeof( result ) );
+    }
+    else
+    {
+        Q_strncatz( result, va( "Printing page %d/%d of maps matching %s%s.\n%sUse %smapfilter %s <pagenum> %sto print other pages.\n",
+                page,
+                totalPages,
+                S_COLOR_YELLOW,
+                filterData->filter,
+                S_COLOR_WHITE,
+                S_COLOR_YELLOW,
+                filterData->filter,
+                S_COLOR_WHITE),  sizeof(result));
 
             s = G_CopyString( maplist );
             t = strtok( s, seps );
@@ -1169,16 +1188,16 @@ void *RS_BasicMapFilter_Thread( void *in)
                     filterCount++;
                     if ( ( filterCount >= ((page-1)*MAPS_PER_PAGE + 1) ) && ( filterCount <= page*MAPS_PER_PAGE  ) )
                         Q_strncatz( result, va( "%s#%4d%s : %s\n", S_COLOR_ORANGE, mapCount, S_COLOR_WHITE, t ),  sizeof( result ) );
-                }
+        }
 
                 t = strtok( NULL, seps);
-            }
+        }
 
             G_Free( s );
-        }
+    }
     }
 
-    size = strlen( result ) + 1;
+    size = strlen( result )+1;
     players_query[filterData->player_id] = malloc( size );
     Q_strncpyz( players_query[filterData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, filterData->player_id, filterCount, 0, 0, 0, 0, 0);
@@ -1214,10 +1233,10 @@ qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
 
         printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
-    }
+            }
 
     return qtrue;
-}
+        }
 
 /**
  * This function is called from angelscript when RACESOW_CALLBACK_MAPFILTER is
@@ -1234,7 +1253,7 @@ char *RS_MapFilterCallback(int player_id )
     free(players_query[player_id]);
     players_query[player_id] = NULL;
     return result;
-}
+    }
 
 /**
  * Maplist thread, parse the maplist array
@@ -1242,7 +1261,7 @@ char *RS_MapFilterCallback(int player_id )
  * @param in Input data, cast to maplistDataStruct
  */
 void *RS_Maplist_Thread(void *in)
-{
+    {
     struct maplistDataStruct *maplistData = (struct maplistDataStruct *)in ;
     int mapsFound = 0, totalPages = 0, size = 0;
     int page = maplistData->page;
@@ -1260,12 +1279,12 @@ void *RS_Maplist_Thread(void *in)
     if ( ( page > totalPages ) || (page < 1 ) )
     {
         Q_strncatz( result , va( "You should enter a page number between%s %d%s and%s %d%s\n",
-                S_COLOR_YELLOW,
+                     S_COLOR_YELLOW,
                 1,
-                S_COLOR_WHITE,
-                S_COLOR_YELLOW,
+                     S_COLOR_WHITE,
+                     S_COLOR_YELLOW,
                 totalPages,
-                S_COLOR_WHITE ), sizeof ( result ) );
+                     S_COLOR_WHITE),  sizeof(result));
     }
     else
     {
@@ -1290,7 +1309,7 @@ void *RS_Maplist_Thread(void *in)
         G_Free( s );
     }
 
-    size = strlen( result ) + 1;
+    size = strlen( result )+1;
     players_query[maplistData->player_id] = malloc( size );
     Q_strncpyz( players_query[maplistData->player_id], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPLIST, maplistData->player_id, 0, 0, 0, 0, 0, 0);
@@ -1577,18 +1596,18 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
             printf("MySQL ERROR: %s\n", mysql_error(&mysql));
             return qfalse;
 	    }
-        
+
        	while( ( row = mysql_fetch_row( mysql_res ) ) ) {
 
             if ( !RS_MapValidate( row[0] ) )
        	        continue;
 
        	    Q_strncatz( maplist, va( "%s ", row[0] ), sizeof( maplist ) );
-            mapcount++;
-       	}
-
-       	mysql_free_result(mysql_res);
-       	return qtrue;
+                mapcount++;
+            }
+        
+        mysql_free_result(mysql_res);
+        return qtrue;
 }
 
 /**
@@ -1612,7 +1631,7 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
         if ( RS_MapValidate( t ) )
         {
             Q_strncatz( maplist, t, sizeof( maplist ) );
-            mapcount++;
+        mapcount++;
         }
         
         t = strtok( NULL, seps);
@@ -1640,7 +1659,7 @@ void RS_LoadMaplist( int is_freestyle)
         RS_BasicLoadMaplist( g_maplist->string );
     }
 
-    G_Printf( "Maplist loaded: %u maps found.\n", mapcount );
+    G_Printf( "Maplist loaded : %u maps found.\n", mapcount );
 }
 
 unsigned int RS_GetNumberOfMaps()
@@ -1798,20 +1817,20 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta )
 
 char *RS_ChooseNextMap()
 {
-     edict_t *ent = NULL;
+    edict_t *ent = NULL;
      char *s, *t, *f;
      static const char *seps = " ,\n\r";
 
      if( *level.forcemap )
-     {
-         return level.forcemap;
-     }
+    {
+        return level.forcemap;
+    }
 
      if( !( *maplist ) || strlen( maplist ) == 0 || g_maprotation->integer == 0 )
-     {
-         // same map again
-         return level.mapname;
-     }
+    {
+        //same map again
+        return level.mapname;
+    }
      else if( g_maprotation->integer == 1 )
      {
          // next map in list
@@ -1820,41 +1839,41 @@ char *RS_ChooseNextMap()
          t = strtok( s, seps );
 
          while( t != NULL )
-         {
+    {
              if( !Q_stricmp( t, level.mapname ) )
-             {
+        {
                  // it's in the list, go to the next one
                  t = strtok( NULL, seps );
                  if( t == NULL )
                  { // end of list, go to first one
                      if( f == NULL )// there isn't a first one, same level
-                     {
+            {
                          G_Free( s );
                          return level.mapname;
                      }
-                     else
-                     {
+                else
+                {
                          G_Free( s );
                          return f;
-                     }
-                 }
+                }
+            }
                  else
                  {
                      G_Free( s );
                      return t;
-                 }
+        }
              }
 
              if( !f )
                  f = t;
 
              t = strtok( NULL, seps );
-         }
+        }
 
          // not in the list, we go for the first one
          G_Free( s );
          return f;
-     }
+    }
      else if( g_maprotation->integer == 2 )
      {
          // random from the list, but not the same
@@ -1863,7 +1882,7 @@ char *RS_ChooseNextMap()
 
          t = strtok( s, seps );
          while( t != NULL )
-         {
+    {
              if( Q_stricmp( t, level.mapname ) )
                  count++;
              t = strtok( NULL, seps );
@@ -1880,40 +1899,40 @@ char *RS_ChooseNextMap()
          }
          else
          {
-             int seed = game.realtime;
+            int seed = game.realtime;
              count -= (int)Q_brandom( &seed, 0, count ); // this should give random integer from 0 to count-1
              ent = NULL; // shutup compiler warning;
 
              t = strtok( s, seps );
              while( t != NULL )
-             {
+            {
                  if( Q_stricmp( t, level.mapname ) )
-                 {
+                {
                      count--;
                      if( count == 0 )
                      {
                          G_Free( s );
                          return t;
                          break;
-                     }
-                 }
+                }
+            }
                  t = strtok( NULL, seps );
-             }
+    }
          }
      }
 
-     if( level.nextmap[0] )  // go to a specific map
-         return level.nextmap;
+    if( level.nextmap[0] )  // go to a specific map
+        return level.nextmap;
 
-     // search for a changelevel
-     ent = G_Find( NULL, FOFS( classname ), "target_changelevel" );
-     if( !ent )
-     {
-         // the map designer didn't include a changelevel,
+    // search for a changelevel
+    ent = G_Find( NULL, FOFS( classname ), "target_changelevel" );
+    if( !ent )
+    {
+        // the map designer didn't include a changelevel,
          // so create a fake ent that goes back to the same level
-         return level.mapname;
-     }
-     return ent->map;
+        return level.mapname;
+    }
+    return ent->map;
 }
 
 char *RS_GetMapByNum(int num)
