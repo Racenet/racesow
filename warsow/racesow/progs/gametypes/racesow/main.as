@@ -470,7 +470,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             if ( vote == "extend_time" )
             {
             	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
-				
+
                 map.cancelOvertime();
 				for ( int i = 0; i < maxClients; i++ )
 				{
@@ -657,11 +657,11 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 			cEntity @edict = @G_GetEntity( args.getToken( 0 ).toInt() );
 			if( @edict.client == null )
 				return;
-                
+
 			Racesow_Player @player_edict = Racesow_GetPlayerByClient( edict.client );
 			if( @player_edict == null )
 				return;
-                
+
 			if( g_freestyle.getBool() && @edict.client != @client ) //telekills
 			{
 				if( @client.getEnt() == null)
@@ -688,7 +688,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
             player.getAuth().setName(client.getUserInfoKey(rs_authField_Name.getString()));
             player.getAuth().setPass(client.getUserInfoKey(rs_authField_Pass.getString()));
             player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.getString()));
-                
+
             player.appear();
 		}
 		else if ( score_event == "disconnect" )
@@ -722,9 +722,9 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	cItem @item;
 	cItem @ammoItem;
 	Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
-    
+
     if (new_team == TEAM_PLAYERS) {
-    
+
         if (map.inOvertime) {
             player.client.team = TEAM_SPECTATOR;
             player.client.respawn( false ); //FIXME : is it really necessary ?
@@ -781,7 +781,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
 	// make dash 450
 	ent.client.setPMoveDashSpeed( 450 );
-    
+
     player.restartRace();
 }
 
@@ -796,21 +796,21 @@ void GT_ThinkRules()
 	// perform a Mysql callback if there is one pending
 	Racesow_ThinkCallbackQueue();
 
-    
+
 	if ( match.timeLimitHit() )
     {
         match.launchState( match.getState() + 1 );
     }
 
     map.allowEndGame();
-    
+
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
 
-    
+
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
-    
+
         // if there is no player in TEAM_PLAYERS finish the match and restart
         if ( G_GetTeam( TEAM_PLAYERS ).numPlayers == 0 && demoRecording )
         {
@@ -861,7 +861,7 @@ void GT_ThinkRules()
 			@spec_ent = @specs.ent( i );
             if (@spec_ent != null && @spec_ent.client != null)
             {
-            
+
                 cClient @spec_client = spec_ent.client;
                 if(spec_client.connecting)
                 {
@@ -1073,7 +1073,6 @@ void GT_SpawnGametype()
 
     while( @trigger_multiple != null )
     {
-        @trigger_multiple = @G_FindEntityWithClassname( from, "trigger_multiple" );
         while( ( @trigger_multiple.findTargetEntity( @from2 ) != null ) )
         {
             if( ( trigger_multiple.findTargetEntity( @from2 ).getClassname() == "target_startTimer" )
@@ -1088,6 +1087,7 @@ void GT_SpawnGametype()
         if( found == true )
             break;
         @from = @trigger_multiple;
+        @trigger_multiple = @G_FindEntityWithClassname( from, "trigger_multiple" );
     }
 
     //TODOSOW fastcap if there are flag entitys
@@ -1136,9 +1136,9 @@ void GT_InitGametype()
 
 	// initalize weapondef config
 	weaponDefInit();
-    
+
     G_WriteFile( "configs/server/gametypes/race.cfg", "" );
-    
+
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
     {
@@ -1272,7 +1272,7 @@ void GT_InitGametype()
     {
 		g_timelimit.set( "0" );
     }
-        
+
 	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
 
 	RS_LoadMapList( g_freestyle.getInteger() );
