@@ -723,11 +723,7 @@ class Racesow_Player
 	 */
 	bool noclip()
 	{
-		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
-			return false;
-		cEntity @ent = @this.client.getEnt();
-		if( @ent == null || ent.team == TEAM_SPECTATOR )
-			return false;
+	    cEntity@ ent = this.client.getEnt();
 		if( ent.moveType == MOVETYPE_NOCLIP )
 		{
 		    cVec3 mins, maxs;
@@ -760,11 +756,6 @@ class Racesow_Player
      */
     bool quad()
     {
-        if( !g_freestyle.getBool() && !sv_cheats.getBool() )
-            return false;
-        cEntity @ent = @this.client.getEnt();
-        if( @ent == null || ent.team == TEAM_SPECTATOR )
-            return false;
         if( this.onQuad )
         {
             this.client.inventorySetCount( POWERUP_QUAD, 0 );
@@ -966,40 +957,12 @@ class Racesow_Player
 	 * @param cString argString, cClient @client
 	 * @return bool
 	 */
-	bool privSay( cString argsString, cClient @client )
+	bool privSay( cString message, cClient @target )
 	{
-		if (argsString.getToken( 0 ) == "" || argsString.getToken( 1 ) == "" )
-		{
-			sendMessage( S_COLOR_RED + "Empty arguments.\n", @client );
-			return false;
-		}
-
-
-		if ( argsString.getToken( 0 ).toInt() > maxClients)
-			return false;
-		cClient @target;
-
-		if ( argsString.getToken( 0 ).isNumerical()==true)
-			@target = @G_GetClient( argsString.getToken( 0 ).toInt() );
-		else
-			if (Racesow_GetClientNumber( argsString.getToken( 0 )) != -1)
-				@target = @G_GetClient( Racesow_GetClientNumber( argsString.getToken( 0 )) );
-
-		cString message = argsString.substr(argsString.getToken( 0 ).length()+1,argsString.length());
-
-		// check if target doesn't exist
-		if ( @target == null || target.getName().length() <=2)
-		{
-			this.sendMessage( S_COLOR_RED + "Invalid player!\n", @client );
-			return false;
-		}
-		else
-		{
-			sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.getName()
-			+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @client );
-			sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + client.getName()
-			+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @target );
-		}
+	    this.sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.getName()
+	            + S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n");
+	    sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + client.getName()
+	            + S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @target );
 		return true;
 	}
 
@@ -1099,36 +1062,19 @@ class Racesow_Player
 		bool showNotification = false;
 		cString command = cmdString.getToken( 0 );
 
-		if ( !this.auth.allow( RACESOW_AUTH_ADMIN ) )
-		{
-			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_RED
-				+ " tried to execute an admin command without permission.\n" );
-
-			return false;
-		}
-
-		// no command
-		if ( command == "" )
-		{
-			this.sendMessage( S_COLOR_RED + "No command given. Use 'admin help' for more information.\n" );
-			return false;
-		}
-
 		// map command
-		else if ( commandExists = command == "map" )
+		if ( commandExists = command == "map" )
 		{
 			if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
 			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
+				this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
 				return false;
 			}
 
 			cString mapName = cmdString.getToken( 1 );
 			if ( mapName == "" )
 			{
-				this.sendMessage( S_COLOR_RED + "No map name given.\n" );
+				this.sendErrorMessage("No map name given" );
 				return false;
 			}
 
@@ -1144,9 +1090,7 @@ class Racesow_Player
 			commandExists = true;
 			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
 			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
+				this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString );
 				return false;
 			}
 			if( cmdString.getToken( 1 ) == "" )
@@ -1187,23 +1131,16 @@ class Racesow_Player
 		{
 			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
 			{
-				this.sendMessage( S_COLOR_RED + "You are not permitted "
-					+ "to execute the command 'admin "+ cmdString +"'.\n" );
-
+				this.sendErrorMessage("You are not permitted to execute the command 'admin "+ cmdString);
 				return false;
 			}
 			cancelvote();
-		}
-		// help command
-		else if( commandExists = command == "help" )
-		{
-			this.displayAdminHelp();
 		}
 
 		// don't touch the rest of the method!
 		if( !commandExists )
 		{
-			this.sendMessage( S_COLOR_RED + "The command 'admin " + cmdString + "' does not exist.\n" );
+			this.sendErrorMessage("The command 'admin " + cmdString + "' does not exist" );
 			return false;
 		}
 		else if ( showNotification )
@@ -1213,22 +1150,6 @@ class Racesow_Player
 		}
 
 		return true;
-	}
-
-	/**
-	 * Display the help to the player
-	 * @return bool
-	 */
-	void displayAdminHelp()
-	{
-		cString help;
-		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n";
-		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-		help += S_COLOR_RED + "admin map     " + S_COLOR_YELLOW + "change to the given map immedeatly\n";
-		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-		//TODOSOW add missing commands
-		G_PrintMsg( this.client.getEnt(), help );
 	}
 
 	/**
@@ -1253,23 +1174,5 @@ class Racesow_Player
 
 	    this.sendMessage(command.getUsage());
 	    return true;
-	}
-
-	/**
-	 * Display the help to the player
-	 * @return bool
-	 */
-	bool displayHelp()
-	{
-		cString help;
-		help = S_COLOR_RED + "admin          " + S_COLOR_YELLOW + "more info with 'admin help'\n";
-		help += S_COLOR_RED + "position save " + S_COLOR_YELLOW + "freestyle only, save the current poisition in the map\n";
-		help += S_COLOR_RED + "position load " + S_COLOR_YELLOW + "freestyle only, load the last saved position in the map\n";
-		help += S_COLOR_RED + "noclip       " + S_COLOR_YELLOW + "freestyle only, switch clip/noclip mode\n";
-//        help += S_COLOR_RED + "weapondef   " + S_COLOR_YELLOW + "change the weapon values, more info with 'weapondef help'\n";
-		help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-		G_PrintMsg( this.client.getEnt(), help );
-
-		return true;
 	}
 }

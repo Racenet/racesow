@@ -233,38 +233,11 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	    player.executeCommand(command, argsString, argc);
 	}
 
-    else if ( cmdString == "join" )
-    {
-        if ( @client != null && !player.isJoinlocked && !map.inOvertime)
-        {
-            client.team = TEAM_PLAYERS;
-			client.respawn( false );
-            return true;
-        }
-
-        if( player.isJoinlocked )
-        	player.sendMessage( S_COLOR_RED + "You can't join: You are join locked.\n");
-
-        if( map.inOvertime )
-        	player.sendMessage( S_COLOR_RED + "You can't join during overtime period.\n" );
-
-		return false;
-    }
-
-	else if ( ( cmdString == "admin" ) )
-    {
-		return player.adminCommand( argsString );
-    }
 
 	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
 	{
 		return player.ammoSwitch();
 	}
-
-	else if ( ( cmdString == "privsay" ) )
-    {
-		return player.privSay( argsString, @client );
-    }
 
    	else if ( ( cmdString == "callvotecheckpermission" ) )
 	{
@@ -378,45 +351,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		}
 
     }
-	else if ( ( cmdString == "noclip" ) )
-	{
-		return player.noclip();
-	}
-    else if ( ( cmdString == "quad" ) )
-    {
-       return player.quad();
-    }
+
 	else if ( ( cmdString == "position" ) )
 	{
 		return player.position( argsString );
 	}
-	else if ( ( cmdString == "timeleft" ) )
-	{
-		if( match.getState() == MATCH_STATE_POSTMATCH )
-		{
-			client.printMessage( "The command isn't available in this match state.\n");
-			return false;
-		}
-		if( g_timelimit.getInteger() <= 0 )
-		{
-			client.printMessage( "There is no timelimit set.\n");
-			return false;
-		}
-		uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
-		uint time = levelTime - match.startTime(); //in ms
-		uint timeleft = timelimit - time;
-		bool isNegative = (timelimit < time ) ? true : false;
-		if( isNegative )
-		{
-			client.printMessage( "We are already in overtime.\n" );
-			return false;
-		}
-		else
-		{
-			client.printMessage( "Time left: " + TimeToString( timeleft ) + "\n" );
-			return true;
-		}
-	}
+
     return false;
 }
 
@@ -1106,16 +1046,9 @@ void GT_InitGametype()
 
     // add commands
 	RS_InitCommands();
-    G_RegisterCommand( "join" );
-	G_RegisterCommand( "admin" );
 	G_RegisterCommand( "ammoswitch" );
 	//G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
-	G_RegisterCommand( "privsay" );
-	G_RegisterCommand( "noclip" );
-	G_RegisterCommand( "position" );
-	G_RegisterCommand( "timeleft" );
-	G_RegisterCommand( "quad" );
 
 	//add callvotes
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
