@@ -24,14 +24,54 @@ class Racesow_Command
     cString description;
     cString usage;
 
+    /**
+     * This is called before the actual work is done.
+     *
+     * Here you should only check the number of arguments and that
+     * the player has the right to call the command
+     *
+     * @param player The player who calls the command
+     * @param args The tokenized string of arguments
+     * @param argc The number of arguments
+     * @return success boolean
+     */
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
         return true;
     }
 
+    /**
+     * This is called after the validate function.
+     *
+     * Technically no validation should be done here, only the real work.
+     * Most probably a call to a player method.
+     * @param player The player who calls the command
+     * @param args The tokenized string of arguments
+     * @param argc The number of arguments
+     * @return success boolean
+     */
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         return true;
+    }
+
+    /**
+     * Return the command description in a nice way to be printed
+     */
+    cString getDescription()
+    {
+        return S_COLOR_ORANGE + this.name + ": " + S_COLOR_WHITE + this.description + "\n";
+    }
+
+    /**
+     * Return the command usage in a nice way to be printed
+     */
+    cString getUsage()
+    {
+        if ( this.usage.len() > 0 )
+            return S_COLOR_ORANGE + "Usage: " + S_COLOR_WHITE + this.usage + "\n";
+        else
+            return "";
     }
 }
 
@@ -284,18 +324,12 @@ class Command_Help : Racesow_Command
             Racesow_Command@ command = RS_GetCommandByName( args.getToken(0) );
             if ( command !is null)
             {
-                cString helpmessage;
-                helpmessage = S_COLOR_ORANGE + command.name + ": " + S_COLOR_WHITE + command.description+"\n";
-
-                if ( command.usage.len() > 0 )
-                    helpmessage += S_COLOR_ORANGE + "Usage: " + S_COLOR_WHITE + command.usage + "\n";
-
-                player.sendMessage(helpmessage);
+                player.sendMessage( command.getDescription() + command.getUsage() );
                 return true;
             }
             else
             {
-                player.sendErrorMessage("command " + S_COLOR_YELLOW + args.getToken(0) + S_COLOR_WHITE + " not found");
+                player.sendErrorMessage("Command " + S_COLOR_YELLOW + args.getToken(0) + S_COLOR_WHITE + " not found");
                 return true;
             }
         }
@@ -311,9 +345,8 @@ class Command_Help : Racesow_Command
             for (int i = 0; i < commandCount; i++)
             {
                 Racesow_Command@ command = commands[i];
-                help += S_COLOR_ORANGE + command.name + ": " + S_COLOR_WHITE + command.description + "\n";
-
-                if ( (i/5)*5 == i )
+                help += command.getDescription();
+                if ( (i/5)*5 == i ) //to avoid print buffer overflow
                 {
                     player.sendMessage(help);
                     help = "";

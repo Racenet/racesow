@@ -1243,17 +1243,15 @@ class Racesow_Player
 	    if(command.validate(@this, argsString, argc))
 	    {
 	        if(command.execute(@this, argsString, argc))
-	        {
 	            return true;
-	        }
 	        else
 	        {
-	            this.sendMessage(S_COLOR_ORANGE + "Usage: " + S_COLOR_WHITE + command.usage + "\n");
+	            this.sendMessage(command.getUsage());
 	            return false;
 	        }
 	    }
 
-	    this.sendMessage(S_COLOR_ORANGE + "Usage: " + S_COLOR_WHITE + command.usage + "\n");
+	    this.sendMessage(command.getUsage());
 	    return true;
 	}
 
