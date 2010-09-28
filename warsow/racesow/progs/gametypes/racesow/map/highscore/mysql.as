@@ -1,7 +1,7 @@
 /**
  * Racesow_Map_HighScore_Mysql
  *
- * Stores stats in a simple text file
+ * Manage stats in mysql mod, stores all race info in a mysql database
  *
  * @package Racesow
  * @subpackage Map_HighScore
@@ -23,15 +23,6 @@ class Racesow_Map_HighScore_Mysql : Racesow_Map_HighScore_Abstract
 			+ "race finished: " + TimeToString( race.getTime() ) + "\n");
 	}
 	
-	/**
-	 * Write the stats to the file
-	 * @return void
-	 */
-	void writeStats()
-	{
-    
-	}
-
 	/**
 	 * Load map id and server best
 	 * @return void

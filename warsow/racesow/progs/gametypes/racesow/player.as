@@ -220,42 +220,51 @@ class Racesow_Player
     void appear()
     {
         this.joinedTime = levelTime;
-        RS_MysqlPlayerAppear(
-            this.getName(),
-            this.getClient().playerNum(),
-            this.getId(),
-            map.getId(),
-            this.getAuth().isAuthenticated(),
-            this.getAuth().authenticationName,
-            this.getAuth().authenticationPass,
-            this.getAuth().authenticationToken
-        );
+        if ( rs_mysqlEnabled.getBool() )
+        {
+            RS_MysqlPlayerAppear(
+                    this.getName(),
+                    this.getClient().playerNum(),
+                    this.getId(),
+                    map.getId(),
+                    this.getAuth().isAuthenticated(),
+                    this.getAuth().authenticationName,
+                    this.getAuth().authenticationPass,
+                    this.getAuth().authenticationToken
+            );
+        }
     }
 
     void disappear(cString nickName)
     {
-        RS_MysqlPlayerDisappear(
-            nickName,
-            levelTime-this.joinedTime,
-            this.getId(),
-            this.getNickId(),
-            map.getId(),
-            this.getAuth().isAuthenticated(),
-			true // default behavior is threaded
-        );
+        if ( rs_mysqlEnabled.getBool() )
+        {
+            RS_MysqlPlayerDisappear(
+                    nickName,
+                    levelTime-this.joinedTime,
+                    this.getId(),
+                    this.getNickId(),
+                    map.getId(),
+                    this.getAuth().isAuthenticated(),
+                    true // default behavior is threaded
+            );
+        }
     }
 	
 	void disappear(cString nickName, bool is_threaded)
     {
-        RS_MysqlPlayerDisappear(
-            nickName,
-            levelTime-this.joinedTime,
-            this.getId(),
-            this.getNickId(),
-            map.getId(),
-            this.getAuth().isAuthenticated(),
-			is_threaded
-        );
+        if ( rs_mysqlEnabled.getBool() )
+        {
+            RS_MysqlPlayerDisappear(
+                    nickName,
+                    levelTime-this.joinedTime,
+                    this.getId(),
+                    this.getNickId(),
+                    map.getId(),
+                    this.getAuth().isAuthenticated(),
+                    is_threaded
+            );
+        }
     }
     
     /**
@@ -269,7 +278,7 @@ class Racesow_Player
         uint delta;
         uint earnedPonts;
         
-        // G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
+        //G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
         
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best

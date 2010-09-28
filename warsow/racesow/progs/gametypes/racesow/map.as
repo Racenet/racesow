@@ -8,7 +8,7 @@ class Racesow_Map
 {
 	cString name;
 
-	Racesow_Map_HighScore_Mysql @statsHandler;
+	Racesow_Map_HighScore_Abstract @statsHandler;
 
 	bool inOvertime;
     
@@ -53,7 +53,11 @@ class Racesow_Map
 
 	void reset()
 	{
-		@this.statsHandler = Racesow_Map_HighScore_Mysql();
+	    if ( rs_mysqlEnabled.getBool() )
+	        @this.statsHandler = Racesow_Map_HighScore_Mysql();
+	    else
+            @this.statsHandler = Racesow_Map_HighScore_NoMysql();
+
 		this.statsHandler.setMap(@this);
 
 		cVar mapName( "mapname", "", 0 );

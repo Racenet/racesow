@@ -166,6 +166,12 @@ class Command_Top : Racesow_Command
             return false;
         }
 
+        if ( !rs_mysqlEnabled.getBool() )
+        {
+            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            return false;
+        }
+
         if (player.isWaitingForCommand)
         {
             player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "

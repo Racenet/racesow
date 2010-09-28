@@ -607,7 +607,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-	// perform a Mysql callback if there is one pending
+	// perform a C callback if there is one pending
 	Racesow_ThinkCallbackQueue();
 
 
@@ -875,10 +875,7 @@ void GT_SpawnGametype()
     bool found = false;
 
     @map = Racesow_Map();
-    if ( rs_mysqlEnabled.getBool() )
-    {
-        map.getStatsHandler().loadStats();
-    }
+    map.getStatsHandler().loadStats();
 
 	// setup players
     for ( int i = 0; i < maxClients; i++ )

@@ -1630,7 +1630,7 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
     {
         if ( RS_MapValidate( t ) )
         {
-            Q_strncatz( maplist, t, sizeof( maplist ) );
+            Q_strncatz( maplist, va("%s ", t), sizeof( maplist ) );
         mapcount++;
         }
         
