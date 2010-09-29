@@ -550,6 +550,15 @@ class Command_Noclip : Racesow_Command
     }
 }
 
+class Command_Mapname : Racesow_Command
+{
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendMessage( map.name + "\n" );
+        return true;
+    }
+}
+
 /**
  * Fill the commands array and set the command counter to the correct value
  */
@@ -595,6 +604,13 @@ void RS_CreateCommands()
     nextmap.description = "Print the name of the next map in map rotation";
     nextmap.usage = "";
     @commands[commandCount] = @nextmap;
+    commandCount++;
+
+    Command_Mapname mapname;
+    mapname.name = "mapname";
+    mapname.description = "Print the name of current map";
+    mapname.usage = "";
+    @commands[commandCount] = @mapname;
     commandCount++;
 
     Command_Chrono chrono;
