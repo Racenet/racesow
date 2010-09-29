@@ -455,7 +455,7 @@ class Racesow_Player
 	 */
 	bool setBestCheckPoint(uint id, uint time)
 	{
-		if ( id >= this.bestCheckPoints.length() || time < this.bestCheckPoints[id])
+		if ( id >= this.bestCheckPoints.length() || ( this.bestCheckPoints[id] != 0 && time >= this.bestCheckPoints[id] ) )
 			return false;
 
 		this.bestCheckPoints[id] = time;

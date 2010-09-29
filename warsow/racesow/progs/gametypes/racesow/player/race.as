@@ -168,7 +168,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         {
 			if ( map.getStatsHandler().getHighScore(0).setCheckPoint(id, newTime) && this.player.setBestCheckPoint(id, newTime) )
 			{
-				this.triggerAward( S_COLOR_GREEN + (id + 1) + ". checkpoint record!" );
+				this.triggerAward( S_COLOR_GREEN + "#" + (id + 1) + " checkpoint record!" );
 				
 				// is printing checkpoints really a good idea?
 				//G_PrintMsg(null, this.player.getName() + " " + S_COLOR_WHITE + "made a new "
@@ -178,7 +178,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         else if ( newTime < personalBestTime || personalBestTime == 0 )
         {
             if ( this.player.setBestCheckPoint(id, newTime) )
-				this.triggerAward( S_COLOR_YELLOW + (id + 1) + ". checkpoint personal record!" );
+				this.triggerAward( S_COLOR_YELLOW + "#" + (id + 1) + " checkpoint personal record!" );
         }
 
         this.lastCheckPoint++;
