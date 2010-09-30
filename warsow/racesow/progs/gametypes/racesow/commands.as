@@ -103,9 +103,7 @@ class Command_Mapfilter : Racesow_Command
             page = args.getToken( 1 ).toInt();
 
         player.isWaitingForCommand = true;
-        RS_MapFilter(player.client.playerNum(),filter,page);
-        return true;
-
+        return RS_MapFilter(player.client.playerNum(),filter,page);
     }
 }
 
@@ -262,8 +260,7 @@ class Command_Maplist : Racesow_Command
         if (argc >= 1)
             page = args.getToken(0).toInt();
 
-        RS_Maplist(player.client.playerNum(),page);
-        return true;
+        return RS_Maplist(player.client.playerNum(),page);
     }
 }
 
