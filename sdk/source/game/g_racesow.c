@@ -146,7 +146,7 @@ void RS_MysqlLoadInfo( void )
     rs_authField_Name = trap_Cvar_Get( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_authField_Pass = trap_Cvar_Get( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_authField_Token = trap_Cvar_Get( "rs_authField_Token", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
-    rs_tokenSalt = trap_Cvar_Get( "rs_tokenSalt", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    rs_tokenSalt = trap_Cvar_Get( "rs_tokenSalt", "", CVAR_ARCHIVE|CVAR_NOSET);
     
     if (!Q_stricmp( rs_authField_Name->string, "" ) || !Q_stricmp( rs_authField_Pass->string, "" ) ||!Q_stricmp( rs_authField_Token->string, "" ))
     {
