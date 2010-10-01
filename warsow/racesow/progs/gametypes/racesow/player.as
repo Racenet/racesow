@@ -937,6 +937,32 @@ class Racesow_Player
 	}
 
     /**
+     * Send a message to console of the player
+     * when the message is too long, split it in several parts
+     * to avoid print buffer overflow
+     * @param cString message
+     * @return void
+     */
+    void sendLongMessage( cString message )
+    {
+        if (@this.client == null)
+            return;
+
+        const int maxsize = 1000;
+        int partsNumber = message.length()/maxsize;
+
+        if ( partsNumber*maxsize < message.length() )//compute the ceil instead of floor
+            partsNumber++;
+
+        for ( int i = 0; i < partsNumber; i++ )
+        {
+            G_PrintMsg( this.client.getEnt(), message.substr(i*maxsize,maxsize) );
+        }
+
+        // maybe log messages for some reason to figure out ;)
+    }
+
+    /**
      * Send an error message with red warning.
      * @param cString message
      * @return void

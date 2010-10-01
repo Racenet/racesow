@@ -102,10 +102,10 @@ extern void *RS_MysqlPlayerDisappear_Thread( void *in );
 
 extern qboolean RS_MysqlLoadMaplist( int is_freestyle );
 
+extern char *RS_PrintQueryCallback(int player_id );
+
 extern qboolean RS_MysqlLoadHighscores( int playerNum, int map_id );
 extern void *RS_MysqlLoadHighscores_Thread( void *in );
-
-extern qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum );
 
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7 );
@@ -113,13 +113,10 @@ extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *ar
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 
 extern void RS_LoadMaplist( int is_freestyle);
-extern unsigned int RS_GetNumberOfMaps();
 
 extern qboolean RS_MapFilter(int player_id, char *filter,unsigned int page);
-extern char *RS_MapFilterCallback(int player_id);
 
 extern qboolean RS_Maplist(int player_id, unsigned int page);
-extern char *RS_MaplistCallback(int player_id);
 
 extern char *RS_ChooseNextMap();
 extern char *RS_GetMapByNum(int num);

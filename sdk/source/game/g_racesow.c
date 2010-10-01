@@ -59,6 +59,11 @@ cvar_t *g_freestyle;
 cvar_t *rs_loadHighscores;
 
 /**
+ * Store the result of different requests from players.
+ */
+char *players_query[MAX_CLIENTS]={0};
+
+/**
  * map-list related global variables
  */
 unsigned int mapcount = 0;
@@ -1096,17 +1101,12 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 }
 
 /**
- * Store the result of different requests from players.
- */
-char *players_query[MAX_CLIENTS]={0};
-
-/**
  * Map filter thread, parse the maplist array
  *
  * @param in Input data, cast to filterDataStruct
  * @return NULL on success
  */
-void *RS_BasicMapFilter_Thread( void *in)
+void *RS_MapFilter_Thread( void *in)
 {
     struct filterDataStruct *filterData = (struct filterDataStruct *)in;
     int filterCount = 0, totalPages = 0, mapCount = 0, size = 0;
@@ -1227,7 +1227,7 @@ qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
     filterdata->player_id = player_id;
     filterdata->filter = strdup(filter);
     filterdata->page = page;
-    returnCode = pthread_create(&thread, &threadAttr, RS_BasicMapFilter_Thread, (void *)filterdata);
+    returnCode = pthread_create(&thread, &threadAttr, RS_MapFilter_Thread, (void *)filterdata);
 
     if (returnCode) {
 
@@ -1239,13 +1239,14 @@ qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
         }
 
 /**
- * This function is called from angelscript when RACESOW_CALLBACK_MAPFILTER is
- * popped out of the callback queue.
+ * This function is called from angelscript when callbacks of queries returning
+ * a string are popped out of the callback queue.
+ * Mainly : RACESOW_CALLBACK_HIGHSCORES/MAPLIST/MAPFILTER
  *
  * @param player_id Id of the player making the request
  * @return the result string to print to the player
  */
-char *RS_MapFilterCallback(int player_id )
+char *RS_PrintQueryCallback(int player_id )
 {
     unsigned int size = strlen(players_query[player_id])+1;
     char *result=malloc(size);
@@ -1253,7 +1254,7 @@ char *RS_MapFilterCallback(int player_id )
     free(players_query[player_id]);
     players_query[player_id] = NULL;
     return result;
-    }
+}
 
 /**
  * Maplist thread, parse the maplist array
@@ -1348,23 +1349,6 @@ qboolean RS_Maplist(int player_id, unsigned int page)
 }
 
 /**
- * This function is called from angelscript when RACESOW_CALLBACK_MAPLIST is
- * popped out of the callback queue.
- *
- * @param player_id Id of the player making the request
- * @return the result string to print to the player
- */
-char *RS_MaplistCallback(int player_id )
-{
-    unsigned int size = strlen(players_query[player_id])+1;
-    char *result=malloc(size);
-    Q_strncpyz(result, players_query[player_id] , size);
-    free(players_query[player_id]);
-    players_query[player_id] = NULL;
-    return result;
-}
-
-/**
  * Calls the highscores thread
  *
  * @param edict_t *ent
@@ -1397,8 +1381,6 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
 // straight from 0.42 with some changes
 //=================
 
-char *highscores_players[3][256]={{0}}; // no more than 256 players at the same time on a server, right?
-
 void *RS_MysqlLoadHighscores_Thread( void* in ) {
     
 		MYSQL_ROW  row;
@@ -1407,10 +1389,8 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		int playerNum;
 		int map_id;
 		int limit;
-		char highscores[3][10000];
+		char highscores[10000];
 		struct highscoresDataStruct *highscoresData;
-		int highscore_part;
-
 
 		highscoresData=(struct highscoresDataStruct *)in;
 		playerNum=highscoresData->playerNum;
@@ -1427,12 +1407,10 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
 
-		highscores[0][0]='\0';
-		highscores[1][0]='\0';
-		highscores[2][0]='\0';
+		highscores[0]='\0';
         
         if( (unsigned long)mysql_num_rows( mysql_res ) == 0 )
-            Q_strncatz(highscores[0], va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores[0]));
+            Q_strncatz(highscores, va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores[0]));
         
         else {
             unsigned int position = 0;
@@ -1446,7 +1424,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 			
 			replay_record=0;
  
-            Q_strncatz(highscores[0], va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, level.mapname, S_COLOR_WHITE ), sizeof(highscores[0]));
+            Q_strncatz(highscores, va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, level.mapname, S_COLOR_WHITE ), sizeof(highscores[0]));
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
 			{
@@ -1485,55 +1463,21 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                 last_position = draw_position;
                 Q_strncpyz( last_time, va( "%d:%d.%d", min, sec, milli ), sizeof(last_time) );
 
-                if( position <= 10 )
-                    Q_strncatz( highscores[0], va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[0]) );
-                else if( position <= 20 )
-                    Q_strncatz( highscores[1], va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[1]) );
-                else if( position <= 30 )
-                    Q_strncatz( highscores[2], va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores[2]) );
-            }
+                Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
 			}
+        }
 
         mysql_free_result(mysql_res);
 
-		for (highscore_part=0;highscore_part<3;highscore_part++)
-		{
-				highscores_players[highscore_part][playerNum]=malloc(strlen(highscores[highscore_part])+1);
-				highscores_players[highscore_part][playerNum][0]='\0';
-				Q_strncpyz( highscores_players[highscore_part][playerNum],highscores[highscore_part], strlen(highscores[highscore_part]));
-		}
+        players_query[playerNum]=malloc(strlen(highscores)+1);
+        players_query[playerNum][0]='\0';
+        Q_strncpyz( players_query[playerNum],highscores, strlen(highscores) + 1);
 
 		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0, 0, 0, 0, 0);
 		
 		free(highscoresData);	
 		RS_EndMysqlThread();
 		return NULL;
-}
-
-/**
- * Print highscores to a player
- * 
- * @param edict_t *ent
- * @param int playerNum
- * @return void
- */
-
-qboolean RS_PrintHighscoresTo( edict_t *ent, int playerNum )
-{
-	int highscore_part;
-	if( ent != NULL )
-	{
-		G_PrintMsg( ent, va( "\n%s\n", highscores_players[0][playerNum]) );
-		G_PrintMsg( ent, va( "%s\n", highscores_players[1][playerNum]) ); 
-		G_PrintMsg( ent, va( "%s\n",highscores_players[2][playerNum]) );
-	}
-	
-	for (highscore_part=0;highscore_part<3;highscore_part++)
-	{
-		free(highscores_players[highscore_part][playerNum]);
-		highscores_players[highscore_part][playerNum]=NULL;
-	}
-	return qtrue;
 }
 
 /**
@@ -1660,11 +1604,6 @@ void RS_LoadMaplist( int is_freestyle)
     }
 
     G_Printf( "Maplist loaded : %u maps found.\n", mapcount );
-}
-
-unsigned int RS_GetNumberOfMaps()
-{
-	return mapcount;
 }
 
 /**

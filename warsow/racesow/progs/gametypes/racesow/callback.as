@@ -43,8 +43,9 @@ void Racesow_ThinkCallbackQueue()
 			@player = Racesow_GetPlayerByNumber(arg1);
 			if ( @player != null )
 			{
-				RS_PrintHighscoresTo(player.getClient().getEnt(),arg1);
-				player.isWaitingForCommand=false;
+                cString result = RS_PrintQueryCallback(arg1);
+                player.sendLongMessage(result);
+                player.isWaitingForCommand=false;
 			}
             break;
 			
@@ -69,7 +70,7 @@ void Racesow_ThinkCallbackQueue()
 
 		    if ( @player != null )
 		    {
-		        cString result = RS_MapFilterCallback(arg1);
+		        cString result = RS_PrintQueryCallback(arg1);
 		        player.sendMessage(result);
 		        player.isWaitingForCommand=false;
 		    }
@@ -80,7 +81,7 @@ void Racesow_ThinkCallbackQueue()
 
             if ( @player != null )
             {
-                cString result = RS_MaplistCallback(arg1);
+                cString result = RS_PrintQueryCallback(arg1);
                 player.sendMessage(result);
                 player.isWaitingForCommand=false;
             }
