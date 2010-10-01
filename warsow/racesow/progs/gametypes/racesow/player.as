@@ -220,7 +220,7 @@ class Racesow_Player
     void appear()
     {
         this.joinedTime = levelTime;
-        if ( rs_mysqlEnabled.getBool() )
+        if ( mysqlConnected != 0 )
         {
             RS_MysqlPlayerAppear(
                     this.getName(),
@@ -237,7 +237,7 @@ class Racesow_Player
 
     void disappear(cString nickName)
     {
-        if ( rs_mysqlEnabled.getBool() )
+        if ( mysqlConnected != 0 )
         {
             RS_MysqlPlayerDisappear(
                     nickName,
@@ -253,7 +253,7 @@ class Racesow_Player
 	
 	void disappear(cString nickName, bool is_threaded)
     {
-        if ( rs_mysqlEnabled.getBool() )
+        if ( mysqlConnected != 0 )
         {
             RS_MysqlPlayerDisappear(
                     nickName,

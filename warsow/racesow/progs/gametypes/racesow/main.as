@@ -46,7 +46,6 @@ cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
 
-cVar rs_mysqlEnabled( "rs_mysqlEnabled", "1",CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 

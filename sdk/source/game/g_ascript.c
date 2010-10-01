@@ -6994,6 +6994,9 @@ static asglobproperties_t asGlobProps[] =
 	{ "const int maxClients", &gs.maxclients },
 	{ "cGametypeDesc gametype", &level.gametype },
 	{ "cMatch match", &level.gametype.match },
+	// racesow
+    { "int mysqlConnected", &MysqlConnected },
+	// !racesow
 
 	{ NULL, NULL }
 };

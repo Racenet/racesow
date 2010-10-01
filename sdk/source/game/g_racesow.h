@@ -2,6 +2,7 @@
 
 char maplist[50000];
 unsigned int mapcount;
+int MysqlConnected;
 
 void RS_MysqlLoadInfo( void );
 qboolean RS_MysqlConnect( void );

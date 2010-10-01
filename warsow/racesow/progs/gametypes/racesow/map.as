@@ -53,7 +53,7 @@ class Racesow_Map
 
 	void reset()
 	{
-	    if ( rs_mysqlEnabled.getBool() )
+	    if ( mysqlConnected != 0 )
 	        @this.statsHandler = Racesow_Map_HighScore_Mysql();
 	    else
             @this.statsHandler = Racesow_Map_HighScore_NoMysql();

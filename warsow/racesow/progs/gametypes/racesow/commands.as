@@ -164,7 +164,7 @@ class Command_Top : Racesow_Command
             return false;
         }
 
-        if ( !rs_mysqlEnabled.getBool() )
+        if ( mysqlConnected == 0 )
         {
             player.sendMessage("This server doesn't store the best times, this command is useless\n" );
             return false;

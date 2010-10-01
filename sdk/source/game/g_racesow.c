@@ -104,7 +104,7 @@ int callback_queue_write_index=0;
 int callback_queue_read_index=0;
 int callback_queue[MAX_SIZE_CALLBACK_QUEUE][8];
 
-static int MysqlConnected;
+int MysqlConnected = 0;
 /**
  * Initializes racesow specific stuff
  *
