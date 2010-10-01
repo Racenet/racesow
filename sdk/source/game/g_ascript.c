@@ -6119,16 +6119,16 @@ static void asFunc_asGeneric_RS_MapFilter( void *gen )
 }
 
 // RS_MysqlMapFilterCallback
-static asstring_t *asFunc_RS_MapFilterCallback(int player_id )
+static asstring_t *asFunc_RS_PrintQueryCallback(int player_id )
 {
      char *result;
-     result = RS_MapFilterCallback(player_id);
+     result = RS_PrintQueryCallback(player_id);
      return objectString_FactoryBuffer(result, strlen(result));
 }
 
-static void asFunc_asGeneric_RS_MapFilterCallback( void *gen )
+static void asFunc_asGeneric_RS_PrintQueryCallback( void *gen )
 {
-    G_asGeneric_SetReturnAddress( gen, asFunc_RS_MapFilterCallback(
+    G_asGeneric_SetReturnAddress( gen, asFunc_RS_PrintQueryCallback(
             (unsigned int)G_asGeneric_GetArgInt(gen, 0)));
 }
 
@@ -6143,20 +6143,6 @@ static void asFunc_asGeneric_RS_Maplist( void *gen )
     G_asGeneric_SetReturnBool( gen, asFunc_RS_Maplist(
             (int)G_asGeneric_GetArgInt(gen, 0),
             (unsigned int)G_asGeneric_GetArgInt(gen, 1)));
-}
-
-// RS_MaplistCallback
-static asstring_t *asFunc_RS_MaplistCallback( int player_id )
-{
-     char *result;
-     result = RS_MaplistCallback(player_id);
-     return objectString_FactoryBuffer(result, strlen(result));
-}
-
-static void asFunc_asGeneric_RS_MaplistCallback( void *gen )
-{
-    G_asGeneric_SetReturnAddress( gen, asFunc_RS_MaplistCallback(
-            (unsigned int)G_asGeneric_GetArgInt(gen, 0)));
 }
 
 // RS_NextMap
@@ -6180,18 +6166,6 @@ static void asFunc_RS_LoadMapList( int is_freestyle )
 static void asFunc_asGeneric_RS_LoadMapList( void *gen )
 {
 	asFunc_RS_LoadMapList( (int)G_asGeneric_GetArgInt( gen, 0 ) );
-}
-
-// RS_GetNumberOfMaps
-static int asFunc_RS_GetNumberOfMaps()
-{
-	int mapcount;
-	mapcount=RS_GetNumberOfMaps();
-	return mapcount;
-}
-static void asFunc_asGeneric_RS_GetNumberOfMaps( void *gen )
-{
-	 G_asGeneric_SetReturnInt(gen, asFunc_RS_GetNumberOfMaps() );
 }
 
 // RS_removeProjectiles
@@ -6279,19 +6253,6 @@ static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlLoadHighscores(
 		(int)G_asGeneric_GetArgInt(gen, 0),
-		(int)G_asGeneric_GetArgInt(gen, 1)));
-}
-
-// RS_MysqlPrintHighscoresTo
-static qboolean asFunc_RS_MysqlPrintHighscoresTo( edict_t *ent, int playerNum)
-{
-	return RS_PrintHighscoresTo(ent, playerNum);
-}
-
-static void asFunc_asGeneric_RS_MysqlPrintHighscoresTo( void *gen )
-{
-	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlPrintHighscoresTo(
-		(edict_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(int)G_asGeneric_GetArgInt(gen, 1)));
 }
 
@@ -6939,15 +6900,12 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "void RS_MysqlInsertRace( int, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
-	{ "void RS_PrintHighscoresTo( cEntity @, int )", asFunc_RS_MysqlPrintHighscoresTo, asFunc_asGeneric_RS_MysqlPrintHighscoresTo },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
 	{ "bool RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},
-    { "cString @RS_MapFilterCallback( int )", asFunc_RS_MapFilterCallback, asFunc_asGeneric_RS_MapFilterCallback },
-    { "cString @RS_MaplistCallback( int )", asFunc_RS_MaplistCallback, asFunc_asGeneric_RS_MaplistCallback },
+    { "cString @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback, asFunc_asGeneric_RS_PrintQueryCallback },
     { "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },
 	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
-	{ "int RS_GetNumberOfMaps()", asFunc_RS_GetNumberOfMaps, asFunc_asGeneric_RS_GetNumberOfMaps},
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
