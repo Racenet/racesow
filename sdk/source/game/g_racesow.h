@@ -66,6 +66,8 @@ struct highscoresDataStruct {
 
 	int playerNum;
 	unsigned int map_id;
+	int limit;
+	char *mapname;
 };
 
 struct filterDataStruct {
@@ -105,7 +107,7 @@ extern qboolean RS_MysqlLoadMaplist( int is_freestyle );
 
 extern char *RS_PrintQueryCallback(int player_id );
 
-extern qboolean RS_MysqlLoadHighscores( int playerNum, int map_id );
+extern qboolean RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, char *mapname );
 extern void *RS_MysqlLoadHighscores_Thread( void *in );
 
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7 );

@@ -6244,16 +6244,18 @@ static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
 }
 
 // RS_MysqlLoadHighScores
-static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int map_id)
+static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, asstring_t *mapname )
 {
-	return RS_MysqlLoadHighscores(playerNum, map_id);
+	return RS_MysqlLoadHighscores(playerNum, limit, map_id, mapname->buffer);
 }
 
 static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlLoadHighscores(
 		(int)G_asGeneric_GetArgInt(gen, 0),
-		(int)G_asGeneric_GetArgInt(gen, 1)));
+		(int)G_asGeneric_GetArgInt(gen, 1),
+		(int)G_asGeneric_GetArgInt(gen, 2),
+		(asstring_t *)G_asGeneric_GetArgAddress(gen, 3)));
 }
 
 // RS_QueryCallbackQueue
@@ -6899,7 +6901,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "void RS_MysqlInsertRace( int, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
-	{ "void RS_MysqlLoadHighscores( int, int )", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
+	{ "void RS_MysqlLoadHighscores( int, int, int, cString &)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
 	{ "bool RS_QueryCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
 	{ "bool RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},

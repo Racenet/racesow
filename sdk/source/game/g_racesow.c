@@ -1459,7 +1459,7 @@ qboolean RS_Maplist(int player_id, unsigned int page)
  * @param int map_id
  * @return void
  */
-qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
+qboolean RS_MysqlLoadHighscores( int playerNum, int  limit, int map_id, char *mapname )
 {
 	pthread_t thread;
 	int returnCode;
@@ -1468,6 +1468,8 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int map_id )
 
     highscoresData->map_id=map_id;
 	highscoresData->playerNum=playerNum;
+	highscoresData->mapname = strdup(mapname);
+	highscoresData->limit = limit;
     
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadHighscores_Thread, (void *)highscoresData);
 	if (returnCode) {
@@ -1493,16 +1495,48 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		int playerNum;
 		int map_id;
 		int limit;
+		int mapNumber;
 		char highscores[10000];
 		struct highscoresDataStruct *highscoresData;
+		char *mapname;
 
-		highscoresData=(struct highscoresDataStruct *)in;
-		playerNum=highscoresData->playerNum;
-		map_id=highscoresData->map_id;
-
-		limit=30;
+		highscoresData = (struct highscoresDataStruct *)in;
+		playerNum = highscoresData->playerNum;
+		limit = highscoresData->limit;
+		mapname = strdup(highscoresData->mapname);
 		
 		RS_StartMysqlThread();
+
+		//if a mapname was provided we must use it
+		if ( mapname != NULL && strlen(mapname) > 0)
+		{
+		    mapNumber = atoi( mapname );
+		    if( !Q_stricmp( mapname, va( "%i", mapNumber ) ) )
+		    {
+		        //a mapnumber was given, get the corresponding mapname in maplist
+		        mapname = RS_GetMapByNum( mapNumber );
+		    }
+
+		    //get the map_id corresponding to the mapname
+		    sprintf(query, rs_queryGetMap->string, mapname);
+		    mysql_real_query(&mysql, query, strlen(query));
+	        RS_CheckMysqlThreadError();
+	        mysql_res = mysql_store_result(&mysql);
+	        RS_CheckMysqlThreadError();
+
+	        if ( (row = mysql_fetch_row(mysql_res)) != NULL )
+	            map_id = atoi(row[0]);
+	        else
+	            map_id = 0;
+
+	        mysql_free_result(mysql_res);
+		}
+		else //use given map_id (current map id)
+		{
+		    mapname = malloc(strlen(level.mapname)+1);
+		    Q_strncpyz(mapname,level.mapname,strlen(level.mapname)+1);
+		    map_id = highscoresData->map_id;
+		}
 
         // get top players on map
 		sprintf(query, rs_queryLoadMapHighscores->string, map_id, limit);
@@ -1514,7 +1548,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		highscores[0]='\0';
         
         if( (unsigned long)mysql_num_rows( mysql_res ) == 0 )
-            Q_strncatz(highscores, va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores[0]));
+            Q_strncatz(highscores, va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores));
         
         else {
             unsigned int position = 0;
@@ -1528,7 +1562,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 			
 			replay_record=0;
  
-            Q_strncatz(highscores, va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, level.mapname, S_COLOR_WHITE ), sizeof(highscores[0]));
+            Q_strncatz(highscores, va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, mapname, S_COLOR_WHITE ), sizeof(highscores));
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
 			{
@@ -1579,7 +1613,9 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 
 		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0, 0, 0, 0, 0);
 		
-		free(highscoresData);	
+		free(highscoresData->mapname);
+		free(mapname);
+		free(highscoresData);
 		RS_EndMysqlThread();
 		return NULL;
 }

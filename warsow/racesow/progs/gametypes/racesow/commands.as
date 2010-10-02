@@ -177,13 +177,30 @@ class Command_Top : Racesow_Command
             return false;
         }
 
+        if ( argc > 0 )
+        {
+            if ( args.getToken(0).toInt() < 3 || args.getToken(0).toInt() > 30)
+            {
+                player.sendErrorMessage( "You must enter a limit between 0 and 30");
+                return false;
+            }
+        }
+
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
+        int limit = 30;
+        cString mapname;
         player.isWaitingForCommand=true;
-        RS_MysqlLoadHighscores(player.getClient().playerNum(),map.getId());
+
+        if ( argc > 0 )
+            limit = args.getToken(0).toInt();
+        if ( argc > 1 )
+            mapname = args.getToken(1);
+
+        RS_MysqlLoadHighscores(player.getClient().playerNum(), limit, map.getId(), mapname);
         return true;
     }
 
@@ -591,8 +608,8 @@ void RS_CreateCommands()
 
     Command_Top top;
     top.name = "top";
-    top.description = "Print the best times of the current map";
-    top.usage = "";
+    top.description = "Print the best times of a given map (current by default)";
+    top.usage = "top <limit(3-30)> <mapname>";
     @commands[commandCount] = @top;
     commandCount++;
 
