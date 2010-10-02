@@ -21,9 +21,12 @@ CREATE TABLE `gameserver` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `user` varchar(255) NOT NULL,
   `admin` varchar(255) default NULL,
+  `playtime` bigint(20) unsigned NOT NULL default '0',
+  `races` int(10) unsigned NOT NULL default '0',
+  `maps` int(10) unsigned NOT NULL default '0',
   `created` datetime NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
