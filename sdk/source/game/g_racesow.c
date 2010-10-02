@@ -8,6 +8,7 @@
 #include <mysql.h>
 
 cvar_t *sv_port;
+cvar_t *sv_hostname;
 
 /**
  * MySQL CVARs
@@ -145,6 +146,7 @@ void RS_Init()
 void RS_MysqlLoadInfo( void )
 {
     sv_port = trap_Cvar_Get( "sv_port", "44400", CVAR_ARCHIVE );
+    sv_hostname = trap_Cvar_Get( "sv_hostname", "racesow server", CVAR_ARCHIVE );
 
     rs_mysqlHost = trap_Cvar_Get( "rs_mysqlHost", "localhost", CVAR_ARCHIVE );
     rs_mysqlPort = trap_Cvar_Get( "rs_mysqlPort", "0", CVAR_ARCHIVE ); // if 0 it will use the system's default port
@@ -180,9 +182,9 @@ void RS_MysqlLoadInfo( void )
 
     rs_queryGetServer               = trap_Cvar_Get( "rs_queryGetServer",				"SELECT `id`, `user` FROM `gameserver` WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetServerById           = trap_Cvar_Get( "rs_queryGetServerById",			"SELECT `id`, `user` FROM `gameserver` WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `created`) VALUES(CONCAT(USER(), ':', %d), NOW());", CVAR_ARCHIVE );
+    rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `hostname` `created`) VALUES(CONCAT(USER(), ':', %d), '%s' NOW());", CVAR_ARCHIVE );
     rs_queryIncrementServerRaces    = trap_Cvar_Get( "rs_queryIncrementServerRaces",    "UPDATE `gameserver` SET `races` = `races` + 1 WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `race` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `servername` = '%s', `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `race` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     
 	rs_queryGetMap					= trap_Cvar_Get( "rs_queryGetMapId",				"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddMap					= trap_Cvar_Get( "rs_queryAddMap",					"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
@@ -260,7 +262,7 @@ qboolean RS_MysqlConnect( void )
     
     if (server_id == 0)
     {
-        sprintf(query, rs_queryAddServer->string, sv_port->integer);
+        sprintf(query, rs_queryAddServer->string, sv_port->integer, sv_hostname->string);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         
@@ -1180,7 +1182,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     RS_CheckMysqlThreadError();
     
     // update the server's number of played maps and playtime
-    sprintf(query, rs_queryUpdateServerData->string, sv_port->integer);
+    sprintf(query, rs_queryUpdateServerData->string, sv_hostname->string, playtimeData->playtime, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
