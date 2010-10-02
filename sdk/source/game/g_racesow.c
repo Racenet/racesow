@@ -182,7 +182,7 @@ void RS_MysqlLoadInfo( void )
 
     rs_queryGetServer               = trap_Cvar_Get( "rs_queryGetServer",				"SELECT `id`, `user` FROM `gameserver` WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetServerById           = trap_Cvar_Get( "rs_queryGetServerById",			"SELECT `id`, `user` FROM `gameserver` WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `servername`, `created`) VALUES(CONCAT(USER(), ':', %d), '%s' NOW());", CVAR_ARCHIVE );
+    rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `servername`, `created`) VALUES(CONCAT(USER(), ':', %d), '%s', NOW());", CVAR_ARCHIVE );
     rs_queryIncrementServerRaces    = trap_Cvar_Get( "rs_queryIncrementServerRaces",    "UPDATE `gameserver` SET `races` = `races` + 1 WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `servername` = '%s', `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `race` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     
