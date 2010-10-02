@@ -28,6 +28,8 @@ cvar_t *rs_queryAddPlayer;
 cvar_t *rs_queryGetServer;
 cvar_t *rs_queryGetServerById;
 cvar_t *rs_queryAddServer;
+cvar_t *rs_queryIncrementServerRaces;
+cvar_t *rs_queryUpdateServerData;
 cvar_t *rs_queryGetPlayerPoints;
 cvar_t *rs_queryRegisterPlayer;
 cvar_t *rs_queryUpdatePlayerPlaytime;
@@ -175,6 +177,8 @@ void RS_MysqlLoadInfo( void )
     rs_queryGetServer               = trap_Cvar_Get( "rs_queryGetServer",				"SELECT `id`, `user` FROM `gameserver` WHERE `user` = USER() LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetServerById           = trap_Cvar_Get( "rs_queryGetServerById",			"SELECT `id`, `user` FROM `gameserver` WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
     rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `created`) VALUES(USER(), NOW());", CVAR_ARCHIVE );
+    rs_queryIncrementServerRaces    = trap_Cvar_Get( "rs_queryIncrementServerRaces",    "UPDATE `gameserver` SET `races` = `races` + 1 WHERE `user` = USER() LIMIT 1;", CVAR_ARCHIVE );
+    rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `player_map` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = USER() LIMIT 1;", CVAR_ARCHIVE );
     
 	rs_queryGetMap					= trap_Cvar_Get( "rs_queryGetMapId",				"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddMap					= trap_Cvar_Get( "rs_queryAddMap",					"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
@@ -603,7 +607,12 @@ void *RS_MysqlInsertRace_Thread(void *in)
         sprintf(query, rs_queryUpdateMapRaces->string, raceData->map_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
-
+        
+        // increment server races
+        sprintf(query, rs_queryIncrementServerRaces->string);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        
         // insert or update player_map
         sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id);
         mysql_real_query(&mysql, query, strlen(query));
@@ -1156,7 +1165,6 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
-    
     // increment player map playtime
     sprintf(query, rs_queryUpdatePlayerMapPlaytime->string, playtimeData->player_id, playtimeData->map_id, playtimeData->playtime);
     mysql_real_query(&mysql, query, strlen(query));
@@ -1166,7 +1174,12 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     sprintf(query, rs_queryUpdatePlayerMaps->string,  playtimeData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-
+    
+    // update the server's number of played maps and playtime
+    sprintf(query, rs_queryUpdateServerData->string);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    
 	free(playtimeData->name);	
 	free(playtimeData);	
 
