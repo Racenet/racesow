@@ -182,7 +182,7 @@ void RS_MysqlLoadInfo( void )
 
     rs_queryGetServer               = trap_Cvar_Get( "rs_queryGetServer",				"SELECT `id`, `user` FROM `gameserver` WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetServerById           = trap_Cvar_Get( "rs_queryGetServerById",			"SELECT `id`, `user` FROM `gameserver` WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `hostname` `created`) VALUES(CONCAT(USER(), ':', %d), '%s' NOW());", CVAR_ARCHIVE );
+    rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `servername` `created`) VALUES(CONCAT(USER(), ':', %d), '%s' NOW());", CVAR_ARCHIVE );
     rs_queryIncrementServerRaces    = trap_Cvar_Get( "rs_queryIncrementServerRaces",    "UPDATE `gameserver` SET `races` = `races` + 1 WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `servername` = '%s', `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `race` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     
@@ -262,7 +262,10 @@ qboolean RS_MysqlConnect( void )
     
     if (server_id == 0)
     {
-        sprintf(query, rs_queryAddServer->string, sv_port->integer, sv_hostname->string);
+        char servername[255];
+        Q_strncpyz ( servername, sv_hostname->string, sizeof(servername) );
+        mysql_real_escape_string(&mysql, servername, servername, strlen(servername));
+        sprintf(query, rs_queryAddServer->string, sv_port->integer, servername);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         
@@ -583,7 +586,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	mysql_free_result(mysql_res);
     
     // get server_id
-    sprintf(query, rs_queryGetServer->string);
+    sprintf(query, rs_queryGetServer->string, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
@@ -1143,6 +1146,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 {
     char query[1024];
 	char name[64];
+    char servername[255];
 	char simplified[64];
 	struct playtimeDataStruct *playtimeData;
 	int is_threaded;
@@ -1181,8 +1185,10 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
-    // update the server's number of played maps and playtime
-    sprintf(query, rs_queryUpdateServerData->string, sv_hostname->string, playtimeData->playtime, sv_port->integer);
+    // update the server's number of played maps and playtime and the hostname
+    Q_strncpyz ( servername, sv_hostname->string, sizeof(servername) );
+    mysql_real_escape_string(&mysql, servername, servername, strlen(servername));
+    sprintf(query, rs_queryUpdateServerData->string, servername, playtimeData->playtime, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     
