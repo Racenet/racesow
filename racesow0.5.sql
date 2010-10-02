@@ -1,48 +1,66 @@
--- MySQL dump 10.11
+-- phpMyAdmin SQL Dump
+-- version 2.11.8.1deb5+lenny6
+-- http://www.phpmyadmin.net
 --
--- Host: localhost    Database: racesow05
--- ------------------------------------------------------
--- Server version	5.0.51a-24+lenny4-log
+-- Host: localhost
+-- Erstellungszeit: 02. Oktober 2010 um 02:49
+-- Server Version: 5.0.51
+-- PHP-Version: 5.2.6-1+lenny9
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `map`
+-- Tabellenstruktur für Tabelle `gameserver`
+--
+
+
+DROP TABLE IF EXISTS `gameserver`;
+CREATE TABLE `gameserver` (
+  `id` int(11) unsigned NOT NULL auto_increment,
+  `user` varchar(255) NOT NULL,
+  `admin` varchar(255) default NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `map`
 --
 
 DROP TABLE IF EXISTS `map`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
 CREATE TABLE `map` (
-  `id` int(11) unsigned NOT NULL auto_increment,
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
   `name` varchar(40) NOT NULL default '',
-  `freestyle` enum('true','false') NOT NULL default 'false',
-  `status` enum('enabled','disabled') NOT NULL default 'enabled',
-  `races` int(11) unsigned NOT NULL default '0',
-  `playtime` bigint(20) unsigned NOT NULL default '0',
-  `rating` tinyint(1) NOT NULL default '0',
-  `ratings` int(11) NOT NULL default '0',
+  `longname` varchar(64) default NULL,
+  `file` varchar(255) NOT NULL,
+  `mapper_id` mediumint(8) unsigned default NULL,
+  `freestyle` tinyint(1) NOT NULL default '0',
+  `status` enum('enabled','disabled','new','true','false') NOT NULL default 'new',
+  `disabled` enum('true','false') NOT NULL default 'false',
+  `races` mediumint(8) unsigned NOT NULL,
+  `playtime` bigint(20) unsigned NOT NULL,
+  `rating` float unsigned NOT NULL,
+  `ratings` mediumint(8) unsigned NOT NULL,
+  `downloads` mediumint(8) unsigned NOT NULL,
+  `weapons` varchar(10) NOT NULL,
   `created` timestamp NOT NULL default CURRENT_TIMESTAMP,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
-SET character_set_client = @saved_cs_client;
+  PRIMARY KEY  (`id`),
+  KEY `races` (`races`),
+  KEY `playtime` (`playtime`),
+  KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `map_rating`
+-- Tabellenstruktur für Tabelle `map_rating`
 --
 
 DROP TABLE IF EXISTS `map_rating`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
 CREATE TABLE `map_rating` (
   `map_id` int(11) unsigned NOT NULL,
   `player_id` int(11) unsigned NOT NULL,
@@ -50,41 +68,47 @@ CREATE TABLE `map_rating` (
   `created` datetime NOT NULL default '0000-00-00 00:00:00',
   `changed` datetime default NULL,
   UNIQUE KEY `map_id` (`map_id`,`player_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-SET character_set_client = @saved_cs_client;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `player`
+-- Tabellenstruktur für Tabelle `player`
 --
 
 DROP TABLE IF EXISTS `player`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
 CREATE TABLE `player` (
-  `id` int(10) unsigned NOT NULL auto_increment,
-  `name` varchar(255) NOT NULL,
-  `simplified` varchar(255) NOT NULL,
-  `auth_name` varchar(255) default NULL,
-  `auth_pass` varchar(255) default NULL,
-  `auth_token` varchar(255) default NULL,
-  `auth_mask` int(11) NOT NULL default '0',
+  `id` mediumint(8) unsigned NOT NULL auto_increment,
+  `name` varchar(64) NOT NULL default '',
+  `simplified` varchar(64) NOT NULL default '',
+  `auth_name` varchar(255) NOT NULL,
+  `auth_token` varchar(255) NOT NULL,
+  `auth_email` varchar(255) NOT NULL,
+  `auth_mask` varchar(255) NOT NULL,
+  `auth_pass` varchar(255) NOT NULL,
   `session_token` varchar(255) default NULL,
   `points` int(11) NOT NULL default '0',
-  `races` int(11) NOT NULL default '0',
-  `playtime` int(11) NOT NULL default '0',
-  `maps` int(11) NOT NULL default '0',
-  `created` datetime NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
-SET character_set_client = @saved_cs_client;
+  `position` mediumint(8) unsigned default NULL,
+  `races` mediumint(8) unsigned NOT NULL,
+  `maps` mediumint(8) unsigned NOT NULL default '0',
+  `skill` float NOT NULL default '0',
+  `diff_points` mediumint(9) NOT NULL,
+  `awardval` mediumint(8) unsigned NOT NULL,
+  `playtime` bigint(20) NOT NULL,
+  `connects` mediumint(8) unsigned NOT NULL default '0',
+  `created` datetime default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `points` (`points`),
+  KEY `position` (`position`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `player_map`
+-- Tabellenstruktur für Tabelle `player_map`
 --
 
 DROP TABLE IF EXISTS `player_map`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
 CREATE TABLE `player_map` (
   `player_id` int(11) unsigned NOT NULL,
   `map_id` int(11) unsigned NOT NULL,
@@ -92,36 +116,26 @@ CREATE TABLE `player_map` (
   `races` int(11) unsigned NOT NULL default '0',
   `points` int(11) unsigned NOT NULL default '0',
   `playtime` bigint(20) unsigned NOT NULL default '0',
+  `server_id` int(11) default NULL,
   `created` datetime default NULL,
   PRIMARY KEY  (`player_id`,`map_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-SET character_set_client = @saved_cs_client;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `race`
+-- Tabellenstruktur für Tabelle `race`
 --
 
 DROP TABLE IF EXISTS `race`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
 CREATE TABLE `race` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `map_id` int(11) unsigned NOT NULL default '0',
   `player_id` int(11) unsigned NOT NULL default '0',
   `nick_id` int(11) unsigned NOT NULL default '0',
   `time` int(11) unsigned NOT NULL default '0',
+  `tries` int(10) unsigned default NULL,
+  `server_id` int(10) unsigned default NULL,
   `created` datetime NOT NULL default '0000-00-00 00:00:00',
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
-SET character_set_client = @saved_cs_client;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2010-09-04  9:13:18
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
