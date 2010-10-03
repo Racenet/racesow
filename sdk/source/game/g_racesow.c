@@ -6,6 +6,7 @@
 #include <pthread.h>
 #endif
 #include <mysql.h>
+#include <errmsg.h>
 
 cvar_t *sv_port;
 cvar_t *sv_hostname;
@@ -225,9 +226,11 @@ qboolean RS_MysqlConnect( void )
     MYSQL_RES  *mysql_res;
 	int server_id=0;
 
+    mysql.reconnect = 1;
+    
     G_Printf( va( "MySQL Connection String\nmysql://%s:*****@%s:%d/%s\n", rs_mysqlUser->string, rs_mysqlHost->string, rs_mysqlPort->integer, rs_mysqlDb->string ) );
     if( !Q_stricmp( rs_mysqlHost->string, "" ) || !Q_stricmp( rs_mysqlUser->string, "user" ) || !Q_stricmp( rs_mysqlDb->string, "" ) ) {
-        G_Printf( "-------------------------------------\nMySQL ERROR: Connection-data incomplete or not available\n" );
+        G_Printf( "-------------------------------------\nMySQL ERROR1: Connection-data incomplete or not available\n" );
         return qfalse;
     }
     mysql_init( &mysql );
@@ -311,13 +314,20 @@ qboolean RS_MysqlDisconnect( void )
  */
 qboolean RS_MysqlError( edict_t *ent )
 {
-    if( mysql_errno( &mysql ) != 0 ) {
-        if( ent != NULL )
-            G_PrintMsg( ent, va( "%sMySQL Error: %s\n", S_COLOR_RED, mysql_error( &mysql ) ) );
-        else
-            G_Printf( va( "-------------------------------------\nMySQL ERROR: %s\n", mysql_error( &mysql ) ) );
+    int errNo = mysql_errno(&mysql);
+    if (errNo != 0) {
+    
+        printf("MySQL ERROR2: %s (%d)\n", mysql_error(&mysql), errNo);
+        
+        if (errNo == CR_SERVER_GONE_ERROR || errNo == CR_SERVER_LOST)
+        {
+            RS_MysqlLoadInfo();
+            MysqlConnected = RS_MysqlConnect();
+        }
+        
         return qtrue;
     }
+    
     return qfalse;
 }
 
@@ -1671,15 +1681,14 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
 
         sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", "name");
         mysql_real_query(&mysql, query, strlen(query));
-       	if ( mysql_errno(&mysql) ) {
-            printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+       	if (RS_MysqlError(NULL)) {
             return qfalse;
-	    }
+        }
+        
         mysql_res = mysql_store_result(&mysql);
-       	if ( mysql_errno(&mysql) ) {
-            printf("MySQL ERROR: %s\n", mysql_error(&mysql));
+       	if (RS_MysqlError(NULL)) {
             return qfalse;
-	    }
+        }
 
        	while( ( row = mysql_fetch_row( mysql_res ) ) ) {
 
@@ -1778,10 +1787,9 @@ void RS_EndMysqlThread()
  */
 void RS_CheckMysqlThreadError()
 {
-	if (mysql_errno(&mysql) != 0) {
+	if (RS_MysqlError(NULL)) {
     
-        printf("MySQL ERROR: %s\n", mysql_error(&mysql));
-		RS_EndMysqlThread();
+        RS_EndMysqlThread();
     }
 }
 
