@@ -21,7 +21,9 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
             race.getPlayer().getNickId(),
             map.getId(),
             race.getTime(),
-            race.getPlayer().getClient().playerNum()
+            race.getPlayer().getClient().playerNum(),
+            race.getPlayer().numberOfRacesSinceLastRace,
+            race.getPlayer().raceDuration
         );
     }
 

@@ -91,6 +91,16 @@ class Racesow_Player
      */
     uint numberOfRaces;
 
+    /**
+     * Number of races since last race
+     */
+    uint numberOfRacesSinceLastRace;
+
+    /**
+     * Racing time before a race is actually finished
+     */
+    uint raceDuration;
+
 	/**
 	 * Local time of the last top command (flood protection)
 	 * @var uint
@@ -471,6 +481,7 @@ class Racesow_Player
 		this.race.setPlayer(@this);
 		this.race.start();
         this.numberOfRaces++;
+        this.numberOfRacesSinceLastRace++;
         this.sendMessage("Race started: attempt "+ S_COLOR_ORANGE + "#" + this.numberOfRaces +"\n");
     }
 
@@ -504,7 +515,10 @@ class Racesow_Player
 
 		this.isSpawned = false;
 		this.setLastRace(@this.race);
+		this.raceDuration += this.race.getTime();
 		racesowAdapter.raceFinish(@this.race);
+		this.numberOfRacesSinceLastRace = 0;
+		this.raceDuration = 0;
 
         // set up for respawning the player with a delay
         cEntity @respawner = G_SpawnEntity( "race_respawner" );
@@ -519,6 +533,12 @@ class Racesow_Player
     void restartRace()
     {
 		this.isSpawned = true;
+
+		if ( @this.race != null )
+		{
+		    this.raceDuration += levelTime - this.race.getStartTime();
+		}
+
 		@this.race = null;
 		//remove all projectiles.
 		if( @this.client.getEnt() != null )
