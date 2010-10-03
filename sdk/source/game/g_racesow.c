@@ -196,7 +196,7 @@ void RS_MysqlLoadInfo( void )
 	rs_queryAddRace					= trap_Cvar_Get( "rs_queryAddRace",					"INSERT INTO `race` (`player_id`, `map_id`, `time`, `server_id`, `created`) VALUES(%d, %d, %d, %d, NOW());", CVAR_ARCHIVE );
 	
 	rs_queryGetPlayerMap			= trap_Cvar_Get( "rs_queryGetPlayerMap",			"SELECT `points`, `time`, `races`, `playtime`, `created` FROM `player_map` WHERE `player_id` = %d AND `map_id` = %d LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `server_id`, `created`) VALUES(%d, %d, %d, 1, %d, NOW()) ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `server_id` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`server_id`), `server_id`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time` )", CVAR_ARCHIVE );
+	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `server_id`, `tries`, `duration`, `created`) VALUES(%d, %d, %d, 1, %d, (SELECT SUM(`tries`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `tries` IS NOT NULL), (SELECT SUM(`duration`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `duration` IS NOT NULL), NOW()) ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `server_id` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`server_id`), `server_id`), `tries` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`tries`), `tries`), `duration` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`duration`), `duration`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time`);", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMapPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPlaytime",	"INSERT INTO `player_map` (`player_id`, `map_id`, `playtime`) VALUES(%d, %d, %d) ON DUPLICATE KEY UPDATE `playtime` = `playtime` + VALUES(`playtime`);", CVAR_ARCHIVE );
 	rs_queryGetPlayerMapHighscore	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScore",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`map_id` = %d AND `pm`.`player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
@@ -629,12 +629,12 @@ void *RS_MysqlInsertRace_Thread(void *in)
         RS_CheckMysqlThreadError();
         
         // increment server races
-        sprintf(query, rs_queryIncrementServerRaces->string);
+        sprintf(query, rs_queryIncrementServerRaces->string, sv_port->integer);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         
-        // insert or update player_map
-        sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id);
+        // insert or update player_map (aka personal record)
+        sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id, raceData->player_id, raceData->map_id, raceData->player_id, raceData->map_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();    
         
