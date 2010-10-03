@@ -20,9 +20,5 @@ class Racesow_Map_HighScore_NoMysql : Racesow_Map_HighScore_Abstract
                 race.getPlayer().bestRaceTime,
                 map.getStatsHandler().getHighScore(0).getTime(),
                 race.getTime());
-
-        race.getPlayer().getClient().addAward( S_COLOR_CYAN + "Race Finished!" );
-        race.getPlayer().sendMessage(S_COLOR_WHITE
-                + "race finished: " + TimeToString( race.getTime() ) + "\n");
     }
 }

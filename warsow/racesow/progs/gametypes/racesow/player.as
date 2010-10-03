@@ -86,6 +86,11 @@ class Racesow_Player
 	 */
     uint bestRaceTime;
 
+    /**
+     * Number of races on the current map
+     */
+    uint numberOfRaces;
+
 	/**
 	 * Local time of the last top command (flood protection)
 	 * @var uint
@@ -273,40 +278,31 @@ class Racesow_Player
      */
     void raceCallback(uint allPoints, uint oldPoints, uint newPoints, uint oldTime, uint oldBestTime, uint newTime)
     {
-        cString str;
-		uint bestTime;
-        uint delta;
-        uint earnedPonts;
-        
+
         //G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
-        
+		uint bestTime;
+        uint earnedPoints;
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
         
+        //print general info to player
+        this.getClient().addAward( S_COLOR_CYAN + "Race Finished!" );
 		bool noDelta = 0 == bestTime;
-		
-        if ( noDelta )
-		{
-			delta = bestTime - newTime;
-            str = S_COLOR_GREEN ;
-		}
-		else if ( newTime < bestTime )
-        {
-			delta = bestTime - newTime;
-            str = S_COLOR_GREEN + "-";
+        G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
+            + ( noDelta ? "" : diffString( bestTime, newTime ) ) );
+
+        this.sendMessage(S_COLOR_WHITE + "Race finished : "
+                + TimeToString( newTime)
+                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldTime, newTime)
+                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldBestTime, newTime) + "\n");
+
+        earnedPoints = newPoints - oldPoints;
+        if (earnedPoints > 0) {
+            this.getClient().addAward( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!" );
+            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!\n" );
         }
-		else if ( newTime == bestTime )
-		{
-		    delta = 0;
-            str = S_COLOR_YELLOW + "+-";
-		}
-        else
-        {
-            delta = newTime - bestTime;
-            str = S_COLOR_RED + "+";
-        }
-		
-        if ( oldBestTime == 0 || newTime < oldBestTime )
+
+        if ( oldBestTime == 0 || newTime < oldBestTime ) //set new server record
         {
             this.setBestTime(newTime);
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
@@ -315,20 +311,18 @@ class Racesow_Player
                 
             map.getStatsHandler().getHighScore(0).fromRace(this.lastRace);
         }
-        else if ( oldTime == 0 || newTime < oldTime )
+        else if ( oldTime == 0 || newTime < oldTime ) //set new personal record
         {
             this.setBestTime(newTime);
 			this.getClient().addAward( "Personal record!" );
         }
-                
-        G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
-			+ ( noDelta ? "" : str + TimeToString( delta ) ) );
-            
-        earnedPonts = newPoints - oldPoints;
-        if (earnedPonts > 0) {
-        
-            this.getClient().addAward( S_COLOR_BLUE + "You earned "+ earnedPonts +" points!" );
-            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPonts +" points!\n" );
+
+        if ( newTime < oldTime || oldTime == 0 )
+        {
+            for ( int i = 0; i < numCheckpoints; i++ )
+            {
+                this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
+            }
         }
     }
 
@@ -497,6 +491,8 @@ class Racesow_Player
 		@this.race = Racesow_Player_Race();
 		this.race.setPlayer(@this);
 		this.race.start();
+        this.numberOfRaces++;
+        this.sendMessage("Race started: attempt "+ S_COLOR_ORANGE + "#" + this.numberOfRaces +"\n");
     }
 
 	/**
@@ -524,10 +520,11 @@ class Racesow_Player
     void touchStopTimer()
     {
         // when the race can not be finished something is very wrong, maybe small penis playing
-		if ( !this.isRacing() || !this.race.stop() )
+		if ( !this.race.stop() )
             return;
 
 		this.isSpawned = false;
+		this.setLastRace(@this.race);
 		map.getStatsHandler().addRace(@this.race);
 
         // set up for respawning the player with a delay

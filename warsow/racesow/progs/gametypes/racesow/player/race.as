@@ -61,7 +61,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
     }
 	
 	/**
-	 * Check if it's is currently beeing raced
+	 * Check if it's is currently being raced
 	 * @return bool
 	 */
 	bool inRace()
@@ -73,7 +73,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	}
 	
 	/**
-	 * See if teh race was finished
+	 * See if the race was finished
 	 * @return bool
 	 */
 	bool isFinished()
@@ -136,52 +136,29 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
 		this.checkPoints[id] = levelTime - this.startTime;
 		
-		cString str;
 		uint newTime =  this.checkPoints[id];
-		//uint bestTime = this.player.bestCheckPoints[id]; // diff to own best
-		uint bestTime = map.getStatsHandler().getHighScore(0).getCheckPoint(id); // diff to server best
+		uint serverBestTime = map.getStatsHandler().getHighScore(0).getCheckPoint(id);
 		uint personalBestTime = this.player.getBestCheckPoint(id);
+		bool noDelta = 0 == serverBestTime;
 		
-		bool noDelta = 0 == bestTime;
-		
-		if ( noDelta || newTime < bestTime )
-        {
-            this.delta = (noDelta ? 0 : bestTime - newTime);
-			str = S_COLOR_GREEN + (noDelta ? "" : "-");
-			
-        }
-		else if ( newTime == bestTime )
-		{
-		    this.delta = 0;
-            str = S_COLOR_YELLOW + "+-";
-		}
-        else
-        {
-            this.delta = newTime - bestTime;
-            str = S_COLOR_RED + "+";
-        }
-
         G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime ) + "\n"
-			+ ( noDelta ? "" : str + TimeToString( this.delta ) ) );
-		
-        if ( newTime < bestTime || bestTime == 0 )
+			+ ( noDelta ? "" : diffString( serverBestTime, newTime ) ) );
+
+        if ( newTime < serverBestTime || serverBestTime == 0 )
         {
-			if ( map.getStatsHandler().getHighScore(0).setCheckPoint(id, newTime) && this.player.setBestCheckPoint(id, newTime) )
-			{
-				this.triggerAward( S_COLOR_GREEN + "#" + (id + 1) + " checkpoint record!" );
-				
-				// is printing checkpoints really a good idea?
-				//G_PrintMsg(null, this.player.getName() + " " + S_COLOR_WHITE + "made a new "
-				//	+ (id + 1) + ". checkpoint record: " + TimeToString( newTime ) + "\n" );
-			}
+            this.triggerAward( S_COLOR_GREEN + "#" + (lastCheckPoint + 1) + " checkpoint record!" );
         }
         else if ( newTime < personalBestTime || personalBestTime == 0 )
         {
-            if ( this.player.setBestCheckPoint(id, newTime) )
-				this.triggerAward( S_COLOR_YELLOW + "#" + (id + 1) + " checkpoint personal record!" );
+            this.triggerAward( S_COLOR_YELLOW + "#" + (lastCheckPoint + 1) + " checkpoint personal record!" );
         }
 
-        this.lastCheckPoint++;
+        this.player.sendMessage( S_COLOR_ORANGE + "#" + (lastCheckPoint +1) + ": "
+                + S_COLOR_WHITE + TimeToString( newTime )
+                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( personalBestTime, newTime )
+                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n");
+		
+       this.lastCheckPoint++;
 	}
 	
 	/**
@@ -212,11 +189,11 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         if ( this.startTime > levelTime ) // something is very wrong here
             return false;
 
-		cString str;
+        if ( !this.inRace() )
+            return false;
+
         this.stopTime = levelTime;
 		this.timeStamp = localTime;
-		
-        this.player.setLastRace(@this);
         
 		return true;
 	}
