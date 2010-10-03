@@ -51,6 +51,25 @@ cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how
 
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
+cString diffString( uint oldTime, uint newTime )
+{
+    if ( oldTime == 0 )
+    {
+        return TimeToString( newTime );
+    }
+    else if ( oldTime < newTime )
+    {
+        return S_COLOR_RED + "+" + TimeToString( newTime - oldTime );
+    }
+    else if ( oldTime == newTime )
+    {
+        return S_COLOR_YELLOW + "+-" + TimeToString( 0 );
+    }
+    else
+    {
+        return S_COLOR_GREEN + "-" + TimeToString( oldTime - newTime );
+    }
+}
 
 /**
  * TimeToString
