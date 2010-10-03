@@ -226,7 +226,8 @@ qboolean RS_MysqlConnect( void )
     MYSQL_RES  *mysql_res;
 	int server_id=0;
 
-    mysql.reconnect = 1;
+    my_bool reconnect = 1;
+    mysql_options(&mysql, MYSQL_OPT_RECONNECT, &reconnect);
     
     G_Printf( va( "MySQL Connection String\nmysql://%s:*****@%s:%d/%s\n", rs_mysqlUser->string, rs_mysqlHost->string, rs_mysqlPort->integer, rs_mysqlDb->string ) );
     if( !Q_stricmp( rs_mysqlHost->string, "" ) || !Q_stricmp( rs_mysqlUser->string, "user" ) || !Q_stricmp( rs_mysqlDb->string, "" ) ) {
