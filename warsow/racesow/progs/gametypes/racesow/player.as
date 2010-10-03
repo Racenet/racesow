@@ -492,7 +492,7 @@ class Racesow_Player
     void touchStopTimer()
     {
         // when the race can not be finished something is very wrong, maybe small penis playing
-		if ( this.race == null || !this.race.stop() )
+		if ( @this.race == null || !this.race.stop() )
             return;
 
 		this.isSpawned = false;
