@@ -193,7 +193,7 @@ void RS_MysqlLoadInfo( void )
 	rs_queryUpdateMapPlaytime		= trap_Cvar_Get( "rs_queryUpdateMapPlaytime",		"UPDATE `map` SET `playtime` = `playtime` + %d WHERE `id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdateMapRaces			= trap_Cvar_Get( "rs_queryUpdateMapRaces",			"UPDATE `map` SET `races` = `races` + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
 
-	rs_queryAddRace					= trap_Cvar_Get( "rs_queryAddRace",					"INSERT INTO `race` (`player_id`, `map_id`, `time`, `server_id`, `created`) VALUES(%d, %d, %d, %d, NOW());", CVAR_ARCHIVE );
+	rs_queryAddRace					= trap_Cvar_Get( "rs_queryAddRace",					"INSERT INTO `race` (`player_id`, `map_id`, `time`, `tries`, `duration`, `server_id`, `created`) VALUES(%d, %d, %d, %d, %d, %d, NOW());", CVAR_ARCHIVE );
 	
 	rs_queryGetPlayerMap			= trap_Cvar_Get( "rs_queryGetPlayerMap",			"SELECT `points`, `time`, `races`, `playtime`, `created` FROM `player_map` WHERE `player_id` = %d AND `map_id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `server_id`, `tries`, `duration`, `created`) VALUES(%d, %d, %d, 1, %d, (SELECT SUM(`tries`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `tries` IS NOT NULL), (SELECT SUM(`duration`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `duration` IS NOT NULL), NOW()) ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `server_id` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`server_id`), `server_id`), `tries` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`tries`), `tries`), `duration` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`duration`), `duration`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time`);", CVAR_ARCHIVE );
@@ -503,7 +503,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
  * @param int race_time
  * @return qboolean
  */
-qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum ) {
+qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum, unsigned int tries, unsigned int duration ) {
 
 	int returnCode;
     struct raceDataStruct *raceData=malloc(sizeof(struct raceDataStruct));
@@ -520,6 +520,8 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 	raceData->map_id = map_id;
 	raceData->race_time = race_time;
 	raceData->playerNum = playerNum;
+	raceData->tries = tries;
+	raceData->duration = duration;
     
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlInsertRace_Thread, (void *)raceData);
 
@@ -614,7 +616,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     if (server_id != 0)
     {
         // insert race
-        sprintf(query, rs_queryAddRace->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id);
+        sprintf(query, rs_queryAddRace->string, raceData->player_id, raceData->map_id, raceData->race_time, raceData->tries, raceData->duration, server_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
 
