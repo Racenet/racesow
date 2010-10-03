@@ -492,7 +492,7 @@ class Racesow_Player
     void touchStopTimer()
     {
         // when the race can not be finished something is very wrong, maybe small penis playing
-		if ( !this.race.stop() )
+		if ( this.race == null || !this.race.stop() )
             return;
 
 		this.isSpawned = false;
@@ -501,6 +501,7 @@ class Racesow_Player
 		racesowAdapter.raceFinish(@this.race);
 		this.numberOfRacesSinceLastRace = 0;
 		this.raceDuration = 0;
+		@this.race = null;
 
         // set up for respawning the player with a delay
         cEntity @respawner = G_SpawnEntity( "race_respawner" );
