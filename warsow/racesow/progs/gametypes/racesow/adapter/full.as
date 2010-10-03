@@ -40,6 +40,28 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
 	}  
     
     /**
+	 * Event: player appears
+     * 
+     * @param ...
+	 * @return void
+	 */
+	void playerAppear(Racesow_Player @player)
+	{
+        // Call to a c-function which should result
+        // in a callback to player_auth.appearCallback()
+        RS_MysqlPlayerAppear(
+            player.getName(),
+            player.getClient().playerNum(),
+            player.getId(),
+            map.getId(),
+            player.getAuth().isAuthenticated(),
+            player.getAuth().authenticationName,
+            player.getAuth().authenticationPass,
+            player.getAuth().authenticationToken
+        );
+	}   
+    
+    /**
 	 * Event: player disappears
      * 
      * @param ...
@@ -47,17 +69,16 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
 	 */
     void playerDisappear(Racesow_Player @player, cString nickName, bool threaded)
     {
-        if ( mysqlConnected != 0 )
-        {
-            RS_MysqlPlayerDisappear(
-                nickName,
-                levelTime-player.joinedTime,
-                player.getId(),
-                player.getNickId(),
-                map.getId(),
-                player.getAuth().isAuthenticated(),
-                threaded
-            );
-        }
+        // Call to a c-function which should result
+        // in a callback to map.loadCallback()
+        RS_MysqlPlayerDisappear(
+            nickName,
+            levelTime-player.joinedTime,
+            player.getId(),
+            player.getNickId(),
+            map.getId(),
+            player.getAuth().isAuthenticated(),
+            threaded
+        );
     }
 }

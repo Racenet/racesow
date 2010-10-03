@@ -40,7 +40,7 @@ class Racesow_Adapter_Abstract
      * @param ...
 	 * @return void
 	 */
-	void playerAppear()
+	void playerAppear(Racesow_Player @player)
 	{
 	}    
   

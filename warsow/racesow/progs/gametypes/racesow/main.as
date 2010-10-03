@@ -33,7 +33,7 @@ uint mapcount;
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
-Racesow_Adapter_Full @racesowAdapter;
+Racesow_Adapter_Abstract @racesowAdapter;
 
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
@@ -891,10 +891,19 @@ void GT_SpawnGametype()
     bool found = false;
 
     @map = Racesow_Map();
-    @racesowAdapter = Racesow_Adapter_Full();
+    
+    if (mysqlConnected != 0) {
+    
+        @racesowAdapter = Racesow_Adapter_Full();
+        
+    } else {
+    
+        @racesowAdapter = Racesow_Adapter_Compat();
+    }
     
     racesowAdapter.initGametype();
-
+    
+    
 	// setup players
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();

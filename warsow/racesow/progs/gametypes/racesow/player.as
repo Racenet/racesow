@@ -235,25 +235,7 @@ class Racesow_Player
     void appear()
     {
         this.joinedTime = levelTime;
-        
-        
-        // NEW
-        // DataAdapter.playerAppear(@this);
-        
-        // OLD
-        if ( mysqlConnected != 0 )
-        {
-            RS_MysqlPlayerAppear(
-                    this.getName(),
-                    this.getClient().playerNum(),
-                    this.getId(),
-                    map.getId(),
-                    this.getAuth().isAuthenticated(),
-                    this.getAuth().authenticationName,
-                    this.getAuth().authenticationPass,
-                    this.getAuth().authenticationToken
-            );
-        }
+        racesowAdapter.playerAppear(@this);
     }
 	
 	void disappear(cString nickName, bool threaded)
