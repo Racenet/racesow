@@ -33,6 +33,7 @@ uint mapcount;
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
+Racesow_Adapter_Full @racesowAdapter;
 
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
@@ -525,7 +526,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "disconnect" )
 		{
-			player.disappear(player.getName());
+			player.disappear(player.getName(), true);
 			player.reset();
 		}
 		else if ( score_event == "userinfochanged" )
@@ -626,8 +627,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 void GT_ThinkRules()
 {
 	// perform a C callback if there is one pending
-	Racesow_ThinkCallbackQueue();
-
+	racesowAdapter.thinkCallbackQueue();
 
 	if ( match.timeLimitHit() )
     {
@@ -893,7 +893,9 @@ void GT_SpawnGametype()
     bool found = false;
 
     @map = Racesow_Map();
-    map.getStatsHandler().loadStats();
+    @racesowAdapter = Racesow_Adapter_Full();
+    
+    racesowAdapter.initGametype();
 
 	// setup players
     for ( int i = 0; i < maxClients; i++ )

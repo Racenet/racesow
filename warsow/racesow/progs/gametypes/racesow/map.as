@@ -67,6 +67,20 @@ class Racesow_Map
         this.overtimeFinished = false;
 	}
 
+    /**
+     * Callback from game lib when a map was loaded
+     * @return uint
+     */
+    void loadCallback(int id, int bestTime)
+    {
+        this.setId( id );
+        if ( rs_loadHighscores.getBool() )
+        {
+            this.getStatsHandler().getHighScore(0).finishTime = bestTime;
+            // we could also do a getHighScore(0).fromRace(arg2), ie. also recover checkpoints, but I don't want that, and arg2 can only be an int..
+        }
+    }
+    
     void startOvertime()
     {
         if (this.inOvertime)

@@ -25,7 +25,7 @@ void Racesow_ThinkCallbackQueue()
 	int command, arg1, arg2, arg3, arg4, arg5, arg6, arg7;
     Racesow_Player @player;
 	
-    if( !RS_QueryCallbackQueue( command, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ) )
+    if( !RS_PopCallbackQueue( command, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ) )
         return;
         
     switch( command )	

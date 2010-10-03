@@ -233,7 +233,7 @@
             }
         }
         
-        this.player.disappear(this.player.getName());
+        this.player.disappear(this.player.getName(), true);
         
         // if only one param was passed, handle it as an authToken
         if (authPass == "")
@@ -292,7 +292,7 @@
 
 		if ( oldNick.removeColorTokens() != this.player.getName().removeColorTokens() )
 		{
-			this.player.disappear(oldNick);
+			this.player.disappear(oldNick, true);
             this.player.appear();
         }
 	}

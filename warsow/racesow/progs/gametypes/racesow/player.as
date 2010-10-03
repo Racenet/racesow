@@ -225,6 +225,12 @@ class Racesow_Player
     void appear()
     {
         this.joinedTime = levelTime;
+        
+        
+        // NEW
+        // DataAdapter.playerAppear(@this);
+        
+        // OLD
         if ( mysqlConnected != 0 )
         {
             RS_MysqlPlayerAppear(
@@ -239,37 +245,10 @@ class Racesow_Player
             );
         }
     }
-
-    void disappear(cString nickName)
-    {
-        if ( mysqlConnected != 0 )
-        {
-            RS_MysqlPlayerDisappear(
-                    nickName,
-                    levelTime-this.joinedTime,
-                    this.getId(),
-                    this.getNickId(),
-                    map.getId(),
-                    this.getAuth().isAuthenticated(),
-                    true // default behavior is threaded
-            );
-        }
-    }
 	
-	void disappear(cString nickName, bool is_threaded)
+	void disappear(cString nickName, bool threaded)
     {
-        if ( mysqlConnected != 0 )
-        {
-            RS_MysqlPlayerDisappear(
-                    nickName,
-                    levelTime-this.joinedTime,
-                    this.getId(),
-                    this.getNickId(),
-                    map.getId(),
-                    this.getAuth().isAuthenticated(),
-                    is_threaded
-            );
-        }
+        racesowAdapter.playerDisappear(@this, nickName, threaded);
     }
     
     /**
