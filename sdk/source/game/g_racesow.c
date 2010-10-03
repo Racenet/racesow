@@ -251,9 +251,9 @@ qboolean RS_MysqlConnect( void )
     
 	sprintf(query, rs_queryGetServer->string, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_MysqlError(NULL);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_MysqlError(NULL);
 
 	if ((row = mysql_fetch_row(mysql_res)) != NULL)
     {
@@ -271,15 +271,15 @@ qboolean RS_MysqlConnect( void )
         mysql_real_escape_string(&mysql, servername, servername, strlen(servername));
         sprintf(query, rs_queryAddServer->string, sv_port->integer, servername);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_MysqlError(NULL);
         
 		server_id=(int)mysql_insert_id(&mysql);
         
         sprintf(query, rs_queryGetServerById->string, server_id);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_MysqlError(NULL);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_MysqlError(NULL);
         
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
@@ -1764,7 +1764,20 @@ void RS_LoadMaplist( int is_freestyle)
  */
 void RS_StartMysqlThread()
 {
+    int errNo;
+    unsigned long threadId;
+    
     pthread_mutex_lock(&mutexsum);
+    
+    threadId = mysql_thread_id(&mysql);
+    errNo = mysql_ping(&mysql);
+    
+    if (mysql_thread_id(&mysql) != threadId) {
+    
+        G_Printf("-------------------------------------\nReconnected to Mysql server\n-------------------------------------\n");
+    }
+    
+    
 }
 
 /**
