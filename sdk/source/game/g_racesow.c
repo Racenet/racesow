@@ -488,7 +488,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	}
 	mysql_free_result(mysql_res);
 
-	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, map_id, bestTime, 0, 0, 0, 0, 0);
+	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, 0, map_id, bestTime, 0, 0, 0, 0);
 
 	RS_EndMysqlThread();
     
