@@ -288,7 +288,7 @@ class Racesow_Player
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
                 
-            map.getStatsHandler().getHighScore(0).fromRace(this.lastRace);
+            map.getHighScore(0).fromRace(this.lastRace);
         }
         else if ( oldTime == 0 || newTime < oldTime ) //set new personal record
         {
@@ -504,7 +504,7 @@ class Racesow_Player
 
 		this.isSpawned = false;
 		this.setLastRace(@this.race);
-		map.getStatsHandler().addRace(@this.race);
+		racesowAdapter.raceFinish(@this.race);
 
         // set up for respawning the player with a delay
         cEntity @respawner = G_SpawnEntity( "race_respawner" );

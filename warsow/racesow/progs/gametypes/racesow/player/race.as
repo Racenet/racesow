@@ -137,7 +137,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		this.checkPoints[id] = levelTime - this.startTime;
 		
 		uint newTime =  this.checkPoints[id];
-		uint serverBestTime = map.getStatsHandler().getHighScore(0).getCheckPoint(id);
+		uint serverBestTime = map.getHighScore(0).getCheckPoint(id);
 		uint personalBestTime = this.player.getBestCheckPoint(id);
 		bool noDelta = 0 == serverBestTime;
 		
@@ -146,11 +146,11 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
         if ( newTime < serverBestTime || serverBestTime == 0 )
         {
-            this.triggerAward( S_COLOR_GREEN + "#" + (lastCheckPoint + 1) + " checkpoint record!" );
+            this.player.getClient().addAward( S_COLOR_GREEN + "#" + (lastCheckPoint + 1) + " checkpoint record!" );
         }
         else if ( newTime < personalBestTime || personalBestTime == 0 )
         {
-            this.triggerAward( S_COLOR_YELLOW + "#" + (lastCheckPoint + 1) + " checkpoint personal record!" );
+            this.player.getClient().addAward( S_COLOR_YELLOW + "#" + (lastCheckPoint + 1) + " checkpoint personal record!" );
         }
 
         this.player.sendMessage( S_COLOR_ORANGE + "#" + (lastCheckPoint +1) + ": "
@@ -159,16 +159,6 @@ class Racesow_Player_Race : Racesow_Player_Implemented
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n");
 		
        this.lastCheckPoint++;
-	}
-	
-	/**
-	 * triggerAward
-	 * @param cString text
-	 * @return void
-	 */
-	void triggerAward(cString text)
-	{
-		this.player.getClient().addAward(text);
 	}
 	
 	/**

@@ -20,9 +20,9 @@ class Racesow_Adapter_Abstract
      * @param ...
 	 * @return void
 	 */
-	void raceFinish()
-	{  
-	}
+    void raceFinish(Racesow_Player_Race @race)
+    {
+    }
     
     /**
 	 * Callback for "raceFinish"
@@ -53,7 +53,6 @@ class Racesow_Adapter_Abstract
 	 */
 	void playerDisappear(Racesow_Player @player, cString nickName, bool threaded)
 	{
-        
 	}
     
     /**
@@ -63,7 +62,6 @@ class Racesow_Adapter_Abstract
 	 */
 	void initGametype()
 	{
-        
 	}
     
     /**

@@ -7,13 +7,34 @@
 class Racesow_Adapter_Full : Racesow_Adapter_Abstract
 {
     /**
+	 * Event: player finishes a race
+     * 
+     * @param ...
+	 * @return void
+	 */
+    void raceFinish(Racesow_Player_Race @race)
+    {
+        // Call to a c-function which should result
+        // in a callback to player.raceCallback()
+        RS_MysqlInsertRace(
+            race.getPlayer().getId(),
+            race.getPlayer().getNickId(),
+            map.getId(),
+            race.getTime(),
+            race.getPlayer().getClient().playerNum()
+        );
+    }
+
+    /**
 	 * Event: initialize the gametype
      * 
 	 * @return void
 	 */
 	void initGametype()
 	{
-        map.getStatsHandler().loadStats();
+        // Call to a c-function which should result
+        // in a callback to map.loadCallback()
+        RS_MysqlLoadMap(); 
 	}  
     
     /**

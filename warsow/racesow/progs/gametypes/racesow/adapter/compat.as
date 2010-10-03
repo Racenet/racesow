@@ -4,5 +4,17 @@
  */
 class Racesow_Adapter_Compat : Racesow_Adapter_Abstract
 {
-
+    /**
+	 * Event: player finishes a race
+     * 
+     * @param ...
+	 * @return void
+	 */
+    void raceFinish(Racesow_Player_Race @race)
+    {
+        race.getPlayer().raceCallback(0,0,0,
+                race.getPlayer().bestRaceTime,
+                map.getHighScore(0).getTime(),
+                race.getTime());
+    }
 }

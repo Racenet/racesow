@@ -8,14 +8,20 @@ class Racesow_Map
 {
 	cString name;
 
-	Racesow_Map_HighScore_Abstract @statsHandler;
-
 	bool inOvertime;
     
     bool overtimeFinished;
 
     uint id;
 
+    /**
+	 * Logfile id
+	 * @var uint
+	 */
+	uint64 logTime;
+    
+    Racesow_Map_HighScore[] highScores;
+    
 	/**
 	 * Constructor
 	 *
@@ -53,18 +59,18 @@ class Racesow_Map
 
 	void reset()
 	{
-	    if ( mysqlConnected != 0 )
-	        @this.statsHandler = Racesow_Map_HighScore_Mysql();
-	    else
-            @this.statsHandler = Racesow_Map_HighScore_NoMysql();
-
-		this.statsHandler.setMap(@this);
-
 		cVar mapName( "mapname", "", 0 );
         this.id = 0;
 		this.name = mapName.getString();
 		this.inOvertime = false;
         this.overtimeFinished = false;
+        
+        this.logTime = 0;
+		this.highScores.resize( MAX_RECORDS );
+		for ( int i = 0; i < MAX_RECORDS; i++ )
+		{
+			this.highScores[i].reset();
+		}
 	}
 
     /**
@@ -76,10 +82,23 @@ class Racesow_Map
         this.setId( id );
         if ( rs_loadHighscores.getBool() )
         {
-            this.getStatsHandler().getHighScore(0).finishTime = bestTime;
+            this.getHighScore(0).finishTime = bestTime;
             // we could also do a getHighScore(0).fromRace(arg2), ie. also recover checkpoints, but I don't want that, and arg2 can only be an int..
         }
     }
+    
+    /**
+	 * Get a highscore model
+	 * @param uint id
+	 * @return Racesow_Map_HighScore
+	 */
+	Racesow_Map_HighScore @getHighScore(uint id)
+	{
+		if (id >= this.highScores.length())
+			return Racesow_Map_HighScore();
+		
+		return @this.highScores[id];
+	}
     
     void startOvertime()
     {
@@ -176,11 +195,6 @@ class Racesow_Map
 	void cancelOvertime()
 	{
 		this.inOvertime = false;
-	}
-
-	Racesow_Map_HighScore_Abstract @getStatsHandler()
-	{
-		return @this.statsHandler;
 	}
 
 	/**

@@ -657,8 +657,8 @@ void GT_ThinkRules()
     }
 
 	// set the logTime once
-	if ( map.getStatsHandler().logTime == 0 && localTime != 0 )
-		map.getStatsHandler().logTime = localTime;
+	if ( map.logTime == 0 && localTime != 0 )
+		map.logTime = localTime;
 
 	if ( !firstAnnouncement && ( ( match.duration() - levelTime ) < 180000 ) && ( match.duration() >= 180000 ) )
 	{
@@ -775,15 +775,15 @@ void GT_ThinkRules()
 		if ( !(g_freestyle.getBool()) ) // remove the time stats in freestyle
 		{
      	  	client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
-        	client.setHUDStat( STAT_TIME_RECORD, map.getStatsHandler().getHighScore(0).getTime() / 100 );
+        	client.setHUDStat( STAT_TIME_RECORD, map.getHighScore(0).getTime() / 100 );
 		}
 
 
-        if ( map.getStatsHandler().getHighScore(0).playerName.len() > 0 )
+        if ( map.getHighScore(0).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
-        if ( map.getStatsHandler().getHighScore(1).playerName.len() > 0 )
+        if ( map.getHighScore(1).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
-        if ( map.getStatsHandler().getHighScore(2).playerName.len() > 0 )
+        if ( map.getHighScore(2).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
 
     	if( player.isUsingChrono )
@@ -822,8 +822,6 @@ bool GT_MatchStateFinished( int incomingMatchState )
     	g_timelimit.set(oldTimelimit); //restore the old timelimit
         match.stopAutorecord();
         demoRecording = false;
-
-        map.getStatsHandler().writeStats();
     }
 
     return true;
