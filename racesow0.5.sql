@@ -3,11 +3,15 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 02. Oktober 2010 um 02:49
+-- Erstellungszeit: 03. Oktober 2010 um 14:40
 -- Server Version: 5.0.51
 -- PHP-Version: 5.2.6-1+lenny9
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
+
+--
+-- Datenbank: `racesow056`
+--
 
 -- --------------------------------------------------------
 
@@ -15,12 +19,11 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- Tabellenstruktur für Tabelle `gameserver`
 --
 
-
 DROP TABLE IF EXISTS `gameserver`;
 CREATE TABLE `gameserver` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `user` varchar(255) NOT NULL,
-  `servername` varchar(255) NOT NULL,
+  `servername` varchar(255) default NULL,
   `admin` varchar(255) default NULL,
   `playtime` bigint(20) unsigned NOT NULL default '0',
   `races` int(10) unsigned NOT NULL default '0',
@@ -39,17 +42,11 @@ DROP TABLE IF EXISTS `map`;
 CREATE TABLE `map` (
   `id` mediumint(8) unsigned NOT NULL auto_increment,
   `name` varchar(40) NOT NULL default '',
-  `longname` varchar(64) default NULL,
-  `file` varchar(255) NOT NULL,
-  `mapper_id` mediumint(8) unsigned default NULL,
   `freestyle` tinyint(1) NOT NULL default '0',
   `status` enum('enabled','disabled','new','true','false') NOT NULL default 'new',
   `disabled` enum('true','false') NOT NULL default 'false',
   `races` mediumint(8) unsigned NOT NULL,
   `playtime` bigint(20) unsigned NOT NULL,
-  `rating` float unsigned NOT NULL,
-  `ratings` mediumint(8) unsigned NOT NULL,
-  `downloads` mediumint(8) unsigned NOT NULL,
   `weapons` varchar(10) NOT NULL,
   `created` timestamp NOT NULL default CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
@@ -58,21 +55,6 @@ CREATE TABLE `map` (
   KEY `name` (`name`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Tabellenstruktur für Tabelle `map_rating`
---
-
-DROP TABLE IF EXISTS `map_rating`;
-CREATE TABLE `map_rating` (
-  `map_id` int(11) unsigned NOT NULL,
-  `player_id` int(11) unsigned NOT NULL,
-  `value` tinyint(3) unsigned NOT NULL,
-  `created` datetime NOT NULL default '0000-00-00 00:00:00',
-  `changed` datetime default NULL,
-  UNIQUE KEY `map_id` (`map_id`,`player_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -95,11 +77,7 @@ CREATE TABLE `player` (
   `position` mediumint(8) unsigned default NULL,
   `races` mediumint(8) unsigned NOT NULL,
   `maps` mediumint(8) unsigned NOT NULL default '0',
-  `skill` float NOT NULL default '0',
-  `diff_points` mediumint(9) NOT NULL,
-  `awardval` mediumint(8) unsigned NOT NULL,
   `playtime` bigint(20) NOT NULL,
-  `connects` mediumint(8) unsigned NOT NULL default '0',
   `created` datetime default NULL,
   PRIMARY KEY  (`id`),
   KEY `points` (`points`),
@@ -122,6 +100,8 @@ CREATE TABLE `player_map` (
   `playtime` bigint(20) unsigned NOT NULL default '0',
   `server_id` int(11) default NULL,
   `created` datetime default NULL,
+  `tries` int(11) default NULL,
+  `duration` bigint(20) default NULL,
   PRIMARY KEY  (`player_id`,`map_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -139,6 +119,7 @@ CREATE TABLE `race` (
   `nick_id` int(11) unsigned NOT NULL default '0',
   `time` int(11) unsigned NOT NULL default '0',
   `tries` int(10) unsigned default NULL,
+  `duration` bigint(20) default NULL,
   `server_id` int(10) unsigned default NULL,
   `created` datetime NOT NULL default '0000-00-00 00:00:00',
   PRIMARY KEY  (`id`)
