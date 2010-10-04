@@ -6228,9 +6228,9 @@ static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
 }
 
 // RS_MysqlPlayerDisappear
-static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int player_id, int nick_id, int map_id, qboolean is_authed, qboolean is_threaded)
+static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int overall_tries, int racing_time, int player_id, int nick_id, int map_id, qboolean is_authed, qboolean is_threaded)
 {
-	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, player_id, nick_id, map_id, (int)(is_authed==qtrue), (int)(is_threaded==qtrue) );
+	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, overall_tries, racing_time, player_id, nick_id, map_id, (int)(is_authed==qtrue), (int)(is_threaded==qtrue) );
 }
 
 static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
@@ -6241,8 +6241,10 @@ static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 2),
 		(int)G_asGeneric_GetArgInt(gen, 3),
 		(int)G_asGeneric_GetArgInt(gen, 4),
-		(qboolean)G_asGeneric_GetArgBool(gen, 5),
-		(qboolean)G_asGeneric_GetArgBool(gen, 6)));
+		(int)G_asGeneric_GetArgInt(gen, 5),
+		(int)G_asGeneric_GetArgInt(gen, 6),
+		(qboolean)G_asGeneric_GetArgBool(gen, 7),
+		(qboolean)G_asGeneric_GetArgBool(gen, 8)));
 }
 
 // RS_MysqlLoadHighScores
@@ -6900,7 +6902,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	{ "void RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
-	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
+	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "void RS_MysqlInsertRace( int, int, int, int, int, int, int )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	{ "void RS_MysqlLoadHighscores( int, int, int, cString &)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },

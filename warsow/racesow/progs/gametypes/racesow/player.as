@@ -87,19 +87,29 @@ class Racesow_Player
     uint bestRaceTime;
 
     /**
-     * Number of races on the current map
+     * Overall number of started races on the current map
      */
-    uint numberOfRaces;
+    uint overallTries;
 
     /**
-     * Number of races since last race
+     * Number of started races on the current map for current session
      */
-    uint numberOfRacesSinceLastRace;
+    uint tries;
+
+    /**
+     * Number of started races since last race
+     */
+    uint triesSinceLastRace;
 
     /**
      * Racing time before a race is actually finished
      */
-    uint raceDuration;
+    uint racingTimeSinceLastRace;
+
+    /**
+     * Racing time
+     */
+    uint racingTime;
 
 	/**
 	 * Local time of the last top command (flood protection)
@@ -214,6 +224,10 @@ class Racesow_Player
 		this.positionSaved = false;
 		@this.triggerEntity = null;
 		this.triggerTimeout = 0;
+		this.tries = 0;
+		this.overallTries = 0;
+		this.racingTime = 0;
+		this.racingTimeSinceLastRace = 0;
 	}
 
 	/**
@@ -462,9 +476,9 @@ class Racesow_Player
 		@this.race = Racesow_Player_Race();
 		this.race.setPlayer(@this);
 		this.race.start();
-        this.numberOfRaces++;
-        this.numberOfRacesSinceLastRace++;
-        this.sendMessage("Race started: attempt "+ S_COLOR_ORANGE + "#" + this.numberOfRaces +"\n");
+        this.tries++;
+        this.triesSinceLastRace++;
+        this.sendMessage("Race started: attempt "+ S_COLOR_ORANGE + "#" + this.overallTries + this.tries +"\n");
     }
 
 	/**
@@ -497,10 +511,11 @@ class Racesow_Player
 
 		this.isSpawned = false;
 		this.setLastRace(@this.race);
-		this.raceDuration += this.race.getTime();
+		this.racingTime += this.race.getTime();
+		this.racingTimeSinceLastRace += this.race.getTime();
 		racesowAdapter.raceFinish(@this.race);
-		this.numberOfRacesSinceLastRace = 0;
-		this.raceDuration = 0;
+		this.triesSinceLastRace = 0;
+		this.racingTimeSinceLastRace = 0;
 		@this.race = null;
 
         // set up for respawning the player with a delay
@@ -519,7 +534,8 @@ class Racesow_Player
 
 		if ( @this.race != null )
 		{
-		    this.raceDuration += levelTime - this.race.getStartTime();
+		    this.racingTime += levelTime - this.race.getStartTime();
+		    this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
 		}
 
 		@this.race = null;

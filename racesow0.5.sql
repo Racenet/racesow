@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Serveur: localhost
--- Généré le : Dim 03 Octobre 2010 à 21:36
+-- Généré le : Lun 04 Octobre 2010 à 12:01
 -- Version du serveur: 5.1.50
 -- Version de PHP: 5.3.3
 
@@ -130,6 +130,8 @@ CREATE TABLE `player_map` (
   `created` datetime DEFAULT NULL,
   `tries` int(11) DEFAULT NULL,
   `duration` bigint(20) DEFAULT NULL,
+  `overall_tries` int(11) DEFAULT NULL,
+  `racing_time` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`player_id`,`map_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

@@ -22,8 +22,8 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
             map.getId(),
             race.getTime(),
             race.getPlayer().getClient().playerNum(),
-            race.getPlayer().numberOfRacesSinceLastRace,
-            race.getPlayer().raceDuration
+            race.getPlayer().triesSinceLastRace,
+            race.getPlayer().racingTimeSinceLastRace
         );
     }
 
@@ -74,6 +74,8 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
         RS_MysqlPlayerDisappear(
             nickName,
             levelTime-player.joinedTime,
+            player.tries,
+            player.racingTime,
             player.getId(),
             player.getNickId(),
             map.getId(),
