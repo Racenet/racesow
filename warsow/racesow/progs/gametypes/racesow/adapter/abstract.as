@@ -100,7 +100,7 @@ class Racesow_Adapter_Abstract
             case RACESOW_ADAPTER_APPEAR:
                 if ( @player != null )
                 {
-                    player.getAuth().appearCallback(arg2, arg3, arg4, arg5, arg6);
+                    player.getAuth().appearCallback(arg2, arg3, arg4, arg5, arg6, arg7);
                 }
                 break;
                 

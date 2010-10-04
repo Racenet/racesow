@@ -389,7 +389,7 @@
      * @param int playerId
      * @return void
      */
-    void appearCallback(int playerId, int authMask, int playerIdForNick, int authMaskForNick, int personalBest)
+    void appearCallback(int playerId, int authMask, int playerIdForNick, int authMaskForNick, int personalBest, int overallTries)
     {
         bool hasToken = this.authenticationToken != "";
         bool hasLogin = this.authenticationName != "" || this.authenticationPass != "";
@@ -398,9 +398,10 @@
         if ( rs_loadHighscores.getBool() )
 		{
 		    this.player.bestRaceTime = personalBest;
+		    this.player.overallTries = overallTries;
 		}
     
-        // if no authentication in teh callback
+        // if no authentication in the callback
         if (playerId == 0)
         {
             if (hasToken)

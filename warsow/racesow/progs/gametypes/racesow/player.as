@@ -478,7 +478,8 @@ class Racesow_Player
 		this.race.start();
         this.tries++;
         this.triesSinceLastRace++;
-        this.sendMessage("Race started: attempt "+ S_COLOR_ORANGE + "#" + this.overallTries + this.tries +"\n");
+        int tries = this.overallTries+this.tries;
+        this.sendMessage("Race started: attempt "+ S_COLOR_ORANGE + "#" + tries +"\n");
     }
 
 	/**
