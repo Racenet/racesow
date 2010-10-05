@@ -43,6 +43,7 @@ cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 
 cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+cVar g_timelimit_reset( "g_timelimit_reset", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
@@ -369,7 +370,13 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
             {
 				int new_timelimit = argsString.getToken( 1 ).toInt();
 				g_timelimit.set(new_timelimit);
-            	oldTimelimit = g_timelimit.getInteger();
+				
+				// g_timelimit_reset == 1: this timelimit value is not kept after current map
+				// g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
+				if (g_timelimit_reset.getBool() == false)
+				{
+					oldTimelimit = g_timelimit.getInteger();
+				}
             }
 			
             return true;
