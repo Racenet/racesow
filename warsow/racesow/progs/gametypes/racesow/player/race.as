@@ -153,10 +153,10 @@ class Racesow_Player_Race : Racesow_Player_Implemented
             this.player.getClient().addAward( S_COLOR_YELLOW + "#" + (lastCheckPoint + 1) + " checkpoint personal record!" );
         }
 
-        this.player.sendMessage( S_COLOR_ORANGE + "#" + (lastCheckPoint +1) + ": "
+        this.player.checkPoints += S_COLOR_ORANGE + "#" + (lastCheckPoint +1) + ": "
                 + S_COLOR_WHITE + TimeToString( newTime )
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( personalBestTime, newTime )
-                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n");
+                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n";
 		
        this.lastCheckPoint++;
 	}
