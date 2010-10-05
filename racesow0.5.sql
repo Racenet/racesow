@@ -28,7 +28,7 @@ CREATE TABLE `gameserver` (
   `playtime` bigint(20) unsigned NOT NULL DEFAULT '0',
   `races` int(10) unsigned NOT NULL DEFAULT '0',
   `maps` int(10) unsigned NOT NULL DEFAULT '0',
-  `created` datetime NOT NULL,
+  `created` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
@@ -47,7 +47,7 @@ CREATE TABLE `map` (
   `disabled` enum('true','false') NOT NULL DEFAULT 'false',
   `races` mediumint(8) unsigned NOT NULL DEFAULT '0',
   `playtime` bigint(20) unsigned NOT NULL DEFAULT '0',
-  `weapons` varchar(10) NOT NULL DEFAULT "",
+  `weapons` varchar(10) NOT NULL DEFAULT '',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `races` (`races`),
@@ -63,9 +63,9 @@ CREATE TABLE `map` (
 
 DROP TABLE IF EXISTS `map_checkpoint`;
 CREATE TABLE `map_checkpoint` (
-  `map_id` int(11) NOT NULL,
-  `num` int(11) unsigned NOT NULL,
-  `time` int(11) NOT NULL,
+  `map_id` int(11) NOT NULL DEFAULT '0',
+  `num` int(11) unsigned NOT NULL DEFAULT '0',
+  `time` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`map_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -80,17 +80,17 @@ CREATE TABLE `player` (
   `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL DEFAULT '',
   `simplified` varchar(64) NOT NULL DEFAULT '',
-  `auth_name` varchar(255) NOT NULL,
-  `auth_token` varchar(255) NOT NULL,
-  `auth_email` varchar(255) NOT NULL,
-  `auth_mask` varchar(255) NOT NULL,
-  `auth_pass` varchar(255) NOT NULL,
+  `auth_name` varchar(255) NOT NULL DEFAULT '',
+  `auth_token` varchar(255) NOT NULL DEFAULT '',
+  `auth_email` varchar(255) NOT NULL DEFAULT '',
+  `auth_mask` varchar(255) NOT NULL DEFAULT '',
+  `auth_pass` varchar(255) NOT NULL DEFAULT '',
   `session_token` varchar(255) DEFAULT NULL,
   `points` int(11) NOT NULL DEFAULT '0',
   `position` mediumint(8) unsigned DEFAULT NULL,
-  `races` mediumint(8) unsigned NOT NULL,
+  `races` mediumint(8) unsigned NOT NULL  DEFAULT '0',
   `maps` mediumint(8) unsigned NOT NULL DEFAULT '0',
-  `playtime` bigint(20) NOT NULL,
+  `playtime` bigint(20) NOT NULL DEFAULT '0',
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `points` (`points`),
@@ -105,10 +105,10 @@ CREATE TABLE `player` (
 
 DROP TABLE IF EXISTS `player_checkpoint`;
 CREATE TABLE `player_checkpoint` (
-  `player_id` int(11) NOT NULL,
-  `map_id` int(11) NOT NULL,
-  `num` int(11) unsigned NOT NULL,
-  `time` int(11) NOT NULL,
+  `player_id` int(11) NOT NULL DEFAULT '0',
+  `map_id` int(11) NOT NULL DEFAULT '0',
+  `num` int(11) unsigned NOT NULL DEFAULT '0',
+  `time` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`map_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -120,8 +120,8 @@ CREATE TABLE `player_checkpoint` (
 
 DROP TABLE IF EXISTS `player_map`;
 CREATE TABLE `player_map` (
-  `player_id` int(11) unsigned NOT NULL,
-  `map_id` int(11) unsigned NOT NULL,
+  `player_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `map_id` int(11) unsigned NOT NULL DEFAULT '0',
   `time` int(11) unsigned DEFAULT NULL,
   `races` int(11) unsigned NOT NULL DEFAULT '0',
   `points` int(11) unsigned NOT NULL DEFAULT '0',
