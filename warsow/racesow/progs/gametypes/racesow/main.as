@@ -19,7 +19,7 @@ bool secondAnnouncement = false;
 bool thirdAnnouncement = false;
 const int MAX_RECORDS = 10;
 const int MAPS_PER_PAGE = 20;
-int oldTimelimit; //for restoring the old value
+int oldTimelimit; // for restoring the original value, because extend_time changes it
 
 cString gameDataDir = "gamedata";
 cString scbmsg; //scoreboard message for custom scoreboards
@@ -46,6 +46,7 @@ cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|C
 cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
+cVar g_warmup_enabled( "g_warmup_enabled", "0", CVAR_ARCHIVE );
 
 cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
@@ -343,6 +344,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					players[i].cancelOvertime();
 				}
             }
+			
+			if ( vote == "timelimit" )
+            {
+            	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
+            }
+			
             return true;
     }
     /*
@@ -1089,13 +1096,20 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
+	// no timelimit in freestyle mode or if maprotation is disabled
 	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
     {
 		g_timelimit.set( "0" );
     }
+	
+	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
+	g_warmup_enabled.set("0");
 
-	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
+	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
+	oldTimelimit = g_timelimit.getInteger(); 
 
+	// load maps list (basic or mysql)
 	RS_LoadMapList( g_freestyle.getInteger() );
+	
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }
