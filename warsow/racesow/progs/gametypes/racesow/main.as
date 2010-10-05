@@ -326,6 +326,26 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			}
 			return true;
 		}
+		
+		if ( vote == "timelimit" )
+		{
+			int new_timelimit = argsString.getToken( 1 ).toInt();
+			
+			if ( new_timelimit < 0 )
+			{
+				client.printMessage( "Can't set negative timelimit\n");
+				return false;
+			}
+			
+			if ( new_timelimit == g_timelimit.getInteger() )
+			{
+				client.printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
+				return false;
+			}
+			
+			return true;
+		}
+		
 		client.printMessage( "Unknown callvote " + vote + "\n" );
 		return false;
 	}
@@ -347,7 +367,9 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			
 			if ( vote == "timelimit" )
             {
-            	oldTimelimit = g_timelimit.getInteger(); //store for restoring it later
+				int new_timelimit = argsString.getToken( 1 ).toInt();
+				g_timelimit.set(new_timelimit);
+            	oldTimelimit = g_timelimit.getInteger();
             }
 			
             return true;
@@ -1083,6 +1105,7 @@ void GT_InitGametype()
 
 	//add callvotes
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
+	G_RegisterCallvote( "timelimit", "20", "Set match timelimit." );
 
 
     demoRecording = false;
