@@ -982,8 +982,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         // always set him his session token... (may be lost when client changes his userinfo, so better set it immediately before changing a map etc.)
         // also maybe better do this outside the thread?
-        Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
-        ClientUserinfoChanged( ent, ent->r.client->userinfo );
+        //Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
+        //ClientUserinfoChanged( ent, ent->r.client->userinfo );
     }
     
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, overall_tries);
