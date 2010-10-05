@@ -1034,11 +1034,13 @@ void GT_InitGametype()
                  + "exec configs/server/gametypes/racesow_weapondefs.cfg"
                  + "\n"
 				 + "echo racesow.cfg executed\n";
-
+	
         G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
         G_Print( "Created default base config file for racesow\n" );
-        G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
-    }
+	}
+	
+	// always execute racesow.cfg
+    G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
 
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
