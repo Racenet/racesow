@@ -989,6 +989,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, overall_tries);
     
 	free(playerData->name);
+	free(playerData->authName);
+	free(playerData->authPass);
+	free(playerData->authToken);
 	free(playerData);
 	RS_EndMysqlThread();
 	   
