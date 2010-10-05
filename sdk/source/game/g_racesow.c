@@ -792,7 +792,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     MYSQL_RES  *mysql_res;
 	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, player_id_for_time, overall_tries;
 	struct playerDataStruct *playerData;
-	edict_t *ent;
+	//edict_t *ent;
 
 	RS_StartMysqlThread();
     
@@ -805,7 +805,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     overall_tries = 0;
     playerData = (struct playerDataStruct*)in;
 
-    ent = &game.edicts[ playerData->playerNum + 1 ];
+    //ent = &game.edicts[ playerData->playerNum + 1 ];
     
     /*
     if( ent->r.client )
@@ -969,6 +969,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     mysql_free_result(mysql_res);
     }
     
+    /*
     if (player_id != 0 && ent->r.inuse && ent->r.client)
     {
         if (!Q_stricmp(sessionToken, "")) {
@@ -985,6 +986,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         //Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
         //ClientUserinfoChanged( ent, ent->r.client->userinfo );
     }
+    */
     
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, overall_tries);
     
