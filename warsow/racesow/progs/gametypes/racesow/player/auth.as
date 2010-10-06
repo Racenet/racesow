@@ -6,6 +6,13 @@
  * @version 0.5.6
  */
 
+const uint RACESOW_AUTH_REGISTERED	= 1;
+const uint RACESOW_AUTH_MAP			= 2;
+const uint RACESOW_AUTH_KICK		= 4;
+const uint RACESOW_AUTH_TIMELIMIT	= 8;
+const uint RACESOW_AUTH_RESTART		= 16;
+const uint RACESOW_AUTH_ADMIN		= 31;
+ 
  class Racesow_Player_Auth : Racesow_Player_Implemented
  {
     /**
@@ -304,7 +311,9 @@
 	 */
 	bool allow( const uint permission )
 	{
-        this.player.sendMessage("mask: " + this.authorizationsMask + "\n");
+        this.player.sendMessage("mask: " + this.authorizationsMask + ", test: " + (this.authorizationsMask & permission) + "\n");
+        
+        
     
 		return ( this.authorizationsMask & permission != 0 );
 	}

@@ -5,13 +5,6 @@
  * @version 0.5.6
  */
 
-const uint RACESOW_AUTH_REGISTERED	= 1;
-const uint RACESOW_AUTH_MAP			= 2;
-const uint RACESOW_AUTH_KICK		= 4;
-const uint RACESOW_AUTH_TIMELIMIT	= 8;
-const uint RACESOW_AUTH_RESTART		= 16;
-const uint RACESOW_AUTH_ADMIN		= 30;
-
 int numCheckpoints = 0;
 bool demoRecording = false;
 bool firstAnnouncement = false;

@@ -483,7 +483,7 @@ class Command_Admin : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( player.auth.allow( RACESOW_AUTH_ADMIN ) )
+        if ( !player.auth.allow( RACESOW_AUTH_ADMIN ) )
         {
             G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
                 + " tried to execute an admin command without permission.\n" );
