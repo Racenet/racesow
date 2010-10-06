@@ -940,35 +940,35 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     }
     mysql_free_result(mysql_res);
 
-    if (rs_loadHighscores->integer)
-    {
-    // retrieve personal best
-    if (player_id != 0) {
-    
-        player_id_for_time = player_id; 
-    
-    } else {
-    
-        player_id_for_time = player_id_for_nick;
-    }
+	if (rs_loadHighscores->integer)
+	{
+		// retrieve personal best
+		if (player_id != 0) {
 
-    sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
-    mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
-    mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+			player_id_for_time = player_id; 
 
-    if ((row = mysql_fetch_row(mysql_res)) != NULL)
-    {
+		} else {
 
-        if (row[0]!=NULL && row[1] != NULL)
-            personalBest = atoi(row[1]);
-        if (row[2] != NULL)
-            overall_tries = atoi(row[2]);
-    }
-    
-    mysql_free_result(mysql_res);
-    }
+			player_id_for_time = player_id_for_nick;
+		}
+
+		sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
+		mysql_real_query(&mysql, query, strlen(query));
+		RS_CheckMysqlThreadError();
+		mysql_res = mysql_store_result(&mysql);
+		RS_CheckMysqlThreadError();
+
+		if ((row = mysql_fetch_row(mysql_res)) != NULL)
+		{
+
+			if (row[0]!=NULL && row[1] != NULL)
+				personalBest = atoi(row[1]);
+			if (row[2] != NULL)
+				overall_tries = atoi(row[2]);
+		}
+
+		mysql_free_result(mysql_res);
+	}
     
     /*
     if (player_id != 0 && ent->r.inuse && ent->r.client)
@@ -1537,6 +1537,8 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		    if( !Q_stricmp( mapname, va( "%i", mapNumber ) ) )
 		    {
 		        //a mapnumber was given, get the corresponding mapname in maplist
+				//first, free the old mapname, as a new one is malloc'd in RS_GetMapByNum
+				free(mapname); 
 		        mapname = RS_GetMapByNum( mapNumber );
 		    }
 

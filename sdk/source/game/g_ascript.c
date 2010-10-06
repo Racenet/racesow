@@ -6122,8 +6122,11 @@ static void asFunc_asGeneric_RS_MapFilter( void *gen )
 static asstring_t *asFunc_RS_PrintQueryCallback(int player_id )
 {
      char *result;
+	 asstring_t *result_as;
      result = RS_PrintQueryCallback(player_id);
-     return objectString_FactoryBuffer(result, strlen(result));
+     result_as=objectString_FactoryBuffer(result, strlen(result));
+	 free(result);
+	 return result_as;
 }
 
 static void asFunc_asGeneric_RS_PrintQueryCallback( void *gen )
