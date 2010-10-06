@@ -795,7 +795,6 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	//edict_t *ent;
 
 	RS_StartMysqlThread();
-    
 	player_id = 0;
 	auth_mask = 0;
 	player_id_for_nick = 0;
@@ -832,7 +831,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     
     Q_strncpyz ( authToken, playerData->authToken, sizeof(authToken) );
     mysql_real_escape_string(&mysql, authToken, authToken, strlen(authToken));
-    
+
     /*
     // try to authenticate by session
     if (Q_stricmp( sessionToken, "" ))
@@ -855,7 +854,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         mysql_free_result(mysql_res);
     }
     */
-    
+
     // try to authenticate by token
     if (player_id == 0 && Q_stricmp( authToken, "" ))
     {
@@ -876,7 +875,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         mysql_free_result(mysql_res);
     }
-   
+
     // when no token is given or was invalid, try by username and password
     if (player_id == 0 && Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
     {
@@ -902,7 +901,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         mysql_free_result(mysql_res);
     }
-        
+
     if (!Q_stricmp( authToken, "" ) && player_id != 0)
     {
         char *newToken = RS_GenerateNewToken(player_id);
@@ -915,7 +914,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         }
         */
     }
-    
+
     // try to get information about the player the nickname belongs to
     sprintf(query, rs_queryGetPlayer->string, simplified);
     mysql_real_query(&mysql, query, strlen(query));
@@ -940,7 +939,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         player_id_for_nick = (int)mysql_insert_id(&mysql);
     }
     mysql_free_result(mysql_res);
-    
+
     if (rs_loadHighscores->integer)
     {
     // retrieve personal best
@@ -952,18 +951,20 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     
         player_id_for_time = player_id_for_nick;
     }
+
     sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
     RS_CheckMysqlThreadError();
+
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
     {
-        if (row[0] !=NULL && row[1] != NULL)
-        {
+
+        if (row[0]!=NULL && row[1] != NULL)
             personalBest = atoi(row[1]);
+        if (row[2] != NULL)
             overall_tries = atoi(row[2]);
-        }
     }
     
     mysql_free_result(mysql_res);
@@ -987,7 +988,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         //ClientUserinfoChanged( ent, ent->r.client->userinfo );
     }
     */
-    
+
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, overall_tries);
     
 	free(playerData->name);
