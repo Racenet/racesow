@@ -287,7 +287,9 @@ class Racesow_Player
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldTime, newTime)
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldBestTime, newTime) + "\n");
 
-        this.sendMessage( "Checkpoints review:\n"+ this.checkPoints );
+        if ( this.checkPoints.len() > 0 )
+            this.sendMessage( "Checkpoints review:\n"+ this.checkPoints );
+
         this.checkPoints = "";
 
         earnedPoints = newPoints - oldPoints;
