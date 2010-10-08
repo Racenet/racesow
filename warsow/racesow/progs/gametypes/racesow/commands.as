@@ -573,6 +573,69 @@ class Command_Mapname : Racesow_Command
     }
 }
 
+class Command_Stats : Racesow_Command
+{
+    cString what;
+    cString which;
+    
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        this.what = "";
+        this.which = "";
+    
+        if (argc == 0)
+        {
+            this.what = "player";
+            this.which = player.getName();
+        }
+        else
+        {
+            if (args.getToken(0) == "player")
+            {
+                this.what = "player";
+                if (argc == 2)
+                {
+                    this.which = args.getToken(1);
+                }
+                else
+                {
+                    this.which = player.getName();
+                }
+            }
+            else if (args.getToken(0) == "map")
+            {
+                this.what = "map";
+                if (argc == 2)
+                {
+                    this.which = args.getToken(1);
+                }
+                else
+                {
+                    this.which = map.name;
+                }
+            }
+        }
+        
+        if (this.what == "")
+        {
+            return false;
+        }
+        
+        if (this.which == "")
+        {
+            return false;
+        }
+        
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendMessage( S_COLOR_RED + "TODO: " + S_COLOR_WHITE + "retrieve stats for " + this.what + " " + this.which + "\n" );
+        return true;
+    }
+}
+
 /**
  * Fill the commands array and set the command counter to the correct value
  */
@@ -717,9 +780,21 @@ void RS_CreateCommands()
             S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
             + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
             + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
-            + S_COLOR_RED + "admin map     " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
+            + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
+            + S_COLOR_RED + "admin kick          " + S_COLOR_YELLOW + "kick the given player immedeatly\n"
+            + S_COLOR_RED + "admin cancelvote    " + S_COLOR_YELLOW + "cancel the currently active vote\n"
             + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
     @commands[commandCount] = @admin;
+    commandCount++;
+    
+    Command_Stats stats;
+    stats.name = "stats";
+    stats.description = "Show statistics";
+    stats.usage =
+            "stats <command> when no options given 'stats player' is executed\n"
+            + "stats player <name> - Prints stats for the given player or yourself if no name given\n"
+            + "stats map <name> - Print stats for the given map or the current map is no name given\n";
+    @commands[commandCount] = @stats;
     commandCount++;
 }
 
