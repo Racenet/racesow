@@ -317,7 +317,7 @@ class Command_Register : Racesow_Command
     {
         if ( argc < 4)
         {
-            player.sendErrorMessage("You must provide all needed info");
+            player.sendErrorMessage("You must provide all required information");
             return false;
         }
 
@@ -421,7 +421,7 @@ class Command_Privsay : Racesow_Command
     {
         if ( player.client.muted == 1 )
         {
-            player.sendErrorMessage("You can\'t talk, you're muted");
+            player.sendErrorMessage("You can't talk, you're muted");
             return false;
         }
 
@@ -613,6 +613,10 @@ class Command_Stats : Racesow_Command
                 {
                     this.which = map.name;
                 }
+            }
+            else
+            {
+                player.sendErrorMessage("stats command '"+ args.getToken(0) +"' not found");
             }
         }
         
