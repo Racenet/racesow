@@ -40,6 +40,7 @@ cvar_t *rs_queryUpdatePlayerPlaytime;
 cvar_t *rs_queryUpdatePlayerRaces;
 cvar_t *rs_queryUpdatePlayerMaps;
 cvar_t *rs_queryUpdatePlayerPoints;
+cvar_t *rs_queryUpdatePlayerHistory;
 cvar_t *rs_queryGetMap;
 cvar_t *rs_queryAddMap;
 cvar_t *rs_queryUpdateMapRating;
@@ -58,6 +59,7 @@ cvar_t *rs_queryLoadMapList;
 cvar_t *rs_queryLoadMapHighscores;
 cvar_t *rs_queryMapFilter;
 cvar_t *rs_queryMapFilterCount;
+
 
 cvar_t *rs_authField_Name;
 cvar_t *rs_authField_Pass;
@@ -134,17 +136,23 @@ void RS_Init()
     if ( rs_mysqlEnabled->integer )
     {
         // initialize mysql
-        RS_MysqlLoadInfo();
+        RS_LoadCvars();
         MysqlConnected = RS_MysqlConnect();
+    }
+    
+    if (MysqlConnected != 0)
+    {
+        mysql_real_query(&mysql, rs_queryUpdatePlayerHistory->string, strlen(rs_queryUpdatePlayerHistory->string));
+        RS_MysqlError(NULL);
     }
 }
 
 /**
- * RS_MysqlLoadInfo
+ * RS_LoadCvars
  *
  * @return void
  */
-void RS_MysqlLoadInfo( void )
+void RS_LoadCvars( void )
 {
     sv_port = trap_Cvar_Get( "sv_port", "44400", CVAR_ARCHIVE );
     sv_hostname = trap_Cvar_Get( "sv_hostname", "racesow server", CVAR_ARCHIVE );
@@ -179,22 +187,19 @@ void RS_MysqlLoadInfo( void )
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = `playtime` + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMaps		= trap_Cvar_Get( "rs_queryUpdatePlayerMaps",		"UPDATE `player` SET `maps` = (SELECT COUNT(`map_id`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` = %d;", CVAR_ARCHIVE );
-	rs_queryUpdatePlayerPoints		= trap_Cvar_Get( "rs_queryUpdatePlayerpoints",		"UPDATE `player` SET `points` = (SELECT SUM(`points`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` IN(%s);", CVAR_ARCHIVE );
-
+	rs_queryUpdatePlayerPoints		= trap_Cvar_Get( "rs_queryUpdatePlayerPoints",		"UPDATE `player` SET `points` = (SELECT SUM(`points`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` IN(%s);", CVAR_ARCHIVE );
+	rs_queryUpdatePlayerHistory		= trap_Cvar_Get( "rs_queryUpdatePlayerHistory",		"INSERT INTO `player_history` (`player_id`, `date`, `races`, `maps`, `playtime`, `points`) SELECT `p`.`id`, DATE_SUB(NOW(), INTERVAL 1 DAY), `p`.`races`, `p`.`maps`, `p`.`playtime`, `p`.`points` FROM `player` `p` WHERE `p`.`playtime` IS NOT NULL AND `p`.`playtime` > 0 AND (SELECT `player_id` FROM `player_history` WHERE (`player_id` = `p`.`id` AND `date` < NOW()) OR (`playtime` = `p`.`playtime` AND `races` = `p`.`races` AND `points` = `p`.`points` AND `maps` = `p`.`maps`) ORDER BY `date` DESC LIMIT 1) IS NULL;", CVAR_ARCHIVE );
     rs_queryGetServer               = trap_Cvar_Get( "rs_queryGetServer",				"SELECT `id`, `user` FROM `gameserver` WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetServerById           = trap_Cvar_Get( "rs_queryGetServerById",			"SELECT `id`, `user` FROM `gameserver` WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
     rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `servername`, `created`) VALUES(CONCAT(USER(), ':', %d), '%s', NOW());", CVAR_ARCHIVE );
     rs_queryIncrementServerRaces    = trap_Cvar_Get( "rs_queryIncrementServerRaces",    "UPDATE `gameserver` SET `races` = `races` + 1 WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `servername` = '%s', `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `race` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
-    
 	rs_queryGetMap					= trap_Cvar_Get( "rs_queryGetMapId",				"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddMap					= trap_Cvar_Get( "rs_queryAddMap",					"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
 	rs_queryUpdateMapRating			= trap_Cvar_Get( "rs_queryUpdateMapRating",			"UPDATE `map` SET `rating` = (SELECT SUM(`value`) / COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`), `ratings` = (SELECT COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`) WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdateMapPlaytime		= trap_Cvar_Get( "rs_queryUpdateMapPlaytime",		"UPDATE `map` SET `playtime` = `playtime` + %d WHERE `id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdateMapRaces			= trap_Cvar_Get( "rs_queryUpdateMapRaces",			"UPDATE `map` SET `races` = `races` + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
-
 	rs_queryAddRace					= trap_Cvar_Get( "rs_queryAddRace",					"INSERT INTO `race` (`player_id`, `map_id`, `time`, `tries`, `duration`, `server_id`, `created`) VALUES(%d, %d, %d, %d, %d, %d, NOW());", CVAR_ARCHIVE );
-	
 	rs_queryGetPlayerMap			= trap_Cvar_Get( "rs_queryGetPlayerMap",			"SELECT `points`, `time`, `races`, `playtime`, `created` FROM `player_map` WHERE `player_id` = %d AND `map_id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `server_id`, `tries`, `duration`, `created`) VALUES(%d, %d, %d, 1, %d, (SELECT SUM(`tries`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `tries` IS NOT NULL), (SELECT SUM(`duration`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `duration` IS NOT NULL), NOW()) ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `server_id` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`server_id`), `server_id`), `tries` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`tries`), `tries`), `duration` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`duration`), `duration`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time`);", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMapInfo  	= trap_Cvar_Get( "rs_queryUpdatePlayerMapInfo",	    "INSERT INTO `player_map` (`player_id`, `map_id`, `playtime`, overall_tries, racing_time) VALUES(%d, %d, %d, %d, %d) ON DUPLICATE KEY UPDATE `playtime` = `playtime` + VALUES(`playtime`), `overall_tries` = `overall_tries` + VALUES(`overall_tries`), `racing_time` = `racing_time` + VALUES(`racing_time`);", CVAR_ARCHIVE );
@@ -202,7 +207,6 @@ void RS_MysqlLoadInfo( void )
     rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
     rs_queryResetPlayerMapPoints	= trap_Cvar_Get( "rs_queryResetPlayerMapPoints",	"UPDATE `player_map` SET `points` = 0 WHERE `map_id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d;", CVAR_ARCHIVE );
-    
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
 	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s' LIMIT %u, %u;", CVAR_ARCHIVE );
@@ -322,7 +326,7 @@ qboolean RS_MysqlError( edict_t *ent )
         
         if (errNo == CR_SERVER_GONE_ERROR || errNo == CR_SERVER_LOST)
         {
-            RS_MysqlLoadInfo();
+            RS_LoadCvars();
             MysqlConnected = RS_MysqlConnect();
         }
         
@@ -787,7 +791,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	char authName[64];
 	char authPass[64];
 	char authToken[64];
-	char sessionToken[64];
+	//char sessionToken[64];
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, player_id_for_time, overall_tries;
@@ -2079,4 +2083,3 @@ char *RS_GetMapByNum(int num)
     G_Free( s );
     return NULL;
 }
-

@@ -4,7 +4,7 @@ char maplist[50000];
 unsigned int mapcount;
 int MysqlConnected;
 
-void RS_MysqlLoadInfo( void );
+void RS_LoadCvars( void );
 qboolean RS_MysqlConnect( void );
 qboolean RS_MysqlDisconnect( void );
 qboolean RS_MysqlQuery( char *query );
