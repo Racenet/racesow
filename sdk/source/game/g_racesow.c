@@ -41,6 +41,7 @@ cvar_t *rs_queryUpdatePlayerRaces;
 cvar_t *rs_queryUpdatePlayerMaps;
 cvar_t *rs_queryUpdatePlayerPoints;
 cvar_t *rs_queryUpdatePlayerHistory;
+cvar_t *rs_queryPurgePlayerHistory;
 cvar_t *rs_queryGetMap;
 cvar_t *rs_queryAddMap;
 cvar_t *rs_queryUpdateMapRating;
@@ -68,6 +69,7 @@ cvar_t *rs_tokenSalt;
 
 cvar_t *g_freestyle;
 cvar_t *rs_loadHighscores;
+cvar_t *rs_historyDays;
 
 /**
  * Store the result of different requests from players.
@@ -140,9 +142,14 @@ void RS_Init()
         MysqlConnected = RS_MysqlConnect();
     }
     
-    if (MysqlConnected != 0)
+    if (MysqlConnected != 0 && rs_historyDays->integer != 0)
     {
+        char query[1000];
         mysql_real_query(&mysql, rs_queryUpdatePlayerHistory->string, strlen(rs_queryUpdatePlayerHistory->string));
+        RS_MysqlError(NULL);
+        
+        sprintf(query, rs_queryPurgePlayerHistory->string, rs_historyDays->integer);
+        mysql_real_query(&mysql, query, strlen(query));
         RS_MysqlError(NULL);
     }
 }
@@ -168,6 +175,8 @@ void RS_LoadCvars( void )
     rs_authField_Token = trap_Cvar_Get( "rs_authField_Token", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_tokenSalt = trap_Cvar_Get( "rs_tokenSalt", "", CVAR_ARCHIVE|CVAR_NOSET);
     
+    rs_historyDays = trap_Cvar_Get( "rs_historyDays", "30", CVAR_ARCHIVE|CVAR_LATCH);
+    
     if (!Q_stricmp( rs_authField_Name->string, "" ) || !Q_stricmp( rs_authField_Pass->string, "" ) ||!Q_stricmp( rs_authField_Token->string, "" ))
     {
         G_Error("\033[31;40m\nthe cVars rs_authField_Name, rs_authField_Pass and rs_authField_Token must be set and should be unique for your database!\n\nie. racenet uses the following settings:\n\tset rs_authField_Name \"racenet_user\"\n\tset rs_authField_Pass \"racenet_pass\"\n\tset rs_authField_Token \"racenet_token\"\n\nlike that you can store authentications for multiple servers in a single config.\n\033[0m\n");
@@ -189,6 +198,7 @@ void RS_LoadCvars( void )
 	rs_queryUpdatePlayerMaps		= trap_Cvar_Get( "rs_queryUpdatePlayerMaps",		"UPDATE `player` SET `maps` = (SELECT COUNT(`map_id`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPoints		= trap_Cvar_Get( "rs_queryUpdatePlayerPoints",		"UPDATE `player` SET `points` = (SELECT SUM(`points`) FROM `player_map` WHERE `player_id` = `player`.`id`) WHERE `id` IN(%s);", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerHistory		= trap_Cvar_Get( "rs_queryUpdatePlayerHistory",		"INSERT INTO `player_history` (`player_id`, `date`, `races`, `maps`, `playtime`, `points`) SELECT `p`.`id`, DATE_SUB(NOW(), INTERVAL 1 DAY), `p`.`races`, `p`.`maps`, `p`.`playtime`, `p`.`points` FROM `player` `p` WHERE `p`.`playtime` IS NOT NULL AND `p`.`playtime` > 0 AND (SELECT `player_id` FROM `player_history` WHERE (`player_id` = `p`.`id` AND `date` < NOW()) OR (`playtime` = `p`.`playtime` AND `races` = `p`.`races` AND `points` = `p`.`points` AND `maps` = `p`.`maps`) ORDER BY `date` DESC LIMIT 1) IS NULL;", CVAR_ARCHIVE );
+	rs_queryPurgePlayerHistory		= trap_Cvar_Get( "rs_queryPurgePlayerHistory",		"DELETE FROM `player_history` WHERE `date` < DATE_SUB(NOW(), INTERVAL 30 DAY);", CVAR_ARCHIVE );
     rs_queryGetServer               = trap_Cvar_Get( "rs_queryGetServer",				"SELECT `id`, `user` FROM `gameserver` WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetServerById           = trap_Cvar_Get( "rs_queryGetServerById",			"SELECT `id`, `user` FROM `gameserver` WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
     rs_queryAddServer               = trap_Cvar_Get( "rs_queryAddServer",				"INSERT INTO `gameserver` (`user`, `servername`, `created`) VALUES(CONCAT(USER(), ':', %d), '%s', NOW());", CVAR_ARCHIVE );
