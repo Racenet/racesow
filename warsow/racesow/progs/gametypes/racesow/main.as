@@ -14,7 +14,6 @@ const int MAX_RECORDS = 10;
 const int MAPS_PER_PAGE = 20;
 int oldTimelimit; // for restoring the original value, because extend_time changes it
 
-cString gameDataDir = "gamedata";
 cString scbmsg; //scoreboard message for custom scoreboards
 cString scb_specs;
 cString[] specwho( maxClients );
@@ -897,12 +896,14 @@ void GT_MatchStateStarted()
  */
 void GT_Shutdown()
 {
+/*
     for ( int i = 0; i < maxClients; i++ )
 		if ( @players[i].getClient() != null )
 		{
 		    // run it unthreaded to prevent a mysql crash
 			players[i].disappear(players[i].getName(),false);
 		}
+*/
 }
 
 /**
