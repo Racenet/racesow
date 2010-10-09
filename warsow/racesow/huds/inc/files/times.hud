@@ -1,0 +1,83 @@
+
+if %TIME_SELF != #NOTSET
+
+	if %RACE
+	setFont "virtue_12"
+	setColor 0.8 0.8 0.8 1
+	setAlign #Right, #MIDDLE
+	setcursor 720, 510
+	drawString "Time:"
+endif
+
+	setFont "virtue_12"
+	setColor 1 1 1 1
+	setAlign #Right, #MIDDLE
+	setcursor 790, 510
+	drawTimer %TIME_SELF
+endif
+
+//Own Best
+
+if %TIME_BEST != #NOTSET
+
+	if %RACE
+	setFont "virtue_12"
+	setColor 0.8 0.8 0.8 1
+	setAlign #Right, #MIDDLE
+	setcursor 720, 525
+	drawString "Own Best:"
+endif
+
+	setColor 1 1 1 1
+	setAlign #Right, #MIDDLE
+	setcursor 790, 525
+	drawTimer %TIME_BEST
+endif
+
+
+
+//Server Best
+
+if %TIME_RECORD != #NOTSET
+
+	if %RACE
+	setFont "virtue_12"
+	setColor 0.8 0.8 0.8 1
+	setAlign #Right, #MIDDLE
+	setcursor 720, 540
+	drawString "Srv Best:"
+endif
+	
+	setColor 1 1 1 1
+	setAlign #Right, #MIDDLE
+	setcursor 790, 540
+	drawTimer %TIME_RECORD
+endif
+
+
+//crazy big timer
+
+// minus time
+
+
+	setFont "virtue_16"
+
+
+if %TIME_SELF < %TIME_BEST
+
+    setAlign #CENTER, #BOTTOM
+    setcolor 0, 1, 0, 1
+    setCursor 400, 50
+    drawTimer %TIME_SELF
+
+endif
+
+if %TIME_SELF > %TIME_BEST
+
+    setAlign #CENTER, #BOTTOM
+    setcolor 1, 0, 0, 1
+    setCursor 400, 50
+    drawTimer %TIME_SELF - %TIME_BEST
+endif
+
+
