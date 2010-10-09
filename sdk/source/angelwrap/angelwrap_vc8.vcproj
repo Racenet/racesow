@@ -775,6 +775,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\qas_scriptarray.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\qas_syscalls.cpp"
 				>
 			</File>
@@ -813,6 +817,10 @@
 			</File>
 			<File
 				RelativePath=".\qas_public.h"
+				>
+			</File>
+			<File
+				RelativePath=".\qas_scriptarray.h"
 				>
 			</File>
 			<File

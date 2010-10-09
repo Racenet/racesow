@@ -13,7 +13,7 @@
 #endif
 
 #include "qas_local.h"
-#include "../../libsrcs/angelscript/angelSVN/sdk/add_on/scriptarray/scriptarray.h"
+#include "qas_scriptarray.h"
 
 #ifdef __cplusplus
 extern "C" {
