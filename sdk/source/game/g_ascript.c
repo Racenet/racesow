@@ -73,7 +73,6 @@ typedef struct asClassDescriptor_s
 	const asEObjTypeFlags typeFlags; 
 	const size_t size;
 	const asBehavior_t * const objBehaviors;
-	const asBehavior_t * const globalBehaviors;
 	const asMethod_t * const objMethods;
 	const asProperty_t * const objProperties;
 	const void * const stringFactory;
@@ -1438,28 +1437,33 @@ static const asBehavior_t asstring_ObjectBehaviors[] =
 	{ asBEHAVE_ADDREF, SCRIPT_FUNCTION_DECL(void, f, ()), objectString_Addref, objectString_asGeneric_Addref, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_RELEASE, SCRIPT_FUNCTION_DECL(void, f, ()), objectString_Release, objectString_asGeneric_Release, asCALL_CDECL_OBJLAST },
 
-	/* assignments */
+// racesow new angelwrap: transformed global behaviors and some object behaviors to object methods, as required by new AS
+/*
+	// assignments 
 	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cString &, f, (const cString &in)), objectString_AssignBehaviour, objectString_asGeneric_AssignBehaviour, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cString &, f, (int)), objectString_AssignBehaviourI, objectString_asGeneric_AssignBehaviourI, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cString &, f, (double)), objectString_AssignBehaviourD, objectString_asGeneric_AssignBehaviourD, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cString &, f, (float)), objectString_AssignBehaviourF, objectString_asGeneric_AssignBehaviourF, asCALL_CDECL_OBJLAST },
 
-	/* register the index operator, both as a mutator and as an inspector */
+	// register the index operator, both as a mutator and as an inspector 
 	{ asBEHAVE_INDEX, SCRIPT_FUNCTION_DECL(uint8 &, f, (uint)), objectString_Index, objectString_asGeneric_Index, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_INDEX, SCRIPT_FUNCTION_DECL(const uint8 &, f, (uint)), objectString_Index, objectString_asGeneric_Index, asCALL_CDECL_OBJLAST },
 
-	/* += */
+	// += 
 	{ asBEHAVE_ADD_ASSIGN, SCRIPT_FUNCTION_DECL(cString &, f, (cString &in)), objectString_AddAssignBehaviourSS, objectString_asGeneric_AddAssignBehaviourSS, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ADD_ASSIGN, SCRIPT_FUNCTION_DECL(cString &, f, (int)), objectString_AddAssignBehaviourSI, objectString_asGeneric_AddAssignBehaviourSI, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ADD_ASSIGN, SCRIPT_FUNCTION_DECL(cString &, f, (double)), objectString_AddAssignBehaviourSD, objectString_asGeneric_AddAssignBehaviourSD, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ADD_ASSIGN, SCRIPT_FUNCTION_DECL(cString &, f, (float)), objectString_AddAssignBehaviourSF, objectString_asGeneric_AddAssignBehaviourSF, asCALL_CDECL_OBJLAST },
-
+*/
 	SCRIPT_BEHAVIOR_NULL
 };
 
+
+/*
+// global behaviors are now moved to methods
 static const asBehavior_t asstring_GlobalBehaviors[] =
 {
-	/* + */
+	// + 
 	{ asBEHAVE_ADD, SCRIPT_FUNCTION_DECL(cString @, f, (const cString &in, const cString &in)), objectString_AddBehaviourSS, objectString_asGeneric_AddBehaviourSS, asCALL_CDECL },
 	{ asBEHAVE_ADD, SCRIPT_FUNCTION_DECL(cString @, f, (const cString &in, int)), objectString_AddBehaviourSI, objectString_asGeneric_AddBehaviourSI, asCALL_CDECL },
 	{ asBEHAVE_ADD, SCRIPT_FUNCTION_DECL(cString @, f, (int, const cString &in)), objectString_AddBehaviourIS, objectString_asGeneric_AddBehaviourIS, asCALL_CDECL },
@@ -1468,28 +1472,60 @@ static const asBehavior_t asstring_GlobalBehaviors[] =
 	{ asBEHAVE_ADD, SCRIPT_FUNCTION_DECL(cString @, f, (const cString &in, float)), objectString_AddBehaviourSF, objectString_asGeneric_AddBehaviourSF, asCALL_CDECL },
 	{ asBEHAVE_ADD, SCRIPT_FUNCTION_DECL(cString @, f, (float, const cString &in)), objectString_AddBehaviourFS, objectString_asGeneric_AddBehaviourFS, asCALL_CDECL },
 
-	/* == != */
+	// == != 
 	{ asBEHAVE_EQUAL, SCRIPT_FUNCTION_DECL(bool, f, (const cString &in, const cString &in)), objectString_EqualBehaviour, objectString_asGeneric_EqualBehaviour, asCALL_CDECL },
 	{ asBEHAVE_NOTEQUAL, SCRIPT_FUNCTION_DECL(bool, f, (const cString &in, const cString &in)), objectString_NotEqualBehaviour, objectString_asGeneric_NotEqualBehaviour, asCALL_CDECL },
 
 	SCRIPT_BEHAVIOR_NULL
 };
+*/
 
 static const asMethod_t asstring_Methods[] =
 {
-	{ SCRIPT_FUNCTION_DECL(int, len, ()), objectString_Len, objectString_asGeneric_Len, asCALL_CDECL_OBJLAST },
+	/* + */
+	{ SCRIPT_FUNCTION_DECL(cString @, opAdd, (const cString &in) const),objectString_AddBehaviourSS, objectString_asGeneric_AddBehaviourSS, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cString @, opAdd, (int) const), objectString_AddBehaviourSI, objectString_asGeneric_AddBehaviourSI, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cString @, opAdd_r, (int) const), objectString_AddBehaviourIS, objectString_asGeneric_AddBehaviourIS, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString @, opAdd, (double) const), objectString_AddBehaviourSD, objectString_asGeneric_AddBehaviourSD, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cString @, opAdd_r, (double) const), objectString_AddBehaviourDS, objectString_asGeneric_AddBehaviourDS, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString @, opAdd, (float) const), objectString_AddBehaviourSF, objectString_asGeneric_AddBehaviourSF, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cString @, opAdd_r, (float) const), objectString_AddBehaviourFS, objectString_asGeneric_AddBehaviourFS, asCALL_CDECL_OBJLAST },
+
+	/* == != */
+	{ SCRIPT_FUNCTION_DECL(bool,  opEquals, (const cString &in) const), objectString_EqualBehaviour, objectString_asGeneric_EqualBehaviour, asCALL_CDECL_OBJFIRST },
+
+	/* = */
+	{ SCRIPT_FUNCTION_DECL(cString &, opAssign, (const cString &in)), objectString_AssignBehaviour, objectString_asGeneric_AssignBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString &, opAssign, (int)), objectString_AssignBehaviourI, objectString_asGeneric_AssignBehaviourI, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString &, opAssign, (double)), objectString_AssignBehaviourD, objectString_asGeneric_AssignBehaviourD, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString &, opAssign, (float)), objectString_AssignBehaviourF, objectString_asGeneric_AssignBehaviourF, asCALL_CDECL_OBJLAST },
+
+	// register the index operator, both as a mutator and as an inspector 
+	{ SCRIPT_FUNCTION_DECL(uint8 &, opIndex, (uint)), objectString_Index, objectString_asGeneric_Index, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(const uint8 &, opIndex, (uint) const), objectString_Index, objectString_asGeneric_Index, asCALL_CDECL_OBJLAST },
+
+	/* += */
+	{ SCRIPT_FUNCTION_DECL(cString &, opAddAssign, (cString &in)), objectString_AddAssignBehaviourSS, objectString_asGeneric_AddAssignBehaviourSS, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString &, opAddAssign, (int)), objectString_AddAssignBehaviourSI, objectString_asGeneric_AddAssignBehaviourSI, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString &, opAddAssign, (double)), objectString_AddAssignBehaviourSD, objectString_asGeneric_AddAssignBehaviourSD, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString &, opAddAssign, (float)), objectString_AddAssignBehaviourSF, objectString_asGeneric_AddAssignBehaviourSF, asCALL_CDECL_OBJLAST },
+
+
+// !racesow
+
+	{ SCRIPT_FUNCTION_DECL(int, len, () const), objectString_Len, objectString_asGeneric_Len, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(int, length, ()), objectString_Len, objectString_asGeneric_Len, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cString @, tolower, ()), objectString_ToLower, objectString_asGeneric_ToLower, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cString @, toupper, ()), objectString_ToUpper, objectString_asGeneric_ToUpper, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cString @, trim, ()), objectString_Trim, objectString_asGeneric_Trim, asCALL_CDECL_OBJLAST },
-	{ SCRIPT_FUNCTION_DECL(cString @, removeColorTokens, ()), objectString_RemoveColorTokens, objectString_asGeneric_RemoveColorTokens, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cString @, removeColorTokens, () const), objectString_RemoveColorTokens, objectString_asGeneric_RemoveColorTokens, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cString @, getToken, (const int)), objectString_getToken, objectString_asGeneric_getToken, asCALL_CDECL_OBJLAST },
 
 	{ SCRIPT_FUNCTION_DECL(int, toInt, ()), objectString_toInt, objectString_asGeneric_toInt, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(float, toFloat, ()), objectString_toFloat, objectString_asGeneric_toFloat, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cVec3 &, toVec3, ()), objectString_toVec3, objectString_asGeneric_toVec3, asCALL_CDECL_OBJLAST },
 
-	{ SCRIPT_FUNCTION_DECL(int, locate, (cString &, const int)), objectString_Locate, objectString_asGeneric_Locate, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(int, locate, (cString &in, const int)), objectString_Locate, objectString_asGeneric_Locate, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cString @, substr, (const int, const int)), objectString_Substring, objectString_asGeneric_Substring, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cString @, subString, (const int, const int)), objectString_Substring, objectString_asGeneric_Substring, asCALL_CDECL_OBJLAST },
 
@@ -1506,7 +1542,6 @@ static const asClassDescriptor_t asStringClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( asstring_t ),		/* size */
 	asstring_ObjectBehaviors,	/* object behaviors */
-	asstring_GlobalBehaviors,	/* global behaviors */
 	asstring_Methods,			/* methods */
 	NULL,						/* properties */
 
@@ -2062,6 +2097,10 @@ static const asBehavior_t asvector_ObjectBehaviors[] =
 	{ asBEHAVE_RELEASE, SCRIPT_FUNCTION_DECL(void, f, ()), objectVector_Release, objectVector_asGeneric_Release, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_FACTORY, SCRIPT_FUNCTION_DECL(cVec3 @, f, (float x, float y, float z)), objectVector_FactorySet, objectVector_asGeneric_FactorySet, asCALL_CDECL },
 	{ asBEHAVE_FACTORY, SCRIPT_FUNCTION_DECL(cVec3 @, f, (float v)), objectVector_FactorySet2, objectVector_asGeneric_FactorySet2, asCALL_CDECL },
+
+// racesow
+
+	/*
 	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cVec3 &, f, (cVec3 &in)), objectVector_AssignBehaviour, objectVector_asGeneric_AssignBehaviour, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cVec3 &, f, (int)), objectVector_AssignBehaviourI, objectVector_asGeneric_AssignBehaviourI, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cVec3 &, f, (float)), objectVector_AssignBehaviourF, objectVector_asGeneric_AssignBehaviourF, asCALL_CDECL_OBJLAST },
@@ -2073,10 +2112,12 @@ static const asBehavior_t asvector_ObjectBehaviors[] =
 	{ asBEHAVE_MUL_ASSIGN, SCRIPT_FUNCTION_DECL(cVec3 &, f, (int)), objectVector_MulAssignBehaviourI, objectVector_asGeneric_MulAssignBehaviourI, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_MUL_ASSIGN, SCRIPT_FUNCTION_DECL(cVec3 &, f, (float)), objectVector_MulAssignBehaviourF, objectVector_asGeneric_MulAssignBehaviourF, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_MUL_ASSIGN, SCRIPT_FUNCTION_DECL(cVec3 &, f, (double)), objectVector_MulAssignBehaviourD, objectVector_asGeneric_MulAssignBehaviourD, asCALL_CDECL_OBJLAST },
+	*/
 
 	SCRIPT_BEHAVIOR_NULL
 };
 
+/*
 static const asBehavior_t asvector_GlobalBehaviors[] =
 {
 	{ asBEHAVE_ADD, SCRIPT_FUNCTION_DECL(cVec3 @, f, (const cVec3 &in, const cVec3 &in)), objectVector_AddBehaviour, objectVector_asGeneric_AddBehaviour, asCALL_CDECL },
@@ -2094,9 +2135,37 @@ static const asBehavior_t asvector_GlobalBehaviors[] =
 
 	SCRIPT_BEHAVIOR_NULL
 };
+*/
 
 static const asMethod_t asvector_Methods[] =
 {
+
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opAssign, (cVec3 &in)), objectVector_AssignBehaviour, objectVector_asGeneric_AssignBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opAssign, (int)), objectVector_AssignBehaviourI, objectVector_asGeneric_AssignBehaviourI, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opAssign, (float)), objectVector_AssignBehaviourF, objectVector_asGeneric_AssignBehaviourF, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opAssign, (double)), objectVector_AssignBehaviourD, objectVector_asGeneric_AssignBehaviourD, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opAddAssign, (cVec3 &in)), objectVector_AddAssignBehaviour, objectVector_asGeneric_AddAssignBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opSubAssign, (cVec3 &in)), objectVector_SubAssignBehaviour, objectVector_asGeneric_SubAssignBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opMulAssign, (cVec3 &in)), objectVector_MulAssignBehaviour, objectVector_asGeneric_MulAssignBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opXorAssign, (cVec3 &in)), objectVector_XORAssignBehaviour, objectVector_asGeneric_XORAssignBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opMulAssign, (int)), objectVector_MulAssignBehaviourI, objectVector_asGeneric_MulAssignBehaviourI, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opMulAssign, (float)), objectVector_MulAssignBehaviourF, objectVector_asGeneric_MulAssignBehaviourF, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 &, opMulAssign, (double)), objectVector_MulAssignBehaviourD, objectVector_asGeneric_MulAssignBehaviourD, asCALL_CDECL_OBJLAST },
+
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opAdd, (const cVec3 &in) const), objectVector_AddBehaviour, objectVector_asGeneric_AddBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opSub, (const cVec3 &in) const), objectVector_SubtractBehaviour, objectVector_asGeneric_SubtractBehaviour, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(float, opMul, (const cVec3 &in) const), objectVector_MultiplyBehaviour, objectVector_asGeneric_MultiplyBehaviour, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opMul, (double) const), objectVector_MultiplyBehaviourVD, objectVector_asGeneric_MultiplyBehaviourVD, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opMul_r, (double) const), objectVector_MultiplyBehaviourDV, objectVector_asGeneric_MultiplyBehaviourDV, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opMul, ( float) const), objectVector_MultiplyBehaviourVF, objectVector_asGeneric_MultiplyBehaviourVF, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opMul_r, (float) const), objectVector_MultiplyBehaviourFV, objectVector_asGeneric_MultiplyBehaviourFV, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opMul, (int) const), objectVector_MultiplyBehaviourVI, objectVector_asGeneric_MultiplyBehaviourVI, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opMul_r, (int) const), objectVector_MultiplyBehaviourIV, objectVector_asGeneric_MultiplyBehaviourIV, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(cVec3 @, opXor, (const cVec3 &in) const), objectVector_XORBehaviour, objectVector_asGeneric_XORBehaviour, asCALL_CDECL_OBJFIRST },
+	{ SCRIPT_FUNCTION_DECL(bool, opEquals, (const cVec3 &in) const), objectVector_EqualBehaviour, objectVector_asGeneric_EqualBehaviour, asCALL_CDECL_OBJFIRST },
+
+// !racesow
+
 	{ SCRIPT_FUNCTION_DECL(void, set, ( float x, float y, float z )), objectVector_Set, objectVector_asGeneric_Set, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(float, length, ()), objectVector_Length, objectVector_asGeneric_Length, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(float, normalize, ()), objectVector_Normalize, objectVector_asGeneric_Normalize, asCALL_CDECL_OBJLAST },
@@ -2125,7 +2194,6 @@ static const asClassDescriptor_t asVectorClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( asvec3_t ),			/* size */
 	asvector_ObjectBehaviors,	/* object behaviors */
-	asvector_GlobalBehaviors,	/* global behaviors */
 	asvector_Methods,			/* methods */
 	asvector_Properties,		/* properties */
 
@@ -2473,7 +2541,6 @@ static const asClassDescriptor_t asCVarClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( ascvar_t ),			/* size */
 	ascvar_ObjectBehaviors,		/* object behaviors */
-	NULL,						/* global behaviors */
 	ascvar_Methods,				/* methods */
 	ascvar_Properties,			/* properties */
 
@@ -2600,20 +2667,32 @@ static const asBehavior_t astime_ObjectBehaviors[] =
 	{ asBEHAVE_ADDREF, SCRIPT_FUNCTION_DECL(void, f, ()), objectTime_Addref, objectTime_asGeneric_Addref, asCALL_CDECL_OBJLAST },
 	{ asBEHAVE_RELEASE, SCRIPT_FUNCTION_DECL(void, f, ()), objectTime_Release, objectTime_asGeneric_Release, asCALL_CDECL_OBJLAST },
 
+// racesow
 	/* assignments */
-	{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cTime &, f, (const cTime &in)), objectTime_AssignBehaviour, objectTime_asGeneric_AssignBehaviour, asCALL_CDECL_OBJLAST },
+	//{ asBEHAVE_ASSIGNMENT, SCRIPT_FUNCTION_DECL(cTime &, f, (const cTime &in)), objectTime_AssignBehaviour, objectTime_asGeneric_AssignBehaviour, asCALL_CDECL_OBJLAST },
 
 	SCRIPT_BEHAVIOR_NULL
 };
 
+/*
 static const asBehavior_t astime_GlobalBehaviors[] =
 {
-	/* == != */
+	// == != 
 	{ asBEHAVE_EQUAL, SCRIPT_FUNCTION_DECL(bool, f, (const cTime &in, const cTime &in)), objectTime_EqualBehaviour, objectTime_asGeneric_EqualBehaviour, asCALL_CDECL },
 	{ asBEHAVE_NOTEQUAL, SCRIPT_FUNCTION_DECL(bool, f, (const cTime &in, const cTime &in)), objectTime_NotEqualBehaviour, objectTime_asGeneric_NotEqualBehaviour, asCALL_CDECL },
 
 	SCRIPT_BEHAVIOR_NULL
 };
+*/
+
+static const asMethod_t astime_Methods[] =
+{
+	{ SCRIPT_FUNCTION_DECL(cTime &, opAssign, (const cTime &in)), objectTime_AssignBehaviour, objectTime_asGeneric_AssignBehaviour, asCALL_CDECL_OBJLAST },
+	{ SCRIPT_FUNCTION_DECL(bool, opEqual, (const cTime &in) const), objectTime_EqualBehaviour, objectTime_asGeneric_EqualBehaviour, asCALL_CDECL_OBJFIRST },
+	SCRIPT_METHOD_NULL
+};
+
+// !racesow
 
 static const asProperty_t astime_Properties[] =
 {
@@ -2637,8 +2716,7 @@ static const asClassDescriptor_t asTimeClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( astime_t ),			/* size */
 	astime_ObjectBehaviors,		/* object behaviors */
-	astime_GlobalBehaviors,		/* global behaviors */
-	NULL,						/* methods */
+	astime_Methods,				/* methods */
 	astime_Properties,			/* properties */
 
 	NULL, NULL					/* string factory hack */
@@ -2791,7 +2869,6 @@ static const asClassDescriptor_t asTraceClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( astrace_t ),		/* size */
 	astrace_ObjectBehaviors,	/* object behaviors */
-	NULL,						/* global behaviors */
 	astrace_Methods,			/* methods */
 	astrace_Properties,			/* properties */
 
@@ -3011,7 +3088,6 @@ static const asClassDescriptor_t asItemClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( gsitem_t ),			/* size */
 	asitem_ObjectBehaviors,		/* object behaviors */
-	NULL,						/* global behaviors */
 	asitem_Methods,				/* methods */
 	asitem_Properties,			/* properties */
 
@@ -3274,7 +3350,6 @@ static const asClassDescriptor_t asMatchClassDescriptor =
 	asOBJ_REF|asOBJ_NOHANDLE,	/* object type flags */
 	sizeof( match_t ),		/* size */
 	match_ObjectBehaviors, /* object behaviors */
-	NULL,						/* global behaviors */
 	match_Methods,				/* methods */
 	match_Properties,			/* properties */
 
@@ -3499,7 +3574,6 @@ static const asClassDescriptor_t asGametypeClassDescriptor =
 	asOBJ_REF|asOBJ_NOHANDLE,		/* object type flags */
 	sizeof( gametype_descriptor_t ), /* size */
 	gametypedescr_ObjectBehaviors, /* object behaviors */
-	NULL,						/* global behaviors */
 	gametypedescr_Methods,		/* methods */
 	gametypedescr_Properties,	/* properties */
 
@@ -3710,7 +3784,6 @@ static const asClassDescriptor_t asTeamListClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( g_teamlist_t ),		/* size */
 	teamlist_ObjectBehaviors,	/* object behaviors */
-	NULL,						/* global behaviors */
 	teamlist_Methods,			/* methods */
 	teamlist_Properties,		/* properties */
 
@@ -3918,7 +3991,6 @@ static const asClassDescriptor_t asScoreStatsClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( score_stats_t ),	/* size */
 	scorestats_ObjectBehaviors, /* object behaviors */
-	NULL,						/* global behaviors */
 	scorestats_Methods,			/* methods */
 	scorestats_Properties,		/* properties */
 
@@ -4082,7 +4154,6 @@ static const asClassDescriptor_t asBotClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( asbot_t ),			/* size */
 	asbot_ObjectBehaviors,		/* object behaviors */
-	NULL,						/* global behaviors */
 	asbot_Methods,				/* methods */
 	asbot_Properties,			/* properties */
 
@@ -4743,7 +4814,6 @@ static const asClassDescriptor_t asGameClientDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( gclient_t ),		/* size */
 	gameclient_ObjectBehaviors,	/* object behaviors */
-	NULL,						/* global behaviors */
 	gameclient_Methods,			/* methods */
 	gameclient_Properties,		/* properties */
 
@@ -5494,17 +5564,26 @@ static const asBehavior_t gedict_ObjectBehaviors[] =
 	SCRIPT_BEHAVIOR_NULL
 };
 
+// racesow
+
+/*
 static const asBehavior_t gedict_GlobalBehaviors[] =
 {
-	/* == != */
-	//{ asBEHAVE_EQUAL, SCRIPT_FUNCTION_DECL(bool, f, (cEntity @, cEntity @)), objectGameEntity_EqualBehaviour, objectGameEntity_asGeneric_EqualBehaviour, asCALL_CDECL },
-	//{ asBEHAVE_NOTEQUAL, SCRIPT_FUNCTION_DECL(bool, f, (cEntity @, cEntity @)), objectGameEntity_NotEqualBehaviour, objectGameEntity_asGeneric_NotEqualBehaviour, asCALL_CDECL },
+	// == != 
+	{ asBEHAVE_EQUAL, SCRIPT_FUNCTION_DECL(bool, f, (cEntity @, cEntity @)), objectGameEntity_EqualBehaviour, objectGameEntity_asGeneric_EqualBehaviour, asCALL_CDECL },
+	{ asBEHAVE_NOTEQUAL, SCRIPT_FUNCTION_DECL(bool, f, (cEntity @, cEntity @)), objectGameEntity_NotEqualBehaviour, objectGameEntity_asGeneric_NotEqualBehaviour, asCALL_CDECL },
 
 	SCRIPT_BEHAVIOR_NULL
 };
+*/
 
 static const asMethod_t gedict_Methods[] =
 {
+	// looks unused (see ifdef before objectGameEntity_EqualBehaviour), but if it gets used, uncomment this
+	//{ SCRIPT_FUNCTION_DECL(bool, opEquals, (const cEntity @) const), objectGameEntity_EqualBehaviour, objectGameEntity_asGeneric_EqualBehaviour, asCALL_CDECL_OBJFIRST },
+
+// !racesow
+
 	{ SCRIPT_FUNCTION_DECL(cVec3 @, getVelocity, ()), objectGameEntity_GetVelocity, objectGameEntity_asGeneric_GetVelocity, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(void, setVelocity, (cVec3 &in)), objectGameEntity_SetVelocity, objectGameEntity_asGeneric_SetVelocity, asCALL_CDECL_OBJLAST },
 	{ SCRIPT_FUNCTION_DECL(cVec3 @, getAVelocity, ()), objectGameEntity_GetAVelocity, objectGameEntity_asGeneric_GetAVelocity, asCALL_CDECL_OBJLAST },
@@ -5617,7 +5696,6 @@ static const asClassDescriptor_t asGameEntityClassDescriptor =
 	asOBJ_REF,					/* object type flags */
 	sizeof( edict_t ),			/* size */
 	gedict_ObjectBehaviors,		/* object behaviors */
-	gedict_GlobalBehaviors,		/* global behaviors */
 	gedict_Methods,				/* methods */
 	gedict_Properties,			/* properties */
 
@@ -5697,22 +5775,6 @@ static void G_RegisterObjectClasses( int asEngineHandle )
 					error = angelExport->asRegisterObjectBehaviour( asEngineHandle, cDescr->name, objBehavior->behavior, objBehavior->declaration, objBehavior->funcPointer_asGeneric, asCALL_GENERIC );
 				else
 					error = angelExport->asRegisterObjectBehaviour( asEngineHandle, cDescr->name, objBehavior->behavior, objBehavior->declaration, objBehavior->funcPointer, objBehavior->callConv );
-			}
-		}
-
-		// global behaviors
-		if( cDescr->globalBehaviors )
-		{
-			for( j = 0; ; j++ )
-			{
-				const asBehavior_t *globalBehavior = &cDescr->globalBehaviors[j];
-				if( !globalBehavior->declaration )
-					break;
-
-				if( level.gametype.asEngineIsGeneric )
-					error = angelExport->asRegisterGlobalBehaviour( asEngineHandle, globalBehavior->behavior, globalBehavior->declaration, globalBehavior->funcPointer_asGeneric, asCALL_GENERIC );
-				else
-					error = angelExport->asRegisterGlobalBehaviour( asEngineHandle, globalBehavior->behavior, globalBehavior->declaration, globalBehavior->funcPointer, globalBehavior->callConv );
 			}
 		}
 
@@ -8040,12 +8102,17 @@ static void G_asDumpAPIToFile( const char *path )
 
 			for( j = 0; ; j++ )
 			{
+				// racesow
+				// look unused
+				#ifdef RACESOW_UNUSED
 				const char * const behaviorMarks[] =
 				{
 					" /* = */", " /* += */", " /* -= */", " /* *= */", " /* /= */", " /* %= */", 
 					" /* |= */", " /* &= */", " /* ^| */", 
 					" /* <<= */", " /* >>= */"
 				};
+				#endif
+				// !racesow
 
 				const asBehavior_t *objBehavior = &cDescr->objBehaviors[j];
 				if( !objBehavior->declaration )
@@ -8056,36 +8123,11 @@ static void G_asDumpAPIToFile( const char *path )
 					continue;
 
 				Q_snprintfz( string, sizeof( string ), "\t%s;%s\r\n", objBehavior->declaration,
-				( objBehavior->behavior == asBEHAVE_FACTORY ? " /* factory */ " : 
-					( objBehavior->behavior < asBEHAVE_ASSIGNMENT ||  objBehavior->behavior > asBEHAVE_SRA_ASSIGN 
-						? "" : behaviorMarks[objBehavior->behavior-asBEHAVE_ASSIGNMENT] ) )
-				);
-				trap_FS_Write( string, strlen( string ), file );
-			}
-		}
-
-		// global behaviors
-		if( cDescr->globalBehaviors )
-		{
-			const char * const globalBehaviorMarks[] =
-			{
-				" /* + */", " /* - */", " /* * */", " /* / */", " /* % */", 
-				" /* == */", " /* != */", " /* < */", " /* > */", " /* <= */", " /* >= */", 
-				" /* | */", " /* & */", " /* ^ */", " /* << */", " /* >> */", " /* >> */"
-			};
-
-			Q_snprintfz( string, sizeof( string ), "\r\n\t/* global behaviors */\r\n" );
-			trap_FS_Write( string, strlen( string ), file );
-
-			for( j = 0; ; j++ )
-			{
-				const asBehavior_t *globalBehavior = &cDescr->globalBehaviors[j];
-				if( !globalBehavior->declaration )
-					break;
-
-				Q_snprintfz( string, sizeof( string ), "\t%s;%s\r\n", globalBehavior->declaration,
-					( globalBehavior->behavior < asBEHAVE_ADD ||  globalBehavior->behavior > asBEHAVE_BIT_SRA 
-						? "" : globalBehaviorMarks[globalBehavior->behavior-asBEHAVE_ADD] )
+					( objBehavior->behavior == asBEHAVE_FACTORY ? " /* factory */ " : "" )\
+					// racesow
+					 //( objBehavior->behavior < asBEHAVE_ASSIGNMENT ||  objBehavior->behavior > asBEHAVE_SRA_ASSIGN 
+						//? "" : behaviorMarks[objBehavior->behavior-asBEHAVE_ASSIGNMENT] ) )
+					//!racesow
 				);
 				trap_FS_Write( string, strlen( string ), file );
 			}

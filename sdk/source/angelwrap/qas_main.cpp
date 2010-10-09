@@ -17,6 +17,7 @@ void QAS_InitAngelExport( void )
 	angelExport.angelwrap_api_version = ANGELWRAP_API_VERSION;
 
 	angelExport.asCreateScriptEngine = qasCreateScriptEngine;
+	angelExport.asSetEngineProperty = qasSetEngineProperty; //racesow
 	angelExport.asReleaseScriptEngine = qasReleaseScriptEngine;
 	angelExport.asGarbageCollect = qasGarbageCollect;
 	angelExport.asGetGCStatistics = qasGetGCStatistics;
@@ -50,7 +51,6 @@ void QAS_InitAngelExport( void )
 	angelExport.asRegisterObjectBehaviour = qasRegisterObjectBehaviour;
 	angelExport.asRegisterGlobalProperty = qasRegisterGlobalProperty;
 	angelExport.asRegisterGlobalFunction = qasRegisterGlobalFunction;
-	angelExport.asRegisterGlobalBehaviour = qasRegisterGlobalBehaviour;
 	angelExport.asRegisterEnum = qasRegisterEnum;
 	angelExport.asRegisterEnumValue = qasRegisterEnumValue;
 	angelExport.asRegisterStringFactory = qasRegisterStringFactory;

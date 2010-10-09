@@ -83,8 +83,12 @@ int qasGetGlobalVarIndexByName( int engineHandle, const char *module, const char
 int qasGetGlobalVarIndexByDecl( int engineHandle, const char *module, const char *decl );
 const char *qasGetGlobalVarDeclaration( int engineHandle, const char *module, int index );
 const char *qasGetGlobalVarName( int engineHandle, const char *module, int index );
+//racesow
+#ifdef AS_DEPRECRATED 
 int qasGetGlobalVarTypeId( int engineHandle, const char *module, int index );
 void *qasGetAddressOfGlobalVar( int engineHandle, const char *module, int index );
+#endif
+//!racesow
 
 // Dynamic binding between modules
 int qasGetImportedFunctionCount( int engineHandle, const char *module );
@@ -103,7 +107,6 @@ int qasCopyScriptObject( int engineHandle, void *dstObj, void *srcObj, int typeI
 int qasReleaseScriptObject( int engineHandle, void *obj, int typeId );
 int qasAddRefScriptObject( int engineHandle, void *obj, int typeId );
 int qasIsHandleCompatibleWithObject( int engineHandle, void *obj, int objTypeId, int handleTypeId );
-int qasCompareScriptObjects( int engineHandle, int *result, int behaviour, void *leftObj, void *rightObj, int typeId );
 
 // Garbage collection
 int qasGarbageCollect( int engineHandle/*, int flags*/ );

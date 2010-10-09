@@ -37,6 +37,7 @@ typedef	struct angelwrap_api_s
 
 	// ENGINE--
 	int ( *asCreateScriptEngine )( qboolean *as_max_portability );
+	int ( *asSetEngineProperty ) ( int engineHandle, int property, int value ); 
 	int ( *asReleaseScriptEngine )( int engineHandle );
 	int ( *asAdquireContext )( int engineHandle );
 
@@ -85,7 +86,6 @@ typedef	struct angelwrap_api_s
 	// GLOBAL --
 	int ( *asRegisterGlobalProperty )( int engineHandle, const char *declaration, void *pointer );
 	int ( *asRegisterGlobalFunction )( int engineHandle, const char *declaration, const void *funcPointer, int callConv );
-	int ( *asRegisterGlobalBehaviour )( int engineHandle, unsigned int behavior, const char *declaration, const void *funcPointer, int callConv );
 
 	int ( *asRegisterEnum )( int engineHandle, const char *type );
 	int ( *asRegisterEnumValue )( int engineHandle, const char *type, const char *name, int value );

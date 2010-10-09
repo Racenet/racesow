@@ -13,6 +13,7 @@
 #endif
 
 #include "qas_local.h"
+#include "../../libsrcs/angelscript/angelSVN/sdk/add_on/scriptarray/scriptarray.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -147,6 +148,16 @@ int qasCreateScriptEngine( qboolean *as_max_portability )
 	eh->engine->SetMessageCallback( asFUNCTION( qasGenericMessageCallback ), 0, asCALL_CDECL );
 
 	qasRegisterMathAddon( eh );
+
+	// racesow:
+	// built-in array type is deprecated as of AngelScript 2.20.0
+	// for wsw 0.5 script compatibility, we still register it here
+	// in order to port future wsw scripts, please declare dynamic arrays
+	// using this symtax: array<int> arr; see this AS changelog:
+	// Remove the syntax for declaring dynamic array types, i.e. int[] arr;. Dynamic arrays 
+	// should be declared as the template type, e.g. array<int> arr;. Static arrays (when 
+	// implemented) should still be declared with int arr[];
+	RegisterScriptArray(eh->engine, true);
 
 	return eh->handle;
 }
@@ -423,26 +434,6 @@ int qasRegisterGlobalFunction( int engineHandle, const char *declaration, const 
 
 	if( error < 0 )
 		QAS_Printf( "WARNING: AScript GlobalFunction '%s' failed to register with error %i\n", declaration, error );
-
-	return error;
-}
-
-int qasRegisterGlobalBehaviour( int engineHandle, unsigned int behavior, const char *declaration, const void *funcPointer, int callConv )
-{
-	enginehandle_t *eh;
-	int error;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return QASINVALIDHANDLE;
-
-	if( eh->max_portability )
-		error = eh->engine->RegisterGlobalBehaviour( (asEBehaviours)behavior, declaration, asFUNCTION_GENERIC(funcPointer), (asDWORD)callConv );
-	else
-		error = eh->engine->RegisterGlobalBehaviour( (asEBehaviours)behavior, declaration, asFUNCTION(funcPointer), (asDWORD)callConv );
-
-	if( error < 0 )
-		QAS_Printf( "WARNING: AScript GlobalBehavior '%s' failed to register with error %i\n", declaration, error );
 
 	return error;
 }
@@ -811,6 +802,9 @@ const char *qasGetGlobalVarDeclaration( int engineHandle, const char *module, in
 	return mod->GetGlobalVarDeclaration( index );
 }
 
+//racesow
+#ifdef AS_DEPRECATED
+
 const char *qasGetGlobalVarName( int engineHandle, const char *module, int index )
 {
 	enginehandle_t *eh;
@@ -840,6 +834,8 @@ int qasGetGlobalVarTypeId( int engineHandle, const char *module, int index )
 
 	return mod->GetGlobalVarTypeId( index );
 }
+#endif
+//!racesow
 
 void *qasGetAddressOfGlobalVar( int engineHandle, const char *module, int index )
 {
@@ -1054,19 +1050,6 @@ int qasIsHandleCompatibleWithObject( int engineHandle, void *obj, int objTypeId,
 	return (int)eh->engine->IsHandleCompatibleWithObject( obj, objTypeId, handleTypeId );
 }
 
-int qasCompareScriptObjects( int engineHandle, int *result, int behaviour, void *leftObj, void *rightObj, int typeId )
-{
-	enginehandle_t *eh;
-	bool bresult = 0;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh || !result )
-		return QASINVALIDHANDLE;
-
-	int ret = eh->engine->CompareScriptObjects( bresult, behaviour, leftObj, rightObj, typeId );
-	*result = (int)bresult;
-	return ret;
-}
 
 // String interpretation
 // not added
@@ -1279,7 +1262,7 @@ void *qasGetArgPointer( int contextHandle, unsigned int arg )
 	if( !ch )
 		return NULL;
 
-	return ch->ctx->GetArgPointer( (asUINT)arg );
+	return ch->ctx->GetAddressOfArg( (asUINT)arg );
 }
 
 int qasSetObject( int contextHandle, void *obj )
