@@ -48,7 +48,7 @@ class Racesow_Player
      * @var bool
      */
     bool onQuad;
-	
+
 	/**
 	 * cEntity which stores the latest position after the telekill
 	 * @var cEntity
@@ -257,12 +257,12 @@ class Racesow_Player
         this.joinedTime = levelTime;
         racesowAdapter.playerAppear(@this);
     }
-	
+
 	void disappear(cString nickName, bool threaded)
     {
         racesowAdapter.playerDisappear(@this, nickName, threaded);
     }
-    
+
     /**
      * Callback for a finished race
      * @return void
@@ -275,7 +275,7 @@ class Racesow_Player
         uint earnedPoints;
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
-        
+
         //print general info to player
         this.getClient().addAward( S_COLOR_CYAN + "Race Finished!" );
 		bool noDelta = 0 == bestTime;
@@ -304,7 +304,7 @@ class Racesow_Player
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
-                
+
             map.getHighScore(0).fromRace(this.lastRace);
         }
         else if ( oldTime == 0 || newTime < oldTime ) //set new personal record
@@ -326,7 +326,7 @@ class Racesow_Player
     {
         @this.lastRace = @race;
     }
-    
+
     /**
 	 * Get the player's id
 	 * @return int
@@ -458,6 +458,7 @@ class Racesow_Player
 	 */
 	void onSpawn()
 	{
+	    this.isSpawned = true;
 	}
 
 	/**
@@ -478,6 +479,9 @@ class Racesow_Player
 	 */
     void touchStartTimer()
     {
+        if( !this.isSpawned )
+            return;
+
 		if ( this.isRacing() )
             return;
 
@@ -767,7 +771,7 @@ class Racesow_Player
 
 		return true;
 	}
-	
+
    /**
      * quad Command
      * @return bool
