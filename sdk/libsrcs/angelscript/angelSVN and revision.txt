@@ -1,3 +1,3 @@
-This copy corresponds to revision 355 of angel script 
+This copy corresponds to revision 717 of angel script 
 SVN repository which is located at: 
 https://angelscript.svn.sourceforge.net/svnroot/angelscript/trunk
