@@ -14,9 +14,12 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
 	 */
     void raceFinish(Racesow_Player_Race @race)
     {
+	
+		bool success;
         // Call to a c-function which should result
         // in a callback to player.raceCallback()
-        RS_MysqlInsertRace(
+		// ..unless the player uses a protected nick
+        success = RS_MysqlInsertRace(
             race.getPlayer().getId(),
             race.getPlayer().getNickId(),
             map.getId(),
@@ -25,6 +28,10 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
             race.getPlayer().triesSinceLastRace,
             race.getPlayer().racingTimeSinceLastRace
         );
+		if ( ! success )
+		{
+			G_PrintMsg( race.getPlayer().getClient().getEnt(), S_COLOR_RED + "Could not insert this race into the database, are you using a protected nick? " + "\n" );
+		}
     }
 
     /**
