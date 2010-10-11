@@ -29,6 +29,7 @@ cvar_t *rs_querySetTokenForPlayer;
 cvar_t *rs_querySetSessionForPlayer;
 cvar_t *rs_queryGetPlayer;
 cvar_t *rs_queryAddPlayer;
+cvar_t *rs_queryGetPlayerStats;
 cvar_t *rs_queryGetServer;
 cvar_t *rs_queryGetServerById;
 cvar_t *rs_queryAddServer;
@@ -131,7 +132,7 @@ void RS_Init()
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
-    rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_ARCHIVE|CVAR_NOSET);
     g_freestyle = trap_Cvar_Get( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
 
@@ -170,9 +171,9 @@ void RS_LoadCvars( void )
     rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "", CVAR_ARCHIVE );
     rs_mysqlDb = trap_Cvar_Get( "rs_mysqlDb", "racesow", CVAR_ARCHIVE );
     
-    rs_authField_Name = trap_Cvar_Get( "rs_authField_Name", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
-    rs_authField_Pass = trap_Cvar_Get( "rs_authField_Pass", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
-    rs_authField_Token = trap_Cvar_Get( "rs_authField_Token", "", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
+    rs_authField_Name = trap_Cvar_Get( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET);
+    rs_authField_Pass = trap_Cvar_Get( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET);
+    rs_authField_Token = trap_Cvar_Get( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET);
     rs_tokenSalt = trap_Cvar_Get( "rs_tokenSalt", "", CVAR_ARCHIVE|CVAR_NOSET);
     
     rs_historyDays = trap_Cvar_Get( "rs_historyDays", "30", CVAR_ARCHIVE|CVAR_LATCH);
@@ -191,6 +192,7 @@ void RS_LoadCvars( void )
     rs_querySetSessionForPlayer     = trap_Cvar_Get( "rs_querySetSessionForPlayer",	    "UPDATE `player` SET `session_token` = '%s' WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
+	rs_queryGetPlayerStats  		= trap_Cvar_Get( "rs_queryGetPlayerStats",			"SELECT `points`, `diff_points`, `races`, (SELECT SUM(`overall_tries`) FROM `player_map` WHERE `player_id` = `p`.`id`) `race_tries`, `maps`, `playtime`, (SELECT SUM(`racing_time`) FROM `player_map` WHERE `player_id` = `p`.`id`) `racing_time`, DATE_FORMAT(`created`, '%%Y-%%m-%%d') `first_seen`, (SELECT `date` FROM `player_history` WHERE `player_id` = `p`.`id`) `last_seen` FROM `player` `p` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL);", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = `playtime` + %d WHERE `id` = %d LIMIT 1;", CVAR_ARCHIVE );
@@ -1242,12 +1244,41 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 }
 
 /**
+ * Mapfilter function registered in AS API.
+ *
+ * Calls RS_BasicMapFilter
+ *
+ * @param player_id Id of the player making the request
+ * @param filter String used to filter maplist
+ * @param page Number of the result page
+ * @return Sucess boolean
+ */
+qboolean RS_MapFilter(int player_id, char *filter, unsigned int page )
+{
+    pthread_t thread;
+    int returnCode;
+    struct filterDataStruct *filterdata=malloc(sizeof(struct filterDataStruct));
+    filterdata->player_id = player_id;
+    filterdata->filter = strdup(filter);
+    filterdata->page = page;
+    returnCode = pthread_create(&thread, &threadAttr, RS_MapFilter_Thread, (void *)filterdata);
+
+    if (returnCode) {
+
+        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        return qfalse;
+    }
+
+    return qtrue;
+}
+
+/**
  * Map filter thread, parse the maplist array
  *
  * @param in Input data, cast to filterDataStruct
  * @return NULL on success
  */
-void *RS_MapFilter_Thread( void *in)
+void *RS_MapFilter_Thread( void *in )
 {
     struct filterDataStruct *filterData = (struct filterDataStruct *)in;
     int filterCount = 0, totalPages = 0, mapCount = 0, size = 0;
@@ -1351,33 +1382,104 @@ void *RS_MapFilter_Thread( void *in)
 }
 
 /**
- * Mapfilter function registered in AS API.
+ * Load stats requested from AS api
  *
- * Calls RS_BasicMapFilter
- *
- * @param player_id Id of the player making the request
- * @param filter String used to filter maplist
- * @param page Number of the result page
+ * @param playerNum playerNum making the request
+ * @param what map or player
+ * @param which name for map or player
  * @return Sucess boolean
  */
-qboolean RS_MapFilter(int player_id, char *filter,unsigned int page)
+qboolean RS_LoadStats(int playerNum, char *what, char *which)
 {
     pthread_t thread;
     int returnCode;
-    struct filterDataStruct *filterdata=malloc(sizeof(struct filterDataStruct));
-    filterdata->player_id = player_id;
-    filterdata->filter = strdup(filter);
-    filterdata->page = page;
-    returnCode = pthread_create(&thread, &threadAttr, RS_MapFilter_Thread, (void *)filterdata);
+    struct statsRequest_t *statsRequest=malloc(sizeof(struct statsRequest_t));
+    statsRequest->playerNum = playerNum;
+    statsRequest->what = strdup(what);
+    statsRequest->which = strdup(which);
+    returnCode = pthread_create(&thread, &threadAttr, RS_LoadStats_Thread, (void *)statsRequest);
 
     if (returnCode) {
 
         printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
-            }
+    }
 
     return qtrue;
+}
+
+
+/**
+ * Map filter thread, parse the maplist array
+ *
+ * @param in Input data, cast to filterDataStruct
+ * @return NULL on success
+ */
+void *RS_LoadStats_Thread( void *in )
+{
+    struct statsRequest_t *statsRequest = (struct statsRequest_t *)in;
+    char result[MAX_STRING_CHARS];
+    char query[1024];
+    char which[64];
+    MYSQL_ROW  row;
+    MYSQL_RES  *mysql_res;
+    int size = 0;
+	result[0]='\0';
+    
+    RS_StartMysqlThread();
+
+    if (!Q_stricmp(statsRequest->what, "map"))
+    {
+        Q_strncatz( result, va( "%sTODO: retrieve stats for %s %s\n", S_COLOR_RED, statsRequest->what, statsRequest->which ), sizeof( result ) );
+    }
+    else if (!Q_stricmp(statsRequest->what, "player"))
+    {
+        Q_strncpyz( which, COM_RemoveColorTokens(statsRequest->which), sizeof( which ) );
+        mysql_real_escape_string(&mysql, which, which, strlen(which));
+        sprintf(query, rs_queryGetPlayerStats->string, which);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        {
+            if (row[0]!=NULL)
+            {
+                Q_strncatz( result, va( "%sStats for %s:\nPoints: %d (%d)\nFinished races: %d\nStarted races: %d\nPlayed maps: %d\nOnline time: %d\nRacing time: %d\nFirst seen: %s\nLast seen: %s\n", S_COLOR_YELLOW, statsRequest->which,
+                    atoi(row[0]), atoi(row[1]), atoi(row[2]), atoi(row[3]), atoi(row[4]), atoi(row[5]), atoi(row[6]),  row[7], row[8]), sizeof( result ) );
+            }
         }
+        else
+        {
+            Q_strncatz( result, va( "%sError: player '%s' not found\n", S_COLOR_RED, statsRequest->which ), sizeof( result ) );
+        }
+            
+        mysql_free_result(mysql_res);
+    }
+    else
+    {
+        Q_strncatz( result, va( "%sError: %invalid stats type: '%s' %s %s\n", S_COLOR_RED, S_COLOR_WHITE, statsRequest->what ), sizeof( result ) );
+    }
+
+    //ent = &game.edicts[ playerData->playerNum + 1 ];
+    
+    /*
+    
+    */
+    
+    
+    size = strlen( result )+1;
+    players_query[statsRequest->playerNum] = malloc( size );
+    Q_strncpyz( players_query[statsRequest->playerNum], result, size);
+    RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, statsRequest->playerNum, 0, 0, 0, 0, 0, 0);
+    
+    free(statsRequest->what);
+    free(statsRequest->which);
+    free(statsRequest);
+    RS_EndMysqlThread();
+
+    return NULL;
+}
 
 /**
  * This function is called from angelscript when callbacks of queries returning

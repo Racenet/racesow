@@ -6180,6 +6180,19 @@ static void asFunc_asGeneric_RS_MapFilter( void *gen )
             (unsigned int)G_asGeneric_GetArgInt(gen, 2)));
 }
 
+// RS_LoadStats
+static qboolean asFunc_RS_LoadStats(int player_id, asstring_t *what, asstring_t *which)
+{
+     return RS_LoadStats( player_id, what->buffer, which->buffer);
+}
+static void asFunc_asGeneric_RS_LoadStats( void *gen )
+{
+    G_asGeneric_SetReturnBool( gen, asFunc_RS_LoadStats(
+            (int)G_asGeneric_GetArgInt(gen, 0),
+            (asstring_t *)G_asGeneric_GetArgAddress(gen, 1),
+            (asstring_t *)G_asGeneric_GetArgAddress(gen, 2)));
+}
+
 // RS_MysqlMapFilterCallback
 static asstring_t *asFunc_RS_PrintQueryCallback(int player_id )
 {
@@ -6974,6 +6987,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
 	{ "bool RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},
+	{ "bool RS_LoadStats( int playerNum, cString &, cString & )", asFunc_RS_LoadStats, asFunc_asGeneric_RS_LoadStats},
     { "cString @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback, asFunc_asGeneric_RS_PrintQueryCallback },
     { "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },
 	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
