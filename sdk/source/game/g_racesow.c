@@ -209,7 +209,7 @@ void RS_LoadCvars( void )
     rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `servername` = '%s', `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `race` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetMap					= trap_Cvar_Get( "rs_queryGetMapId",				"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddMap					= trap_Cvar_Get( "rs_queryAddMap",					"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
-	rs_queryGetMapStats  		    = trap_Cvar_Get( "rs_queryGetMapStats",			    "SELECT IF(`freestyle`, 'freestyle', 'race') `type`, `m`.`races`, SUM(`pm`.`overall_tries`) as `tries`, CAST(AVG(`pm`.`overall_tries`) AS UNSIGNED) `avg_overall_tries`, CAST(AVG(`pm`.`tries`) AS UNSIGNED) `avg_tries`, CAST(AVG(`pm`.`duration`) AS UNSIGNED) `avg_duration`, `m`.`playtime`, DATE_FORMAT(`m`.`created`, '%%Y-%%m-%%d') `created`, MIN(`pm`.`time`) `best_time`, MAX(`pm`.`time`) `worst_time`, COUNT(`pm`.`player_id`) `players` FROM map m LEFT JOIN player_map pm ON pm.map_id = m.id WHERE name = '%s' GROUP BY m.`id``", CVAR_ARCHIVE );
+	rs_queryGetMapStats  		    = trap_Cvar_Get( "rs_queryGetMapStats",			    "SELECT IF(`freestyle`, 'freestyle', 'race') `type`, `m`.`races`, SUM(`pm`.`overall_tries`) as `tries`, CAST(AVG(`pm`.`overall_tries`) AS UNSIGNED) `avg_overall_tries`, CAST(AVG(`pm`.`tries`) AS UNSIGNED) `avg_tries`, CAST(AVG(`pm`.`duration`) AS UNSIGNED) `avg_duration`, `m`.`playtime`, DATE_FORMAT(`m`.`created`, '%%Y-%%m-%%d') `created`, MIN(`pm`.`time`) `best_time`, MAX(`pm`.`time`) `worst_time`, COUNT(`pm`.`player_id`) `players` FROM map m LEFT JOIN player_map pm ON pm.map_id = m.id WHERE name = '%s' GROUP BY m.`id`;", CVAR_ARCHIVE );
 	rs_queryUpdateMapRating			= trap_Cvar_Get( "rs_queryUpdateMapRating",			"UPDATE `map` SET `rating` = (SELECT SUM(`value`) / COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`), `ratings` = (SELECT COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`) WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdateMapPlaytime		= trap_Cvar_Get( "rs_queryUpdateMapPlaytime",		"UPDATE `map` SET `playtime` = `playtime` + %d WHERE `id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdateMapRaces			= trap_Cvar_Get( "rs_queryUpdateMapRaces",			"UPDATE `map` SET `races` = `races` + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
@@ -1432,6 +1432,21 @@ void *RS_LoadStats_Thread( void *in )
 
     if (!Q_stricmp(statsRequest->what, "map"))
     {
+        int agMilli, agHour, agMin, btMilli, btMin, btSec, wtMilli, wtMin, wtSec, ptMilli, ptHour, ptMin, avgTries;
+        agMilli = 0;
+        agHour = 0;
+        agMin = 0;
+        btMilli = 0;
+        btMin = 0;
+        btSec = 0;
+        wtMilli = 0;
+        wtMin = 0;
+        wtSec = 0;
+        ptMilli = 0;
+        ptHour = 0;
+        ptMin = 0;
+        avgTries = 0;
+        
         Q_strncpyz( which, COM_RemoveColorTokens(statsRequest->which), sizeof( which ) );
         mysql_real_escape_string(&mysql, which, which, strlen(which));
         sprintf(query, rs_queryGetMapStats->string, which);
@@ -1443,10 +1458,58 @@ void *RS_LoadStats_Thread( void *in )
         {
             if (row[0]!=NULL)
             {
-                    // type  created	races 	tries 	avg_overall_tries 	avg_tries 	avg_duration 	playtime 	 	best_time 	worst_time 
+                 //  0        1        2            3                  4            5              6           7           8            9             10
+                // `type`, `races`, `tries`, `avg_overall_tries`, `avg_tries`, `avg_duration`, `playtime`, `created`, `best_time`, `worst_time`, `players`
             
-                    Q_strncatz( result, va( "%sStats for %s:\nType: %s\nAvaiable since: %s\nPlaytime: %d\nNumber of players: %d\nFinished races: %d\nStarted races: %d\nAvg. started races: %d\nAvg. tries to personal best: %d\nAvg. duration to personal Best: %d\n", S_COLOR_YELLOW, statsRequest->which,
-                    row[0], row[7], atoi(row[6]), atoi(row[1]), atoi(row[2]), atoi(row[3]), atoi(row[4]), atoi(row[5]), atoi(row[8]), atoi(row[9]), atoi(row[10])), sizeof( result ) );
+                    if (row[4] != NULL) {
+                    
+                        avgTries = atoi(row[4]);
+                    }
+            
+                    if (row[5] != NULL) {
+                        agMilli = atoi( row[5] );
+                        agHour = agMilli / 3600000;
+                        agMilli -= agHour * 3600000;
+                        agMin = agMilli / 60000 + 1;
+                    }
+                    
+                    if (row[6] != NULL) {
+                        ptMilli = atoi( row[6] );
+                        ptHour = ptMilli / 3600000;
+                        ptMilli -= ptHour * 3600000;
+                        ptMin = ptMilli / 60000 + 1;
+                    }
+
+                    if (row[8] != NULL) {
+                        btMilli = atoi( row[8] );
+                        btMin = btMilli / 60000;
+                        btMilli -= btMin * 60000;
+                        btSec = btMilli / 1000;
+                        btMilli -= btSec * 1000;
+                    }
+                    
+                    if (row[9] != NULL) {
+                        wtMilli = atoi( row[9] );
+                        wtMin = wtMilli / 60000;
+                        wtMilli -= wtMin * 60000;
+                        wtSec = wtMilli / 1000;
+                        wtMilli -= wtSec * 1000;
+                    }
+                    
+                    
+                    Q_strncatz( result, va( "%sStats for %s:\n%sMap type: %s%s\n%sAvaiable since: %s%s\n%sPlaytime: %s%d hours %d minutes\n%sNumber of players: %s%d\n%sFinished races: %s%d\n%sStarted races (overall tries): %s%d\n%sAvg. started races: %s%d\n%sAvg. tries to personal best: %s%d\n%sAvg. duration to personal Best: %s%d hours %d minutes\n%sBest personal record: %s%d:%d:%03d\n%sWorst personal record: %s%d:%d:%03d\n",
+                        S_COLOR_YELLOW, statsRequest->which,
+                        S_COLOR_ORANGE, S_COLOR_WHITE, row[0],
+                        S_COLOR_ORANGE, S_COLOR_WHITE, row[7],
+                        S_COLOR_ORANGE, S_COLOR_WHITE, ptHour, ptMin,
+                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[10]),
+                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[1]),
+                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[2]),
+                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[3]),
+                        S_COLOR_ORANGE, S_COLOR_WHITE, avgTries,
+                        S_COLOR_ORANGE, S_COLOR_WHITE, agHour, agMin,
+                        S_COLOR_ORANGE, S_COLOR_WHITE, btMin, btSec, btMilli,
+                        S_COLOR_ORANGE, S_COLOR_WHITE, wtMin, wtSec, wtMilli), sizeof( result ) );
             }
         }
         else
