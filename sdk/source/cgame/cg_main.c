@@ -56,6 +56,8 @@ cvar_t *developer;
 // racesow - client console variables
 cvar_t *rc_showPlayerTrails;
 cvar_t *rc_playerTrailsColor;
+cvar_t *rc_playerTrailsAlpha;
+cvar_t *rc_playerTrailsSize;
 // ! racesow
 
 cvar_t *cg_handOffset;
@@ -503,6 +505,8 @@ static void CG_RegisterVariables( void )
 	// racesow
     rc_showPlayerTrails =	trap_Cvar_Get( "rc_showPlayerTrails", "0", CVAR_ARCHIVE );
 	rc_playerTrailsColor =   trap_Cvar_Get( "rc_playerTrailsColor", "0.0 1.0 0.0", CVAR_ARCHIVE );
+	rc_playerTrailsAlpha =   trap_Cvar_Get( "rc_playerTrailsAlpha", "1.0", CVAR_ARCHIVE );
+	rc_playerTrailsSize =   trap_Cvar_Get( "rc_playerTrailsSize", "1.5", CVAR_ARCHIVE );
     // !racesow
 	
 	cg_predict =	    trap_Cvar_Get( "cg_predict", "1", 0 );
