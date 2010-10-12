@@ -339,6 +339,17 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			return true;
 		}
 		
+		if ( vote == "spec" )
+		{
+			if ( ! map.inOvertime )
+			{
+				client.printMessage( S_COLOR_RED + "Callvote spec is only valid during overtime\n");
+				return false;
+			}
+			
+			return true;
+		}
+		
 		client.printMessage( "Unknown callvote " + vote + "\n" );
 		return false;
 	}
@@ -370,6 +381,19 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					oldTimelimit = g_timelimit.getInteger();
 				}
             }
+			
+			if ( vote == "spec" )
+			{
+				for ( int i = 0; i < maxClients; i++ )
+				{
+					if ( @players[i].getClient() != null )
+					{
+						players[i].client.team = TEAM_SPECTATOR;
+					}
+				}
+				
+			}
+		
 			
             return true;
     }
@@ -1108,7 +1132,8 @@ void GT_InitGametype()
 
 	//add callvotes
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
-	G_RegisterCallvote( "timelimit", "20", "Set match timelimit." );
+	G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
+	G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
 
 
     demoRecording = false;
