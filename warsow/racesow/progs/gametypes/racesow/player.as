@@ -282,13 +282,14 @@ class Racesow_Player
         G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
             + ( noDelta ? "" : diffString( bestTime, newTime ) ) );
 
-        this.sendMessage(S_COLOR_WHITE + "Race finished : "
+        this.sendMessage(S_COLOR_WHITE + "Race " + S_COLOR_ORANGE + "#"
+                + this.tries + S_COLOR_WHITE + " finished : "
                 + TimeToString( newTime)
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldTime, newTime)
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldBestTime, newTime) + "\n");
 
         if ( this.checkPoints.len() > 0 )
-            this.sendMessage( "Checkpoints review:\n"+ this.checkPoints );
+            this.sendMessage( this.checkPoints );
 
         this.checkPoints = "";
 
@@ -494,7 +495,6 @@ class Racesow_Player
         this.tries++;
         this.triesSinceLastRace++;
         int tries = this.overallTries+this.tries;
-        this.sendMessage("Race started: attempt "+ S_COLOR_ORANGE + "#" + tries +"\n");
     }
 
 	/**
