@@ -388,7 +388,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 				{
 					if ( @players[i].getClient() != null )
 					{
-						players[i].client.team = TEAM_SPECTATOR;
+						players[i].remove("You have been removed because you were playing during overtime.");
 					}
 				}
 				
