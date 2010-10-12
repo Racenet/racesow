@@ -940,6 +940,11 @@ void CG_Event_Die( entity_state_t *state, int parm )
 		CG_PModel_AddAnimation( state->number, BOTH_DEATH3, BOTH_DEATH3, ANIM_NONE, EVENT_CHANNEL );
 		break;
 	}
+
+	// racesow - lm: filter out other players
+    if( ISVIEWERENTITY( state->number ) )
+        CG_ClearJumpspeed(); 
+	// !racesow
 }
 
 /*
@@ -968,9 +973,15 @@ void CG_Event_Dash( entity_state_t *state, int parm )
 		CG_SexedSound( state->number, CHAN_VOICE, va( S_PLAYER_DASH_1_to_2, ( rand()&1 )+1 ), cg_volume_players->value );
 		break;
 	}
+
 	CG_Dash( state ); // Dash smoke effect
 	// since most dash animations jump with right leg, reset the jump to start with left leg after a dash
 	cg_entities[state->number].jumpedLeft = qtrue;
+
+	// racesow - lm: filter out other players
+    if( ISVIEWERENTITY( state->number ) )
+        CG_AddJumpspeed(); 
+	// !racesow
 }
 
 /*
@@ -1013,6 +1024,11 @@ void CG_Event_WallJump( entity_state_t *state, int parm, int ev )
 			CG_DustCircle( pos, normal, 65, 12 );
 		}
 	}
+
+	// racesow - lm: filter out other players
+    if( ISVIEWERENTITY( state->number ) )
+        CG_AddJumpspeed(); 
+	// !racesow
 }
 
 /*
@@ -1069,6 +1085,11 @@ void CG_Event_Jump( entity_state_t *state, int parm )
 		}
 	}
 #undef MOVEDIREPSILON
+
+	// racesow - lm: filter out other players
+    if( ISVIEWERENTITY( state->number ) )
+        CG_AddJumpspeed(); 
+	// !racesow
 }
 
 /*
@@ -1343,6 +1364,8 @@ void CG_EntityEvent( entity_state_t *ent, int ev, int parm, qboolean predicted )
 			CG_ResetKickAngles();
 			CG_ResetColorBlend();
 			CG_ResetDamageIndicator();
+
+			CG_ClearJumpspeed(); // racesow - lm: filter out other players
 		}
 		// fallthrough
 	case EV_PLAYER_TELEPORT_IN:

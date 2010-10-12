@@ -353,6 +353,205 @@ static int CG_GetItemTimerTeam( void *parameter )
 	return max( cent->current.modelindex-1, 0 );
 }
 
+
+// racesow - adds bunch of vars to the hud
+
+//lm: for readability
+enum race_index {
+	mouse_x,
+	mouse_y,
+	jumpspeed,
+	move_an,
+	cp1,
+	cp2,
+	cp3,
+	cp4,
+	cp5,
+	cp6,
+	cp7,
+	cp8,
+	cp9,
+	cp10,
+	cp11,
+	cp12,
+	cp13,
+	cp14,
+	cp15,
+	max_index
+};
+
+/*
+%mouse_x - display currently mouse x (-180,180)
+%mouse_y - display currently mouse y (-90,90)
+%acceleration - speed increase over last 1/10th of second (0, MAX_SPEED
+%jumpspeed - speed at the last jump (either wall or dash)
+%moveangle - angle of the direction currently moving towards (-180,180)
+%cp1 ... %cp15 - index to use with drawCheckPoint (only use if %cpXX != #NOTSET)
+
+LMTODO: strafing 
+		- dots firstly ill need the angle on map u are moving. Like before we will need tangens or contanges alpha (dun remember wich one was that) but im sure it was sth like world_x fivide by world_y. Then probably ill have to check the square function graph of biggest accel for every speed. And then we will work on it more)
+*/
+/* edited by joki:
+%mouse_x, %mouse_y, %moveangle 
+  now use units of 0.01degrees for more precision
+also fixed a casting bug for %mouse_x
+*/
+
+#define RACE_CP_LENGTH	20
+
+char race_checkpoints[15][RACE_CP_LENGTH];		//cG^ said: no map with more than 15 checkpoints
+qboolean race_started = qfalse;
+int cur_check = 0;
+
+int race_jump_speeds[30] = {-1};
+int cur_jump = 0;
+int race_jump = 0;
+
+void CG_RaceInsertjump( int num )
+{
+	race_jump_speeds[cur_jump++] = num;
+	if( cur_jump >= 30 ) cur_jump = 0;
+}
+
+void CG_RaceSayjump_f( void )
+{
+	int n;
+	trap_Cmd_ExecuteText( EXEC_APPEND, "say \"Jumps: " ); // change to a printf
+	for( n = cur_jump; n < 30; n++ ) {
+		if( race_jump_speeds[n] != -1 )
+			trap_Cmd_ExecuteText( EXEC_APPEND, va( "%i ", race_jump_speeds[n] ) );
+	}
+	if( cur_jump != 0 ) {
+		for( n = 0; n < cur_jump; n++ ) {
+			if( race_jump_speeds[n] != -1 )
+				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%i ", race_jump_speeds[n] ) );
+		}
+	}
+	trap_Cmd_ExecuteText( EXEC_APPEND, "\"\n" );
+}
+static int CG_GetRaceVars( void* parameter )
+{
+	int index = (qintptr)parameter;
+	int iNum;
+	vec3_t hor_vel, an;
+	switch( index ) {
+		case move_an:
+			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
+			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
+			hor_vel[2] = 0;
+			VecToAngles( hor_vel, an );
+			iNum = (int)(100 * an[YAW]);
+			while( iNum > 18000 ) 
+				iNum -= 36000;
+			while( iNum < -18000 )
+				iNum += 36000;
+			return iNum;
+		case mouse_x:
+			return (int)(100 * cg.predictedPlayerState.viewangles[YAW]+18000)-18000;
+		case mouse_y:
+			return (int)(cg.predictedPlayerState.viewangles[PITCH]*100);
+		case cp1: case cp2: case cp3: case cp4: case cp5: case cp6: case cp7: case cp8:
+		case cp9: case cp10: case cp11: case cp12: case cp13: case cp14: case cp15:
+			iNum = index - (int)cp1;
+			if( cg.predictedPlayerState.stats[STAT_TIME_SELF] == STAT_NOTSET && !race_started ) {
+				race_started = qtrue;
+			} else if( cg.predictedPlayerState.stats[STAT_TIME_SELF] != STAT_NOTSET && race_started ) {
+				race_started = qfalse;
+				cur_check = 0;
+				memset( race_jump_speeds, -1, sizeof(race_jump_speeds) );
+				cur_jump = 0;
+			}
+			if( iNum < cur_check )
+				return iNum;
+			return STAT_NOTSET;
+		case jumpspeed:
+			return race_jump;
+		default:
+			return STAT_NOTSET;
+	}
+}
+
+static int CG_GetAccel( void* parameter )
+{
+	static int accel = 0;
+	static double oldtime = 0;
+	static int oldspeed = 0;
+	double t;
+
+	t = cg.realTime * 0.001f;
+	if( ( t - oldtime ) >= 0.10 )		//check 10 times a second for accel
+	{
+		int newspeed = CG_GetSpeed( 0 );
+		accel = newspeed - oldspeed;
+		if( accel < 0 ) accel = 0;
+		oldspeed = newspeed;
+		oldtime = t;
+	}
+	return accel;
+}
+
+qboolean CG_IsBounce()
+{
+	if( cg.predictedPlayerState.pmove.pm_flags & PMF_ON_GROUND )
+		return qtrue;
+	if( cg.predictedPlayerState.pmove.pm_flags & PMF_WALLJUMPING )
+		return qtrue;
+	return qfalse;
+}
+
+void CG_AddJumpspeed( void )
+{
+	race_jump = CG_GetSpeed( 0 );
+	CG_RaceInsertjump( race_jump );
+}
+
+void CG_ClearJumpspeed( void )
+{
+	int n;
+	for ( n = 0; n < 30 ; n++)
+	{
+		race_jump_speeds[n] = -1;
+	}
+	cur_jump = 0;
+}
+
+void CG_RaceAddCheckpoint( char* msg )
+{
+	if( msg && msg[0] && cur_check < 14 && strstr( msg, "Current: " ) ) {
+		char* check, pos;
+		int mins, secs, millis;
+		char* help = strchr( msg, '\n' );
+		if( !help ) {
+			//lm: for racesow, when there is no previous time there is no \n
+			help = strchr( msg, ':' ) + 1;
+			check = 0;
+			Q_strncpyz( race_checkpoints[cur_check], S_COLOR_GREEN, 3 );
+		} else {
+			help++;
+			check = strchr( help, '#' );
+			Q_strncpyz( race_checkpoints[cur_check], help, 3 );
+			if( check )
+				help = check + 2;
+			else
+				help += 2;
+		}
+		sscanf( help, "%c%d:%d.%d", &pos, &mins, &secs, &millis );	//lm: wtf, %i did not always return correct values
+		if( mins ) {
+			strcat( race_checkpoints[cur_check], va( "%c%d min", pos, mins ) ); 
+		} else if( (secs *1000 + millis) > 9999 ) {
+			strcat( race_checkpoints[cur_check], va( "%c%d sec", pos, secs ) );
+		} else {
+			strcat( race_checkpoints[cur_check], va( "%c%02d.%03d", pos, secs, millis ) );
+		}
+		if( check )
+			strcat( race_checkpoints[cur_check], " R" );
+		cur_check++;
+	}
+}
+
+// !racesow
+
+
 typedef struct
 {
 	char *name;
@@ -435,6 +634,30 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "DAMAGE_INDICATOR_RIGHT", CG_GetDamageIndicatorDirValue, (void *)1 },
 	{ "DAMAGE_INDICATOR_BOTTOM", CG_GetDamageIndicatorDirValue, (void *)2 },
 	{ "DAMAGE_INDICATOR_LEFT", CG_GetDamageIndicatorDirValue, (void *)3 },
+
+	// racesow - lm: race stuff
+	{ "MOUSE_X", CG_GetRaceVars, (void *)mouse_x },
+	{ "MOUSE_Y", CG_GetRaceVars, (void *)mouse_y },
+	{ "ACCELERATION", CG_GetAccel, NULL },
+	{ "JUMPSPEED", CG_GetRaceVars, (void *)jumpspeed },
+	{ "MOVEANGLE", CG_GetRaceVars, (void *)move_an	},
+
+	{ "CP1", CG_GetRaceVars, (void *)cp1 },
+	{ "CP2", CG_GetRaceVars, (void *)cp2, },
+	{ "CP3", CG_GetRaceVars, (void *)cp3, },
+	{ "CP4", CG_GetRaceVars, (void *)cp4 },
+	{ "CP5", CG_GetRaceVars, (void *)cp5 },
+	{ "CP6", CG_GetRaceVars, (void *)cp6 },
+	{ "CP7", CG_GetRaceVars, (void *)cp7 },
+	{ "CP8", CG_GetRaceVars, (void *)cp8 },
+	{ "CP9", CG_GetRaceVars, (void *)cp9 },
+	{ "CP10", CG_GetRaceVars, (void *)cp10 },
+	{ "CP11", CG_GetRaceVars, (void *)cp11 },
+	{ "CP12", CG_GetRaceVars, (void *)cp12 },
+	{ "CP13", CG_GetRaceVars, (void *)cp13 },
+	{ "CP14", CG_GetRaceVars, (void *)cp14 },
+	{ "CP15", CG_GetRaceVars, (void *)cp15 },
+	// !racesow
 
 	// cvars
 	{ "SHOW_FPS", CG_GetCvar, "cg_showFPS" },
@@ -1809,6 +2032,15 @@ static int CG_LFuncIf( struct cg_layoutnode_s *commandnode, struct cg_layoutnode
 	return (int)CG_GetNumericArg( &argumentnode );
 }
 
+// racesow - race mod helper function, draws the checkpoint on the hud (can't retrieve char* in hudscript?)
+static int CG_LFuncDrawCheckpoint( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	int itemindex = (int)CG_GetNumericArg( &argumentnode );
+	if( itemindex >= cur_check ) return qfalse;
+	trap_SCR_DrawString( layout_cursor_x, layout_cursor_y, layout_cursor_align, race_checkpoints[itemindex], layout_cursor_font, layout_cursor_color );
+	return qtrue;
+}
+// !racesow
 
 typedef struct cg_layoutcommand_s
 {
@@ -1945,6 +2177,15 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		1,
 		"Draws configstring of argument id"
 	},
+
+	// racesow
+	{
+		"drawCheckPoint",
+		CG_LFuncDrawCheckpoint,
+		1,
+		"Draws last checkpoint time of argument id"
+	},
+	// !racesow
 
 	{
 		"drawItemName",

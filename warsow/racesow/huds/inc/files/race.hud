@@ -1,3 +1,4 @@
+//
 setFont "virtue_12"
 setColor 1, 1, 1, 1
 setSize 16, 16
@@ -14,12 +15,12 @@ drawStringNum %speed
 setColor 1 1 1 1
 setAlign #CENTER, #middle
 setCursor 350, 340
-drawstringNum %mouse_x
+drawstringNum 0.01 * %mouse_x
 
 setColor 1 1 1 1
 setAlign #CENTER, #middle
 setCursor 450, 340
-drawstringNum %mouse_y
+drawstringNum 0.01 * %mouse_y
  
 
 //speed on jump

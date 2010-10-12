@@ -2,19 +2,20 @@
 if %SPEED != #NOTSET
 
 setSize 4, 4
+setColor 0, 1, 0, 1
 
 
 setCursor #WIDTH / 2, 297
-if -180 > %MOUSE_X - %MOVEANGLE
-	moveCursor 3 * %MOUSE_X - %MOVEANGLE - 360, 0
+if -18000 > %MOUSE_X - %MOVEANGLE
+	moveCursor 0.03 * %MOUSE_X - %MOVEANGLE - 36000, 0
 endif
-if -180 < %MOUSE_X - %MOVEANGLE
-if 180  > %MOUSE_X - %MOVEANGLE
-	moveCursor 3 * %MOUSE_X - %MOVEANGLE, 0
+if -18000 < %MOUSE_X - %MOVEANGLE
+if 18000  > %MOUSE_X - %MOVEANGLE
+	moveCursor 0.03 * %MOUSE_X - %MOVEANGLE, 0
 endif
 endif
-if 180 < %MOUSE_X - %MOVEANGLE
-	moveCursor 3 * %MOUSE_X - %MOVEANGLE + 360, 0
+if 18000 < %MOUSE_X - %MOVEANGLE
+	moveCursor 0.03 * %MOUSE_X - %MOVEANGLE + 36000, 0
 endif
 
 
@@ -27,7 +28,6 @@ if %SPEED <= 1250
 	moveCursor 3 * -0.000229361 * %SPEED * %SPEED, 0
 	moveCursor 3 * 0.220902 * %SPEED, 0
 	moveCursor 3 * -58.698, 0
-	setColor 1, 0, 0, 1
 	setAlign #LEFT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -36,7 +36,6 @@ if %SPEED <= 1250
 	moveCursor -6 * -0.000229361 * %SPEED * %SPEED, 0
 	moveCursor -6 * 0.220902 * %SPEED, 0
 	moveCursor -6 * -58.698, 0
-	setColor 1, 0, 0, 1
 	setAlign #RIGHT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -52,7 +51,6 @@ if %SPEED <= 1750
 	moveCursor 3 * -0.0000594323 * %SPEED * %SPEED, 0
 	moveCursor 3 * 0.0877219 * %SPEED, 0
 	moveCursor 3 * -19.0414, 0
-	setColor 1, 0, 0, 1
 	setAlign #LEFT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -61,7 +59,6 @@ if %SPEED <= 1750
 	moveCursor -6 * -0.0000594323 * %SPEED * %SPEED, 0
 	moveCursor -6 * 0.0877219 * %SPEED, 0
 	moveCursor -6 * -19.0414, 0
-	setColor 1, 0, 0, 1
 	setAlign #RIGHT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -77,7 +74,6 @@ if %SPEED <= 2250
 	moveCursor 3 * -0.0000239988 * %SPEED * %SPEED, 0
 	moveCursor 3 * 0.0475693 * %SPEED, 0
 	moveCursor 3 * -1.86308, 0
-	setColor 1, 0, 0, 1
 	setAlign #LEFT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -86,11 +82,10 @@ if %SPEED <= 2250
 	moveCursor -6 * -0.0000239988 * %SPEED * %SPEED, 0
 	moveCursor -6 * 0.0475693 * %SPEED, 0
 	moveCursor -6 * -1.86308, 0
-	setColor 1, 0, 0, 1
 	setAlign #RIGHT, #MIDDLE
 	drawPicByName gfx/ui/white
 
-endif	
+endif
 endif
 
 
@@ -103,7 +98,6 @@ if %SPEED <= 2750
 	moveCursor 3 * -0.000012047 * %SPEED * %SPEED, 0
 	moveCursor 3 * 0.0299463 * %SPEED, 0
 	moveCursor 3 * 7.92151, 0
-	setColor 1, 0, 0, 1
 	setAlign #LEFT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -112,11 +106,10 @@ if %SPEED <= 2750
 	moveCursor -6 * -0.000012047 * %SPEED * %SPEED, 0
 	moveCursor -6 * 0.0299463 * %SPEED, 0
 	moveCursor -6 * 7.92151, 0
-	setColor 1, 0, 0, 1
 	setAlign #RIGHT, #MIDDLE
 	drawPicByName gfx/ui/white
 
-endif	
+endif
 endif
 
 if %SPEED > 2750
@@ -128,7 +121,6 @@ if %SPEED <= 3250
 	moveCursor 3 * -.00000689816 * %SPEED * %SPEED, 0
 	moveCursor 3 * 0.020613 * %SPEED, 0
 	moveCursor 3 * 14.2834, 0
-	setColor 1, 0, 0, 1
 	setAlign #LEFT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -137,7 +129,6 @@ if %SPEED <= 3250
 	moveCursor -6 * -.00000689816 * %SPEED * %SPEED, 0
 	moveCursor -6 * 0.020613 * %SPEED, 0
 	moveCursor -6 * 14.2834, 0
-	setColor 1, 0, 0, 1
 	setAlign #RIGHT, #MIDDLE
 	drawPicByName gfx/ui/white
 
@@ -149,13 +140,11 @@ if %SPEED > 3250
 
 	moveCursor 3 * %SPEED / 362.6, 0
 	moveCursor 3 * 29.96, 0
-	setColor 1, 0, 0, 1
 	setAlign #LEFT, #MIDDLE
 	drawPicByName gfx/ui/white
 
 	moveCursor -6 * %SPEED / 362.6, 0
 	moveCursor -6 * 29.96, 0
-	setColor 1, 0, 0, 1
 	setAlign #RIGHT, #MIDDLE
 	drawPicByName gfx/ui/white
 	
