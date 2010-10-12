@@ -53,6 +53,11 @@ cvar_t *cg_gunbob;
 
 cvar_t *developer;
 
+// racesow - client console variables
+cvar_t *rc_showPlayerTrails;
+cvar_t *rc_playerTrailsColor;
+// ! racesow
+
 cvar_t *cg_handOffset;
 cvar_t *cg_gun_fov;
 cvar_t *cg_volume_players;
@@ -495,6 +500,11 @@ static void CG_RegisterLightStyles( void )
 */
 static void CG_RegisterVariables( void )
 {
+	// racesow
+    rc_showPlayerTrails =	trap_Cvar_Get( "rc_showPlayerTrails", "0", CVAR_ARCHIVE );
+	rc_playerTrailsColor =   trap_Cvar_Get( "rc_playerTrailsColor", "0.0 1.0 0.0", CVAR_ARCHIVE );
+    // !racesow
+	
 	cg_predict =	    trap_Cvar_Get( "cg_predict", "1", 0 );
 	cg_predict_optimize = trap_Cvar_Get( "cg_predict_optimize", "1", 0 );
 	cg_showMiss =	    trap_Cvar_Get( "cg_showMiss", "0", 0 );
@@ -514,7 +524,7 @@ static void CG_RegisterVariables( void )
 	cg_addDecals =	    trap_Cvar_Get( "cg_decals", "1", CVAR_ARCHIVE );
 	//cg_footSteps =	    trap_Cvar_Get( "cg_footSteps", "1", 0 );
 
-	cg_thirdPerson =	trap_Cvar_Get( "cg_thirdPerson", "0", CVAR_CHEAT );
+	cg_thirdPerson =	trap_Cvar_Get( "cg_thirdPerson", "0", CVAR_ARCHIVE); // racesow - its' no cheat in race :)
 	cg_thirdPersonAngle =	trap_Cvar_Get( "cg_thirdPersonAngle", "0", 0 );
 	cg_thirdPersonRange =	trap_Cvar_Get( "cg_thirdPersonRange", "90", 0 );
 

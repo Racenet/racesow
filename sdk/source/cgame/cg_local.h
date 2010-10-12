@@ -899,6 +899,13 @@ void CG_PLink( vec3_t start, vec3_t end, vec4_t color, int flags );
 //
 // cg_effects.c
 //
+
+// racesow - client console variables
+cvar_t *rc_showPlayerTrails;
+cvar_t *rc_playerTrailsColor;
+void RC_AddLinearTrail( centity_t *cent, float lifetime );
+// ! racesow
+
 void CG_ClearEffects( void );
 
 void CG_AddLightToScene( vec3_t org, float radius, float r, float g, float b, struct shader_s *shader );

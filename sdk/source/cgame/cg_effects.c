@@ -619,6 +619,48 @@ static void CG_ClearParticles( void )
 	( p )->fog = qtrue \
 	)
 
+// racesow - player trails
+extern cvar_t *rc_playerTrailsColor;
+
+void RC_AddLinearTrail( centity_t *cent, float lifetime )
+{
+	cparticle_t *p;
+	float r, g, b;
+    
+	if( cg_numparticles + 1 > MAX_PARTICLES )
+		return;
+
+	if( rc_playerTrailsColor->string != NULL
+		&& sscanf( rc_playerTrailsColor->string, "%f %f %f", &r, &g, &b ) == 3 )
+	{
+		if( r < 0.0f )
+			r = 0.0f;
+		if( r > 1.0f )
+			r = 1.0f;
+		if( g < 0.0f )
+			g = 0.0f;
+		if( g > 1.0f )
+			g = 1.0f;
+		if( b < 0.0f )
+			b = 0.0f;
+		if( b > 1.0f )
+			b = 1.0f;
+	}
+	else
+	{
+		r = 0.0f;
+		g = 1.0f;
+		b = 0.0f;
+	}
+
+	p = &particles[cg_numparticles++];
+	CG_InitParticle( p, 1.0f, 1.0f, r, g, b, NULL );
+	VectorCopy( cent->ent.origin, p->org );
+	p->alphavel = -( 1.0f / lifetime );
+}
+
+// !racesow
+
 /*
 ===============
 CG_ParticleEffect
