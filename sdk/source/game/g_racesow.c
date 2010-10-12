@@ -1530,10 +1530,42 @@ void *RS_LoadStats_Thread( void *in )
         RS_CheckMysqlThreadError();
         if ((row = mysql_fetch_row(mysql_res)) != NULL) 
         {
+            int oHour, oMin, oMilli, rHour, rMin, rMilli;
+            oHour = 0;
+            oMin = 0;
+            oMilli = 0;
+            rHour = 0;
+            rMin = 0;
+            rMilli = 0;
+        
+            if (row[5] != NULL) {
+                oMilli = atoi( row[5] );
+                oHour = oMilli / 3600000;
+                oMilli -= oHour * 3600000;
+                oMin = oMilli / 60000 + 1;
+            }
+            
+            if (row[6] != NULL) {
+                rMilli = atoi( row[6] );
+                rHour = rMilli / 3600000;
+                rMilli -= rHour * 3600000;
+                rMin = rMilli / 60000 + 1;
+            }
+        
             if (row[0]!=NULL)
             {
-                Q_strncatz( result, va( "%sStats for %s:\nPoints: %d (%d)\nFinished races: %d\nStarted races: %d\nPlayed maps: %d\nOnline time: %d\nRacing time: %d\nFirst seen: %s\nLast seen: %s\n", S_COLOR_YELLOW, statsRequest->which,
-                    atoi(row[0]), atoi(row[1]), atoi(row[2]), atoi(row[3]), atoi(row[4]), atoi(row[5]), atoi(row[6]),  row[7], row[8]), sizeof( result ) );
+            //   0        1               2         3           4        5            6             7                  8
+            // `points`, `diff_points`, `races`, `race_tries`, `maps`, `playtime`, `racing_time`, `first_seen`,  `last_seen`
+            
+                Q_strncatz( result, va( "%sStats for %s:\n%sPoints: %s%d (%s%d)\n%sFinished races: %s%d\n%sStarted races: %s%d\n%sPlayed maps: %s%d\n%sOnline time: %s%d hours %d minutes \n%sRacing time: %s%d hours %d minutes\n%sFirst seen: %s%s\n%sLast seen: %s%s\n", S_COLOR_YELLOW, statsRequest->which,
+                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[0]), (atoi(row[1]) < 0 ? "-" : "+"), atoi(row[1]),
+                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[2]),
+                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[3]),
+                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[4]),
+                    S_COLOR_ORANGE, S_COLOR_WHITE, oHour, oMin,
+                    S_COLOR_ORANGE, S_COLOR_WHITE, rHour, rMin,
+                    S_COLOR_ORANGE, S_COLOR_WHITE, row[7],
+                    S_COLOR_ORANGE, S_COLOR_WHITE, row[8]), sizeof( result ) );
             }
         }
         else
