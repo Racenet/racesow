@@ -580,6 +580,13 @@ class Command_Stats : Racesow_Command
     
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
+        if( player.isWaitingForCommand )
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+    
         this.what = "";
         this.which = "";
     
@@ -635,8 +642,8 @@ class Command_Stats : Racesow_Command
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        player.sendMessage( S_COLOR_RED + "TODO: " + S_COLOR_WHITE + "retrieve stats for " + this.what + " " + this.which + "\n" );
-        return true;
+        //player.sendMessage( S_COLOR_RED + "TODO: " + S_COLOR_WHITE + "retrieve stats for " + this.what + " " + this.which + "\n" );
+        return RS_LoadStats(player.client.playerNum(), this.what, this.which);
     }
 }
 
