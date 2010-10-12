@@ -32,6 +32,7 @@ cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Token( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
+cVar rs_allowAutoHop( "rs_allowAutoHop", "0", CVAR_ARCHIVE );
 
 cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_ARCHIVE|CVAR_NOSET );
@@ -586,7 +587,18 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 			if( !client.connecting ) {
 
                 player.getAuth().refresh( args );
-            }
+            			
+						
+				// auto-hop check
+				if ( rs_allowAutoHop.getBool() == false )
+				{
+					// checking if the player is restoring his autojump (we can't cheatprotect a client variable from the server, can we?)
+					if ( client.getUserInfoKey("cg_noAutohop").toInt() == 0 )
+					{
+						client.setPMoveFeatures( client.pmoveFeatures & ~PMFEAT_CONTINOUSJUMP );
+					}
+				}
+			}
 		}
 	}
 }
@@ -654,6 +666,12 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	{
 		// set player movement to pass through other players
 		ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
+		
+		// disable autojump
+		if ( rs_allowAutoHop.getBool() == false )
+		{
+			ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_CONTINOUSJUMP );
+		}
 	}
 
 	ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
