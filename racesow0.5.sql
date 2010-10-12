@@ -115,7 +115,7 @@ CREATE TABLE `player_checkpoint` (
   `map_id` int(11) NOT NULL,
   `num` int(11) unsigned NOT NULL,
   `time` int(11) NOT NULL,
-  PRIMARY KEY (`map_id`)
+  PRIMARY KEY (`map_id`,`player_id`,`num`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
