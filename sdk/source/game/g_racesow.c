@@ -45,6 +45,7 @@ cvar_t *rs_queryUpdatePlayerHistory;
 cvar_t *rs_queryPurgePlayerHistory;
 cvar_t *rs_queryGetMap;
 cvar_t *rs_queryAddMap;
+cvar_t *rs_queryGetMapStats;
 cvar_t *rs_queryUpdateMapRating;
 cvar_t *rs_queryUpdateMapPlaytime;
 cvar_t *rs_queryUpdateMapRaces;
@@ -208,6 +209,7 @@ void RS_LoadCvars( void )
     rs_queryUpdateServerData        = trap_Cvar_Get( "rs_queryUpdateServerData",        "UPDATE `gameserver` SET `servername` = '%s', `playtime` = `playtime` + %d, `maps` = (SELECT COUNT(DISTINCT map_id) FROM `race` WHERE `server_id` = `gameserver`.`id`) WHERE `user` = CONCAT(USER(), ':', %d) LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetMap					= trap_Cvar_Get( "rs_queryGetMapId",				"SELECT `id` FROM `map` WHERE `name` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddMap					= trap_Cvar_Get( "rs_queryAddMap",					"INSERT INTO `map` (`name`, `created`) VALUES('%s', NOW());", CVAR_ARCHIVE );
+	rs_queryGetMapStats  		    = trap_Cvar_Get( "rs_queryGetMapStats",			    "SELECT IF(`freestyle`, 'freestyle', 'race') `type`, `m`.`races`, SUM(`pm`.`overall_tries`) as `tries`, CAST(AVG(`pm`.`overall_tries`) AS UNSIGNED) `avg_overall_tries`, CAST(AVG(`pm`.`tries`) AS UNSIGNED) `avg_tries`, CAST(AVG(`pm`.`duration`) AS UNSIGNED) `avg_duration`, `m`.`playtime`, DATE_FORMAT(`m`.`created`, '%%Y-%%m-%%d') `created`, MIN(`pm`.`time`) `best_time`, MAX(`pm`.`time`) `worst_time`, COUNT(`pm`.`player_id`) `players` FROM map m LEFT JOIN player_map pm ON pm.map_id = m.id WHERE name = '%s' GROUP BY m.`id``", CVAR_ARCHIVE );
 	rs_queryUpdateMapRating			= trap_Cvar_Get( "rs_queryUpdateMapRating",			"UPDATE `map` SET `rating` = (SELECT SUM(`value`) / COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`), `ratings` = (SELECT COUNT(`player_id`) FROM `map_rating` WHERE `map_id` = `map`.`id`) WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdateMapPlaytime		= trap_Cvar_Get( "rs_queryUpdateMapPlaytime",		"UPDATE `map` SET `playtime` = `playtime` + %d WHERE `id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdateMapRaces			= trap_Cvar_Get( "rs_queryUpdateMapRaces",			"UPDATE `map` SET `races` = `races` + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
@@ -1430,7 +1432,29 @@ void *RS_LoadStats_Thread( void *in )
 
     if (!Q_stricmp(statsRequest->what, "map"))
     {
-        Q_strncatz( result, va( "%sTODO: retrieve stats for %s %s\n", S_COLOR_RED, statsRequest->what, statsRequest->which ), sizeof( result ) );
+        Q_strncpyz( which, COM_RemoveColorTokens(statsRequest->which), sizeof( which ) );
+        mysql_real_escape_string(&mysql, which, which, strlen(which));
+        sprintf(query, rs_queryGetMapStats->string, which);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        {
+            if (row[0]!=NULL)
+            {
+                    // type  created	races 	tries 	avg_overall_tries 	avg_tries 	avg_duration 	playtime 	 	best_time 	worst_time 
+            
+                    Q_strncatz( result, va( "%sStats for %s:\nType: %s\nAvaiable since: %s\nPlaytime: %d\nNumber of players: %d\nFinished races: %d\nStarted races: %d\nAvg. started races: %d\nAvg. tries to personal best: %d\nAvg. duration to personal Best: %d\n", S_COLOR_YELLOW, statsRequest->which,
+                    row[0], row[7], atoi(row[6]), atoi(row[1]), atoi(row[2]), atoi(row[3]), atoi(row[4]), atoi(row[5]), atoi(row[8]), atoi(row[9]), atoi(row[10])), sizeof( result ) );
+            }
+        }
+        else
+        {
+            Q_strncatz( result, va( "%sError: map '%s' not found\n", S_COLOR_RED, statsRequest->which ), sizeof( result ) );
+        }
+            
+        mysql_free_result(mysql_res);
     }
     else if (!Q_stricmp(statsRequest->what, "player"))
     {
