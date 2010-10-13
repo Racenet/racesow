@@ -62,6 +62,8 @@ cvar_t *rs_queryLoadMapList;
 cvar_t *rs_queryLoadMapHighscores;
 cvar_t *rs_queryMapFilter;
 cvar_t *rs_queryMapFilterCount;
+cvar_t *rs_queryUpdateCheckpoint;
+cvar_t *rs_queryGetPlayerMapCheckpoints;
 
 
 cvar_t *rs_authField_Name;
@@ -225,7 +227,8 @@ void RS_LoadCvars( void )
 	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s';", CVAR_ARCHIVE );
-    
+    rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `player_checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
+    rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `num`, `time` FROM `player_checkpoint` WHERE `map_id` = %d AND `player_id` = %d;", CVAR_ARCHIVE );
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
     
@@ -521,7 +524,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
  * @param int race_time
  * @return qboolean
  */
-qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum, unsigned int tries, unsigned int duration ) {
+qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum, unsigned int tries, unsigned int duration, char *checkpoints ) {
 
 	int returnCode;
     struct raceDataStruct *raceData=malloc(sizeof(struct raceDataStruct));
@@ -532,7 +535,6 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
     
         return qfalse;
     }
-    
     raceData->player_id = player_id;
 	raceData->nick_id= nick_id;
 	raceData->map_id = map_id;
@@ -540,6 +542,7 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 	raceData->playerNum = playerNum;
 	raceData->tries = tries;
 	raceData->duration = duration;
+	raceData->checkpoints = strdup( checkpoints );
     
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlInsertRace_Thread, (void *)raceData);
 
@@ -567,7 +570,10 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
-	
+    char *t; //token to parse checkpoints
+    static const char *seps = " "; //token separator in checkpoints string
+    int index = 0; //checkpoint number
+
     affectedPlayerIds[0] = '\0';
     oldTime = 0;
     bestTime = 0;
@@ -656,11 +662,22 @@ void *RS_MysqlInsertRace_Thread(void *in)
         // insert or update player_map (aka personal record)
         sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id, raceData->player_id, raceData->map_id, raceData->player_id, raceData->map_id);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();    
-        
+        RS_CheckMysqlThreadError();
+
         // only when the new time is better than the old one, recompute the points
         if (oldTime == 0 || raceData->race_time < oldTime)
         {
+            //update player checkpoints
+            t = strtok( raceData->checkpoints , seps );
+            while( t != NULL )
+            {
+                index++;
+                sprintf(query, rs_queryUpdateCheckpoint->string, raceData->player_id, raceData->map_id, atoi(t), index);
+                mysql_real_query(&mysql, query, strlen(query));
+                RS_CheckMysqlThreadError();
+                t = strtok( NULL, seps);
+            }
+
             // reset points in player_map
             sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
             mysql_real_query(&mysql, query, strlen(query));
@@ -732,6 +749,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
             sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError();
+
         }
        
         sprintf(query, rs_queryGetPlayerPoints->string, raceData->player_id);
@@ -750,6 +768,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
         RS_PushCallbackQueue(RACESOW_CALLBACK_RACE, raceData->playerNum, allPoints, oldPoints, newPoints, oldTime, oldBestTime, raceData->race_time);
     }
 
+    free(raceData->checkpoints);
 	free(raceData);	
 	RS_EndMysqlThread();
   

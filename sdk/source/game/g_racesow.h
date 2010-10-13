@@ -21,6 +21,7 @@ struct raceDataStruct {
 	unsigned int playerNum;
 	unsigned int tries;
 	unsigned int duration;
+	char *checkpoints;
 };
 
 struct playerDataStruct {
@@ -91,7 +92,7 @@ extern void RS_Shutdown( void );
 char *RS_GenerateNewToken( int );
 extern qboolean RS_MysqlLoadMap();
 extern void *RS_MysqlLoadMap_Thread( void *in );
-extern qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum, unsigned int tries, unsigned int duration );
+extern qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum, unsigned int tries, unsigned int duration, char *checkpoints );
 extern void *RS_MysqlInsertRace_Thread( void *in );
 extern qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int map_id, int is_authed, char* authName, char* authPass, char* authToken );
 extern void *RS_MysqlPlayerAppear_Thread( void *in );

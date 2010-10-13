@@ -16,6 +16,13 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
     {
 	
 		bool success;
+		cString checkpoints = "";
+
+        for ( int i = 0; i < numCheckpoints; i++ )
+        {
+            checkpoints +=  race.checkPoints[i] + " ";
+        }
+
         // Call to a c-function which should result
         // in a callback to player.raceCallback()
 		// ..unless the player uses a protected nick
@@ -26,8 +33,10 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
             race.getTime(),
             race.getPlayer().getClient().playerNum(),
             race.getPlayer().triesSinceLastRace,
-            race.getPlayer().racingTimeSinceLastRace
+            race.getPlayer().racingTimeSinceLastRace,
+            checkpoints
         );
+
 		if ( ! success )
 		{
 			G_PrintMsg( race.getPlayer().getClient().getEnt(), S_COLOR_RED + "Could not insert this race into the database, are you using a protected nick? " + "\n" );

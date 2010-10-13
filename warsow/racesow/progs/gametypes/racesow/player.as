@@ -312,11 +312,8 @@ class Racesow_Player
         {
             this.setBestTime(newTime);
 			this.getClient().addAward( "Personal record!" );
-        }
 
-        if ( newTime < oldTime || oldTime == 0 )
-        {
-            for ( int i = 0; i < numCheckpoints; i++ )
+			for ( int i = 0; i < numCheckpoints; i++ )
             {
                 this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
             }
