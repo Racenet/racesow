@@ -73,6 +73,7 @@ cvar_t *rs_tokenSalt;
 
 cvar_t *g_freestyle;
 cvar_t *rs_loadHighscores;
+cvar_t *rs_loadPlayerCheckpoints;
 cvar_t *rs_historyDays;
 
 /**
@@ -138,6 +139,7 @@ void RS_Init()
     rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_ARCHIVE|CVAR_NOSET);
     g_freestyle = trap_Cvar_Get( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
+    rs_loadPlayerCheckpoints = trap_Cvar_Get( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE);
 
     if ( rs_mysqlEnabled->integer )
     {
@@ -228,7 +230,7 @@ void RS_LoadCvars( void )
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s';", CVAR_ARCHIVE );
     rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `player_checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
-    rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `num`, `time` FROM `player_checkpoint` WHERE `map_id` = %d AND `player_id` = %d;", CVAR_ARCHIVE );
+    rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `time` FROM `player_checkpoint` WHERE `map_id` = %d AND `player_id` = %d ORDER BY `num` ASC;", CVAR_ARCHIVE );
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
     
@@ -824,14 +826,18 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	char authName[64];
 	char authPass[64];
 	char authToken[64];
+	char checkpoints[MAX_STRING_CHARS];
 	//char sessionToken[64];
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
 	unsigned int player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, player_id_for_time, overall_tries;
+	int size;
 	struct playerDataStruct *playerData;
 	//edict_t *ent;
 
 	RS_StartMysqlThread();
+	checkpoints[0]='\0';
+	size = 0;
 	player_id = 0;
 	auth_mask = 0;
 	player_id_for_nick = 0;
@@ -977,18 +983,18 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     }
     mysql_free_result(mysql_res);
 
+    if (player_id != 0)
+    {
+        player_id_for_time = player_id;
+    }
+    else
+    {
+        player_id_for_time = player_id_for_nick;
+    }
+
 	if (rs_loadHighscores->integer)
 	{
 		// retrieve personal best
-		if (player_id != 0) {
-
-			player_id_for_time = player_id; 
-
-		} else {
-
-			player_id_for_time = player_id_for_nick;
-		}
-
 		sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
 		mysql_real_query(&mysql, query, strlen(query));
 		RS_CheckMysqlThreadError();
@@ -1005,6 +1011,25 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 		}
 
 		mysql_free_result(mysql_res);
+	}
+
+	if ( rs_loadPlayerCheckpoints->integer )
+	{
+	    //get player checkpoints on this map
+	    sprintf(query, rs_queryGetPlayerMapCheckpoints->string, playerData->map_id, player_id_for_time);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+
+        while ( (row = mysql_fetch_row(mysql_res) ) != NULL )
+        {
+            Q_strncatz( checkpoints, va("%s ",row[0]), sizeof( checkpoints ) );
+        }
+
+        size = strlen( checkpoints )+1;
+        players_query[playerData->playerNum] = malloc( size );
+        Q_strncpyz( players_query[playerData->playerNum], checkpoints, size);
 	}
     
     /*
@@ -1629,12 +1654,23 @@ void *RS_LoadStats_Thread( void *in )
  */
 char *RS_PrintQueryCallback(int player_id )
 {
-    unsigned int size = strlen(players_query[player_id])+1;
-    char *result=malloc(size);
-    Q_strncpyz(result, players_query[player_id] , size);
-    free(players_query[player_id]);
-    players_query[player_id] = NULL;
-    return result;
+    unsigned int size;
+    char *result;
+
+    if ( players_query[player_id] != NULL )
+    {
+        size = strlen(players_query[player_id])+1;
+        result=malloc(size);
+        Q_strncpyz(result, players_query[player_id] , size);
+        free(players_query[player_id]);
+        players_query[player_id] = NULL;
+        return result;
+    }
+    else
+    {
+        return NULL;
+    }
+
 }
 
 /**

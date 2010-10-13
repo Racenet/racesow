@@ -409,6 +409,16 @@ const uint RACESOW_AUTH_ADMIN		= 31;
 		    this.player.bestRaceTime = personalBest;
 		    this.player.overallTries = overallTries;
 		}
+
+        if ( rs_loadPlayerCheckpoints.getBool() )
+        {
+            cString checkpoints = RS_PrintQueryCallback(this.player.getClient().getEnt().playerNum());
+
+            for ( int i = 0; i < numCheckpoints; i++ )
+            {
+                this.player.bestCheckPoints[i] = checkpoints.getToken(i).toInt();
+            }
+        }
     
         // if no authentication in the callback
         if (playerId == 0)
