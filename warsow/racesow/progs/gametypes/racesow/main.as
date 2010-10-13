@@ -48,6 +48,13 @@ cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how
 
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
+bool isUsingRacesowClient( cClient @client )
+{
+	// TODO: use something like a client userinfo variable to determine if the player is running racesow client
+	return false;
+}
+
+
 cString diffString( uint oldTime, uint newTime )
 {
     if ( oldTime == 0 )
@@ -847,9 +854,13 @@ void GT_ThinkRules()
 		{
      	  	client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
         	client.setHUDStat( STAT_TIME_RECORD, map.getHighScore(0).getTime() / 100 );
+			if ( isUsingRacesowClient(client) )
+			{
+				client.setHUDStat( STAT_TIME_ALPHA, map.worldBest / 100 );
+			}
 		}
 
-
+		// what is this for? should we del it? please add a meaningful comment
         if ( map.getHighScore(0).playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
         if ( map.getHighScore(1).playerName.len() > 0 )

@@ -273,9 +273,12 @@ class Racesow_Player
         //G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
 		uint bestTime;
         uint earnedPoints;
+		uint oldServerBestTime;
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
 
+		oldServerBestTime = map.getHighScore(0).getTime();
+		
         //print general info to player
         this.getClient().addAward( S_COLOR_CYAN + "Race Finished!" );
 		bool noDelta = 0 == bestTime;
@@ -285,8 +288,11 @@ class Racesow_Player
         this.sendMessage(S_COLOR_WHITE + "Race " + S_COLOR_ORANGE + "#"
                 + this.tries + S_COLOR_WHITE + " finished : "
                 + TimeToString( newTime)
-                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldTime, newTime)
-                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString(oldBestTime, newTime) + "\n");
+				+ " "
+                + S_COLOR_ORANGE + "Personal:" + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
+				+ S_COLOR_ORANGE + "/Server:" + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
+                + S_COLOR_ORANGE + "/World:" + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
+				+ "\n");
 
         if ( this.checkPoints.len() > 0 )
             this.sendMessage( this.checkPoints );
@@ -299,7 +305,16 @@ class Racesow_Player
             this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!\n" );
         }
 
-        if ( oldBestTime == 0 || newTime < oldBestTime ) //set new server record
+		if ( oldBestTime == 0 || newTime < oldBestTime ) //set new world record
+        {
+            this.setBestTime(newTime);
+			this.getClient().addAward( S_COLOR_GREEN + "New world record!" );
+			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
+				+ "made a new " + S_COLOR_GREEN  + "world" + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
+
+            map.getHighScore(0).fromRace(this.lastRace);
+        }
+        else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //set new server record
         {
             this.setBestTime(newTime);
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );

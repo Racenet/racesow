@@ -20,7 +20,15 @@ class Racesow_Map
 	 */
 	uint64 logTime;
     
+	/*
+	 * Highscores
+	 */
     Racesow_Map_HighScore[] highScores;
+	
+	/*
+	 * World record time for this map (loaded from database)
+	 */
+	uint worldBest;
     
 	/**
 	 * Constructor
@@ -82,8 +90,7 @@ class Racesow_Map
         this.setId( id );
         if ( rs_loadHighscores.getBool() )
         {
-            this.getHighScore(0).finishTime = bestTime;
-            // we could also do a getHighScore(0).fromRace(arg2), ie. also recover checkpoints, but I don't want that, and arg2 can only be an int..
+            this.worldBest = bestTime; // save it for AS
         }
     }
     

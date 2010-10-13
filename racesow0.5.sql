@@ -156,8 +156,8 @@ CREATE TABLE `player_map` (
   `playtime` bigint(20) unsigned NOT NULL DEFAULT '0',
   `tries` int(11) DEFAULT NULL,
   `duration` bigint(20) DEFAULT NULL,
-  `overall_tries` int(11) NOT NULL,
-  `racing_time` bigint(20) NOT NULL,
+  `overall_tries` int(11) NOT NULL DEFAULT '0',
+  `racing_time` bigint(20) NOT NULL DEFAULT '0',
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`player_id`,`map_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
