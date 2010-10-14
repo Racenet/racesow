@@ -316,7 +316,10 @@ class Racesow_Player
         }
         else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //set new server record
         {
-            this.setBestTime(newTime);
+			if ( newTime < oldTime )
+			{
+				this.setBestTime(newTime);
+			}
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
