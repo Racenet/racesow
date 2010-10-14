@@ -59,7 +59,7 @@ cString diffString( uint oldTime, uint newTime )
 {
     if ( oldTime == 0 )
     {
-        return TimeToString( newTime );
+        return "****";
     }
     else if ( oldTime < newTime )
     {
