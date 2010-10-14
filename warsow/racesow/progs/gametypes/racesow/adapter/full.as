@@ -50,6 +50,8 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
 	 */
 	void initGametype()
 	{
+		previousMapName=RS_LastMap();
+		
         // Call to a c-function which should result
         // in a callback to map.loadCallback()
         RS_MysqlLoadMap(); 

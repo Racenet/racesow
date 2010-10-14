@@ -215,6 +215,16 @@ class Command_NextMap : Racesow_Command
     }
 }
 
+class Command_LastMap : Racesow_Command
+{
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendMessage( previousMapName + "\n" );
+        return true;
+    }
+}
+
+
 class Command_Chrono : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -692,6 +702,13 @@ void RS_CreateCommands()
     nextmap.description = "Print the name of the next map in map rotation";
     nextmap.usage = "";
     @commands[commandCount] = @nextmap;
+    commandCount++;
+	
+	Command_LastMap lastmap;
+    lastmap.name = "lastmap";
+    lastmap.description = "Print the name of the previous map on the server, before this one";
+    lastmap.usage = "";
+    @commands[commandCount] = @lastmap;
     commandCount++;
 
     Command_Mapname mapname;

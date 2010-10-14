@@ -213,7 +213,7 @@ static void *G_Z_Malloc( int size, const char *filename, int fileline )
 	return buf;
 }
 
-#ifdef GETUNUSED
+//#ifdef GETUNUSED
 /*
 * G_Z_Print
 */
@@ -237,7 +237,7 @@ static void G_Z_Print( memzone_t *zone )
 			G_Printf( "ERROR: two consecutive free blocks\n");
 	}
 }
-#endif
+//#endif
 
 //==============================================================================
 
@@ -297,6 +297,7 @@ char *_G_LevelCopyString( const char *in, const char *filename, int fileline )
 */
 void G_LevelGarbageCollect( void )
 {
+	//G_Z_Print( levelzone );
 }
 
 //==============================================================================

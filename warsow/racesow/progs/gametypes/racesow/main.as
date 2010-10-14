@@ -22,6 +22,7 @@ bool scbupdated = true;
 
 cString maplist;
 uint mapcount;
+cString previousMapName; // to remember the previous map on the server
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
@@ -950,14 +951,13 @@ void GT_MatchStateStarted()
  */
 void GT_Shutdown()
 {
-/*
+
     for ( int i = 0; i < maxClients; i++ )
 		if ( @players[i].getClient() != null )
 		{
 		    // run it unthreaded to prevent a mysql crash
 			players[i].disappear(players[i].getName(),false);
 		}
-*/
 }
 
 /**

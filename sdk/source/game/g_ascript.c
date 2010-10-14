@@ -6236,6 +6236,19 @@ static void asFunc_asGeneric_RS_NextMap( void *gen )
     G_asGeneric_SetReturnAddress( gen, asFunc_RS_NextMap( ) );
 }
 
+// RS_LastMap
+static asstring_t *asFunc_RS_LastMap( )
+{
+     char *result;
+     result = previousMapName;
+     return objectString_FactoryBuffer(result, strlen(result));
+}
+
+static void asFunc_asGeneric_RS_LastMap( void *gen )
+{
+    G_asGeneric_SetReturnAddress( gen, asFunc_RS_LastMap( ) );
+}
+
 // RS_LoadMapList
 static void asFunc_RS_LoadMapList( int is_freestyle )
 {
@@ -6991,6 +7004,7 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "bool RS_LoadStats( int playerNum, cString &, cString & )", asFunc_RS_LoadStats, asFunc_asGeneric_RS_LoadStats},
     { "cString @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback, asFunc_asGeneric_RS_PrintQueryCallback },
     { "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },
+	{ "cString @RS_LastMap()", asFunc_RS_LastMap, asFunc_asGeneric_RS_LastMap },
 	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
 	// !racesow
 

@@ -3,6 +3,7 @@
 char maplist[50000];
 unsigned int mapcount;
 int MysqlConnected;
+char previousMapName[MAX_CONFIGSTRING_CHARS];
 
 struct authenticationData {
 

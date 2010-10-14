@@ -54,6 +54,8 @@ endif
 	drawTimer %TIME_RECORD
 endif
 
+// TODO: add a world best here, using TIME_ALPHA
+
 
 //crazy big timer
 

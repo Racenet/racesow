@@ -86,6 +86,7 @@ char *players_query[MAX_CLIENTS]={0};
  */
 unsigned int mapcount = 0;
 char maplist[50000] = {0}; // around 5000 maps..
+char previousMapName[MAX_CONFIGSTRING_CHARS];
 
 /**
  * as callback commands (must be similar to callback.as!)
@@ -140,6 +141,8 @@ void RS_Init()
     g_freestyle = trap_Cvar_Get( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
     rs_loadPlayerCheckpoints = trap_Cvar_Get( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE);
+
+	previousMapName[0]='\0';
 
     if ( rs_mysqlEnabled->integer )
     {
@@ -512,6 +515,9 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	mysql_free_result(mysql_res);
 
 	RS_PushCallbackQueue(RACESOW_CALLBACK_LOADMAP, 0, map_id, bestTime, 0, 0, 0, 0);
+
+	// remember this map name
+	strcpy(previousMapName,level.mapname);
 
 	RS_EndMysqlThread();
     
