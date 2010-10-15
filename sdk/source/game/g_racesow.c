@@ -229,7 +229,7 @@ void RS_LoadCvars( void )
     rs_queryResetPlayerMapPoints	= trap_Cvar_Get( "rs_queryResetPlayerMapPoints",	"UPDATE `player_map` SET `points` = 0 WHERE `map_id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
-	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%s' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
+	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%d' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s';", CVAR_ARCHIVE );
     rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `player_checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
@@ -1990,7 +1990,7 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
         mapcount = 0;
         maplist[0] = '\0';
 
-        sprintf(query, rs_queryLoadMapList->string, is_freestyle ? "true" : "false", "name");
+        sprintf(query, rs_queryLoadMapList->string, is_freestyle, "name");
         mysql_real_query(&mysql, query, strlen(query));
        	if (RS_MysqlError(NULL)) {
             return qfalse;
