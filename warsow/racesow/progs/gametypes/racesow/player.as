@@ -132,11 +132,6 @@ class Racesow_Player
 	 */
     uint[] bestCheckPoints;
 
-    /**
-     * The player's last race checkpoints, waiting to be printed in racerestart
-     */
-    cString checkPoints;
-
 	/**
 	 * The player's client
 	 * @var uint
@@ -233,7 +228,6 @@ class Racesow_Player
 		this.overallTries = 0;
 		this.racingTime = 0;
 		this.racingTimeSinceLastRace = 0;
-		this.checkPoints = "";
 	}
 
 	/**
@@ -294,10 +288,8 @@ class Racesow_Player
                 + S_COLOR_ORANGE + "/World:" + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
 				+ "\n");
 
-        if ( this.checkPoints.len() > 0 )
-            this.sendMessage( this.checkPoints );
-
-        this.checkPoints = "";
+        if ( this.lastRace.checkPointsString.len() > 0 )
+            this.sendMessage( this.lastRace.checkPointsString );
 
         earnedPoints = newPoints - oldPoints;
         if (earnedPoints > 0) {
@@ -567,8 +559,7 @@ class Racesow_Player
 		{
 		    this.racingTime += levelTime - this.race.getStartTime();
 		    this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
-	        this.sendMessage( this.checkPoints );
-	        this.checkPoints = "";
+	        this.sendMessage( this.race.checkPointsString );
 		}
 
 		@this.race = null;

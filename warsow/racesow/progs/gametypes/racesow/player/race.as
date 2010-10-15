@@ -13,6 +13,11 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 */
     uint[] checkPoints;
 
+    /**
+     * The checkpoints of the race as a string
+     */
+    cString checkPointsString;
+
 	/**
 	 * Leveltime when started race
 	 * @var uint
@@ -128,6 +133,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 */
 	void check(int id)
 	{
+	    this.lastCheckPoint++;
 		if ( this.checkPoints[id] != 0 ) // already past this checkPoint
             return;
 
@@ -146,19 +152,19 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
         if ( newTime < serverBestTime || serverBestTime == 0 )
         {
-            this.player.getClient().addAward( S_COLOR_GREEN + "#" + (lastCheckPoint + 1) + " checkpoint record!" );
+            this.player.getClient().addAward( S_COLOR_GREEN + "#" + lastCheckPoint + " checkpoint record!" );
         }
         else if ( newTime < personalBestTime || personalBestTime == 0 )
         {
-            this.player.getClient().addAward( S_COLOR_YELLOW + "#" + (lastCheckPoint + 1) + " checkpoint personal record!" );
+            this.player.getClient().addAward( S_COLOR_YELLOW + "#" + lastCheckPoint + " checkpoint personal record!" );
         }
 
-        this.player.checkPoints += S_COLOR_ORANGE + "#" + (lastCheckPoint +1) + ": "
+        this.checkPointsString += S_COLOR_ORANGE + "#" + lastCheckPoint + ": "
                 + S_COLOR_WHITE + TimeToString( newTime )
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( personalBestTime, newTime )
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n";
 		
-       this.lastCheckPoint++;
+
 	}
 	
 	/**
