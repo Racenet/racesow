@@ -264,7 +264,7 @@ class Racesow_Player
     void raceCallback(uint allPoints, uint oldPoints, uint newPoints, uint oldTime, uint oldBestTime, uint newTime)
     {
 
-        //G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
+        G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
 		uint bestTime;
         uint earnedPoints;
 		uint oldServerBestTime;
@@ -300,6 +300,10 @@ class Racesow_Player
 		if ( oldBestTime == 0 || newTime < oldBestTime ) //set new world record
         {
             this.setBestTime(newTime);
+            for ( int i = 0; i < numCheckpoints; i++ )
+            {
+                this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
+            }
 			this.getClient().addAward( S_COLOR_GREEN + "New world record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new " + S_COLOR_GREEN  + "world" + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
@@ -308,9 +312,13 @@ class Racesow_Player
         }
         else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //set new server record
         {
-			if ( newTime < oldTime )
+			if ( oldTime == 0 || newTime < oldTime )
 			{
 				this.setBestTime(newTime);
+	            for ( int i = 0; i < numCheckpoints; i++ )
+	            {
+	                this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
+	            }
 			}
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
@@ -322,7 +330,6 @@ class Racesow_Player
         {
             this.setBestTime(newTime);
 			this.getClient().addAward( "Personal record!" );
-
 			for ( int i = 0; i < numCheckpoints; i++ )
             {
                 this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
