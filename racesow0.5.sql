@@ -95,8 +95,8 @@ CREATE TABLE `player` (
 -- Structure de la table `checkpoint`
 --
 
-DROP TABLE IF EXISTS `player_checkpoint`;
-CREATE TABLE `player_checkpoint` (
+DROP TABLE IF EXISTS `checkpoint`;
+CREATE TABLE `checkpoint` (
   `player_id` int(11) NOT NULL,
   `map_id` int(11) NOT NULL,
   `num` int(11) unsigned NOT NULL,
