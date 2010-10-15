@@ -64,20 +64,6 @@ CREATE TABLE `map` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `map_checkpoint`
---
-
-DROP TABLE IF EXISTS `map_checkpoint`;
-CREATE TABLE `map_checkpoint` (
-  `map_id` int(11) NOT NULL,
-  `num` int(11) unsigned NOT NULL,
-  `time` int(11) NOT NULL,
-  PRIMARY KEY (`map_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
 -- Structure de la table `player`
 --
 
@@ -106,7 +92,7 @@ CREATE TABLE `player` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `player_checkpoint`
+-- Structure de la table `checkpoint`
 --
 
 DROP TABLE IF EXISTS `player_checkpoint`;

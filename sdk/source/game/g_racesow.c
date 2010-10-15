@@ -232,8 +232,8 @@ void RS_LoadCvars( void )
 	rs_queryLoadMapList				= trap_Cvar_Get( "rs_queryLoadMapList",				"SELECT name FROM map WHERE freestyle = '%d' AND status = 'enabled' ORDER BY %s;", CVAR_ARCHIVE);
 	rs_queryMapFilter               = trap_Cvar_Get( "rs_queryMapFilter",               "SELECT id, name FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s' LIMIT %u, %u;", CVAR_ARCHIVE );
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s';", CVAR_ARCHIVE );
-    rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `player_checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
-    rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `time` FROM `player_checkpoint` WHERE `map_id` = %d AND `player_id` = %d ORDER BY `num` ASC;", CVAR_ARCHIVE );
+    rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
+    rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `time` FROM `checkpoint` WHERE `map_id` = %d AND `player_id` = %d ORDER BY `num` ASC;", CVAR_ARCHIVE );
 	// TODO: I think this one can be replaced by a query to player_map similar to rs_queryGetPlayerMapHighscores, or maybe even remove it and use the latter to display highscores (because querying the big "race" table is probably expensive)
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
     
