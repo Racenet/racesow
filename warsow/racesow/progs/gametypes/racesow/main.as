@@ -329,26 +329,26 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			}
 			return true;
 		}
-		
+
 		if ( vote == "timelimit" )
 		{
 			int new_timelimit = argsString.getToken( 1 ).toInt();
-			
+
 			if ( new_timelimit < 0 )
 			{
 				client.printMessage( "Can't set negative timelimit\n");
 				return false;
 			}
-			
+
 			if ( new_timelimit == g_timelimit.getInteger() )
 			{
 				client.printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
 				return false;
 			}
-			
+
 			return true;
 		}
-		
+
 		if ( vote == "spec" )
 		{
 			if ( ! map.inOvertime )
@@ -356,10 +356,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 				client.printMessage( S_COLOR_RED + "Callvote spec is only valid during overtime\n");
 				return false;
 			}
-			
+
 			return true;
 		}
-		
+
 		client.printMessage( "Unknown callvote " + vote + "\n" );
 		return false;
 	}
@@ -378,12 +378,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					players[i].cancelOvertime();
 				}
             }
-			
+
 			if ( vote == "timelimit" )
             {
 				int new_timelimit = argsString.getToken( 1 ).toInt();
 				g_timelimit.set(new_timelimit);
-				
+
 				// g_timelimit_reset == 1: this timelimit value is not kept after current map
 				// g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
 				if (g_timelimit_reset.getBool() == false)
@@ -391,7 +391,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					oldTimelimit = g_timelimit.getInteger();
 				}
             }
-			
+
 			if ( vote == "spec" )
 			{
 				for ( int i = 0; i < maxClients; i++ )
@@ -401,10 +401,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 						players[i].remove("You have been removed because you were playing during overtime.");
 					}
 				}
-				
+
 			}
-		
-			
+
+
             return true;
     }
     /*
@@ -596,8 +596,8 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 			if( !client.connecting ) {
 
                 player.getAuth().refresh( args );
-            			
-						
+
+
 				// auto-hop check
 				if ( rs_allowAutoHop.getBool() == false )
 				{
@@ -675,7 +675,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	{
 		// set player movement to pass through other players
 		ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
-		
+
 		// disable autojump
 		if ( rs_allowAutoHop.getBool() == false )
 		{
@@ -970,24 +970,26 @@ void GT_Shutdown()
 void GT_SpawnGametype()
 {
     cEntity @trigger_multiple;
+    cEntity @target_give;
+    cEntity @target;
     cEntity @from = null;
     cEntity @from2 = null;
     bool found = false;
 
     @map = Racesow_Map();
-    
+
     if (mysqlConnected != 0) {
-    
+
         @racesowAdapter = Racesow_Adapter_Full();
-        
+
     } else {
-    
+
         @racesowAdapter = Racesow_Adapter_Compat();
     }
-    
+
     racesowAdapter.initGametype();
-    
-    
+
+
 	// setup players
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
@@ -1011,6 +1013,22 @@ void GT_SpawnGametype()
             break;
         @from = @trigger_multiple;
         @trigger_multiple = @G_FindEntityWithClassname( from, "trigger_multiple" );
+    }
+
+    @from = null;
+    @target_give = @G_FindEntityWithClassname(from, "target_give");
+
+    while( @target_give != null)
+    {
+        @target = @target_give.findTargetEntity( null );
+        if( @target == null )
+        {
+            G_Print(" WARNING: target_give has no targets\n");
+            target_give.unlinkEntity();
+            target_give.freeEntity();
+        }
+    @from = @target_give;
+    @target_give = @G_FindEntityWithClassname(from, "target_give");
     }
 
     //TODOSOW fastcap if there are flag entitys
@@ -1089,11 +1107,11 @@ void GT_InitGametype()
                  + "exec configs/server/gametypes/racesow_weapondefs.cfg"
                  + "\n"
 				 + "echo racesow.cfg executed\n";
-	
+
         G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
         G_Print( "Created default base config file for racesow\n" );
 	}
-	
+
 	// always execute racesow.cfg
     G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
 
@@ -1182,15 +1200,15 @@ void GT_InitGametype()
     {
 		g_timelimit.set( "0" );
     }
-	
+
 	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
 	g_warmup_enabled.set("0");
 
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
-	oldTimelimit = g_timelimit.getInteger(); 
+	oldTimelimit = g_timelimit.getInteger();
 
 	// load maps list (basic or mysql)
 	RS_LoadMapList( g_freestyle.getInteger() );
-	
+
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }
