@@ -854,7 +854,7 @@ void GT_ThinkRules()
 		if ( !(g_freestyle.getBool()) ) // remove the time stats in freestyle
 		{
      	  	client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
-        	client.setHUDStat( STAT_TIME_RECORD, map.getHighScore(0).getTime() / 100 );
+        	client.setHUDStat( STAT_TIME_RECORD, map.getHighScore().getTime() / 100 );
 			if ( isUsingRacesowClient(client) )
 			{
 				client.setHUDStat( STAT_TIME_ALPHA, map.worldBest / 100 );
@@ -862,11 +862,11 @@ void GT_ThinkRules()
 		}
 
 		// what is this for? should we del it? please add a meaningful comment
-        if ( map.getHighScore(0).playerName.len() > 0 )
+        if ( map.getHighScore().playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
-        if ( map.getHighScore(1).playerName.len() > 0 )
+        if ( map.getHighScore().playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
-        if ( map.getHighScore(2).playerName.len() > 0 )
+        if ( map.getHighScore().playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
 
     	if( player.isUsingChrono )

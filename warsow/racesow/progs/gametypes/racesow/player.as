@@ -271,7 +271,7 @@ class Racesow_Player
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
 
-		oldServerBestTime = map.getHighScore(0).getTime();
+		oldServerBestTime = map.getHighScore().getTime();
 		
         //print general info to player
         this.getClient().addAward( S_COLOR_CYAN + "Race Finished!" );
@@ -297,43 +297,34 @@ class Racesow_Player
             this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!\n" );
         }
 
-		if ( oldBestTime == 0 || newTime < oldBestTime ) //set new world record
+        if ( oldTime == 0 || newTime < oldTime ) //set new personal record
         {
             this.setBestTime(newTime);
-            for ( int i = 0; i < numCheckpoints; i++ )
-            {
-                this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
-            }
-			this.getClient().addAward( S_COLOR_GREEN + "New world record!" );
-			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
-				+ "made a new " + S_COLOR_GREEN  + "world" + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
-
-            map.getHighScore(0).fromRace(this.lastRace);
+            this.setBestCheckPointsFromRace(this.lastRace);
         }
-        else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //set new server record
+
+        if ( oldServerBestTime == 0 || newTime < oldServerBestTime )//set new server record
         {
-			if ( oldTime == 0 || newTime < oldTime )
-			{
-				this.setBestTime(newTime);
-	            for ( int i = 0; i < numCheckpoints; i++ )
-	            {
-	                this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
-	            }
-			}
+            map.getHighScore().fromRace(this.lastRace);
+        }
+
+        //print record awards
+		if ( oldBestTime == 0 || newTime < oldBestTime ) //world record award
+        {
+		    this.getClient().addAward( S_COLOR_GREEN + "New world record!" );
+		    G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
+		            + "made a new " + S_COLOR_GREEN  + "world" + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
+        }
+
+        else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //server record award
+        {
 			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
-
-            map.getHighScore(0).fromRace(this.lastRace);
         }
-        else if ( oldTime == 0 || newTime < oldTime ) //set new personal record
+        else if ( oldTime == 0 || newTime < oldTime ) //personal record award
         {
-            this.setBestTime(newTime);
 			this.getClient().addAward( "Personal record!" );
-			for ( int i = 0; i < numCheckpoints; i++ )
-            {
-                this.bestCheckPoints[i] =  this.lastRace.checkPoints[i];
-            }
         }
     }
 
@@ -453,18 +444,18 @@ class Racesow_Player
 	}
 
 	/**
-	 * setBestCheckPoint
-	 * @param uint id
-	 * @param uint time
-	 * @return uint
+	 * Set player best checkpoints from a given race
+	 *
+	 * @param race The race from which to take the checkpoints
+	 * @return true
 	 */
-	bool setBestCheckPoint(uint id, uint time)
+	bool setBestCheckPointsFromRace(Racesow_Player_Race @race)
 	{
-		if ( id >= this.bestCheckPoints.length() || ( this.bestCheckPoints[id] != 0 && time >= this.bestCheckPoints[id] ) )
-			return false;
-
-		this.bestCheckPoints[id] = time;
-		return true;
+	    for ( int i = 0; i < numCheckpoints; i++)
+	    {
+	        this.bestCheckPoints[i] = race.getCheckPoint(i);
+	    }
+	    return true;
 	}
 
 	/**

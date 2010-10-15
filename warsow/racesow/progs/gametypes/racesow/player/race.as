@@ -143,7 +143,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		this.checkPoints[id] = levelTime - this.startTime;
 		
 		uint newTime =  this.checkPoints[id];
-		uint serverBestTime = map.getHighScore(0).getCheckPoint(id);
+		uint serverBestTime = map.getHighScore().getCheckPoint(id);
 		uint personalBestTime = this.player.getBestCheckPoint(id);
 		bool noDelta = 0 == serverBestTime;
 		
@@ -163,8 +163,6 @@ class Racesow_Player_Race : Racesow_Player_Implemented
                 + S_COLOR_WHITE + TimeToString( newTime )
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( personalBestTime, newTime )
                 + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n";
-		
-
 	}
 	
 	/**

@@ -21,9 +21,9 @@ class Racesow_Map
 	uint64 logTime;
     
 	/*
-	 * Highscores
+	 * Highscore
 	 */
-    Racesow_Map_HighScore[] highScores;
+    Racesow_Map_HighScore highScore;
 	
 	/*
 	 * World record time for this map (loaded from database)
@@ -74,11 +74,7 @@ class Racesow_Map
         this.overtimeFinished = false;
         
         this.logTime = 0;
-		this.highScores.resize( MAX_RECORDS );
-		for ( int i = 0; i < MAX_RECORDS; i++ )
-		{
-			this.highScores[i].reset();
-		}
+        this.highScore.reset();
 	}
 
     /**
@@ -95,16 +91,12 @@ class Racesow_Map
     }
     
     /**
-	 * Get a highscore model
-	 * @param uint id
+	 * Get the map highscore
 	 * @return Racesow_Map_HighScore
 	 */
-	Racesow_Map_HighScore @getHighScore(uint id)
+	Racesow_Map_HighScore @getHighScore()
 	{
-		if (id >= this.highScores.length())
-			return Racesow_Map_HighScore();
-		
-		return @this.highScores[id];
+		return @this.highScore;
 	}
     
     void startOvertime()
