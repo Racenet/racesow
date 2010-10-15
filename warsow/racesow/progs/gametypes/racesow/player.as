@@ -264,7 +264,7 @@ class Racesow_Player
     void raceCallback(uint allPoints, uint oldPoints, uint newPoints, uint oldTime, uint oldBestTime, uint newTime)
     {
 
-        G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
+        //G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
 		uint bestTime;
         uint earnedPoints;
 		uint oldServerBestTime;
