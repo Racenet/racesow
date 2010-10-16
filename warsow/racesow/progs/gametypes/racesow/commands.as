@@ -470,7 +470,7 @@ class Command_Quad : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( !g_freestyle.getBool() || !sv_cheats.getBool() )
+        if( !g_freestyle.getBool() && !sv_cheats.getBool() )
         {
             player.sendErrorMessage("Quad is not available on this server");
             return false;
