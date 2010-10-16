@@ -10,8 +10,6 @@ bool demoRecording = false;
 bool firstAnnouncement = false;
 bool secondAnnouncement = false;
 bool thirdAnnouncement = false;
-const int MAX_RECORDS = 10;
-const int MAPS_PER_PAGE = 20;
 int oldTimelimit; // for restoring the original value, because extend_time changes it
 
 cString scbmsg; //scoreboard message for custom scoreboards
@@ -20,8 +18,6 @@ cString[] specwho( maxClients );
 uint nextTimeUpdate;
 bool scbupdated = true;
 
-cString maplist;
-uint mapcount;
 cString previousMapName; // to remember the previous map on the server
 
 Racesow_Player[] players( maxClients );
@@ -757,20 +753,43 @@ void GT_ThinkRules()
 	if ( map.logTime == 0 && localTime != 0 )
 		map.logTime = localTime;
 
-	if ( !firstAnnouncement && ( ( match.duration() - levelTime ) < 180000 ) && ( match.duration() >= 180000 ) )
+	if ( ( match.duration() - levelTime ) < 180000 )
 	{
-	    firstAnnouncement = true;
-	    G_PrintMsg( null, S_COLOR_GREEN + "3 minutes left...\n");
+	    if ( !firstAnnouncement && match.duration() >= 180000 )
+	    {
+	        firstAnnouncement = true;
+	        G_PrintMsg( null, S_COLOR_GREEN + "3 minutes left...\n");
+	    }
 	}
-    if ( !secondAnnouncement && ( ( match.duration() - levelTime ) < 120000 ) && ( match.duration() >= 120000 ) )
+	else
+	{
+	    firstAnnouncement = false;
+	}
+
+    if ( ( match.duration() - levelTime ) < 120000 )
     {
-        secondAnnouncement = true;
-        G_PrintMsg( null, S_COLOR_YELLOW + "2 minutes left...\n");
+        if ( !secondAnnouncement && match.duration() >= 120000 )
+        {
+            secondAnnouncement = true;
+            G_PrintMsg( null, S_COLOR_YELLOW + "2 minutes left...\n");
+        }
     }
-    if ( !thirdAnnouncement && ( ( match.duration() - levelTime ) < 60000 ) && ( match.duration() >= 60000 ) )
+    else
     {
-        thirdAnnouncement = true;
-        G_PrintMsg( null, S_COLOR_RED + "1 minute left...\n");
+        secondAnnouncement = false;
+    }
+
+    if ( ( match.duration() - levelTime ) < 60000 )
+    {
+        if ( !thirdAnnouncement && match.duration() >= 60000 )
+        {
+            thirdAnnouncement = true;
+            G_PrintMsg( null, S_COLOR_RED + "1 minutes left...\n");
+        }
+    }
+    else
+    {
+        thirdAnnouncement = false;
     }
 
 	if( levelTime > nextTimeUpdate )
