@@ -284,7 +284,7 @@ class Racesow_Player
                 + TimeToString( newTime)
                 + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
 				+ S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
-                + S_COLOR_ORANGE + "/World: " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
+                + S_COLOR_ORANGE + "/" + Capitalize(rs_networkName.getString()) + ": " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
 				+ "\n");
 
         if ( this.lastRace.checkPointsString.len() > 0 )
@@ -310,9 +310,9 @@ class Racesow_Player
         //print record awards
 		if ( oldBestTime == 0 || newTime < oldBestTime ) //world record award
         {
-		    this.getClient().addAward( S_COLOR_GREEN + "New world record!" );
+		    this.getClient().addAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
 		    G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
-		            + "made a new " + S_COLOR_GREEN  + "world" + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
+		            + "made a new " + S_COLOR_GREEN  + rs_networkName.getString() + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
         }
 
         else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //server record award

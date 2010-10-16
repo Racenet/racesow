@@ -31,6 +31,7 @@ Racesow_Adapter_Abstract @racesowAdapter;
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Token( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET );
+cVar rs_networkName( "rs_networkName", "racenet", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 cVar rs_loadPlayerCheckpoints( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE );
@@ -49,6 +50,11 @@ cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how
 
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
+/**
+ * Determines if the current client is using Racesow game library
+ * @param cClient @client
+ * @return bool
+ */
 bool isUsingRacesowClient( cClient @client )
 {
 	// TODO: use something like a client userinfo variable to determine if the player is running racesow client
@@ -168,6 +174,16 @@ cString DateToString( uint64 dateuint64 )
     return daysString + "/" + monsString + "/" + (1900+date.year) + " " + hoursString +":" + minsString + ":" + secsString;
 }
 
+/**
+ * Capitalize a string
+ *
+ * @param cString string
+ * @return cString
+ */
+cString Capitalize( cString string )
+{
+	return string.substr(0,1).toupper() + string.substr(1,string.len()-1);
+}
 
 /**
  * Racesow_GetPlayerByClient
