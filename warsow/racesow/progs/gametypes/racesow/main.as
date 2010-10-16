@@ -50,6 +50,8 @@ cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how
 
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
+cVar g_gravity( "g_gravity", "850", CVAR_ARCHIVE );
+
 /**
  * Determines if the current client is using Racesow game library
  * @param cClient @client
@@ -967,7 +969,13 @@ void GT_MatchStateStarted()
  */
 void GT_Shutdown()
 {
-
+    if( g_gravity.getDefaultString() != g_gravity.getString() )
+    {
+        //some maps might have set a custom g_gravity which normaly won't get restored
+        g_gravity.reset();
+        G_Print( "Note: custom g_gravity reset\n" );
+    }
+    
     for ( int i = 0; i < maxClients; i++ )
 		if ( @players[i].getClient() != null )
 		{
