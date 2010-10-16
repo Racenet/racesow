@@ -1,154 +1,27 @@
-//
+//dotstrafer.hud 2010-10-15
 if %SPEED != #NOTSET
+
+//  set position here \'/
+setCursor #WIDTH / 2, 0.47 * #HEIGHT
+
+setSize 2, 10
+setColor 0, 0, 0, 1
+setAlign #CENTER, #MIDDLE
+drawPicByName gfx/ui/white
 
 setSize 4, 4
 setColor 0, 1, 0, 1
 
+moveCursor 0.03 * %DIFF_ANGLE, 0
 
-setCursor #WIDTH / 2, 297
-if -18000 > %MOUSE_X - %MOVEANGLE
-	moveCursor 0.03 * %MOUSE_X - %MOVEANGLE - 36000, 0
-endif
-if -18000 < %MOUSE_X - %MOVEANGLE
-if 18000  > %MOUSE_X - %MOVEANGLE
-	moveCursor 0.03 * %MOUSE_X - %MOVEANGLE, 0
-endif
-endif
-if 18000 < %MOUSE_X - %MOVEANGLE
-	moveCursor 0.03 * %MOUSE_X - %MOVEANGLE + 36000, 0
-endif
-
-
-if %SPEED >= 450
-if %SPEED <= 1250
-//speed: 1000
-//-2.39471*10^-11 x^4+1.17596*10^-7 x^3-0.000229361 x^2+0.220902 x-58.698
-	moveCursor 3 * -.0000000000239471 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor 3 * .000000117596 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor 3 * -0.000229361 * %SPEED * %SPEED, 0
-	moveCursor 3 * 0.220902 * %SPEED, 0
-	moveCursor 3 * -58.698, 0
+if %SPEED >= 320
+	moveCursor 0.03 * %STRAFEANGLE , 0
 	setAlign #LEFT, #MIDDLE
 	drawPicByName gfx/ui/white
 
-	moveCursor -6 * -.0000000000239471 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor -6 * .000000117596 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor -6 * -0.000229361 * %SPEED * %SPEED, 0
-	moveCursor -6 * 0.220902 * %SPEED, 0
-	moveCursor -6 * -58.698, 0
+	moveCursor -0.06 * %STRAFEANGLE , 0
 	setAlign #RIGHT, #MIDDLE
 	drawPicByName gfx/ui/white
-
 endif	
-endif
-
-if %SPEED > 1250
-if %SPEED <= 1750
-//speed: 1500
-//-2.69069*10^-12 x^4+2.00252*10^-8 x^3-0.0000594323 x^2+0.0877219 x-19.0414
-	moveCursor 3 * -.00000000000269069 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor 3 * .0000000200252 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor 3 * -0.0000594323 * %SPEED * %SPEED, 0
-	moveCursor 3 * 0.0877219 * %SPEED, 0
-	moveCursor 3 * -19.0414, 0
-	setAlign #LEFT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-	moveCursor -6 * -.00000000000269069 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor -6 * .0000000200252 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor -6 * -0.0000594323 * %SPEED * %SPEED, 0
-	moveCursor -6 * 0.0877219 * %SPEED, 0
-	moveCursor -6 * -19.0414, 0
-	setAlign #RIGHT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-endif	
-endif
-
-if %SPEED > 1750
-if %SPEED <= 2250
-//speed: 2000
-// -6.06153*10^-13 x^4+6.03566*10^-9 x^3-0.0000239988 *^2+0.0475693 x-1.86308
-	moveCursor 3 * -.000000000000606153 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor 3 * .00000000603566 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor 3 * -0.0000239988 * %SPEED * %SPEED, 0
-	moveCursor 3 * 0.0475693 * %SPEED, 0
-	moveCursor 3 * -1.86308, 0
-	setAlign #LEFT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-	moveCursor -6 * -.000000000000606153 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor -6 * .00000000603566 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor -6 * -0.0000239988 * %SPEED * %SPEED, 0
-	moveCursor -6 * 0.0475693 * %SPEED, 0
-	moveCursor -6 * -1.86308, 0
-	setAlign #RIGHT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-endif
-endif
-
-
-if %SPEED > 2250
-if %SPEED <= 2750
-//speed: 2500
-//  -1.94014*10^-13 x^4+2.41859*10^-9 x^3-0.000012047 x^2+0.0299463 x+7.92151
-	moveCursor 3 * -.000000000000194014 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor 3 * .00000000241859 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor 3 * -0.000012047 * %SPEED * %SPEED, 0
-	moveCursor 3 * 0.0299463 * %SPEED, 0
-	moveCursor 3 * 7.92151, 0
-	setAlign #LEFT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-	moveCursor -6 * -.000000000000194014 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor -6 * .00000000241859 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor -6 * -0.000012047 * %SPEED * %SPEED, 0
-	moveCursor -6 * 0.0299463 * %SPEED, 0
-	moveCursor -6 * 7.92151, 0
-	setAlign #RIGHT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-endif
-endif
-
-if %SPEED > 2750
-if %SPEED <= 3250
-//speed: 3000
-//  -7.6993*10^-14 x^4+1.15272*10^-9 x^3-6.89816*10^-6 x^2+0.020613 x+14.2834
-	moveCursor 3 * -.000000000000076993 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor 3 * .00000000115272 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor 3 * -.00000689816 * %SPEED * %SPEED, 0
-	moveCursor 3 * 0.020613 * %SPEED, 0
-	moveCursor 3 * 14.2834, 0
-	setAlign #LEFT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-	moveCursor -6 * -.000000000000076993 * %SPEED * %SPEED * %SPEED * %SPEED , 0
-	moveCursor -6 * .00000000115272 * %SPEED * %SPEED * %SPEED, 0
-	moveCursor -6 * -.00000689816 * %SPEED * %SPEED, 0
-	moveCursor -6 * 0.020613 * %SPEED, 0
-	moveCursor -6 * 14.2834, 0
-	setAlign #RIGHT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-endif	
-endif
-
-
-if %SPEED > 3250	
-
-	moveCursor 3 * %SPEED / 362.6, 0
-	moveCursor 3 * 29.96, 0
-	setAlign #LEFT, #MIDDLE
-	drawPicByName gfx/ui/white
-
-	moveCursor -6 * %SPEED / 362.6, 0
-	moveCursor -6 * 29.96, 0
-	setAlign #RIGHT, #MIDDLE
-	drawPicByName gfx/ui/white
-	
-endif
-
 
 endif

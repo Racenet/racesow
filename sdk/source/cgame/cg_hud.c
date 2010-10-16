@@ -353,8 +353,11 @@ static int CG_GetItemTimerTeam( void *parameter )
 	return max( cent->current.modelindex-1, 0 );
 }
 
+/*********************************************************************************
+lm: edit for race mod,
+	adds bunch of vars to the hud.
 
-// racesow - adds bunch of vars to the hud
+*********************************************************************************/
 
 //lm: for readability
 enum race_index {
@@ -362,6 +365,8 @@ enum race_index {
 	mouse_y,
 	jumpspeed,
 	move_an,
+	diff_an,
+	strafe_an,
 	cp1,
 	cp2,
 	cp3,
@@ -392,9 +397,12 @@ LMTODO: strafing
 		- dots firstly ill need the angle on map u are moving. Like before we will need tangens or contanges alpha (dun remember wich one was that) but im sure it was sth like world_x fivide by world_y. Then probably ill have to check the square function graph of biggest accel for every speed. And then we will work on it more)
 */
 /* edited by joki:
-%mouse_x, %mouse_y, %moveangle 
-  now use units of 0.01degrees for more precision
-also fixed a casting bug for %mouse_x
+%mouse_x, %mouse_y, %moveangle now use units of 0.01degrees for more precision
+=>angles are now (-18000,18000) and (-9000,9000)
+substituted int casts with round functions
+added:
+%diff_angle - difference of %mouse_x and %moveangle (%mouse_x - %moveangle)
+%strafe_angle - the optimal strafe angle based on current speed
 */
 
 #define RACE_CP_LENGTH	20
@@ -416,7 +424,7 @@ void CG_RaceInsertjump( int num )
 void CG_RaceSayjump_f( void )
 {
 	int n;
-	trap_Cmd_ExecuteText( EXEC_APPEND, "say \"Jumps: " ); // change to a printf
+	trap_Cmd_ExecuteText( EXEC_APPEND, "say \"Jumps: " );
 	for( n = cur_jump; n < 30; n++ ) {
 		if( race_jump_speeds[n] != -1 )
 			trap_Cmd_ExecuteText( EXEC_APPEND, va( "%i ", race_jump_speeds[n] ) );
@@ -429,27 +437,56 @@ void CG_RaceSayjump_f( void )
 	}
 	trap_Cmd_ExecuteText( EXEC_APPEND, "\"\n" );
 }
+
+void CG_RaceSaycps_f( void )
+{
+	int n;
+	if( cur_check == 0 ) return;
+	trap_Cmd_ExecuteText( EXEC_APPEND, "say \"Checkpoints: " );
+	for( n = 0; n < cur_check; n++ ) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s ", race_checkpoints[n] ) );
+	}
+	trap_Cmd_ExecuteText( EXEC_APPEND, "\"\n" );
+}
+
 static int CG_GetRaceVars( void* parameter )
 {
 	int index = (qintptr)parameter;
 	int iNum;
 	vec3_t hor_vel, an;
 	switch( index ) {
+		case diff_an:
+			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
+			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
+			hor_vel[2] = 0;
+			VecToAngles( hor_vel, an );
+			iNum = round(100 * (cg.predictedPlayerState.viewangles[YAW] - an[YAW]));
+			while( iNum > 18000 )
+				iNum -= 36000;
+			while( iNum < -18000 )
+				iNum += 36000;
+			return iNum;
+		case strafe_an:
+			iNum = round(100 * (acos((320-320*cg.realFrameTime)/CG_GetSpeed(0))*180/M_PI-45) ); //maybe need to check if speed below 320 is allowed for acos
+			if (iNum > 0)
+				return iNum;
+			else
+				return 0;
 		case move_an:
 			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
 			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
 			hor_vel[2] = 0;
 			VecToAngles( hor_vel, an );
-			iNum = (int)(100 * an[YAW]);
-			while( iNum > 18000 ) 
+			iNum = round(100 * an[YAW]);
+			while( iNum > 18000 )
 				iNum -= 36000;
 			while( iNum < -18000 )
 				iNum += 36000;
 			return iNum;
 		case mouse_x:
-			return (int)(100 * cg.predictedPlayerState.viewangles[YAW]+18000)-18000;
+			return round(100 * cg.predictedPlayerState.viewangles[YAW]);
 		case mouse_y:
-			return (int)(cg.predictedPlayerState.viewangles[PITCH]*100);
+			return round(100 * cg.predictedPlayerState.viewangles[PITCH]);
 		case cp1: case cp2: case cp3: case cp4: case cp5: case cp6: case cp7: case cp8:
 		case cp9: case cp10: case cp11: case cp12: case cp13: case cp14: case cp15:
 			iNum = index - (int)cp1;
@@ -549,7 +586,7 @@ void CG_RaceAddCheckpoint( char* msg )
 	}
 }
 
-// !racesow
+//lm: end race functions
 
 
 typedef struct
@@ -635,12 +672,14 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "DAMAGE_INDICATOR_BOTTOM", CG_GetDamageIndicatorDirValue, (void *)2 },
 	{ "DAMAGE_INDICATOR_LEFT", CG_GetDamageIndicatorDirValue, (void *)3 },
 
-	// racesow - lm: race stuff
+//lm: race stuff
 	{ "MOUSE_X", CG_GetRaceVars, (void *)mouse_x },
 	{ "MOUSE_Y", CG_GetRaceVars, (void *)mouse_y },
 	{ "ACCELERATION", CG_GetAccel, NULL },
 	{ "JUMPSPEED", CG_GetRaceVars, (void *)jumpspeed },
 	{ "MOVEANGLE", CG_GetRaceVars, (void *)move_an	},
+	{ "STRAFEANGLE", CG_GetRaceVars, (void *)strafe_an },
+	{ "DIFF_ANGLE", CG_GetRaceVars, (void *)diff_an	},
 
 	{ "CP1", CG_GetRaceVars, (void *)cp1 },
 	{ "CP2", CG_GetRaceVars, (void *)cp2, },
@@ -657,7 +696,7 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "CP13", CG_GetRaceVars, (void *)cp13 },
 	{ "CP14", CG_GetRaceVars, (void *)cp14 },
 	{ "CP15", CG_GetRaceVars, (void *)cp15 },
-	// !racesow
+
 
 	// cvars
 	{ "SHOW_FPS", CG_GetCvar, "cg_showFPS" },
@@ -2032,7 +2071,7 @@ static int CG_LFuncIf( struct cg_layoutnode_s *commandnode, struct cg_layoutnode
 	return (int)CG_GetNumericArg( &argumentnode );
 }
 
-// racesow - race mod helper function, draws the checkpoint on the hud (can't retrieve char* in hudscript?)
+//lm: race mod helper function, draws the checkpoint on the hud (can't retrieve char* in hudscript?)
 static int CG_LFuncDrawCheckpoint( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
 	int itemindex = (int)CG_GetNumericArg( &argumentnode );
@@ -2040,7 +2079,7 @@ static int CG_LFuncDrawCheckpoint( struct cg_layoutnode_s *commandnode, struct c
 	trap_SCR_DrawString( layout_cursor_x, layout_cursor_y, layout_cursor_align, race_checkpoints[itemindex], layout_cursor_font, layout_cursor_color );
 	return qtrue;
 }
-// !racesow
+
 
 typedef struct cg_layoutcommand_s
 {
@@ -2178,14 +2217,12 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		"Draws configstring of argument id"
 	},
 
-	// racesow
 	{
 		"drawCheckPoint",
 		CG_LFuncDrawCheckpoint,
 		1,
 		"Draws last checkpoint time of argument id"
 	},
-	// !racesow
 
 	{
 		"drawItemName",
