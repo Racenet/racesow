@@ -161,8 +161,8 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
         this.checkPointsString += S_COLOR_ORANGE + "#" + lastCheckPoint + ": "
                 + S_COLOR_WHITE + TimeToString( newTime )
-                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( personalBestTime, newTime )
-                + S_COLOR_ORANGE + "/" + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n";
+                + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString( personalBestTime, newTime )
+                + S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n";
 	}
 	
 	/**

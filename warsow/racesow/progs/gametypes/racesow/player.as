@@ -280,12 +280,11 @@ class Racesow_Player
             + ( noDelta ? "" : diffString( bestTime, newTime ) ) );
 
         this.sendMessage(S_COLOR_WHITE + "Race " + S_COLOR_ORANGE + "#"
-                + this.tries + S_COLOR_WHITE + " finished : "
+                + this.tries + S_COLOR_WHITE + " finished: "
                 + TimeToString( newTime)
-				+ " "
-                + S_COLOR_ORANGE + "Personal:" + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
-				+ S_COLOR_ORANGE + "/Server:" + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
-                + S_COLOR_ORANGE + "/World:" + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
+                + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
+				+ S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
+                + S_COLOR_ORANGE + "/World: " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
 				+ "\n");
 
         if ( this.lastRace.checkPointsString.len() > 0 )
