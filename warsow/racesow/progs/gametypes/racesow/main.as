@@ -12,11 +12,10 @@ bool secondAnnouncement = false;
 bool thirdAnnouncement = false;
 int oldTimelimit; // for restoring the original value, because extend_time changes it
 
-cString scbmsg; //scoreboard message for custom scoreboards
-cString scb_specs;
-cString[] specwho( maxClients );
-uint nextTimeUpdate;
-bool scbupdated = true;
+cString playerList; //scoreboard message for custom scoreboards
+cString spectatorList; //list of all spectators for custom scoreboards
+uint scoreboardLastUpdate; //when got the scoreboard updated? (levelTime)
+bool scoreboardUpdated = false; //GT_ScoreboardMessage got called
 
 cString previousMapName; // to remember the previous map on the server
 
@@ -537,9 +536,43 @@ cString @GT_ScoreboardMessage( int maxlen )
         if ( scoreboardMessage.len() + entry.len() < maxlen )
             scoreboardMessage += entry;
     }
-
-    scbmsg = scoreboardMessage;
-    scbupdated = true;
+    
+    //custom scoreboard for ppl who are getting spectated
+    if( levelTime > scoreboardLastUpdate + 1800 )
+    {
+        for ( int i = 0; i < maxClients; i++ )
+        {
+            players[i].challengerList = "";
+        }
+        cTeam @spectators = @G_GetTeam( TEAM_SPECTATOR );
+        cEntity @other;
+        spectatorList = "";
+        for ( int i = 0; @spectators.ent( i ) != null; i++ )
+        {
+            @other = @spectators.ent( i );
+            if ( @other.client != null )
+            {
+                if( !other.client.connecting && other.client.state() >= CS_SPAWNED )
+                    //add all other spectators
+                {
+                    spectatorList += other.client.playerNum() + " " + other.client.ping + " ";
+                }
+                else if( other.client.connecting ) //add connecting spectators
+                {
+                    spectatorList += other.client.playerNum() + " " + -1 + " ";
+                }
+                if( other.client.chaseActive && other.client.chaseTarget != 0)
+                    //add him to the challenger list of the player he's spectating
+                {
+                    Racesow_Player @player = players[other.client.chaseTarget-1];
+                    player.challengerList += other.client.playerNum() + " " + other.client.ping + " ";
+                }
+            }
+        }
+        playerList = scoreboardMessage;
+        scoreboardLastUpdate = levelTime;
+    }
+    scoreboardUpdated = true;
     return scoreboardMessage;
 }
 
@@ -792,42 +825,6 @@ void GT_ThinkRules()
         thirdAnnouncement = false;
     }
 
-	if( levelTime > nextTimeUpdate )
-	{
-		//custom scoreboard
-		cTeam @specs;
-		@specs = @G_GetTeam( TEAM_SPECTATOR );
-		cEntity @spec_ent;
-		for( int j = 0; j < maxClients; j++ )
-		{
-			specwho[j] = "";
-		}
-
-		scb_specs = "&s ";
-		for ( int i = 0; @specs.ent( i ) != null; i++ )
-		{
-			@spec_ent = @specs.ent( i );
-            if (@spec_ent != null && @spec_ent.client != null)
-            {
-
-                cClient @spec_client = spec_ent.client;
-                if(spec_client.connecting)
-                {
-                    scb_specs += spec_client.playerNum() + " " + -1 + " ";
-                }
-                else
-                {
-                    scb_specs += spec_client.playerNum() + " " + spec_client.ping + " ";
-                }
-                if( spec_client.chaseActive )
-                {
-                    specwho[spec_client.chaseTarget - 1] += spec_ent.client.playerNum() + " " + spec_ent.client.ping + " ";
-                }
-            }
-		}
-	nextTimeUpdate = levelTime + 2500;
-	}
-
     // set all clients race stats
     cClient @client;
 
@@ -835,14 +832,20 @@ void GT_ThinkRules()
     {
         @client = @G_GetClient( i );
 
-    	if( scbupdated && specwho[i] != "" )
-    		client.execGameCommand("scb \"" + scbmsg + " &w " + specwho[i] + " " + scb_specs + " \"");
-
         if ( client.state() < CS_SPAWNED )
             continue;
 
 		Racesow_Player @player = Racesow_GetPlayerByClient( client );
 
+		if( scoreboardUpdated && player.challengerList != "")//send the scoreboard to the player
+		{
+            cString command = "scb \""
+                    + playerList + " "
+                    + "&s " + spectatorList + " "
+                    + "&w " + player.challengerList + "\"";
+            client.execGameCommand( command );
+		}
+		
 		int countdownState;
 		if ( 0 != ( countdownState = player.getAuth().wontGiveUpViolatingNickProtection() ) )
 		{
@@ -916,6 +919,8 @@ void GT_ThinkRules()
 			    client.inventorySetCount( POWERUP_QUAD, 30 );
     	}
     }
+    if( scoreboardUpdated )
+        scoreboardUpdated = false; //custom scoreboard got updated
 }
 
 /**

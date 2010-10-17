@@ -169,6 +169,11 @@ class Racesow_Player
 	 */
 	cEntity @triggerEntity;
 
+	/**
+     * Stores all spectators of the player in a list ((int)id (int)ping)
+     * @var cString
+     */
+	cString challengerList;
 
 	/**
 	 * Variables for the position function
@@ -228,6 +233,7 @@ class Racesow_Player
 		this.overallTries = 0;
 		this.racingTime = 0;
 		this.racingTimeSinceLastRace = 0;
+		this.challengerList = "";
 	}
 
 	/**
