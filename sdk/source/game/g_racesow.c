@@ -1337,7 +1337,6 @@ void *RS_GetPlayerNick_Thread( void *in )
 {
 	struct playerDataStruct *playerData;
     char name[MAX_STRING_CHARS]; 
-	char result[MAX_STRING_CHARS]; 
 	int size;
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -1448,9 +1447,13 @@ void *RS_UpdatePlayerNick_Thread( void *in )
     }
 
 	// if it's already protected, stop
-	if (auth_mask_for_nick > 0)
+	if (auth_mask_for_nick > 0 && player_id_for_nick != playerData->player_id )
 	{
+		size = strlen( name )+1;
+		players_query[playerData->playerNum] = malloc( size );
+		Q_strncpyz( players_query[playerData->playerNum], name, size);
 		RS_PushCallbackQueue(RACESOW_CALLBACK_PLAYERNICK, playerData->playerNum, 0, 0, 0, 0, 0, 0);
+
 		free(playerData->name);
 		free(playerData);
 		RS_EndMysqlThread();

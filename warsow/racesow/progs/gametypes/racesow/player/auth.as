@@ -491,7 +491,7 @@ const uint RACESOW_AUTH_ADMIN		= 31;
 		}
 		else if ( success_state == 1 )
 		{
-			this.player.sendMessage( "Your protected nick is: " + nick.getToken(0) + "\n" );
+			this.player.sendMessage( "Your protected nick is: " + nick.getToken(0) + ".\nType " + S_COLOR_ORANGE + "protectednick update " + S_COLOR_WHITE + "to protect your current nick.\n" );
 		}
 		else if ( success_state == 2 )
 		{
