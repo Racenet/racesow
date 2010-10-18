@@ -1453,6 +1453,7 @@ void *RS_UpdatePlayerNick_Thread( void *in )
 		RS_PushCallbackQueue(RACESOW_CALLBACK_PLAYERNICK, playerData->playerNum, 0, 0, 0, 0, 0, 0);
 		free(playerData->name);
 		free(playerData);
+		RS_EndMysqlThread();
 		return NULL;
 	}
 
