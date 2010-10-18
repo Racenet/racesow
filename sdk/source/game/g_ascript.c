@@ -6339,6 +6339,33 @@ static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
 		(qboolean)G_asGeneric_GetArgBool(gen, 8)));
 }
 
+// RS_GetPlayerNick
+static qboolean asFunc_RS_GetPlayerNick( int playerNum, int player_id )
+{
+	return RS_GetPlayerNick(playerNum, player_id);
+}
+
+static void asFunc_asGeneric_RS_GetPlayerNick( void *gen )
+{
+	G_asGeneric_SetReturnBool(gen, asFunc_RS_GetPlayerNick(
+		(int)G_asGeneric_GetArgInt(gen, 0),
+		(int)G_asGeneric_GetArgInt(gen, 1)));
+}
+
+// RS_UpdatePlayerNick
+static qboolean asFunc_RS_UpdatePlayerNick( asstring_t * name, int playerNum, int player_id )
+{
+	return RS_UpdatePlayerNick(name->buffer, playerNum, player_id);
+}
+
+static void asFunc_asGeneric_RS_UpdatePlayerNick( void *gen )
+{
+	G_asGeneric_SetReturnBool(gen, asFunc_RS_UpdatePlayerNick(
+		(asstring_t *)G_asGeneric_GetArgAddress(gen, 0),
+		(int)G_asGeneric_GetArgInt(gen, 1),
+		(int)G_asGeneric_GetArgInt(gen, 2)));
+}
+
 // RS_MysqlLoadHighScores
 static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, asstring_t *mapname )
 {
@@ -6995,6 +7022,8 @@ static asglobfuncs_t asGlobFuncs[] =
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
 	{ "void RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
 	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
+	{ "void RS_GetPlayerNick( int, int )", asFunc_RS_GetPlayerNick, asFunc_asGeneric_RS_GetPlayerNick },
+	{ "void RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick, asFunc_asGeneric_RS_UpdatePlayerNick },
 	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString & )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
 	{ "void RS_MysqlLoadHighscores( int, int, int, cString &)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },

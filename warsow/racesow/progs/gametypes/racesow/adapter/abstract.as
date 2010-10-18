@@ -11,6 +11,7 @@ const uint RACESOW_ADAPTER_APPEAR = 4;
 const uint RACESOW_ADAPTER_RACE = 5;
 const uint RACESOW_ADAPTER_MAPFILTER = 6;
 const uint RACESOW_ADAPTER_MAPLIST = 7;
+const uint RACESOW_ADAPTER_PLAYERNICK = 8;
 
 class Racesow_Adapter_Abstract
 {
@@ -110,6 +111,15 @@ class Racesow_Adapter_Abstract
                     player.raceCallback(arg2, arg3, arg4, arg5, arg6, arg7);
                 }
                 break;
+				
+			case RACESOW_ADAPTER_PLAYERNICK:
+				if ( @player != null )
+				{
+					cString result = RS_PrintQueryCallback( playerNum );
+					player.isWaitingForCommand = false;
+					player.getAuth().nickCallback( arg2, result );
+				}
+				break;
                 
             // why printing that compicated and not just in RS_PopCallbackQueue() ?
             case RACESOW_ADAPTER_HIGHSCORES:

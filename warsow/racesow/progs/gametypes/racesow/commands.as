@@ -321,6 +321,77 @@ class Command_Auth : Racesow_Command
     }
 }
 
+class Command_ShowNick : Racesow_Command
+{
+	bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+		bool is_authenticated = player.getAuth().isAuthenticated();
+		bool is_nickprotected = player.getAuth().wontGiveUpViolatingNickProtection() == 0;
+		bool valid = ( is_authenticated and is_nickprotected );
+		
+		if (not valid)
+		{
+			player.sendErrorMessage( "You must be authenticated and not under nick protection.");
+			return false;
+		}
+		
+		if( player.isWaitingForCommand )
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+		
+		return true;
+	}
+	
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		RS_GetPlayerNick( player.client.playerNum(), player.getId() );
+		player.isWaitingForCommand = true;
+        return true;
+    }
+}
+
+class Command_UpdateNick : Racesow_Command
+{
+	bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+		bool is_authenticated = player.getAuth().isAuthenticated();
+		bool is_nickprotected = player.getAuth().wontGiveUpViolatingNickProtection() == 0;
+		bool valid = ( is_authenticated and is_nickprotected );
+		
+		if (not valid)
+		{
+			player.sendErrorMessage( "You must be authenticated and not under nick protection.");
+			return false;
+		}
+		
+		if( player.isWaitingForCommand )
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+		
+		if ( argc < 1 )
+        {
+            return false;
+        }
+
+		
+		return true;
+	}
+	
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		RS_UpdatePlayerNick( args.getToken( 0 ), player.client.playerNum(), player.getId() );
+		player.isWaitingForCommand = true;
+        return true;
+    }
+}
+
+
 class Command_Register : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -739,11 +810,28 @@ void RS_CreateCommands()
     @commands[commandCount] = @auth;
     commandCount++;
 
+	/*
+	// removed for now to give one more command (we've reached MAX_GAMECOMMANDS)
     Command_Register register;
     register.name = "register";
     register.description = "Register a new account on this server";
     register.usage = "register <authname> <email> <password> <confirmation>";
     @commands[commandCount] = @register;
+    commandCount++;
+	*/
+	
+	Command_ShowNick shownick;
+    shownick.name = "shownick";
+    shownick.description = "Show your current protected nick";
+    shownick.usage = "";
+    @commands[commandCount] = @shownick;
+    commandCount++;
+	
+	Command_UpdateNick updatenick;
+    updatenick.name = "updatenick";
+    updatenick.description = "Update your current protected nick";
+    updatenick.usage = "updatenick <newnick>";
+    @commands[commandCount] = @updatenick;
     commandCount++;
 
     Command_Help help;

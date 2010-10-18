@@ -392,10 +392,15 @@ const uint RACESOW_AUTH_ADMIN		= 31;
         return false;
     }
     
-    /**
+  /**
      * Callback when a player "appeared"
      *
      * @param int playerId
+     * @param int authMask
+     * @param int playerIdForNick
+     * @param int authMaskForNick
+     * @param int personalBest
+     * @param int overallTries
      * @return void
      */
     void appearCallback(int playerId, int authMask, int playerIdForNick, int authMaskForNick, int personalBest, int overallTries)
@@ -477,4 +482,20 @@ const uint RACESOW_AUTH_ADMIN		= 31;
             
         }
     }
+	
+	void nickCallback(int success_state, cString &nick)
+	{
+		if ( success_state == 0 )
+		{
+			this.player.sendMessage( S_COLOR_RED + "The nick " + nick.getToken(0) + S_COLOR_RED + " is already protected.\n" );
+		}
+		else if ( success_state == 1 )
+		{
+			this.player.sendMessage( "Your protected nick is: " + nick.getToken(0) + "\n" );
+		}
+		else if ( success_state == 2 )
+		{
+			this.player.sendMessage( "Your protected nick has been updated to: " + nick.getToken(0) + "\n" );
+		}
+	}
 }
