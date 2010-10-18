@@ -13,6 +13,10 @@ class Racesow_Map
     bool overtimeFinished;
 
     uint id;
+	
+	bool firstAnnouncement;
+	bool secondAnnouncement;
+	bool thirdAnnouncement;
 
     /**
 	 * Logfile id
@@ -72,9 +76,54 @@ class Racesow_Map
 		this.name = mapName.getString();
 		this.inOvertime = false;
         this.overtimeFinished = false;
-        
+        this.firstAnnouncement = false;
+		this.secondAnnouncement = false;
+		this.thirdAnnouncement = false;
+
         this.logTime = 0;
         this.highScore.reset();
+	}
+	
+	void PrintMinutesLeft()
+	{
+		if ( ( match.duration() - levelTime ) < 180000 )
+		{
+			if ( !this.firstAnnouncement && match.duration() >= 180000 )
+			{
+				this.firstAnnouncement = true;
+				G_PrintMsg( null, S_COLOR_GREEN + "3 minutes left...\n");
+			}
+		}
+		else
+		{
+			this.firstAnnouncement = false;
+		}
+
+		if ( ( match.duration() - levelTime ) < 120000 )
+		{
+			if ( !this.secondAnnouncement && match.duration() >= 120000 )
+			{
+				this.secondAnnouncement = true;
+				G_PrintMsg( null, S_COLOR_YELLOW + "2 minutes left...\n");
+			}
+		}
+		else
+		{
+			this.secondAnnouncement = false;
+		}
+
+		if ( ( match.duration() - levelTime ) < 60000 )
+		{
+			if ( !this.thirdAnnouncement && match.duration() >= 60000 )
+			{
+				this.thirdAnnouncement = true;
+				G_PrintMsg( null, S_COLOR_RED + "1 minutes left...\n");
+			}
+		}
+		else
+		{
+			this.thirdAnnouncement = false;
+		}
 	}
 
     /**

@@ -439,6 +439,13 @@ class Command_Timeleft : Racesow_Command
             player.sendErrorMessage( "The command isn't available in this match state");
             return false;
         }
+		
+		if ( g_freestyle.getBool() || !g_maprotation.getBool() )
+		{
+			player.sendErrorMessage( "The command isn't available in freestyle mode or when g_maprotation == 0.");
+            return false;
+		}
+		
         if( g_timelimit.getInteger() <= 0 )
         {
             player.sendErrorMessage( "There is no timelimit set");

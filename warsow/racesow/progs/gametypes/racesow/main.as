@@ -7,9 +7,6 @@
 
 int numCheckpoints = 0;
 bool demoRecording = false;
-bool firstAnnouncement = false;
-bool secondAnnouncement = false;
-bool thirdAnnouncement = false;
 int oldTimelimit; // for restoring the original value, because extend_time changes it
 
 cString playerList; //scoreboard message for custom scoreboards
@@ -755,16 +752,8 @@ void GT_ThinkRules()
 	// perform a C callback if there is one pending
 	racesowAdapter.thinkCallbackQueue();
 
-	if ( match.timeLimitHit() )
-    {
-        match.launchState( match.getState() + 1 );
-    }
-
-    map.allowEndGame();
-
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
-
 
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
@@ -786,45 +775,20 @@ void GT_ThinkRules()
 	if ( map.logTime == 0 && localTime != 0 )
 		map.logTime = localTime;
 
-	if ( ( match.duration() - levelTime ) < 180000 )
+	bool timelimited = not (g_freestyle.getBool() || !g_maprotation.getBool());
+	
+	if ( timelimited )
 	{
-	    if ( !firstAnnouncement && match.duration() >= 180000 )
-	    {
-	        firstAnnouncement = true;
-	        G_PrintMsg( null, S_COLOR_GREEN + "3 minutes left...\n");
-	    }
+	
+		if ( match.timeLimitHit() )
+		{
+			match.launchState( match.getState() + 1 );
+		}
+	
+		map.allowEndGame();
+		map.PrintMinutesLeft();
 	}
-	else
-	{
-	    firstAnnouncement = false;
-	}
-
-    if ( ( match.duration() - levelTime ) < 120000 )
-    {
-        if ( !secondAnnouncement && match.duration() >= 120000 )
-        {
-            secondAnnouncement = true;
-            G_PrintMsg( null, S_COLOR_YELLOW + "2 minutes left...\n");
-        }
-    }
-    else
-    {
-        secondAnnouncement = false;
-    }
-
-    if ( ( match.duration() - levelTime ) < 60000 )
-    {
-        if ( !thirdAnnouncement && match.duration() >= 60000 )
-        {
-            thirdAnnouncement = true;
-            G_PrintMsg( null, S_COLOR_RED + "1 minutes left...\n");
-        }
-    }
-    else
-    {
-        thirdAnnouncement = false;
-    }
-
+		
     // set all clients race stats
     cClient @client;
 
@@ -1242,12 +1206,6 @@ void GT_InitGametype()
 	{
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
-
-	// no timelimit in freestyle mode or if maprotation is disabled
-	if ( g_freestyle.getBool() || !g_maprotation.getBool() )
-    {
-		g_timelimit.set( "0" );
-    }
 
 	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
 	g_warmup_enabled.set("0");
