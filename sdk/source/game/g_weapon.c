@@ -133,6 +133,8 @@ int G_Projectile_HitStyle( edict_t *projectile, edict_t *target )
 	vec3_t end;
 	qboolean atGround = qfalse;
 	edict_t *attacker;
+	cvar_t *g_freestyle; //racesow
+	g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET ); //racesow
 #define AIRHIT_MINHEIGHT 64
 
 	// don't hurt owner for the first second
@@ -148,6 +150,14 @@ int G_Projectile_HitStyle( edict_t *projectile, edict_t *target )
 
 	if( target->waterlevel > 1 )
 		return PROJECTILE_TOUCH_DIRECTHIT; // water hits are direct but don't count for awards
+
+//racesow
+	if( projectile->r.owner->r.client && target->r.client )
+	{
+		if( GS_RaceGametype() && target->team == projectile->r.owner->team && !g_freestyle->integer ) 
+			return PROJECTILE_TOUCH_NOT;
+	}
+//!racesow
 
 	attacker = ( projectile->r.owner && projectile->r.owner->r.client ) ? projectile->r.owner : NULL;
 
