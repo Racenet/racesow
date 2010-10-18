@@ -60,7 +60,7 @@ cString diffString( uint oldTime, uint newTime )
 {
     if ( oldTime == 0 )
     {
-        return "****";
+        return "--:--:---";
     }
     else if ( oldTime < newTime )
     {
