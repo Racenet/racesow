@@ -752,7 +752,22 @@ void GT_ThinkRules()
 	// perform a C callback if there is one pending
 	racesowAdapter.thinkCallbackQueue();
 
-    if ( match.getState() >= MATCH_STATE_POSTMATCH )
+	bool timelimited = not (g_freestyle.getBool() || !g_maprotation.getBool());
+	
+	if ( timelimited )
+	{
+	
+		if ( match.timeLimitHit() )
+		{
+			match.launchState( match.getState() + 1 );
+		}
+		
+		map.allowEndGame();
+		map.PrintMinutesLeft();
+	}
+	
+	// allowEndGame() should -always- be called at each think even during POSTMATCH, hence before this line.
+	if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
 
     if ( match.getState() == MATCH_STATE_PLAYTIME )
@@ -775,20 +790,6 @@ void GT_ThinkRules()
 	if ( map.logTime == 0 && localTime != 0 )
 		map.logTime = localTime;
 
-	bool timelimited = not (g_freestyle.getBool() || !g_maprotation.getBool());
-	
-	if ( timelimited )
-	{
-	
-		if ( match.timeLimitHit() )
-		{
-			match.launchState( match.getState() + 1 );
-		}
-	
-		map.allowEndGame();
-		map.PrintMinutesLeft();
-	}
-		
     // set all clients race stats
     cClient @client;
 
