@@ -1,7 +1,8 @@
 /**
- * Change this if more than 100 commands are needed
+ * Change this if more than 50 commands are needed
+ * There is another limitation in C so this number will never be reacher anyway
  */
-const int MAX_COMMANDS = 100;
+const int MAX_COMMANDS = 50;
 
 /**
  * Container for all the commands, filled in RS_CreateCommands
@@ -20,9 +21,44 @@ int commandCount = 0;
 class Racesow_Command
 {
 
+    /**
+     * The name of the command.
+     * That's what the user will have to type to call the command
+     */
     cString name;
+
+    /**
+     * Description of what the command does.
+     * This is displayed in the help
+     */
     cString description;
+
+    /**
+     * Usage of the command. This should document the command syntax.
+     * Displayed when you do "help <command>" and also when you make an error
+     * with the command syntax (e.g wrong number of arguments).
+     * When describing the syntax, put the arguments name into brackets (e.g <mapname>)
+     */
     cString usage;
+
+    /**
+     * Should the command only be available in freestyle ?
+     */
+    bool freestyleOnly;
+
+    /**
+     * Should the command only be available in race ?
+     */
+    bool raceOnly;
+
+    /**
+     * Default constructor
+     */
+    Racesow_Command()
+    {
+        this.raceOnly = false;
+        this.freestyleOnly = false;
+    }
 
     /**
      * This is called before the actual work is done.
@@ -158,12 +194,6 @@ class Command_Top : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( g_freestyle.getBool() )
-        {
-            player.sendErrorMessage( "Command only available for race");
-            return false;
-        }
-
         if ( mysqlConnected == 0 )
         {
             player.sendMessage("This server doesn't store the best times, this command is useless\n" );
@@ -229,12 +259,6 @@ class Command_Chrono : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( !g_freestyle.getBool() )
-        {
-            player.sendErrorMessage( "chrono is only available in freestyle mode");
-            return false;
-        }
-
         if ( argc < 1 )
         {
             player.sendErrorMessage( "you must provide a chrono command" );
@@ -415,6 +439,12 @@ class Command_Help : Racesow_Command
             for (int i = 0; i < commandCount; i++)
             {
                 Racesow_Command@ command = commands[i];
+                if ( command.raceOnly and g_freestyle.getBool() )
+                    continue;
+
+                if ( command.freestyleOnly and not g_freestyle.getBool() )
+                    continue;
+
                 help += command.getDescription();
                 if ( (i/5)*5 == i ) //to avoid print buffer overflow
                 {
@@ -440,9 +470,9 @@ class Command_Timeleft : Racesow_Command
             return false;
         }
 		
-		if ( g_freestyle.getBool() || !g_maprotation.getBool() )
+		if ( !g_maprotation.getBool() )
 		{
-			player.sendErrorMessage( "The command isn't available in freestyle mode or when g_maprotation == 0.");
+			player.sendErrorMessage( "The command isn't available when g_maprotation == 0.");
             return false;
 		}
 		
@@ -517,7 +547,7 @@ class Command_Quad : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( !g_freestyle.getBool() && !sv_cheats.getBool() )
+        if( !sv_cheats.getBool() )
         {
             player.sendErrorMessage("Quad is not available on this server");
             return false;
@@ -600,7 +630,7 @@ class Command_Noclip : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( !g_freestyle.getBool() && !sv_cheats.getBool() )
+        if( !sv_cheats.getBool() )
         {
             player.sendErrorMessage( "Noclip is not available on this server" );
             return false;
@@ -709,6 +739,63 @@ class Command_Stats : Racesow_Command
  */
 void RS_CreateCommands()
 {
+    Command_Admin admin;
+    admin.name = "admin";
+    admin.description = "Execute an admin command";
+    admin.usage =
+            S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
+            + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
+            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
+            + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
+            + S_COLOR_RED + "admin kick          " + S_COLOR_YELLOW + "kick the given player immedeatly\n"
+            + S_COLOR_RED + "admin cancelvote    " + S_COLOR_YELLOW + "cancel the currently active vote\n"
+            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
+    @commands[commandCount] = @admin;
+    commandCount++;
+
+    Command_Auth auth;
+    auth.name = "auth";
+    auth.description = "Authenticate with the server (alternatively you can use setu to save your login)";
+    auth.usage = "auth <authname> <password>";
+    @commands[commandCount] = @auth;
+    commandCount++;
+
+    Command_Chrono chrono;
+    chrono.name = "chrono";
+    chrono.description = "Chrono for tricks timing";
+    chrono.usage = "chrono <start/reset>";
+    chrono.freestyleOnly = true;
+    @commands[commandCount] = @chrono;
+    commandCount++;
+
+    Command_Gametype gameType;
+    gameType.name = "gametype";
+    gameType.description = "Print info about the game type";
+    gameType.usage = "";
+    @commands[commandCount] = @gameType;
+    commandCount++;
+
+    Command_Help help;
+    help.name = "help";
+    help.description = "Print this help, or give help on a specific command";
+    help.usage = "help <command>";
+    @commands[commandCount] = @help;
+    commandCount++;
+
+    Command_Join join;
+    join.name = "join";
+    join.description = "Join the game";
+    join.usage = "";
+    @commands[commandCount] = @join;
+    commandCount++;
+
+    Command_LastMap lastmap;
+    lastmap.name = "lastmap";
+    lastmap.description = "Print the name of the previous map on the server, before this one";
+    lastmap.usage = "";
+    @commands[commandCount] = @lastmap;
+    commandCount++;
+
     Command_Mapfilter mapfilter;
     mapfilter.name = "mapfilter";
     mapfilter.description = "Search for maps matching a given name";
@@ -723,25 +810,11 @@ void RS_CreateCommands()
     @commands[commandCount] = @maplist;
     commandCount++;
 
-    Command_Gametype gameType;
-    gameType.name = "gametype";
-    gameType.description = "Print info about the game type";
-    gameType.usage = "";
-    @commands[commandCount] = @gameType;
-    commandCount++;
-
-    Command_RaceRestart racerestart;
-    racerestart.name = "racerestart";
-    racerestart.description = "Go back to the start area whenever you want";
-    racerestart.usage = "";
-    @commands[commandCount] = @racerestart;
-    commandCount++;
-
-    Command_Top top;
-    top.name = "top";
-    top.description = "Print the best times of a given map (current by default)";
-    top.usage = "top <limit(3-30)> <mapname>";
-    @commands[commandCount] = @top;
+    Command_Mapname mapname;
+    mapname.name = "mapname";
+    mapname.description = "Print the name of current map";
+    mapname.usage = "";
+    @commands[commandCount] = @mapname;
     commandCount++;
 
     Command_NextMap nextmap;
@@ -750,88 +823,12 @@ void RS_CreateCommands()
     nextmap.usage = "";
     @commands[commandCount] = @nextmap;
     commandCount++;
-	
-	Command_LastMap lastmap;
-    lastmap.name = "lastmap";
-    lastmap.description = "Print the name of the previous map on the server, before this one";
-    lastmap.usage = "";
-    @commands[commandCount] = @lastmap;
-    commandCount++;
-
-    Command_Mapname mapname;
-    mapname.name = "mapname";
-    mapname.description = "Print the name of current map";
-    mapname.usage = "";
-    @commands[commandCount] = @mapname;
-    commandCount++;
-
-    Command_Chrono chrono;
-    chrono.name = "chrono";
-    chrono.description = "Chrono for tricks timing";
-    chrono.usage = "chrono <start/reset>";
-    @commands[commandCount] = @chrono;
-    commandCount++;
-
-    Command_Token token;
-    token.name = "token";
-    token.description = "When authenticated, shows your unique login token you may setu in your config";
-    token.usage = "";
-    @commands[commandCount] = @token;
-    commandCount++;
-
-    Command_Auth auth;
-    auth.name = "auth";
-    auth.description = "Authenticate with the server (alternatively you can use setu to save your login)";
-    auth.usage = "auth <authname> <password>";
-    @commands[commandCount] = @auth;
-    commandCount++;
-
-    Command_Register register;
-    register.name = "register";
-    register.description = "Register a new account on this server";
-    register.usage = "register <authname> <email> <password> <confirmation>";
-    @commands[commandCount] = @register;
-    commandCount++;
-
-	Command_ProtectedNick protectednick;
-    protectednick.name = "protectednick";
-    protectednick.description = "Show/update your current protected nick";
-    protectednick.usage = "protectednick <newnick>";
-    @commands[commandCount] = @protectednick;
-    commandCount++;
-
-    Command_Help help;
-    help.name = "help";
-    help.description = "Print this help, or give help on a specific command";
-    help.usage = "help <command>";
-    @commands[commandCount] = @help;
-    commandCount++;
-
-    Command_Timeleft timeleft;
-    timeleft.name = "timeleft";
-    timeleft.description = "Print remaining time before map change";
-    timeleft.usage = "";
-    @commands[commandCount] = @timeleft;
-    commandCount++;
-
-    Command_Privsay privsay;
-    privsay.name = "privsay";
-    privsay.description = "Send a private message to a player";
-    privsay.usage = "privsay <playerid/playername>";
-    @commands[commandCount] = @privsay;
-    commandCount++;
-
-    Command_Quad quad;
-    quad.name = "quad";
-    quad.description = "Activate or desactivate the quad for weapons";
-    quad.usage = "";
-    @commands[commandCount] = @quad;
-    commandCount++;
 
     Command_Noclip noclip;
     noclip.name = "noclip";
     noclip.description = "Disable your interaction with other players";
     noclip.usage = "";
+    noclip.freestyleOnly = true;
     @commands[commandCount] = @noclip;
     commandCount++;
 
@@ -848,25 +845,40 @@ void RS_CreateCommands()
     @commands[commandCount] = @position;
     commandCount++;
 
-    Command_Join join;
-    join.name = "join";
-    join.description = "Join the game";
-    join.usage = "";
-    @commands[commandCount] = @join;
+    Command_Privsay privsay;
+    privsay.name = "privsay";
+    privsay.description = "Send a private message to a player";
+    privsay.usage = "privsay <playerid/playername>";
+    @commands[commandCount] = @privsay;
     commandCount++;
 
-    Command_Admin admin;
-    admin.name = "admin";
-    admin.description = "Execute an admin command";
-    admin.usage =
-            S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
-            + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
-            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
-            + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
-            + S_COLOR_RED + "admin kick          " + S_COLOR_YELLOW + "kick the given player immedeatly\n"
-            + S_COLOR_RED + "admin cancelvote    " + S_COLOR_YELLOW + "cancel the currently active vote\n"
-            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
-    @commands[commandCount] = @admin;
+    Command_ProtectedNick protectednick;
+    protectednick.name = "protectednick";
+    protectednick.description = "Show/update your current protected nick";
+    protectednick.usage = "protectednick <newnick>";
+    @commands[commandCount] = @protectednick;
+    commandCount++;
+
+    Command_Quad quad;
+    quad.name = "quad";
+    quad.description = "Activate or desactivate the quad for weapons";
+    quad.usage = "";
+    quad.freestyleOnly = true;
+    @commands[commandCount] = @quad;
+    commandCount++;
+
+    Command_RaceRestart racerestart;
+    racerestart.name = "racerestart";
+    racerestart.description = "Go back to the start area whenever you want";
+    racerestart.usage = "";
+    @commands[commandCount] = @racerestart;
+    commandCount++;
+
+    Command_Register register;
+    register.name = "register";
+    register.description = "Register a new account on this server";
+    register.usage = "register <authname> <email> <password> <confirmation>";
+    @commands[commandCount] = @register;
     commandCount++;
     
     Command_Stats stats;
@@ -877,6 +889,29 @@ void RS_CreateCommands()
             + "stats player <name> - Prints stats for the given player or yourself if no name given\n"
             + "stats map <name> - Print stats for the given map or the current map is no name given\n";
     @commands[commandCount] = @stats;
+    commandCount++;
+
+    Command_Timeleft timeleft;
+    timeleft.name = "timeleft";
+    timeleft.description = "Print remaining time before map change";
+    timeleft.usage = "";
+    timeleft.raceOnly = true;
+    @commands[commandCount] = @timeleft;
+    commandCount++;
+
+    Command_Token token;
+    token.name = "token";
+    token.description = "When authenticated, shows your unique login token you may setu in your config";
+    token.usage = "";
+    @commands[commandCount] = @token;
+    commandCount++;
+
+    Command_Top top;
+    top.name = "top";
+    top.description = "Print the best times of a given map (current by default)";
+    top.usage = "top <limit(3-30)> <mapname>";
+    top.raceOnly = true;
+    @commands[commandCount] = @top;
     commandCount++;
 }
 
@@ -889,6 +924,12 @@ void RS_InitCommands()
 
     for (int i = 0; i < commandCount; i++)
     {
+        if ( commands[i].raceOnly and g_freestyle.getBool() )
+            continue;
+
+        if ( commands[i].freestyleOnly and not g_freestyle.getBool() )
+            continue;
+
         G_RegisterCommand( commands[i].name );
     }
 }
