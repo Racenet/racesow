@@ -240,12 +240,6 @@ class Command_Oneliner : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( g_freestyle.getBool() )
-        {
-            player.sendErrorMessage( "Command only available for race");
-            return false;
-        }
-
         if ( mysqlConnected == 0 )
         {
             player.sendMessage("This server doesn't store the best times, this command is useless\n" );
