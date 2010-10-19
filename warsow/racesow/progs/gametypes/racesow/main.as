@@ -266,6 +266,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	    player.executeCommand(command, argsString, argc);
 	}
 
+	else if ( cmdString == "whoisgod" )
+	{
+	    cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo" };
+	    int index = brandom(0, 6);
+	    player.sendMessage( devs[index] + "\n" );
+	}
 
 	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
 	{
@@ -1190,6 +1196,7 @@ void GT_InitGametype()
 	G_RegisterCommand( "ammoswitch" );
 	//G_RegisterCommand( "weapondef" );
 	G_RegisterCommand( "classaction1" );
+	G_RegisterCommand( "whoisgod" );
 
 	//add callvotes
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
