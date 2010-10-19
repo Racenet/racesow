@@ -9,6 +9,7 @@ legacy/quake2_items.as;
 legacy/quake3_items.as;
 
 racesow/main.as;
+racesow/helpers.as;
 racesow/entities.as;
 racesow/adapter/abstract.as;
 racesow/adapter/compat.as;
