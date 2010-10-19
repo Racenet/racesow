@@ -1834,7 +1834,7 @@ void *RS_LoadStats_Thread( void *in )
                 rMin = rMilli / 60000 + 1;
             }
         
-            if (row[0]!=NULL)
+            if (row[0]!=NULL && row[1]!=NULL && row[2]!=NULL && row[3]!=NULL && row[4]!=NULL && row[5]!=NULL && row[6]!=NULL && row[7]!=NULL)
             {
             //   0        1               2         3           4        5            6             7                  8
             // `points`, `diff_points`, `races`, `race_tries`, `maps`, `playtime`, `racing_time`, `first_seen`,  `last_seen`
@@ -1848,6 +1848,10 @@ void *RS_LoadStats_Thread( void *in )
                     S_COLOR_ORANGE, S_COLOR_WHITE, rHour, rMin,
                     S_COLOR_ORANGE, S_COLOR_WHITE, row[7],
                     S_COLOR_ORANGE, S_COLOR_WHITE, row[8]), sizeof( result ) );
+            }
+            else
+            {
+                Q_strncatz( result, va( "%sThere is a problem with stats for %s:\nPlease contact the server admin.\n", S_COLOR_YELLOW, statsRequest->which), sizeof( result ) );
             }
         }
         else
