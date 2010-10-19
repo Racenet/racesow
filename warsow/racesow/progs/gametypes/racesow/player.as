@@ -1139,6 +1139,18 @@ class Racesow_Player
 			showNotification = true;
 		}
 
+      // restart command
+        if ( commandExists = command == "restart" )
+        {
+            if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
+            {
+                this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
+                return false;
+            }
+            G_CmdExecute("match restart\n");
+            showNotification = true;
+        }
+		
 		// kick, votemute, remove, mute, joinlock  commands (RACESOW_AUTH_KICK)
 		else if ( command == "mute" || command == "unmute" || command == "vmute" ||
 				command == "vunmute" || command == "remove"|| command == "kick"
