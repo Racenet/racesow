@@ -1778,20 +1778,24 @@ void *RS_LoadStats_Thread( void *in )
                         wtMilli -= wtSec * 1000;
                     }
                     
-                    
-                    Q_strncatz( result, va( "%sStats for %s:\n%sMap type: %s%s\n%sAvaiable since: %s%s\n%sPlaytime: %s%d hours %d minutes\n%sNumber of players: %s%d\n%sFinished races: %s%d\n%sStarted races (overall tries): %s%d\n%sAvg. started races: %s%d\n%sAvg. tries to personal best: %s%d\n%sAvg. duration to personal Best: %s%d hours %d minutes\n%sBest personal record: %s%d:%d:%03d\n%sWorst personal record: %s%d:%d:%03d\n",
-                        S_COLOR_YELLOW, statsRequest->which,
-                        S_COLOR_ORANGE, S_COLOR_WHITE, row[0],
-                        S_COLOR_ORANGE, S_COLOR_WHITE, row[7],
-                        S_COLOR_ORANGE, S_COLOR_WHITE, ptHour, ptMin,
-                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[10]),
-                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[1]),
-                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[2]),
-                        S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[3]),
-                        S_COLOR_ORANGE, S_COLOR_WHITE, avgTries,
-                        S_COLOR_ORANGE, S_COLOR_WHITE, agHour, agMin,
-                        S_COLOR_ORANGE, S_COLOR_WHITE, btMin, btSec, btMilli,
-                        S_COLOR_ORANGE, S_COLOR_WHITE, wtMin, wtSec, wtMilli), sizeof( result ) );
+                    Q_strncatz( result, va( "%sStats for %s:\n", S_COLOR_YELLOW, statsRequest->which ), sizeof( result ) );
+                    if (row[0]!=NULL)
+                        Q_strncatz( result, va( "%sMap type: %s%s\n", S_COLOR_ORANGE, S_COLOR_WHITE, row[0] ), sizeof( result ) );
+                    if (row[7]!=NULL)
+                        Q_strncatz( result, va( "%sAvaiable since: %s%s\n", S_COLOR_ORANGE, S_COLOR_WHITE, row[7] ), sizeof( result ) );
+                    Q_strncatz( result, va( "%sPlaytime: %s%d hours %d minutes\n", S_COLOR_ORANGE, S_COLOR_WHITE, ptHour, ptMin ), sizeof( result ) );
+                    if (row[10]!=NULL)
+                        Q_strncatz( result, va( "%sNumber of players: %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[10]) ), sizeof( result ) );
+                    if (row[1]!=NULL)
+                        Q_strncatz( result, va( "%sFinished races: %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[1])), sizeof( result ) );
+                    if (row[2]!=NULL)
+                        Q_strncatz( result, va( "%sStarted races (overall tries): %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[2])), sizeof( result ) );
+                    if (row[3]!=NULL)
+                        Q_strncatz( result, va( "%sAvg. started races: %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[3])), sizeof( result ) );
+                    Q_strncatz( result, va( "%sAvg. tries to personal best: %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, avgTries), sizeof( result ) );
+                    Q_strncatz( result, va( "%sAvg. duration to personal Best: %s%d hours %d minutes\n", S_COLOR_ORANGE, S_COLOR_WHITE, agHour, agMin), sizeof( result ) );
+                    Q_strncatz( result, va( "%sBest personal record: %s%d:%d:%03d\n", S_COLOR_ORANGE, S_COLOR_WHITE, btMin, btSec, btMilli), sizeof( result ) );
+                    Q_strncatz( result, va( "%sWorst personal record: %s%d:%d:%03d\n", S_COLOR_ORANGE, S_COLOR_WHITE, wtMin, wtSec, wtMilli), sizeof( result ) );
             }
         }
         else
@@ -1820,6 +1824,9 @@ void *RS_LoadStats_Thread( void *in )
             rMin = 0;
             rMilli = 0;
         
+            //   0        1               2         3           4        5            6             7                  8
+            // `points`, `diff_points`, `races`, `race_tries`, `maps`, `playtime`, `racing_time`, `first_seen`,  `last_seen`
+        
             if (row[5] != NULL) {
                 oMilli = atoi( row[5] );
                 oHour = oMilli / 3600000;
@@ -1833,26 +1840,22 @@ void *RS_LoadStats_Thread( void *in )
                 rMilli -= rHour * 3600000;
                 rMin = rMilli / 60000 + 1;
             }
-        
-            if (row[0]!=NULL && row[1]!=NULL && row[2]!=NULL && row[3]!=NULL && row[4]!=NULL && row[5]!=NULL && row[6]!=NULL && row[7]!=NULL)
-            {
-            //   0        1               2         3           4        5            6             7                  8
-            // `points`, `diff_points`, `races`, `race_tries`, `maps`, `playtime`, `racing_time`, `first_seen`,  `last_seen`
-            
-                Q_strncatz( result, va( "%sStats for %s:\n%sPoints: %s%d (%s%d)\n%sFinished races: %s%d\n%sStarted races: %s%d\n%sPlayed maps: %s%d\n%sOnline time: %s%d hours %d minutes \n%sRacing time: %s%d hours %d minutes\n%sFirst seen: %s%s\n%sLast seen: %s%s\n", S_COLOR_YELLOW, statsRequest->which,
-                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[0]), (atoi(row[1]) < 0 ? "" : "+"), atoi(row[1]),
-                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[2]),
-                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[3]),
-                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[4]),
-                    S_COLOR_ORANGE, S_COLOR_WHITE, oHour, oMin,
-                    S_COLOR_ORANGE, S_COLOR_WHITE, rHour, rMin,
-                    S_COLOR_ORANGE, S_COLOR_WHITE, row[7],
-                    S_COLOR_ORANGE, S_COLOR_WHITE, row[8]), sizeof( result ) );
-            }
-            else
-            {
-                Q_strncatz( result, va( "%sThere is a problem with stats for %s:\nPlease contact the server admin.\n", S_COLOR_YELLOW, statsRequest->which), sizeof( result ) );
-            }
+
+            Q_strncatz( result, va( "%sStats for %s:\n", S_COLOR_YELLOW, statsRequest->which ), sizeof( result ) );
+            if (row[0]!=NULL && row[1]!=NULL)
+                Q_strncatz( result, va( "%sPoints: %s%d (%s%d)\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[0]), (atoi(row[1]) < 0 ? "" : "+"), atoi(row[1])), sizeof( result ) );
+            if (row[2]!=NULL)
+                Q_strncatz( result, va( "%sFinished races: %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[2]) ), sizeof( result ) );
+            if (row[3]!=NULL)
+                Q_strncatz( result, va( "%sStarted races: %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[3]) ), sizeof( result ) );
+            if (row[4]!=NULL)
+                Q_strncatz( result, va( "%sPlayed maps: %s%d\n", S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[4]) ), sizeof( result ) );
+                Q_strncatz( result, va( "%sOnline time: %s%d hours %d minutes \n", S_COLOR_ORANGE, S_COLOR_WHITE, oHour, oMin ), sizeof( result ) );
+                Q_strncatz( result, va( "%sRacing time: %s%d hours %d minutes\n", S_COLOR_ORANGE, S_COLOR_WHITE, rHour, rMin ), sizeof( result ) );
+            if (row[7]!=NULL)
+                Q_strncatz( result, va( "%sFirst seen: %s%s\n", S_COLOR_ORANGE, S_COLOR_WHITE, row[7] ), sizeof( result ) );
+            if (row[8]!=NULL)
+                Q_strncatz( result, va( "%sLast seen: %s%s\n", S_COLOR_ORANGE, S_COLOR_WHITE, row[8] ), sizeof( result ) );
         }
         else
         {
