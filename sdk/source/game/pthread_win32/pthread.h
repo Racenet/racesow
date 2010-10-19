@@ -246,6 +246,7 @@ enum {
 #    define NEED_SEM
 #  endif
 #  if defined(_UWIN) || defined(__MINGW32__)
+# 		define HAVE_STRUCT_TIMESPEC
 #    define HAVE_MODE_T
 #  endif
 #endif
@@ -308,7 +309,7 @@ struct timespec {
         long tv_sec;
         long tv_nsec;
 };
-#endif /* HAVE_STRUCT_TIMESPEC */
+#endif  /* HAVE_STRUCT_TIMESPEC */
 
 #ifndef SIG_BLOCK
 #define SIG_BLOCK 0
