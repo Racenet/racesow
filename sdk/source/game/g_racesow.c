@@ -206,7 +206,7 @@ void RS_LoadCvars( void )
     rs_querySetSessionForPlayer     = trap_Cvar_Get( "rs_querySetSessionForPlayer",	    "UPDATE `player` SET `session_token` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
-	rs_queryGetPlayerStats  		= trap_Cvar_Get( "rs_queryGetPlayerStats",			"SELECT `points`, `diff_points`, `races`, (SELECT SUM(`overall_tries`) FROM `player_map` WHERE `player_id` = `p`.`id`) `race_tries`, `maps`, `playtime`, (SELECT SUM(`racing_time`) FROM `player_map` WHERE `player_id` = `p`.`id`) `racing_time`, DATE_FORMAT(`created`, '%%Y-%%m-%%d') `first_seen`, (SELECT `date` FROM `player_history` WHERE `player_id` = `p`.`id`) `last_seen` FROM `player` `p` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryGetPlayerStats  		= trap_Cvar_Get( "rs_queryGetPlayerStats",			"SELECT `points`, `diff_points`, `races`, (SELECT SUM(`overall_tries`) FROM `player_map` WHERE `player_id` = `p`.`id` LIMIT 1) `race_tries`, `maps`, `playtime`, (SELECT SUM(`racing_time`) FROM `player_map` WHERE `player_id` = `p`.`id` LIMIT 1) `racing_time`, DATE_FORMAT(`created`, '%%Y-%%m-%%d') `first_seen`, (SELECT `date` FROM `player_history` WHERE `player_id` = `p`.`id` ORDER BY `date` DESC LIMIT 1) `last_seen` FROM `player` `p` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL);", CVAR_ARCHIVE );
 	rs_queryGetPlayerNick			= trap_Cvar_Get( "rs_queryGetPlayerNick",			"SELECT `name` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
@@ -1840,7 +1840,7 @@ void *RS_LoadStats_Thread( void *in )
             // `points`, `diff_points`, `races`, `race_tries`, `maps`, `playtime`, `racing_time`, `first_seen`,  `last_seen`
             
                 Q_strncatz( result, va( "%sStats for %s:\n%sPoints: %s%d (%s%d)\n%sFinished races: %s%d\n%sStarted races: %s%d\n%sPlayed maps: %s%d\n%sOnline time: %s%d hours %d minutes \n%sRacing time: %s%d hours %d minutes\n%sFirst seen: %s%s\n%sLast seen: %s%s\n", S_COLOR_YELLOW, statsRequest->which,
-                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[0]), (atoi(row[1]) < 0 ? "-" : "+"), atoi(row[1]),
+                    S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[0]), (atoi(row[1]) < 0 ? "" : "+"), atoi(row[1]),
                     S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[2]),
                     S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[3]),
                     S_COLOR_ORANGE, S_COLOR_WHITE, atoi(row[4]),
