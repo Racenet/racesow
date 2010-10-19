@@ -1193,8 +1193,11 @@ void GT_InitGametype()
 
     // add commands
 	RS_InitCommands();
-	G_RegisterCommand( "ammoswitch" );
+	
+	// weapondef not needed anymore, we're not testing weapons
 	//G_RegisterCommand( "weapondef" );
+	
+	G_RegisterCommand( "ammoswitch" );
 	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "whoisgod" );
 

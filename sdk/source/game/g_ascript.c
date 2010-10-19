@@ -6381,6 +6381,22 @@ static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 3)));
 }
 
+// RS_MysqlSetOneliner
+static qboolean asFunc_RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, asstring_t *oneliner)
+{
+	return RS_MysqlSetOneliner(playerNum, player_id, map_id, oneliner->buffer);
+}
+
+static void asFunc_asGeneric_RS_MysqlSetOneliner( void *gen )
+{
+	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlSetOneliner(
+		(int)G_asGeneric_GetArgInt(gen, 0),
+		(int)G_asGeneric_GetArgInt(gen, 1),
+		(int)G_asGeneric_GetArgInt(gen, 2),
+		(asstring_t *)G_asGeneric_GetArgAddress(gen, 3)));
+}
+
+
 // RS_PopCallbackQueue
 static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7 )
 {
@@ -7020,13 +7036,14 @@ static asglobfuncs_t asGlobFuncs[] =
 	// racesow
 	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
 	{ "bool FS_RemoveFile( cString & )", asFunc_RemoveFile, asFunc_asGeneric_RemoveFile },
-	{ "void RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
-	{ "void RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
-	{ "void RS_GetPlayerNick( int, int )", asFunc_RS_GetPlayerNick, asFunc_asGeneric_RS_GetPlayerNick },
-	{ "void RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick, asFunc_asGeneric_RS_UpdatePlayerNick },
-	{ "void RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
+	{ "bool RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
+	{ "bool RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
+	{ "bool RS_GetPlayerNick( int, int )", asFunc_RS_GetPlayerNick, asFunc_asGeneric_RS_GetPlayerNick },
+	{ "bool RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick, asFunc_asGeneric_RS_UpdatePlayerNick },
+	{ "bool RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
 	{ "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString & )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
-	{ "void RS_MysqlLoadHighscores( int, int, int, cString &)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
+	{ "bool RS_MysqlLoadHighscores( int, int, int, cString &)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
+	{ "bool RS_MysqlSetOneliner( int, int, int, cString &)", asFunc_RS_MysqlSetOneliner, asFunc_asGeneric_RS_MysqlSetOneliner },
 	{ "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
 	{ "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
 	{ "bool RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},

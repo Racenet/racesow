@@ -62,6 +62,8 @@ cvar_t *rs_queryUpdatePlayerMapPoints;
 cvar_t *rs_querySetMapRating;
 cvar_t *rs_queryLoadMapList;
 cvar_t *rs_queryLoadMapHighscores;
+cvar_t *rs_queryLoadMapOneliner;
+cvar_t *rs_querySetMapOneliner;
 cvar_t *rs_queryMapFilter;
 cvar_t *rs_queryMapFilterCount;
 cvar_t *rs_queryUpdateCheckpoint;
@@ -100,6 +102,7 @@ const unsigned int RACESOW_CALLBACK_RACE = 5;
 const unsigned int RACESOW_CALLBACK_MAPFILTER = 6;
 const unsigned int RACESOW_CALLBACK_MAPLIST = 7;
 const unsigned int RACESOW_CALLBACK_PLAYERNICK = 8;
+const unsigned int RACESOW_CALLBACK_ONELINER = 9;
 
 /**
  * MySQL Socket
@@ -240,6 +243,8 @@ void RS_LoadCvars( void )
     rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
     rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `time` FROM `checkpoint` WHERE `map_id` = %d AND `player_id` = %d ORDER BY `num` ASC;", CVAR_ARCHIVE );
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
+	rs_queryLoadMapOneliner			= trap_Cvar_Get( "rs_queryLoadMapOneliner",			"SELECT `oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
+	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `oneliner` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
     
 }
 
@@ -293,6 +298,8 @@ qboolean RS_MysqlConnect( void )
             Q_strncpyz(user, row[1], sizeof(user));
         }
     }
+
+	mysql_free_result(mysql_res);
     
     if (server_id == 0)
     {
@@ -318,8 +325,9 @@ qboolean RS_MysqlConnect( void )
                 Q_strncpyz(user, row[1], sizeof(user));
             }
         }
+
+		mysql_free_result(mysql_res);
     }
-    mysql_free_result(mysql_res);
 
     G_Printf( va("authenticated as %s/%d\n-------------------------------------\n", user, server_id ) );
     
@@ -519,7 +527,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
     RS_CheckMysqlThreadError();
-    while ((row = mysql_fetch_row(mysql_res)) != NULL)
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	{
 		if (row[0] !=NULL && row[1] != NULL)
 		{
@@ -663,6 +671,8 @@ void *RS_MysqlInsertRace_Thread(void *in)
             server_id = atoi(row[0]);
         }
     }
+
+	mysql_free_result(mysql_res);
     
     if (server_id != 0)
     {
@@ -690,6 +700,16 @@ void *RS_MysqlInsertRace_Thread(void *in)
         sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id, raceData->player_id, raceData->map_id, raceData->player_id, raceData->map_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
+
+		// clear oneliner if the rec was beaten
+		if ( raceData->race_time < oldBestTime )
+		{
+			char empty_oneliner[1];
+			empty_oneliner[0] = '\0';
+			sprintf(query, rs_querySetMapOneliner->string, empty_oneliner, raceData->map_id);
+			mysql_real_query(&mysql, query, strlen(query));
+			RS_CheckMysqlThreadError();
+		}
 
         // only when the new time is better than the old one, recompute the points
         if (oldTime == 0 || raceData->race_time < oldTime)
@@ -791,6 +811,8 @@ void *RS_MysqlInsertRace_Thread(void *in)
                 allPoints = atoi(row[0]);
             }
         }
+
+		mysql_free_result(mysql_res);
         
         RS_PushCallbackQueue(RACESOW_CALLBACK_RACE, raceData->playerNum, allPoints, oldPoints, newPoints, oldTime, oldBestTime, raceData->race_time);
     }
@@ -998,8 +1020,12 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         }
     }
 
-    // and only add a new player if the player isn't already authed
-    else if (player_id == 0)
+	mysql_free_result(mysql_res);
+
+    // only add a new player if 
+	// 1) noone has this nick already, and
+	// 2) the player isn't already authed (if he his, we keep using the nick associated to his auth)
+    if ( player_id_for_nick == 0 && player_id == 0)
     {
         sprintf(query, rs_queryAddPlayer->string, name, simplified);
         mysql_real_query(&mysql, query, strlen(query));
@@ -1007,7 +1033,6 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         
         player_id_for_nick = (int)mysql_insert_id(&mysql);
     }
-    mysql_free_result(mysql_res);
 
     if (player_id != 0)
     {
@@ -1052,6 +1077,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         {
             Q_strncatz( checkpoints, va("%s ",row[0]), sizeof( checkpoints ) );
         }
+
+		mysql_free_result(mysql_res);
 
         size = strlen( checkpoints )+1;
         players_query[playerData->playerNum] = malloc( size );
@@ -1320,7 +1347,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
  *
  * @param player_id Id of the player making the request
  * @param playerNum Num of the player making the request
- * @return Sucess boolean
+ * @return Success boolean
  */
 qboolean RS_GetPlayerNick( int playerNum, int player_id )
 {
@@ -1375,6 +1402,8 @@ void *RS_GetPlayerNick_Thread( void *in )
 		}
             
     }
+
+	mysql_free_result(mysql_res);
 	
 	size = strlen( name )+1;
     players_query[playerData->playerNum] = malloc( size );
@@ -1395,7 +1424,7 @@ void *RS_GetPlayerNick_Thread( void *in )
  * @param name Name of the player making the request
  * @param player_id Id of the player making the request
  * @param playerNum Num of the player making the request
- * @return Sucess boolean
+ * @return Success boolean
  */
 qboolean RS_UpdatePlayerNick( char *name, int playerNum, int player_id )
 {
@@ -1462,6 +1491,8 @@ void *RS_UpdatePlayerNick_Thread( void *in )
         }
     }
 
+	mysql_free_result(mysql_res);
+
 	// if it's already protected, stop
 	if (auth_mask_for_nick > 0 && player_id_for_nick != playerData->player_id )
 	{
@@ -1505,7 +1536,7 @@ void *RS_UpdatePlayerNick_Thread( void *in )
  * @param player_id Id of the player making the request
  * @param filter String used to filter maplist
  * @param page Number of the result page
- * @return Sucess boolean
+ * @return Success boolean
  */
 qboolean RS_MapFilter(int playerNum, char *filter, unsigned int page )
 {
@@ -1641,7 +1672,7 @@ void *RS_MapFilter_Thread( void *in )
  * @param playerNum playerNum making the request
  * @param what map or player
  * @param which name for map or player
- * @return Sucess boolean
+ * @return Success boolean
  */
 qboolean RS_LoadStats(int playerNum, char *what, char *which)
 {
@@ -1664,9 +1695,8 @@ qboolean RS_LoadStats(int playerNum, char *what, char *which)
 
 
 /**
- * Map filter thread, parse the maplist array
+ * Load stats thread
  *
- * @param in Input data, cast to filterDataStruct
  * @return NULL on success
  */
 void *RS_LoadStats_Thread( void *in )
@@ -2014,6 +2044,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
         char query[1024];
+		char oneliner[100];
 		int playerNum;
 		int map_id;
 		int limit;
@@ -2061,6 +2092,25 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		    Q_strncpyz(mapname,level.mapname,strlen(level.mapname)+1);
 		    map_id = highscoresData->map_id;
 		}
+
+		// get map oneliner (may not be present)
+		oneliner[0]='\0';
+		sprintf(query, rs_queryLoadMapOneliner->string, map_id);
+		mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+		if ((row = mysql_fetch_row(mysql_res)) != NULL)
+	    {
+		    if (row[0] !=NULL)
+			{
+				if ( strlen(row[0]) > 0 )
+					{
+						Q_strncpyz(oneliner, va("\"%s\"", row[0]), sizeof(oneliner));
+					}
+			}
+	    }
+		mysql_free_result(mysql_res);
 
         // get top players on map
 		sprintf(query, rs_queryLoadMapHighscores->string, map_id, limit);
@@ -2125,7 +2175,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                 last_position = draw_position;
                 Q_strncpyz( last_time, va( "%d:%d.%d", min, sec, milli ), sizeof(last_time) );
 
-                Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s)\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2] ), sizeof(highscores) );
+				Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s) %s%s\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2], S_COLOR_YELLOW, ( position == 1 ? oneliner : "" ) ), sizeof(highscores) );
 			}
         }
 
@@ -2143,6 +2193,143 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		RS_EndMysqlThread();
 		return NULL;
 }
+
+/**
+ * Set a map oneliner
+ *
+ * @return Success boolean
+ */
+qboolean RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, char *oneliner)
+{
+    pthread_t thread;
+    int returnCode;
+	struct onelinerDataStruct *onelinerData=malloc(sizeof(struct onelinerDataStruct));
+
+    onelinerData->oneliner = strdup(oneliner);
+	onelinerData->playerNum = playerNum;
+	onelinerData->player_id = player_id;
+	onelinerData->map_id = map_id;
+
+    returnCode = pthread_create(&thread, &threadAttr, RS_MysqlSetOneliner_Thread, (void *)onelinerData);
+
+    if (returnCode) {
+
+        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        return qfalse;
+    }
+
+    return qtrue;
+}
+
+/**
+ * Thread that updates the database with the player new protected nick
+ *
+ * @param in Input data
+ * @return NULL on success
+ */
+void *RS_MysqlSetOneliner_Thread( void *in )
+{
+	struct onelinerDataStruct *onelinerData;
+	char query[1024];
+	char response[1024];
+	MYSQL_ROW  row;
+    MYSQL_RES  *mysql_res;
+	int size;
+	int failure;
+	int best_player_id;
+	char old_oneliner[100];
+	char oneliner[100];
+
+	RS_StartMysqlThread();
+
+    onelinerData = (struct onelinerDataStruct*)in;
+	best_player_id = 0;
+	failure=0;
+
+	// retrieve server best
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, onelinerData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
+	{
+		if (row[0] !=NULL && row[1] != NULL)
+		{
+            best_player_id = atoi(row[0]);
+		}
+	}
+	mysql_free_result(mysql_res);
+
+	// test if the player is allowed to set the oneliner, else stop
+	if ( best_player_id == 0 || best_player_id != onelinerData->player_id )
+	{
+	Q_strncpyz( response, "You need to be #1 on this map to set a oneliner.\n", sizeof(response));
+		failure=1;
+	}
+	else
+	{
+
+		// testing if the player has already set a oneliner
+		// retrieve the existing oneliner
+		old_oneliner[0]='\0';
+		sprintf(query, rs_queryLoadMapOneliner->string, onelinerData->map_id);
+		mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError();
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError();
+		if ((row = mysql_fetch_row(mysql_res)) != NULL)
+	    {
+		    if (row[0] !=NULL)
+			{
+				Q_strncpyz(old_oneliner, row[0], sizeof(old_oneliner));
+			}
+	    }
+		mysql_free_result(mysql_res);
+
+		if ( strlen(old_oneliner) > 0 )
+		{
+			Q_strncpyz( response, "You have already set a oneliner for this map, it's written in stone now!\n", sizeof(response));
+			failure=1;
+		}
+	}
+	
+	// return a failure message
+	if ( failure )
+	{
+		size = strlen( response )+1;
+		players_query[onelinerData->playerNum] = malloc( size );
+		Q_strncpyz( players_query[onelinerData->playerNum], response, size);
+		RS_PushCallbackQueue(RACESOW_CALLBACK_ONELINER, onelinerData->playerNum, 0, 0, 0, 0, 0, 0);
+
+		free(onelinerData->oneliner);
+		free(onelinerData);
+		RS_EndMysqlThread();
+		return NULL;
+	}
+
+	// update the new oneliner
+	Q_strncpyz ( oneliner, onelinerData->oneliner, sizeof(oneliner) );
+	RS_EscapeString(oneliner);
+	sprintf(query, rs_querySetMapOneliner->string, oneliner, onelinerData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+
+	// return confirmation to the player (needed, because the command is waiting for a callback)
+	Q_strncpyz( response, va("Oneliner successfully set to: %s\n", oneliner), sizeof(response));
+	size = strlen( response )+1;
+    players_query[onelinerData->playerNum] = malloc( size );
+    Q_strncpyz( players_query[onelinerData->playerNum], response, size);
+    RS_PushCallbackQueue(RACESOW_CALLBACK_ONELINER, onelinerData->playerNum, 0, 0, 0, 0, 0, 0);
+
+	free(onelinerData->oneliner);
+ 	free(onelinerData);
+
+	RS_EndMysqlThread();
+
+    return NULL;
+}
+
 
 /**
  * Test if a map name is valid and print some warnings if it's not.

@@ -85,6 +85,14 @@ struct maplistDataStruct {
     unsigned int page;
 };
 
+struct onelinerDataStruct {
+
+	int playerNum;
+	int player_id;
+	int map_id;
+	char *oneliner;
+};
+
 void RS_LoadCvars( void );
 qboolean RS_MysqlConnect( void );
 qboolean RS_MysqlDisconnect( void );
@@ -114,6 +122,8 @@ void *RS_UpdatePlayerNick_Thread( void *in );
 extern qboolean RS_MysqlLoadMaplist( int is_freestyle );
 extern qboolean RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, char *mapname );
 extern void *RS_MysqlLoadHighscores_Thread( void *in );
+extern qboolean RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, char *oneliner);
+extern void *RS_MysqlSetOneliner_Thread( void *in );
 extern char *RS_PrintQueryCallback(int player_id );
 extern void RS_PushCallbackQueue( int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7 );
 extern qboolean RS_PopCallbackQueue( int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7 );

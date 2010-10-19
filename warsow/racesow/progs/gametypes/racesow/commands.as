@@ -236,6 +236,46 @@ class Command_Top : Racesow_Command
 
 }
 
+class Command_Oneliner : Racesow_Command
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( g_freestyle.getBool() )
+        {
+            player.sendErrorMessage( "Command only available for race");
+            return false;
+        }
+
+        if ( mysqlConnected == 0 )
+        {
+            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            return false;
+        }
+		
+		if ( args.len() > 100 )
+        {
+            player.sendMessage("Oneliner too long (" + args.len() + " chars), please keep it under 100 characters.\n" );
+            return false;
+        }
+		
+		if ( argc < 1 )
+        {
+			player.sendMessage("If you are #1 on a map, you can enter a one-line message that will be printed in the highscores.\n" );
+            return false;
+        }
+		
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+	    player.isWaitingForCommand = true;
+        RS_MysqlSetOneliner(player.getClient().playerNum(), player.getId(), map.getId(), args);
+        return true;
+    }
+
+}
+
 class Command_NextMap : Racesow_Command
 {
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -831,6 +871,14 @@ void RS_CreateCommands()
     noclip.freestyleOnly = true;
     @commands[commandCount] = @noclip;
     commandCount++;
+	
+	Command_Oneliner oneliner;
+    oneliner.name = "oneliner";
+    oneliner.description = "Set a one-line message that is displayed right next to your top time";
+    oneliner.usage = "";
+	oneliner.raceOnly = true;
+    @commands[commandCount] = @oneliner;
+    commandCount++;
 
     Command_Position position;
     position.name = "position";
@@ -851,7 +899,7 @@ void RS_CreateCommands()
     privsay.usage = "privsay <playerid/playername>";
     @commands[commandCount] = @privsay;
     commandCount++;
-
+	
     Command_ProtectedNick protectednick;
     protectednick.name = "protectednick";
     protectednick.description = "Show/update your current protected nick";
@@ -908,7 +956,7 @@ void RS_CreateCommands()
 
     Command_Top top;
     top.name = "top";
-    top.description = "Print the best times of a given map (current by default)";
+    top.description = "Print the best times of a given map (default: current map)";
     top.usage = "top <limit(3-30)> <mapname>";
     top.raceOnly = true;
     @commands[commandCount] = @top;

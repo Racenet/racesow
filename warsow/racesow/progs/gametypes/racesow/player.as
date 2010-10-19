@@ -319,6 +319,7 @@ class Racesow_Player
 		    this.getClient().addAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
 		    G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 		            + "made a new " + S_COLOR_GREEN  + rs_networkName.getString() + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
+			this.sendMessage(S_COLOR_YELLOW + "Congratulations! You can now set a " + S_COLOR_WHITE + "oneliner" + S_COLOR_YELLOW + ". Careful though, only one try.\n");
         }
 
         else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //server record award

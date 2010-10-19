@@ -12,6 +12,7 @@ const uint RACESOW_ADAPTER_RACE = 5;
 const uint RACESOW_ADAPTER_MAPFILTER = 6;
 const uint RACESOW_ADAPTER_MAPLIST = 7;
 const uint RACESOW_ADAPTER_PLAYERNICK = 8;
+const uint RACESOW_ADAPTER_ONELINER = 9;
 
 class Racesow_Adapter_Abstract
 {
@@ -125,6 +126,7 @@ class Racesow_Adapter_Abstract
             case RACESOW_ADAPTER_HIGHSCORES:
             case RACESOW_ADAPTER_MAPFILTER:
             case RACESOW_ADAPTER_MAPLIST:
+			case RACESOW_ADAPTER_ONELINER:
                 if ( @player != null )
                 {
                     cString result = RS_PrintQueryCallback(playerNum);
