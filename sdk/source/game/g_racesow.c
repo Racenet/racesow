@@ -277,7 +277,7 @@ qboolean RS_MysqlConnect( void )
     
     
     //Q_strncpyz ( user, COM_RemoveColorTokens( level.mapname ), sizeof(user) );
-    //mysql_real_escape_string(&mysql, user, user, strlen(user));
+	//RS_EscapeString(user);
     
 	sprintf(query, rs_queryGetServer->string, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
@@ -298,7 +298,7 @@ qboolean RS_MysqlConnect( void )
     {
         char servername[255];
         Q_strncpyz ( servername, sv_hostname->string, sizeof(servername) );
-        mysql_real_escape_string(&mysql, servername, servername, strlen(servername));
+		RS_EscapeString(servername);
         sprintf(query, rs_queryAddServer->string, sv_port->integer, servername);
         mysql_real_query(&mysql, query, strlen(query));
         RS_MysqlError();
@@ -377,6 +377,22 @@ void RS_Shutdown()
 
 	// removed it because of crash in win32 implementation, also this may be not necessary at all because this isnt in a thread
 	//pthread_exit(NULL);
+}
+
+
+/**
+ * Escapes the string, in-place
+ *
+ * @param char* string
+ * @return void
+ */
+void RS_EscapeString( char* string )
+{
+	char escaped_buffer[MAX_STRING_CHARS];
+
+	// one cannot call mysql_real_escape_string with dest string == source string
+	mysql_real_escape_string(&mysql, escaped_buffer, string, strlen(string));
+	Q_strncpyz ( string, escaped_buffer, sizeof(escaped_buffer) );
 }
 
 /**
@@ -477,7 +493,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
 
 	RS_StartMysqlThread();
     Q_strncpyz ( name, COM_RemoveColorTokens( level.mapname ), sizeof(name) );
-    mysql_real_escape_string(&mysql, name, name, strlen(name));
+	RS_EscapeString(name);
     
 	sprintf(query, rs_queryGetMap->string, name);
     mysql_real_query(&mysql, query, strlen(query));
@@ -870,19 +886,19 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     
     // escape strings
     Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
-    mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
+    RS_EscapeString(simplified);
     
 	Q_strncpyz ( name, playerData->name, sizeof(name) );
-    mysql_real_escape_string(&mysql, name, name, strlen(name));
+	RS_EscapeString(name);
     
     Q_strncpyz ( authName, playerData->authName, sizeof(authName) );
-    mysql_real_escape_string(&mysql, authName, authName, strlen(authName));
+	RS_EscapeString(authName);
     
     Q_strncpyz ( authPass, playerData->authPass, sizeof(authPass) );
-    mysql_real_escape_string(&mysql, authPass, authPass, strlen(authPass));
+	RS_EscapeString(authPass);
     
     Q_strncpyz ( authToken, playerData->authToken, sizeof(authToken) );
-    mysql_real_escape_string(&mysql, authToken, authToken, strlen(authToken));
+	RS_EscapeString(authToken);
 
     /*
     // try to authenticate by session
@@ -1256,9 +1272,9 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 		pthread_mutex_lock(&mutexsum);
 
     Q_strncpyz ( simplified, COM_RemoveColorTokens( playtimeData->name ), sizeof(simplified) );
-    mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
+	RS_EscapeString(simplified);
 	Q_strncpyz ( name, playtimeData->name, sizeof(name) );
-    mysql_real_escape_string(&mysql, name, name, strlen(name));
+	RS_EscapeString(name);
 
     // increment map playtime
 	sprintf(query, rs_queryUpdateMapPlaytime->string, playtimeData->playtime, playtimeData->map_id);
@@ -1282,7 +1298,7 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     
     // update the server's number of played maps and playtime and the hostname
     Q_strncpyz ( servername, sv_hostname->string, sizeof(servername) );
-    mysql_real_escape_string(&mysql, servername, servername, strlen(servername));
+	RS_EscapeString(servername);
     sprintf(query, rs_queryUpdateServerData->string, servername, playtimeData->playtime, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
@@ -1426,10 +1442,10 @@ void *RS_UpdatePlayerNick_Thread( void *in )
 	auth_mask_for_nick = 0;
 
 	Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
-    mysql_real_escape_string(&mysql, simplified, simplified, strlen(simplified));
+	RS_EscapeString(simplified);
     
 	Q_strncpyz ( name, playerData->name, sizeof(name) );
-    mysql_real_escape_string(&mysql, name, name, strlen(name));
+	RS_EscapeString(name);
 	
 	// test if the wanted nick is protected
 	sprintf(query, rs_queryGetPlayer->string, simplified);
@@ -1684,7 +1700,7 @@ void *RS_LoadStats_Thread( void *in )
         avgTries = 0;
         
         Q_strncpyz( which, COM_RemoveColorTokens(statsRequest->which), sizeof( which ) );
-        mysql_real_escape_string(&mysql, which, which, strlen(which));
+		RS_EscapeString(which);
         sprintf(query, rs_queryGetMapStats->string, which);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
@@ -1758,7 +1774,7 @@ void *RS_LoadStats_Thread( void *in )
     else if (!Q_stricmp(statsRequest->what, "player"))
     {
         Q_strncpyz( which, COM_RemoveColorTokens(statsRequest->which), sizeof( which ) );
-        mysql_real_escape_string(&mysql, which, which, strlen(which));
+		RS_EscapeString(which);
         sprintf(query, rs_queryGetPlayerStats->string, which);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();

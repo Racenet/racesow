@@ -90,6 +90,7 @@ qboolean RS_MysqlConnect( void );
 qboolean RS_MysqlDisconnect( void );
 qboolean RS_MysqlQuery( char *query );
 qboolean RS_MysqlError( void );
+void RS_EscapeString( char* string );
 void RS_StartMysqlThread( void );
 void RS_EndMysqlThread( void );
 void RS_CheckMysqlThreadError( void );
