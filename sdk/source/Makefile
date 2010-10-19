@@ -145,7 +145,7 @@ endif
 
 CFLAGS_CLIENT=$(shell curl-config --cflags)
 CFLAGS_DED=-DDEDICATED_ONLY -DC_ONLY $(shell curl-config --cflags) -pthread
-CFLAGS_MODULE=-DPIC -fPIC
+CFLAGS_MODULE=-DPIC -fPIC `mysql_config --include` -DUSE_MYSQL
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DC_ONLY -DTV_MODULE_HARD_LINKED
 
 
@@ -163,7 +163,7 @@ endif
 
 LDFLAGS_CLIENT=-ljpeg -lz -L$(X11BASE)/$(LIB) -lX11 -lXext -lXxf86dga -lXxf86vm -lXinerama $(shell curl-config --libs)
 LDFLAGS_DED=-lz $(shell curl-config --libs) -pthread
-LDFLAGS_MODULE=-shared
+LDFLAGS_MODULE=-shared `mysql_config --libs`
 LDFLAGS_TV_SERVER=-lz
 
 # openal
@@ -226,7 +226,6 @@ DO_CXX=echo "  > Compiling (c++) $<" && \
 DO_CC_CLIENT=$(DO_CC) $(CFLAGS_CLIENT)
 DO_CC_DED=$(DO_CC) $(CFLAGS_DED)
 DO_CC_MODULE=$(DO_CC) $(CFLAGS_MODULE)
-DO_CC_MODULE+=`mysql_config --include` -DUSE_MYSQL
 DO_CC_TV_SERVER=$(DO_CC) $(CFLAGS_TV_SERVER)
 
 DO_CXX_MODULE=$(DO_CXX) $(CFLAGS_MODULE)
@@ -611,7 +610,7 @@ $(BINDIR)/basewsw/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_CGAME)
 
 $(BINDIR)/basewsw/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_GAME)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) `mysql_config --libs`
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE)
 
 $(BINDIR)/basewsw/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_UI)
 	@echo "  > Linking $@" && \
