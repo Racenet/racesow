@@ -125,6 +125,62 @@ cString DateToString( uint64 dateuint64 )
 }
 
 /**
+ * Racesow_GetPlayerByClient
+ * @param cClient @client
+ * @return Racesow_Player
+ */
+Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
+{
+    if ( @client == null || client.playerNum() < 0 )
+        return null;
+
+    return @players[ client.playerNum() ].setClient( @client );
+}
+
+/**
+ * Racesow_GetPlayerByNumber
+ * @param int playerNum
+ * @return Racesow_Player
+ */
+Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
+{
+    if ( playerNum < 0 )
+        return null;
+
+    return @players[ playerNum ];
+}
+
+
+/**
+ * Racesow_GetPlayerNumber
+ * @param cString playerName
+ * @return int
+ */
+int Racesow_GetClientNumber( cString playerName )
+{
+    cClient @client;
+
+    for ( int i = 0; i < maxClients; i++ )
+    {
+        @client = @G_GetClient( i );
+        if ( client.state() < CS_SPAWNED )
+            continue;
+
+        if (client.getName().removeColorTokens() == playerName)
+            return client.playerNum();
+    }
+    return -1;
+}
+
+/**
+ * Cancel the current vote (equals to /opcall cancelvote)
+ */
+void RS_cancelvote()
+{
+    G_CmdExecute( "cancelvote" );
+}
+
+/**
  * Capitalize a string
  *
  * @param cString string

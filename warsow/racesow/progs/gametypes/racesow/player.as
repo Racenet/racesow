@@ -1038,8 +1038,9 @@ class Racesow_Player
 	void kick( cString message )
 	{
         int playerNum = this.client.playerNum();
-		G_PrintMsg( null, S_COLOR_RED + "Kicked "+ this.getName() + S_COLOR_RED + " Reason: " + message + "\n" );
-		this.reset();
+        if( message.length() > 0)
+            G_PrintMsg( null, S_COLOR_RED + "Kicked "+ this.getName() + S_COLOR_RED + " Reason: " + message + "\n" );
+        this.reset();
         G_CmdExecute( "kick " + playerNum );
 	}
 
@@ -1055,14 +1056,18 @@ class Racesow_Player
 		this.client.team = TEAM_SPECTATOR;
 		this.client.respawn( false ); // param = ghost, false|true what to use????
 	}
-
-	/**
-	 * Cancel the current vote (equals to /opcall cancelvote)
-	 */
-	void cancelvote()
-	{
-		G_CmdExecute( "cancelvote" );
-	}
+	
+   /**
+     * Ban the player
+     * @param cString message
+     * @return void
+     */
+    void kickban( cString message )
+    {
+        cString ip = this.client.getUserInfoKey( "ip" );
+        this.reset();
+        G_CmdExecute( "addip " + ip + " 15;kick " + this.client.playerNum() );
+    }
 
 	/**
 	 * Switch player ammo between strong/weak
@@ -1175,30 +1180,30 @@ class Racesow_Player
 				showNotification = false;
 				return false;
 			}
-			int playerNum = cmdString.getToken( 1 ).toInt();
-			if( playerNum > maxClients )
-				return false;
+			Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+            if (@player == null )
+                return false;
 
 			if( command == "kick" )
-				G_CmdExecute("kick "+ playerNum + "\n");
+				player.kick("");
 			else if( command == "votemute" )
-				players[playerNum].isVotemuted = true;
+				player.isVotemuted = true;
 			else if( command == "unvotemute" )
-				players[playerNum].isVotemuted = false;
+				player.isVotemuted = false;
 			else if( command == "remove" )
-				players[playerNum].remove("");
+				player.remove("");
 			else if( command == "mute" )
-				G_GetClient( playerNum ).muted |= 1;
+			    player.client.muted |= 1;
 			else if( command == "unmute" )
-				G_GetClient( playerNum ).muted &= ~1;
+				player.client.muted &= ~1;
 			else if( command == "vmute" )
-				G_GetClient( playerNum ).muted |= 2;
+				player.client.muted |= 2;
 			else if( command == "vunmute" )
-				G_GetClient( playerNum ).muted &= ~2;
+				player.client.muted &= ~2;
 			else if( command == "joinlock" )
-				players[playerNum].isJoinlocked = true;
+				player.isJoinlocked = true;
 			else if( command == "unjoinlock" )
-				players[playerNum].isJoinlocked = false;
+				player.isJoinlocked = false;
 			showNotification = true;
 		}
 
@@ -1210,9 +1215,29 @@ class Racesow_Player
 				this.sendErrorMessage("You are not permitted to execute the command 'admin "+ cmdString);
 				return false;
 			}
-			cancelvote();
+			RS_cancelvote();
 		}
 
+        
+        // ban
+		else if ( commandExists = command == "kickban" )
+        {
+            if ( !this.auth.allow( RACESOW_AUTH_ADMIN ) )
+            {
+                this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString );
+                return false;
+            }
+            if( cmdString.getToken( 1 ) == "" )
+            {
+                this.client.execGameCommand("cmd players");
+                showNotification = false;
+                return false;
+            }
+            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+            if (@player != null )
+                player.kickban("");
+        }
+        
 		// don't touch the rest of the method!
 		if( !commandExists )
 		{
@@ -1224,7 +1249,6 @@ class Racesow_Player
 			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
 				+ " executed command '"+ cmdString +"'\n" );
 		}
-
 		return true;
 	}
 

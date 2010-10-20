@@ -57,54 +57,6 @@ bool isUsingRacesowClient( cClient @client )
 }
 
 /**
- * Racesow_GetPlayerByClient
- * @param cClient @client
- * @return Racesow_Player
- */
-Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
-{
-    if ( @client == null || client.playerNum() < 0 )
-        return null;
-
-	return @players[ client.playerNum() ].setClient( @client );
-}
-
-/**
- * Racesow_GetPlayerByNumber
- * @param int playerNum
- * @return Racesow_Player
- */
-Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
-{
-    if ( playerNum < 0 )
-        return null;
-
-	return @players[ playerNum ];
-}
-
-
-/**
- * Racesow_GetPlayerNumber
- * @param cString playerName
- * @return int
- */
-int Racesow_GetClientNumber( cString playerName )
-{
-    cClient @client;
-
-    for ( int i = 0; i < maxClients; i++ )
-    {
-        @client = @G_GetClient( i );
-        if ( client.state() < CS_SPAWNED )
-            continue;
-
-		if (client.getName().removeColorTokens() == playerName)
-			return client.playerNum();
-	}
-    return -1;
-}
-
-/**
  * race_respawner_think
  * the player has finished the race. This entity times his automatic respawning
  * @param cEntity @respawner
