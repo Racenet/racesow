@@ -37,7 +37,7 @@ cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
 cVar g_warmup_enabled( "g_warmup_enabled", "0", CVAR_ARCHIVE );
 
-cVar rs_welcomeMessage ("rs_welcomeMessage", "Welcome on this server running racesow", CVAR_ARCHIVE );
+cVar rs_welcomeMessage ("rs_welcomeMessage", S_COLOR_WHITE + "Welcome to this Racesow server. Type " + S_COLOR_ORANGE + "help" + S_COLOR_WHITE + " to get a list of commands\n", CVAR_ARCHIVE );
 cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_ARCHIVE|CVAR_NOSET );
 
@@ -597,13 +597,23 @@ void GT_ThinkRules()
 			match.launchState( match.getState() + 1 );
 		}
 		
-		map.allowEndGame();
 		map.PrintMinutesLeft();
 	}
 	
+	// needs to be always executed, because overtime occurs even in time-unlimited mode
+	map.allowEndGame();
+	
 	// allowEndGame() should -always- be called at each think even during POSTMATCH, hence before this line.
 	if ( match.getState() >= MATCH_STATE_POSTMATCH )
+	{
+		// that piece of code needs to be always executed during postmatch
+		if ( match.timeLimitHit() )
+		{
+			match.launchState( match.getState() + 1 );
+		}
+		
         return;
+	}
 
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
