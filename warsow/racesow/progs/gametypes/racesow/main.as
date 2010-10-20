@@ -2,7 +2,7 @@
  * Racesow Gametype Interface
  *
  * based on warsow 0.5 race gametype
- * @version 0.5.6
+ * @version 0.5.7
  */
 
 int numCheckpoints = 0;
@@ -937,7 +937,7 @@ void GT_SpawnGametype()
 void GT_InitGametype()
 {
     gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.5.6" );
+    gametype.setVersion( "0.5.7" );
     gametype.setAuthor( "warsow-race.net" );
 
 	// initalize weapondef config

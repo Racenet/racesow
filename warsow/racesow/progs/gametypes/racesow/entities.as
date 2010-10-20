@@ -3,7 +3,7 @@
  * based on Warsow 0.5 race gametype
  *
  * @package Racesow
- * @version 0.5.6
+ * @version 0.5.7
  */
 
 cString[] entStorage(maxEntities);
