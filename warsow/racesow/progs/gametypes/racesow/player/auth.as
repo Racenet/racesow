@@ -448,6 +448,10 @@ const uint RACESOW_AUTH_ADMIN		= 31;
             
             if ( msg != "" )
                 G_PrintMsg( null, msg + "\n" );
+
+            this.player.printWelcomeMessage = true;
+
+
         }
         else 
         {

@@ -37,6 +37,7 @@ cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
 cVar g_warmup_enabled( "g_warmup_enabled", "0", CVAR_ARCHIVE );
 
+cVar rs_welcomeMessage ("rs_welcomeMessage", "Welcome on this server running racesow", CVAR_ARCHIVE );
 cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_ARCHIVE|CVAR_NOSET );
 
@@ -715,6 +716,13 @@ void GT_ThinkRules()
 
             if (status == 2)
                 player.getClient().addAward(S_COLOR_GREEN + "Perfect Plasma Climb !");
+        }
+
+        if ( player.printWelcomeMessage and levelTime - player.joinedTime > 1000 )
+        {
+            player.printWelcomeMessage = false;
+            player.sendMessage( rs_welcomeMessage.getString() + "\n" );
+            player.sendMessage( rs_registrationInfo.getString() + "\n" );
         }
 
         // always clear all before setting

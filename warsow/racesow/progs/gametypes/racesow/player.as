@@ -73,6 +73,11 @@ class Racesow_Player
 	 */
 	uint joinedTime;
 
+	/**
+	 * Should we print welcome message to the player ?
+	 */
+	bool printWelcomeMessage;
+
     /**
      * the time when the player started to make
      * a perfect plasma climb
@@ -234,6 +239,7 @@ class Racesow_Player
 		this.racingTime = 0;
 		this.racingTimeSinceLastRace = 0;
 		this.challengerList = "";
+		this.printWelcomeMessage = false;
 	}
 
 	/**
