@@ -1163,6 +1163,29 @@ class Racesow_Player
             showNotification = true;
         }
 		
+        // extend_time command
+        if ( commandExists = command == "extend_time" )
+        {
+            if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
+            {
+                this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
+                return false;
+            }
+            if( g_timelimit.getInteger() <= 0 )
+            {
+                this.sendErrorMessage( "This command is only available for timelimits.\n");
+                return false;
+            }
+            g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+
+            map.cancelOvertime();
+            for ( int i = 0; i < maxClients; i++ )
+            {
+                players[i].cancelOvertime();
+            }
+            showNotification = true;
+        }
+        
 		// kick, votemute, remove, mute, joinlock  commands (RACESOW_AUTH_KICK)
 		else if ( command == "mute" || command == "unmute" || command == "vmute" ||
 				command == "vunmute" || command == "remove"|| command == "kick"

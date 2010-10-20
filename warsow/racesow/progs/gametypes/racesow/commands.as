@@ -781,7 +781,14 @@ void RS_CreateCommands()
             + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
             + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
             + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
+            + S_COLOR_RED + "admin restart  " + S_COLOR_YELLOW + "restart the match immedeatly\n"
+            + S_COLOR_RED + "admin extend_time  " + S_COLOR_YELLOW + "extend the matchtime immedeatly\n"
+            + S_COLOR_RED + "admin remove  " + S_COLOR_YELLOW + "remove the given player immedeatly\n"
             + S_COLOR_RED + "admin kick          " + S_COLOR_YELLOW + "kick the given player immedeatly\n"
+            + S_COLOR_RED + "admin kickban       " + S_COLOR_YELLOW + "kickban the given player immedeatly\n"
+            + S_COLOR_RED + "admin [v](un)mute  " + S_COLOR_YELLOW + "[v](un)mute the given player immedeatly\n"
+            + S_COLOR_RED + "admin vote(un)mute  " + S_COLOR_YELLOW + "enable/disable voting for the given player\n"
+            + S_COLOR_RED + "admin joinlock  " + S_COLOR_YELLOW + "prevent the given player from joining\n"
             + S_COLOR_RED + "admin cancelvote    " + S_COLOR_YELLOW + "cancel the currently active vote\n"
             + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
     @commands[commandCount] = @admin;
