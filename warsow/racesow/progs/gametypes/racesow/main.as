@@ -606,8 +606,8 @@ void GT_ThinkRules()
 	// allowEndGame() should -always- be called at each think even during POSTMATCH, hence before this line.
 	if ( match.getState() >= MATCH_STATE_POSTMATCH )
 	{
-		// that piece of code needs to be always executed during postmatch
-		if ( match.timeLimitHit() )
+		// that piece of code needs to be always executed during postmatch when g_maprotation=0 or freestyle=1
+		if ( ( not timelimited ) and match.timeLimitHit() )
 		{
 			match.launchState( match.getState() + 1 );
 		}
