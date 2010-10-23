@@ -670,16 +670,6 @@ void GT_ThinkRules()
             }
 		}
 
-        int status;
-        if ( (status = player.processPlasmaClimbStatus()) > 0 )
-        {
-            if (status == 1)
-                player.getClient().addAward(S_COLOR_YELLOW + "Good Plasma Climb !");
-
-            if (status == 2)
-                player.getClient().addAward(S_COLOR_GREEN + "Perfect Plasma Climb !");
-        }
-
         if ( player.printWelcomeMessage and levelTime - player.joinedTime > 1000 )
         {
             player.printWelcomeMessage = false;

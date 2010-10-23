@@ -79,13 +79,6 @@ class Racesow_Player
 	bool printWelcomeMessage;
 
     /**
-     * the time when the player started to make
-     * a perfect plasma climb
-     * @var uint64
-     */
-    uint64 plasmaPerfectClimbSince;
-
-	/**
 	 * The player's best race
 	 * @var uint
 	 */
@@ -221,8 +214,7 @@ class Racesow_Player
 		this.onQuad = false;
 		this.isWaitingForCommand = false;
 		this.bestRaceTime = 0;
-        this.plasmaPerfectClimbSince = 0;
-		this.resetAuth();
+        this.resetAuth();
 		this.auth.setPlayer(@this);
 		this.bestCheckPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )
@@ -628,67 +620,6 @@ class Racesow_Player
 	}
 
     /**
-     * Rate the current
-     * plasma climb.
-     * @return int
-     */
-    int ratePlasmaClimbing()
-    {
-        if ( this.client.weapon != WEAP_PLASMAGUN )
-            return 0;
-
-        if ( this.client.getEnt().getVelocity().z <= 0 )
-            return 0;
-
-        if ( (this.client.getEnt().getAngles().x) < 69 || (this.client.getEnt().getAngles().x > 73) )
-            return 0;
-
-        if ( (this.client.getEnt().getAngles().x >= 71) && (this.client.getEnt().getAngles().x <= 72) )
-            return 2;
-
-        if ( (this.client.getEnt().getAngles().x) >= 69 && (this.client.getEnt().getAngles().x <= 73) )
-            return 1;
-
-        return 0;
-    }
-
-
-    /**
-     * Get the player's status concerning plasma climb.
-     * @return int
-     */
-    int processPlasmaClimbStatus()
-    {
-        int rate = this.ratePlasmaClimbing();
-
-        if ( rate == 0)
-        {
-            this.plasmaPerfectClimbSince = 0;
-            return 0;
-        }
-        else
-        {
-            if ( this.plasmaPerfectClimbSince == 0 )
-            {
-                this.plasmaPerfectClimbSince = localTime;
-                return 0;
-            }
-
-            int seconds = localTime - this.plasmaPerfectClimbSince;
-            if ( seconds > 1 )
-            {
-                this.plasmaPerfectClimbSince = 0;
-                return rate;
-            }
-            else
-            {
-                return 0;
-            }
-
-        }
-    }
-
-	/**
 	 * startOvertime
 	 * @return void
 	 */
