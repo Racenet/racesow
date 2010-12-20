@@ -2773,8 +2773,11 @@ char *RS_GetMapByNum(int num)
     return NULL;
 }
 
-qboolean isFreestyle()
+qboolean isFreestyle( void )
 {
     g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
-    return g_freestyle->integer;
+    if( g_freestyle->integer == 1 )
+        return qtrue;
+    else
+        return qfalse;
 }
