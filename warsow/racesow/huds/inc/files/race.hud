@@ -1,0 +1,111 @@
+//
+setFont "virtue_12"
+setColor 1, 1, 1, 1
+setSize 16, 16
+
+//speed meter
+
+setAlign #CENTER, #MIDDLE
+setCursor 400, 340
+drawStringNum %speed
+
+
+//mouse angles
+
+setColor 1 1 1 1
+setAlign #CENTER, #middle
+setCursor 350, 340
+drawstringNum 0.01 * %mouse_x
+
+setColor 1 1 1 1
+setAlign #CENTER, #middle
+setCursor 450, 340
+drawstringNum 0.01 * %mouse_y
+ 
+
+//speed on jump
+
+	setAlign #left, #MIDDLE
+	setcursor 10, 350
+	drawString "j-speed:"
+	setcursor 10, 370
+	drawStringNum %jumpspeed
+
+
+//Checkpoints
+
+	setcursor 10, 540
+	setAlign #left, #MIDDLE
+	if %CP1 != #NOTSET
+		drawString "CP1:"
+		moveCursor 45, 0
+		drawCheckPoint %CP1
+		moveCursor -45, -15
+	endif
+	if %CP2 != #NOTSET
+		drawString "CP2:"
+		moveCursor 45, 0
+		drawCheckPoint %CP2
+		moveCursor -45, -15
+	endif
+	if %CP3 != #NOTSET
+		drawString "CP3:"
+		moveCursor 45, 0
+		drawCheckPoint %CP3
+		moveCursor -45, -15
+	endif
+	if %CP4 != #NOTSET
+		drawString "CP4:"
+		moveCursor 45, 0
+		drawCheckPoint %CP4
+		moveCursor -45, -15
+	endif
+	if %CP5 != #NOTSET
+		drawString "CP5:"
+		moveCursor 45, 0
+		drawCheckPoint %CP5
+		moveCursor -45, -15
+	endif
+	if %CP6 != #NOTSET
+		drawString "CP6:"
+		moveCursor 45, 0
+		drawCheckPoint %CP6
+		moveCursor -45, -15
+	endif
+	if %CP7 != #NOTSET
+		drawString "CP7:"
+		moveCursor 45, 0
+		drawCheckPoint %CP7
+		moveCursor -45, -15
+	endif
+	if %CP8 != #NOTSET
+		drawString "CP8:"
+		moveCursor 45, 0
+		drawCheckPoint %CP8
+		moveCursor -45, -15
+	endif
+	if %CP9 != #NOTSET
+		drawString "CP9:"
+		moveCursor 45, 0
+		drawCheckPoint %CP9
+		moveCursor -45, -15
+	endif
+	if %CP10 != #NOTSET
+		drawString "CP10:"
+		moveCursor 45, 0
+		drawCheckPoint %CP10
+		moveCursor -45, -15
+	endif
+
+//accelmeter bar
+
+	setAlign #left, #middle
+	setcursor 303, 400
+	setSize 194, 10
+	setcolor 0, 1, 0, 0.3
+	drawBar %acceleration , 20
+
+	setcursor 300, 400
+	setSize 200, 16
+	setcolor 1, 1, 1, 0.1
+	drawbar  1, 1,
