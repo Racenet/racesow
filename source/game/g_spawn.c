@@ -138,7 +138,7 @@ spawn_t	spawns[] = {
 	{ "target_position", SP_target_position },
 	{ "target_print", SP_target_print },
 	{ "target_give", SP_target_give },
-	{ "target_push", SP_info_notnull },
+	{ "target_push", SP_target_push },
 	{ "target_changelevel", SP_target_changelevel },
 
 	{ "worldspawn", SP_worldspawn },
@@ -247,6 +247,10 @@ qboolean G_CallSpawn( edict_t *ent )
 		return qtrue;
 	}
 
+	// see if there's a spawn definition in the gametype scripts
+	if( G_asCallMapEntitySpawnScript( ent->classname, ent ) )
+		return qtrue; // handled by the script
+
 	// check normal spawn functions
 	for( s = spawns; s->name; s++ )
 	{
@@ -256,10 +260,6 @@ qboolean G_CallSpawn( edict_t *ent )
 			return qtrue;
 		}
 	}
-
-	// see if there's a spawn definition in the gametype scripts
-	if( G_asCallMapEntitySpawnScript( ent->classname, ent ) )
-		return qtrue; // handled by the script
 
 	if( sv_cheats->integer || developer->integer ) // mappers load their maps with devmap
 		G_Printf( "%s doesn't have a spawn function\n", ent->classname );

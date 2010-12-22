@@ -833,6 +833,9 @@ static void door_killed( edict_t *self, edict_t *inflictor, edict_t *attacker, i
 {
 	edict_t	*ent;
 
+	if( GS_RaceGametype() ) //racesow: defrag support: do not trigger if the door got killed
+		return;
+
 	for( ent = self->teammaster; ent; ent = ent->teamchain )
 	{
 		ent->health = ent->max_health;
@@ -1433,7 +1436,12 @@ static void button_wait( edict_t *self )
 
 	G_UseTargets( self, self->activator );
 	self->s.frame = 1;
-	if( self->moveinfo.wait >= 0 )
+	if( self->moveinfo.wait == -1 )
+	{
+		self->nextThink = level.time + 1; // racesow: if -1 change back immediately
+		self->think = button_return;
+	}
+	else if( self->moveinfo.wait >= 0 )
 	{
 		self->nextThink = level.time + ( self->moveinfo.wait * 1000 );
 		self->think = button_return;

@@ -1638,6 +1638,8 @@ int G_SolidMaskForEnt( edict_t *ent )
 	int solidmask;
 	if( ent->ai.type == AI_ISMONSTER )
 		solidmask = MASK_MONSTERSOLID;
+	else if( ent->r.client )
+		solidmask = MASK_PLAYERSOLID;
 	else
 		solidmask = ent->r.clipmask ? ent->r.clipmask : MASK_SOLID;
 
