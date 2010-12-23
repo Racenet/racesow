@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="wsw_server" />
+		<Option makefile_is_custom="1" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+				</Compiler>
+				<MakeCommands>
+					<Build command="DEBUG_BUILD=YES $make -C ../ -f $makefile ded" />
+					<CompileFile command="DEBUG_BUILD=YES $make -C ../ -f $makefile $file" />
+					<Clean command="DEBUG_BUILD=YES $make -C ../ -f $makefile clean-ded" />
+					<DistClean command="DEBUG_BUILD=YES $make -C ../ -f $makefile distclean-ded" />
+				</MakeCommands>
+			</Target>
+			<Target title="Debug MinGW">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+				</Compiler>
+				<MakeCommands>
+					<Build command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile ded" />
+					<CompileFile command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile $file" />
+					<Clean command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile clean-ded" />
+					<DistClean command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile distclean-ded" />
+				</MakeCommands>
+			</Target>
+			<Target title="Release">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+				</Compiler>
+				<MakeCommands>
+					<Build command="DEBUG_BUILD=NO $make -C ../ -f $makefile ded" />
+					<CompileFile command="DEBUG_BUILD=NO $make -C ../ -f $makefile $file" />
+					<Clean command="DEBUG_BUILD=NO $make -C ../ -f $makefile clean-ded" />
+					<DistClean command="DEBUG_BUILD=NO $make -C ../ -f $makefile distclean-ded" />
+				</MakeCommands>
+			</Target>
+			<Target title="Release MinGW">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+				</Compiler>
+				<MakeCommands>
+					<Build command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile ded" />
+					<CompileFile command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile $file" />
+					<Clean command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile clean-ded" />
+					<DistClean command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile distclean-ded" />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="../game/g_public.h" />
+		<Unit filename="../gameshared/config.h" />
+		<Unit filename="../gameshared/q_arch.h" />
+		<Unit filename="../gameshared/q_collision.h" />
+		<Unit filename="../gameshared/q_comref.h" />
+		<Unit filename="../gameshared/q_cvar.h" />
+		<Unit filename="../gameshared/q_dynvar.h" />
+		<Unit filename="../gameshared/q_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../gameshared/q_math.h" />
+		<Unit filename="../gameshared/q_shared.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../gameshared/q_shared.h" />
+		<Unit filename="../matchmaker/mm_common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../matchmaker/mm_common.h" />
+		<Unit filename="../null/cl_null.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../null/mm_null.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/anticheat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/anticheat.h" />
+		<Unit filename="../qcommon/ascript.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/bignum.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/bignum.h" />
+		<Unit filename="../qcommon/bn_mul.h" />
+		<Unit filename="../qcommon/cm_local.h" />
+		<Unit filename="../qcommon/cm_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cm_q1bsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cm_q2bsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cm_q3bsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cm_trace.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cmd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cmodel.h" />
+		<Unit filename="../qcommon/common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cvar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/cvar.h" />
+		<Unit filename="../qcommon/dynvar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/dynvar.h" />
+		<Unit filename="../qcommon/files.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/glob.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/glob.h" />
+		<Unit filename="../qcommon/irc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/library.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/md5.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/md5.h" />
+		<Unit filename="../qcommon/mem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/mlist.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/msg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/net.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/net_chan.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/patch.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/qcommon.h" />
+		<Unit filename="../qcommon/qfiles.h" />
+		<Unit filename="../qcommon/rsa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/rsa.h" />
+		<Unit filename="../qcommon/sha1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/sha1.h" />
+		<Unit filename="../qcommon/snap_demos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/snap_read.h" />
+		<Unit filename="../qcommon/snap_write.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/snap_write.h" />
+		<Unit filename="../qcommon/svnrev.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/svnrev.h" />
+		<Unit filename="../qcommon/sys_fs.h" />
+		<Unit filename="../qcommon/sys_library.h" />
+		<Unit filename="../qcommon/sys_net.h" />
+		<Unit filename="../qcommon/trie.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/trie.h" />
+		<Unit filename="../qcommon/version.h" />
+		<Unit filename="../qcommon/webdownload.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../qcommon/webdownload.h" />
+		<Unit filename="../server/server.h" />
+		<Unit filename="../server/sv_ccmds.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_demos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_game.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_mm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_motd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_oob.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../server/sv_send.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../unix/unix_fs.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="../unix/unix_lib.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="../unix/unix_net.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="../unix/unix_sys.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="../win32/conproc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../win32/conproc.h" />
+		<Unit filename="../win32/win_fs.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug MinGW" />
+			<Option target="Release MinGW" />
+		</Unit>
+		<Unit filename="../win32/win_lib.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug MinGW" />
+			<Option target="Release MinGW" />
+		</Unit>
+		<Unit filename="../win32/win_net.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug MinGW" />
+			<Option target="Release MinGW" />
+		</Unit>
+		<Unit filename="../win32/win_sys.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug MinGW" />
+			<Option target="Release MinGW" />
+		</Unit>
+		<Unit filename="../win32/winquake.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
