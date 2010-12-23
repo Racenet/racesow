@@ -319,7 +319,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			//timings (in msecs)
 			WEAPONUP_FRAMETIME,				// weapon up frametime
 			WEAPONDOWN_FRAMETIME,			// weapon down frametime
+			/* racesow (725 in warsow.6) */
 			800,							// reload frametime
+			/* !racesow */
 			0,								// cooldown frametime
 			1250,							// projectile timeout
 			0,								// smooth refire
@@ -351,7 +353,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			//timings (in msecs)
 			WEAPONUP_FRAMETIME,				// weapon up frametime
 			WEAPONDOWN_FRAMETIME,			// weapon down frametime
+			/* racesow (725 in warsow.6) */
 			800,							// reload frametime
+			/* !racesow */
 			0,								// cooldown frametime
 			1250,							// projectile timeout
 			0,								// smooth refire
@@ -387,11 +391,13 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			//timings (in msecs)
 			WEAPONUP_FRAMETIME,             // weapon up frametime
 			WEAPONDOWN_FRAMETIME,           // weapon down frametime
-            /* racesow (950 in warsow.5, 850 in racesow.42) */
+            /* racesow (925 in warsow.5,950 in warsow.5, 850 in racesow.42) */
             850,                            // reload frametime
             /* !racesow */
 			0,								// cooldown frametime
-            100000,                         // projectile timeout; racesow
+            /* racesow make rockets fly longer (10000 in 0.5 and 0.6) */
+            100000,                         // projectile timeout
+			/* !racesow */
 			0,								// smooth refire
 
 			//damages
@@ -404,7 +410,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			8,                             // splash minimum knockback
 
 			//projectile def
-            /* racesow (1150 in warsow.5, 950 in racesow.42) */
+            /* racesow (1200 in warsow.6, 1150 in warsow.5, 950 in racesow.42) */
             950,                            // speed
             /* !racesow */
 			0,								// spread
@@ -427,7 +433,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
             850,                            // reload frametime
             /* !racesow */
 			0,								// cooldown frametime
-			100000,                          // projectile timeout; racesow
+			/* racesow make rockets fly longer (10000 in 0.5 and 0.6) */
+            100000,                         // projectile timeout
+			/* !racesow */
 			0,								// smooth refire
 
 			//damages
@@ -440,7 +448,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			5,                              // splash minimum knockback
 
 			//projectile def
-            /* racesow (1150 in warsow.5, 950 in racesow.42) */
+            /* racesow (1200 in warsow.6, 1150 in warsow.5, 950 in racesow.42) */
             950,                            // speed
             /* !racesow */
 			0,								// spread
@@ -511,7 +519,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 
 			//projectile def
 			2400,							// speed
-            /* racesow (90 in warsow.5, 0 in racesow.42) */
+            /* racesow (90 in warsow.6 and warsow.5, 0 in racesow.42) */
             0,                              // spread
             /* !racesow */
 
