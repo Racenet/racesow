@@ -370,6 +370,10 @@ void G_Init( unsigned int seed, unsigned int framemsec, int protocol )
 
 	// weapon items
 	GS_InitWeapons();
+	//racesow
+	//Initialize racesow
+	RS_Init();
+	//!racesow
 }
 
 //=================
@@ -380,6 +384,11 @@ void G_Shutdown( void )
 	int i;
 
 	G_Printf( "==== G_Shutdown ====\n" );
+
+	//racesow
+	//Shutdown racesow
+	RS_Shutdown();
+	//!racesow
 
 	G_asGarbageCollect( qtrue );
 

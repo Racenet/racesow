@@ -1,0 +1,41 @@
+
+// Scripting by learn_more
+// Hud placement, ideas and hud coginf reed aka cG aka gumka :)
+// This hud supports all important race .hud features.
+
+// This HUD uses others
+// - cryzis2 (health/armor/ammo)
+// - warsow hud (basewsw)
+
+
+setFont con_fontSystemsmall
+
+include obituaries
+include powerups
+include picked_up_item
+include item_timers
+include chasing
+include crizis2/health
+include crizis2/armor
+include crizis/ammo
+include net
+include pointing
+include help_message
+include fps
+include clock
+include weaponlist
+include crosshair
+include keystate
+include awards
+include minimap
+include download
+include files/times
+include files/race
+include files/dotstrafer
+
+include damage_indicator_screen
+
+// alternatively can use
+//include danlin/damage_indicator_screen
+
+

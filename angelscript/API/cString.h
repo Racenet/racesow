@@ -43,5 +43,8 @@ public:
 	int locate(cString &, const int);
 	cString @ substr(const int, const int);
 	cString @ subString(const int, const int);
+	bool isAlpha();
+	bool isNumerical();
+	bool isAlphaNumerical();
 };
 

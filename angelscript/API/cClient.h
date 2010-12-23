@@ -15,7 +15,7 @@ public:
 	const int zoomFov;
 	const bool isOperator;
 	const uint queueTimeStamp;
-	const int muted;
+	int muted;
 	float armor;
 	uint gunbladeChargeTimeStamp;
 	const bool chaseActive;
@@ -27,6 +27,7 @@ public:
 	const int16 weapon;
 	const int16 pendingWeapon;
 	const int16 pmoveFeatures;
+	bool takeStun;
 
 	/* object behaviors */
 	cClient @ f(); /* factory */ 
@@ -60,5 +61,6 @@ public:
 	cString @ getUserInfoKey( cString &in );
 	void printMessage( cString &in );
 	void chaseCam( cString @, bool teamOnly );
+	void setChaseActive( bool active );
 };
 

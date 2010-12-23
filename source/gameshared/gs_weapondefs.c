@@ -319,7 +319,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			//timings (in msecs)
 			WEAPONUP_FRAMETIME,				// weapon up frametime
 			WEAPONDOWN_FRAMETIME,			// weapon down frametime
-			725,							// reload frametime
+			800,							// reload frametime
 			0,								// cooldown frametime
 			1250,							// projectile timeout
 			0,								// smooth refire
@@ -351,7 +351,7 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			//timings (in msecs)
 			WEAPONUP_FRAMETIME,				// weapon up frametime
 			WEAPONDOWN_FRAMETIME,			// weapon down frametime
-			725,							// reload frametime
+			800,							// reload frametime
 			0,								// cooldown frametime
 			1250,							// projectile timeout
 			0,								// smooth refire
@@ -387,9 +387,11 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			//timings (in msecs)
 			WEAPONUP_FRAMETIME,             // weapon up frametime
 			WEAPONDOWN_FRAMETIME,           // weapon down frametime
-			925,							// reload frametime
+            /* racesow (950 in warsow.5, 850 in racesow.42) */
+            850,                            // reload frametime
+            /* !racesow */
 			0,								// cooldown frametime
-			10000,							// projectile timeout
+            100000,                         // projectile timeout; racesow
 			0,								// smooth refire
 
 			//damages
@@ -402,7 +404,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			8,                             // splash minimum knockback
 
 			//projectile def
-			1200,							// speed
+            /* racesow (1150 in warsow.5, 950 in racesow.42) */
+            950,                            // speed
+            /* !racesow */
 			0,								// spread
 
 			//ammo
@@ -419,9 +423,11 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			//timings (in msecs)
 			WEAPONUP_FRAMETIME,             // weapon up frametime
 			WEAPONDOWN_FRAMETIME,           // weapon down frametime
-			925,							// reload frametime
+            /* racesow (950 in warsow.5, 850 in racesow.42) */
+            850,                            // reload frametime
+            /* !racesow */
 			0,								// cooldown frametime
-			10000,							// projectile timeout
+			100000,                          // projectile timeout; racesow
 			0,								// smooth refire
 
 			//damages
@@ -434,7 +440,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
 			5,                              // splash minimum knockback
 
 			//projectile def
-			1200,							// speed
+            /* racesow (1150 in warsow.5, 950 in racesow.42) */
+            950,                            // speed
+            /* !racesow */
 			0,								// spread
 
 			//ammo
@@ -503,7 +511,9 @@ gs_weapon_definition_t gs_weaponDefs[] =
 
 			//projectile def
 			2400,							// speed
-			90,								// spread
+            /* racesow (90 in warsow.5, 0 in racesow.42) */
+            0,                              // spread
+            /* !racesow */
 
 			//ammo
 			70,								// pickup amount

@@ -149,6 +149,14 @@ int G_Projectile_HitStyle( edict_t *projectile, edict_t *target )
 	if( target->waterlevel > 1 )
 		return PROJECTILE_TOUCH_DIRECTHIT; // water hits are direct but don't count for awards
 
+	//racesow
+	    if( projectile->r.owner->r.client && target->r.client )
+	    {
+	        if( GS_RaceGametype() && target->team == projectile->r.owner->team && !isFreestyle )
+	            return PROJECTILE_TOUCH_NOT;
+	    }
+	//!racesow
+
 	attacker = ( projectile->r.owner && projectile->r.owner->r.client ) ? projectile->r.owner : NULL;
 
 	// see if the target is at ground or a less than a step of height
@@ -273,7 +281,7 @@ static edict_t *W_Fire_LinearProjectile( edict_t *self, vec3_t start, vec3_t ang
 	projectile->s.linearProjectile = qtrue;
 
 	projectile->r.solid = SOLID_YES;
-	projectile->r.clipmask = ( !GS_RaceGametype() ) ? MASK_SHOT : MASK_SOLID;
+	projectile->r.clipmask = ( GS_RaceGametype() && !isFreestyle() ) ? MASK_SOLID : MASK_SHOT; //racesow projectiles interact with others
 
 	projectile->r.svflags = SVF_PROJECTILE;
 	// enable me when drawing exception is added to cgame
@@ -331,7 +339,7 @@ static edict_t *W_Fire_TossProjectile( edict_t *self, vec3_t start, vec3_t angle
 	projectile->movetype = MOVETYPE_BOUNCEGRENADE;
 
 	// make missile fly through players in race
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !isFreestyle() )
 		projectile->r.clipmask = MASK_SOLID;
 	else
 		projectile->r.clipmask = MASK_SHOT;
@@ -387,7 +395,7 @@ void W_Fire_Blade( edict_t *self, int range, vec3_t start, vec3_t angles, float 
 	AngleVectors( angles, dir, NULL, NULL );
 	VectorMA( start, range, dir, end );
 
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectile interact with others
 		mask = MASK_SOLID;
 
 	G_Trace4D( &trace, start, NULL, NULL, end, self, MASK_SHOT, timeDelta );
@@ -640,21 +648,29 @@ static void W_Touch_Grenade( edict_t *ent, edict_t *other, cplane_t *plane, int 
 	if( hitType == PROJECTILE_TOUCH_NOT )
 		return;
 
-	// don't explode on doors and plats that take damage
-	if( !other->takedamage || ISBRUSHMODEL( other->s.modelindex ) )
+	// don't explode on doors and plats that take damage (removed in racesow: || ISBRUSHMODEL( other->s.modelindex ))
+	if( !other->takedamage )
 	{
-		// kill some velocity on each bounce
-		float fric;
-		static cvar_t *g_grenade_friction = NULL;
+	    if( ent->s.effects & EF_STRONG_WEAPON )//racesow: make grenades bounce twice code
+            ent->health -= 1;
 
-		if( !g_grenade_friction )
-			g_grenade_friction = trap_Cvar_Get( "g_grenade_friction", "0.85", CVAR_DEVELOPER );
+        if( !( ent->s.effects & EF_STRONG_WEAPON )
+                || ( ( VectorLength( ent->velocity ) && Q_rint( ent->health ) > 0 ) || ent->timeStamp + 350 > level.time ) )//racesow: make grenades bounce twice code
+        {
+            // kill some velocity on each bounce
+            float fric;
+            static cvar_t *g_grenade_friction = NULL;
 
-		fric = bound( 0, g_grenade_friction->value, 1 );
-		VectorScale( ent->velocity, fric, ent->velocity );
+            // racesow: used rs_grenade_friction instead of g_grenade_friction
+            g_grenade_friction = trap_Cvar_Get( "rs_grenade_friction", "0.85", CVAR_ARCHIVE );
+            // !racesow
 
-		G_AddEvent( ent, EV_GRENADE_BOUNCE, ( ent->s.effects & EF_STRONG_WEAPON ) ? FIRE_MODE_STRONG : FIRE_MODE_WEAK, qtrue );
-		return;
+            fric = bound( 0, g_grenade_friction->value, 1 );
+            VectorScale( ent->velocity, fric, ent->velocity );
+
+            G_AddEvent( ent, EV_GRENADE_BOUNCE, ( ent->s.effects & EF_STRONG_WEAPON ) ? FIRE_MODE_STRONG : FIRE_MODE_WEAK, qtrue );
+            return;
+        }
 	}
 
 	if( other->takedamage )
@@ -697,15 +713,20 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	edict_t	*grenade;
 	static cvar_t *g_grenade_gravity = NULL;
 
-	if( GS_Instagib() )
-		damage = 9999;
+   /* racesow: custom parameters*/
+    float rs_radius;
+    int rs_minKnockback, rs_maxKnockback, rs_speed, rs_timeout;
+    /* !racesow*/
 
-	if( !g_grenade_gravity )
-		g_grenade_gravity = trap_Cvar_Get( "g_grenade_gravity", "1.3", CVAR_DEVELOPER );
+    // racesow: used rs_grenade_gravity instead of g_grenade_gravity
+    g_grenade_gravity = trap_Cvar_Get( "rs_grenade_gravity", "1.3", CVAR_ARCHIVE );
+    // !racesow
 
 	if( aim_up )
 	{
-		angles[PITCH] -= 10; // aim some degrees upwards from view dir
+
+        if( !GS_RaceGametype() )// racesow
+            angles[PITCH] -= 10; // aim some degrees upwards from view dir
 
 		// clamp to front side of the player
 		angles[PITCH] += -90; // rotate to make easier the check
@@ -715,8 +736,32 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 		while( angles[PITCH] > 360 ) angles[PITCH] -= 360;
 	}
 
-	grenade = W_Fire_TossProjectile( self, start, angles, speed, damage, minKnockback, maxKnockback, stun, minDamage, radius, timeout, timeDelta );
-	VectorClear( grenade->s.angles );
+   /* racesow: cvars for other parameters */
+    if (mod==MOD_GRENADE_W)
+    {
+        rs_timeout= trap_Cvar_Get( "rs_grenadeweak_timeout", "1250", CVAR_ARCHIVE )->integer;
+        rs_maxKnockback= trap_Cvar_Get( "rs_grenadeweak_knockback", "100", CVAR_ARCHIVE )->integer;
+        rs_radius= trap_Cvar_Get( "rs_grenadeweak_splash", "170", CVAR_ARCHIVE )->value;
+        rs_minKnockback= trap_Cvar_Get( "rs_grenadeweak_minknockback", "10", CVAR_ARCHIVE)->integer;
+        rs_speed= trap_Cvar_Get( "rs_grenadeweak_speed", "900", CVAR_ARCHIVE )->integer;
+    }
+    else
+    {
+        rs_timeout= trap_Cvar_Get( "rs_grenade_timeout", "1250", CVAR_ARCHIVE )->integer;
+        rs_maxKnockback= trap_Cvar_Get( "rs_grenade_knockback", "90", CVAR_ARCHIVE )->integer;
+        rs_radius= trap_Cvar_Get( "rs_grenade_splash", "160", CVAR_ARCHIVE )->value;
+        rs_minKnockback= trap_Cvar_Get( "rs_grenade_minknockback", "5", CVAR_ARCHIVE )->integer;
+        rs_speed= trap_Cvar_Get( "rs_grenade_speed", "900", CVAR_ARCHIVE )->integer;
+    }
+    /* !racesow */
+
+    if( GS_Instagib() )
+        damage = 9999;
+
+    /* racesow */
+    grenade = W_Fire_TossProjectile( self, start, angles, rs_speed, damage, rs_minKnockback, rs_maxKnockback, stun, minDamage, rs_radius, rs_timeout, timeDelta );
+    /* !racesow */
+    VectorClear( grenade->s.angles );
 	grenade->style = mod;
 	grenade->s.type = ET_GRENADE;
 	grenade->movetype = MOVETYPE_BOUNCEGRENADE;
@@ -731,6 +776,7 @@ edict_t *W_Fire_Grenade( edict_t *self, vec3_t start, vec3_t angles, int speed, 
 	{
 		grenade->s.modelindex = trap_ModelIndex( PATH_GRENADE_STRONG_MODEL );
 		grenade->s.effects |= EF_STRONG_WEAPON;
+		grenade->health = 2;//racesow: make grenades bounce twice code
 	}
 	else
 	{
@@ -816,11 +862,38 @@ static void W_Touch_Rocket( edict_t *ent, edict_t *other, cplane_t *plane, int s
 edict_t *W_Fire_Rocket( edict_t *self, vec3_t start, vec3_t angles, int speed, float damage, int minKnockback, int maxKnockback, int stun, int minDamage, int radius, int timeout, int mod, int timeDelta )
 {
 	edict_t	*rocket;
+    /* racesow: custom parameters*/
+    int new_speed;
+    int rs_minKnockback, rs_maxKnockback, rs_radius;
+    /* !racesow*/
 
-	if( GS_Instagib() )
-		damage = 9999;
+    /* racesow: added water rockets */
+    new_speed=speed;
+    if( self->waterlevel > 1 )
+        new_speed*=0.5;
+    /* !racesow */
 
-	rocket = W_Fire_LinearProjectile( self, start, angles, speed, damage, minKnockback, maxKnockback, stun, minDamage, radius, timeout, timeDelta );
+    /* racesow: cvars for other parameters */
+    if (mod==MOD_ROCKET_W)
+    {
+        rs_maxKnockback= trap_Cvar_Get( "rs_rocketweak_knockback", "95", CVAR_ARCHIVE )->integer;
+        rs_radius= trap_Cvar_Get( "rs_rocketweak_splash", "140", CVAR_ARCHIVE )->integer;
+        rs_minKnockback= trap_Cvar_Get( "rs_rocketweak_minknockback", "5", CVAR_ARCHIVE)->integer;
+    }
+    else
+    {
+        rs_maxKnockback= trap_Cvar_Get( "rs_rocket_knockback", "100", CVAR_ARCHIVE )->integer;
+        rs_radius= trap_Cvar_Get( "rs_rocket_splash", "140", CVAR_ARCHIVE )->integer;
+        rs_minKnockback= trap_Cvar_Get( "rs_rocket_minknockback", "10", CVAR_ARCHIVE )->integer;
+    }
+    /* !racesow */
+
+    if( GS_Instagib() )
+        damage = 9999;
+
+    /* racesow: custom arguments */
+    rocket = W_Fire_LinearProjectile( self, start, angles, new_speed, damage, rs_minKnockback, rs_maxKnockback, stun, minDamage, rs_radius, timeout, timeDelta );
+    /* !racesow */
 
 	rocket->s.type = ET_ROCKET; //rocket trail sfx
 	if( mod == MOD_ROCKET_S )
@@ -904,7 +977,7 @@ void W_Plasma_Backtrace( edict_t *ent, const vec3_t start )
 	vec3_t oldorigin;
 	vec3_t mins = { -2, -2, -2 }, maxs = { 2, 2, 2 };
 
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectiles interact with others in freestyle
 		return;
 
 	VectorCopy( ent->s.origin, oldorigin );
@@ -969,11 +1042,33 @@ static void W_AutoTouch_Plasma( edict_t *ent, edict_t *other, cplane_t *plane, i
 edict_t *W_Fire_Plasma( edict_t *self, vec3_t start, vec3_t angles, float damage, int minKnockback, int maxKnockback, int stun, int minDamage, int radius, int speed, int timeout, int mod, int timeDelta )
 {
 	edict_t	*plasma;
+    /* racesow: custom parameters*/
+    int rs_minKnockback, rs_maxKnockback, rs_radius, rs_speed;
+    /* !racesow*/
 
-	if( GS_Instagib() )
-		damage = 9999;
+    /* racesow: cvars for other parameters */
+    if (mod==MOD_PLASMA_W)
+    {
+        rs_maxKnockback= trap_Cvar_Get( "rs_plasmaweak_knockback", "14", CVAR_ARCHIVE )->integer;
+        rs_radius= trap_Cvar_Get( "rs_plasmaweak_splash", "45", CVAR_ARCHIVE )->integer;
+        rs_minKnockback= trap_Cvar_Get( "rs_plasmaweak_minknockback", "1", CVAR_ARCHIVE)->integer;
+        rs_speed= trap_Cvar_Get( "rs_plasmaweak_speed", "2400", CVAR_ARCHIVE )->integer;
+    }
+    else
+    {
+        rs_maxKnockback= trap_Cvar_Get( "rs_plasma_knockback", "20", CVAR_ARCHIVE )->integer;
+        rs_radius= trap_Cvar_Get( "rs_plasma_splash", "45", CVAR_ARCHIVE )->integer;
+        rs_minKnockback= trap_Cvar_Get( "rs_plasma_minknockback", "1", CVAR_ARCHIVE )->integer;
+        rs_speed= trap_Cvar_Get( "rs_plasma_speed", "2400", CVAR_ARCHIVE )->integer;
+    }
+    /* !racesow */
 
-	plasma = W_Fire_LinearProjectile( self, start, angles, speed, damage, minKnockback, maxKnockback, stun, minDamage, radius, timeout, timeDelta );
+    if( GS_Instagib() )
+        damage = 9999;
+
+    /* racesow */
+    plasma = W_Fire_LinearProjectile( self, start, angles, rs_speed, damage, rs_minKnockback, rs_maxKnockback, stun, minDamage, rs_radius, timeout, timeDelta );
+    /* !racesow */
 	plasma->s.type = ET_PLASMA;
 	plasma->classname = "plasma";
 	plasma->style = mod;
@@ -1076,7 +1171,7 @@ void W_Fire_Electrobolt_Combined( edict_t *self, vec3_t start, vec3_t angles, fl
 	hit = damaged = NULL;
 
 	mask = MASK_SHOT;
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectiles interact with others in freestyle
 		mask = MASK_SOLID;
 
 	clamp_high( mindamage, maxdamage );
@@ -1095,10 +1190,7 @@ void W_Fire_Electrobolt_Combined( edict_t *self, vec3_t start, vec3_t angles, fl
 
 		// some entity was touched
 		hit = &game.edicts[tr.ent];
-		if( hit == world )  // stop dead if hit the world
-			break;
-		if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
-			break;
+		//racesow: do hit check later to activate shootable buttons
 
 		// allow trail to go through BBOX entities (players, gibs, etc)
 		if( !ISBRUSHMODEL( hit->s.modelindex ) )
@@ -1115,7 +1207,12 @@ void W_Fire_Electrobolt_Combined( edict_t *self, vec3_t start, vec3_t angles, fl
 			knockback = maxknockback - ( ( maxknockback - minknockback ) * frac );
 
 			G_TakeDamage( hit, self, self, dir, dir, tr.endpos, damage, knockback, stun, dmgflags, mod );
-			
+            //racesow make shootable buttons work
+            if( hit == world )  // stop dead if hit the world
+                return;
+            if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
+                return;
+            //!racesow
 			// spawn a impact event on each damaged ent
 			event = G_SpawnEvent( EV_BOLT_EXPLOSION, DirToByte( tr.plane.normal ), tr.endpos );
 			event->s.firemode = fireMode;
@@ -1168,7 +1265,7 @@ void W_Fire_Electrobolt_FullInstant( edict_t *self, vec3_t start, vec3_t angles,
 	hit = damaged = NULL;
 
 	mask = MASK_SHOT;
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectiles interact with others in freestyle
 		mask = MASK_SOLID;
 
 	clamp_high( mindamage, maxdamage );
@@ -1194,10 +1291,7 @@ void W_Fire_Electrobolt_FullInstant( edict_t *self, vec3_t start, vec3_t angles,
 
 		// some entity was touched
 		hit = &game.edicts[tr.ent];
-		if( hit == world )  // stop dead if hit the world
-			break;
-		if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
-			break;
+        //racesow: do hit check later to activate shootable buttons
 
 		// allow trail to go through BBOX entities (players, gibs, etc)
 		if( !ISBRUSHMODEL( hit->s.modelindex ) )
@@ -1222,7 +1316,12 @@ void W_Fire_Electrobolt_FullInstant( edict_t *self, vec3_t start, vec3_t angles,
 			//G_Printf( "mindamagerange %i frac %.1f damage %i\n", minDamageRange, 1.0f - frac, (int)damage );
 
 			G_TakeDamage( hit, self, self, dir, dir, tr.endpos, damage, knockback, stun, dmgflags, mod );
-			
+            //racesow make shottable buttons work
+            if( hit == world )  // stop dead if hit the world
+                return;
+            if( hit->movetype == MOVETYPE_NONE || hit->movetype == MOVETYPE_PUSH )
+                return;
+            //!racesow
 			// spawn a impact event on each damaged ent
 			event = G_SpawnEvent( EV_BOLT_EXPLOSION, DirToByte( tr.plane.normal ), tr.endpos );
 			event->s.firemode = FIRE_MODE_STRONG;
@@ -1289,7 +1388,7 @@ void W_Fire_Instagun( edict_t *self, vec3_t start, vec3_t angles, float damage, 
 	VectorCopy( start, from );
 	ignore = self;
 	mask = MASK_SHOT;
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !isFreestyle )//racesow: make projectiles interact with others in freestyle
 		mask = MASK_SOLID;
 	tr.ent = -1;
 	while( ignore )

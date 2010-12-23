@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_public.h"
 #include "g_syscalls.h"
 #include "g_gametypes.h"
+#include "g_racesow.h"
 
 //==================================================================
 // round(x)==floor(x+0.5f)
@@ -660,6 +661,7 @@ void SP_trigger_once( edict_t *ent );
 void SP_trigger_multiple( edict_t *ent );
 void SP_trigger_relay( edict_t *ent );
 void SP_trigger_push( edict_t *ent );
+void SP_target_push( edict_t *ent );
 void SP_trigger_hurt( edict_t *ent );
 void SP_trigger_key( edict_t *ent );
 void SP_trigger_counter( edict_t *ent );
@@ -1074,6 +1076,7 @@ typedef struct
 	qboolean position_saved;
 	vec3_t position_origin;
 	vec3_t position_angles;
+	int position_weapon; //racesow
 	unsigned int position_lastcmd;
 
 	gsitem_t	*last_drop_item;

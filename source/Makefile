@@ -124,8 +124,8 @@ else
 CFLAGS_COMMON+=$(CFLAGS_RELEASE)
 endif
 
-CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../dxsdk/include -DCURL_STATICLIB
 CFLAGS_DED=-DDEDICATED_ONLY -DCURL_STATICLIB
+CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../dxsdk/include -DCURL_STATICLIB
 CFLAGS_MODULE=-DPIC
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DTV_MODULE_HARD_LINKED
 
@@ -176,8 +176,8 @@ CFLAGS_COMMON+=$(CFLAGS_RELEASE)
 endif
 
 CFLAGS_CLIENT=$(shell curl-config --cflags)
-CFLAGS_DED=-DDEDICATED_ONLY -DC_ONLY $(shell curl-config --cflags)
-CFLAGS_MODULE=-DPIC -fPIC
+CFLAGS_DED=-DDEDICATED_ONLY -DC_ONLY $(shell curl-config --cflags) -pthread
+CFLAGS_MODULE=-DPIC -fPIC `mysql_config --include` -DUSE_MYSQL
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DC_ONLY -DTV_MODULE_HARD_LINKED
 
 LDFLAGS_COMMON=$(LDFLAGS)
@@ -197,8 +197,8 @@ LIB=lib
 endif
 
 LDFLAGS_CLIENT=-ljpeg -lz -L$(X11BASE)/$(LIB) -lX11 -lXext -lXxf86dga -lXxf86vm -lXinerama -lrt $(shell curl-config --libs)
-LDFLAGS_DED=-lz $(shell curl-config --libs)
-LDFLAGS_MODULE=-shared
+LDFLAGS_DED=-lz $(shell curl-config --libs) -pthread
+LDFLAGS_MODULE=-shared `mysql_config --libs`
 LDFLAGS_TV_SERVER=-lz
 
 # openal
@@ -378,6 +378,7 @@ endif
 CFILES_GAME  = $(wildcard game/*.c)
 CFILES_GAME += $(wildcard game/ai/*.c)
 CFILES_GAME += $(wildcard gameshared/*.c)
+CFILES_GAME += qcommon/md5.c
 
 CFILES_GAME_WITHOUT_PATH= $(notdir  $(CFILES_GAME))
 OFILES_GAME=$(CFILES_GAME_WITHOUT_PATH:.c=.o)
@@ -845,6 +846,9 @@ $(BUILDDIR)/game/%.o: game/ai/%.c
 	@$(DO_CC_MODULE)
 
 $(BUILDDIR)/game/%.o: gameshared/%.c
+	@$(DO_CC_MODULE)
+
+$(BUILDDIR)/game/md5.o: qcommon/md5.c
 	@$(DO_CC_MODULE)
 
 ########

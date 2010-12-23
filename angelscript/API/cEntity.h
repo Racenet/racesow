@@ -10,12 +10,14 @@ public:
 	cEntity @ groundEntity;
 	cEntity @ owner;
 	cEntity @ enemy;
+	cEntity @ activator;
 	int type;
 	int modelindex;
 	int modelindex2;
 	int frame;
 	int ownerNum;
 	int counterNum;
+	int skinNum;
 	int colorRGBA;
 	int weapon;
 	bool teleported;
@@ -48,6 +50,17 @@ public:
 	float attenuation;
 	int mass;
 	uint timeStamp;
+	int particlesSpeed;
+	int particlesShaderIndex;
+	int particlesSpread;
+	int particlesSize;
+	int particlesTime;
+	int particlesFrequency;
+	bool particlesSpherical;
+	bool particlesBounce;
+	bool particlesGravity;
+	bool particlesExpandEffect;
+	bool particlesShrinkEffect;
 
 	/* object behaviors */
 	cEntity @ f(); /* factory */ 
@@ -65,8 +78,8 @@ public:
 	void setOrigin2(cVec3 &in);
 	cVec3 @ getAngles();
 	void setAngles(cVec3 &in);
-	void getSize(cVec3 @+, cVec3 @+);
-	void setSize(cVec3 @+, cVec3 @+);
+	void getSize(cVec3 @+mins, cVec3 @+maxs);
+	void setSize(cVec3 @+mins, cVec3 @+maxs);
 	void getMovedir(cVec3 &);
 	void setMovedir();
 	bool isBrushModel();
@@ -94,6 +107,7 @@ public:
 	void teleportEffect( bool );
 	void respawnEffect();
 	void setupModel( cString &in );
+	void setupModel( cString &in, cString &in );
 	cEntity @ findTargetEntity( cEntity @from );
 	cEntity @ findTargetingEntity( cEntity @from );
 	void use( cEntity @targeter, cEntity @activator );

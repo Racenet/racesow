@@ -240,11 +240,19 @@ static void Cmd_Noclip_f( edict_t *ent )
 {
 	char *msg;
 
-	if( !sv_cheats->integer )
+	if( !sv_cheats->integer && !isFreestyle() ) //racesow
 	{
 		G_PrintMsg( ent, "Cheats are not enabled on this server.\n" );
 		return;
 	}
+
+	//racesow
+	if( ent->s.team == TEAM_SPECTATOR )
+	{
+		G_PrintMsg( ent, "You can't use noclip while spectating.\n" );
+		return;
+	}
+	//!racesow
 
 	if( ent->movetype == MOVETYPE_NOCLIP )
 	{
@@ -384,9 +392,10 @@ static void Cmd_CvarInfo_f( edict_t *ent )
 static void Cmd_Position_f( edict_t *ent )
 {
 	char *action;
+	gsitem_t *weaponItem; //racesow
 
 	if( !sv_cheats->integer && GS_MatchState() > MATCH_STATE_WARMUP &&
-		ent->r.client->ps.pmove.pm_type != PM_SPECTATOR )
+		ent->r.client->ps.pmove.pm_type != PM_SPECTATOR && !isFreestyle() ) //racesow
 	{
 		G_PrintMsg( ent, "Position command is only available in warmup and in spectator mode.\n" );
 		return;
@@ -404,6 +413,7 @@ static void Cmd_Position_f( edict_t *ent )
 		ent->r.client->teamstate.position_saved = qtrue;
 		VectorCopy( ent->s.origin, ent->r.client->teamstate.position_origin );
 		VectorCopy( ent->s.angles, ent->r.client->teamstate.position_angles );
+		ent->r.client->teamstate.position_weapon = ent->s.weapon; //racesow
 		G_PrintMsg( ent, "Position saved.\n" );
 	}
 	else if( !Q_stricmp( action, "load" ) )
@@ -418,7 +428,13 @@ static void Cmd_Position_f( edict_t *ent )
 				G_SpectatorMode( ent );
 
 			if( G_Teleport( ent, ent->r.client->teamstate.position_origin, ent->r.client->teamstate.position_angles ) )
+			{
+				//racesow
+				weaponItem = GS_FindItemByTag( ent->r.client->teamstate.position_weapon );
+				G_UseItem( ent, weaponItem );
+				//!racesow
 				G_PrintMsg( ent, "Position loaded.\n" );
+			}
 			else
 				G_PrintMsg( ent, "Position not available.\n" );
 		}

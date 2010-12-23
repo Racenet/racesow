@@ -30,6 +30,7 @@ public:
 	bool canShowMinimap;
 	bool teamOnlyMinimap;
 	int spawnpointRadius;
+	bool customDeadBodyCam;
 
 	/* object behaviors */
 
