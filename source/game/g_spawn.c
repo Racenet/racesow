@@ -875,7 +875,10 @@ void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int lev
 		if( !ent->classname )
 		{
 			i++;
-			G_FreeEdict( ent );
+			//racesow: introducing the freestyle map bug again in order to make some freestyle maps work
+			if( !isFreestyle )
+				G_FreeEdict( ent );
+			//!racesow
 			continue;
 		}
 

@@ -35,7 +35,7 @@ cVar g_timelimit_reset( "g_timelimit_reset", "1", CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
-cVar g_warmup_enabled( "g_warmup_enabled", "0", CVAR_ARCHIVE );
+cVar g_warmup_timelimit( "g_warmup_timelimit", "0", CVAR_ARCHIVE ); //cvar g_warmup_enabled was removed in warsow 0.6
 
 cVar rs_welcomeMessage ("rs_welcomeMessage", S_COLOR_WHITE + "Welcome to this Racesow server. Type " + S_COLOR_ORANGE + "help" + S_COLOR_WHITE + " to get a list of commands\n", CVAR_ARCHIVE );
 cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_ARCHIVE|CVAR_NOSET );
@@ -772,7 +772,7 @@ void GT_MatchStateStarted()
     switch ( match.getState() )
     {
     case MATCH_STATE_WARMUP:
-        map.setUpMatch();
+				match.launchState( MATCH_STATE_PLAYTIME );
         break;
 
     case MATCH_STATE_COUNTDOWN:
@@ -955,7 +955,7 @@ void GT_InitGametype()
                  + "set g_allow_bunny \"0\" // learn it!\n"
                  + "set g_antilag \"0\" // do NEVER touch!\n"
                  + "set g_scorelimit \"0\" // a new feature..?\n"
-                 + "set g_warmup_enabled \"0\" // ...\n"
+								 + "set g_warmup_timelimit \"0\" // ... \n"
                  + "set rs_projectilePrestep \"24\" // is it used?\n"
                  + "set rs_movementStyle \"1\"\n"
                  + "\n"
@@ -1055,7 +1055,7 @@ void GT_InitGametype()
 	}
 
 	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
-	g_warmup_enabled.set("0");
+	g_warmup_timelimit.set("0"); //g_warmup_enabled was removed in warsow 0.6
 
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
 	oldTimelimit = g_timelimit.getInteger();

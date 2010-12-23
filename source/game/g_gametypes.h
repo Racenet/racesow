@@ -86,6 +86,7 @@ typedef struct
 	int clientCommandFuncID;
 	int botStatusFuncID;
 	int shutdownFuncID;
+	int RS_MysqlAuthenticate_CallbackID;
 
 	int spawnableItemsMask;
 	int respawnableItemsMask;

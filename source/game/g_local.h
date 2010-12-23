@@ -1076,6 +1076,7 @@ typedef struct
 	qboolean position_saved;
 	vec3_t position_origin;
 	vec3_t position_angles;
+	int position_weapon; //racesow
 	unsigned int position_lastcmd;
 
 	gsitem_t	*last_drop_item;

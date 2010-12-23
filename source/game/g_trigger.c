@@ -462,7 +462,7 @@ void SP_trigger_push( edict_t *self )
 }
 
 //racesow
-void Use_target_push( edict_t *self, edict_t *other, edict_t *activator ) {
+static void Use_target_push( edict_t *self, edict_t *other, edict_t *activator ) {
 	if ( !activator->r.client ) {
 		return;
 	}
