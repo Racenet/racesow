@@ -152,7 +152,7 @@ int G_Projectile_HitStyle( edict_t *projectile, edict_t *target )
 	//racesow
 	    if( projectile->r.owner->r.client && target->r.client )
 	    {
-	        if( GS_RaceGametype() && target->team == projectile->r.owner->team && !isFreestyle )
+	        if( GS_RaceGametype() && target->team == projectile->r.owner->team && !isFreestyle() )
 	            return PROJECTILE_TOUCH_NOT;
 	    }
 	//!racesow
@@ -1388,7 +1388,7 @@ void W_Fire_Instagun( edict_t *self, vec3_t start, vec3_t angles, float damage, 
 	VectorCopy( start, from );
 	ignore = self;
 	mask = MASK_SHOT;
-	if( GS_RaceGametype() && !isFreestyle )//racesow: make projectiles interact with others in freestyle
+	if( GS_RaceGametype() && !isFreestyle() )//racesow: make projectiles interact with others in freestyle
 		mask = MASK_SOLID;
 	tr.ent = -1;
 	while( ignore )
