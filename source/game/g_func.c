@@ -1427,7 +1427,10 @@ static void button_return( edict_t *self )
 	self->s.frame = 0;
 
 	if( self->health )
+	{
+	    self->deadflag = DEAD_NO;
 		self->takedamage = DAMAGE_YES;
+	}
 }
 
 static void button_wait( edict_t *self )
