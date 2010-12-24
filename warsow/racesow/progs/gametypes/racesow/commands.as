@@ -846,9 +846,9 @@ void RS_CreateCommands()
     commandCount++;
 
     Command_Join spec;
-    join.name = "spec";
-    join.description = "Spectate";
-    join.usage = "";
+    spec.name = "spec";
+    spec.description = "Spectate";
+    spec.usage = "";
     @commands[commandCount] = @spec;
     commandCount++;
     
