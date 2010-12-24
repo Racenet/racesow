@@ -339,7 +339,7 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 	client = targ->r.client;
 
 	// Cgg - race mode: players don't interact with one another
-	if( GS_RaceGametype() )
+	if( GS_RaceGametype() && !isFreestyle() )
 	{
 		if( attacker->r.client && targ->r.client && attacker != targ )
 			return;
@@ -654,7 +654,7 @@ void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, co
 
 #ifdef VERTICALBIAS
 		// move the center up for the push direction
-		if( origin[2] + maxs[2] > boxcenter[2] )
+		if( ( origin[2] + maxs[2] > boxcenter[2] ) && !GS_RaceGametype())// racesow don't do this in racesow
 			boxcenter[2] += VERTICALBIAS * ( ( origin[2] + maxs[2] ) - boxcenter[2] );
 #endif // VERTICALBIAS
 
@@ -688,7 +688,7 @@ void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, co
 }
 
 /*
-* G_TakeRadiusDamage
+* G_TakeRadiusDamage //racesow
 */
 void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane, edict_t *ignore, int mod )
 {
@@ -698,6 +698,8 @@ void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane,
 	int timeDelta;
 
 	float maxdamage, mindamage, maxknockback, minknockback, maxstun, minstun, radius;
+
+	int rs_minKnockback = 0, rs_maxKnockback = 0, rs_radius = 0;
 
 	assert( inflictor );
 
@@ -737,21 +739,32 @@ void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane,
 		{
 			gs_weapon_definition_t *weapondef = NULL;
 			if( inflictor->s.type == ET_ROCKET )
-				weapondef = GS_GetWeaponDef( WEAP_ROCKETLAUNCHER );
-			else if( inflictor->s.type == ET_GRENADE )
-				weapondef = GS_GetWeaponDef( WEAP_GRENADELAUNCHER );
-			else if( inflictor->s.type == ET_PLASMA )
-				weapondef = GS_GetWeaponDef( WEAP_PLASMAGUN );
-
-			if( weapondef )
 			{
-				G_SplashFrac4D( ENTNUM( ent ), inflictor->s.origin, radius, pushDir, &kickFrac, NULL, 0 );
+				weapondef = GS_GetWeaponDef( WEAP_ROCKETLAUNCHER );
+                rs_maxKnockback = trap_Cvar_Get( "rs_rocket_knockback", "100", CVAR_ARCHIVE )->integer;
+                rs_radius = trap_Cvar_Get( "rs_rocket_splash", "140", CVAR_ARCHIVE )->integer;
+                rs_minKnockback = trap_Cvar_Get( "rs_rocket_minknockback", "10", CVAR_ARCHIVE)->integer;
+			}
+			else if( inflictor->s.type == ET_GRENADE )
+			{
+				weapondef = GS_GetWeaponDef( WEAP_GRENADELAUNCHER );
+                rs_maxKnockback = trap_Cvar_Get( "rs_grenade_knockback", "90", CVAR_ARCHIVE )->integer;
+                rs_radius = trap_Cvar_Get( "rs_grenade_splash", "160", CVAR_ARCHIVE )->value;
+                rs_minKnockback = trap_Cvar_Get( "rs_grenade_minknockback", "5", CVAR_ARCHIVE )->integer;
+			}
+			else if( inflictor->s.type == ET_PLASMA )
+			{
+				weapondef = GS_GetWeaponDef( WEAP_PLASMAGUN );
+                rs_maxKnockback = trap_Cvar_Get( "rs_plasma_knockback", "20", CVAR_ARCHIVE )->integer;
+                rs_radius = trap_Cvar_Get( "rs_plasma_splash", "45", CVAR_ARCHIVE )->integer;
+                rs_minKnockback = trap_Cvar_Get( "rs_plasma_minknockback", "1", CVAR_ARCHIVE)->integer;
+			}
 
-				minknockback = weapondef->firedef.minknockback;
-				maxknockback = weapondef->firedef.knockback;
-				clamp_high( minknockback, maxknockback );
-				knockback = ( minknockback + ( (float)( maxknockback - minknockback ) * kickFrac ) ) * g_self_knockback->value;
-				damage *= weapondef->firedef.selfdamage;
+			if( rs_maxKnockback && rs_radius && rs_minKnockback && weapondef )
+			{
+                G_SplashFrac4D( ENTNUM( ent ), inflictor->s.origin, rs_radius, pushDir, &kickFrac, NULL, 0 );
+                knockback = (float)( rs_maxKnockback * kickFrac * g_self_knockback->value );
+                damage *= weapondef->firedef.selfdamage;
 			}
 		}
 
