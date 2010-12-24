@@ -660,6 +660,21 @@ class Command_Join : Racesow_Command
     }
 }
 
+class Command_Spec : Racesow_Command
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.client.team = TEAM_SPECTATOR;
+        player.client.respawn( true );
+        return true;
+    }
+}
+
 class Command_Noclip : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -830,6 +845,13 @@ void RS_CreateCommands()
     @commands[commandCount] = @join;
     commandCount++;
 
+    Command_Join spec;
+    join.name = "spec";
+    join.description = "Spectate";
+    join.usage = "";
+    @commands[commandCount] = @spec;
+    commandCount++;
+    
     Command_LastMap lastmap;
     lastmap.name = "lastmap";
     lastmap.description = "Print the name of the previous map on the server, before this one";

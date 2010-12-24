@@ -371,10 +371,12 @@ void G_AddServerCommands( void )
 	if( dedicated->integer )
 		trap_Cmd_AddCommand( "say", Cmd_ConsoleSay_f );
 	trap_Cmd_AddCommand( "kick", Cmd_ConsoleKick_f );
+	//racesow
+	trap_Cmd_AddCommand( "cancelvote", G_Cancelvote_f );
+	//!racesow
 
 	// match controls
 	trap_Cmd_AddCommand( "match", Cmd_Match_f );
-
 	// banning
 	trap_Cmd_AddCommand( "addip", Cmd_AddIP_f );
 	trap_Cmd_AddCommand( "removeip", Cmd_RemoveIP_f );
@@ -403,7 +405,9 @@ void G_RemoveCommands( void )
 	if( dedicated->integer )
 		trap_Cmd_RemoveCommand( "say" );
 	trap_Cmd_RemoveCommand( "kick" );
-
+    //racesow
+    trap_Cmd_RemoveCommand( "cancelvote" );
+    //!racesow
 	// match controls
 	trap_Cmd_RemoveCommand( "match" );
 

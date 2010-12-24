@@ -610,7 +610,8 @@ extern game_locals_t game;
 #define PLAYERNUM( x ) ( ( x ) - game.edicts - 1 )
 #define PLAYERENT( x ) ( game.edicts + ( x ) + 1 )
 #define G_ISGHOSTING( x ) ( ( ( x )->s.modelindex == 0 ) && ( ( x )->r.solid == SOLID_NOT ) )
-#define ISBRUSHMODEL( x ) ( ( ( x > 0 ) && ( (int)x < trap_CM_NumInlineModels() ) ) ? qtrue : qfalse )
+// racesow: fixing maps with many models: allows for 50 non-inline models to load
+#define ISBRUSHMODEL( x ) ( (  ( x > 0 ) && ( (int)x < trap_CM_NumInlineModels() ) && ( (int)x < MAX_MODELS-50 ) ) ? qtrue : qfalse )
 
 void G_TeleportEffect( edict_t *ent, qboolean in );
 void G_RespawnEffect( edict_t *ent );
@@ -649,6 +650,7 @@ void G_CallVotes_CmdVote( edict_t *ent );
 void G_CallVotes_Think( void );
 void G_CallVote_Cmd( edict_t *ent );
 void G_OperatorVote_Cmd( edict_t *ent );
+void G_Cancelvote_f( void );//racesow
 void G_RegisterGametypeScriptCallvote( const char *name, const char *usage, const char *help );
 
 //

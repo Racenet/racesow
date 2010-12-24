@@ -2146,6 +2146,32 @@ void G_OperatorVote_Cmd( edict_t *ent )
 
 	G_CallVote( ent, qtrue );
 }
+//racesow
+void G_Cancelvote_f( void )
+{
+    edict_t *other;
+
+    if( !callvoteState.vote.callvote )
+    {
+        Com_Printf( "There's no callvote to cancel.\n" );
+        return;
+    }
+
+    for( other = game.edicts + 1; PLAYERNUM( other ) < gs.maxclients; other++ )
+    {
+        if( !other->r.inuse || trap_GetClientState( PLAYERNUM( other ) ) < CS_SPAWNED )
+            continue;
+
+        if( ( other->r.svflags & SVF_FAKECLIENT ) || other->r.client->tv )
+            continue;
+
+        clientVoted[PLAYERNUM( other )] = VOTED_NO;
+    }
+
+    G_PrintMsg( NULL, "Callvote has been canceled by an admin\n" );
+    return;
+}
+//!racesow
 
 /*
 * G_VoteFromScriptValidate

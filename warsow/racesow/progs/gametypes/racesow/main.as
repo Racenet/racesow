@@ -44,6 +44,7 @@ cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how
 cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
 cVar g_gravity( "g_gravity", "850", CVAR_ARCHIVE );
+cVar g_self_knockback( "g_self_knockback", "1.18", CVAR_ARCHIVE);
 
 /**
  * Determines if the current client is using Racesow game library
@@ -772,7 +773,7 @@ void GT_MatchStateStarted()
     switch ( match.getState() )
     {
     case MATCH_STATE_WARMUP:
-				match.launchState( MATCH_STATE_PLAYTIME );
+        match.launchState( MATCH_STATE_PLAYTIME );
         break;
 
     case MATCH_STATE_COUNTDOWN:
@@ -1034,7 +1035,6 @@ void GT_InitGametype()
 	//G_RegisterCommand( "weapondef" );
 	
 	G_RegisterCommand( "ammoswitch" );
-	G_RegisterCommand( "classaction1" );
 	G_RegisterCommand( "whoisgod" );
 
 	//add callvotes
@@ -1057,6 +1057,8 @@ void GT_InitGametype()
 	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
 	g_warmup_timelimit.set("0"); //g_warmup_enabled was removed in warsow 0.6
 
+	g_self_knockback.set("1.25"); // 1.18 in basewsw.6
+	
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
 	oldTimelimit = g_timelimit.getInteger();
 
