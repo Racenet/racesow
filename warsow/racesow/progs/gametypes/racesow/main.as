@@ -103,7 +103,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	    player.sendMessage( devs[index] + "\n" );
 	}
 
-	else if ( ( cmdString == "ammoswitch" ) || ( cmdString == "classaction1" ) )
+	else if ( ( cmdString == "ammoswitch" ) )
 	{
 		return player.ammoSwitch();
 	}
@@ -520,7 +520,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
     }
 
 	if ( ent.isGhosting() )
-	return;
+	    return;
 
 	if ( g_freestyle.getBool() )
 	{
@@ -1057,7 +1057,7 @@ void GT_InitGametype()
 	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
 	g_warmup_timelimit.set("0"); //g_warmup_enabled was removed in warsow 0.6
 
-	g_self_knockback.set("1.25"); // 1.18 in basewsw.6
+	g_self_knockback.forceSet("1.25"); // 1.18 in basewsw.6
 	
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
 	oldTimelimit = g_timelimit.getInteger();

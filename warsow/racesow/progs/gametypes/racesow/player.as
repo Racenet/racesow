@@ -775,14 +775,15 @@ class Racesow_Player
 
 				}
 			}
-			ent.teleportEffect( false );
 		}
+		if( ent.team != TEAM_SPECTATOR )
+            ent.teleportEffect( true );
 		if(!keepVelocity)
 			ent.setVelocity( cVec3(0,0,0) );
 		ent.setOrigin( origin );
 		ent.setAngles( angles );
 		if( ent.team != TEAM_SPECTATOR )
-			ent.teleportEffect( true );
+			ent.teleportEffect( false );
 		return true;
 	}
 
@@ -792,6 +793,7 @@ class Racesow_Player
 	 */
 	bool position( cString argsString )
 	{
+	    //TODO: move this to the commands?
 		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
 			return false;
 		if( this.positionLastcmd + 500 > realTime )
