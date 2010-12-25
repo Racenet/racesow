@@ -670,7 +670,7 @@ class Command_Spec : Racesow_Command
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         player.client.team = TEAM_SPECTATOR;
-        player.client.respawn( true );
+        player.client.respawn( true ); // true means ghost
         return true;
     }
 }
@@ -845,12 +845,20 @@ void RS_CreateCommands()
     @commands[commandCount] = @join;
     commandCount++;
 
-    Command_Join spec;
+    Command_Spec spec;
     spec.name = "spec";
     spec.description = "Spectate";
     spec.usage = "";
     @commands[commandCount] = @spec;
     commandCount++;
+    
+    Command_Spec chase;
+    chase.name = "chase";
+    chase.description = "Spectate";
+    chase.usage = "";
+    @commands[commandCount] = @chase;
+    commandCount++;
+
     
     Command_LastMap lastmap;
     lastmap.name = "lastmap";

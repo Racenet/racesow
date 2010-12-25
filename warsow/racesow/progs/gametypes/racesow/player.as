@@ -985,7 +985,7 @@ class Racesow_Player
 		if( message.length() > 0)
 			G_PrintMsg( null, S_COLOR_RED + message + "\n" );
 		this.client.team = TEAM_SPECTATOR;
-		this.client.respawn( false ); // param = ghost, false|true what to use????
+		this.client.respawn( true ); // true means ghost
 	}
 	
    /**

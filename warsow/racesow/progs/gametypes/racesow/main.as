@@ -513,7 +513,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
         if (map.inOvertime) {
             player.client.team = TEAM_SPECTATOR;
-            player.client.respawn( false ); //FIXME : is it really necessary ?
+            player.client.respawn( true );
             player.sendMessage(S_COLOR_RED + "No spawning in overtime. Please wait for the other players to finish.\n");
             return;
         }
