@@ -553,8 +553,8 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	}
 	else
 	{
-		// set player movement to pass through other players
-		ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
+		// set player movement to pass through other players and remove gunblade auto attacking
+		ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
 
 		// disable autojump
 		if ( rs_allowAutoHop.getBool() == false )
