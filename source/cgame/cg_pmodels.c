@@ -1288,6 +1288,11 @@ void CG_AddPModel( centity_t *cent )
 
 	CG_AddHeadIcon( cent );
 
+  //racesow
+  if( rc_showPlayerTrails->value )
+    RC_AddLinearTrail( cent, rc_showPlayerTrails->value );
+  //!racesow
+
 #ifdef CGAMEGETLIGHTORIGIN
 	if( !( cent->ent.renderfx & RF_NOSHADOW ) && ( cg_shadows->integer == 1 ) )
 		CG_AllocShadeBox( cent->current.number, cent->ent.origin, playerbox_stand_mins, playerbox_stand_maxs, NULL );

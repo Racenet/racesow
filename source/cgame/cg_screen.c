@@ -112,6 +112,11 @@ void CG_CenterPrint( char *str )
 	scr_centertime_off = cg_centerTime->value;
 	scr_centertime_start = cg.time;
 
+	//racesow
+	if( GS_RaceGametype() == qtrue )
+			CG_RaceAddCheckpoint(scr_centerstring );
+	//!racesow
+
 	// count the number of lines for centering
 	scr_center_lines = 1;
 	s = scr_centerstring;
@@ -321,6 +326,11 @@ void CG_ScreenInit( void )
 	trap_Cmd_AddCommand( "sizedown", CG_SizeDown_f );
 	trap_Cmd_AddCommand( "help_hud", Cmd_CG_PrintHudHelp_f );
 
+  //racesow - lm:race mod
+  trap_Cmd_AddCommand( "jumps", CG_RaceSayjump_f );
+  CG_ClearJumpspeed();
+  //racesow
+
 	// random background image, note that this has to be in sync with UI module,
 	// so the order of Q_rand calls matters
 	backgroundNum = Q_rand( &cg.sharedSeed ) % UI_SHADER_MAX_BACKGROUNDS;
@@ -336,6 +346,7 @@ void CG_ScreenShutdown( void )
 	trap_Cmd_RemoveCommand( "sizeup" );
 	trap_Cmd_RemoveCommand( "sizedown" );
 	trap_Cmd_RemoveCommand( "help_hud" );
+  trap_Cmd_RemoveCommand( "jumps" ); //racesow
 }
 
 
