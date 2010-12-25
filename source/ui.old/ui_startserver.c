@@ -344,6 +344,7 @@ static void StartServerActionFunc( menucommon_t *unused )
 	trap_Cvar_SetValue( "sv_skilllevel", m_skill );
 	trap_Cvar_SetValue( "sv_cheats", m_cheats );
 	trap_Cvar_SetValue( "sv_public", m_public );
+	trap_Cvar_SetValue( "rs_mysqlenabled", 0 ); //racesow: only dedicated servers use mysql ;)
 
 	str = UI_GetMenuitemFieldBuffer( UI_MenuItemByName( "m_startserver_hostname" ) );
 	if( str ) trap_Cvar_Set( "sv_hostname", str );
