@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="ui" />
+		<Option makefile_is_custom="1" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+				</Compiler>
+				<Linker>
+					<Add library="winmm" />
+				</Linker>
+				<MakeCommands>
+					<Build command="DEBUG_BUILD=YES $make -C ../ -f $makefile ui" />
+					<CompileFile command="DEBUG_BUILD=YES $make -C ../ -f $makefile $file" />
+					<Clean command="DEBUG_BUILD=YES $make -C ../ -f $makefile clean-ui" />
+					<DistClean command="DEBUG_BUILD=YES $make -C ../ -f $makefile distclean-ui" />
+				</MakeCommands>
+			</Target>
+			<Target title="Debug MinGW">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+				</Compiler>
+				<Linker>
+					<Add library="winmm" />
+				</Linker>
+				<MakeCommands>
+					<Build command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile ui" />
+					<CompileFile command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile $file" />
+					<Clean command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile clean-ui" />
+					<DistClean command="USE_MINGW=YES DEBUG_BUILD=YES $make -C ../ -f $makefile distclean-ui" />
+				</MakeCommands>
+			</Target>
+			<Target title="Release">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+				</Compiler>
+				<Linker>
+					<Add library="winmm" />
+				</Linker>
+				<MakeCommands>
+					<Build command="DEBUG_BUILD=NO $make -C ../ -f $makefile ui" />
+					<CompileFile command="DEBUG_BUILD=NO $make -C ../ -f $makefile $file" />
+					<Clean command="DEBUG_BUILD=NO $make -C ../ -f $makefile clean-ui" />
+					<DistClean command="DEBUG_BUILD=NO $make -C ../ -f $makefile distclean-ui" />
+				</MakeCommands>
+			</Target>
+			<Target title="Release MinGW">
+				<Option type="4" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+				</Compiler>
+				<Linker>
+					<Add library="winmm" />
+				</Linker>
+				<MakeCommands>
+					<Build command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile ui" />
+					<CompileFile command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile $file" />
+					<Clean command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile clean-ui" />
+					<DistClean command="USE_MINGW=YES DEBUG_BUILD=NO $make -C ../ -f $makefile distclean-ui" />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="../game/g_gametype_ca.h" />
+		<Unit filename="../gameshared/config.h" />
+		<Unit filename="../gameshared/gs_public.h" />
+		<Unit filename="../gameshared/gs_qrespath.h" />
+		<Unit filename="../gameshared/q_arch.h" />
+		<Unit filename="../gameshared/q_collision.h" />
+		<Unit filename="../gameshared/q_comref.h" />
+		<Unit filename="../gameshared/q_cvar.h" />
+		<Unit filename="../gameshared/q_dynvar.h" />
+		<Unit filename="../gameshared/q_math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../gameshared/q_math.h" />
+		<Unit filename="../gameshared/q_shared.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../gameshared/q_shared.h" />
+		<Unit filename="ui.def" />
+		<Unit filename="ui_atoms.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_atoms.h" />
+		<Unit filename="ui_boneposes.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_boneposes.h" />
+		<Unit filename="ui_chasecam.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_connect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_demoplay.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_demos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_failed.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_game.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_keycodes.h" />
+		<Unit filename="ui_keys.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_local.h" />
+		<Unit filename="ui_login.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_matchmaker.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_menu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_menucustom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_messagebox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_mods.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_options.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_performance.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_performance_adv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_playerconfig.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_playermodels.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_public.h" />
+		<Unit filename="ui_quit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_register.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_setup.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_sound.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_startserver.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_syscalls.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_syscalls.h" />
+		<Unit filename="ui_teamconfig.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_tutorials.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_tv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ui_vsays.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
