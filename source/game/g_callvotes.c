@@ -239,6 +239,59 @@ static char *G_VoteMapCurrent( void )
 	return level.mapname;
 }
 
+// racesow : randmap
+
+/**
+ * Choose a valid random map in the map list.
+ */
+qboolean RS_VoteRandmapValidate( callvotedata_t *vote, qboolean first )
+{
+    int index = brandom( 1, mapcount );
+    int size = 0;
+    char *s, *tok;
+    static const char *seps = " ,\n\r";
+
+    if( !first )
+        return qtrue;
+
+    s = G_CopyString( maplist );
+    tok = strtok( s, seps );
+
+    while ( tok != NULL )
+    {
+        if( Q_stricmp( tok, level.mapname ) )
+            index--;
+
+        if ( index == 0)
+            break;
+
+        tok = strtok( NULL, seps );
+    }
+
+    G_Free(s);
+
+    if ( index == 0){
+        size = strlen( tok ) + 1;
+        vote->data = G_Malloc( size );
+        Q_strncpyz(vote->data, tok, size);
+        return qtrue;
+    }
+    else
+    {
+        G_PrintMsg( vote->caller, "%sCouldn't find a random map, maybe try again.\n", S_COLOR_RED );
+        return qfalse;
+    }
+}
+
+/**
+ * Execute the randmap vote
+ */
+void RS_VoteRandmapPassed( callvotedata_t *vote){
+    Q_strncpyz( level.forcemap, Q_strlwr(vote->data) , strlen(vote->data)+1 );
+    G_EndMatch();
+}
+
+// !racesow
 
 //====================
 // restart
