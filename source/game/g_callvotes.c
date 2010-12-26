@@ -146,11 +146,29 @@ static void G_VoteMapExtraHelp( edict_t *ent )
 static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 {
 	char mapname[MAX_CONFIGSTRING_CHARS];
+    char *map;
+    int mapnumber;
 
 	if( !first )  // map can't become invalid while voting
 		return qtrue;
-	if( Q_isdigit( data->argv[0] ) )  // FIXME
-		return qfalse;
+
+	// racesow : vote a map number
+    mapnumber = atoi( data->argv[0] );
+
+    if( !Q_stricmp( data->argv[0], va( "%i", mapnumber ) ) && ( mapnumber <= mapcount ) )
+    {
+        map = RS_GetMapByNum(mapnumber);
+
+        if ( map != NULL )
+        {
+            G_Free( data->argv[0] );
+            data->argv[0] = G_Malloc( strlen (map) + 1 );
+            Q_strncpyz( data->argv[0], map, strlen (map) + 1 );
+        }
+
+        free(map);
+    }
+    // !racesow
 
 	if( strlen( "maps/" ) + strlen( data->argv[0] ) + strlen( ".bsp" ) >= MAX_CONFIGSTRING_CHARS )
 	{
@@ -182,10 +200,10 @@ static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 			static const char *seps = " ,";
 
 			// if map pool is empty, basically turn it off
-			if( strlen(g_map_pool->string) < 2 )
+			if( strlen(maplist) < 2 ) //racesow : use maplist
 				return qtrue;
 
-			s = G_CopyString( g_map_pool->string );
+			s = G_CopyString(maplist); //racesow : use maplist
 			tok = strtok( s, seps );
 			while ( tok != NULL )
 			{
