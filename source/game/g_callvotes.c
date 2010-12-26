@@ -2328,6 +2328,17 @@ void G_CallVotes_Init( void )
 	callvote->argument_format = G_LevelCopyString( "<name/[startnum]>" );
 	callvote->help = G_LevelCopyString( "- Changes map" );
 
+    // racesow
+    callvote = G_RegisterCallvote( "randmap" );
+    callvote->expectedargs = 0;
+    callvote->validate = RS_VoteRandmapValidate;
+    callvote->execute = RS_VoteRandmapPassed;
+    callvote->current = NULL;
+    callvote->extraHelp = NULL;
+    callvote->argument_format = NULL;
+    callvote->help = G_LevelCopyString( "- Changes to a random map" );
+    // !racesow
+
 	callvote = G_RegisterCallvote( "restart" );
 	callvote->expectedargs = 0;
 	callvote->validate = NULL;
