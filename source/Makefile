@@ -143,7 +143,7 @@ endif
 
 LDFLAGS_CLIENT=-lcurlstat -lwsock32 -ljpegstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
 LDFLAGS_DED=-lcurlstat -lwsock32
-LDFLAGS_MODULE=-shared
+LDFLAGS_MODULE=-shared -lmysql -lpthread
 LDFLAGS_TV_SERVER=
 
 # openal
