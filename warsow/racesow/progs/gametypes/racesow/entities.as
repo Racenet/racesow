@@ -421,13 +421,13 @@ void RS_UseShooter( cEntity @self, cEntity @other, cEntity @activator ) {
 	switch ( self.weapon )
 	{
         case WEAP_GRENADELAUNCHER:
-        	G_FireGrenade( self.getOrigin(), angles, rs_grenadeweak_speed.getInteger(), 0, 0, rs_grenadeweak_knockback.getInteger(), 0, @activator );
+        	G_FireGrenade( self.getOrigin(), angles, rs_grenadeweak_speed.getInteger(), 0, 65, rs_grenadeweak_knockback.getInteger(), 0, @activator );
             break;
         case WEAP_ROCKETLAUNCHER:
-        	G_FireRocket( self.getOrigin(), angles, rs_rocketweak_speed.getInteger(), rs_rocketweak_splash.getInteger(), 0, rs_rocketweak_knockback.getInteger(), 0, @activator );
+        	G_FireRocket( self.getOrigin(), angles, rs_rocketweak_speed.getInteger(), rs_rocketweak_splash.getInteger(), 75, rs_rocketweak_knockback.getInteger(), 0, @activator );
             break;
         case WEAP_PLASMAGUN:
-        	G_FirePlasma( self.getOrigin(), angles, rs_plasmaweak_speed.getInteger(), rs_plasmaweak_splash.getInteger(), 0, rs_plasmaweak_knockback.getInteger(), 0, @activator );
+        	G_FirePlasma( self.getOrigin(), angles, rs_plasmaweak_speed.getInteger(), rs_plasmaweak_splash.getInteger(), 15, rs_plasmaweak_knockback.getInteger(), 0, @activator );
             break;
     }
 
