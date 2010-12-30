@@ -1529,7 +1529,8 @@ void SP_func_button( edict_t *ent )
 		ent->die = button_killed;
 		ent->takedamage = DAMAGE_YES;
 	}
-	//else if( !ent->targetname || G_IsQ1Map() ) //racesow: We suppose all buttons should be touchable regardless of targetname
+	//else if( !ent->targetname || G_IsQ1Map() ) //racesow: We suppose all buttons without health should be touchable regardless of targetname
+	else
 	{
 		ent->touch = button_touch;
 	}
