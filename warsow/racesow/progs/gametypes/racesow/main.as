@@ -351,13 +351,15 @@ cString @GT_ScoreboardMessage( int maxlen )
     for ( i = 0; @team.ent( i ) != null; i++ )
     {
         @ent = @team.ent( i );
+        Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
 
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
-        racing = int( Racesow_GetPlayerByClient( ent.client ).isRacing() ? 1 : 0 );
+        racing = int( player.isRacing() ? 1 : 0 );
     	if ( !(g_freestyle.getBool()) ) // use a different scoreboard for freestyle
     	{
 			entry = "&p " + playerID + " " + ent.client.getClanName() + " "
-					+ Racesow_GetPlayerByClient( ent.client ).getBestTime() + " "
+					+ player.getBestTime() + " "
+					+ player.highestSpeed + " "
 					+ ent.client.ping + " " + racing + " ";
     	}
     	else
@@ -697,7 +699,11 @@ void GT_ThinkRules()
             @player.race = null;
 
         if ( player.isRacing() )
+        {
             client.setHUDStat( STAT_TIME_SELF, (levelTime - player.race.getStartTime()) / 100 );
+            if ( player.highestSpeed < player.getSpeed() )
+                player.highestSpeed = player.getSpeed(); // updating the heighestSpeed attribute.
+        }
 
 		if ( !(g_freestyle.getBool()) ) // remove the time stats in freestyle
 		{
@@ -1019,8 +1025,8 @@ void GT_InitGametype()
     // define the scoreboard layout
 	if ( !(g_freestyle.getBool()) ) // use a different scoreboard for freestyle
 	{
-    	G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %b 48" );
-    	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping Racing" );
+	    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %i 48 %l 48 %b 48" );
+	    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Speed Ping Racing" );
 	}
 	else
 	{

@@ -115,6 +115,11 @@ class Racesow_Player
 	 */
     uint topLastcmd;
 
+    /**
+     * Current session speed record
+     */
+    int highestSpeed;
+
 	/**
 	 * Is the player waiting for the result of a command (like "top")?
 	 * (this is another kind of flood protection)
@@ -483,6 +488,15 @@ class Racesow_Player
 		return this.race.inRace();
 	}
 
+	/**
+	 * Get the player current speed
+	 */
+	int getSpeed()
+	{
+	    cVec3 globalSpeed = this.getClient().getEnt().getVelocity();
+	    cVec3 horizontalSpeed = cVec3(globalSpeed.x, globalSpeed.y, 0);
+	    return horizontalSpeed.length();
+	}
 	/**
 	 * crossStartLine
 	 * @return void
