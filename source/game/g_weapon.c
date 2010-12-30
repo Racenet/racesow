@@ -938,12 +938,11 @@ static void W_Touch_Plasma( edict_t *ent, edict_t *other, cplane_t *plane, int s
 {
 	int hitType;
 	vec3_t dir;
-
-	if( surfFlags & SURF_NOIMPACT )
+	/*if( surfFlags & SURF_NOIMPACT ) //<- Warsow0.6 code
 	{
 		G_FreeEdict( ent );
 		return;
-	}
+	}*/
 
 	hitType = G_Projectile_HitStyle( ent, other );
 	if( hitType == PROJECTILE_TOUCH_NOT )
@@ -961,8 +960,18 @@ static void W_Touch_Plasma( edict_t *ent, edict_t *other, cplane_t *plane, int s
 		{
 			VectorNormalize2( ent->velocity, dir );
 		}
-
-		G_TakeDamage( other, ent, ent->r.owner, dir, ent->velocity, ent->s.origin, ent->projectileInfo.maxDamage, ent->projectileInfo.maxKnockback, ent->projectileInfo.stun, DAMAGE_KNOCKBACK_SOFT, ent->style );
+		//racesow
+		if( surfFlags & SURF_NOIMPACT ) //hack for plasma shooters which shoot on buttons with SURF_NOIMPACT
+		{
+			G_TakeDamage( other, ent, ent->r.owner, dir, ent->velocity, ent->s.origin, ent->projectileInfo.maxDamage, 0, 0, DAMAGE_NO_KNOCKBACK, ent->style );
+			G_FreeEdict( ent );
+			return;
+		}
+		//!racesow
+		else
+		{
+			G_TakeDamage( other, ent, ent->r.owner, dir, ent->velocity, ent->s.origin, ent->projectileInfo.maxDamage, ent->projectileInfo.maxKnockback, ent->projectileInfo.stun, DAMAGE_KNOCKBACK_SOFT, ent->style );
+		}
 	}
 
 	W_Plasma_Explosion( ent, other, plane, surfFlags );
