@@ -244,7 +244,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 				{
 					if ( @players[i].getClient() != null )
 					{
-						players[i].remove("You have been removed because you were playing during overtime.");
+						players[i].moveToSpec( S_COLOR_RED + "You have been move to spec cause you were playing in overtime.\n");
 					}
 				}
 

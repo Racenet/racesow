@@ -1003,7 +1003,7 @@ class Racesow_Player
 		this.client.team = TEAM_SPECTATOR;
 		this.client.respawn( true ); // true means ghost
 	}
-	
+
    /**
      * Ban the player
      * @param cString message
@@ -1016,6 +1016,17 @@ class Racesow_Player
         G_CmdExecute( "addip " + ip + " 15;kick " + this.client.playerNum() );
     }
 
+    /**
+     * Move the player to spec and leave a message to him
+     * @param cString message
+     * @return void
+     */
+    void moveToSpec( cString message )
+    {
+        this.client.team = TEAM_SPECTATOR;
+        this.client.respawn( true ); // true means ghost
+        this.sendMessage( message );
+    }
 	/**
 	 * Switch player ammo between strong/weak
 	 * @param cClient @client
