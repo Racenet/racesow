@@ -8,9 +8,13 @@ legacy/quake1_items.as;
 legacy/quake2_items.as;
 legacy/quake3_items.as;
 
+legacy/quake1_ctf.as;
+legacy/quake3_ctf.as;
+
 racesow/main.as;
 racesow/helpers.as;
 racesow/entities.as;
+racesow/entities/fastcap.as;
 racesow/adapter/abstract.as;
 racesow/adapter/compat.as;
 racesow/adapter/full.as;
