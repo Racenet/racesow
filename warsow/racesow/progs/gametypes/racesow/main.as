@@ -20,6 +20,8 @@ Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 Racesow_Adapter_Abstract @racesowAdapter;
 
+int prcFlagIconStolen;
+
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Token( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET );
@@ -318,6 +320,10 @@ cEntity @GT_SelectSpawnPoint( cEntity @self )
 	if( player.wasTelekilled )
 	{
 		return @player.gravestone;
+	}
+	else if( @alphaFlagBase != null )
+	{
+	    return @bestFastcapSpawnpoint();
 	}
 	else
 	{
@@ -718,7 +724,14 @@ void GT_ThinkRules()
 				client.setHUDStat( STAT_TIME_ALPHA, map.worldBest / 100 );
 			}
 		}
-
+		
+		//fastcap
+		if( ( client.getEnt().effects & EF_FLAG_TRAIL ) != 0 )
+		    client.setHUDStat( STAT_IMAGE_SELF, prcFlagIconStolen );
+		if( unlockTimes[client.playerNum()] > 0 )
+		    client.setHUDStat( STAT_PROGRESS_OTHER, ( unlockTimes[client.playerNum()]  / ( CTF_UNLOCK_TIME * 10 ) ) );
+		//!fastcap
+		
 		// what is this for? should we del it? please add a meaningful comment
         if ( map.getHighScore().playerName.len() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
@@ -896,8 +909,7 @@ void GT_SpawnGametype()
     @from = @target_give;
     @target_give = @G_FindEntityWithClassname(from, "target_give");
     }
-
-    //TODOSOW fastcap if there are flag entitys
+    
     for( int tag = WEAP_NONE; tag < POWERUP_TOTAL; tag++ )
     {
     	cItem @Item = G_GetItem( tag );
@@ -1038,6 +1050,8 @@ void GT_InitGametype()
     	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Ping" );
 	}
 
+	prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );	
+	
     // add commands
 	RS_InitCommands();
 	

@@ -29,6 +29,10 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 	return false;
 }
 
+/*
+ * Entity code for infinitive weapon pickup
+ */
+
 void replacementItem( cEntity @oldItem )
 {
   	cVec3 min, max;
@@ -546,6 +550,9 @@ void target_relay( cEntity @ent )
 	//the rest does the use code
 }
 
+/*
+ * Soundfix
+ */
 void AS_weapon_gunblade_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
     replacementItem_use( @ent, @other, @activator );
