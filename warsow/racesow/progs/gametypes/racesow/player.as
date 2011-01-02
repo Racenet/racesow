@@ -284,7 +284,7 @@ class Racesow_Player
 		oldServerBestTime = map.getHighScore().getTime();
 		
         //print general info to player
-        this.getClient().addAward( S_COLOR_CYAN + "Race Finished!" );
+        this.sendAward( S_COLOR_CYAN + "Race Finished!" );
 		bool noDelta = 0 == bestTime;
         G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
             + ( noDelta ? "" : diffString( bestTime, newTime ) ) );
@@ -302,7 +302,7 @@ class Racesow_Player
 
         earnedPoints = newPoints - oldPoints;
         if (earnedPoints > 0) {
-            this.getClient().addAward( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!" );
+            this.sendAward( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!" );
             this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!\n" );
         }
 
@@ -320,7 +320,7 @@ class Racesow_Player
         //print record awards
 		if ( oldBestTime == 0 || newTime < oldBestTime ) //world record award
         {
-		    this.getClient().addAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
+		    this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
 		    G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 		            + "made a new " + S_COLOR_GREEN  + rs_networkName.getString() + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
 			this.sendMessage(S_COLOR_YELLOW + "Congratulations! You can now set a " + S_COLOR_WHITE + "oneliner" + S_COLOR_YELLOW + ". Careful though, only one try.\n");
@@ -328,13 +328,13 @@ class Racesow_Player
 
         else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //server record award
         {
-			this.getClient().addAward( S_COLOR_GREEN + "New server record!" );
+			this.sendAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
         }
         else if ( oldTime == 0 || newTime < oldTime ) //personal record award
         {
-			this.getClient().addAward( "Personal record!" );
+			this.sendAward( "Personal record!" );
         }
     }
 
@@ -913,6 +913,18 @@ class Racesow_Player
 		// maybe log messages for some reason to figure out ;)
 	}
 
+   /**
+     * Send an unlogged award to the player
+     * @param cString message
+     * @return void
+     */
+    void sendAward( cString message )
+    {
+        if (@this.client == null)
+            return;
+        this.client.execGameCommand( "aw \"" + message + "\"" );
+    }
+	
     /**
      * Send a message to console of the player
      * when the message is too long, split it in several parts

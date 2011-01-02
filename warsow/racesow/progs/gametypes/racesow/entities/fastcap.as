@@ -9,6 +9,8 @@ float[] unlockTimes( maxClients );
 
 cFlagBase @alphaFlagBase = null;
 cFlagBase @betaFlagBase = null;
+cEntity @bestFastcapSpawnPoint = null;
+bool noBestFastcapPosition = false;
 
 class cFlagBase
 {
@@ -172,6 +174,15 @@ class cFlagBase
             mins = 0;
             maxs = 0;
             int clientNum = target.client.playerNum();
+            if( unlockTimes[clientNum] == 0 )
+            {
+                target.client.armor = 0;
+                target.health = target.maxHealth;
+                target.client.inventoryClear();
+                target.client.inventorySetCount( WEAP_GUNBLADE, 1 );
+                target.client.selectWeapon( WEAP_GUNBLADE );
+                removeProjectiles( target );
+            }
             if ( !tr.doTrace( origin, mins, maxs, center, target.entNum(), MASK_SOLID ) )
             {
                 unlockTimes[clientNum] += frameTime;
@@ -189,24 +200,20 @@ class cFlagBase
     
     }
 
-    void flagCaptured( cEntity @player )
+    void flagCaptured( cEntity @ent )
     {
-        player.client.addAward( S_COLOR_GREEN + "Flag Capture!" );
-        this.resetCarrier( player );
-        Racesow_GetPlayerByClient( player.client ).touchStopTimer();
+        Racesow_Player @player = @Racesow_GetPlayerByClient( ent.client );
+        player.sendAward( S_COLOR_GREEN + "Flag Capture!" );
+        this.resetCarrier( ent );
+        player.touchStopTimer();
     }
 
-    void flagStolen( cEntity @player )
-    {    
-        player.client.armor = 0;
-        player.health = player.maxHealth;
-        player.client.inventoryClear();
-        player.client.inventorySetCount( WEAP_GUNBLADE, 1 );
-        player.client.selectWeapon( WEAP_GUNBLADE );
-        removeProjectiles( player );
-        player.client.addAward( S_COLOR_GREEN + "Flag Steal!" );
-        this.setCarrier( player );
-        Racesow_GetPlayerByClient( player.client ).touchStartTimer();
+    void flagStolen( cEntity @ent )
+    {   
+        Racesow_Player @player = @Racesow_GetPlayerByClient( ent.client );
+        player.sendAward( S_COLOR_GREEN + "Flag Steal!" );
+        this.setCarrier( ent );
+        player.touchStartTimer();
     }
 }
 
@@ -365,51 +372,123 @@ void team_CTF_betaplayer( cEntity @ent )
 
 cEntity @bestFastcapSpawnpoint()
 {
+    if( @bestFastcapSpawnPoint != null && !noBestFastcapPosition )
+        return @bestFastcapSpawnPoint;
+    cTrace tr;
+    cVec3 center, mins, maxs;
+    cVec3 flagOrigin = alphaFlagBase.owner.getOrigin();
+
     cEntity @closestSpawn = null;
-    float closestDistance = 1024;
+    cEntity @currentSpawnpoint;
+    float closestDistance = CTF_UNLOCK_RADIUS * 2;
     
-    cEntity @currentSpawnpoint = @G_FindEntityWithClassname( null, "team_CTF_alphaspawn" );
-    if( @currentSpawnpoint == null )
-        return closestSpawn;
-    do
+    for ( int i = 0; i < 3; i++ )
     {
-        float currentDistance = currentSpawnpoint.getOrigin().distance( alphaFlagBase.owner.getOrigin() );
-        if( currentDistance < closestDistance && currentDistance > ( CTF_UNLOCK_RADIUS + 1 ) )
+        cString classname;
+        switch( i )
         {
-            @closestSpawn = @currentSpawnpoint;
-            closestDistance = currentDistance;
+        case 0:
+            classname = "team_CTF_alphaspawn";
+            break;
+        case 1:
+            classname = "team_CTF_alphaplayer";
+            break;
+        case 2:
+            classname = "info_player_start";
+            break;
         }
-        @currentSpawnpoint = @G_FindEntityWithClassname( @currentSpawnpoint, "team_CTF_alphaspawn" );
-    } while( @currentSpawnpoint != null );
+        @currentSpawnpoint = @G_FindEntityWithClassname( null, classname );
+        if( @currentSpawnpoint != null )
+        {
+            do
+            {
+                float currentDistance = currentSpawnpoint.getOrigin().distance( alphaFlagBase.owner.getOrigin() );
+                currentSpawnpoint.getSize( mins, maxs );
+                center = currentSpawnpoint.getOrigin() + ( 0.5 * ( maxs + mins ) );
+                if( currentDistance < closestDistance && currentDistance > ( CTF_UNLOCK_RADIUS + 1 ) && 
+                        !tr.doTrace( flagOrigin, vec3Origin, vec3Origin, center, currentSpawnpoint.entNum(), MASK_SOLID ) )
+                {
+                    
+                    @closestSpawn = @currentSpawnpoint;
+                    closestDistance = currentDistance;
+                }
+                @currentSpawnpoint = @G_FindEntityWithClassname( @currentSpawnpoint, classname );
+            } while( @currentSpawnpoint != null );
+        }
+    }
     
-    @currentSpawnpoint = @G_FindEntityWithClassname( null, "team_CTF_alphaplayer" );
-    if( @currentSpawnpoint == null )
-        return closestSpawn;
-    do
+    if( @closestSpawn == null )
     {
-        float currentDistance = currentSpawnpoint.getOrigin().distance( alphaFlagBase.owner.getOrigin() );
-        if( currentDistance < closestDistance && currentDistance > ( CTF_UNLOCK_RADIUS + 2 ) )
+        cVec3 flagOrigin = alphaFlagBase.owner.getOrigin();
+        cVec3 center, mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+        center = flagOrigin + ( 0.5 * ( maxs + mins ) );
+        for ( int i = 0; i < 8; i++ )
         {
-            @closestSpawn = @currentSpawnpoint;
-            closestDistance = currentDistance;
+            cVec3 addVector, newOrigin;
+            switch( i )
+            {
+            case 0:
+                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x , 0, 0);
+                break;
+            case 1:
+                addVector = cVec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x) , 0, 0);
+                break;
+            case 2:
+                addVector = cVec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
+                break;
+            case 3:
+                addVector = cVec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
+                break;
+            case 4:
+                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
+                break;
+            case 5:
+                addVector = cVec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x), -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
+                break;
+            case 6:
+                addVector = cVec3( -( CTF_UNLOCK_RADIUS + 1 + maxs.x ), CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
+                break;
+            case 7:
+                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
+                break;
+            }
+            newOrigin = flagOrigin + addVector;
+            if( !tr.doTrace( newOrigin, mins, maxs, center, alphaFlagBase.owner.entNum(), MASK_SOLID ) )
+            {
+                @currentSpawnpoint = @G_SpawnEntity( "info_player_start" );
+                currentSpawnpoint.setOrigin( cVec3( newOrigin.x, newOrigin.y, newOrigin.z + 8 ));
+                cTrace drop;
+                cVec3 start, end;
+                end = start = newOrigin;
+                start.z += 16;
+                end.z -= 1024;
+                drop.doTrace( start, mins, maxs, end, currentSpawnpoint.entNum(), MASK_SOLID );
+                if( drop.getEndPos().z < ( flagOrigin.z ) - 2 )
+                {
+                    currentSpawnpoint.freeEntity();
+                }
+                else
+                {
+                    @bestFastcapSpawnPoint = @currentSpawnpoint;
+                    break;
+                }
+            }
         }
-        @currentSpawnpoint = @G_FindEntityWithClassname( @currentSpawnpoint, "team_CTF_alphaplayer" );
-    } while( @currentSpawnpoint != null );
+    }
+    else
+    {
+        @bestFastcapSpawnPoint = @closestSpawn;
+    }
     
-    @currentSpawnpoint = @G_FindEntityWithClassname( null, "info_player_start" );
-    if( @currentSpawnpoint == null )
-        return closestSpawn;
-    do
-    {
-        float currentDistance = currentSpawnpoint.getOrigin().distance( alphaFlagBase.owner.getOrigin() );
-        if( currentDistance < closestDistance && currentDistance > ( CTF_UNLOCK_RADIUS + 2 ) )
-        {
-            @closestSpawn = @currentSpawnpoint;
-            closestDistance = currentDistance;
-        }
-        @currentSpawnpoint = @G_FindEntityWithClassname( @currentSpawnpoint, "info_player_start" );
-    } while( @currentSpawnpoint != null );
-    return closestSpawn;    
+    noBestFastcapPosition = ( @closestSpawn == null ) ? true : false;
+    //look at flag
+    cVec3 angles;
+    cVec3 dir = flagOrigin - bestFastcapSpawnPoint.getOrigin();
+    dir.toAngles( angles );
+    bestFastcapSpawnPoint.setAngles( angles );
+    bestFastcapSpawnPoint.linkEntity();
+    
+    return @bestFastcapSpawnPoint;    
 }
 
 void addFastcapHUDStats( cClient @client )
