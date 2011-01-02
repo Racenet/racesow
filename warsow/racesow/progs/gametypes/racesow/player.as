@@ -237,6 +237,7 @@ class Racesow_Player
 		this.racingTimeSinceLastRace = 0;
 		this.challengerList = "";
 		this.printWelcomeMessage = false;
+		this.highestSpeed = 0;
 	}
 
 	/**
