@@ -725,12 +725,8 @@ void GT_ThinkRules()
 			}
 		}
 		
-		//fastcap
-		if( ( client.getEnt().effects & EF_FLAG_TRAIL ) != 0 )
-		    client.setHUDStat( STAT_IMAGE_SELF, prcFlagIconStolen );
-		if( unlockTimes[client.playerNum()] > 0 )
-		    client.setHUDStat( STAT_PROGRESS_OTHER, ( unlockTimes[client.playerNum()]  / ( CTF_UNLOCK_TIME * 10 ) ) );
-		//!fastcap
+		addFastcapHUDStats( @client );
+
 		
 		// what is this for? should we del it? please add a meaningful comment
         if ( map.getHighScore().playerName.len() > 0 )

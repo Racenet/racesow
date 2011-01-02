@@ -411,3 +411,11 @@ cEntity @bestFastcapSpawnpoint()
     } while( @currentSpawnpoint != null );
     return closestSpawn;    
 }
+
+void addFastcapHUDStats( cClient @client )
+{
+    if( ( client.getEnt().effects & EF_FLAG_TRAIL ) != 0 )
+        client.setHUDStat( STAT_IMAGE_SELF, prcFlagIconStolen );
+    if( unlockTimes[client.playerNum()] > 0 )
+        client.setHUDStat( STAT_PROGRESS_OTHER, ( unlockTimes[client.playerNum()]  / ( CTF_UNLOCK_TIME * 10 ) ) );//*10 because of 1000/100
+}
