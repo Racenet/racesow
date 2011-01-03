@@ -481,7 +481,6 @@ cEntity @bestFastcapSpawnpoint()
     }
     if( @bestFastcapSpawnPoint != null )
     {
-        noBestFastcapPosition = ( @closestSpawn == null ) ? true : false;
         //look at flag
         cVec3 angles;
         cVec3 dir = flagOrigin - bestFastcapSpawnPoint.getOrigin();
@@ -489,6 +488,7 @@ cEntity @bestFastcapSpawnpoint()
         bestFastcapSpawnPoint.setAngles( angles );
         bestFastcapSpawnPoint.linkEntity();
     }
+    noBestFastcapPosition = ( @bestFastcapSpawnPoint == null ) ? true : false;
     return @bestFastcapSpawnPoint;    
 }
 
