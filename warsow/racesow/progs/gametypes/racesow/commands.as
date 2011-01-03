@@ -859,6 +859,19 @@ void RS_CreateCommands()
     @commands[commandCount] = @chase;
     commandCount++;
 
+    Command_RaceRestart racerestart;
+    racerestart.name = "racerestart";
+    racerestart.description = "Go back to the start area whenever you want";
+    racerestart.usage = "";
+    @commands[commandCount] = @racerestart;
+    commandCount++;
+
+    Command_RaceRestart kill;
+    kill.name = "kill";
+    kill.description = "Go back to the start area whenever you want";
+    kill.usage = "";
+    @commands[commandCount] = @kill;
+    commandCount++;
     
     Command_LastMap lastmap;
     lastmap.name = "lastmap";
@@ -944,13 +957,6 @@ void RS_CreateCommands()
     quad.usage = "";
     quad.freestyleOnly = true;
     @commands[commandCount] = @quad;
-    commandCount++;
-
-    Command_RaceRestart racerestart;
-    racerestart.name = "racerestart";
-    racerestart.description = "Go back to the start area whenever you want";
-    racerestart.usage = "";
-    @commands[commandCount] = @racerestart;
     commandCount++;
 
     Command_Register register;

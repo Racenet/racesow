@@ -463,7 +463,7 @@ cEntity @bestFastcapSpawnpoint()
                 start.z += 16;
                 end.z -= 1024;
                 drop.doTrace( start, mins, maxs, end, currentSpawnpoint.entNum(), MASK_SOLID );
-                if( drop.getEndPos().z < ( flagOrigin.z ) - 2 )
+                if( drop.getEndPos().z < ( flagOrigin.z ) - 20.0 )
                 {
                     currentSpawnpoint.freeEntity();
                 }
@@ -479,15 +479,16 @@ cEntity @bestFastcapSpawnpoint()
     {
         @bestFastcapSpawnPoint = @closestSpawn;
     }
-    
-    noBestFastcapPosition = ( @closestSpawn == null ) ? true : false;
-    //look at flag
-    cVec3 angles;
-    cVec3 dir = flagOrigin - bestFastcapSpawnPoint.getOrigin();
-    dir.toAngles( angles );
-    bestFastcapSpawnPoint.setAngles( angles );
-    bestFastcapSpawnPoint.linkEntity();
-    
+    if( @bestFastcapSpawnPoint != null )
+    {
+        noBestFastcapPosition = ( @closestSpawn == null ) ? true : false;
+        //look at flag
+        cVec3 angles;
+        cVec3 dir = flagOrigin - bestFastcapSpawnPoint.getOrigin();
+        dir.toAngles( angles );
+        bestFastcapSpawnPoint.setAngles( angles );
+        bestFastcapSpawnPoint.linkEntity();
+    }
     return @bestFastcapSpawnPoint;    
 }
 
