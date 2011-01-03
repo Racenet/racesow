@@ -723,9 +723,13 @@ void GT_ThinkRules()
 			{
 				client.setHUDStat( STAT_TIME_ALPHA, map.worldBest / 100 );
 			}
+			addFastcapHUDStats( @client );
+			int PLAYER_MASS = 200;
+			if( client.inventoryCount( POWERUP_QUAD ) > 0 )
+			    client.getEnt().mass = PLAYER_MASS * 1/3;// * QUAD_KNOCKBACK_SCALE
+			else
+			    client.getEnt().mass = PLAYER_MASS;
 		}
-		
-		addFastcapHUDStats( @client );
 
 		
 		// what is this for? should we del it? please add a meaningful comment
