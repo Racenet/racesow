@@ -923,6 +923,20 @@ class Racesow_Player
         if (@this.client == null)
             return;
         this.client.execGameCommand( "aw \"" + message + "\"" );
+        //print the checkpoint times to specs too
+        cTeam @spectators = @G_GetTeam( TEAM_SPECTATOR );
+        cEntity @other;
+        for ( int i = 0; @spectators.ent( i ) != null; i++ )
+        {
+            @other = @spectators.ent( i );
+            if ( @other.client != null && other.client.chaseActive )
+            {
+                if( other.client.chaseTarget == this.client.playerNum() + 1 )
+                {
+                    other.client.execGameCommand( "aw \"" + message + "\"" );
+                }
+            }
+        }
     }
 	
     /**
