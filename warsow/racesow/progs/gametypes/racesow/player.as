@@ -519,6 +519,12 @@ class Racesow_Player
         this.tries++;
         this.triesSinceLastRace++;
         int tries = this.overallTries+this.tries;
+		
+		this.race.prejumped=RS_QueryPjState(this.getClient().playerNum());
+		if (this.race.prejumped)
+		{
+			G_CenterPrintMsg( this.getClient().getEnt(), "Prejumped!");
+		}
     }
 
 	/**

@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "q_comref.h"
 #include "q_collision.h"
 #include "gs_public.h"
+#include "gs_racesow.h"
 
 //===============================================================
 //		WARSOW player AAboxes sizes
@@ -764,7 +765,7 @@ static void PM_Move( void )
 		PM_StepSlideMove();
 	}
 	else if( pm->groundentity != -1 )
-	{ 
+	{
 		// walking on ground
 		if( pml.velocity[2] > 0 )
 			pml.velocity[2] = 0; //!!! this is before the accel
@@ -784,14 +785,17 @@ static void PM_Move( void )
 			return;
 
 		PM_StepSlideMove();
+
+		// player is genuinely walking: clear prejump counters
+		RS_ResetPjState(pm->playerState->playerNum);
 	}
-	else if( ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_AIRCONTROL ) 
+	else if( ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_AIRCONTROL )
 		&& !( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_FWDBUNNY ) )
 	{
 		// Air Control
 		wishspeed2 = wishspeed;
-		if( DotProduct( pml.velocity, wishdir ) < 0 
-			&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) 
+		if( DotProduct( pml.velocity, wishdir ) < 0
+			&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING )
 			&& ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] <= 0 ) )
 			accel = pm_airdecelerate;
 		else
@@ -824,7 +828,7 @@ static void PM_Move( void )
 
 		accelerating = ( DotProduct( pml.velocity, wishdir ) > 0.0f );
 		decelerating = ( DotProduct( pml.velocity, wishdir ) < -0.0f );
-		
+
 		if( ( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) &&
 			( pm->playerState->pmove.stats[PM_STAT_WJTIME] >= ( PM_WALLJUMP_TIMEDELAY - PM_AIRCONTROL_BOUNCE_DELAY ) ) )
 			inhibit = qtrue;
@@ -849,13 +853,13 @@ static void PM_Move( void )
 			qboolean aircontrol = qtrue;
 
 			wishspeed2 = wishspeed;
-			if( decelerating && 
+			if( decelerating &&
 				!( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) )
 				accel = pm_airdecelerate;
 			else
 				accel = pm_airaccelerate;
 
-			if( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING 
+			if( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING
 				|| ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 ) )
 			{
 				accel = 0; // no stop-move while wall-jumping
@@ -1003,7 +1007,7 @@ static void PM_ClearStun( void )
 static void PM_CheckJump( void )
 {
 	if( pml.upPush < 10 )
-	{ 
+	{
 		// not holding jump
 		if( !( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_CONTINOUSJUMP ) )
 			pm->playerState->pmove.pm_flags &= ~PMF_JUMP_HELD;
@@ -1048,11 +1052,17 @@ static void PM_CheckJump( void )
 	{
 		module_PredictedEvent( pm->playerState->POVnum, EV_JUMP, 0 );
 		pml.velocity[2] += pml.jumpPlayerSpeed;
+
+		// increment count for prejump check (doublejumps dont count)
+        RS_IncrementJumps(pm->playerState->playerNum);
 	}
 	else
 	{
 		module_PredictedEvent( pm->playerState->POVnum, EV_JUMP, 0 );
 		pml.velocity[2] = pml.jumpPlayerSpeed;
+
+		// increment count for prejump check (doublejumps dont count)
+        RS_IncrementJumps(pm->playerState->playerNum);
 	}
 
 	// remove wj count
@@ -1082,7 +1092,7 @@ static void PM_CheckDash( void )
 	if( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 ) // can not start a new dash during knockback time
 		return;
 
-	if( ( pm->cmd.buttons & BUTTON_SPECIAL ) && pm->groundentity != -1 
+	if( ( pm->cmd.buttons & BUTTON_SPECIAL ) && pm->groundentity != -1
 		&& ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_DASH ) )
 	{
 		if( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
@@ -1140,6 +1150,9 @@ static void PM_CheckDash( void )
 		{
 			module_PredictedEvent( pm->playerState->POVnum, EV_DASH, 0 );
 		}
+
+		// increment count for prejump check
+		RS_IncrementDashes(pm->playerState->playerNum);
 	}
 	else if( pm->groundentity == -1 )
 		pm->playerState->pmove.pm_flags &= ~PMF_DASHING;
@@ -1172,14 +1185,14 @@ static void PM_CheckWallJump( void )
 		return;
 
 	// don't walljump in the first 100 milliseconds of a dash jump
-	if( pm->playerState->pmove.pm_flags & PMF_DASHING 
+	if( pm->playerState->pmove.pm_flags & PMF_DASHING
 		&& ( pm->playerState->pmove.stats[PM_STAT_DASHTIME] > ( PM_DASHJUMP_TIMEDELAY - 100 ) ) )
 		return;
 
-	
+
 	// markthis
 
-	if( pm->groundentity == -1 && ( pm->cmd.buttons & BUTTON_SPECIAL ) 
+	if( pm->groundentity == -1 && ( pm->cmd.buttons & BUTTON_SPECIAL )
 		&& ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_WALLJUMP ) &&
 		( !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPCOUNT ) )
 		&& pm->playerState->pmove.stats[PM_STAT_WJTIME] <= 0
@@ -1192,12 +1205,12 @@ static void PM_CheckWallJump( void )
 		point[1] = pml.origin[1];
 		point[2] = pml.origin[2] - STEPSIZE;
 
-		// don't walljump if our height is smaller than a step 
+		// don't walljump if our height is smaller than a step
 		// unless the player is moving faster than dash speed and upwards
 		hspeed = VectorLengthFast( tv( pml.velocity[0], pml.velocity[1], 0 ) );
 		module_Trace( &trace, pml.origin, pm->mins, pm->maxs, point, pm->playerState->POVnum, pm->contentmask, 0 );
-		
-		if( ( hspeed > pm->playerState->pmove.stats[PM_STAT_DASHSPEED] && pml.velocity[2] > 8 ) 
+
+		if( ( hspeed > pm->playerState->pmove.stats[PM_STAT_DASHSPEED] && pml.velocity[2] > 8 )
 			|| ( trace.fraction == 1 ) || ( !ISWALKABLEPLANE( &trace.plane ) && !trace.startsolid ) )
 		{
 			VectorClear( normal );
@@ -1205,7 +1218,7 @@ static void PM_CheckWallJump( void )
 			if( !VectorLength( normal ) )
 				return;
 
-			if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD ) 
+			if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
 				&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) )
 			{
 				float oldupvelocity = pml.velocity[2];
@@ -1260,6 +1273,9 @@ static void PM_CheckWallJump( void )
 
 					// Create the event
 					module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP, DirToByte( normal ) );
+
+					// increment count for prejump check
+					RS_IncrementWallJumps(pm->playerState->playerNum);
 				}
 			}
 		}
@@ -1463,7 +1479,7 @@ static void PM_AdjustBBox( void )
 		pm->playerState->viewheight = playerbox_stand_viewheight;
 	}
 
-	if( pml.upPush < 0 && ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_CROUCH ) && 
+	if( pml.upPush < 0 && ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_CROUCH ) &&
 		pm->playerState->pmove.stats[PM_STAT_WJTIME] < ( PM_WALLJUMP_TIMEDELAY - PM_SPECIAL_CROUCH_INHIBIT ) &&
 		pm->playerState->pmove.stats[PM_STAT_DASHTIME] < ( PM_DASHJUMP_TIMEDELAY - PM_SPECIAL_CROUCH_INHIBIT ) )
 	{
@@ -1907,7 +1923,7 @@ void Pmove( pmove_t *pmove )
 			pml.sidePush = 0;
 			pml.upPush = 0;
 		}
-		
+
 		PM_SnapPosition();
 		return;
 	}

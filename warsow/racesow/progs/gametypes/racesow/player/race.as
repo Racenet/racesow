@@ -38,6 +38,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
 	/**
 	 * Difference to best race
+	 * @var int
 	 */
 	int delta;
 	
@@ -46,6 +47,11 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 * @var int
 	 */
     int lastCheckPoint;
+	
+	/* Prejumped race flag 
+	 * @var bool
+	 */
+    bool prejumped;
 	
 	/**
 	 * Constructor

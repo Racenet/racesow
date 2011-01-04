@@ -31,7 +31,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_public.h"
 #include "g_syscalls.h"
 #include "g_gametypes.h"
+
+// racesow
 #include "g_racesow.h"
+#include "../gameshared/gs_racesow.h"
+// !racesow
 
 //==================================================================
 // round(x)==floor(x+0.5f)
@@ -1118,7 +1122,7 @@ struct gclient_s
 	char clanname[MAX_CLANNAME_BYTES];
 	char ip[MAX_INFO_VALUE];
 	char socket[MAX_INFO_VALUE];
-	
+
 	qboolean connecting;
 	qboolean multiview, tv;
 
@@ -1159,7 +1163,7 @@ typedef struct snap_edict_s
 	float damage_fall;
 } snap_edict_t;
 
-typedef struct  
+typedef struct
 {
 	int speed;
 	int shaderIndex;

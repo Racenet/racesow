@@ -67,7 +67,7 @@ typedef struct asProperty_s
 typedef struct asClassDescriptor_s
 {
 	const char * const name;
-	const asEObjTypeFlags typeFlags; 
+	const asEObjTypeFlags typeFlags;
 	const size_t size;
 	const asBehavior_t * const objBehaviors;
 	const asBehavior_t * const globalBehaviors;
@@ -954,7 +954,7 @@ static void objectString_asGeneric_Addref( void *gen )
 	objectString_Addref( (asstring_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectString_Release( asstring_t *obj ) 
+static void objectString_Release( asstring_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -1000,7 +1000,7 @@ static void objectString_asGeneric_Index( void *gen )
 {
 	unsigned int i = (unsigned int)G_asGeneric_GetArgInt( gen, 0 );
 	asstring_t *self = (asstring_t *)G_asGeneric_GetObject( gen );
-	
+
 	G_asGeneric_SetReturnAddress( gen, objectString_Index( i, self ) );
 }
 
@@ -1576,12 +1576,12 @@ static void objectVector_asGeneric_FactorySet2( void *gen )
 
 static void objectVector_Addref( asvec3_t *obj ) { obj->asRefCount++; }
 
-static void objectVector_asGeneric_Addref( void *gen ) 
+static void objectVector_asGeneric_Addref( void *gen )
 {
 	objectVector_Addref( (asvec3_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectVector_Release( asvec3_t *obj ) 
+static void objectVector_Release( asvec3_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -1592,7 +1592,7 @@ static void objectVector_Release( asvec3_t *obj )
 	}
 }
 
-static void objectVector_asGeneric_Release( void *gen ) 
+static void objectVector_asGeneric_Release( void *gen )
 {
 	objectVector_Release( (asvec3_t *)G_asGeneric_GetObject( gen ) );
 }
@@ -1859,7 +1859,7 @@ static void objectVector_asGeneric_MultiplyBehaviourVF( void *gen )
 {
 	asvec3_t *first = (asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 );
 	float second = G_asGeneric_GetArgFloat( gen, 1 );
-	
+
 	G_asGeneric_SetReturnAddress( gen, objectVector_MultiplyBehaviourVF( first, second ) );
 }
 
@@ -2140,11 +2140,11 @@ static const asClassDescriptor_t asVectorClassDescriptor =
 
 //=======================================================================
 
-// CLASS: cVar 
+// CLASS: cVar
 static int cvar_factored_count = 0;
 static int cvar_released_count = 0;
 
-typedef struct  
+typedef struct
 {
 	cvar_t *cvar;
 	int asFactored, asRefCount;
@@ -2177,7 +2177,7 @@ static ascvar_t *objectCVar_FactoryRegister( asstring_t *name, asstring_t *def, 
 
 static void objectCVar_asGeneric_FactoryRegister( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
+	G_asGeneric_SetReturnAddress( gen,
 		objectCVar_FactoryRegister( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 									(asstring_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 									(unsigned int)G_asGeneric_GetArgInt( gen, 2 ) )
@@ -2191,9 +2191,9 @@ static void objectCVar_asGeneric_Addref( void *gen )
 	objectCVar_Addref( (ascvar_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectCVar_Release( ascvar_t *obj ) 
+static void objectCVar_Release( ascvar_t *obj )
 {
-	obj->asRefCount--; 
+	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
 	if( !obj->asRefCount && obj->asFactored )
 	{
@@ -2492,7 +2492,7 @@ static const asClassDescriptor_t asCVarClassDescriptor =
 static int astime_factored_count = 0;
 static int astime_released_count = 0;
 
-typedef struct  
+typedef struct
 {
 	time_t time;
 	struct tm localtime;
@@ -2542,7 +2542,7 @@ static void objectTime_asGeneric_Addref( void *gen )
 	objectTime_Addref( (astime_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectTime_Release( astime_t *obj ) 
+static void objectTime_Release( astime_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -2652,11 +2652,11 @@ static const asClassDescriptor_t asTimeClassDescriptor =
 
 //=======================================================================
 
-// CLASS: cTrace 
+// CLASS: cTrace
 static int trace_factored_count = 0;
 static int trace_released_count = 0;
 
-typedef struct  
+typedef struct
 {
 	trace_t trace;
 	int asFactored, asRefCount;
@@ -2685,9 +2685,9 @@ static void objectTrace_asGeneric_Addref( void *gen )
 	objectTrace_Addref( (astrace_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectTrace_Release( astrace_t *obj ) 
+static void objectTrace_Release( astrace_t *obj )
 {
-	obj->asRefCount--; 
+	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
 	if( !obj->asRefCount && obj->asFactored )
 	{
@@ -2715,7 +2715,7 @@ static qboolean objectTrace_doTrace( asvec3_t *start, asvec3_t *mins, asvec3_t *
 	}
 
 	G_Trace( &self->trace, start->v, mins ? mins->v : vec3_origin, maxs ? maxs->v : vec3_origin, end->v, passEnt, contentMask );
-	
+
 	if( self->trace.startsolid || self->trace.allsolid )
 		return qtrue;
 
@@ -2809,7 +2809,7 @@ static const asClassDescriptor_t asTraceClassDescriptor =
 
 //=======================================================================
 
-// CLASS: cItem 
+// CLASS: cItem
 static int gsitem_factored_count = 0;
 static int gsitem_released_count = 0;
 
@@ -2836,9 +2836,9 @@ static void objectGItem_asGeneric_Addref( void *gen )
 	objectGItem_Addref( (gsitem_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectGItem_Release( gsitem_t *obj ) 
+static void objectGItem_Release( gsitem_t *obj )
 {
-	obj->asRefCount--; 
+	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
 	if( !obj->asRefCount && obj->asFactored )
 	{
@@ -3069,7 +3069,7 @@ static qboolean objectMatch_scoreLimitHit( match_t *self )
 
 static void objectMatch_asGeneric_scoreLimitHit( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_scoreLimitHit( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3081,7 +3081,7 @@ static qboolean objectMatch_timeLimitHit( match_t *self )
 
 static void objectMatch_asGeneric_timeLimitHit( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_timeLimitHit( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3093,7 +3093,7 @@ static qboolean objectMatch_isTied( match_t *self )
 
 static void objectMatch_asGeneric_isTied( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_isTied( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3105,7 +3105,7 @@ static qboolean objectMatch_checkExtendPlayTime( match_t *self )
 
 static void objectMatch_asGeneric_checkExtendPlayTime( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_checkExtendPlayTime( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3117,7 +3117,7 @@ static qboolean objectMatch_suddenDeathFinished( match_t *self )
 
 static void objectMatch_asGeneric_suddenDeathFinished( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_suddenDeathFinished( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3129,7 +3129,7 @@ static qboolean objectMatch_isPaused( match_t *self )
 
 static void objectMatch_asGeneric_isPaused( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_isPaused( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3141,7 +3141,7 @@ static qboolean objectMatch_isWaiting( match_t *self )
 
 static void objectMatch_asGeneric_isWaiting( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_isWaiting( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3153,7 +3153,7 @@ static qboolean objectMatch_isExtended( match_t *self )
 
 static void objectMatch_asGeneric_isExtended( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		objectMatch_isExtended( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3165,7 +3165,7 @@ static unsigned int objectMatch_duration( match_t *self )
 
 static void objectMatch_asGeneric_duration( void *gen )
 {
-	G_asGeneric_SetReturnInt( gen, 
+	G_asGeneric_SetReturnInt( gen,
 		(int)objectMatch_duration( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3177,7 +3177,7 @@ static unsigned int objectMatch_startTime( match_t *self )
 
 static void objectMatch_asGeneric_startTime( void *gen )
 {
-	G_asGeneric_SetReturnInt( gen, 
+	G_asGeneric_SetReturnInt( gen,
 		(int)objectMatch_startTime( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3189,7 +3189,7 @@ static unsigned int objectMatch_endTime( match_t *self )
 
 static void objectMatch_asGeneric_endTime( void *gen )
 {
-	G_asGeneric_SetReturnInt( gen, 
+	G_asGeneric_SetReturnInt( gen,
 		(int)objectMatch_endTime( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3201,7 +3201,7 @@ static int objectMatch_getState( match_t *self )
 
 static void objectMatch_asGeneric_getState( void *gen )
 {
-	G_asGeneric_SetReturnInt( gen, 
+	G_asGeneric_SetReturnInt( gen,
 		objectMatch_getState( (match_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -3398,12 +3398,12 @@ static void objectGametypeDescriptor_SetTeamSpawnsystem( int team, int spawnsyst
 
 static void objectGametypeDescriptor_asGeneric_SetTeamSpawnsystem( void *gen )
 {
-	objectGametypeDescriptor_SetTeamSpawnsystem( 
+	objectGametypeDescriptor_SetTeamSpawnsystem(
 		G_asGeneric_GetArgInt( gen, 0 ),
 		G_asGeneric_GetArgInt( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
 		G_asGeneric_GetArgInt( gen, 3 ),
-		G_asGeneric_GetArgBool( gen, 4 ), 
+		G_asGeneric_GetArgBool( gen, 4 ),
 		(gametype_descriptor_t *)G_asGeneric_GetObject( gen ) );
 }
 
@@ -3546,7 +3546,7 @@ static void objectTeamlist_asGeneric_Addref( void *gen )
 	objectTeamlist_Addref( (g_teamlist_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectTeamlist_Release( g_teamlist_t *obj ) 
+static void objectTeamlist_Release( g_teamlist_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -3562,7 +3562,7 @@ static void objectTeamlist_asGeneric_Release( void *gen )
 	objectTeamlist_Release( (g_teamlist_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static edict_t *objectTeamlist_GetPlayerEntity( int index, g_teamlist_t *obj ) 
+static edict_t *objectTeamlist_GetPlayerEntity( int index, g_teamlist_t *obj )
 {
 	if( index < 0 || index >= obj->numplayers )
 		return NULL;
@@ -3581,7 +3581,7 @@ static void objectTeamlist_asGeneric_GetPlayerEntity( void *gen )
 	G_asGeneric_SetReturnAddress( gen, objectTeamlist_GetPlayerEntity( index, self ) );
 }
 
-static asstring_t *objectTeamlist_getName( g_teamlist_t *obj ) 
+static asstring_t *objectTeamlist_getName( g_teamlist_t *obj )
 {
 	const char *name = GS_TeamName( obj - teamlist );
 
@@ -3593,7 +3593,7 @@ static void objectTeamlist_asGeneric_getName( void *gen )
 	G_asGeneric_SetReturnAddress( gen, objectTeamlist_getName( (g_teamlist_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static asstring_t *objectTeamlist_getDefaultName( g_teamlist_t *obj ) 
+static asstring_t *objectTeamlist_getDefaultName( g_teamlist_t *obj )
 {
 	const char *name = GS_DefaultTeamName( obj - teamlist );
 
@@ -3625,7 +3625,7 @@ static void objectTeamlist_asGeneric_setName( void *gen )
 	objectTeamlist_setName( str, (g_teamlist_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static qboolean objectTeamlist_IsLocked( g_teamlist_t *obj ) 
+static qboolean objectTeamlist_IsLocked( g_teamlist_t *obj )
 {
 	return G_Teams_TeamIsLocked( obj - teamlist );
 }
@@ -3635,7 +3635,7 @@ static void objectTeamlist_asGeneric_IsLocked( void *gen )
 	G_asGeneric_SetReturnBool( gen, objectTeamlist_IsLocked( (g_teamlist_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static qboolean objectTeamlist_Lock( g_teamlist_t *obj ) 
+static qboolean objectTeamlist_Lock( g_teamlist_t *obj )
 {
 	return ( obj ? G_Teams_LockTeam( obj - teamlist ) : qfalse );
 }
@@ -3645,7 +3645,7 @@ static void objectTeamlist_asGeneric_Lock( void *gen )
 	G_asGeneric_SetReturnBool( gen, objectTeamlist_Lock( (g_teamlist_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static qboolean objectTeamlist_Unlock( g_teamlist_t *obj ) 
+static qboolean objectTeamlist_Unlock( g_teamlist_t *obj )
 {
 	return ( obj ? G_Teams_UnLockTeam( obj - teamlist ) : qfalse );
 }
@@ -3655,7 +3655,7 @@ static void objectTeamlist_asGeneric_Unlock( void *gen )
 	G_asGeneric_SetReturnBool( gen, objectTeamlist_Unlock( (g_teamlist_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static void objectTeamlist_ClearInvites( g_teamlist_t *obj ) 
+static void objectTeamlist_ClearInvites( g_teamlist_t *obj )
 {
 	obj->invited[0] = 0;
 }
@@ -3756,7 +3756,7 @@ static void objectScoreStats_asGeneric_Addref( void *gen )
 	objectScoreStats_Addref( (score_stats_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectScoreStats_Release( score_stats_t *obj ) 
+static void objectScoreStats_Release( score_stats_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -3772,7 +3772,7 @@ static void objectScoreStats_asGeneric_Release( void *gen )
 	objectScoreStats_Release( (score_stats_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectScoreStats_Clear( score_stats_t *obj ) 
+static void objectScoreStats_Clear( score_stats_t *obj )
 {
 	memset( obj, 0, sizeof( *obj ) );
 }
@@ -3782,7 +3782,7 @@ static void objectScoreStats_asGeneric_Clear( void *gen )
 	objectScoreStats_Clear( (score_stats_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static int objectScoreStats_AccShots( int ammo, score_stats_t *obj ) 
+static int objectScoreStats_AccShots( int ammo, score_stats_t *obj )
 {
 	if( ammo < AMMO_GUNBLADE || ammo >= AMMO_TOTAL )
 		return 0;
@@ -3797,7 +3797,7 @@ static void objectScoreStats_asGeneric_AccShots( void *gen )
 	G_asGeneric_SetReturnInt( gen, objectScoreStats_AccShots( ammo, (score_stats_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static int objectScoreStats_AccHits( int ammo, score_stats_t *obj ) 
+static int objectScoreStats_AccHits( int ammo, score_stats_t *obj )
 {
 	if( ammo < AMMO_GUNBLADE || ammo >= AMMO_TOTAL )
 		return 0;
@@ -3812,7 +3812,7 @@ static void objectScoreStats_asGeneric_AccHits( void *gen )
 	G_asGeneric_SetReturnInt( gen, objectScoreStats_AccHits( ammo, (score_stats_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static int objectScoreStats_AccHitsDirect( int ammo, score_stats_t *obj ) 
+static int objectScoreStats_AccHitsDirect( int ammo, score_stats_t *obj )
 {
 	if( ammo < AMMO_GUNBLADE || ammo >= AMMO_TOTAL )
 		return 0;
@@ -3827,7 +3827,7 @@ static void objectScoreStats_asGeneric_AccHitsDirect( void *gen )
 	G_asGeneric_SetReturnInt( gen, objectScoreStats_AccHitsDirect( ammo, (score_stats_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static int objectScoreStats_AccHitsAir( int ammo, score_stats_t *obj ) 
+static int objectScoreStats_AccHitsAir( int ammo, score_stats_t *obj )
 {
 	if( ammo < AMMO_GUNBLADE || ammo >= AMMO_TOTAL )
 		return 0;
@@ -3842,7 +3842,7 @@ static void objectScoreStats_asGeneric_AccHitsAir( void *gen )
 	G_asGeneric_SetReturnInt( gen, objectScoreStats_AccHitsAir( ammo, (score_stats_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static int objectScoreStats_AccDamage( int ammo, score_stats_t *obj ) 
+static int objectScoreStats_AccDamage( int ammo, score_stats_t *obj )
 {
 	if( ammo < AMMO_GUNBLADE || ammo >= AMMO_TOTAL )
 		return 0;
@@ -3857,7 +3857,7 @@ static void objectScoreStats_asGeneric_AccDamage( void *gen )
 	G_asGeneric_SetReturnInt( gen, objectScoreStats_AccDamage( ammo, (score_stats_t *)G_asGeneric_GetObject( gen ) ) );
 }
 
-static void objectScoreStats_ScoreSet( int newscore, score_stats_t *obj ) 
+static void objectScoreStats_ScoreSet( int newscore, score_stats_t *obj )
 {
 	obj->score = newscore;
 }
@@ -3869,7 +3869,7 @@ static void objectScoreStats_asGeneric_ScoreSet( void *gen )
 	objectScoreStats_ScoreSet( newscore, (score_stats_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectScoreStats_ScoreAdd( int score, score_stats_t *obj ) 
+static void objectScoreStats_ScoreAdd( int score, score_stats_t *obj )
 {
 	obj->score += score;
 }
@@ -3967,7 +3967,7 @@ static void objectBot_asGeneric_Addref( void *gen )
 	objectBot_Addref( (asbot_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectBot_Release( asbot_t *obj ) 
+static void objectBot_Release( asbot_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -3983,7 +3983,7 @@ static void objectBot_asGeneric_Release( void *gen )
 	objectBot_Release( (asbot_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectBot_ClearWeights( asbot_t *obj ) 
+static void objectBot_ClearWeights( asbot_t *obj )
 {
 	memset( obj->status.entityWeights, 0, sizeof( obj->status.entityWeights ) );
 }
@@ -3993,7 +3993,7 @@ static void objectBot_asGeneric_ClearWeights( void *gen )
 	objectBot_ClearWeights( (asbot_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectBot_ResetWeights( asbot_t *obj ) 
+static void objectBot_ResetWeights( asbot_t *obj )
 {
 	AI_ResetWeights( obj );
 }
@@ -4003,7 +4003,7 @@ static void objectBot_asGeneric_ResetWeights( void *gen )
 	objectBot_ResetWeights( (asbot_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectBot_SetGoalWeight( int index, float weight, asbot_t *obj ) 
+static void objectBot_SetGoalWeight( int index, float weight, asbot_t *obj )
 {
 	if( index < 0 || index >= MAX_EDICTS )
 		return;
@@ -4013,14 +4013,14 @@ static void objectBot_SetGoalWeight( int index, float weight, asbot_t *obj )
 
 static void objectBot_asGeneric_SetGoalWeight( void *gen )
 {
-	objectBot_SetGoalWeight( 
-		G_asGeneric_GetArgInt( gen, 0 ), 
-		G_asGeneric_GetArgFloat( gen, 1 ), 
-		(asbot_t *)G_asGeneric_GetObject( gen ) 
+	objectBot_SetGoalWeight(
+		G_asGeneric_GetArgInt( gen, 0 ),
+		G_asGeneric_GetArgFloat( gen, 1 ),
+		(asbot_t *)G_asGeneric_GetObject( gen )
 		);
 }
 
-static edict_t *objectBot_GetGoalEnt( int index, asbot_t *obj ) 
+static edict_t *objectBot_GetGoalEnt( int index, asbot_t *obj )
 {
 	return AI_GetGoalEnt( index );
 }
@@ -4032,7 +4032,7 @@ static void objectBot_asGeneric_GetGoalEnt( void *gen )
 		);
 }
 
-static float objectBot_GetItemWeight( gsitem_t *item, asbot_t *obj ) 
+static float objectBot_GetItemWeight( gsitem_t *item, asbot_t *obj )
 {
 	if( !item )
 		return 0.0f;
@@ -4041,11 +4041,11 @@ static float objectBot_GetItemWeight( gsitem_t *item, asbot_t *obj )
 
 static void objectBot_asGeneric_GetItemWeight( void *gen )
 {
-	G_asGeneric_SetReturnFloat( gen, 
+	G_asGeneric_SetReturnFloat( gen,
 		objectBot_GetItemWeight(
 		G_asGeneric_GetArgAddress( gen, 0 ),
-		(asbot_t *)G_asGeneric_GetObject( gen ) 
-		) 
+		(asbot_t *)G_asGeneric_GetObject( gen )
+		)
 	);
 }
 
@@ -4127,7 +4127,7 @@ static void objectGameClient_asGeneric_Addref( void *gen )
 	objectGameClient_Addref( (gclient_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectGameClient_Release( gclient_t *obj ) 
+static void objectGameClient_Release( gclient_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -4281,7 +4281,7 @@ static void objectGameClient_Respawn( qboolean ghost, gclient_t *self )
 
 static void objectGameClient_asGeneric_Respawn( void *gen )
 {
-	objectGameClient_Respawn( 
+	objectGameClient_Respawn(
 		G_asGeneric_GetArgBool( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen ) );
 }
@@ -4476,7 +4476,7 @@ static void objectGameClient_addAward( asstring_t *msg, gclient_t *self )
 
 static void objectGameClient_asGeneric_addAward( void *gen )
 {
-	objectGameClient_addAward( 
+	objectGameClient_addAward(
 		G_asGeneric_GetArgAddress( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
@@ -4500,7 +4500,7 @@ static void objectGameClient_execGameCommand( asstring_t *msg, gclient_t *self )
 
 static void objectGameClient_asGeneric_execGameCommand( void *gen )
 {
-	objectGameClient_execGameCommand( 
+	objectGameClient_execGameCommand(
 		G_asGeneric_GetArgAddress( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
@@ -4522,7 +4522,7 @@ static void objectGameClient_setHUDStat( int stat, int value, gclient_t *self )
 
 static void objectGameClient_asGeneric_setHUDStat( void *gen )
 {
-	objectGameClient_setHUDStat( 
+	objectGameClient_setHUDStat(
 		G_asGeneric_GetArgInt( gen, 0 ),
 		G_asGeneric_GetArgInt( gen, 1 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
@@ -4542,8 +4542,8 @@ static int objectGameClient_getHUDStat( int stat, gclient_t *self )
 
 static void objectGameClient_asGeneric_getHUDStat( void *gen )
 {
-	G_asGeneric_SetReturnInt( gen, 
-		objectGameClient_getHUDStat( G_asGeneric_GetArgInt( gen, 0 ), 
+	G_asGeneric_SetReturnInt( gen,
+		objectGameClient_getHUDStat( G_asGeneric_GetArgInt( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -4555,7 +4555,7 @@ static void objectGameClient_setPMoveFeatures( unsigned int bitmask, gclient_t *
 
 static void objectGameClient_asGeneric_setPMoveFeatures( void *gen )
 {
-	objectGameClient_setPMoveFeatures( 
+	objectGameClient_setPMoveFeatures(
 		G_asGeneric_GetArgInt( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
@@ -4571,7 +4571,7 @@ static void objectGameClient_setPMoveMaxSpeed( float speed, gclient_t *self )
 
 static void objectGameClient_asGeneric_setPMoveMaxSpeed( void *gen )
 {
-	objectGameClient_setPMoveMaxSpeed( 
+	objectGameClient_setPMoveMaxSpeed(
 		G_asGeneric_GetArgFloat( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
@@ -4587,7 +4587,7 @@ static void objectGameClient_setPMoveJumpSpeed( float speed, gclient_t *self )
 
 static void objectGameClient_asGeneric_setPMoveJumpSpeed( void *gen )
 {
-	objectGameClient_setPMoveJumpSpeed( 
+	objectGameClient_setPMoveJumpSpeed(
 		G_asGeneric_GetArgFloat( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
@@ -4603,7 +4603,7 @@ static void objectGameClient_setPMoveDashSpeed( float speed, gclient_t *self )
 
 static void objectGameClient_asGeneric_setPMoveDashSpeed( void *gen )
 {
-	objectGameClient_setPMoveDashSpeed( 
+	objectGameClient_setPMoveDashSpeed(
 		G_asGeneric_GetArgFloat( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
@@ -4615,19 +4615,19 @@ static asstring_t *objectGameClient_getUserInfoKey( asstring_t *key, gclient_t *
 
 	if( !key || !key->buffer || !key->buffer[0] )
 		return objectString_FactoryBuffer( NULL, 0 );
-	
+
 	s = Info_ValueForKey( self->userinfo, key->buffer );
 	if( !s || !*s )
 		return objectString_FactoryBuffer( NULL, 0 );
-	
+
 	return objectString_FactoryBuffer( s, strlen( s ) );
 }
 
 static void objectGameClient_asGeneric_getUserInfoKey( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
-		objectGameClient_getUserInfoKey( 
-		(asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ), 
+	G_asGeneric_SetReturnAddress( gen,
+		objectGameClient_getUserInfoKey(
+		(asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -4649,9 +4649,9 @@ static void objectGameClient_printMessage( asstring_t *str, gclient_t *self )
 }
 
 static void objectGameClient_asGeneric_printMessage( void *gen )
-{ 
-		objectGameClient_printMessage( 
-		(asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ), 
+{
+		objectGameClient_printMessage(
+		(asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
 }
@@ -4668,10 +4668,10 @@ static void objectGameClient_ChaseCam( asstring_t *str, qboolean teamonly, gclie
 }
 
 static void objectGameClient_asGeneric_ChaseCam( void *gen )
-{ 
-	objectGameClient_ChaseCam( 
+{
+	objectGameClient_ChaseCam(
 		(asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
-		G_asGeneric_GetArgBool( gen, 1 ), 
+		G_asGeneric_GetArgBool( gen, 1 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
 }
@@ -4691,8 +4691,8 @@ static void objectGameClient_SetChaseActive( qboolean active, gclient_t *self )
 }
 
 static void objectGameClient_asGeneric_SetChaseActive( void *gen )
-{ 
-	objectGameClient_SetChaseActive( 
+{
+	objectGameClient_SetChaseActive(
 		G_asGeneric_GetArgBool( gen, 0 ),
 		(gclient_t *)G_asGeneric_GetObject( gen )
 		);
@@ -4814,7 +4814,7 @@ static void objectGameEntity_asGeneric_Addref( void *gen )
 	objectGameEntity_Addref( (edict_t *)G_asGeneric_GetObject( gen ) );
 }
 
-static void objectGameEntity_Release( edict_t *obj ) 
+static void objectGameEntity_Release( edict_t *obj )
 {
 	obj->asRefCount--;
 	clamp_low( obj->asRefCount, 0 );
@@ -5150,7 +5150,7 @@ static asstring_t *objectGameEntity_getSpawnKey( asstring_t *key, edict_t *self 
 
 static void objectGameEntity_asGeneric_getSpawnKey( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
+	G_asGeneric_SetReturnAddress( gen,
 		objectGameEntity_getSpawnKey( G_asGeneric_GetArgAddress( gen, 0 ), (edict_t *)G_asGeneric_GetObject( gen ) )
 		);
 }
@@ -5464,7 +5464,7 @@ static void objectGameEntity_takeDamage( edict_t *inflictor, edict_t *attacker, 
 
 static void objectGameEntity_asGeneric_takeDamage( void *gen )
 {
-	objectGameEntity_takeDamage( 
+	objectGameEntity_takeDamage(
 		(edict_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(edict_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 2 ),
@@ -5493,7 +5493,7 @@ static void objectGameEntity_splashDamage( edict_t *attacker, int radius, float 
 
 static void objectGameEntity_asGeneric_splashDamage( void *gen )
 {
-	objectGameEntity_splashDamage( 
+	objectGameEntity_splashDamage(
 		(edict_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		G_asGeneric_GetArgInt( gen, 1 ),
 		G_asGeneric_GetArgFloat( gen, 2 ),
@@ -5537,7 +5537,7 @@ static void objectGameEntity_explosionEffect( int radius, edict_t *self )
 
 static void objectGameEntity_asGeneric_explosionEffect( void *gen )
 {
-	objectGameEntity_explosionEffect( 
+	objectGameEntity_explosionEffect(
 		G_asGeneric_GetArgInt( gen, 0 ),
 		(edict_t *)G_asGeneric_GetObject( gen )
 		);
@@ -5699,7 +5699,7 @@ static const asClassDescriptor_t asGameEntityClassDescriptor =
 
 //=======================================================================
 
-static const asClassDescriptor_t * const asClassesDescriptors[] = 
+static const asClassDescriptor_t * const asClassesDescriptors[] =
 {
 	&asStringClassDescriptor,
 	&asVectorClassDescriptor,
@@ -5745,7 +5745,7 @@ static void G_RegisterObjectClasses( int asEngineHandle )
 				error = angelExport->asRegisterStringFactory( asEngineHandle, decl, cDescr->stringFactory_asGeneric, asCALL_GENERIC );
 			else
 				error = angelExport->asRegisterStringFactory( asEngineHandle, decl, cDescr->stringFactory, asCALL_CDECL );
-			
+
 			if( error < 0 )
 				G_Error( "angelExport->asRegisterStringFactory for object %s returned error %i\n", cDescr->name, error );
 		}
@@ -5835,7 +5835,7 @@ static edict_t *asFunc_G_Spawn( asstring_t *classname )
 		G_Printf( "* WARNING: Spawning entities is disallowed during initialization. Returning null object\n" );
 		return NULL;
 	}
-	
+
 	ent = G_Spawn();
 
 	if( classname && classname->len )
@@ -6007,7 +6007,7 @@ static void asFunc_asGeneric_G_Sound( void *gen )
 	int channel = G_asGeneric_GetArgInt( gen, 1 );
 	int soundindex = G_asGeneric_GetArgInt( gen, 2 );
 	float attenuation = G_asGeneric_GetArgFloat( gen, 3 );
-	
+
 	G_Sound( owner, channel, soundindex, attenuation );
 }
 
@@ -6064,8 +6064,8 @@ static qboolean asFunc_InPVS( asvec3_t *origin1, asvec3_t *origin2 )
 
 static void asFunc_asGeneric_InPVS( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
-		asFunc_InPVS( (asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ), 
+	G_asGeneric_SetReturnBool( gen,
+		asFunc_InPVS( (asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ) )
 		);
 }
@@ -6090,8 +6090,8 @@ static qboolean asFunc_WriteFile( asstring_t *path, asstring_t *data )
 
 static void asFunc_asGeneric_WriteFile( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
-		asFunc_WriteFile( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ), 
+	G_asGeneric_SetReturnBool( gen,
+		asFunc_WriteFile( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asstring_t *)G_asGeneric_GetArgAddress( gen, 1 ) )
 		);
 }
@@ -6116,8 +6116,8 @@ static qboolean asFunc_AppendToFile( asstring_t *path, asstring_t *data )
 
 static void asFunc_asGeneric_AppendToFile( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
-		asFunc_AppendToFile( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ), 
+	G_asGeneric_SetReturnBool( gen,
+		asFunc_AppendToFile( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asstring_t *)G_asGeneric_GetArgAddress( gen, 1 ) )
 		);
 }
@@ -6151,7 +6151,7 @@ static asstring_t *asFunc_LoadFile( asstring_t *path )
 
 static void asFunc_asGeneric_LoadFile( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
+	G_asGeneric_SetReturnAddress( gen,
 		asFunc_LoadFile( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ) ) );
 }
 // racesow
@@ -6277,6 +6277,18 @@ static void asFunc_asGeneric_RS_removeProjectiles( void *gen )
 {
     edict_t *owner = (edict_t *)G_asGeneric_GetArgAddress( gen, 0 );
     RS_removeProjectiles( owner );
+}
+
+// RS_QueryPjState
+static qboolean asFunc_RS_QueryPjState(int playerNum)
+{
+     return RS_QueryPjState(playerNum);
+}
+
+static void asFunc_asGeneric_RS_QueryPjState( void *gen )
+{
+    G_asGeneric_SetReturnBool( gen, asFunc_RS_QueryPjState(
+            (int)G_asGeneric_GetArgInt(gen, 0)));
 }
 
 // RS_MysqlLoadMap
@@ -6437,7 +6449,7 @@ static int asFunc_FileLength( asstring_t *path )
 
 static void asFunc_asGeneric_FileLength( void *gen )
 {
-	G_asGeneric_SetReturnInt( gen, 
+	G_asGeneric_SetReturnInt( gen,
 		asFunc_FileLength( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ) ) );
 }
 
@@ -6461,7 +6473,7 @@ static qboolean asFunc_ML_FilenameExists( asstring_t *filename )
 
 static void asFunc_asGeneric_ML_FilenameExists( void *gen )
 {
-	G_asGeneric_SetReturnBool( gen, 
+	G_asGeneric_SetReturnBool( gen,
 		asFunc_ML_FilenameExists( (asstring_t *)G_asGeneric_GetArgAddress( gen, 0 ) ) );
 }
 
@@ -6479,7 +6491,7 @@ static asstring_t *asFunc_ML_GetMapByNum( int num )
 
 static void asFunc_asGeneric_ML_GetMapByNum( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
+	G_asGeneric_SetReturnAddress( gen,
 		asFunc_ML_GetMapByNum( G_asGeneric_GetArgInt( gen, 0 ) ) );
 }
 
@@ -6496,7 +6508,7 @@ static asstring_t *asFunc_LocationName( asvec3_t *origin )
 
 static void asFunc_asGeneric_LocationName( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
+	G_asGeneric_SetReturnAddress( gen,
 		asFunc_LocationName( (asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ) ) );
 }
 
@@ -6524,7 +6536,7 @@ static asstring_t *asFunc_LocationForTag( int tag )
 
 static void asFunc_asGeneric_LocationForTag( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
+	G_asGeneric_SetReturnAddress( gen,
 		asFunc_LocationForTag( G_asGeneric_GetArgInt( gen, 0 ) ) );
 }
 
@@ -6860,7 +6872,7 @@ static void asFunc_FireInstaShot( asvec3_t *origin, asvec3_t *angles, int range,
 
 static void asFunc_asGeneric_FireInstaShot( void *gen )
 {
-	asFunc_FireInstaShot( 
+	asFunc_FireInstaShot(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -6878,8 +6890,8 @@ static edict_t *asFunc_FireWeakBolt( asvec3_t *origin, asvec3_t *angles, int spe
 
 static void asFunc_asGeneric_FireWeakBolt( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
-		asFunc_FireWeakBolt( 
+	G_asGeneric_SetReturnAddress( gen,
+		asFunc_FireWeakBolt(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -6898,7 +6910,7 @@ static void asFunc_FireStrongBolt( asvec3_t *origin, asvec3_t *angles, int range
 
 static void asFunc_asGeneric_FireStrongBolt( void *gen )
 {
-	asFunc_FireStrongBolt( 
+	asFunc_FireStrongBolt(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -6916,8 +6928,8 @@ static edict_t *asFunc_FirePlasma( asvec3_t *origin, asvec3_t *angles, int speed
 
 static void asFunc_asGeneric_FirePlasma( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
-		asFunc_FirePlasma( 
+	G_asGeneric_SetReturnAddress( gen,
+		asFunc_FirePlasma(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -6937,8 +6949,8 @@ static edict_t *asFunc_FireRocket( asvec3_t *origin, asvec3_t *angles, int speed
 
 static void asFunc_asGeneric_FireRocket( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
-		asFunc_FireRocket( 
+	G_asGeneric_SetReturnAddress( gen,
+		asFunc_FireRocket(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -6958,8 +6970,8 @@ static edict_t *asFunc_FireGrenade( asvec3_t *origin, asvec3_t *angles, int spee
 
 static void asFunc_asGeneric_FireGrenade( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
-		asFunc_FireGrenade( 
+	G_asGeneric_SetReturnAddress( gen,
+		asFunc_FireGrenade(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -6979,7 +6991,7 @@ static void asFunc_FireRiotgun( asvec3_t *origin, asvec3_t *angles, int range, i
 
 static void asFunc_asGeneric_FireRiotgun( void *gen )
 {
-	asFunc_FireRiotgun( 
+	asFunc_FireRiotgun(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -6999,7 +7011,7 @@ static void asFunc_FireBullet( asvec3_t *origin, asvec3_t *angles, int range, in
 
 static void asFunc_asGeneric_FireBullet( void *gen )
 {
-	asFunc_FireBullet( 
+	asFunc_FireBullet(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -7018,8 +7030,8 @@ static edict_t *asFunc_FireBlast( asvec3_t *origin, asvec3_t *angles, int speed,
 
 static void asFunc_asGeneric_FireBlast( void *gen )
 {
-	G_asGeneric_SetReturnAddress( gen, 
-		asFunc_FireBlast( 
+	G_asGeneric_SetReturnAddress( gen,
+		asFunc_FireBlast(
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 0 ),
 		(asvec3_t *)G_asGeneric_GetArgAddress( gen, 1 ),
 		G_asGeneric_GetArgInt( gen, 2 ),
@@ -7060,6 +7072,7 @@ static asglobfuncs_t asGlobFuncs[] =
     { "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },
     { "cString @RS_LastMap()", asFunc_RS_LastMap, asFunc_asGeneric_RS_LastMap },
     { "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
+    { "bool RS_QueryPjState( int )", asFunc_RS_QueryPjState, asFunc_asGeneric_RS_QueryPjState},
     // !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
@@ -7284,7 +7297,7 @@ void G_asCallLevelSpawnScript( void )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.spawnFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	error = angelExport->asExecute( asContextHandle );
@@ -7303,7 +7316,7 @@ void G_asCallMatchStateStartedScript( void )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.matchStateStartedFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	error = angelExport->asExecute( asContextHandle );
@@ -7323,7 +7336,7 @@ qboolean G_asCallMatchStateFinishedScript( int incomingMatchState )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.matchStateFinishedFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return qtrue;
 
 	// Now we need to pass the parameters to the script function.
@@ -7350,7 +7363,7 @@ void G_asCallThinkRulesScript( void )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.thinkRulesFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	error = angelExport->asExecute( asContextHandle );
@@ -7369,7 +7382,7 @@ void G_asCallPlayerRespawnScript( edict_t *ent, int old_team, int new_team )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.playerRespawnFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	// Now we need to pass the parameters to the script function.
@@ -7400,7 +7413,7 @@ void G_asCallScoreEventScript( gclient_t *client, const char *score_event, const
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.scoreEventFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	// Now we need to pass the parameters to the script function.
@@ -7433,7 +7446,7 @@ char *G_asCallScoreboardMessage( int maxlen )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.scoreboardMessageFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return NULL;
 
 	// Now we need to pass the parameters to the script function.
@@ -7464,7 +7477,7 @@ edict_t *G_asCallSelectSpawnPointScript( edict_t *ent )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.selectSpawnPointFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return SelectDeathmatchSpawnPoint( ent );
 
 	// Now we need to pass the parameters to the script function.
@@ -7497,7 +7510,7 @@ qboolean G_asCallGameCommandScript( gclient_t *client, char *cmd, char *args, in
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.clientCommandFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return qfalse;
 
 	// Now we need to pass the parameters to the script function.
@@ -7531,7 +7544,7 @@ qboolean G_asCallBotStatusScript( edict_t *ent )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.botStatusFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return qfalse;
 
 	// Now we need to pass the parameters to the script function.
@@ -7556,7 +7569,7 @@ void G_asCallShutdownScript( void )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.shutdownFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	error = angelExport->asExecute( asContextHandle );
@@ -7619,7 +7632,7 @@ qboolean G_asCallMapEntitySpawnScript( const char *classname, edict_t *ent )
 	// call the spawn function
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 	error = angelExport->asPrepare( asContextHandle, ent->asSpawnFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return qfalse;
 
 	// Now we need to pass the parameters to the script function.
@@ -7657,7 +7670,7 @@ void G_asCallMapEntityThink( edict_t *ent )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asThinkFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	// Now we need to pass the parameters to the script function.
@@ -7673,14 +7686,14 @@ void G_asCallMapEntityTouch( edict_t *ent, edict_t *other, cplane_t *plane, int 
 {
 	int error, asContextHandle;
 	asvec3_t asv, *normal = NULL;
-	
+
 	if( ent->asTouchFuncID < 0 )
 		return;
 
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asTouchFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	if( plane )
@@ -7712,7 +7725,7 @@ void G_asCallMapEntityUse( edict_t *ent, edict_t *other, edict_t *activator )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asUseFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	// Now we need to pass the parameters to the script function.
@@ -7736,7 +7749,7 @@ void G_asCallMapEntityPain( edict_t *ent, edict_t *other, float kick, float dama
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asPainFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	// Now we need to pass the parameters to the script function.
@@ -7761,7 +7774,7 @@ void G_asCallMapEntityDie( edict_t *ent, edict_t *inflicter, edict_t *attacker )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asDieFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	// Now we need to pass the parameters to the script function.
@@ -7785,7 +7798,7 @@ void G_asCallMapEntityStop( edict_t *ent )
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asStopFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		return;
 
 	// Now we need to pass the parameters to the script function.
@@ -7872,14 +7885,14 @@ qboolean G_asInitializeGametypeScript( const char *script, const char *gametypeN
 	G_InitializeGameModuleSyntax( asEngineHandle );
 
 	// load up the script sections
-	
+
 	for( sectionNum = 0; ( section = G_LoadScriptSection( script, sectionNum ) ) != NULL; sectionNum++ )
 	{
 		char *sectionName = G_ListNameForPosition( script, sectionNum, CHAR_GAMETYPE_SEPARATOR );
 		error = angelExport->asAddScriptSection( asEngineHandle, SCRIPT_MODULE_NAME, sectionName, section, strlen( section ) );
-		
+
 		G_Free( section );
-		
+
 		if( error )
 		{
 			G_Printf( "* Failed to add the script section %s with error %i\n", gametypeName, error );
@@ -8032,7 +8045,7 @@ qboolean G_asInitializeGametypeScript( const char *script, const char *gametypeN
 	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, level.gametype.initFuncID );
-	if( error < 0 ) 
+	if( error < 0 )
 		goto releaseAll;
 
 	error = angelExport->asExecute( asContextHandle );
@@ -8187,8 +8200,8 @@ static void G_asDumpAPIToFile( const char *path )
 			{
 				const char * const behaviorMarks[] =
 				{
-					" /* = */", " /* += */", " /* -= */", " /* *= */", " /* /= */", " /* %= */", 
-					" /* |= */", " /* &= */", " /* ^| */", 
+					" /* = */", " /* += */", " /* -= */", " /* *= */", " /* /= */", " /* %= */",
+					" /* |= */", " /* &= */", " /* ^| */",
 					" /* <<= */", " /* >>= */"
 				};
 
@@ -8201,8 +8214,8 @@ static void G_asDumpAPIToFile( const char *path )
 					continue;
 
 				Q_snprintfz( string, sizeof( string ), "\t%s;%s\r\n", objBehavior->declaration,
-				( objBehavior->behavior == asBEHAVE_FACTORY ? " /* factory */ " : 
-					( objBehavior->behavior < asBEHAVE_ASSIGNMENT ||  objBehavior->behavior > asBEHAVE_SRA_ASSIGN 
+				( objBehavior->behavior == asBEHAVE_FACTORY ? " /* factory */ " :
+					( objBehavior->behavior < asBEHAVE_ASSIGNMENT ||  objBehavior->behavior > asBEHAVE_SRA_ASSIGN
 						? "" : behaviorMarks[objBehavior->behavior-asBEHAVE_ASSIGNMENT] ) )
 				);
 				trap_FS_Write( string, strlen( string ), file );
@@ -8214,8 +8227,8 @@ static void G_asDumpAPIToFile( const char *path )
 		{
 			const char * const globalBehaviorMarks[] =
 			{
-				" /* + */", " /* - */", " /* * */", " /* / */", " /* % */", 
-				" /* == */", " /* != */", " /* < */", " /* > */", " /* <= */", " /* >= */", 
+				" /* + */", " /* - */", " /* * */", " /* / */", " /* % */",
+				" /* == */", " /* != */", " /* < */", " /* > */", " /* <= */", " /* >= */",
 				" /* | */", " /* & */", " /* ^ */", " /* << */", " /* >> */", " /* >> */"
 			};
 
@@ -8229,7 +8242,7 @@ static void G_asDumpAPIToFile( const char *path )
 					break;
 
 				Q_snprintfz( string, sizeof( string ), "\t%s;%s\r\n", globalBehavior->declaration,
-					( globalBehavior->behavior < asBEHAVE_ADD ||  globalBehavior->behavior > asBEHAVE_BIT_SRA 
+					( globalBehavior->behavior < asBEHAVE_ADD ||  globalBehavior->behavior > asBEHAVE_BIT_SRA
 						? "" : globalBehaviorMarks[globalBehavior->behavior-asBEHAVE_ADD] )
 				);
 				trap_FS_Write( string, strlen( string ), file );
