@@ -815,9 +815,6 @@ class Racesow_Player
 	 */
 	bool position( cString argsString )
 	{
-	    //TODO: move this to the commands?
-		if( !g_freestyle.getBool() && !sv_cheats.getBool() )
-			return false;
 		if( this.positionLastcmd + 500 > realTime )
 			return false;
 		this.positionLastcmd = realTime;

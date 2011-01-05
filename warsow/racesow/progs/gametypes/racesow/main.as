@@ -564,10 +564,6 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 		// set player movement to pass through other players and remove gunblade auto attacking
 		ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
 
-		//give machinegun (this is default behavior in defrag and usefull in some maps to shoot buttons)
-		ent.client.inventoryGiveItem( WEAP_MACHINEGUN );
-		ent.client.selectWeapon( WEAP_GUNBLADE );
-
 		// disable autojump
 		if ( rs_allowAutoHop.getBool() == false )
 		{

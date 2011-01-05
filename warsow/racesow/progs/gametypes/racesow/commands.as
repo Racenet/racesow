@@ -581,11 +581,6 @@ class Command_Quad : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( !sv_cheats.getBool() )
-        {
-            player.sendErrorMessage("Quad is not available on this server");
-            return false;
-        }
         if( @player.client.getEnt() == null || player.client.getEnt().team == TEAM_SPECTATOR )
         {
             player.sendErrorMessage("Quad is not available in your current state");
@@ -679,12 +674,6 @@ class Command_Noclip : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( !sv_cheats.getBool() )
-        {
-            player.sendErrorMessage( "Noclip is not available on this server" );
-            return false;
-        }
-
         if( @player.client.getEnt() == null || player.client.getEnt().team == TEAM_SPECTATOR )
         {
             player.sendErrorMessage("Noclip is not available in your current state");
@@ -699,6 +688,17 @@ class Command_Noclip : Racesow_Command
         return player.noclip();
     }
 }
+
+class Command_Machinegun : Racesow_Command
+{
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		//give machinegun (this is default behavior in defrag and usefull in some maps to shoot buttons)
+		player.client.inventoryGiveItem( WEAP_MACHINEGUN );
+		return true;
+    }
+}
+
 
 class Command_Mapname : Racesow_Command
 {
@@ -851,14 +851,15 @@ void RS_CreateCommands()
     spec.usage = "";
     @commands[commandCount] = @spec;
     commandCount++;
-    
+
+	// do we really need this alias? commands are limited you know..
     Command_Spec chase;
     chase.name = "chase";
     chase.description = "Spectate";
     chase.usage = "";
     @commands[commandCount] = @chase;
     commandCount++;
-
+	
     Command_RaceRestart racerestart;
     racerestart.name = "racerestart";
     racerestart.description = "Go back to the start area whenever you want";
@@ -907,14 +908,6 @@ void RS_CreateCommands()
     nextmap.usage = "";
     @commands[commandCount] = @nextmap;
     commandCount++;
-
-    Command_Noclip noclip;
-    noclip.name = "noclip";
-    noclip.description = "Disable your interaction with other players";
-    noclip.usage = "";
-    noclip.freestyleOnly = true;
-    @commands[commandCount] = @noclip;
-    commandCount++;
 	
 	Command_Oneliner oneliner;
     oneliner.name = "oneliner";
@@ -934,6 +927,7 @@ void RS_CreateCommands()
             + "position store <id> <name> - Store a position for another session\n"
             + "position restore <id> - Restore a stored position from another session\n"
             + "position storedlist <limit> - Sends you a list of your stored positions\n";
+	position.freestyleOnly = true;
     @commands[commandCount] = @position;
     commandCount++;
 
@@ -957,6 +951,21 @@ void RS_CreateCommands()
     quad.usage = "";
     quad.freestyleOnly = true;
     @commands[commandCount] = @quad;
+    commandCount++;
+	
+    Command_Noclip noclip;
+    noclip.name = "noclip";
+    noclip.description = "Disable your interaction with other players and objects";
+    noclip.usage = "";
+    noclip.freestyleOnly = true;
+    @commands[commandCount] = @noclip;
+    commandCount++;
+	
+    Command_Machinegun machinegun;
+    machinegun.name = "machinegun";
+    machinegun.description = "Gives you a machinegun";
+    machinegun.usage = "";
+    @commands[commandCount] = @machinegun;
     commandCount++;
 
     Command_Register register;
