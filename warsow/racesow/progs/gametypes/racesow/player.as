@@ -523,7 +523,7 @@ class Racesow_Player
 		this.race.prejumped=RS_QueryPjState(this.getClient().playerNum());
 		if (this.race.prejumped)
 		{
-			G_CenterPrintMsg( this.getClient().getEnt(), "Prejumped!");
+		    this.sendAward(S_COLOR_RED + "Prejumped!");
 		}
     }
 
@@ -589,6 +589,7 @@ class Racesow_Player
 		//remove all projectiles.
 		if( @this.client.getEnt() != null )
 			removeProjectiles( this.client.getEnt() );
+		RS_ResetPjState(this.getClient().playerNum());
     }
 
 	/**

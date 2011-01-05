@@ -6291,6 +6291,19 @@ static void asFunc_asGeneric_RS_QueryPjState( void *gen )
             (int)G_asGeneric_GetArgInt(gen, 0)));
 }
 
+// RS_ResetPjState
+static qboolean asFunc_RS_ResetPjState(int playerNum)
+{
+     RS_ResetPjState(playerNum);
+     return qtrue;
+}
+
+static void asFunc_asGeneric_RS_ResetPjState( void *gen )
+{
+    G_asGeneric_SetReturnBool( gen, asFunc_RS_ResetPjState(
+            (int)G_asGeneric_GetArgInt(gen, 0)));
+}
+
 // RS_MysqlLoadMap
 static qboolean asFunc_RS_MysqlLoadMap()
 {
@@ -7072,7 +7085,8 @@ static asglobfuncs_t asGlobFuncs[] =
     { "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },
     { "cString @RS_LastMap()", asFunc_RS_LastMap, asFunc_asGeneric_RS_LastMap },
     { "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
-    { "bool RS_QueryPjState( int )", asFunc_RS_QueryPjState, asFunc_asGeneric_RS_QueryPjState},
+    { "bool RS_QueryPjState( int playerNum)", asFunc_RS_QueryPjState, asFunc_asGeneric_RS_QueryPjState},
+    { "bool RS_ResetPjState( int playerNum)", asFunc_RS_ResetPjState, asFunc_asGeneric_RS_ResetPjState},
     // !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },
