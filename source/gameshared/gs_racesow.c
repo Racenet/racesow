@@ -2,6 +2,8 @@
 #include "q_math.h"
 #include "q_shared.h"
 #include "q_comref.h"
+#include "q_collision.h"
+#include "gs_public.h"
 
 // Prejump/noprejump checking code
 
@@ -44,8 +46,8 @@ void RS_IncrementJumps(int playerNum)
 */
 qboolean RS_QueryPjState(int playerNum)
 {
-    // that printf needs to be commented as G_Printf is not supposed to be linked properly (but practically it is)
-    G_Printf("Pj query for player %d: %d jumps, %d walljumps, %d dashes\n", playerNum, pj_jumps[playerNum], pj_walljumps[playerNum], pj_dashes[playerNum]);
+    // debug:
+    // module_Printf("Pj query for player %d: %d jumps, %d walljumps, %d dashes\n", playerNum, pj_jumps[playerNum], pj_walljumps[playerNum], pj_dashes[playerNum]);
     return  ( pj_jumps[playerNum] > 1 || pj_dashes[playerNum] > 1 || pj_walljumps[playerNum] > 1 );
 }
 
