@@ -6316,9 +6316,9 @@ static void asFunc_asGeneric_RS_MysqlLoadMap( void *gen )
 }
 
 // RS_MysqlInsertRace
-static qboolean asFunc_RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time, int playerNum, int tries, int duration, asstring_t *checkpoints)
+static qboolean asFunc_RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time, int playerNum, int tries, int duration, asstring_t *checkpoints, qboolean prejumped)
 {
-    return RS_MysqlInsertRace(player_id, nick_id, map_id, race_time, playerNum, tries, duration, checkpoints->buffer );
+    return RS_MysqlInsertRace(player_id, nick_id, map_id, race_time, playerNum, tries, duration, checkpoints->buffer, prejumped );
 }
 
 static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
@@ -6331,7 +6331,8 @@ static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
         (int)G_asGeneric_GetArgInt(gen, 4),
         (int)G_asGeneric_GetArgInt(gen, 5),
         (int)G_asGeneric_GetArgInt(gen, 6),
-        (asstring_t *)G_asGeneric_GetArgAddress(gen, 7)));
+        (asstring_t *)G_asGeneric_GetArgAddress(gen, 7),
+        (qboolean)G_asGeneric_GetArgBool(gen, 8)));
 }
 
 // RS_MysqlPlayerAppear
@@ -7074,7 +7075,7 @@ static asglobfuncs_t asGlobFuncs[] =
     { "bool RS_GetPlayerNick( int, int )", asFunc_RS_GetPlayerNick, asFunc_asGeneric_RS_GetPlayerNick },
     { "bool RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick, asFunc_asGeneric_RS_UpdatePlayerNick },
     { "bool RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
-    { "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString & )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
+    { "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString &, bool )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
     { "bool RS_MysqlLoadHighscores( int, int, int, cString &)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
     { "bool RS_MysqlSetOneliner( int, int, int, cString &)", asFunc_RS_MysqlSetOneliner, asFunc_asGeneric_RS_MysqlSetOneliner },
     { "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },

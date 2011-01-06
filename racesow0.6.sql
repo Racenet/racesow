@@ -146,6 +146,7 @@ CREATE TABLE `player_map` (
   `overall_tries` int(11) NOT NULL DEFAULT '0',
   `racing_time` bigint(20) NOT NULL DEFAULT '0',
   `created` datetime DEFAULT NULL,
+  `prejumped` enum('true','false') NOT NULL DEFAULT 'false',
   PRIMARY KEY (`player_id`,`map_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -166,5 +167,6 @@ CREATE TABLE `race` (
   `tries` int(10) unsigned DEFAULT NULL,
   `duration` bigint(20) DEFAULT NULL,
   `created` datetime DEFAULT NULL,
+  `prejumped` enum('true','false') NOT NULL DEFAULT 'false',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;

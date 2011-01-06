@@ -64,6 +64,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		this.checkPoints.resize( numCheckpoints );
 		this.lastCheckPoint = 0;
 		this.startTime = 0;
+		this.prejumped = false;
 		
 		for ( int i = 0; i < numCheckpoints; i++ )
 		{
@@ -112,7 +113,21 @@ class Racesow_Player_Race : Racesow_Player_Implemented
             return 0;
 		
 		return this.checkPoints[id];
-	}	
+	}
+
+	/**
+	 * Get all the checkpoint times as a token string
+	 * @return cString
+	 */
+	cString getCheckpoints()
+	{
+        cString checkpoints = "";
+        for ( int i = 0; i < numCheckpoints; i++ )
+        {
+            checkpoints +=  this.checkPoints[i] + " ";
+        }
+        return checkpoints;
+	}
 	
 	/**
 	 * getStartTime
