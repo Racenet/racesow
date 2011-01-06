@@ -772,6 +772,8 @@ void replacementItem_touch( cEntity @ent, cEntity @other )
 {
 	if( @other.client == null || other.moveType != MOVETYPE_PLAYER )
 		return;
+	if( ( other.client.pmoveFeatures & PMFEAT_ITEMPICK ) == 0 )
+	    return;
 	int count = other.client.inventoryCount( ent.item.tag );
 	int inventoryMax = ent.item.inventoryMax;
 	if( ( ent.item.type & IT_WEAPON ) == uint(IT_WEAPON) )
