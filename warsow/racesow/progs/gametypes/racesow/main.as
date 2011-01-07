@@ -869,68 +869,47 @@ void GT_SpawnGametype()
     for ( int i = 0; i < maxClients; i++ )
         players[i].reset();
 
-    @trigger_multiple = @G_FindEntityWithClassname( null, "trigger_multiple" );
-
-    while( @trigger_multiple != null )
+    for ( int i = 0; i <= numEntities; i++ )
     {
-        while( ( @trigger_multiple.findTargetEntity( @from2 ) != null ) )
+        cEntity @ent = @G_GetEntity( i );
+        if( @ent == null )
+            continue;
+        
+        if( ent.getClassname() == "trigger_multiple" )
         {
-            if( ( trigger_multiple.findTargetEntity( @from2 ).getClassname() == "target_startTimer" )
-                || ( trigger_multiple.findTargetEntity( @from2 ).getClassname() == "target_starttimer" ) )
+            if( ( ent.findTargetEntity( @ent ).getClassname() == "target_startTimer" )
+                            || ( ent.findTargetEntity( @ent ).getClassname() == "target_starttimer" ) )
             {
-                trigger_multiple.wait = 0;
-                found = true;
-                break;
+                ent.wait = 0;
             }
-            @from2 = @trigger_multiple.findTargetEntity( @from2 );
         }
-        if( found == true )
-            break;
-        @from = @trigger_multiple;
-        @trigger_multiple = @G_FindEntityWithClassname( from, "trigger_multiple" );
-    }
-
-    @from = null;
-    @target_give = @G_FindEntityWithClassname(from, "target_give");
-
-    while( @target_give != null)
-    {
-        @target = @target_give.findTargetEntity( null );
-        if( @target == null )
+        else if( ent.getClassname() == "target_give" )
         {
-            G_Print(" WARNING: target_give has no targets\n");
-            target_give.unlinkEntity();
-            target_give.freeEntity();
+            cEntity @target = @ent.findTargetEntity( null );
+            if( @target == null )
+            {
+                G_Print(" WARNING: target_give has no targets\n");
+                ent.unlinkEntity();
+                ent.freeEntity();
+            }
         }
-    @from = @target_give;
-    @target_give = @G_FindEntityWithClassname(from, "target_give");
+        else if( ent.type == ET_ITEM )
+        {
+            for( int tag = WEAP_NONE; tag < POWERUP_TOTAL; tag++ )
+            {
+                cItem @Item = G_GetItem( tag );
+                if( @Item != null && ent.getClassname() == Item.getClassname() )
+                {
+                    if( ent.solid != SOLID_NOT ) //ok, not connected
+                    {
+                        ent.setClassname( "AS_" + Item.getClassname() );
+                        replacementItem( @ent );
+                    }
+                    tag = POWERUP_TOTAL; //somehow break; stops the first loop
+                }
+            }
+        }
     }
-    
-    for( int tag = WEAP_NONE; tag < POWERUP_TOTAL; tag++ )
-    {
-    	cItem @Item = G_GetItem( tag );
-    	if( @Item == null)
-    		continue;
-    	cString itemClassname = Item.getClassname();
-    	@from = null;
-    	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
-    	if( @item == null )
-    		continue;
-		do
-		{
-			if( ( item.solid == SOLID_NOT ) && ( ( @item.findTargetingEntity( null ) != null ) && ( item.findTargetingEntity( null ).getClassname() == "target_give" ) ) ) //connected to target_give
-			{
-				@from = @item;
-			}
-			else
-			{
-				item.setClassname( "AS_" + itemClassname );
-				replacementItem( @item );
-				@from = @item;
-			}
-			@item = @G_FindEntityWithClassname( @from, itemClassname );
-		} while( @item != null );
-	}
 }
 
 /**
