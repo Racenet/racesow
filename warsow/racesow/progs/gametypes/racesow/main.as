@@ -872,8 +872,9 @@ void GT_SpawnGametype()
         
         if( ent.getClassname() == "trigger_multiple" )
         {
-            if( ( ent.findTargetEntity( @ent ).getClassname() == "target_startTimer" )
-                            || ( ent.findTargetEntity( @ent ).getClassname() == "target_starttimer" ) )
+            cEntity @target = @ent.findTargetEntity( @ent );
+            if( @target != null && ( ( target.getClassname() == "target_startTimer" )
+                            || ( target.getClassname() == "target_starttimer" ) ) )
             {
                 ent.wait = 0;
             }
