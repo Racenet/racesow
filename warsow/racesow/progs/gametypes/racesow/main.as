@@ -844,11 +844,6 @@ void GT_Shutdown()
  */
 void GT_SpawnGametype()
 {
-    cEntity @trigger_multiple;
-    cEntity @target_give;
-    cEntity @target;
-    cEntity @from = null;
-    cEntity @from2 = null;
     bool found = false;
 
     @map = Racesow_Map();
