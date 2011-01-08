@@ -5,6 +5,12 @@ unsigned int mapcount;
 int MysqlConnected;
 char previousMapName[MAX_CONFIGSTRING_CHARS];
 
+typedef enum{
+    RS_PREJUMPED,
+    RS_NOTPREJUMPED,
+    RS_BOTH
+} pjflag;
+
 struct authenticationData {
 
    unsigned int playerNum;
@@ -64,6 +70,7 @@ struct highscoresDataStruct {
 	unsigned int map_id;
 	int limit;
 	char *mapname;
+	pjflag prejumpflag;
 };
 
 struct filterDataStruct {
@@ -121,7 +128,7 @@ void *RS_GetPlayerNick_Thread( void *in );
 qboolean RS_UpdatePlayerNick( char *name, int playerNum, int player_id );
 void *RS_UpdatePlayerNick_Thread( void *in );
 qboolean RS_MysqlLoadMaplist( int is_freestyle );
-qboolean RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, char *mapname );
+qboolean RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, char *mapname, pjflag prejumpflag );
 void *RS_MysqlLoadHighscores_Thread( void *in );
 qboolean RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, char *oneliner);
 void *RS_MysqlSetOneliner_Thread( void *in );

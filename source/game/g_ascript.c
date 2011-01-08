@@ -6402,9 +6402,9 @@ static void asFunc_asGeneric_RS_UpdatePlayerNick( void *gen )
 }
 
 // RS_MysqlLoadHighScores
-static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, asstring_t *mapname )
+static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, asstring_t *mapname, pjflag prejumped )
 {
-    return RS_MysqlLoadHighscores(playerNum, limit, map_id, mapname->buffer);
+    return RS_MysqlLoadHighscores(playerNum, limit, map_id, mapname->buffer, prejumped);
 }
 
 static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
@@ -6413,7 +6413,8 @@ static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
         (int)G_asGeneric_GetArgInt(gen, 0),
         (int)G_asGeneric_GetArgInt(gen, 1),
         (int)G_asGeneric_GetArgInt(gen, 2),
-        (asstring_t *)G_asGeneric_GetArgAddress(gen, 3)));
+        (asstring_t *)G_asGeneric_GetArgAddress(gen, 3),
+        (int)G_asGeneric_GetArgInt(gen, 4)));
 }
 
 // RS_MysqlSetOneliner
@@ -7076,7 +7077,7 @@ static asglobfuncs_t asGlobFuncs[] =
     { "bool RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick, asFunc_asGeneric_RS_UpdatePlayerNick },
     { "bool RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
     { "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString &, bool )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
-    { "bool RS_MysqlLoadHighscores( int, int, int, cString &)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
+    { "bool RS_MysqlLoadHighscores( int, int, int, cString &, int)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
     { "bool RS_MysqlSetOneliner( int, int, int, cString &)", asFunc_RS_MysqlSetOneliner, asFunc_asGeneric_RS_MysqlSetOneliner },
     { "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
     { "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},

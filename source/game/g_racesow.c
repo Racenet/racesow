@@ -242,7 +242,7 @@ void RS_LoadCvars( void )
 	rs_queryMapFilterCount          = trap_Cvar_Get( "rs_queryMapFilterCount",          "SELECT COUNT(id)FROM map WHERE name LIKE '%%%s%%' AND freestyle = '%s';", CVAR_ARCHIVE );
     rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
     rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `time` FROM `checkpoint` WHERE `map_id` = %d AND `player_id` = %d ORDER BY `num` ASC;", CVAR_ARCHIVE );
-	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
+	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created, pm.prejumped FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d AND pm.prejumped in (%s) ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
 	rs_queryLoadMapOneliner			= trap_Cvar_Get( "rs_queryLoadMapOneliner",			"SELECT `oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `oneliner` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
     
@@ -533,7 +533,6 @@ void *RS_MysqlLoadMap_Thread(void *in)
 			unsigned int playerId, raceTime;
             playerId = atoi(row[0]);
             raceTime = atoi(row[1]);
-
             if (bestTime == 0)
                 bestTime = raceTime;
 		}
@@ -601,7 +600,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
     char query[1000];
     char affectedPlayerIds[500];
 	unsigned int maxPositions, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime, oldTime, oldPoints, oldBestTime, allPoints, newPosition, server_id;
-	qboolean prejumped;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -622,7 +620,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
     lastRaceTime = 0;
     allPoints = 0;
     server_id = 0;
-    prejumped = qfalse;
 	raceData =(struct raceDataStruct *)in;
     
 	RS_StartMysqlThread();
@@ -679,7 +676,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
     {
         // insert race
         sprintf(query, rs_queryAddRace->string, raceData->player_id, raceData->map_id, raceData->race_time, raceData->tries, raceData->duration, server_id, raceData->prejumped?"true":"false");
-        G_Printf(query);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
 
@@ -2019,7 +2015,7 @@ void *RS_Maplist_Thread(void *in)
  * @param int map_id
  * @return void
  */
-qboolean RS_MysqlLoadHighscores( int playerNum, int  limit, int map_id, char *mapname )
+qboolean RS_MysqlLoadHighscores( int playerNum, int  limit, int map_id, char *mapname, pjflag prejumpFlag)
 {
 	pthread_t thread;
 	int returnCode;
@@ -2030,6 +2026,7 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int  limit, int map_id, char *ma
 	highscoresData->playerNum=playerNum;
 	highscoresData->mapname = strdup(mapname);
 	highscoresData->limit = limit;
+	highscoresData->prejumpflag = prejumpFlag;
     
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadHighscores_Thread, (void *)highscoresData);
 	if (returnCode) {
@@ -2060,12 +2057,31 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		char highscores[10000];
 		struct highscoresDataStruct *highscoresData;
 		char *mapname;
+		char *prejumpflag;
+		qboolean prejumped;
 
 		highscoresData = (struct highscoresDataStruct *)in;
 		playerNum = highscoresData->playerNum;
 		limit = highscoresData->limit;
 		mapname = strdup(highscoresData->mapname);
-		
+		prejumped = qfalse;
+
+		switch (highscoresData->prejumpflag)
+		{
+		    case RS_PREJUMPED :
+		        prejumpflag = "'true'";
+		        break;
+		    case RS_NOTPREJUMPED :
+		        prejumpflag = "'false'";
+		        break;
+		    case RS_BOTH :
+		        prejumpflag = "'true','false'";
+		        break;
+		    default :
+		        prejumpflag = "'true','false'";
+                break;
+		}
+
 		RS_StartMysqlThread();
 
 		//if a mapname was provided we must use it
@@ -2121,7 +2137,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		mysql_free_result(mysql_res);
 
         // get top players on map
-		sprintf(query, rs_queryLoadMapHighscores->string, map_id, limit);
+		sprintf(query, rs_queryLoadMapHighscores->string, map_id, prejumpflag, limit);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
@@ -2158,6 +2174,11 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 					*/
                 } 
                 position++;
+                //check is the time is prejumped
+                if ( !Q_stricmp(row[3], "true") )
+                    prejumped = qtrue;
+                else
+                    prejumped = qfalse;
 
                 // convert time into MM:SS:mmm
                 milli = atoi( row[0] );
@@ -2183,7 +2204,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                 last_position = draw_position;
                 Q_strncpyz( last_time, va( "%d:%d.%d", min, sec, milli ), sizeof(last_time) );
 
-				Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s) %s%s\n", S_COLOR_WHITE, draw_position, S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2], S_COLOR_YELLOW, ( position == 1 ? oneliner : "" ) ), sizeof(highscores) );
+				Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s) %s%s\n", S_COLOR_WHITE, draw_position, prejumped?S_COLOR_RED:S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2], S_COLOR_YELLOW, ( position == 1 ? oneliner : "" ) ), sizeof(highscores) );
 			}
         }
 

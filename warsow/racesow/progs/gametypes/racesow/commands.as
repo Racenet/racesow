@@ -192,8 +192,16 @@ class Command_RaceRestart : Racesow_Command
 
 class Command_Top : Racesow_Command
 {
+    int limit;
+    cString mapname;
+    int prejumped;
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
+        this.limit = 30;
+        this.mapname = "";
+        this.prejumped = 2;
+
         if ( mysqlConnected == 0 )
         {
             player.sendMessage("This server doesn't store the best times, this command is useless\n" );
@@ -209,28 +217,39 @@ class Command_Top : Racesow_Command
 
         if ( argc > 0 )
         {
-            if ( args.getToken(0).toInt() < 3 || args.getToken(0).toInt() > 30)
+            cString firstToken = args.getToken(0);
+            if ( firstToken.isNumerical() )
             {
-                player.sendErrorMessage( "You must enter a limit between 0 and 30");
+                this.limit = firstToken.toInt();
+                if ( argc > 1 )
+                    mapname = args.getToken(1);
+            }
+            else
+            {
+                if (firstToken == "pj")
+                    this.prejumped = 0;
+                else if (firstToken == "nopj")
+                    this.prejumped = 1;
+                else
+                    return false;
+                if ( argc > 1 )
+                    this.limit = args.getToken(1).toInt();
+                if ( argc > 2 )
+                    mapname = args.getToken(2);
+            }
+            if ( this.limit < 3 || this.limit > 30)
+            {
+                player.sendErrorMessage("You must use a limit between 3 and 30");
                 return false;
             }
         }
-
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        int limit = 30;
-        cString mapname;
         player.isWaitingForCommand=true;
-
-        if ( argc > 0 )
-            limit = args.getToken(0).toInt();
-        if ( argc > 1 )
-            mapname = args.getToken(1);
-
-        RS_MysqlLoadHighscores(player.getClient().playerNum(), limit, map.getId(), mapname);
+        RS_MysqlLoadHighscores(player.getClient().playerNum(), this.limit, map.getId(), this.mapname, this.prejumped);
         return true;
     }
 
@@ -1003,7 +1022,7 @@ void RS_CreateCommands()
     Command_Top top;
     top.name = "top";
     top.description = "Print the best times of a given map (default: current map)";
-    top.usage = "top <limit(3-30)> <mapname>";
+    top.usage = "top <pj/nopj> <limit(3-30)> <mapname>";
     top.raceOnly = true;
     @commands[commandCount] = @top;
     commandCount++;
