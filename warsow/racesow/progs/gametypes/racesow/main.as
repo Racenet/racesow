@@ -890,17 +890,13 @@ void GT_SpawnGametype()
         }
         else if( ent.type == ET_ITEM )
         {
-            for( int tag = WEAP_NONE; tag < POWERUP_TOTAL; tag++ )
+            cItem @Item = @ent.item;
+            if( @Item != null && ent.getClassname() == Item.getClassname() )
             {
-                cItem @Item = G_GetItem( tag );
-                if( @Item != null && ent.getClassname() == Item.getClassname() )
+                if( ent.solid != SOLID_NOT ) //ok, not connected
                 {
-                    if( ent.solid != SOLID_NOT ) //ok, not connected
-                    {
-                        ent.setClassname( "AS_" + Item.getClassname() );
-                        replacementItem( @ent );
-                    }
-                    tag = POWERUP_TOTAL; //somehow break; stops the first loop
+                    ent.setClassname( "AS_" + Item.getClassname() );
+                    replacementItem( @ent );
                 }
             }
         }
