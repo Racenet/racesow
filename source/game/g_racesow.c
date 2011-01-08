@@ -233,7 +233,7 @@ void RS_LoadCvars( void )
 	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `server_id`, `tries`, `duration`, `created`, `prejumped`) VALUES(%d, %d, %d, 1, %d, (SELECT SUM(`tries`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `tries` IS NOT NULL), (SELECT SUM(`duration`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `duration` IS NOT NULL), NOW(), '%s') ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `server_id` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`server_id`), `server_id`), `tries` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`tries`), `tries`), `duration` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`duration`), `duration`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time`), `prejumped` = VALUES(`prejumped`);", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMapInfo  	= trap_Cvar_Get( "rs_queryUpdatePlayerMapInfo",	    "INSERT INTO `player_map` (`player_id`, `map_id`, `playtime`, overall_tries, racing_time) VALUES(%d, %d, %d, %d, %d) ON DUPLICATE KEY UPDATE `playtime` = `playtime` + VALUES(`playtime`), `overall_tries` = `overall_tries` + VALUES(`overall_tries`), `racing_time` = `racing_time` + VALUES(`racing_time`);", CVAR_ARCHIVE );
 	rs_queryGetPlayerMapHighscore	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScore",	"SELECT `p`.`id`, `pm`.`time`, `pm`.`overall_tries`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`map_id` = %d AND `pm`.`player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created`, `pm`.`prejumped` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d AND `pm`.`prejumped` = '%s' ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
+    rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created`, `pm`.`prejumped` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d AND `pm`.`prejumped` in (%s) ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
     rs_queryResetPlayerMapPoints	= trap_Cvar_Get( "rs_queryResetPlayerMapPoints",	"UPDATE `player_map` SET `points` = 0 WHERE `map_id` = %d;", CVAR_ARCHIVE );
     rs_queryUpdatePlayerMapPoints	= trap_Cvar_Get( "rs_queryUpdatePlayerMapPoints",	"UPDATE `player_map` SET `points` = %d WHERE `map_id` = %d AND `player_id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapRating			= trap_Cvar_Get( "rs_querySetMapRating",			"INSERT INTO `map_rating` (`player_id`, `map_id`, `value`, `created`) VALUES(%d, %d, %d, NOW()) ON DUPLICATE KEY UPDATE `value` = VALUE(`value`), `changed` = NOW();", CVAR_ARCHIVE );
@@ -521,7 +521,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
     mysql_free_result(mysql_res);
 	
     // retrieve server best
-	sprintf(query, rs_queryGetPlayerMapHighscores->string, map_id, "false");
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, map_id, "'false'");
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
@@ -599,13 +599,14 @@ void *RS_MysqlInsertRace_Thread(void *in)
 {
     char query[1000];
     char affectedPlayerIds[500];
-	unsigned int maxPositions, newPoints, currentPosition, realPosition, offset, points, lastRaceTime, bestTime, oldTime, oldPoints, oldBestTime, allPoints, newPosition, server_id;
+	unsigned int maxPositions, newPoints, currentPosition, currentCleanPosition, realPosition, offset, cleanOffset, points, lastRaceTime, lastCleanRaceTime, bestTime, oldTime, oldPoints, oldBestTime, allPoints, newPosition, server_id;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
     char *t; //token to parse checkpoints
     static const char *seps = " "; //token separator in checkpoints string
     int index = 0; //checkpoint number
+    qboolean prejumped;
 
     affectedPlayerIds[0] = '\0';
     oldTime = 0;
@@ -613,13 +614,17 @@ void *RS_MysqlInsertRace_Thread(void *in)
     maxPositions = 30;
     oldBestTime = 0;
     offset = 0;
+    cleanOffset = 0;
     newPosition = 0;
 	newPoints = 0;
 	oldPoints = 0;
 	currentPosition = 0;
+	currentCleanPosition = 0;
     lastRaceTime = 0;
+    lastCleanRaceTime = 0;
     allPoints = 0;
     server_id = 0;
+    prejumped = qfalse;
 	raceData =(struct raceDataStruct *)in;
     
 	RS_StartMysqlThread();
@@ -641,7 +646,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	mysql_free_result(mysql_res);
 
     // retrieve server best
-	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, raceData->prejumped?"true":"false");
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, raceData->prejumped?"'true'":"'false'");
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
@@ -729,7 +734,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
             RS_CheckMysqlThreadError();
             
             // update points in player_map
-            sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, raceData->prejumped?"true":"false");
+            sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, "'true','false'");
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError();
             mysql_res = mysql_store_result(&mysql);
@@ -742,12 +747,15 @@ void *RS_MysqlInsertRace_Thread(void *in)
                     unsigned int playerId, raceTime;
                     playerId = atoi(row[0]);
                     raceTime = atoi(row[1]);
-                
-                        if (Q_stricmp( affectedPlayerIds, "" )) {
-                        
-                            Q_strncatz( affectedPlayerIds, ",",  sizeof(affectedPlayerIds));
-                        }
-                        Q_strncatz( affectedPlayerIds, row[0],  sizeof(affectedPlayerIds));
+                    if ( !Q_stricmp(row[6],"true") )
+                        prejumped = qtrue;
+                    else
+                        prejumped = qfalse;
+
+                    if ( Q_stricmp( affectedPlayerIds, "" ) )
+                        Q_strncatz( affectedPlayerIds, ",", sizeof(affectedPlayerIds));
+
+                    Q_strncatz( affectedPlayerIds, row[0], sizeof(affectedPlayerIds));
                     
                     if (bestTime == 0)
                         bestTime = raceTime;
@@ -757,8 +765,23 @@ void *RS_MysqlInsertRace_Thread(void *in)
                     else
                         offset = 0;
 
+                    if ( !prejumped && raceTime == lastCleanRaceTime )
+                        cleanOffset++;
+                    else
+                        cleanOffset = 0;
+
                     currentPosition++;
-                    realPosition = currentPosition - offset;
+                    if ( !prejumped )
+                    {
+                        currentCleanPosition++;
+                        realPosition = currentCleanPosition - cleanOffset;
+                        lastCleanRaceTime = raceTime;
+                    }
+                    else
+                    {
+                        realPosition = currentPosition - offset;
+                    }
+
                     points = (maxPositions + 1) - realPosition;
                     switch (realPosition)
                     {
@@ -2159,6 +2182,10 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 			int replay_record;
 			
 			replay_record=0;
+			last_time[0]='\0';
+			draw_time[0]='\0';
+			diff_time[0]='\0';
+
  
             Q_strncatz(highscores, va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, mapname, S_COLOR_WHITE ), sizeof(highscores));
 
