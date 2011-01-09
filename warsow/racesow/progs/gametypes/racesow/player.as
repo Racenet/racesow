@@ -276,7 +276,7 @@ class Racesow_Player
 
         //G_PrintMsg( null, this.getName() + ": aP: "+ allPoints + ", oP: "+ oldPoints + ", nP: " + newPoints + ", oT: "+ oldTime + ", oBT: "+ oldBestTime + ", nT: " + newTime + "\n");
 		uint bestTime;
-        uint earnedPoints;
+        int earnedPoints;
 		uint oldServerBestTime;
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
