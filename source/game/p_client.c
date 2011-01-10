@@ -384,7 +384,11 @@ void G_Client_InactivityRemove( gclient_t *client )
 
 			// move to spectators and reset the queue time, effectively removing from the challengers queue
 			G_Teams_SetTeam( ent, TEAM_SPECTATOR );
-			client->queueTimeStamp = 0;
+            // racesow
+            // set player in free-view, don't make it spectate some random player
+			G_SpawnQueue_RemoveClient(ent);
+            // !racesow
+            client->queueTimeStamp = 0;
 
 			G_PrintMsg( NULL, "%s"S_COLOR_YELLOW" has been moved to spectator after %.1f seconds of inactivity\n", client->netname, g_inactivity_maxtime->value );
 		}
@@ -399,7 +403,7 @@ static void G_Client_AssignTeamSkin( edict_t *ent, char *userinfo )
 	// index skin file
 	userskin = GS_TeamSkinName( ent->s.team ); // is it a team skin?
 	if( !userskin ) // NULL indicates *user defined*
-	{   
+	{
 		userskin = Info_ValueForKey( userinfo, "skin" );
 		if( !userskin || !userskin[0] || !COM_ValidateRelativeFilename( userskin ) ||
 			strchr( userskin, '/' ) || strstr( userskin, "invisibility" ) )
@@ -938,7 +942,7 @@ static void G_UpdatePlayerInfoString( int playerNum )
 /*
 * ClientUserinfoChanged
 * called whenever the player updates a userinfo variable.
-* 
+*
 * The game can override any of the settings in place
 * (forcing skins or names, etc) before copying it off.
 */
@@ -1435,7 +1439,7 @@ void ClientThink( edict_t *ent, usercmd_t *ucmd, int timeDelta )
 
 	client->ps.pmove.gravity = g_gravity->value;
 
-	if( GS_MatchState() >= MATCH_STATE_POSTMATCH || GS_MatchPaused() 
+	if( GS_MatchState() >= MATCH_STATE_POSTMATCH || GS_MatchPaused()
 		|| ( ent->movetype != MOVETYPE_PLAYER && ent->movetype != MOVETYPE_NOCLIP ) )
 		client->ps.pmove.pm_type = PM_FREEZE;
 	else if( ent->s.type == ET_GIB )
@@ -1480,7 +1484,7 @@ void ClientThink( edict_t *ent, usercmd_t *ucmd, int timeDelta )
 		ent->groundentity = &game.edicts[pm.groundentity];
 		ent->groundentity_linkcount = ent->groundentity->r.linkcount;
 	}
-	
+
 	GClip_LinkEntity( ent );
 
 	GS_AddLaserbeamPoint( &ent->r.client->resp.trail, &ent->r.client->ps, ucmd->serverTimeStamp );
@@ -1530,7 +1534,7 @@ void ClientThink( edict_t *ent, usercmd_t *ucmd, int timeDelta )
 	if( GS_Instagib() && g_instashield->integer )
 	{
 		if( client->ps.pmove.pm_type == PM_NORMAL && pm.cmd.upmove < 0 &&
-			client->resp.instashieldCharge == INSTA_SHIELD_MAX && 
+			client->resp.instashieldCharge == INSTA_SHIELD_MAX &&
 			client->ps.inventory[POWERUP_SHELL] == 0 )
 		{
 			client->ps.inventory[POWERUP_SHELL] = client->resp.instashieldCharge;
@@ -1611,7 +1615,7 @@ void G_CheckClientRespawnClick( edict_t *ent )
 			// hold system must wait for at least 1000 msecs (to see the death properly)
 			if( G_SpawnQueue_GetSystem( ent->s.team ) == SPAWNSYSTEM_HOLD )
 				minDelay = ( g_respawn_delay_min->integer < 1300 ) ? 1300 : g_respawn_delay_min->integer;
-				
+
 			if( level.time >= ent->deathTimeStamp + minDelay )
 				G_SpawnQueue_AddClient( ent );
 		}
