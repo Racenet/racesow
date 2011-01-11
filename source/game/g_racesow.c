@@ -259,7 +259,7 @@ void RS_LoadCvars( void )
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created, pm.prejumped FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d AND pm.prejumped in (%s) ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
 	rs_queryLoadMapOneliners		= trap_Cvar_Get( "rs_queryLoadMapOneliners",		"SELECT `oneliner`, `pj_oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `%s` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
-    
+
 }
 
 /**
@@ -692,7 +692,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     }
     mysql_free_result(mysql_res);
 
-    
+
     // get server_id
     sprintf(query, rs_queryGetServer->string, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
@@ -731,7 +731,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
         sprintf(query, rs_queryIncrementServerRaces->string, sv_port->integer);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
-        
+
         // insert or update player_map (aka personal record)
         sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id, raceData->player_id, raceData->map_id, raceData->player_id, raceData->map_id, raceData->prejumped?"true":"false");
         mysql_real_query(&mysql, query, strlen(query));
@@ -751,9 +751,10 @@ void *RS_MysqlInsertRace_Thread(void *in)
                 RS_CheckMysqlThreadError();
             }
 
-            // clear the current oneliner in the other category if current racer was the record holder in this category
-            // cause he just changed category (he was the best but improved) so he leaves his right to have the oneliner in his previous category
-            if ( raceData->player_id == oldOtherBestPlayerId )
+            // - clear the current oneliner in the other category if current racer was the record holder in this category
+            //   cause he just changed category (he was the best but improved) so he leaves his right to have the oneliner in his previous category
+            // - also clear the prejumped oneliner if a nopj absolute record was made
+            if ( raceData->player_id == oldOtherBestPlayerId || ( ( !raceData->prejumped ) && ( raceData->race_time < oldOtherBestTime ) ) )
             {
                 char empty_oneliner[1];
                 empty_oneliner[0] = '\0';
@@ -868,7 +869,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
             RS_CheckMysqlThreadError();
 
         }
-       
+
         sprintf(query, rs_queryGetPlayerPoints->string, raceData->player_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
@@ -2204,6 +2205,9 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 				{
 						Q_strncpyz(oneliner, va("\"%s\"", row[0]), sizeof(oneliner));
 				}
+			}
+			if (row[1] !=NULL)
+			{
                 if ( strlen(row[1]) > 0 )
                 {
                         Q_strncpyz(pjoneliner, va("\"%s\"", row[1]), sizeof(pjoneliner));
@@ -2235,7 +2239,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
             char diff_time[16];
             int min, sec, milli, dmin, dsec, dmilli;
 			int replay_record;
-			
+
 			replay_record=0;
 			last_time[0]='\0';
 			draw_time[0]='\0';
@@ -2254,7 +2258,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                     if( rs_restoreHighscores->integer )
                         game.race_record = atoi( row[0] );
 					*/
-                } 
+                }
                 position++;
                 //check is the time is prejumped
                 if ( !Q_stricmp(row[3], "true") )
@@ -2382,7 +2386,7 @@ void *RS_MysqlSetOneliner_Thread( void *in )
     mysql_free_result(mysql_res);
 
 	// retrieve server best
-	sprintf(query, rs_queryGetPlayerMapHighscores->string, onelinerData->map_id, prejumped?"'true'":"'false'");
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, onelinerData->map_id, prejumped?"'true','false'":"'false'");
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
@@ -2433,7 +2437,7 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 			failure=1;
 		}
 	}
-	
+
 	// return a failure message
 	if ( failure )
 	{
