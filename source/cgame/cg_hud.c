@@ -360,12 +360,6 @@ lm: edit for race mod,
 
 //lm: for readability
 enum race_index {
-	mouse_x,
-	mouse_y,
-	jumpspeed,
-	move_an,
-	diff_an,
-	strafe_an,
 	cp1,
 	cp2,
 	cp3,
@@ -399,9 +393,13 @@ LMTODO: strafing
 %mouse_x, %mouse_y, %moveangle now use units of 0.01degrees for more precision
 =>angles are now (-18000,18000) and (-9000,9000)
 substituted int casts with round functions
+acceleration now reports average speed increase per 1000 seconds over X frames (8, 16, 32 or 64 should be good)
 added:
 %diff_angle - difference of %mouse_x and %moveangle (%mouse_x - %moveangle)
-%strafe_angle - the optimal strafe angle based on current speed
+%strafe_angle - the optimal strafe angle based on current speed and FrameTime
+	this seems to be different in 0.6 for certain gametypes
+	maybe has something to do with the base speed
+%max_accel - the maximum possible acceleration based on current speed, same unit as %acceleration
 */
 
 #define RACE_CP_LENGTH	20
@@ -448,44 +446,11 @@ void CG_RaceSaycps_f( void )
 	trap_Cmd_ExecuteText( EXEC_APPEND, "\"\n" );
 }
 
-static int CG_GetRaceVars( void* parameter )
+static int CG_GetCheckPoint( void* parameter )
 {
 	int index = (qintptr)parameter;
 	int iNum;
-	vec3_t hor_vel, an;
 	switch( index ) {
-		case diff_an:
-			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
-			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
-			hor_vel[2] = 0;
-			VecToAngles( hor_vel, an );
-			iNum = round(100 * (cg.predictedPlayerState.viewangles[YAW] - an[YAW]));
-			while( iNum > 18000 )
-				iNum -= 36000;
-			while( iNum < -18000 )
-				iNum += 36000;
-			return iNum;
-		case strafe_an:
-			iNum = round(100 * (acos((320-320*cg.realFrameTime)/CG_GetSpeed(0))*180/M_PI-45) ); //maybe need to check if speed below 320 is allowed for acos
-			if (iNum > 0)
-				return iNum;
-			else
-				return 0;
-		case move_an:
-			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
-			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
-			hor_vel[2] = 0;
-			VecToAngles( hor_vel, an );
-			iNum = round(100 * an[YAW]);
-			while( iNum > 18000 )
-				iNum -= 36000;
-			while( iNum < -18000 )
-				iNum += 36000;
-			return iNum;
-		case mouse_x:
-			return round(100 * cg.predictedPlayerState.viewangles[YAW]);
-		case mouse_y:
-			return round(100 * cg.predictedPlayerState.viewangles[PITCH]);
 		case cp1: case cp2: case cp3: case cp4: case cp5: case cp6: case cp7: case cp8:
 		case cp9: case cp10: case cp11: case cp12: case cp13: case cp14: case cp15:
 			iNum = index - (int)cp1;
@@ -500,30 +465,113 @@ static int CG_GetRaceVars( void* parameter )
 			if( iNum < cur_check )
 				return iNum;
 			return STAT_NOTSET;
-		case jumpspeed:
-			return race_jump;
 		default:
 			return STAT_NOTSET;
 	}
 }
 
+static int CG_GetJumpSpeed( void* parameter )
+{
+	return race_jump;
+}
+
+static int CG_GetMouseAngleY( void* parameter )
+{
+	return round(100 * cg.predictedPlayerState.viewangles[PITCH]);
+}
+
+static int CG_GetMouseAngleX( void* parameter )
+{
+	return round(100 * cg.predictedPlayerState.viewangles[YAW]);
+}
+
+static int CG_GetMoveAngle( void* parameter )
+{
+	vec3_t hor_vel, an;
+	hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
+	hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
+	hor_vel[2] = 0;
+	VecToAngles( hor_vel, an );
+	int MoveAngle = round(100 * an[YAW]);
+	while( MoveAngle > 18000 )
+		MoveAngle -= 36000;
+	while( MoveAngle < -18000 )
+		MoveAngle += 36000;
+	return MoveAngle;
+}
+
+static int CG_GetDiffAngle( void* parameter )
+{
+	vec3_t hor_vel, an;
+	hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
+	hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
+	hor_vel[2] = 0;
+	VecToAngles( hor_vel, an );
+	int diffAngle = round(100 * (cg.predictedPlayerState.viewangles[YAW] - an[YAW]));
+	while( diffAngle > 18000 )
+		diffAngle -= 36000;
+	while( diffAngle < -18000 )
+		diffAngle += 36000;
+	return diffAngle;
+}
+
+static int CG_GetStrafeAngle( void* parameter )
+{
+	int base_speed = cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED];
+	float base_accel = base_speed * cg.realFrameTime;
+
+	int strafeAngle = round(100 * (acos((base_speed-base_accel)/CG_GetSpeed(0))*180/M_PI-45) ); //maybe need to check if speed below 320 is allowed for acos
+	if (strafeAngle > 0)
+		return strafeAngle;
+	else
+		return 0;
+}
+
+static int CG_GetMaxAccel( void* parameter )
+{
+	int base_speed = cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED];
+	float base_accel = base_speed * cg.realFrameTime;
+
+	//copied from CG_GetSpeed, because int isnt accurate enough
+	vec3_t hvel;
+	VectorSet( hvel, cg.predictedPlayerState.pmove.velocity[0], cg.predictedPlayerState.pmove.velocity[1], 0 );
+	float speed = VectorLength( hvel );
+	//---------------------------------------------------------
+	return (int)( 1000 *
+			(
+				sqrt(speed*speed + base_accel*(2*base_speed - base_accel))
+				- speed
+			)
+			/ cg.realFrameTime);
+}
+
 static int CG_GetAccel( void* parameter )
 {
-	static int accel = 0;
-	static double oldtime = 0;
-	static int oldspeed = 0;
-	double t;
+#define ACCELSAMPLESCOUNT 16
+#define ACCELSAMPLESMASK ( ACCELSAMPLESCOUNT-1 )
+	static float speeds[ACCELSAMPLESCOUNT];
+	static float accels[ACCELSAMPLESCOUNT];
+	float avAccel = 0.0f;
+	float newSpeed;
+	int i;
 
-	t = cg.realTime * 0.001f;
-	if( ( t - oldtime ) >= 0.10 )		//check 10 times a second for accel
-	{
-		int newspeed = CG_GetSpeed( 0 );
-		accel = newspeed - oldspeed;
-		if( accel < 0 ) accel = 0;
-		oldspeed = newspeed;
-		oldtime = t;
-	}
-	return accel;
+	//copied from CG_GetSpeed, because int isnt accurate enough
+	vec3_t hvel;
+	VectorSet( hvel, cg.predictedPlayerState.pmove.velocity[0], cg.predictedPlayerState.pmove.velocity[1], 0 );
+	newSpeed = VectorLength( hvel );
+	//---------------------------------------------------------
+
+	//newSpeed = CG_GetSpeed( 0 );
+	accels[cg.frameCount & ACCELSAMPLESMASK] =
+			(newSpeed - speeds[(cg.frameCount-1) & ACCELSAMPLESMASK]) / cg.realFrameTime;
+	speeds[cg.frameCount & ACCELSAMPLESMASK] = newSpeed;
+
+	for( i = 0; i < ACCELSAMPLESCOUNT; i++ )
+		avAccel += accels[i];
+	if( avAccel < 0 )
+		return 0;
+	else
+		return (int)(1000 * avAccel / ACCELSAMPLESCOUNT);
 }
 
 qboolean CG_IsBounce()
@@ -671,29 +719,30 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "DAMAGE_INDICATOR_LEFT", CG_GetDamageIndicatorDirValue, (void *)3 },
 
 //racesow - lm: race stuff 
-	{ "MOUSE_X", CG_GetRaceVars, (void *)mouse_x },
-	{ "MOUSE_Y", CG_GetRaceVars, (void *)mouse_y },
+	{ "MOUSE_X", CG_GetMouseAngleX, NULL },
+	{ "MOUSE_Y", CG_GetMouseAngleY, NULL },
 	{ "ACCELERATION", CG_GetAccel, NULL },
-	{ "JUMPSPEED", CG_GetRaceVars, (void *)jumpspeed },
-	{ "MOVEANGLE", CG_GetRaceVars, (void *)move_an	},
-	{ "STRAFEANGLE", CG_GetRaceVars, (void *)strafe_an },
-	{ "DIFF_ANGLE", CG_GetRaceVars, (void *)diff_an	},
+	{ "JUMPSPEED", CG_GetJumpSpeed, NULL },
+	{ "MOVEANGLE", CG_GetMoveAngle, NULL },
+	{ "STRAFEANGLE", CG_GetStrafeAngle, NULL },
+	{ "DIFF_ANGLE", CG_GetDiffAngle, NULL },
+	{ "MAX_ACCEL", CG_GetMaxAccel, NULL },
 
-	{ "CP1", CG_GetRaceVars, (void *)cp1 },
-	{ "CP2", CG_GetRaceVars, (void *)cp2, },
-	{ "CP3", CG_GetRaceVars, (void *)cp3, },
-	{ "CP4", CG_GetRaceVars, (void *)cp4 },
-	{ "CP5", CG_GetRaceVars, (void *)cp5 },
-	{ "CP6", CG_GetRaceVars, (void *)cp6 },
-	{ "CP7", CG_GetRaceVars, (void *)cp7 },
-	{ "CP8", CG_GetRaceVars, (void *)cp8 },
-	{ "CP9", CG_GetRaceVars, (void *)cp9 },
-	{ "CP10", CG_GetRaceVars, (void *)cp10 },
-	{ "CP11", CG_GetRaceVars, (void *)cp11 },
-	{ "CP12", CG_GetRaceVars, (void *)cp12 },
-	{ "CP13", CG_GetRaceVars, (void *)cp13 },
-	{ "CP14", CG_GetRaceVars, (void *)cp14 },
-	{ "CP15", CG_GetRaceVars, (void *)cp15 },
+	{ "CP1", CG_GetCheckPoint, (void *)cp1 },
+	{ "CP2", CG_GetCheckPoint, (void *)cp2, }, //why is there another comma?
+	{ "CP3", CG_GetCheckPoint, (void *)cp3, }, //
+	{ "CP4", CG_GetCheckPoint, (void *)cp4 },
+	{ "CP5", CG_GetCheckPoint, (void *)cp5 },
+	{ "CP6", CG_GetCheckPoint, (void *)cp6 },
+	{ "CP7", CG_GetCheckPoint, (void *)cp7 },
+	{ "CP8", CG_GetCheckPoint, (void *)cp8 },
+	{ "CP9", CG_GetCheckPoint, (void *)cp9 },
+	{ "CP10", CG_GetCheckPoint, (void *)cp10 },
+	{ "CP11", CG_GetCheckPoint, (void *)cp11 },
+	{ "CP12", CG_GetCheckPoint, (void *)cp12 },
+	{ "CP13", CG_GetCheckPoint, (void *)cp13 },
+	{ "CP14", CG_GetCheckPoint, (void *)cp14 },
+	{ "CP15", CG_GetCheckPoint, (void *)cp15 },
 //!racesow
 
 	// cvars
@@ -1204,7 +1253,7 @@ static void CG_DrawWeaponIcons( int x, int y, int offx, int offy, int iw, int ih
 //================
 static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, int ammotype, int align )
 {
-	int curx, cury, curw, curh;
+	int curx, cury, curh;
 	int i, j, n, fs;
 	float fj, fn;
 	vec4_t color;
@@ -1222,7 +1271,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		fs = fontsize;
 	else
 		fs = 12; // 12 = default size for font
-	curw = (int)( fs * cgs.vidWidth/800 );
+	//curw = (int)( fs * cgs.vidWidth/800 );
 	curh = (int)( fs * cgs.vidHeight/600 );
 
 	n = 0;
@@ -1252,7 +1301,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		cury = y + (int)( offy * ( fj - fn / 2.0f ) );
 
 		if( cg.predictedPlayerState.inventory[i+startammo] )
-			CG_DrawHUDNumeric( curx, cury, align, color, curw, curh, cg.predictedPlayerState.inventory[i+startammo] );
+			CG_DrawHUDNumeric( curx, cury, align, color, curh, curh, cg.predictedPlayerState.inventory[i+startammo] );
 		j++;
 	}
 }
@@ -1679,6 +1728,27 @@ static int CG_LFuncCursor( struct cg_layoutnode_s *commandnode, struct cg_layout
 	return qtrue;
 }
 
+static int CG_LFuncCursorX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_x = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_y = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	return qtrue;
+}
+
+static int CG_LFuncCursorY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_x = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_y = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	return qtrue;
+}
+
+static int CG_LFuncPixelCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_x = (int)CG_GetNumericArg( &argumentnode );
+	layout_cursor_y = (int)CG_GetNumericArg( &argumentnode );
+	return qtrue;
+}
+
 static int CG_LFuncMoveCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
 	layout_cursor_x += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
@@ -1686,10 +1756,52 @@ static int CG_LFuncMoveCursor( struct cg_layoutnode_s *commandnode, struct cg_la
 	return qtrue;
 }
 
+static int CG_LFuncMoveCursorX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_x += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_y += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	return qtrue;
+}
+
+static int CG_LFuncMoveCursorY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_x += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_y += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	return qtrue;
+}
+
+static int CG_LFuncMovePixelCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_x += (int)CG_GetNumericArg( &argumentnode );
+	layout_cursor_y += (int)CG_GetNumericArg( &argumentnode );
+	return qtrue;
+}
+
 static int CG_LFuncSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
 	layout_cursor_width = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
 	layout_cursor_height = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	return qtrue;
+}
+
+static int CG_LFuncSizeX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_width = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_height = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	return qtrue;
+}
+
+static int CG_LFuncSizeY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_width = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_height = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	return qtrue;
+}
+
+static int CG_LFuncPixelSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	layout_cursor_width = (int)CG_GetNumericArg( &argumentnode );
+	layout_cursor_height = (int)CG_GetNumericArg( &argumentnode );
 	return qtrue;
 }
 
@@ -2135,10 +2247,52 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 	},
 
 	{
+		"setCursorX",
+		CG_LFuncCursorX,
+		2,
+		"Sets the cursor position to x and y coordinates. x and y depend on screen width."
+	},
+
+	{
+		"setCursorY",
+		CG_LFuncCursorY,
+		2,
+		"Sets the cursor position to x and y coordinates. x and y depend on screen height."
+	},
+
+	{
+		"setPixelCursor",
+		CG_LFuncPixelCursor,
+		2,
+		"Sets the cursor position to x and y coordinates based on screen resolution."
+	},
+
+	{
 		"MoveCursor",
 		CG_LFuncMoveCursor,
 		2,
 		"Moves the cursor position by dx and dy."
+	},
+
+	{
+		"MoveCursorX",
+		CG_LFuncMoveCursorX,
+		2,
+		"Moves the cursor position by dx and dy. dx and dy depend on screen width."
+	},
+
+	{
+		"MoveCursorY",
+		CG_LFuncMoveCursorY,
+		2,
+		"Moves the cursor position by dx and dy. dx and dy depend on screen height."
+	},
+
+	{
+		"MovePixelCursor",
+		CG_LFuncMovePixelCursor,
+		2,
+		"Moves the cursor position by dx and dy based on screen resolution."
 	},
 
 	{
@@ -2153,6 +2307,27 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		CG_LFuncSize,
 		2,
 		"Sets width and height. Used for pictures and models."
+	},
+
+	{
+		"setSizeX",
+		CG_LFuncSizeX,
+		2,
+		"Sets width and height. Width and height depend on screen width."
+	},
+
+	{
+		"setSizeY",
+		CG_LFuncSizeY,
+		2,
+		"Sets width and height. Width and height depend on screen height."
+	},
+
+	{
+		"setPixelSize",
+		CG_LFuncPixelSize,
+		2,
+		"Sets width and height in Pixels. Used for pictures and models."
 	},
 
 	{
