@@ -62,7 +62,7 @@ cvar_t *rs_queryUpdatePlayerMapPoints;
 cvar_t *rs_querySetMapRating;
 cvar_t *rs_queryLoadMapList;
 cvar_t *rs_queryLoadMapHighscores;
-cvar_t *rs_queryLoadMapOneliner;
+cvar_t *rs_queryLoadMapOneliners;
 cvar_t *rs_querySetMapOneliner;
 cvar_t *rs_queryMapFilter;
 cvar_t *rs_queryMapFilterCount;
@@ -230,7 +230,7 @@ void RS_LoadCvars( void )
     rs_queryUpdateMapRaces			= trap_Cvar_Get( "rs_queryUpdateMapRaces",			"UPDATE `map` SET `races` = `races` + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryAddRace					= trap_Cvar_Get( "rs_queryAddRace",					"INSERT INTO `race` (`player_id`, `map_id`, `time`, `tries`, `duration`, `server_id`, `created`, `prejumped`) VALUES(%d, %d, %d, %d, %d, %d, NOW(), '%s');", CVAR_ARCHIVE );
 	rs_queryGetPlayerMap			= trap_Cvar_Get( "rs_queryGetPlayerMap",			"SELECT `points`, `time`, `prejumped`, `races`, `playtime`, `created` FROM `player_map` WHERE `player_id` = %d AND `map_id` = %d LIMIT 1;", CVAR_ARCHIVE );
-	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `server_id`, `tries`, `duration`, `created`, `prejumped`) VALUES(%d, %d, %d, 1, %d, (SELECT SUM(`tries`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `tries` IS NOT NULL), (SELECT SUM(`duration`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `duration` IS NOT NULL), NOW(), '%s') ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `server_id` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`server_id`), `server_id`), `tries` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`tries`), `tries`), `duration` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`duration`), `duration`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time`), `prejumped` = VALUES(`prejumped`);", CVAR_ARCHIVE );
+	rs_queryUpdatePlayerMap			= trap_Cvar_Get( "rs_queryUpdatePlayerMap",			"INSERT INTO `player_map` (`player_id`, `map_id`, `time`, `races`, `server_id`, `tries`, `duration`, `created`, `prejumped`) VALUES(%d, %d, %d, 1, %d, (SELECT SUM(`tries`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `tries` IS NOT NULL), (SELECT SUM(`duration`) FROM `race` WHERE `player_id` = %d AND `map_id` = %d AND `duration` IS NOT NULL), NOW(), '%s') ON DUPLICATE KEY UPDATE `races` = `races` + 1, `created` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, NOW(), `created`), `server_id` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`server_id`), `server_id`), `tries` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`tries`), `tries`), `duration` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`duration`), `duration`), `prejumped` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`prejumped`), `prejumped`), `time` = IF( VALUES(`time`) < `time` OR `time` = 0 OR `time` IS NULL, VALUES(`time`), `time`);", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerMapInfo  	= trap_Cvar_Get( "rs_queryUpdatePlayerMapInfo",	    "INSERT INTO `player_map` (`player_id`, `map_id`, `playtime`, overall_tries, racing_time) VALUES(%d, %d, %d, %d, %d) ON DUPLICATE KEY UPDATE `playtime` = `playtime` + VALUES(`playtime`), `overall_tries` = `overall_tries` + VALUES(`overall_tries`), `racing_time` = `racing_time` + VALUES(`racing_time`);", CVAR_ARCHIVE );
 	rs_queryGetPlayerMapHighscore	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScore",	"SELECT `p`.`id`, `pm`.`time`, `pm`.`overall_tries`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`map_id` = %d AND `pm`.`player_id` = %d LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerMapHighscores	= trap_Cvar_Get( "rs_queryGetPlayerMapHighScores",	"SELECT `p`.`id`, `pm`.`time`, `p`.`name`, `pm`.`races`, `pm`.`playtime`, `pm`.`created`, `pm`.`prejumped` FROM `player_map` `pm` INNER JOIN `player` `p` ON `p`.`id` = `pm`.`player_id` WHERE `pm`.`time` IS NOT NULL AND `pm`.`time` > 0 AND `pm`.`map_id` = %d AND `pm`.`prejumped` in (%s) ORDER BY `pm`.`time` ASC;", CVAR_ARCHIVE );
@@ -243,8 +243,8 @@ void RS_LoadCvars( void )
     rs_queryUpdateCheckpoint        = trap_Cvar_Get( "rs_queryUpdateCheckpoint",        "INSERT INTO `checkpoint` (`player_id`, `map_id`, `time`, `num`) VALUES(%d, %d, %d, %d) ON DUPLICATE KEY UPDATE `time` = VALUES(`time`);", CVAR_ARCHIVE );
     rs_queryGetPlayerMapCheckpoints = trap_Cvar_Get( "rs_queryGetPlayerMapCheckpoints", "SELECT `time` FROM `checkpoint` WHERE `map_id` = %d AND `player_id` = %d ORDER BY `num` ASC;", CVAR_ARCHIVE );
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created, pm.prejumped FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d AND pm.prejumped in (%s) ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
-	rs_queryLoadMapOneliner			= trap_Cvar_Get( "rs_queryLoadMapOneliner",			"SELECT `oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
-	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `oneliner` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
+	rs_queryLoadMapOneliners		= trap_Cvar_Get( "rs_queryLoadMapOneliners",		"SELECT `oneliner`, `pj_oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
+	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `%s` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
     
 }
 
@@ -597,9 +597,9 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
  */
 void *RS_MysqlInsertRace_Thread(void *in)
 {
-    char query[1000];
+    char query[1500];
     char affectedPlayerIds[500];
-	unsigned int maxPositions, newPoints, currentPosition, currentCleanPosition, realPosition, offset, cleanOffset, points, lastRaceTime, lastCleanRaceTime, bestTime, oldTime, oldPoints, oldBestTime, allPoints, newPosition, server_id;
+	unsigned int maxPositions, newPoints, currentPosition, currentCleanPosition, realPosition, offset, cleanOffset, points, lastRaceTime, lastCleanRaceTime, bestTime, oldTime, oldPoints, oldBestTime, oldOtherBestTime, oldBestPlayerId, oldOtherBestPlayerId, allPoints, newPosition, server_id;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -613,6 +613,9 @@ void *RS_MysqlInsertRace_Thread(void *in)
     bestTime = 0;
     maxPositions = 30;
     oldBestTime = 0;
+    oldOtherBestTime = 0;
+    oldBestPlayerId = 0;
+    oldOtherBestPlayerId = 0;
     offset = 0;
     cleanOffset = 0;
     newPosition = 0;
@@ -645,7 +648,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     }
 	mysql_free_result(mysql_res);
 
-    // retrieve server best
+    // retrieve server best in the category (pj/nopj) of the race to be inserted
 	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, raceData->prejumped?"'true'":"'false'");
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
@@ -655,10 +658,28 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	{
 		if (row[1] !=NULL)
 		{
+		    oldBestPlayerId = atoi(row[0]);
             oldBestTime = atoi(row[1]);
 		}
 	}
 	mysql_free_result(mysql_res);
+
+    // retrieve server best in the other category (pj/nopj) of the race to be inserted
+    sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, raceData->prejumped?"'false'":"'true'");
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL)
+    {
+        if (row[1] !=NULL)
+        {
+            oldOtherBestPlayerId = atoi(row[0]);
+            oldOtherBestTime = atoi(row[1]);
+        }
+    }
+    mysql_free_result(mysql_res);
+
     
     // get server_id
     sprintf(query, rs_queryGetServer->string, sv_port->integer);
@@ -704,19 +725,31 @@ void *RS_MysqlInsertRace_Thread(void *in)
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
 
-		// clear oneliner if the rec was beaten
-		if ( raceData->race_time < oldBestTime )
-		{
-			char empty_oneliner[1];
-			empty_oneliner[0] = '\0';
-			sprintf(query, rs_querySetMapOneliner->string, empty_oneliner, raceData->map_id);
-			mysql_real_query(&mysql, query, strlen(query));
-			RS_CheckMysqlThreadError();
-		}
-
         // only when the new time is better than the old one, recompute the points
         if (oldTime == 0 || raceData->race_time < oldTime)
         {
+
+            // clear the current oneliner in the race category if the rec of this category was beaten
+            if ( raceData->race_time < oldBestTime )
+            {
+                char empty_oneliner[1];
+                empty_oneliner[0] = '\0';
+                sprintf(query, rs_querySetMapOneliner->string, raceData->prejumped?"pj_oneliner":"oneliner", empty_oneliner, raceData->map_id);
+                mysql_real_query(&mysql, query, strlen(query));
+                RS_CheckMysqlThreadError();
+            }
+
+            // clear the current oneliner in the other category if current racer was the record holder in this category
+            // cause he just changed category (he was the best but improved) so he leaves his right to have the oneliner in his previous category
+            if ( raceData->player_id == oldOtherBestPlayerId )
+            {
+                char empty_oneliner[1];
+                empty_oneliner[0] = '\0';
+                sprintf(query, rs_querySetMapOneliner->string, raceData->prejumped?"oneliner":"pj_oneliner", empty_oneliner, raceData->map_id);
+                mysql_real_query(&mysql, query, strlen(query));
+                RS_CheckMysqlThreadError();
+            }
+
             //update player checkpoints
             t = strtok( raceData->checkpoints , seps );
             while( t != NULL )
@@ -2073,6 +2106,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
         MYSQL_RES  *mysql_res;
         char query[1024];
 		char oneliner[100];
+		char pjoneliner[100];
 		int playerNum;
 		int map_id;
 		int limit;
@@ -2140,9 +2174,10 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		    map_id = highscoresData->map_id;
 		}
 
-		// get map oneliner (may not be present)
+		// get map oneliners (may not be present)
 		oneliner[0]='\0';
-		sprintf(query, rs_queryLoadMapOneliner->string, map_id);
+		pjoneliner[0]='\0';
+		sprintf(query, rs_queryLoadMapOneliners->string, map_id);
 		mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
@@ -2152,9 +2187,13 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		    if (row[0] !=NULL)
 			{
 				if ( strlen(row[0]) > 0 )
-					{
+				{
 						Q_strncpyz(oneliner, va("\"%s\"", row[0]), sizeof(oneliner));
-					}
+				}
+                if ( strlen(row[1]) > 0 )
+                {
+                        Q_strncpyz(pjoneliner, va("\"%s\"", row[1]), sizeof(pjoneliner));
+                }
 			}
 	    }
 		mysql_free_result(mysql_res);
@@ -2175,6 +2214,8 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
             unsigned int position = 0;
             unsigned int last_position = 0;
             unsigned int draw_position = 0;
+            unsigned int cleanBest = 0;
+            unsigned int pjBest = 0;
             char last_time[16];
             char draw_time[16];
             char diff_time[16];
@@ -2207,6 +2248,11 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                 else
                     prejumped = qfalse;
 
+                if (!prejumped && cleanBest == 0) //update the positions
+                    cleanBest = position;
+                if (prejumped && pjBest == 0)
+                    pjBest = position;
+
                 // convert time into MM:SS:mmm
                 milli = atoi( row[0] );
                 min = milli / 60000;
@@ -2231,7 +2277,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
                 last_position = draw_position;
                 Q_strncpyz( last_time, va( "%d:%d.%d", min, sec, milli ), sizeof(last_time) );
 
-				Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s) %s%s\n", S_COLOR_WHITE, draw_position, prejumped?S_COLOR_RED:S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2], S_COLOR_YELLOW, ( position == 1 ? oneliner : "" ) ), sizeof(highscores) );
+				Q_strncatz( highscores, va( "%s%3d. %s%6s  %s[%s]  %s %s  %s(%s) %s%s%s\n", S_COLOR_WHITE, draw_position, prejumped?S_COLOR_RED:S_COLOR_GREEN, draw_time, S_COLOR_YELLOW, diff_time, S_COLOR_WHITE, row[1], S_COLOR_WHITE, row[2], S_COLOR_YELLOW, ( position == pjBest ? pjoneliner : "" ), ( position == cleanBest ? oneliner : "" ) ), sizeof(highscores) );
 			}
         }
 
@@ -2295,15 +2341,34 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 	int best_player_id;
 	char old_oneliner[100];
 	char oneliner[100];
+	qboolean prejumped;
 
 	RS_StartMysqlThread();
 
     onelinerData = (struct onelinerDataStruct*)in;
 	best_player_id = 0;
-	failure=0;
+	failure = 0;
+	prejumped = qfalse;
+
+    // read current player record to know if it was prejumped or not
+    sprintf(query, rs_queryGetPlayerMap->string, onelinerData->player_id, onelinerData->map_id);
+    mysql_real_query(&mysql, query, strlen(query));
+    RS_CheckMysqlThreadError();
+    mysql_res = mysql_store_result(&mysql);
+    RS_CheckMysqlThreadError();
+    if ((row = mysql_fetch_row(mysql_res)) != NULL) {
+        if (row[0] != NULL && row[1] != NULL)
+        {
+            if ( !Q_stricmp(row[2],"true") )
+                prejumped = qtrue;
+            else
+                prejumped = qfalse;
+        }
+    }
+    mysql_free_result(mysql_res);
 
 	// retrieve server best
-	sprintf(query, rs_queryGetPlayerMapHighscores->string, onelinerData->map_id);
+	sprintf(query, rs_queryGetPlayerMapHighscores->string, onelinerData->map_id, prejumped?"'true'":"'false'");
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
     mysql_res = mysql_store_result(&mysql);
@@ -2320,8 +2385,8 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 	// test if the player is allowed to set the oneliner, else stop
 	if ( best_player_id == 0 || best_player_id != onelinerData->player_id )
 	{
-	Q_strncpyz( response, "You need to be #1 on this map to set a oneliner.\n", sizeof(response));
-		failure=1;
+	    Q_strncpyz( response, "You need to be #1 on this map to set a oneliner.\n", sizeof(response));
+		failure = 1;
 	}
 	else
 	{
@@ -2329,18 +2394,23 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 		// testing if the player has already set a oneliner
 		// retrieve the existing oneliner
 		old_oneliner[0]='\0';
-		sprintf(query, rs_queryLoadMapOneliner->string, onelinerData->map_id);
+		sprintf(query, rs_queryLoadMapOneliners->string, onelinerData->map_id);
 		mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
 		if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	    {
-		    if (row[0] !=NULL)
+		    if ( !prejumped && row[0] !=NULL)
 			{
 				Q_strncpyz(old_oneliner, row[0], sizeof(old_oneliner));
 			}
+            if ( prejumped && row[1] !=NULL)
+            {
+                Q_strncpyz(old_oneliner, row[1], sizeof(old_oneliner));
+            }
 	    }
+
 		mysql_free_result(mysql_res);
 
 		if ( strlen(old_oneliner) > 0 )
@@ -2367,7 +2437,7 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 	// update the new oneliner
 	Q_strncpyz ( oneliner, onelinerData->oneliner, sizeof(oneliner) );
 	RS_EscapeString(oneliner);
-	sprintf(query, rs_querySetMapOneliner->string, oneliner, onelinerData->map_id);
+	sprintf(query, rs_querySetMapOneliner->string, prejumped?"pj_oneliner":"oneliner", oneliner, onelinerData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
 

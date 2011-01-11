@@ -318,7 +318,7 @@ class Racesow_Player
         }
 
         //print record awards
-		if ( oldBestTime == 0 || newTime < oldBestTime ) //world record award
+		if ( ( oldBestTime == 0 || newTime < oldBestTime ) and ( newTime < oldTime ) ) //world record award
         {
 		    this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
 		    G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW

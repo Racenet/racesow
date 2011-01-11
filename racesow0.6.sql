@@ -45,6 +45,7 @@ CREATE TABLE `map` (
   `longname` varchar(64) DEFAULT NULL,
   `file` varchar(255) DEFAULT NULL,
   `oneliner` varchar(255) DEFAULT NULL,
+  `pj_oneliner` varchar(255) DEFAULT NULL,
   `mapper_id` mediumint(8) unsigned DEFAULT NULL,
   `freestyle` tinyint(1) NOT NULL DEFAULT '0',
   `status` enum('enabled','disabled','new','true','false') NOT NULL DEFAULT 'new',
