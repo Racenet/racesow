@@ -355,6 +355,9 @@ void G_AwardPlayerKilled( edict_t *self, edict_t *inflictor, edict_t *attacker, 
 
 void G_AwardPlayerPickup( edict_t *self, edict_t *item )
 {
+    if( GS_RaceGametype() ) //racesow: no awards for item timings; will be included in basewsw
+        return;
+
 	if( !item )
 		return;
 
