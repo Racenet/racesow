@@ -74,6 +74,8 @@ class Racesow_Gametype_Race : Racesow_Gametype
                 client.getEnt().mass = PLAYER_MASS * 1/3;// * QUAD_KNOCKBACK_SCALE
             else
                 client.getEnt().mass = PLAYER_MASS;
+            if ( client.getEnt().health > client.getEnt().maxHealth )
+                client.getEnt().health -= ( frameTime * 0.001f );
         }
     }
     

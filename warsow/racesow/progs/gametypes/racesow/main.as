@@ -797,7 +797,6 @@ void GT_InitGametype()
 	// always execute racesow.cfg
     G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
 
-    racesowGametype.InitGametype();
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
         gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
@@ -872,5 +871,6 @@ void GT_InitGametype()
 	// load maps list (basic or mysql)
 	RS_LoadMapList( g_freestyle.getInteger() );
 
+	racesowGametype.InitGametype();
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }
