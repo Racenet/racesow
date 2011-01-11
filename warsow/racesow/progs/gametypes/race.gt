@@ -15,6 +15,7 @@ racesow/main.as;
 racesow/helpers.as;
 racesow/entities.as;
 racesow/entities/fastcap.as;
+racesow/entities/race.as;
 racesow/adapter/abstract.as;
 racesow/adapter/compat.as;
 racesow/adapter/full.as;
