@@ -834,11 +834,16 @@ static void door_killed( edict_t *self, edict_t *inflictor, edict_t *attacker, i
 	edict_t	*ent;
 
 	if( GS_RaceGametype() ) //racesow: defrag support: do not trigger if the door got killed
+	{
+	    self->deadflag = DEAD_NO;
+		G_UseTargets( self, inflictor ); //racesow: Fix for "doorbuttons" trigger targets without opening
 		return;
+	}
 
 	for( ent = self->teammaster; ent; ent = ent->teamchain )
 	{
 		ent->health = ent->max_health;
+	    self->deadflag = DEAD_NO;
 		if( ent->spawnflags & DOOR_DIE_ONCE )
 			ent->takedamage = DAMAGE_NO;
 	}

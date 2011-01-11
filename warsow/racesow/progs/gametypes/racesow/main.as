@@ -725,7 +725,7 @@ void GT_SpawnGametype()
             cItem @Item = @ent.item;
             if( @Item != null && ent.getClassname() == Item.getClassname() )
             {
-                if( ent.solid != SOLID_NOT ) //ok, not connected
+                if( ( ent.solid != SOLID_NOT ) || ( ( @ent.findTargetingEntity( null ) != null ) && ( ent.findTargetingEntity( null ).getClassname() != "target_give" ) ) ) //ok, not connected to target_give
                 {
                     ent.setClassname( "AS_" + Item.getClassname() );
                     replacementItem( @ent );
