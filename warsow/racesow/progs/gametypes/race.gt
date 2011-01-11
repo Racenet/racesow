@@ -26,3 +26,6 @@ racesow/player/auth.as;
 racesow/player/race.as;
 racesow/weapondefs.as;
 racesow/commands.as;
+racesow/gametypes.as;
+racesow/gametypes/race.as;
+racesow/gametypes/freestyle.as;

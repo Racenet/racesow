@@ -19,6 +19,7 @@ cString previousMapName; // to remember the previous map on the server
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 Racesow_Adapter_Abstract @racesowAdapter;
+Racesow_Gametype @racesowGametype;
 
 int prcFlagIconStolen;
 
@@ -57,26 +58,6 @@ bool isUsingRacesowClient( cClient @client )
 {
 	// TODO: use something like a client userinfo variable to determine if the player is running racesow client
 	return false;
-}
-
-/**
- * race_respawner_think
- * the player has finished the race. This entity times his automatic respawning
- * @param cEntity @respawner
- * @return void
- */
-void race_respawner_think( cEntity @respawner )
-{
-    cClient @client = G_GetClient( respawner.count );
-
-    // the client may have respawned on his own. If the last time was erased, don't respawn him
-    if ( !Racesow_GetPlayerByClient( client ).isSpawned )
-	{
-		client.respawn( false );
-        Racesow_GetPlayerByClient( client ).isSpawned = true;
-	}
-
-    respawner.freeEntity(); // free the respawner
 }
 
 /**
@@ -286,7 +267,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return player.position( argsString );
 	}
 
-    return false;
+    return racesowGametype.Command( @client, @cmdString, @argsString, argc );
 }
 
 /**
@@ -303,7 +284,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
  */
 bool GT_UpdateBotStatus( cEntity @self )
 {
-    return false; // let the default code handle it itself
+    return racesowGametype.UpdateBotStatus( @self );
 }
 
 /**
@@ -317,18 +298,7 @@ cEntity @GT_SelectSpawnPoint( cEntity @self )
 {
 	Racesow_Player @player = Racesow_GetPlayerByClient(self.client);
 	player.onSpawn();
-	if( player.wasTelekilled )
-	{
-		return @player.gravestone;
-	}
-	else if( @alphaFlagBase != null )
-	{
-	    return @bestFastcapSpawnpoint();
-	}
-	else
-	{
-		return null; // select random
-	}
+	return racesowGametype.SelectSpawnPoint( @self );
 }
 
 /**
@@ -338,45 +308,7 @@ cEntity @GT_SelectSpawnPoint( cEntity @self )
  */
 cString @GT_ScoreboardMessage( int maxlen )
 {
-    cString scoreboardMessage = "";
-    cString entry;
-    cTeam @team;
-    cEntity @ent;
-    int i, playerID;
-    int racing;
-    //int readyIcon;
-
-    @team = @G_GetTeam( TEAM_PLAYERS );
-
-    // &t = team tab, team tag, team score (doesn't apply), team ping (doesn't apply)
-    entry = "&t " + int( TEAM_PLAYERS ) + " 0 " + team.ping + " ";
-    if ( scoreboardMessage.len() + entry.len() < maxlen )
-        scoreboardMessage += entry;
-
-    // "Name Time Ping Racing"
-    for ( i = 0; @team.ent( i ) != null; i++ )
-    {
-        @ent = @team.ent( i );
-        Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
-
-        int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
-        racing = int( player.isRacing() ? 1 : 0 );
-    	if ( !(g_freestyle.getBool()) ) // use a different scoreboard for freestyle
-    	{
-			entry = "&p " + playerID + " " + ent.client.getClanName() + " "
-					+ player.getBestTime() + " "
-					+ player.highestSpeed + " "
-					+ ent.client.ping + " " + racing + " ";
-    	}
-    	else
-    	{
-			entry = "&p " + playerID + " " + ent.client.getClanName() + " "
-					+ ent.client.ping + " ";
-    	}
-
-        if ( scoreboardMessage.len() + entry.len() < maxlen )
-            scoreboardMessage += entry;
-    }
+    cString @scoreboardMessage = @racesowGametype.ScoreboardMessage( maxlen );
     
     //custom scoreboard for ppl who are getting spectated
     if( levelTime > scoreboardLastUpdate + 1800 )
@@ -414,7 +346,7 @@ cString @GT_ScoreboardMessage( int maxlen )
         scoreboardLastUpdate = levelTime;
     }
     scoreboardUpdated = true;
-    return scoreboardMessage;
+    return @scoreboardMessage;
 }
 
 /**
@@ -429,6 +361,8 @@ cString @GT_ScoreboardMessage( int maxlen )
  */
 void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 {
+    if( @client == null)//basewsw does check that too ("clients can be null")
+        return;
     Racesow_Player @player = Racesow_GetPlayerByClient( client );
 	if (@player != null )
 	{
@@ -437,27 +371,6 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "kill" )
 		{
-			cEntity @edict = @G_GetEntity( args.getToken( 0 ).toInt() );
-			if( @edict.client == null )
-				return;
-
-			Racesow_Player @player_edict = Racesow_GetPlayerByClient( edict.client );
-			if( @player_edict == null )
-				return;
-
-			if( g_freestyle.getBool() && @edict.client != @client ) //telekills
-			{
-				if( @client.getEnt() == null)
-					return;
-				cTrace tr;
-				if(	tr.doTrace( client.getEnt().getOrigin(), vec3Origin, vec3Origin, client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ), 0, MASK_DEADSOLID ))//avoid bugs
-					return;
-				//spawn a gravestone to store the postition
-				cEntity @gravestone = @G_SpawnEntity( "gravestone" );
-				// copy client position
-				gravestone.setOrigin( client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ) );
-				player_edict.setupTelekilled( @gravestone );
-			}
 		}
 		else if ( score_event == "award" )
 		{
@@ -498,6 +411,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 			}
 		}
 	}
+	racesowGametype.scoreEvent( @client, score_event, args );
 }
 
 /**
@@ -513,8 +427,6 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 */
 void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
-	cItem @item;
-	cItem @ammoItem;
 	Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
 
     if (new_team == TEAM_PLAYERS) {
@@ -530,49 +442,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	if ( ent.isGhosting() )
 	    return;
 
-	if ( g_freestyle.getBool() )
-	{
-		if( player.wasTelekilled )
-			player.resetTelekilled();
-		ent.client.inventorySetCount( WEAP_ROCKETLAUNCHER, 1 );
-		ent.client.inventorySetCount( AMMO_WEAK_ROCKETS, 10 );
-
-
-		// give all weapons
-		for ( int i = WEAP_GUNBLADE + 1; i < WEAP_TOTAL; i++ )
-		{
-			if ( i == WEAP_INSTAGUN ) // dont add instagun...
-			continue;
-
-			ent.client.inventoryGiveItem( i );
-
-			@item = @G_GetItem( i );
-
-			@ammoItem = @G_GetItem( item.weakAmmoTag );
-			if ( @ammoItem != null )
-			ent.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
-
-			@ammoItem = @G_GetItem( item.ammoTag );
-			if ( @ammoItem != null )
-			ent.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
-		}
-
-		// TODO: let player choose if allow interacting with others, maybe also who to interact with
-	}
-	else
-	{
-		// set player movement to pass through other players and remove gunblade auto attacking
-		ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
-
-		// disable autojump
-		if ( rs_allowAutoHop.getBool() == false )
-		{
-			ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_CONTINOUSJUMP );
-		}
-	}
-
-	ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
-
+	racesowGametype.playerRespawn( @ent, old_team, new_team );
     // select rocket launcher if available
     if ( ent.client.canSelectWeapon( WEAP_ROCKETLAUNCHER ) )
         ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
@@ -700,52 +570,10 @@ void GT_ThinkRules()
         client.setHUDStat( STAT_MESSAGE_ALPHA, 0 );
         client.setHUDStat( STAT_MESSAGE_BETA, 0 );
 
-        // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
-        if( ( player.client.team == TEAM_SPECTATOR ) && !( player.client.chaseActive ) )
-            @player.race = null;
-
-        if ( player.isRacing() )
-        {
-            client.setHUDStat( STAT_TIME_SELF, (levelTime - player.race.getStartTime()) / 100 );
-            if ( player.highestSpeed < player.getSpeed() )
-                player.highestSpeed = player.getSpeed(); // updating the heighestSpeed attribute.
-        }
-
-		if ( !(g_freestyle.getBool()) ) // remove the time stats in freestyle
-		{
-     	  	client.setHUDStat( STAT_TIME_BEST, player.getBestTime() / 100 );
-        	client.setHUDStat( STAT_TIME_RECORD, map.getHighScore().getTime() / 100 );
-			if ( isUsingRacesowClient(client) )
-			{
-				client.setHUDStat( STAT_TIME_ALPHA, map.worldBest / 100 );
-			}
-			addFastcapHUDStats( @client );
-			int PLAYER_MASS = 200;
-			if( client.inventoryCount( POWERUP_QUAD ) > 0 )
-			    client.getEnt().mass = PLAYER_MASS * 1/3;// * QUAD_KNOCKBACK_SCALE
-			else
-			    client.getEnt().mass = PLAYER_MASS;
-		}
-
-		
-		// what is this for? should we del it? please add a meaningful comment
-        if ( map.getHighScore().playerName.len() > 0 )
-            client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
-        if ( map.getHighScore().playerName.len() > 0 )
-            client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
-        if ( map.getHighScore().playerName.len() > 0 )
-            client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
-
     	if( player.isUsingChrono )
     		client.setHUDStat( STAT_TIME_ALPHA, (levelTime - player.chronoTime()) / 100 );
-
-    	if ( g_freestyle.getBool() && client.inventoryCount( WEAP_GUNBLADE ) != 0)
-    	{
-			client.inventorySetCount( AMMO_GUNBLADE, 10 );
-			if( player.onQuad )
-			    client.inventorySetCount( POWERUP_QUAD, 30 );
-    	}
     }
+    racesowGametype.ThinkRules();
     if( scoreboardUpdated )
         scoreboardUpdated = false; //custom scoreboard got updated
 }
@@ -776,7 +604,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
         demoRecording = false;
     }
 
-    return true;
+    return racesowGametype.MatchStateFinished( incomingMatchState );
 }
 
 /**
@@ -811,6 +639,7 @@ void GT_MatchStateStarted()
     default:
         break;
     }
+    racesowGametype.MatchStateStarted();
 }
 
 /**
@@ -833,6 +662,8 @@ void GT_Shutdown()
 		    // run it unthreaded to prevent a mysql crash
 			players[i].disappear(players[i].getName(),false);
 		}
+    
+    racesowGametype.Shutdown();
 }
 
 /**
@@ -902,6 +733,7 @@ void GT_SpawnGametype()
             }
         }
     }
+    racesowGametype.SpawnGametype();
 }
 
 /**
@@ -919,6 +751,11 @@ void GT_InitGametype()
     gametype.setTitle( "Racesow" );
     gametype.setVersion( "0.6.0" );
     gametype.setAuthor( "warsow-race.net" );
+    
+    if ( !(g_freestyle.getBool()) )
+        @racesowGametype = @Racesow_Gametype_Race();
+    else
+        @racesowGametype = @Racesow_Gametype_Freestyle();
 
 	// initalize weapondef config
 	weaponDefInit();
@@ -960,6 +797,7 @@ void GT_InitGametype()
 	// always execute racesow.cfg
     G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
 
+    racesowGametype.InitGametype();
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
         gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
@@ -991,31 +829,9 @@ void GT_InitGametype()
     gametype.canShowMinimap = false;
 	gametype.teamOnlyMinimap = true;
 
-	if ( !(g_freestyle.getBool()) )
-	{
-		gametype.spawnpointRadius = 0;
-	}
-	else
-	{
-		 // use a different spawnpoint radius for freestyle (avoid massacres when spawning)
-		gametype.spawnpointRadius = 256;
-	}
-
     // set spawnsystem type
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
-
-    // define the scoreboard layout
-	if ( !(g_freestyle.getBool()) ) // use a different scoreboard for freestyle
-	{
-	    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %i 48 %l 48 %b 48" );
-	    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Speed Ping Racing" );
-	}
-	else
-	{
-    	G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 152 %s 90 %l 48" );
-    	G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Ping" );
-	}
 
 	prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );	
 	
