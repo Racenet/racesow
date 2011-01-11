@@ -1,10 +1,8 @@
 #include "g_local.h"
 #ifdef WIN32
-#include "pthread_win32/pthread.h"
 #include <winsock.h>
-#else
-#include <pthread.h>
 #endif
+#include <pthread.h>
 #include <mysql.h>
 #include <errmsg.h>
 
