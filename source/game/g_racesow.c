@@ -1,5 +1,5 @@
 #include "g_local.h"
-#ifdef WIN32 
+#ifdef WIN32
 #include "pthread_win32/pthread.h"
 #include <winsock.h>
 #else
@@ -121,7 +121,7 @@ pthread_mutex_t mutexsum;
 pthread_mutex_t mutex_callback;
 
 /**
- * callback queue variables used for de-threadization of mysql calls 
+ * callback queue variables used for de-threadization of mysql calls
  */
 #define MAX_SIZE_CALLBACK_QUEUE 50
 int callback_queue_size=0;
@@ -130,6 +130,20 @@ int callback_queue_read_index=0;
 int callback_queue[MAX_SIZE_CALLBACK_QUEUE][8];
 
 int MysqlConnected = 0;
+
+
+// some queries can be very long! keep this over 3k ok?
+#define MYSQL_QUERY_LENGTH 3000
+
+
+/**
+ * MySQL errorhandler for threads
+ *
+ * not a function anymore
+ */
+#define RS_CheckMysqlThreadError() {if (RS_MysqlError()) { G_Printf("file=%s line=%d MySQL Error!\n",__FILE__,__LINE__); RS_EndMysqlThread(); } }
+
+
 /**
  * Initializes racesow specific stuff
  *
@@ -156,13 +170,13 @@ void RS_Init()
         RS_LoadCvars();
         MysqlConnected = RS_MysqlConnect();
     }
-    
+
     if (MysqlConnected != 0 && rs_historyDays->integer != 0)
     {
-        char query[1000];
+        char query[MYSQL_QUERY_LENGTH];
         mysql_real_query(&mysql, rs_queryUpdatePlayerHistory->string, strlen(rs_queryUpdatePlayerHistory->string));
         RS_MysqlError();
-        
+
         sprintf(query, rs_queryPurgePlayerHistory->string, rs_historyDays->integer);
         mysql_real_query(&mysql, query, strlen(query));
         RS_MysqlError();
@@ -184,21 +198,21 @@ void RS_LoadCvars( void )
     rs_mysqlUser = trap_Cvar_Get( "rs_mysqlUser", "root", CVAR_ARCHIVE );
     rs_mysqlPass = trap_Cvar_Get( "rs_mysqlPass", "", CVAR_ARCHIVE );
     rs_mysqlDb = trap_Cvar_Get( "rs_mysqlDb", "racesow", CVAR_ARCHIVE );
-    
+
     rs_authField_Name = trap_Cvar_Get( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET);
     rs_authField_Pass = trap_Cvar_Get( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET);
     rs_authField_Token = trap_Cvar_Get( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET);
     rs_tokenSalt = trap_Cvar_Get( "rs_tokenSalt", "", CVAR_ARCHIVE|CVAR_NOSET);
-    
+
     rs_historyDays = trap_Cvar_Get( "rs_historyDays", "30", CVAR_ARCHIVE|CVAR_LATCH);
-    
+
     if (!Q_stricmp( rs_authField_Name->string, "" ) || !Q_stricmp( rs_authField_Pass->string, "" ) ||!Q_stricmp( rs_authField_Token->string, "" ))
     {
         G_Error("\033[31;40m\nthe cVars rs_authField_Name, rs_authField_Pass and rs_authField_Token must be set and should be unique for your database!\n\nie. racenet uses the following settings:\n\tset rs_authField_Name \"racenet_user\"\n\tset rs_authField_Pass \"racenet_pass\"\n\tset rs_authField_Token \"racenet_token\"\n\nlike that you can store authentications for multiple servers in a single config.\n\033[0m\n");
     }
-    
+
     G_Printf("-------------------------------------\nClient authentication via userinfo:\nsetu %s \"username\"\nsetu %s \"password\"\nor the more secure method using an enrypted token\nsetu %s \"token\"\n-------------------------------------\n", rs_authField_Name->string, rs_authField_Pass->string, rs_authField_Token->string);
-    
+
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthBySession  = trap_Cvar_Get( "rs_queryGetPlayerAuthBySession",	"SELECT `id`, `auth_mask` FROM `player` WHERE `session_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
@@ -255,7 +269,7 @@ void RS_LoadCvars( void )
  */
 qboolean RS_MysqlConnect( void )
 {
-    char query[2000];
+    char query[MYSQL_QUERY_LENGTH];
     char user[255];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -263,7 +277,7 @@ qboolean RS_MysqlConnect( void )
 
     my_bool reconnect = 1;
     mysql_options(&mysql, MYSQL_OPT_RECONNECT, &reconnect);
-    
+
     G_Printf( va( "MySQL Connection String\nmysql://%s:*****@%s:%d/%s\n", rs_mysqlUser->string, rs_mysqlHost->string, rs_mysqlPort->integer, rs_mysqlDb->string ) );
     if( !Q_stricmp( rs_mysqlHost->string, "" ) || !Q_stricmp( rs_mysqlUser->string, "user" ) || !Q_stricmp( rs_mysqlDb->string, "" ) ) {
         G_Printf( "-------------------------------------\nMySQL ERROR1: Connection-data incomplete or not available\n" );
@@ -279,11 +293,11 @@ qboolean RS_MysqlConnect( void )
         return qfalse;
     }
     G_Printf( "-------------------------------------\nConnected to MySQL Server\n-------------------------------------\n" );
-    
-    
+
+
     //Q_strncpyz ( user, COM_RemoveColorTokens( level.mapname ), sizeof(user) );
 	//RS_EscapeString(user);
-    
+
 	sprintf(query, rs_queryGetServer->string, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
     RS_MysqlError();
@@ -300,7 +314,7 @@ qboolean RS_MysqlConnect( void )
     }
 
 	mysql_free_result(mysql_res);
-    
+
     if (server_id == 0)
     {
         char servername[255];
@@ -309,15 +323,15 @@ qboolean RS_MysqlConnect( void )
         sprintf(query, rs_queryAddServer->string, sv_port->integer, servername);
         mysql_real_query(&mysql, query, strlen(query));
         RS_MysqlError();
-        
+
 		server_id=(int)mysql_insert_id(&mysql);
-        
+
         sprintf(query, rs_queryGetServerById->string, server_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_MysqlError();
         mysql_res = mysql_store_result(&mysql);
         RS_MysqlError();
-        
+
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0] !=NULL && row[1] != NULL)
@@ -330,7 +344,7 @@ qboolean RS_MysqlConnect( void )
     }
 
     G_Printf( va("authenticated as %s/%d\n-------------------------------------\n", user, server_id ) );
-    
+
     return qtrue;
 }
 
@@ -354,18 +368,18 @@ qboolean RS_MysqlError( void )
 {
     int errNo = mysql_errno(&mysql);
     if (errNo != 0) {
-    
+
         printf("MySQL ERROR2: %s (%d)\n", mysql_error(&mysql), errNo);
-        
+
         if (errNo == CR_SERVER_GONE_ERROR || errNo == CR_SERVER_LOST)
         {
             RS_LoadCvars();
             MysqlConnected = RS_MysqlConnect();
         }
-        
+
         return qtrue;
     }
-    
+
     return qfalse;
 }
 
@@ -406,7 +420,7 @@ void RS_EscapeString( char* string )
 /**
  *
  * Add a command to the callback queue
- * 
+ *
  * @return void
  */
 void RS_PushCallbackQueue(int command, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7)
@@ -423,7 +437,7 @@ void RS_PushCallbackQueue(int command, int arg1, int arg2, int arg3, int arg4, i
 		callback_queue[callback_queue_write_index][5]=arg5;
 		callback_queue[callback_queue_write_index][6]=arg6;
 		callback_queue[callback_queue_write_index][7]=arg7;
-		
+
 		callback_queue_write_index=(callback_queue_write_index+1)%MAX_SIZE_CALLBACK_QUEUE;
 		callback_queue_size++;
 	}
@@ -436,7 +450,7 @@ void RS_PushCallbackQueue(int command, int arg1, int arg2, int arg3, int arg4, i
  *
  * "Is there a callback result to execute?"
  * queried at each game frame
- * 
+ *
  * @return qboolean
  */
 qboolean RS_PopCallbackQueue(int *command, int *arg1, int *arg2, int *arg3, int *arg4, int *arg5, int *arg6, int *arg7)
@@ -480,7 +494,7 @@ qboolean RS_MysqlLoadMap()
 		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
-	
+
 	return qtrue;
 }
 
@@ -492,7 +506,7 @@ qboolean RS_MysqlLoadMap()
  */
 void *RS_MysqlLoadMap_Thread(void *in)
 {
-    char query[2000];
+    char query[MYSQL_QUERY_LENGTH];
     char name[64];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -511,15 +525,15 @@ void *RS_MysqlLoadMap_Thread(void *in)
 	if ((row = mysql_fetch_row(mysql_res)) != NULL) {
         map_id=atoi(row[0]);
     } else {
-    
+
         sprintf(query, rs_queryAddMap->string, name);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
-        
+
 		map_id=(int)mysql_insert_id(&mysql);
     }
     mysql_free_result(mysql_res);
-	
+
     // retrieve server best
 	sprintf(query, rs_queryGetPlayerMapHighscores->string, map_id, "'false'");
     mysql_real_query(&mysql, query, strlen(query));
@@ -564,7 +578,7 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 
     // player finished a race while using a protected nickname
     if (player_id == 0) {
-    
+
         return qfalse;
     }
     raceData->player_id = player_id;
@@ -576,7 +590,7 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 	raceData->duration = duration;
 	raceData->checkpoints = strdup( checkpoints );
 	raceData->prejumped = prejumped;
-    
+
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlInsertRace_Thread, (void *)raceData);
 
 	if (returnCode) {
@@ -584,13 +598,13 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
-	
+
 	return qtrue;
 
 }
 
 /**
- * Thread to insert a new race 
+ * Thread to insert a new race
  *
  * @param void *in
  * @return void
@@ -606,7 +620,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
     char *t; //token to parse checkpoints
     static const char *seps = " "; //token separator in checkpoints string
     int index = 0; //checkpoint number
-    qboolean prejumped;
 
     affectedPlayerIds[0] = '\0';
     oldTime = 0;
@@ -627,15 +640,14 @@ void *RS_MysqlInsertRace_Thread(void *in)
     lastCleanRaceTime = 0;
     allPoints = 0;
     server_id = 0;
-    prejumped = qfalse;
 	raceData =(struct raceDataStruct *)in;
-    
+
 	RS_StartMysqlThread();
 
 	// read current points and time
 	sprintf(query, rs_queryGetPlayerMap->string, raceData->player_id, raceData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();    
+    RS_CheckMysqlThreadError();
 	mysql_res = mysql_store_result(&mysql);
     RS_CheckMysqlThreadError();
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
@@ -697,7 +709,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     }
 
 	mysql_free_result(mysql_res);
-    
+
     if (server_id != 0)
     {
         // insert race
@@ -714,7 +726,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
         sprintf(query, rs_queryUpdateMapRaces->string, raceData->map_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
-        
+
         // increment server races
         sprintf(query, rs_queryIncrementServerRaces->string, sv_port->integer);
         mysql_real_query(&mysql, query, strlen(query));
@@ -765,7 +777,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
             sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError();
-            
+
             // update points in player_map
             sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, "'true','false'");
             mysql_real_query(&mysql, query, strlen(query));
@@ -778,8 +790,11 @@ void *RS_MysqlInsertRace_Thread(void *in)
                 if (row[0] !=NULL && row[1] != NULL)
                 {
                     unsigned int playerId, raceTime;
+                    qboolean prejumped;
+
                     playerId = atoi(row[0]);
                     raceTime = atoi(row[1]);
+
                     if ( !Q_stricmp(row[6],"true") )
                         prejumped = qtrue;
                     else
@@ -789,10 +804,10 @@ void *RS_MysqlInsertRace_Thread(void *in)
                         Q_strncatz( affectedPlayerIds, ",", sizeof(affectedPlayerIds));
 
                     Q_strncatz( affectedPlayerIds, row[0], sizeof(affectedPlayerIds));
-                    
+
                     if (bestTime == 0)
                         bestTime = raceTime;
-                
+
                     if (raceTime == lastRaceTime)
                         offset++;
                     else
@@ -828,24 +843,25 @@ void *RS_MysqlInsertRace_Thread(void *in)
                             points += 3;
                             break;
                     }
-                    
+
                     if (playerId == raceData->player_id) {
-                    
+
                         newPoints = points;
                         newPosition = realPosition;
                     }
 
                     lastRaceTime = raceTime;
-                    
+
                     // set points in player_map
                     sprintf(query, rs_queryUpdatePlayerMapPoints->string, points, raceData->map_id, playerId);
                     mysql_real_query(&mysql, query, strlen(query));
                     RS_CheckMysqlThreadError();
                 }
             }
-            
+
             mysql_free_result(mysql_res);
-           
+            RS_CheckMysqlThreadError();
+
             // update points for affected players
             sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
             mysql_real_query(&mysql, query, strlen(query));
@@ -867,12 +883,12 @@ void *RS_MysqlInsertRace_Thread(void *in)
         }
 
 		mysql_free_result(mysql_res);
-        
+
         RS_PushCallbackQueue(RACESOW_CALLBACK_RACE, raceData->playerNum, allPoints, oldPoints, newPoints, oldTime, oldBestTime, raceData->race_time);
     }
 
     free(raceData->checkpoints);
-	free(raceData);	
+	free(raceData);
 	RS_EndMysqlThread();
     return NULL;
 }
@@ -904,7 +920,7 @@ qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int map
 		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
-	
+
 	return qtrue;
 }
 
@@ -913,14 +929,14 @@ qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int map
  *
  * the player just arrived, so his nick_id was not previously stored in AS
  * however, if he's authed, the player_id won't change.
- * if he's not authed, his player_id will jump to another player_id 
+ * if he's not authed, his player_id will jump to another player_id
  *
  * @param void *in
  * @return void
  */
 void *RS_MysqlPlayerAppear_Thread(void *in)
 {
-    char query[1024];
+    char query[MYSQL_QUERY_LENGTH];
 	char name[64];
 	char simplified[64];
 	char authName[64];
@@ -948,7 +964,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     playerData = (struct playerDataStruct*)in;
 
     //ent = &game.edicts[ playerData->playerNum + 1 ];
-    
+
     /*
     if( ent->r.client )
     {
@@ -958,20 +974,20 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         }
     }
     */
-    
+
     // escape strings
     Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
     RS_EscapeString(simplified);
-    
+
 	Q_strncpyz ( name, playerData->name, sizeof(name) );
 	RS_EscapeString(name);
-    
+
     Q_strncpyz ( authName, playerData->authName, sizeof(authName) );
 	RS_EscapeString(authName);
-    
+
     Q_strncpyz ( authPass, playerData->authPass, sizeof(authPass) );
 	RS_EscapeString(authPass);
-    
+
     Q_strncpyz ( authToken, playerData->authToken, sizeof(authToken) );
 	RS_EscapeString(authToken);
 
@@ -981,11 +997,11 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     {
         sprintf(query, rs_queryGetPlayerAuthBySession->string, sessionToken);
         mysql_real_query(&mysql, query, strlen(query));
-        
+
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
-        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL && row[1]!=NULL )
             {
@@ -993,7 +1009,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
                 auth_mask = atoi(row[1]);
             }
         }
-        
+
         mysql_free_result(mysql_res);
     }
     */
@@ -1003,11 +1019,11 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     {
         sprintf(query, rs_queryGetPlayerAuthByToken->string, authToken, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
-        
+
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
-        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL && row[1]!=NULL )
             {
@@ -1015,7 +1031,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
                 auth_mask = atoi(row[1]);
             }
         }
-        
+
         mysql_free_result(mysql_res);
     }
 
@@ -1023,25 +1039,25 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     if (player_id == 0 && Q_stricmp( authName, "" ) && Q_stricmp( authPass, "" ))
     {
         sprintf(query, rs_queryGetPlayerAuth->string, authName, authPass, rs_tokenSalt->string);
-        
+
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
-        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL && row[1]!=NULL) // token may be null
             {
                 player_id = atoi(row[0]);
                 auth_mask = atoi(row[1]);
-                
-                if (row[2] != NULL) 
+
+                if (row[2] != NULL)
                 {
                     Q_strncpyz(authToken, row[2], sizeof(authToken));
             }
         }
         }
-        
+
         mysql_free_result(mysql_res);
     }
 
@@ -1075,15 +1091,15 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
 	mysql_free_result(mysql_res);
 
-    // only add a new player if 
+    // only add a new player if
 	// 1) noone has this nick already, and
 	// 2) the player isn't already authed (if he his, we keep using the nick associated to his auth)
     if ( player_id_for_nick == 0 && player_id == 0)
     {
         sprintf(query, rs_queryAddPlayer->string, name, simplified);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();  
-        
+        RS_CheckMysqlThreadError();
+
         player_id_for_nick = (int)mysql_insert_id(&mysql);
     }
 
@@ -1137,19 +1153,19 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         players_query[playerData->playerNum] = malloc( size );
         Q_strncpyz( players_query[playerData->playerNum], checkpoints, size);
 	}
-    
+
     /*
     if (player_id != 0 && ent->r.inuse && ent->r.client)
     {
         if (!Q_stricmp(sessionToken, "")) {
-        
+
             char *newSession = RS_StartPlayerSession(player_id);
             if (newSession) {
                 Q_strncpyz(sessionToken, newSession, sizeof(sessionToken));
                 free(newSession);
             }
         }
-        
+
         // always set him his session token... (may be lost when client changes his userinfo, so better set it immediately before changing a map etc.)
         // also maybe better do this outside the thread?
         //Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
@@ -1158,14 +1174,14 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     */
 
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, overall_tries);
-    
+
 	free(playerData->name);
 	free(playerData->authName);
 	free(playerData->authPass);
 	free(playerData->authToken);
 	free(playerData);
 	RS_EndMysqlThread();
-	   
+
     return NULL;
 }
 
@@ -1173,7 +1189,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 // should return a new UNIQUE token for the playerId
 char *RS_GenerateNewToken(int playerId)
 {
-    char query[1024];
+    char query[MYSQL_QUERY_LENGTH];
     char *hex_output = (char *)malloc(16*2+1);
     srand((unsigned)time(NULL));
 
@@ -1183,7 +1199,7 @@ char *RS_GenerateNewToken(int playerId)
             "0123456789"
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz";
-        
+
         MYSQL_RES  *mysql_res;
         int di, i;
         md5_state_t state;
@@ -1196,7 +1212,7 @@ char *RS_GenerateNewToken(int playerId)
             str[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
         }
         str[32] = 0;
-        
+
         md5_init(&state);
         md5_append(&state, (const md5_byte_t *)str, 32);
         md5_finish(&state, digest);
@@ -1204,7 +1220,7 @@ char *RS_GenerateNewToken(int playerId)
         {
 	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
         }
-    
+
         sprintf(query, rs_queryGetPlayerAuthByToken->string, hex_output, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
@@ -1215,21 +1231,21 @@ char *RS_GenerateNewToken(int playerId)
             sprintf(query, rs_querySetTokenForPlayer->string, hex_output, rs_tokenSalt->string, playerId);
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError();
-            
+
             mysql_free_result(mysql_res);
             return hex_output;
         }
-        
+
         mysql_free_result(mysql_res);
     }
-    
+
     return NULL;
 }
 
 // should return a new UNIQUE token for the playerId
 char *RS_StartPlayerSession(int playerId)
 {
-    char query[1024];
+    char query[MYSQL_QUERY_LENGTH];
     char *hex_output = (char *)malloc(16*2+1);
     srand((unsigned)time(NULL));
 
@@ -1239,7 +1255,7 @@ char *RS_StartPlayerSession(int playerId)
             "0123456789"
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz";
-        
+
         MYSQL_RES  *mysql_res;
         int di, i;
         md5_state_t state;
@@ -1252,7 +1268,7 @@ char *RS_StartPlayerSession(int playerId)
             str[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
         }
         str[32] = 0;
-        
+
         md5_init(&state);
         md5_append(&state, (const md5_byte_t *)str, 32);
         md5_finish(&state, digest);
@@ -1260,7 +1276,7 @@ char *RS_StartPlayerSession(int playerId)
         {
 	       	sprintf(hex_output + di * 2, "%02x", digest[di]);
         }
-    
+
         sprintf(query, rs_queryGetPlayerAuthBySession->string, hex_output);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError();
@@ -1271,14 +1287,14 @@ char *RS_StartPlayerSession(int playerId)
             sprintf(query, rs_querySetSessionForPlayer->string, hex_output, playerId);
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError();
-            
+
             mysql_free_result(mysql_res);
             return hex_output;
         }
-        
+
         mysql_free_result(mysql_res);
     }
-    
+
     return NULL;
 }
 
@@ -1297,10 +1313,10 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int overall_tries, i
 
     // player disappeard while using a protected nickname
     if (player_id == 0) {
-    
+
         return qfalse;
     }
-    
+
     playtimeData->name=strdup(name);
     playtimeData->map_id=map_id;
 	playtimeData->player_id=player_id;
@@ -1323,7 +1339,7 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int overall_tries, i
 		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
-	
+
 	return qtrue;
 }
 
@@ -1335,7 +1351,7 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int overall_tries, i
  */
 void *RS_MysqlPlayerDisappear_Thread(void *in)
 {
-    char query[1024];
+    char query[MYSQL_QUERY_LENGTH];
 	char name[64];
     char servername[255];
 	char simplified[64];
@@ -1360,38 +1376,38 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
 	sprintf(query, rs_queryUpdateMapPlaytime->string, playtimeData->playtime, playtimeData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-    
+
     // increment player playtime
     sprintf(query, rs_queryUpdatePlayerPlaytime->string, playtimeData->playtime, playtimeData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-    
+
     // update player map info
     sprintf(query, rs_queryUpdatePlayerMapInfo->string, playtimeData->player_id, playtimeData->map_id, playtimeData->playtime, playtimeData->overall_tries, playtimeData->racing_time);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-    
+
     // update the players's number of played maps
     sprintf(query, rs_queryUpdatePlayerMaps->string,  playtimeData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-    
+
     // update the server's number of played maps and playtime and the hostname
     Q_strncpyz ( servername, sv_hostname->string, sizeof(servername) );
 	RS_EscapeString(servername);
     sprintf(query, rs_queryUpdateServerData->string, servername, playtimeData->playtime, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
     RS_CheckMysqlThreadError();
-    
-	free(playtimeData->name);	
-	free(playtimeData);	
+
+	free(playtimeData->name);
+	free(playtimeData);
 
 	if (is_threaded)
 		RS_EndMysqlThread();
 	else
 		pthread_mutex_unlock(&mutexsum);
-		
-    
+
+
     return NULL;
 }
 
@@ -1432,11 +1448,11 @@ qboolean RS_GetPlayerNick( int playerNum, int player_id )
 void *RS_GetPlayerNick_Thread( void *in )
 {
 	struct playerDataStruct *playerData;
-    char name[MAX_STRING_CHARS]; 
+    char name[MAX_STRING_CHARS];
 	int size;
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
-	char query[1024];
+	char query[MYSQL_QUERY_LENGTH];
 
 	RS_StartMysqlThread();
 	playerData = (struct playerDataStruct*)in;
@@ -1453,11 +1469,11 @@ void *RS_GetPlayerNick_Thread( void *in )
 		{
 			Q_strncpyz(name, row[0], sizeof(name));
 		}
-            
+
     }
 
 	mysql_free_result(mysql_res);
-	
+
 	size = strlen( name )+1;
     players_query[playerData->playerNum] = malloc( size );
     Q_strncpyz( players_query[playerData->playerNum], name, size);
@@ -1509,7 +1525,7 @@ qboolean RS_UpdatePlayerNick( char *name, int playerNum, int player_id )
 void *RS_UpdatePlayerNick_Thread( void *in )
 {
 	struct playerDataStruct *playerData;
-	char query[1024];
+	char query[MYSQL_QUERY_LENGTH];
 	char name[64];
 	char simplified[64];
 	MYSQL_ROW  row;
@@ -1525,10 +1541,10 @@ void *RS_UpdatePlayerNick_Thread( void *in )
 
 	Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
 	RS_EscapeString(simplified);
-    
+
 	Q_strncpyz ( name, playerData->name, sizeof(name) );
 	RS_EscapeString(name);
-	
+
 	// test if the wanted nick is protected
 	sprintf(query, rs_queryGetPlayer->string, simplified);
     mysql_real_query(&mysql, query, strlen(query));
@@ -1756,13 +1772,13 @@ void *RS_LoadStats_Thread( void *in )
 {
     struct statsRequest_t *statsRequest = (struct statsRequest_t *)in;
     char result[MAX_STRING_CHARS];
-    char query[1024];
+    char query[MYSQL_QUERY_LENGTH];
     char which[64];
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
     int size = 0;
 	result[0]='\0';
-    
+
     RS_StartMysqlThread();
 
     if (!Q_stricmp(statsRequest->what, "map"))
@@ -1781,7 +1797,7 @@ void *RS_LoadStats_Thread( void *in )
         ptHour = 0;
         ptMin = 0;
         avgTries = 0;
-        
+
         Q_strncpyz( which, COM_RemoveColorTokens(statsRequest->which), sizeof( which ) );
 		RS_EscapeString(which);
         sprintf(query, rs_queryGetMapStats->string, which);
@@ -1789,25 +1805,25 @@ void *RS_LoadStats_Thread( void *in )
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
-        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL)
             {
                  //  0        1        2            3                  4            5              6           7           8            9             10
                 // `type`, `races`, `tries`, `avg_overall_tries`, `avg_tries`, `avg_duration`, `playtime`, `created`, `best_time`, `worst_time`, `players`
-            
+
                     if (row[4] != NULL) {
-                    
+
                         avgTries = atoi(row[4]);
                     }
-            
+
                     if (row[5] != NULL) {
                         agMilli = atoi( row[5] );
                         agHour = agMilli / 3600000;
                         agMilli -= agHour * 3600000;
                         agMin = agMilli / 60000 + 1;
                     }
-                    
+
                     if (row[6] != NULL) {
                         ptMilli = atoi( row[6] );
                         ptHour = ptMilli / 3600000;
@@ -1822,7 +1838,7 @@ void *RS_LoadStats_Thread( void *in )
                         btSec = btMilli / 1000;
                         btMilli -= btSec * 1000;
                     }
-                    
+
                     if (row[9] != NULL) {
                         wtMilli = atoi( row[9] );
                         wtMin = wtMilli / 60000;
@@ -1830,7 +1846,7 @@ void *RS_LoadStats_Thread( void *in )
                         wtSec = wtMilli / 1000;
                         wtMilli -= wtSec * 1000;
                     }
-                    
+
                     Q_strncatz( result, va( "%sStats for %s:\n", S_COLOR_YELLOW, statsRequest->which ), sizeof( result ) );
                     if (row[0]!=NULL)
                         Q_strncatz( result, va( "%sMap type: %s%s\n", S_COLOR_ORANGE, S_COLOR_WHITE, row[0] ), sizeof( result ) );
@@ -1855,7 +1871,7 @@ void *RS_LoadStats_Thread( void *in )
         {
             Q_strncatz( result, va( "%sError: map '%s' not found\n", S_COLOR_RED, statsRequest->which ), sizeof( result ) );
         }
-            
+
         mysql_free_result(mysql_res);
     }
     else if (!Q_stricmp(statsRequest->what, "player"))
@@ -1867,7 +1883,7 @@ void *RS_LoadStats_Thread( void *in )
         RS_CheckMysqlThreadError();
         mysql_res = mysql_store_result(&mysql);
         RS_CheckMysqlThreadError();
-        if ((row = mysql_fetch_row(mysql_res)) != NULL) 
+        if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             int oHour, oMin, oMilli, rHour, rMin, rMilli;
             oHour = 0;
@@ -1876,17 +1892,17 @@ void *RS_LoadStats_Thread( void *in )
             rHour = 0;
             rMin = 0;
             rMilli = 0;
-        
+
             //   0        1               2         3           4        5            6             7                  8
             // `points`, `diff_points`, `races`, `race_tries`, `maps`, `playtime`, `racing_time`, `first_seen`,  `last_seen`
-        
+
             if (row[5] != NULL) {
                 oMilli = atoi( row[5] );
                 oHour = oMilli / 3600000;
                 oMilli -= oHour * 3600000;
                 oMin = oMilli / 60000 + 1;
             }
-            
+
             if (row[6] != NULL) {
                 rMilli = atoi( row[6] );
                 rHour = rMilli / 3600000;
@@ -1914,7 +1930,7 @@ void *RS_LoadStats_Thread( void *in )
         {
             Q_strncatz( result, va( "%sError: player '%s' not found\n", S_COLOR_RED, statsRequest->which ), sizeof( result ) );
         }
-            
+
         mysql_free_result(mysql_res);
     }
     else
@@ -1923,17 +1939,17 @@ void *RS_LoadStats_Thread( void *in )
     }
 
     //ent = &game.edicts[ playerData->playerNum + 1 ];
-    
+
     /*
-    
+
     */
-    
-    
+
+
     size = strlen( result )+1;
     players_query[statsRequest->playerNum] = malloc( size );
     Q_strncpyz( players_query[statsRequest->playerNum], result, size);
     RS_PushCallbackQueue(RACESOW_CALLBACK_MAPFILTER, statsRequest->playerNum, 0, 0, 0, 0, 0, 0);
-    
+
     free(statsRequest->what);
     free(statsRequest->which);
     free(statsRequest);
@@ -2083,14 +2099,14 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int  limit, int map_id, char *ma
 	highscoresData->mapname = strdup(mapname);
 	highscoresData->limit = limit;
 	highscoresData->prejumpflag = prejumpFlag;
-    
+
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadHighscores_Thread, (void *)highscoresData);
 	if (returnCode) {
 
 		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
-	
+
 	return qtrue;
 }
 
@@ -2101,10 +2117,10 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int  limit, int map_id, char *ma
 //=================
 
 void *RS_MysqlLoadHighscores_Thread( void* in ) {
-    
+
 		MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
-        char query[1024];
+        char query[MYSQL_QUERY_LENGTH];
 		char oneliner[100];
 		char pjoneliner[100];
 		int playerNum;
@@ -2132,8 +2148,6 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		        prejumpflag = "'false'";
 		        break;
 		    case RS_BOTH :
-		        prejumpflag = "'true','false'";
-		        break;
 		    default :
 		        prejumpflag = "'true','false'";
                 break;
@@ -2149,7 +2163,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		    {
 		        //a mapnumber was given, get the corresponding mapname in maplist
 				//first, free the old mapname, as a new one is malloc'd in RS_GetMapByNum
-				free(mapname); 
+				free(mapname);
 		        mapname = RS_GetMapByNum( mapNumber );
 		    }
 
@@ -2206,10 +2220,10 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
         RS_CheckMysqlThreadError();
 
 		highscores[0]='\0';
-        
+
         if( (unsigned long)mysql_num_rows( mysql_res ) == 0 )
             Q_strncatz(highscores, va( "%sNo highscores found yet!\n", S_COLOR_RED ), sizeof(highscores));
-        
+
         else {
             unsigned int position = 0;
             unsigned int last_position = 0;
@@ -2227,12 +2241,12 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 			draw_time[0]='\0';
 			diff_time[0]='\0';
 
- 
+
             Q_strncatz(highscores, va( "%sTop %d players on map '%s'%s\n", S_COLOR_ORANGE, limit, mapname, S_COLOR_WHITE ), sizeof(highscores));
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
 			{
-				
+
 				if( /*load_replay_record && */	!position && row[0] ) {
                     replay_record = atoi( row[0] );
                     /*
@@ -2288,7 +2302,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
         Q_strncpyz( players_query[playerNum],highscores, strlen(highscores) + 1);
 
 		RS_PushCallbackQueue(RACESOW_CALLBACK_HIGHSCORES, playerNum, 0, 0, 0, 0, 0, 0);
-		
+
 		free(highscoresData->mapname);
 		free(mapname);
 		free(highscoresData);
@@ -2332,7 +2346,7 @@ qboolean RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, char *on
 void *RS_MysqlSetOneliner_Thread( void *in )
 {
 	struct onelinerDataStruct *onelinerData;
-	char query[1024];
+	char query[MYSQL_QUERY_LENGTH];
 	char response[1024];
 	MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -2502,7 +2516,7 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
 {
         MYSQL_ROW  row;
         MYSQL_RES  *mysql_res;
-        char query[MAX_STRING_CHARS];
+        char query[MYSQL_QUERY_LENGTH];
         mapcount = 0;
         maplist[0] = '\0';
 
@@ -2511,7 +2525,7 @@ qboolean RS_MysqlLoadMaplist( int is_freestyle )
        	if (RS_MysqlError()) {
             return qfalse;
         }
-        
+
         mysql_res = mysql_store_result(&mysql);
        	if (RS_MysqlError()) {
             return qfalse;
@@ -2553,7 +2567,7 @@ qboolean RS_BasicLoadMaplist(char *stringMapList)
             Q_strncatz( maplist, va("%s ", t), sizeof( maplist ) );
         mapcount++;
         }
-        
+
         t = strtok( NULL, seps);
     }
 
@@ -2584,32 +2598,32 @@ void RS_LoadMaplist( int is_freestyle)
 
 /**
  * Start the mysql thread
- * 
- * @param void 
+ *
+ * @param void
  * @return void
  */
 void RS_StartMysqlThread()
 {
     int errNo;
     unsigned long threadId;
-    
+
     pthread_mutex_lock(&mutexsum);
-    
+
     threadId = mysql_thread_id(&mysql);
     errNo = mysql_ping(&mysql);
-    
+
     if (mysql_thread_id(&mysql) != threadId) {
-    
+
         G_Printf("-------------------------------------\nReconnected to Mysql server\n-------------------------------------\n");
     }
-    
-    
+
+
 }
 
 /**
  * Cleanly end the mysql thread
- * 
- * @param void 
+ *
+ * @param void
  * @return void
  */
 void RS_EndMysqlThread()
@@ -2618,21 +2632,6 @@ void RS_EndMysqlThread()
     pthread_mutex_unlock(&mutexsum);
 	pthread_exit(NULL);
 }
-
-/**
- * MySQL errorhandler for threads
- * 
- * @param void *threadid
- * @return void
- */
-void RS_CheckMysqlThreadError()
-{
-	if (RS_MysqlError()) {
-    
-        RS_EndMysqlThread();
-    }
-}
-
 
 // Functions
 

@@ -109,7 +109,6 @@ qboolean RS_MysqlError( void );
 void RS_EscapeString( char* string );
 void RS_StartMysqlThread( void );
 void RS_EndMysqlThread( void );
-void RS_CheckMysqlThreadError( void );
 void rs_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, const vec3_t point, float maxradius, vec3_t pushdir, float *kickFrac, float *dmgFrac );
 void RS_removeProjectiles( edict_t *owner ); //remove the projectiles by an owner
 void RS_Init( void );
