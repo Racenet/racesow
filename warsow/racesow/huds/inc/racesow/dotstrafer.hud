@@ -1,0 +1,63 @@
+//
+//  set position here \'/
+setCursor #WIDTH / 2, 0.47 * #HEIGHT
+
+if %STRAFEANGLE > 0
+	//set size of arrows
+	setSizeY 0.03 * 4500 - %STRAFEANGLE, 10
+	
+	//set color of arrows
+	//default: white
+	setColor 1, 1, 1, 0.8
+	//bad strafe: red
+	if 4500 < %DIFF_ANGLE
+		setColor 1, 0, 0, 0.8
+	endif
+	if -4500 > %DIFF_ANGLE
+		setColor 1, 0, 0, 0.8
+	endif
+	//good strafe: green
+	if 0.8 < %ACCELERATION / %MAX_ACCEL
+		setColor 0, 1, 0, 0.8
+	endif
+	
+	//move cursor in position and draw arrows
+	moveCursorY 0.03 * %DIFF_ANGLE, 0
+	moveCursorY 0.03 * %STRAFEANGLE , 0
+	setAlign #LEFT, #MIDDLE
+	drawPicByName gfx/hud/racesow/strafearrow_right
+
+	moveCursorY -0.06 * %STRAFEANGLE , 0
+	setAlign #RIGHT, #MIDDLE
+	drawPicByName gfx/hud/racesow/strafearrow_left
+
+	//move Cursor back to the middle
+	moveCursorY -0.03 * %STRAFEANGLE, 0
+	moveCursorY 0.06 * %STRAFEANGLE, 0
+	moveCursorY -0.03 * %DIFF_ANGLE, 0
+
+endif
+//set size,color and draw "crosshair"
+setSizeY 2, 10
+setColor 0, 0, 0, 1
+setAlign #CENTER, #MIDDLE
+drawPicByName gfx/ui/white
+
+
+if 0 //debug
+
+setColor 1 1 1 1
+setCursor #WIDTH - 50, 100
+setAlign #RIGHT, #MIDDLE
+drawString "StrafeAngle: "
+setAlign #LEFT, #MIDDLE
+drawStringNum %STRAFEANGLE
+
+moveCursor 0, 20
+
+setAlign #RIGHT, #MIDDLE
+drawString "MaxAccel: "
+setAlign #LEFT, #MIDDLE
+drawStringNum %MAX_ACCEL
+
+endif

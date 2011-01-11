@@ -1,0 +1,13 @@
+//mouse angles
+
+setFont "virtue_12"
+
+setColor 1 1 1 1
+setAlign #CENTER, #MIDDLE
+setCursor 350, 340
+drawstringNum 0.01 * %MOUSE_X
+
+setColor 1 1 1 1
+setAlign #CENTER, #MIDDLE
+setCursor 450, 340
+drawstringNum 0.01 * %MOUSE_Y

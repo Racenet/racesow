@@ -1,0 +1,12 @@
+//speed on jump
+
+setFont "virtue_12"
+setColor 1 1 1 1
+
+setAlign #LEFT, #BOTTOM
+setCursor 0, 380
+movePixelCursor 10, 0
+drawString "j-speed:"
+movePixelCursor 76, 0
+drawStringNum %JUMPSPEED
+

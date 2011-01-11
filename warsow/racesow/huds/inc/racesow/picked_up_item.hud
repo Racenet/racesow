@@ -1,0 +1,35 @@
+if %SHOW_PICKUP
+if %PICKUP_ITEM
+
+	setColor 0, 0, 0, 1
+	setAlign #CENTER, #TOP
+	setCursor 602, 520
+	setFont "virtue_16"
+	drawItemName %PICKUP_ITEM
+
+	setColor 1, 1, 0.6, 1
+	setAlign #CENTER, #TOP
+	setCursor 600, 518
+	setFont "virtue_16"
+	drawItemName %PICKUP_ITEM
+
+	// don't draw "picked up:" string in racemode
+	// (overlaps the timer, this is a cheap hack :P)
+	if %RACE == 0
+		setColor 0, 0, 0, 1
+		setAlign #CENTER, #TOP
+		//setCursor 402, 502
+		setCursor 602, 502
+		setFont "virtue_12"
+		drawString "Picked up:"
+
+		setColor 1, 1, 1, 1
+		setAlign #CENTER, #TOP
+		//setCursor 400, 500
+		setCursor 600, 500
+		setFont "virtue_12"
+		drawString "Picked up:"
+	endif
+
+endif
+endif

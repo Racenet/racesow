@@ -1,7 +1,7 @@
-
+//
 // Scripting by learn_more
 // Hud placement, ideas and hud coginf reed aka cG aka gumka :)
-// This hud supports all important race .hud features.
+// This hud supports all race .hud features.
 
 // This HUD uses others
 // - cryzis2 (health/armor/ammo)
@@ -10,28 +10,41 @@
 
 setFont con_fontSystemsmall
 
-include obituaries
-include powerups
-include picked_up_item
-include item_timers
-include chasing
-include crizis2/health
-include crizis2/armor
-include crizis/ammo
-include net
-include pointing
-include help_message
-include fps
-include clock
-include weaponlist
-include crosshair
-include keystate
-include awards
-include minimap
-include download
-include files/times
-include files/race
-include files/dotstrafer
+include racesow/zoom
+include racesow/team_info
+include racesow/ammo
+include racesow/scores
+include racesow/times
+include racesow/obituaries
+include racesow/powerups
+include racesow/picked_up_item
+include racesow/item_timers
+include racesow/chasing
+include racesow/health
+include racesow/armor
+include racesow/frags
+include racesow/net
+include racesow/pointing
+include racesow/help_message
+include racesow/fps
+include racesow/clock
+include racesow/speed
+include racesow/weaponlist
+include racesow/crosshair
+include racesow/keystate
+include racesow/awards
+include racesow/minimap
+include racesow/download
+
+include racesow/angles
+include racesow/jumpspeed
+include racesow/checkpoints
+include racesow/acceleration
+include racesow/dotstrafer
+
+include racesow/chat
+
+include racesow/plasmahelper
 
 include damage_indicator_screen
 

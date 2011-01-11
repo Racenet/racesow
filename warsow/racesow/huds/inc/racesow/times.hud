@@ -1,0 +1,121 @@
+//
+
+setFont "virtue_12"
+setCursor #WIDTH, 510
+movePixelCursor -70, 0
+
+//draw Strings:
+//	Race Time
+//	Own Best
+//	Server Best
+if %RACE
+	setColor 0.8 0.8 0.8 1
+	setAlign #RIGHT, #MIDDLE
+	if %TIME_SELF != #NOTSET
+		drawString "Time: "
+	endif
+	movePixelCursor 0, 15
+	if %TIME_BEST != #NOTSET
+		drawString "Own Best: "
+	endif
+	movePixelCursor 0, 15
+	if %TIME_RECORD != #NOTSET
+		drawString "Srv Best: "
+	endif
+	movePixelCursor 0, -30
+endif
+
+
+//draw Times
+setColor 1 1 1 1
+setAlign #LEFT, #MIDDLE
+if %TIME_SELF != #NOTSET
+	drawTimer %TIME_SELF
+endif
+movePixelCursor 0, 15
+if %TIME_BEST != #NOTSET
+	drawTimer %TIME_BEST
+endif
+movePixelCursor 0, 15
+if %TIME_RECORD != #NOTSET
+	drawTimer %TIME_RECORD
+endif
+
+// TODO: add a world best here, using TIME_ALPHA
+
+
+//crazy big timer
+
+// minus time
+
+
+setFont "virtue_16"
+
+if %TIME_SELF < %TIME_BEST
+
+    setAlign #CENTER, #BOTTOM
+    setcolor 0, 1, 0, 1
+    setCursor 400, 50
+    drawTimer %TIME_SELF
+
+endif
+
+if %TIME_SELF > %TIME_BEST
+
+    setAlign #CENTER, #BOTTOM
+    setcolor 1, 0, 0, 1
+    setCursor 400, 50
+    drawTimer %TIME_SELF - %TIME_BEST
+endif
+
+
+//from default times.hud:
+if %TIME_ALPHA != #NOTSET
+	setFont "virtue_16"
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 786, 392
+	drawString "Alpha Time:"
+
+	setColor 0.8 0.8 0.8 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 784, 390
+	drawString "Alpha Time:"
+
+	// current time (+shadow)
+	setFont "virtue_16"
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 786, 408
+	drawTimer %TIME_ALPHA
+
+	setColor 1 1 1 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 784, 406
+	drawTimer %TIME_ALPHA
+endif
+
+if %TIME_BETA != #NOTSET
+	setFont "virtue_16"
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 786, 444
+	drawString "Beta Time:"
+
+	setColor 0.8 0.8 0.8 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 784, 442
+	drawString "Beta Time:"
+
+	// current time (+shadow)
+	setFont "virtue_16"
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 786, 460
+	drawTimer %TIME_ALPHA
+
+	setColor 1 1 1 1
+	setAlign #RIGHT, #BOTTOM
+	setCursor 784, 468
+	drawTimer %TIME_ALPHA
+endif

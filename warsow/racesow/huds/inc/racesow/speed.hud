@@ -1,0 +1,8 @@
+//speed meter
+
+setFont "virtue_12"
+
+setColor 1, 1, 1, 1
+setAlign #CENTER, #MIDDLE
+setCursor 400, 340
+drawStringNum %SPEED

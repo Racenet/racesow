@@ -1,0 +1,29 @@
+//accelmeter bar
+
+setFont "virtue_12"
+
+setAlign #LEFT, #MIDDLE
+setCursor 400, 370
+moveCursorY -103, 0
+setSizeY 206, 16
+setcolor 1, 1, 1, 0.1
+drawPicByName gfx/ui/white
+
+moveCursorY 3, 0
+setSizeY 200, 10
+setColor 0, 1, 0, 0.3
+drawBar %ACCELERATION, %MAX_ACCEL
+
+//alternative way, draws a black line where acceleration is maximum
+//drawBar %ACCELERATION, 200000
+//moveCursorY %MAX_ACCEL / 1000, 0
+//setcolor 0, 0, 0, 1
+//setSizeY 2, 10
+//drawPicByName gfx/ui/white
+
+
+//moveCursor -2, 0
+//setAlign #RIGHT, #MIDDLE
+//setColor 1, 1, 1, 1
+//drawStringNum %ACCELERATION
+

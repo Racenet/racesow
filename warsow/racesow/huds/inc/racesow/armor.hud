@@ -1,0 +1,37 @@
+//
+if %ARMOR > 0
+	setColor 1, 1, 1, 1
+	setSizeY 32, 32
+
+	setCursorY 252, #HEIGHT - 10
+
+	setAlign #LEFT, #BOTTOM
+	if %ARMOR < 95
+		//drawpicbyitemindex %ITEM_GREEN_ARMOR
+		drawPicByName "gfx/hud/icons/armor/ga"
+	endif
+	if %ARMOR >= 95
+	if %ARMOR < 125
+		//drawpicbyitemindex %ITEM_YELLOW_ARMOR
+		drawPicByName "gfx/hud/icons/armor/ya"
+		setColor 1, 1, 0, 1
+	endif
+	endif
+	if %ARMOR >= 125
+		//drawpicbyitemindex %ARMOR
+		drawPicByName "gfx/hud/icons/armor/ra"
+		setColor 1, 0, 0, 1
+	endif
+	if %ARMOR >= 175
+		setColor 0.6, 0, 0, 1
+	endif
+	if %ARMOR == 200
+		setColor 0.3, 0.3, 0.3, 1
+	endif
+
+	//draw armor number
+	setAlign #RIGHT, #BOTTOM
+	moveCursorY -4, 0
+	drawNum %ARMOR
+endif
+

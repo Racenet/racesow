@@ -1,0 +1,72 @@
+//
+
+if %WEAPON_ITEM == #WEAP_PLASMAGUN
+
+//setCursor #WIDTH / 2, 0.3 * #HEIGHT
+//setColor 1, 1, 0, 1
+//drawstringNum %MOUSE_Y
+
+//set position
+setCursor 0.47 * #WIDTH, 0.5 * #HEIGHT
+
+// zoomfactor 0.2
+moveCursor 0, 0.2 * %MOUSE_Y - 7150
+
+if 6540 > %MOUSE_Y 
+// Farbe Rot
+setColor 1, 0, 0, 0.8
+endif
+if 7510 < %MOUSE_Y
+// Farbe Rot
+setColor 1, 0, 0, 0.8
+endif
+if 6540 <= %MOUSE_Y
+if 7100 > %MOUSE_Y
+// Farbübergang Rot -> Grün
+setColor .00178571428571428571 * 7100 - %MOUSE_Y, 1 - .00178571428571428571 * 7100 - %MOUSE_Y, 0, 0.8
+endif
+endif
+if 7200 < %MOUSE_Y
+if 7510 >= %MOUSE_Y
+// Farbübergang Grün -> Rot
+setColor 1 - .00322580645161290322 * 7510 - %MOUSE_Y, .00322580645161290322 * 7510 - %MOUSE_Y, 0, 0.8
+endif
+endif
+if 7100 <= %MOUSE_Y
+if 7200 >= %MOUSE_Y
+// Farbe Weiß
+setColor 1, 1, 1, 0.8
+endif
+endif
+
+setAlign #LEFT, #TOP
+// zoomfactor
+setSize 10, 0.2 * 100 * 6.1
+drawPicByName gfx/hud/racesow/plasmaarrow_down
+
+setAlign #LEFT, #BOTTOM
+// zoomfactor
+setSize 10, 0.2 * 100 * 3.6
+drawPicByName gfx/hud/racesow/plasmaarrow_up
+
+//draw "crosshair"
+//zoomfactor
+moveCursor 0, -0.2 * %MOUSE_Y - 7150
+setSize 10, 2
+setColor 0, 0, 0, 1
+setAlign #LEFT, #MIDDLE
+drawPicByName gfx/ui/white
+
+
+//basewsw:
+//min angle: 60
+//max angle: 72.8
+//good: ~68
+
+//racesow:
+//min angle: 65.4
+//max angle: 75.1
+//good angles: 69-73
+//perfect angles: 71-72
+
+endif
