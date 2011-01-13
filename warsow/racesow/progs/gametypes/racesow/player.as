@@ -14,6 +14,12 @@ class Racesow_Player
 	bool isSpawned;
 
 	/**
+	 * Is the player practising?
+	 * @var bool
+	 */
+	bool practicing;
+	
+	/**
 	 * Is the player still racing in the overtime?
 	 * @var bool
 	 */
@@ -210,6 +216,7 @@ class Racesow_Player
 	 */
 	void reset()
 	{
+		this.practicing = false;
 		this.idleTime = 0;
 		this.isSpawned = true;
 		this.isJoinlocked = false;
@@ -512,7 +519,10 @@ class Racesow_Player
 
 		if ( g_freestyle.getBool() )
 			return;
-
+		
+		if ( this.practicing )
+			return;
+			
 		@this.race = Racesow_Player_Race();
 		this.race.setPlayer(@this);
 		this.race.start();
@@ -573,23 +583,44 @@ class Racesow_Player
 	/**
 	 * restartRace
 	 * @return void
+	 * for raceRestart and practicing mode.
 	 */
-    void restartRace()
+	void restartRace()
+	{
+		if ( this.client !is null )
+        {
+            this.client.team = TEAM_PLAYERS;
+            this.client.respawn( false );
+        }
+	}
+	
+	/**
+	 * restartingRace
+	 * @return void
+	 */
+    void restartingRace()
     {
-		this.isSpawned = true;
-
-		if ( this.isRacing() )
+		if ( this.practicing && this.positionSaved )
 		{
-		    this.racingTime += levelTime - this.race.getStartTime();
-		    this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
-	        this.sendMessage( this.race.checkPointsString );
-		}
+			this.teleport( this.positionOrigin, this.positionAngles, false, false );
+			this.client.selectWeapon( this.positionWeapon );
+			
+		} else {
+			this.isSpawned = true;
 
-		@this.race = null;
-		//remove all projectiles.
-		if( @this.client.getEnt() != null )
-			removeProjectiles( this.client.getEnt() );
-		RS_ResetPjState(this.getClient().playerNum());
+			if ( this.isRacing() )
+			{
+				this.racingTime += levelTime - this.race.getStartTime();
+				this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
+				this.sendMessage( this.race.checkPointsString );
+			}
+
+			@this.race = null;
+			//remove all projectiles.
+			if( @this.client.getEnt() != null )
+				removeProjectiles( this.client.getEnt() );
+			RS_ResetPjState(this.getClient().playerNum());
+		}
     }
 
 	/**
@@ -598,7 +629,6 @@ class Racesow_Player
 	 */
     void cancelRace()
     {
-		this.remove("");
 		@this.race = null;
     }
 
@@ -1284,6 +1314,13 @@ class Racesow_Player
 	        }
 	    }
 
+		if ( command.practiceEnabled && !g_freestyle.getBool() )
+		{
+			// if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
+			// i guess we'll have a better solution to this when the new command system is up.
+			this.sendErrorMessage( "The " + command.name + " command is only available in practice mode." );
+			return true;
+		}
 	    this.sendMessage(command.getUsage());
 	    return true;
 	}

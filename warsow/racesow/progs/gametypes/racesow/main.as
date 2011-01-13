@@ -452,7 +452,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 	// make dash 450
 	ent.client.setPMoveDashSpeed( 450 );
 
-    player.restartRace();
+    player.restartingRace();
 }
 
 /**

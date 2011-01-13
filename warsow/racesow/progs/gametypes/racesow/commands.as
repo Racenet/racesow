@@ -50,7 +50,12 @@ class Racesow_Command
      * Should the command only be available in race ?
      */
     bool raceOnly;
-
+	
+	/**
+	 * Should the command be available in practice mode ?
+	 */
+	bool practiceEnabled;
+	
     /**
      * Default constructor
      */
@@ -58,6 +63,7 @@ class Racesow_Command
     {
         this.raceOnly = false;
         this.freestyleOnly = false;
+		this.practiceEnabled = false;
     }
 
     /**
@@ -179,14 +185,8 @@ class Command_RaceRestart : Racesow_Command
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        if ( @player.client !is null )
-        {
-            player.client.team = TEAM_PLAYERS;
-            player.client.respawn( false );
-            return true;
-        }
-
-        return false;
+        player.restartRace();
+		return true;
     }
 }
 
@@ -642,6 +642,14 @@ class Command_Admin : Racesow_Command
 
 class Command_Position : Racesow_Command
 {
+	bool validate(Racesow_Player @player, cString &args, int argc)
+	{
+		if ( !player.practicing )
+			return false;
+			
+		return true;
+	}
+	
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         return player.position(args);
@@ -698,6 +706,8 @@ class Command_Noclip : Racesow_Command
             player.sendErrorMessage("Noclip is not available in your current state");
             return false;
         }
+		if( !player.practicing )
+			return false;
 
         return true;
     }
@@ -800,6 +810,43 @@ class Command_Stats : Racesow_Command
         //player.sendMessage( S_COLOR_RED + "TODO: " + S_COLOR_WHITE + "retrieve stats for " + this.what + " " + this.which + "\n" );
         return RS_LoadStats(player.client.playerNum(), this.what, this.which);
     }
+}
+
+class Command_Practicemode : Racesow_Command
+{
+	bool validate( Racesow_Player @player, cString &args, int argc )
+	{
+		if ( player.client.team != TEAM_PLAYERS )
+		{
+			player.sendErrorMessage( "You must join the game before going into practice mode" );
+			return false;
+		}
+		return true;
+	}
+	bool execute( Racesow_Player @player, cString &args, int argc )
+	{
+		if ( @player.client !is null )
+		{
+			if ( player.isRacing() )
+				player.cancelRace();
+				
+			if ( player.practicing )
+			{
+				player.practicing = false;
+				player.sendAward( S_COLOR_GREEN + "Leaving practice mode" );
+				player.restartRace();
+					
+				
+			} else {
+				player.practicing = true;
+				player.sendAward( S_COLOR_GREEN + "You have entered practice mode" );
+			}
+			return true;
+		}
+		/* something went wrong */
+		return false;
+		
+	}
 }
 
 /**
@@ -947,6 +994,7 @@ void RS_CreateCommands()
             + "position restore <id> - Restore a stored position from another session\n"
             + "position storedlist <limit> - Sends you a list of your stored positions\n";
 	position.freestyleOnly = true;
+	position.practiceEnabled = true;
     @commands[commandCount] = @position;
     commandCount++;
 
@@ -977,6 +1025,7 @@ void RS_CreateCommands()
     noclip.description = "Disable your interaction with other players and objects";
     noclip.usage = "";
     noclip.freestyleOnly = true;
+	noclip.practiceEnabled = true;
     @commands[commandCount] = @noclip;
     commandCount++;
 	
@@ -1026,6 +1075,14 @@ void RS_CreateCommands()
     top.raceOnly = true;
     @commands[commandCount] = @top;
     commandCount++;
+	
+	Command_Practicemode practicemode;
+	practicemode.name = "practicemode";
+	practicemode.description = "Enable or disable practicemode";
+	practicemode.usage = "practicemode\nAllows usage of the position and noclip commands";
+	practicemode.raceOnly = true;
+	@commands[commandCount] = @practicemode;
+	commandCount++;
 }
 
 /*
@@ -1040,7 +1097,7 @@ void RS_InitCommands()
         if ( commands[i].raceOnly and g_freestyle.getBool() )
             continue;
 
-        if ( commands[i].freestyleOnly and not g_freestyle.getBool() )
+        if ( commands[i].freestyleOnly and not commands[i].practiceEnabled and not g_freestyle.getBool() )
             continue;
 
         G_RegisterCommand( commands[i].name );
