@@ -14,10 +14,17 @@ class Racesow_Player
 	bool isSpawned;
 
 	/**
-	 * Is the player practising?
+	 * Is the player practising? has the player completed the map in practicemode?
 	 * @var bool
 	 */
 	bool practicing;
+	bool completedInPracticemode;
+	
+	/**
+	 * What state is the player in: racing, practicing, prerace?
+	 * @var cString
+	 */
+	cString state;
 	
 	/**
 	 * Is the player still racing in the overtime?
@@ -217,6 +224,7 @@ class Racesow_Player
 	void reset()
 	{
 		this.practicing = false;
+		this.completedInPracticemode = false;
 		this.idleTime = 0;
 		this.isSpawned = true;
 		this.isJoinlocked = false;
@@ -245,6 +253,7 @@ class Racesow_Player
 		this.challengerList = "";
 		this.printWelcomeMessage = false;
 		this.highestSpeed = 0;
+		this.state = "";
 	}
 
 	/**
@@ -505,6 +514,22 @@ class Racesow_Player
 	    cVec3 horizontalSpeed = cVec3(globalSpeed.x, globalSpeed.y, 0);
 	    return horizontalSpeed.length();
 	}
+	
+	/**
+	 * Get the state of the player;
+	 * @return cString
+	 */
+	cString getState()
+	{
+		if ( this.practicing )
+			this.state = "^5practicing";
+		else if ( this.isRacing() )
+			this.state = "^2racing";
+		else
+			this.state = "^3prerace";
+		
+		return state;
+	}
 	/**
 	 * crossStartLine
 	 * @return void
@@ -561,10 +586,22 @@ class Racesow_Player
 	 */
     void touchStopTimer()
     {
-        // when the race can not be finished something is very wrong, maybe small penis playing
+		if ( this.practicing && !this.completedInPracticemode )
+		{
+			this.sendAward( S_COLOR_CYAN + "You completed the map in practicemode, no time was set" );
+			
+			this.isSpawned = false;
+			this.completedInPracticemode = true;
+			// set up for respawning the player with a delay
+			cEntity @practiceRespawner = G_SpawnEntity( "practice_respawner" );
+			practiceRespawner.nextThink = levelTime + 3000;
+			practiceRespawner.count = client.playerNum();
+		}
+			
+        // when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
 		if ( @this.race == null || !this.race.stop() )
             return;
-
+			
 		this.isSpawned = false;
 		this.setLastRace(@this.race);
 		this.racingTime += this.race.getTime();
@@ -600,27 +637,29 @@ class Racesow_Player
 	 */
     void restartingRace()
     {
+		this.isSpawned = true;
+		
 		if ( this.practicing && this.positionSaved )
 		{
 			this.teleport( this.positionOrigin, this.positionAngles, false, false );
 			this.client.selectWeapon( this.positionWeapon );
+			if ( this.completedInPracticemode )
+				this.completedInPracticemode = false;
 			
-		} else {
-			this.isSpawned = true;
-
-			if ( this.isRacing() )
-			{
-				this.racingTime += levelTime - this.race.getStartTime();
-				this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
-				this.sendMessage( this.race.checkPointsString );
-			}
-
-			@this.race = null;
-			//remove all projectiles.
-			if( @this.client.getEnt() != null )
-				removeProjectiles( this.client.getEnt() );
-			RS_ResetPjState(this.getClient().playerNum());
+		} else if ( this.isRacing() )
+		{
+			this.racingTime += levelTime - this.race.getStartTime();
+			this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
+			this.sendMessage( this.race.checkPointsString );
 		}
+
+		@this.race = null;
+		//remove all projectiles.
+		if( @this.client.getEnt() != null )
+			removeProjectiles( this.client.getEnt() );
+		if ( !this.practicing )
+			RS_ResetPjState(this.getClient().playerNum());
+		
     }
 
 	/**

@@ -14,8 +14,8 @@ class Racesow_Gametype_Race : Racesow_Gametype
     void InitGametype()
     {
         gametype.spawnpointRadius = 0;
-        G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %i 48 %l 48 %b 48" );
-        G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Speed Ping Racing" );
+        G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %i 48 %l 48 %s 85" );
+	    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Speed Ping State" );
     }
     
     void SpawnGametype()
@@ -114,18 +114,18 @@ class Racesow_Gametype_Race : Racesow_Gametype
         if ( scoreboardMessage.len() + entry.len() < maxlen )
             scoreboardMessage += entry;
 
-        // "Name Time Ping Racing"
+        // "Name Time Ping State"
         for ( i = 0; @team.ent( i ) != null; i++ )
         {
             @ent = @team.ent( i );
             Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
 
             int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
-            racing = int( player.isRacing() ? 1 : 0 );
+			
             entry = "&p " + playerID + " " + ent.client.getClanName() + " "
                 + player.getBestTime() + " "
                 + player.highestSpeed + " "
-                + ent.client.ping + " " + racing + " ";
+                + ent.client.ping + " " + player.getState() + " ";
             if ( scoreboardMessage.len() + entry.len() < maxlen )
                 scoreboardMessage += entry;
         }

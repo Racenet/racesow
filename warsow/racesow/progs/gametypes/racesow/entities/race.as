@@ -17,6 +17,19 @@ void race_respawner_think( cEntity @respawner )
 
     respawner.freeEntity(); // free the respawner
 }
+
+void practice_respawner_think( cEntity @practiceRespawner )
+{
+    cClient @client = G_GetClient( practiceRespawner.count );
+
+    // the client may have respawned on his own. If the last time was erased, don't respawn him
+    if ( !Racesow_GetPlayerByClient( client ).isSpawned )
+    {
+        Racesow_GetPlayerByClient( client ).restartRace();
+    }
+
+    practiceRespawner.freeEntity(); // free the respawner
+}
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
 // and classname->function is case sensitive so we need some shadow functions
 
