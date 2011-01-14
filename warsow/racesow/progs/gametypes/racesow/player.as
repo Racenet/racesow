@@ -859,6 +859,9 @@ class Racesow_Player
 				return false;
 			this.positionOrigin = ent.getOrigin();
 			this.positionAngles = ent.getAngles();
+			if ( ent.moveType == MOVETYPE_NOCLIP )
+				this.positionWeapon = this.noclipWeapon;
+			else
 			this.positionWeapon = client.weapon;
 		}
 		else if( action == "load" )
