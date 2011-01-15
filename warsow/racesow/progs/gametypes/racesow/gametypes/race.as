@@ -69,11 +69,6 @@ class Racesow_Gametype_Race : Racesow_Gametype
                 client.setHUDStat( STAT_TIME_ALPHA, map.worldBest / 100 );
             }
             addFastcapHUDStats( @client );
-            int PLAYER_MASS = 200;
-            if( client.inventoryCount( POWERUP_QUAD ) > 0 )
-                client.getEnt().mass = PLAYER_MASS * 1/3;// * QUAD_KNOCKBACK_SCALE
-            else
-                client.getEnt().mass = PLAYER_MASS;
             if ( client.getEnt().health > client.getEnt().maxHealth )
                 client.getEnt().health -= ( frameTime * 0.001f );
         }
