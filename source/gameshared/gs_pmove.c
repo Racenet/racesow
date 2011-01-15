@@ -157,8 +157,8 @@ static void PlayerTouchWall( int nbTestDir, float maxZnormal, vec3_t *normal )
 
 	for( i = 0; i < nbTestDir; i++ )
 	{
-		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( 360/nbTestDir )*i ) + pml.velocity[0] * 0.015f );
-		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( 360/nbTestDir )*i ) + pml.velocity[1] * 0.015f );
+		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( 360/nbTestDir )*i ) );
+		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( 360/nbTestDir )*i ) );
 		dir[2] = pml.origin[2];
 
 		for( j = 0; j < 2; j++ )
