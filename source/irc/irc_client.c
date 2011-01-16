@@ -804,7 +804,15 @@ static void Irc_Client_CmdPrivmsg_f(irc_command_t cmd, const char *prefix, const
 	else
 		strcpy(nick, prefix);
 	if (*params == '#' || *params == '&')
-		Irc_Println(IRC_COLOR_YELLOW "%s " IRC_COLOR_WHITE "| " IRC_COLOR_GREEN "<%s> %s", IRC_COLOR_IRC_TO_WSW, params, nick, trailing);
+	{
+	    Irc_Println(IRC_COLOR_YELLOW "%s " IRC_COLOR_WHITE "| " IRC_COLOR_GREEN "<%s> %s", IRC_COLOR_IRC_TO_WSW, params, nick, trailing);
+	    //racesow
+	    char msg[1024];
+	    Q_strncpyz( msg, trailing, sizeof( msg ) );
+		Q_chrreplace( msg, '\"', '\'' );
+		IRC_IMPORT.Cmd_ExecuteString( va( "ircprint %s%s%s \"%s\"", S_COLOR_WHITE, nick, S_COLOR_WHITE, msg ) );
+		//!racesow
+	}
 	else
 		Irc_Println(IRC_COLOR_RED "%s " IRC_COLOR_WHITE "| " IRC_COLOR_GREEN "<%s> %s", IRC_COLOR_IRC_TO_WSW, nick, nick, trailing);
 }

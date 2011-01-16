@@ -644,7 +644,7 @@ class Command_Position : Racesow_Command
 {
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
-		if ( !player.practicing )
+		if ( !player.practicing && !g_freestyle.getBool() )
 			return false;
 			
 		return true;
@@ -706,7 +706,7 @@ class Command_Noclip : Racesow_Command
             player.sendErrorMessage("Noclip is not available in your current state");
             return false;
         }
-		if( !player.practicing )
+		if( !player.practicing && !g_freestyle.getBool() )
 			return false;
 
         return true;

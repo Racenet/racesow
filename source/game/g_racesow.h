@@ -4,6 +4,7 @@ char maplist[50000];
 unsigned int mapcount;
 int MysqlConnected;
 char previousMapName[MAX_CONFIGSTRING_CHARS];
+int ircConnected;
 
 typedef enum{
     RS_PREJUMPED,
@@ -146,3 +147,7 @@ char *RS_ChooseNextMap();
 char *RS_GetMapByNum(int num);
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
 qboolean  isFreestyle( void );
+void RS_ircSendMessage( const char *name,  const char *text );
+void RS_AddServerCommands( void );
+void RS_RemoveServerCommands( void );
+static void RS_Irc_ConnectedListener_f( void *connected );

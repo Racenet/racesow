@@ -7179,6 +7179,7 @@ static asglobproperties_t asGlobProps[] =
 	{ "cMatch match", &level.gametype.match },
 	// racesow
     { "int mysqlConnected", &MysqlConnected },
+    { "int ircConnected", &ircConnected },
     // !racesow
 
 	{ NULL, NULL }

@@ -426,6 +426,7 @@ const int maxClients;
 cGametypeDesc gametype;
 cMatch match;
 int mysqlConnected;
+int ircConnected;
 
 /**
  * Global functions
@@ -436,8 +437,8 @@ bool RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, boo
 bool RS_GetPlayerNick( int, int );
 bool RS_UpdatePlayerNick( cString &, int, int );
 bool RS_MysqlLoadMap();
-bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString & );
-bool RS_MysqlLoadHighscores( int, int, int, cString &);
+bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString &, bool );
+bool RS_MysqlLoadHighscores( int, int, int, cString &, int);
 bool RS_MysqlSetOneliner( int, int, int, cString &);
 bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out );
 bool RS_MapFilter( int, cString &, int );
@@ -447,6 +448,8 @@ cString @RS_PrintQueryCallback( int );
 cString @RS_NextMap();
 cString @RS_LastMap();
 void RS_LoadMapList( int );
+bool RS_QueryPjState( int playerNum);
+bool RS_ResetPjState( int playerNum);
 cEntity @G_SpawnEntity( cString & );
 cString @G_SpawnTempValue( cString & );
 cEntity @G_GetEntity( int entNum );

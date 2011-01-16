@@ -190,3 +190,10 @@ cString Capitalize( cString string )
 {
     return string.substr(0,1).toupper() + string.substr(1,string.len()-1);
 }
+
+void RS_ircSendMessage( cString message )
+{
+    if( ircConnected == 0 )
+        return;
+    G_CmdExecute( "irc_chanmsg \"" + message + "\" \n");
+}

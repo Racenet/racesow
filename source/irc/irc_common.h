@@ -45,7 +45,7 @@ typedef struct irc_chat_history_node_s {
 #ifdef _WIN32
 #	pragma warning (disable : 4125)		// decimal digit terminates octal escape sequence
 #endif
-#define IRC_COLOR_WHITE		"\0030"
+#define IRC_COLOR_WHITE		"\00315"//racesow: better visibility
 #define IRC_COLOR_BLACK		"\0031"
 #define IRC_COLOR_RED		"\0034"
 #define IRC_COLOR_ORANGE	"\0037"

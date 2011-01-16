@@ -378,6 +378,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		else if ( score_event == "connect" )
 		{
 			player.reset();
+			RS_ircSendMessage( player.getName() + S_COLOR_BLACK + " connected" );
 		}
 		else if ( score_event == "enterGame" )
 		{
@@ -386,11 +387,13 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
             player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.getString()));
 
             player.appear();
+            RS_ircSendMessage( player.getName() + S_COLOR_BLACK + " entered the game" );
 		}
 		else if ( score_event == "disconnect" )
 		{
 			player.disappear(player.getName(), true);
 			player.reset();
+			RS_ircSendMessage( player.getName() + S_COLOR_BLACK + " disconnected" );
 		}
 		else if ( score_event == "userinfochanged" )
 		{
@@ -409,6 +412,9 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 					}
 				}
 			}
+			cString oldNick = args.getToken( 0 );
+            if( oldNick.removeColorTokens() != player.getName().removeColorTokens() && client.state() >= CS_SPAWNED )
+                RS_ircSendMessage( oldNick + S_COLOR_BLACK + " is now known as " + player.getName() );
 		}
 	}
 	racesowGametype.scoreEvent( @client, score_event, args );
@@ -540,7 +546,7 @@ void GT_ThinkRules()
 		{
 		    if ( countdownState == 1 )
             {
-		        //player.getClient().addAward(player.getAuth().getViolateCountDown());
+		        //player.sendAward(player.getAuth().getViolateCountDown());
                 G_PrintMsg( player.getClient().getEnt(), player.getAuth().getViolateCountDown() + "\n" );
             }
             else if ( countdownState == 2 )
@@ -664,6 +670,7 @@ void GT_Shutdown()
 		}
     
     racesowGametype.Shutdown();
+    RS_ircSendMessage( "Map changed to: \'" + RS_NextMap() + "\'" );
 }
 
 /**

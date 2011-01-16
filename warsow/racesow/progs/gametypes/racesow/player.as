@@ -347,6 +347,8 @@ class Racesow_Player
 			this.sendAward( S_COLOR_GREEN + "New server record!" );
 			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
 				+ "made a new server record: " + TimeToString( newTime ) + "\n");
+			RS_ircSendMessage( this.getName() + " " + S_COLOR_YELLOW
+	                + "made a new server record: " + TimeToString( newTime ) );
         }
         else if ( oldTime == 0 || newTime < oldTime ) //personal record award
         {

@@ -189,11 +189,11 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
         if ( newTime < serverBestTime || serverBestTime == 0 )
         {
-            this.player.getClient().addAward( S_COLOR_GREEN + "#" + lastCheckPoint + " checkpoint record!" );
+            this.player.sendAward( S_COLOR_GREEN + "#" + lastCheckPoint + " checkpoint record!" );
         }
         else if ( newTime < personalBestTime || personalBestTime == 0 )
         {
-            this.player.getClient().addAward( S_COLOR_YELLOW + "#" + lastCheckPoint + " checkpoint personal record!" );
+            this.player.sendAward( S_COLOR_YELLOW + "#" + lastCheckPoint + " checkpoint personal record!" );
         }
 
         this.checkPointsString += S_COLOR_ORANGE + "#" + lastCheckPoint + ": "

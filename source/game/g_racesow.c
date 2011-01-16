@@ -78,6 +78,10 @@ cvar_t *rs_loadHighscores;
 cvar_t *rs_loadPlayerCheckpoints;
 cvar_t *rs_historyDays;
 
+cvar_t *rs_IRCstream;
+dynvar_t *irc_connected;
+int ircConnected = 0;
+
 /**
  * Store the result of different requests from players.
  */
@@ -141,7 +145,6 @@ int MysqlConnected = 0;
  */
 #define RS_CheckMysqlThreadError() {if (RS_MysqlError()) { G_Printf("file=%s line=%d MySQL Error!\n",__FILE__,__LINE__); RS_EndMysqlThread(); } }
 
-
 /**
  * Initializes racesow specific stuff
  *
@@ -156,6 +159,7 @@ void RS_Init()
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
     rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_ARCHIVE|CVAR_NOSET);
+    rs_IRCstream = trap_Cvar_Get( "rs_IRCstream","0", CVAR_ARCHIVE|CVAR_NOSET );
     g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
     rs_loadPlayerCheckpoints = trap_Cvar_Get( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE);
@@ -179,6 +183,12 @@ void RS_Init()
         mysql_real_query(&mysql, query, strlen(query));
         RS_MysqlError();
     }
+    RS_AddServerCommands();
+    if( rs_IRCstream->integer )
+        trap_Cmd_ExecuteText( EXEC_APPEND, "irc_connect" );
+    irc_connected = trap_Dynvar_Lookup( "irc_connected" );
+    trap_Dynvar_AddListener( irc_connected, RS_Irc_ConnectedListener_f );
+
 }
 
 /**
@@ -397,6 +407,8 @@ void RS_Shutdown()
 
 	// removed it because of crash in win32 implementation, also this may be not necessary at all because this isnt in a thread
 	//pthread_exit(NULL);
+	RS_RemoveServerCommands();
+	trap_Dynvar_RemoveListener( irc_connected, RS_Irc_ConnectedListener_f );
 }
 
 
@@ -2901,4 +2913,51 @@ qboolean isFreestyle( void )
         return qtrue;
     else
         return qfalse;
+}
+
+static void RS_Irc_ConnectedListener_f( void *connected )
+{
+    qboolean* c;
+    trap_Dynvar_GetValue( irc_connected, (void**) &c );
+    if( *c )
+    {
+        ircConnected = 1;
+    }
+    else
+    {
+        ircConnected = 0;
+        G_Printf("%sWarning:%s IRC disconnected\n", S_COLOR_RED, S_COLOR_WHITE);
+    }
+}
+
+void RS_ircSendMessage( const char *name,  const char *text )
+{
+    trap_Cmd_ExecuteText( EXEC_APPEND, va( "irc_chanmsg %s%s%s: %s\n", S_COLOR_WHITE, name , S_COLOR_BLACK , text) );
+}
+
+void RS_ircPrint( const char *format, ... )
+{
+    const char *nick = trap_Cmd_Argv( 1 );
+    char *msg = trap_Cmd_Argv( 2 );
+    char *s;
+    s = va( "%s %s \"%s\n\"", "tvch", nick, msg );
+
+    trap_GameCmd( NULL, s );
+}
+
+static void RS_Cmd_ircPrint_f( void )
+{
+    RS_ircPrint( trap_Cmd_Args() );
+}
+
+void RS_AddServerCommands( void )
+{
+    if( rs_IRCstream->integer )
+        trap_Cmd_AddCommand( "ircprint", RS_Cmd_ircPrint_f );
+}
+
+void RS_RemoveServerCommands( void )
+{
+    if( rs_IRCstream->integer )
+        trap_Cmd_RemoveCommand( "ircprint" );
 }
