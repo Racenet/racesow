@@ -741,6 +741,7 @@ void GT_SpawnGametype()
         }
     }
     racesowGametype.SpawnGametype();
+    
 }
 
 /**
