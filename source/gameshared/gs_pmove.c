@@ -786,8 +786,14 @@ static void PM_Move( void )
 
 		PM_StepSlideMove();
 
-		// player is genuinely walking: clear prejump counters
-		RS_ResetPjState(pm->playerState->playerNum);
+        // racesow
+		// player is genuinely walking at walking speed: clear prejump counters
+		float hspeed = VectorLengthFast( tv( pml.velocity[0], pml.velocity[1], 0 ) );
+		if (hspeed < DEFAULT_PLAYERSPEED_RACE+5.0f) // allow uncertainty of 5.0f
+		{
+		    RS_ResetPjState(pm->playerState->playerNum);
+		}
+		// !racesow
 	}
 	else if( ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_AIRCONTROL )
 		&& !( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_FWDBUNNY ) )
@@ -1053,16 +1059,20 @@ static void PM_CheckJump( void )
 		module_PredictedEvent( pm->playerState->POVnum, EV_JUMP, 0 );
 		pml.velocity[2] += pml.jumpPlayerSpeed;
 
+        // racesow
 		// increment count for prejump check (doublejumps dont count)
         RS_IncrementJumps(pm->playerState->playerNum);
+        // !racesow
 	}
 	else
 	{
 		module_PredictedEvent( pm->playerState->POVnum, EV_JUMP, 0 );
 		pml.velocity[2] = pml.jumpPlayerSpeed;
 
+        // racesow
 		// increment count for prejump check (doublejumps dont count)
         RS_IncrementJumps(pm->playerState->playerNum);
+        // !racesow
 	}
 
 	// remove wj count
@@ -1151,8 +1161,10 @@ static void PM_CheckDash( void )
 			module_PredictedEvent( pm->playerState->POVnum, EV_DASH, 0 );
 		}
 
+        // racesow
 		// increment count for prejump check
 		RS_IncrementDashes(pm->playerState->playerNum);
+		// !racesow
 	}
 	else if( pm->groundentity == -1 )
 		pm->playerState->pmove.pm_flags &= ~PMF_DASHING;
@@ -1198,70 +1210,72 @@ static void PM_CheckWallJump( void )
 		&& pm->playerState->pmove.stats[PM_STAT_WJTIME] <= 0
 		)
 	{
-		VectorClear( normal );
-		PlayerTouchWall( 12, 0.3f, &normal );
-		if( !VectorLength( normal ) )
-			return;
+			VectorClear( normal );
+			PlayerTouchWall( 12, 0.3f, &normal );
+			if( !VectorLength( normal ) )
+				return;
 
-		if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
+			if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
 				&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) )
-		{
-			float oldupvelocity = pml.velocity[2];
-			pml.velocity[2] = 0.0;
-
-			hspeed = VectorNormalize2D( pml.velocity );
-
-			// if stunned almost do nothing
-			if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
 			{
-				GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0f );
-				VectorMA( pml.velocity, pm_failedwjbouncefactor, normal, pml.velocity );
+				float oldupvelocity = pml.velocity[2];
+				pml.velocity[2] = 0.0;
 
-				VectorNormalize( pml.velocity );
+				hspeed = VectorNormalize2D( pml.velocity );
 
-				VectorScale( pml.velocity, hspeed, pml.velocity );
-				pml.velocity[2] = ( oldupvelocity + pm_failedwjupspeed > pm_failedwjupspeed ) ? oldupvelocity : oldupvelocity + pm_failedwjupspeed;
-			}
-			else
-			{
-				GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0005f );
-				VectorMA( pml.velocity, pm_wjbouncefactor, normal, pml.velocity );
+				// if stunned almost do nothing
+				if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
+				{
+					GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0f );
+					VectorMA( pml.velocity, pm_failedwjbouncefactor, normal, pml.velocity );
 
-				if( hspeed < pm_wjminspeed )
-					hspeed = pm_wjminspeed;
+					VectorNormalize( pml.velocity );
 
-				VectorNormalize( pml.velocity );
+					VectorScale( pml.velocity, hspeed, pml.velocity );
+					pml.velocity[2] = ( oldupvelocity + pm_failedwjupspeed > pm_failedwjupspeed ) ? oldupvelocity : oldupvelocity + pm_failedwjupspeed;
+				}
+				else
+				{
+					GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0005f );
+					VectorMA( pml.velocity, pm_wjbouncefactor, normal, pml.velocity );
 
-				VectorScale( pml.velocity, hspeed, pml.velocity );
-				pml.velocity[2] = ( oldupvelocity > pm_wjupspeed ) ? oldupvelocity : pm_wjupspeed; // jal: if we had a faster upwards speed, keep it
-			}
+					if( hspeed < pm_wjminspeed )
+						hspeed = pm_wjminspeed;
 
-			// set the walljumping state
-			PM_ClearDash();
-			pm->playerState->pmove.pm_flags &= ~PMF_JUMPPAD_TIME;
+					VectorNormalize( pml.velocity );
 
-			pm->playerState->pmove.pm_flags |= PMF_WALLJUMPING;
-			pm->playerState->pmove.pm_flags |= PMF_SPECIAL_HELD;
+					VectorScale( pml.velocity, hspeed, pml.velocity );
+					pml.velocity[2] = ( oldupvelocity > pm_wjupspeed ) ? oldupvelocity : pm_wjupspeed; // jal: if we had a faster upwards speed, keep it
+				}
 
-			pm->playerState->pmove.pm_flags |= PMF_WALLJUMPCOUNT;
+				// set the walljumping state
+				PM_ClearDash();
+				pm->playerState->pmove.pm_flags &= ~PMF_JUMPPAD_TIME;
 
-			if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
-			{
-				pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_FAILED_TIMEDELAY;
+				pm->playerState->pmove.pm_flags |= PMF_WALLJUMPING;
+				pm->playerState->pmove.pm_flags |= PMF_SPECIAL_HELD;
 
-				// Create the event
-				module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP_FAILED, DirToByte( normal ) );
-			}
-			else
-			{
-				pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_TIMEDELAY;
+				pm->playerState->pmove.pm_flags |= PMF_WALLJUMPCOUNT;
 
-				// Create the event
-				module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP, DirToByte( normal ) );
+				if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
+				{
+					pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_FAILED_TIMEDELAY;
 
-				// increment count for prejump check
-				RS_IncrementWallJumps(pm->playerState->playerNum);
-			}
+					// Create the event
+					module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP_FAILED, DirToByte( normal ) );
+				}
+				else
+				{
+					pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_TIMEDELAY;
+
+					// Create the event
+					module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP, DirToByte( normal ) );
+
+                    // racesow
+					// increment count for prejump check
+					RS_IncrementWallJumps(pm->playerState->playerNum);
+					// !racesow
+				}
 		}
 
 	}
