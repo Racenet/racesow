@@ -412,9 +412,8 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 					}
 				}
 			}
-			cString oldNick = args.getToken( 0 );
-            if( oldNick.removeColorTokens() != player.getName().removeColorTokens() && client.state() >= CS_SPAWNED )
-                RS_ircSendMessage( oldNick + S_COLOR_BLACK + " is now known as " + player.getName() );
+            if( args.removeColorTokens() != player.getName().removeColorTokens() && client.state() >= CS_SPAWNED )
+                RS_ircSendMessage( args + S_COLOR_BLACK + " is now known as " + player.getName() );
 		}
 	}
 	racesowGametype.scoreEvent( @client, score_event, args );
