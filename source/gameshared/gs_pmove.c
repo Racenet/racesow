@@ -157,9 +157,9 @@ static void PlayerTouchWall( int nbTestDir, float maxZnormal, vec3_t *normal )
 
 	for( i = 0; i < nbTestDir; i++ )
 	{
-		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( 360/nbTestDir )*i ) );
-		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( 360/nbTestDir )*i ) );
-		dir[2] = pml.origin[2];
+		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[0] * 0.015f );
+		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[1] * 0.015f );
+		dir[2] = pml.origin[2] + pm->maxs[2];
 
 		for( j = 0; j < 2; j++ )
 		{
@@ -1198,87 +1198,72 @@ static void PM_CheckWallJump( void )
 		&& pm->playerState->pmove.stats[PM_STAT_WJTIME] <= 0
 		)
 	{
-		trace_t trace;
-		vec3_t point;
+		VectorClear( normal );
+		PlayerTouchWall( 12, 0.3f, &normal );
+		if( !VectorLength( normal ) )
+			return;
 
-		point[0] = pml.origin[0];
-		point[1] = pml.origin[1];
-		point[2] = pml.origin[2] - STEPSIZE;
-
-		// don't walljump if our height is smaller than a step
-		// unless the player is moving faster than dash speed and upwards
-		hspeed = VectorLengthFast( tv( pml.velocity[0], pml.velocity[1], 0 ) );
-		module_Trace( &trace, pml.origin, pm->mins, pm->maxs, point, pm->playerState->POVnum, pm->contentmask, 0 );
-
-		if( ( hspeed > pm->playerState->pmove.stats[PM_STAT_DASHSPEED] && pml.velocity[2] > 8 )
-			|| ( trace.fraction == 1 ) || ( !ISWALKABLEPLANE( &trace.plane ) && !trace.startsolid ) )
-		{
-			VectorClear( normal );
-			PlayerTouchWall( 12, 0.3f, &normal );
-			if( !VectorLength( normal ) )
-				return;
-
-			if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
+		if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
 				&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) )
+		{
+			float oldupvelocity = pml.velocity[2];
+			pml.velocity[2] = 0.0;
+
+			hspeed = VectorNormalize2D( pml.velocity );
+
+			// if stunned almost do nothing
+			if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
 			{
-				float oldupvelocity = pml.velocity[2];
-				pml.velocity[2] = 0.0;
+				GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0f );
+				VectorMA( pml.velocity, pm_failedwjbouncefactor, normal, pml.velocity );
 
-				hspeed = VectorNormalize2D( pml.velocity );
+				VectorNormalize( pml.velocity );
 
-				// if stunned almost do nothing
-				if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
-				{
-					GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0f );
-					VectorMA( pml.velocity, pm_failedwjbouncefactor, normal, pml.velocity );
+				VectorScale( pml.velocity, hspeed, pml.velocity );
+				pml.velocity[2] = ( oldupvelocity + pm_failedwjupspeed > pm_failedwjupspeed ) ? oldupvelocity : oldupvelocity + pm_failedwjupspeed;
+			}
+			else
+			{
+				GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0005f );
+				VectorMA( pml.velocity, pm_wjbouncefactor, normal, pml.velocity );
 
-					VectorNormalize( pml.velocity );
+				if( hspeed < pm_wjminspeed )
+					hspeed = pm_wjminspeed;
 
-					VectorScale( pml.velocity, hspeed, pml.velocity );
-					pml.velocity[2] = ( oldupvelocity + pm_failedwjupspeed > pm_failedwjupspeed ) ? oldupvelocity : oldupvelocity + pm_failedwjupspeed;
-				}
-				else
-				{
-					GS_ClipVelocity( pml.velocity, normal, pml.velocity, 1.0005f );
-					VectorMA( pml.velocity, pm_wjbouncefactor, normal, pml.velocity );
+				VectorNormalize( pml.velocity );
 
-					if( hspeed < pm_wjminspeed )
-						hspeed = pm_wjminspeed;
+				VectorScale( pml.velocity, hspeed, pml.velocity );
+				pml.velocity[2] = ( oldupvelocity > pm_wjupspeed ) ? oldupvelocity : pm_wjupspeed; // jal: if we had a faster upwards speed, keep it
+			}
 
-					VectorNormalize( pml.velocity );
+			// set the walljumping state
+			PM_ClearDash();
+			pm->playerState->pmove.pm_flags &= ~PMF_JUMPPAD_TIME;
 
-					VectorScale( pml.velocity, hspeed, pml.velocity );
-					pml.velocity[2] = ( oldupvelocity > pm_wjupspeed ) ? oldupvelocity : pm_wjupspeed; // jal: if we had a faster upwards speed, keep it
-				}
+			pm->playerState->pmove.pm_flags |= PMF_WALLJUMPING;
+			pm->playerState->pmove.pm_flags |= PMF_SPECIAL_HELD;
 
-				// set the walljumping state
-				PM_ClearDash();
-				pm->playerState->pmove.pm_flags &= ~PMF_JUMPPAD_TIME;
+			pm->playerState->pmove.pm_flags |= PMF_WALLJUMPCOUNT;
 
-				pm->playerState->pmove.pm_flags |= PMF_WALLJUMPING;
-				pm->playerState->pmove.pm_flags |= PMF_SPECIAL_HELD;
+			if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
+			{
+				pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_FAILED_TIMEDELAY;
 
-				pm->playerState->pmove.pm_flags |= PMF_WALLJUMPCOUNT;
+				// Create the event
+				module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP_FAILED, DirToByte( normal ) );
+			}
+			else
+			{
+				pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_TIMEDELAY;
 
-				if( pm->playerState->pmove.stats[PM_STAT_STUN] > 0 )
-				{
-					pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_FAILED_TIMEDELAY;
+				// Create the event
+				module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP, DirToByte( normal ) );
 
-					// Create the event
-					module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP_FAILED, DirToByte( normal ) );
-				}
-				else
-				{
-					pm->playerState->pmove.stats[PM_STAT_WJTIME] = PM_WALLJUMP_TIMEDELAY;
-
-					// Create the event
-					module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP, DirToByte( normal ) );
-
-					// increment count for prejump check
-					RS_IncrementWallJumps(pm->playerState->playerNum);
-				}
+				// increment count for prejump check
+				RS_IncrementWallJumps(pm->playerState->playerNum);
 			}
 		}
+
 	}
 	else
 		pm->playerState->pmove.pm_flags &= ~PMF_WALLJUMPING;
