@@ -327,7 +327,6 @@ void CG_ScreenInit( void )
 	trap_Cmd_AddCommand( "help_hud", Cmd_CG_PrintHudHelp_f );
 
   //racesow - lm:race mod
-  trap_Cmd_AddCommand( "jumps", CG_RaceSayjump_f );
   CG_ClearJumpspeed();
   //racesow
 
@@ -346,7 +345,6 @@ void CG_ScreenShutdown( void )
 	trap_Cmd_RemoveCommand( "sizeup" );
 	trap_Cmd_RemoveCommand( "sizedown" );
 	trap_Cmd_RemoveCommand( "help_hud" );
-  trap_Cmd_RemoveCommand( "jumps" ); //racesow
 }
 
 

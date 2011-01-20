@@ -727,8 +727,6 @@ void CG_ExecuteLayoutProgram( struct cg_layoutnode_s *rootnode );
 
 //racesow
 void CG_RaceAddCheckpoint( char* msg ); //lm: race hud checkpoints helper
-void CG_RaceSayjump_f( void );
-void CG_RaceSaycps_f( void );
 void CG_AddJumpspeed( void ); //lm: don't depend on the hudscripts for obtaining jump values..
 void CG_ClearJumpspeed( void );
 //!racesow

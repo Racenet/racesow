@@ -418,34 +418,6 @@ void CG_RaceInsertjump( int num )
 	if( cur_jump >= 30 ) cur_jump = 0;
 }
 
-void CG_RaceSayjump_f( void )
-{
-	int n;
-	trap_Cmd_ExecuteText( EXEC_APPEND, "say \"Jumps: " );
-	for( n = cur_jump; n < 30; n++ ) {
-		if( race_jump_speeds[n] != -1 )
-			trap_Cmd_ExecuteText( EXEC_APPEND, va( "%i ", race_jump_speeds[n] ) );
-	}
-	if( cur_jump != 0 ) {
-		for( n = 0; n < cur_jump; n++ ) {
-			if( race_jump_speeds[n] != -1 )
-				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%i ", race_jump_speeds[n] ) );
-		}
-	}
-	trap_Cmd_ExecuteText( EXEC_APPEND, "\"\n" );
-}
-
-void CG_RaceSaycps_f( void )
-{
-	int n;
-	if( cur_check == 0 ) return;
-	trap_Cmd_ExecuteText( EXEC_APPEND, "say \"Checkpoints: " );
-	for( n = 0; n < cur_check; n++ ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s ", race_checkpoints[n] ) );
-	}
-	trap_Cmd_ExecuteText( EXEC_APPEND, "\"\n" );
-}
-
 static int CG_GetCheckPoint( void* parameter )
 {
 	int index = (qintptr)parameter;
