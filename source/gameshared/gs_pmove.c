@@ -157,9 +157,9 @@ static void PlayerTouchWall( int nbTestDir, float maxZnormal, vec3_t *normal )
 
 	for( i = 0; i < nbTestDir; i++ )
 	{
-		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[0] * 0.015f );
-		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[1] * 0.015f );
-		dir[2] = pml.origin[2] + pm->maxs[2];
+		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[0]*pml.frametime );
+		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[1]*pml.frametime );
+		dir[2] = pml.origin[2];
 
 		for( j = 0; j < 2; j++ )
 		{
@@ -188,7 +188,7 @@ static void PlayerTouchWall( int nbTestDir, float maxZnormal, vec3_t *normal )
 
 		if( trace.fraction > 0 )
 		{
-			if( dist > trace.fraction && abs( trace.plane.normal[2] ) < maxZnormal )
+			if( dist > trace.fraction && fabs( trace.plane.normal[2] ) < maxZnormal )
 			{
 				dist = trace.fraction;
 				VectorCopy( trace.plane.normal, *normal );
