@@ -940,11 +940,6 @@ void CG_Event_Die( entity_state_t *state, int parm )
 		CG_PModel_AddAnimation( state->number, BOTH_DEATH3, BOTH_DEATH3, ANIM_NONE, EVENT_CHANNEL );
 		break;
 	}
-
-  //racesow - lm: filter out other players
-  if( ISVIEWERENTITY( state->number ))
-      CG_ClearJumpspeed();
-  //!racesow
 }
 
 /*
@@ -1363,8 +1358,6 @@ void CG_EntityEvent( entity_state_t *ent, int ev, int parm, qboolean predicted )
 			CG_ResetKickAngles();
 			CG_ResetColorBlend();
 			CG_ResetDamageIndicator();
-
-      CG_ClearJumpspeed(); //racesow - lm: filter out other players
 		}
 		// fallthrough
 	case EV_PLAYER_TELEPORT_IN:

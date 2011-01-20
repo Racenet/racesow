@@ -326,10 +326,6 @@ void CG_ScreenInit( void )
 	trap_Cmd_AddCommand( "sizedown", CG_SizeDown_f );
 	trap_Cmd_AddCommand( "help_hud", Cmd_CG_PrintHudHelp_f );
 
-  //racesow - lm:race mod
-  CG_ClearJumpspeed();
-  //racesow
-
 	// random background image, note that this has to be in sync with UI module,
 	// so the order of Q_rand calls matters
 	backgroundNum = Q_rand( &cg.sharedSeed ) % UI_SHADER_MAX_BACKGROUNDS;

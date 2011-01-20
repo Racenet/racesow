@@ -408,15 +408,7 @@ char race_checkpoints[15][RACE_CP_LENGTH];		//cG^ said: no map with more than 15
 qboolean race_started = qfalse;
 int cur_check = 0;
 
-int race_jump_speeds[30] = {-1};
-int cur_jump = 0;
 int race_jump = 0;
-
-void CG_RaceInsertjump( int num )
-{
-	race_jump_speeds[cur_jump++] = num;
-	if( cur_jump >= 30 ) cur_jump = 0;
-}
 
 static int CG_GetCheckPoint( void* parameter )
 {
@@ -431,8 +423,6 @@ static int CG_GetCheckPoint( void* parameter )
 			} else if( cg.predictedPlayerState.stats[STAT_TIME_SELF] != STAT_NOTSET && race_started ) {
 				race_started = qfalse;
 				cur_check = 0;
-				memset( race_jump_speeds, -1, sizeof(race_jump_speeds) );
-				cur_jump = 0;
 			}
 			if( iNum < cur_check )
 				return iNum;
@@ -558,17 +548,6 @@ qboolean CG_IsBounce()
 void CG_AddJumpspeed( void )
 {
 	race_jump = CG_GetSpeed( 0 );
-	CG_RaceInsertjump( race_jump );
-}
-
-void CG_ClearJumpspeed( void )
-{
-	int n;
-	for ( n = 0; n < 30 ; n++)
-	{
-		race_jump_speeds[n] = -1;
-	}
-	cur_jump = 0;
 }
 
 void CG_RaceAddCheckpoint( char* msg )
