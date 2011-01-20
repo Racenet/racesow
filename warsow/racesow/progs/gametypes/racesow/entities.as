@@ -633,7 +633,6 @@ void replacementItem_touch( cEntity @ent, cEntity @other )
 	        healthAmount = 200;
 	        break;
 	    }
-	    G_Print( healthAmount + " " + other.health + "\n" );
         if( other.health >= 100 && healthAmount <= 100 ) 
             return;
         if( other.health >= 200 && healthAmount <= 200 ) 
