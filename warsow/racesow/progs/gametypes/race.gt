@@ -14,6 +14,7 @@ legacy/quake3_ctf.as;
 racesow/main.as;
 racesow/helpers.as;
 racesow/entities.as;
+racesow/entities/accuracy.as;
 racesow/entities/fastcap.as;
 racesow/entities/race.as;
 racesow/adapter/abstract.as;
