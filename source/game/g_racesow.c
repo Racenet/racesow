@@ -2932,7 +2932,8 @@ static void RS_Irc_ConnectedListener_f( void *connected )
 
 void RS_ircSendMessage( const char *name,  const char *text )
 {
-    trap_Cmd_ExecuteText( EXEC_APPEND, va( "irc_chanmsg %s%s%s: %s\n", S_COLOR_WHITE, name , S_COLOR_BLACK , text) );
+    if( ircConnected )
+        trap_Cmd_ExecuteText( EXEC_APPEND, va( "irc_chanmsg %s: %s\n", name , text ) );
 }
 
 void RS_ircPrint( const char *format, ... )

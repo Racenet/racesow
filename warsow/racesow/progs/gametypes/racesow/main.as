@@ -378,7 +378,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		else if ( score_event == "connect" )
 		{
 			player.reset();
-			RS_ircSendMessage( player.getName() + S_COLOR_BLACK + " connected" );
+			RS_ircSendMessage( player.getName().removeColorTokens() + " connected" );
 		}
 		else if ( score_event == "enterGame" )
 		{
@@ -387,13 +387,13 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
             player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.getString()));
 
             player.appear();
-            RS_ircSendMessage( player.getName() + S_COLOR_BLACK + " entered the game" );
+            RS_ircSendMessage( player.getName().removeColorTokens() + " entered the game" );
 		}
 		else if ( score_event == "disconnect" )
 		{
 			player.disappear(player.getName(), true);
 			player.reset();
-			RS_ircSendMessage( player.getName() + S_COLOR_BLACK + " disconnected" );
+			RS_ircSendMessage( player.getName().removeColorTokens() + S_COLOR_BLACK + " disconnected" );
 		}
 		else if ( score_event == "userinfochanged" )
 		{
@@ -413,7 +413,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 				}
 			}
             if( args.removeColorTokens() != player.getName().removeColorTokens() && client.state() >= CS_SPAWNED )
-                RS_ircSendMessage( args + S_COLOR_BLACK + " is now known as " + player.getName() );
+                RS_ircSendMessage( args.removeColorTokens() + " is now known as " + player.getName().removeColorTokens() );
 		}
 	}
 	racesowGametype.scoreEvent( @client, score_event, args );

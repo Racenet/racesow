@@ -45,16 +45,16 @@ typedef struct irc_chat_history_node_s {
 #ifdef _WIN32
 #	pragma warning (disable : 4125)		// decimal digit terminates octal escape sequence
 #endif
-#define IRC_COLOR_WHITE		"\00315"//racesow: better visibility
-#define IRC_COLOR_BLACK		"\00301"
-#define IRC_COLOR_RED		"\00304"
-#define IRC_COLOR_ORANGE	"\00307"
-#define IRC_COLOR_YELLOW	"\00308"
-#define IRC_COLOR_GREEN		"\00309"
-#define IRC_COLOR_CYAN		"\00311"
-#define IRC_COLOR_BLUE		"\00312"
-#define IRC_COLOR_MAGENTA	"\00313"
-#define IRC_COLOR_GREY		"\00314"
+#define IRC_COLOR_WHITE     "\00300"
+#define IRC_COLOR_BLACK     "\00301"
+#define IRC_COLOR_RED       "\00304"
+#define IRC_COLOR_ORANGE    "\00307"
+#define IRC_COLOR_YELLOW    "\00308"
+#define IRC_COLOR_GREEN     "\00309"
+#define IRC_COLOR_CYAN      "\00311"
+#define IRC_COLOR_BLUE      "\00312"
+#define IRC_COLOR_MAGENTA   "\00313"
+#define IRC_COLOR_GREY      "\00314"
 
 typedef enum irc_color_filter_e {
 	IRC_COLOR_NONE,

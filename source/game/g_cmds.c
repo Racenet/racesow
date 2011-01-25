@@ -707,8 +707,9 @@ void Cmd_Say_f( edict_t *ent, qboolean arg0, qboolean checkflood )
 		text[150] = 0;
 
 	G_ChatMsg( NULL, ent, qfalse, "%s", text );
-	if( ircConnected )
-	    RS_ircSendMessage( ent->r.client->netname,  text );//racesow
+
+    RS_ircSendMessage( va( "%s", COM_RemoveColorTokens(( ent->r.client->netname ) )),
+            va( "%s", COM_RemoveColorTokens(( text)) ) );//racesow
 
 }
 
