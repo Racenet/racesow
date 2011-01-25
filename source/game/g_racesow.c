@@ -377,7 +377,7 @@ qboolean RS_MysqlError( void )
     int errNo = mysql_errno(&mysql);
     if (errNo != 0) {
 
-        printf("MySQL ERROR2: %s (%d)\n", mysql_error(&mysql), errNo);
+        G_Printf("%sMySQL ERROR: %s (%d)\n", S_COLOR_RED, mysql_error(&mysql), errNo);
 
         if (errNo == CR_SERVER_GONE_ERROR || errNo == CR_SERVER_LOST)
         {
@@ -452,7 +452,7 @@ void RS_PushCallbackQueue(int command, int arg1, int arg2, int arg3, int arg4, i
 		callback_queue_size++;
 	}
 	else
-		printf("Error: callback queue overflow\n");
+		G_Printf("Error: callback queue overflow\n");
 	pthread_mutex_unlock(&mutex_callback);
 }
 
@@ -501,7 +501,7 @@ qboolean RS_MysqlLoadMap()
 	int returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadMap_Thread, NULL);
 	if (returnCode) {
 
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
 
@@ -605,7 +605,7 @@ qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsig
 
 	if (returnCode) {
 
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
 
@@ -928,7 +928,7 @@ qboolean RS_MysqlPlayerAppear( char *name, int playerNum, int player_id, int map
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlPlayerAppear_Thread, (void *)playerData);
 	if (returnCode) {
 
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
 
@@ -1347,7 +1347,7 @@ qboolean RS_MysqlPlayerDisappear( char *name, int playtime, int overall_tries, i
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlPlayerDisappear_Thread, (void *)playtimeData);
 	if (returnCode) {
 
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
 
@@ -1443,7 +1443,7 @@ qboolean RS_GetPlayerNick( int playerNum, int player_id )
 
     if (returnCode) {
 
-        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
     }
 
@@ -1520,7 +1520,7 @@ qboolean RS_UpdatePlayerNick( char *name, int playerNum, int player_id )
 
     if (returnCode) {
 
-        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
     }
 
@@ -1630,7 +1630,7 @@ qboolean RS_MapFilter(int playerNum, char *filter, unsigned int page )
 
     if (returnCode) {
 
-        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
     }
 
@@ -1766,7 +1766,7 @@ qboolean RS_LoadStats(int playerNum, char *what, char *which)
 
     if (returnCode) {
 
-        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
     }
 
@@ -2018,7 +2018,7 @@ qboolean RS_Maplist(int playerNum, unsigned int page)
 
     if (returnCode) {
 
-        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
     }
 
@@ -2114,7 +2114,7 @@ qboolean RS_MysqlLoadHighscores( int playerNum, int  limit, int map_id, char *ma
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadHighscores_Thread, (void *)highscoresData);
 	if (returnCode) {
 
-		printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
 		return qfalse;
 	}
 
@@ -2344,7 +2344,7 @@ qboolean RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, char *on
 
     if (returnCode) {
 
-        printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+        G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
         return qfalse;
     }
 
