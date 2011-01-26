@@ -103,7 +103,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			cString vote = argsString.getToken( 0 );
 			if( vote == "mute" || vote == "vmute" ||
 					vote == "kickban" || vote == "kick" || vote == "remove" ||
-          vote == "joinlock" || vote == "unjoinlock" )    //Jerm's
+          vote == "joinlock" || vote == "joinunlock" )    //Jerm's
 			{
 				Racesow_Player @victimPlayer;
 				cString victim = argsString.getToken( 1 );
@@ -191,7 +191,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		}
 		
 		//Jerm's Begin
-		if ( vote == "joinlock" || vote == "unjoinlock" )
+		if ( vote == "joinlock" || vote == "joinunlock" )
     {
       if( argc != 2 )
     	{
@@ -215,7 +215,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         else if ( Racesow_GetClientNumber( argsString.getToken( 1 ) ) != -1 )
             @target = @G_GetClient( Racesow_GetClientNumber( argsString.getToken( 1 ) ) );
  
-        if ( target is null || !target.getEnt().inuse )
+        if ( @target == null || !target.getEnt().inuse )
         {
             client.printMessage( S_COLOR_RED + "Invalid player\n" );
             return false;
@@ -271,7 +271,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			}
 
       //Jerm's Begin
-      if ( vote == "joinlock" || vote == "unjoinlock" )
+      if ( vote == "joinlock" || vote == "joinunlock" )
   		{
       	Racesow_Player@ target = null;
    
@@ -448,7 +448,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		{
 			player.disappear(player.getName(), true);
 			player.reset();
-			RS_ircSendMessage( player.getName().removeColorTokens() + " disconnected" ); //Jerm's
+			RS_ircSendMessage( player.getName().removeColorTokens() + " disconnected" );
 		}
 		else if ( score_event == "userinfochanged" )
 		{
@@ -911,7 +911,7 @@ void GT_InitGametype()
 	G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
   //Jerm's Begin
   G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
-  G_RegisterCallvote( "unjoinlock", "<id or name>", "Allow the player to join the game." );
+  G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
   //Jerm's End
 
     demoRecording = false;
@@ -939,3 +939,4 @@ void GT_InitGametype()
 	racesowGametype.InitGametype();
     G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
 }
+

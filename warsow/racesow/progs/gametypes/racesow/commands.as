@@ -586,7 +586,7 @@ class Command_Privsay : Racesow_Command
             @target = @G_GetClient( Racesow_GetClientNumber( args.getToken( 0 ) ) );
         }
 
-        if ( target is null || !target.getEnt().inuse ) //Jerm's
+        if ( @target == null || !target.getEnt().inuse ) //Jerm's
         {
             player.sendErrorMessage("Invalid player");
             return false;
