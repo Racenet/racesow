@@ -102,7 +102,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		{
 			cString vote = argsString.getToken( 0 );
 			if( vote == "mute" || vote == "vmute" ||
-					vote == "kickban" || vote == "kick" || vote == "remove" )
+					vote == "kickban" || vote == "kick" || vote == "remove" ||
+          vote == "joinlock" || vote == "unjoinlock" )    //Jerm's
 			{
 				Racesow_Player @victimPlayer;
 				cString victim = argsString.getToken( 1 );
@@ -188,6 +189,42 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 			return true;
 		}
+		
+		//Jerm's Begin
+		if ( vote == "joinlock" || vote == "unjoinlock" )
+    {
+      if( argc != 2 )
+    	{
+        client.printMessage( "Usage: callvote " + vote + " <id or name>\n" );
+    		client.printMessage( "- List of current players:\n" );
+    		
+    		for ( int i = 0; i < maxClients; i++ )
+    		{
+    		  if ( @players[i].getClient() != null )
+            client.printMessage( "  " + players[i].getClient().playerNum() + ": " + players[i].getClient().getName() + "\n");
+        }
+        
+       	return false;
+    	}
+      else
+    	{
+    	  cClient@ target = null;
+ 
+        if ( argsString.getToken( 1 ).isNumerical() && argsString.getToken( 1 ).toInt() <= maxClients )
+            @target = @G_GetClient( argsString.getToken( 1 ).toInt() );
+        else if ( Racesow_GetClientNumber( argsString.getToken( 1 ) ) != -1 )
+            @target = @G_GetClient( Racesow_GetClientNumber( argsString.getToken( 1 ) ) );
+ 
+        if ( target is null || !target.getEnt().inuse )
+        {
+            client.printMessage( S_COLOR_RED + "Invalid player\n" );
+            return false;
+        }
+      }
+
+			return true;
+		}
+		//Jerm's End
 
 		client.printMessage( "Unknown callvote " + vote + "\n" );
 		return false;
@@ -233,6 +270,24 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 			}
 
+      //Jerm's Begin
+      if ( vote == "joinlock" || vote == "unjoinlock" )
+  		{
+      	Racesow_Player@ target = null;
+   
+        if ( argsString.getToken( 1 ).isNumerical() && argsString.getToken( 1 ).toInt() <= maxClients )
+          @target = @Racesow_GetPlayerByNumber( argsString.getToken( 1 ).toInt() );
+        else if ( Racesow_GetClientNumber( argsString.getToken( 1 ) ) != -1 )
+          @target = @Racesow_GetPlayerByNumber( Racesow_GetClientNumber( argsString.getToken( 1 ) ) );
+        
+        if ( vote == "joinlock" )
+          target.isJoinlocked = true;
+        else
+          target.isJoinlocked = false;
+          
+        return true;
+  		}
+  		//Jerm's End
 
             return true;
     }
@@ -393,7 +448,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		{
 			player.disappear(player.getName(), true);
 			player.reset();
-			RS_ircSendMessage( player.getName().removeColorTokens() + S_COLOR_BLACK + " disconnected" );
+			RS_ircSendMessage( player.getName().removeColorTokens() + " disconnected" ); //Jerm's
 		}
 		else if ( score_event == "userinfochanged" )
 		{
@@ -759,10 +814,10 @@ void GT_InitGametype()
     gametype.setVersion( "0.6.0" );
     gametype.setAuthor( "warsow-race.net" );
     
-    if ( !(g_freestyle.getBool()) )
-        @racesowGametype = @Racesow_Gametype_Race();
-    else
-        @racesowGametype = @Racesow_Gametype_Freestyle();
+      if ( !(g_freestyle.getBool()) )
+          @racesowGametype = @Racesow_Gametype_Race();
+      else
+          @racesowGametype = @Racesow_Gametype_Freestyle();
 
 	// initalize weapondef config
 	weaponDefInit();
@@ -833,7 +888,7 @@ void GT_InitGametype()
     gametype.infiniteAmmo = true;
     gametype.canForceModels = true;
     gametype.canShowMinimap = false;
-	gametype.teamOnlyMinimap = true;
+  	gametype.teamOnlyMinimap = true;
 
     // set spawnsystem type
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
@@ -854,7 +909,10 @@ void GT_InitGametype()
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
 	G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
 	G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
-
+  //Jerm's Begin
+  G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
+  G_RegisterCallvote( "unjoinlock", "<id or name>", "Allow the player to join the game." );
+  //Jerm's End
 
     demoRecording = false;
 
