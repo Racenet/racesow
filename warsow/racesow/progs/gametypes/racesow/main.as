@@ -31,6 +31,7 @@ cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 cVar rs_loadPlayerCheckpoints( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE );
 cVar rs_allowAutoHop( "rs_allowAutoHop", "1", CVAR_ARCHIVE );
+cVar rs_gametype( "rs_gametype", "race", CVAR_ARCHIVE );
 
 cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_ARCHIVE|CVAR_NOSET );
@@ -103,7 +104,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			cString vote = argsString.getToken( 0 );
 			if( vote == "mute" || vote == "vmute" ||
 					vote == "kickban" || vote == "kick" || vote == "remove" ||
-          vote == "joinlock" || vote == "joinunlock" )    //Jerm's
+          vote == "joinlock" || vote == "joinunlock" )
 			{
 				Racesow_Player @victimPlayer;
 				cString victim = argsString.getToken( 1 );
@@ -190,7 +191,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			return true;
 		}
 		
-		//Jerm's Begin
 		if ( vote == "joinlock" || vote == "joinunlock" )
     {
       if( argc != 2 )
@@ -224,7 +224,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 			return true;
 		}
-		//Jerm's End
 
 		client.printMessage( "Unknown callvote " + vote + "\n" );
 		return false;
@@ -270,7 +269,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 			}
 
-      //Jerm's Begin
       if ( vote == "joinlock" || vote == "joinunlock" )
   		{
       	Racesow_Player@ target = null;
@@ -287,7 +285,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
           
         return true;
   		}
-  		//Jerm's End
 
             return true;
     }
@@ -909,10 +906,8 @@ void GT_InitGametype()
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
 	G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
 	G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
-  //Jerm's Begin
   G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
   G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
-  //Jerm's End
 
     demoRecording = false;
 

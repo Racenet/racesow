@@ -5,6 +5,16 @@
 const int MAX_COMMANDS = 50;
 
 /**
+ * MODFLAG, used to determine in which gametype a command is registered
+ */
+const int MODFLAG_RACE = 1;
+const int MODFLAG_FREESTYLE = 2;
+const int MODFLAG_FASTCAP = 4;
+const int MODFLAG_DRACE = 8;
+const int MODFLAG_DURACE = 16;
+const int MODFLAG_ALL = 31;
+
+/**
  * Container for all the commands, filled in RS_CreateCommands
  */
 Racesow_Command@[] commands(MAX_COMMANDS);
@@ -42,15 +52,10 @@ class Racesow_Command
     cString usage;
 
     /**
-     * Should the command only be available in freestyle ?
+     * In which mode should the command only be available ?
      */
-    bool freestyleOnly;
-
-    /**
-     * Should the command only be available in race ?
-     */
-    bool raceOnly;
-	
+    int modFlag;
+    
 	/**
 	 * Should the command be available in practice mode ?
 	 */
@@ -61,9 +66,7 @@ class Racesow_Command
      */
     Racesow_Command()
     {
-        this.raceOnly = false;
-        this.freestyleOnly = false;
-		this.practiceEnabled = false;
+		    this.modFlag = MODFLAG_ALL ;
     }
 
     /**
@@ -492,11 +495,6 @@ class Command_Help : Racesow_Command
             for (int i = 0; i < commandCount; i++)
             {
                 Racesow_Command@ command = commands[i];
-                if ( command.raceOnly and g_freestyle.getBool() )
-                    continue;
-
-                if ( command.freestyleOnly and not g_freestyle.getBool() )
-                    continue;
 
                 help += command.getDescription();
                 if ( (i/5)*5 == i ) //to avoid print buffer overflow
@@ -586,7 +584,7 @@ class Command_Privsay : Racesow_Command
             @target = @G_GetClient( Racesow_GetClientNumber( args.getToken( 0 ) ) );
         }
 
-        if ( @target == null || !target.getEnt().inuse ) //Jerm's
+        if ( @target == null || !target.getEnt().inuse )
         {
             player.sendErrorMessage("Invalid player");
             return false;
@@ -849,6 +847,55 @@ class Command_Practicemode : Racesow_Command
 	}
 }
 
+class Command_Topscore : Racesow_Command
+{
+	bool validate( Racesow_Player @player, cString &args, int argc )
+	{
+	  cClient @cli;
+	  
+		if( argc > 1 )
+  	{
+  		G_PrintMsg( player.client.getEnt(), "Usage: topscore <id or name>\n" );
+  		G_PrintMsg( player.client.getEnt(), "- List of current players:\n" );
+  		
+  		for ( int i = 0; i < maxClients; i++ )
+      {
+        @cli = @G_GetClient( i );
+        
+        if ( @cli.getEnt() != null )
+        {
+          if ( cli.getEnt().inuse )
+            G_PrintMsg( player.client.getEnt(), "  " + cli.playerNum() + ": " + cli.getName() + "\n");
+        }
+      }
+  		
+  		return false;
+  	}
+  	
+  	return true;
+	}
+	bool execute( Racesow_Player @player, cString &args, int argc )
+	{
+	  cClient @cli;
+	  
+	  if( argc == 1 )
+  	{
+  		@cli = Racesow_GetClientByString( args );
+  		if( @cli == null )
+  		{
+  			G_PrintMsg( player.client.getEnt(), S_COLOR_RED + "No such player\n" );
+  			return false;
+  		}
+  	}
+  	
+  	if ( argc == 0 )
+  	    @cli = player.client;
+  	    
+		//DURACE_WritePlayerBestTime( player.client, cli );
+    return true;
+	}
+}
+
 /**
  * Fill the commands array and set the command counter to the correct value
  */
@@ -886,7 +933,7 @@ void RS_CreateCommands()
     chrono.name = "chrono";
     chrono.description = "Chrono for tricks timing";
     chrono.usage = "chrono <start/reset>";
-    chrono.freestyleOnly = true;
+    chrono.modFlag = MODFLAG_FREESTYLE;
     @commands[commandCount] = @chrono;
     commandCount++;
 
@@ -975,11 +1022,11 @@ void RS_CreateCommands()
     @commands[commandCount] = @nextmap;
     commandCount++;
 	
-	Command_Oneliner oneliner;
+	  Command_Oneliner oneliner;
     oneliner.name = "oneliner";
     oneliner.description = "Set a one-line message that is displayed right next to your top time";
     oneliner.usage = "";
-	oneliner.raceOnly = true;
+	  oneliner.modFlag = MODFLAG_RACE;
     @commands[commandCount] = @oneliner;
     commandCount++;
 
@@ -993,8 +1040,8 @@ void RS_CreateCommands()
             + "position store <id> <name> - Store a position for another session\n"
             + "position restore <id> - Restore a stored position from another session\n"
             + "position storedlist <limit> - Sends you a list of your stored positions\n";
-	position.freestyleOnly = true;
-	position.practiceEnabled = true;
+	  position.modFlag = MODFLAG_FREESTYLE;
+	  position.practiceEnabled = true;
     @commands[commandCount] = @position;
     commandCount++;
 
@@ -1016,7 +1063,7 @@ void RS_CreateCommands()
     quad.name = "quad";
     quad.description = "Activate or desactivate the quad for weapons";
     quad.usage = "";
-    quad.freestyleOnly = true;
+    quad.modFlag = MODFLAG_FREESTYLE;
     @commands[commandCount] = @quad;
     commandCount++;
 	
@@ -1024,8 +1071,8 @@ void RS_CreateCommands()
     noclip.name = "noclip";
     noclip.description = "Disable your interaction with other players and objects";
     noclip.usage = "";
-    noclip.freestyleOnly = true;
-	noclip.practiceEnabled = true;
+    noclip.modFlag = MODFLAG_FREESTYLE;
+	  noclip.practiceEnabled = true;
     @commands[commandCount] = @noclip;
     commandCount++;
 	
@@ -1057,7 +1104,7 @@ void RS_CreateCommands()
     timeleft.name = "timeleft";
     timeleft.description = "Print remaining time before map change";
     timeleft.usage = "";
-    timeleft.raceOnly = true;
+    timeleft.modFlag = MODFLAG_RACE;
     @commands[commandCount] = @timeleft;
     commandCount++;
 
@@ -1072,17 +1119,25 @@ void RS_CreateCommands()
     top.name = "top";
     top.description = "Print the best times of a given map (default: current map)";
     top.usage = "top <pj/nopj> <limit(3-30)> <mapname>";
-    top.raceOnly = true;
+    top.modFlag = MODFLAG_RACE;
     @commands[commandCount] = @top;
     commandCount++;
 	
-	Command_Practicemode practicemode;
-	practicemode.name = "practicemode";
-	practicemode.description = "Enable or disable practicemode";
-	practicemode.usage = "practicemode\nAllows usage of the position and noclip commands";
-	practicemode.raceOnly = true;
-	@commands[commandCount] = @practicemode;
-	commandCount++;
+	  Command_Practicemode practicemode;
+	  practicemode.name = "practicemode";
+	  practicemode.description = "Enable or disable practicemode";
+	  practicemode.usage = "practicemode\nAllows usage of the position and noclip commands";
+	  practicemode.modFlag = MODFLAG_RACE;
+	  @commands[commandCount] = @practicemode;
+	  commandCount++;
+	  
+	  Command_Topscore topscore;
+	  topscore.name = "topscore";
+	  topscore.description = "Displays the top scores of the current map and the given player";
+	  topscore.usage = "topscore <id or name>\n";
+	  topscore.modFlag = MODFLAG_DRACE | MODFLAG_DURACE;
+	  @commands[commandCount] = @topscore;
+	  commandCount++;
 }
 
 /*
@@ -1094,12 +1149,9 @@ void RS_InitCommands()
 
     for (int i = 0; i < commandCount; i++)
     {
-        if ( commands[i].raceOnly and g_freestyle.getBool() )
-            continue;
-
-        if ( commands[i].freestyleOnly and not commands[i].practiceEnabled and not g_freestyle.getBool() )
-            continue;
-
+        if ( ( commands[i].modFlag & RS_GetModFlagByName( rs_gametype.getString() ) ) == 0 )
+            continue ;
+        
         G_RegisterCommand( commands[i].name );
     }
 }
@@ -1119,4 +1171,26 @@ Racesow_Command@ RS_GetCommandByName(cString name)
     }
 
     return null;
+}
+
+/**
+ * Find a modflag value by the gametype name
+ *
+ * @param name The name of the gametype you are looking for
+ * @return int the modflag value, -1 if not found
+ */
+int RS_GetModFlagByName(cString name)
+{
+    if ( name == "race" )
+        return MODFLAG_RACE;
+    if ( name == "freestyle" )
+        return MODFLAG_FREESTYLE;
+    if ( name == "fastcap" )
+        return MODFLAG_FASTCAP;
+    if ( name == "drace" )
+        return MODFLAG_DRACE;
+    if ( name == "durace" )
+        return MODFLAG_DURACE;
+    
+    return MODFLAG_ALL;
 }
