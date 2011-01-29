@@ -544,7 +544,7 @@ class Racesow_Player
 		if ( this.isRacing() )
             return;
 
-		if ( g_freestyle.getBool() )
+		if ( gametypeFlag == MODFLAG_FREESTYLE )
 			return;
 		
 		if ( this.practicing )

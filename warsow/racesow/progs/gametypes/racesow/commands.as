@@ -642,7 +642,7 @@ class Command_Position : Racesow_Command
 {
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
-		if ( !player.practicing && !g_freestyle.getBool() )
+		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
 			return false;
 			
 		return true;
@@ -704,7 +704,7 @@ class Command_Noclip : Racesow_Command
             player.sendErrorMessage("Noclip is not available in your current state");
             return false;
         }
-		if( !player.practicing && !g_freestyle.getBool() )
+        if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
 			return false;
 
         return true;
@@ -848,7 +848,7 @@ class Command_Practicemode : Racesow_Command
 }
 
 class Command_Topscore : Racesow_Command
-{
+{/*
 	bool validate( Racesow_Player @player, cString &args, int argc )
 	{
 	  cClient @cli;
@@ -893,7 +893,7 @@ class Command_Topscore : Racesow_Command
   	    
 		//DURACE_WritePlayerBestTime( player.client, cli );
     return true;
-	}
+	}*/
 }
 
 /**
@@ -977,6 +977,7 @@ void RS_CreateCommands()
     racerestart.name = "racerestart";
     racerestart.description = "Go back to the start area whenever you want";
     racerestart.usage = "";
+    racerestart.modFlag = MODFLAG_RACE | MODFLAG_FASTCAP;
     @commands[commandCount] = @racerestart;
     commandCount++;
 
@@ -1040,8 +1041,8 @@ void RS_CreateCommands()
             + "position store <id> <name> - Store a position for another session\n"
             + "position restore <id> - Restore a stored position from another session\n"
             + "position storedlist <limit> - Sends you a list of your stored positions\n";
-	  position.modFlag = MODFLAG_FREESTYLE;
-	  position.practiceEnabled = true;
+    position.modFlag = MODFLAG_FREESTYLE |MODFLAG_RACE;
+    position.practiceEnabled = true;
     @commands[commandCount] = @position;
     commandCount++;
 
@@ -1071,8 +1072,8 @@ void RS_CreateCommands()
     noclip.name = "noclip";
     noclip.description = "Disable your interaction with other players and objects";
     noclip.usage = "";
-    noclip.modFlag = MODFLAG_FREESTYLE;
-	  noclip.practiceEnabled = true;
+    noclip.modFlag = MODFLAG_FREESTYLE | MODFLAG_RACE;
+    noclip.practiceEnabled = true;
     @commands[commandCount] = @noclip;
     commandCount++;
 	
@@ -1080,6 +1081,7 @@ void RS_CreateCommands()
     machinegun.name = "machinegun";
     machinegun.description = "Gives you a machinegun";
     machinegun.usage = "";
+    machinegun.modFlag = MODFLAG_RACE;
     @commands[commandCount] = @machinegun;
     commandCount++;
 
@@ -1123,21 +1125,21 @@ void RS_CreateCommands()
     @commands[commandCount] = @top;
     commandCount++;
 	
-	  Command_Practicemode practicemode;
-	  practicemode.name = "practicemode";
-	  practicemode.description = "Enable or disable practicemode";
-	  practicemode.usage = "practicemode\nAllows usage of the position and noclip commands";
-	  practicemode.modFlag = MODFLAG_RACE;
-	  @commands[commandCount] = @practicemode;
-	  commandCount++;
+    Command_Practicemode practicemode;
+    practicemode.name = "practicemode";
+    practicemode.description = "Enable or disable practicemode";
+    practicemode.usage = "practicemode\nAllows usage of the position and noclip commands";
+    practicemode.modFlag = MODFLAG_RACE;
+    @commands[commandCount] = @practicemode;
+    commandCount++;
 	  
-	  Command_Topscore topscore;
-	  topscore.name = "topscore";
-	  topscore.description = "Displays the top scores of the current map and the given player";
-	  topscore.usage = "topscore <id or name>\n";
-	  topscore.modFlag = MODFLAG_DRACE | MODFLAG_DURACE;
-	  @commands[commandCount] = @topscore;
-	  commandCount++;
+    Command_Topscore topscore;
+    topscore.name = "topscore";
+    topscore.description = "Displays the top scores of the current map and the given player";
+    topscore.usage = "topscore <id or name>\n";
+    topscore.modFlag = MODFLAG_DRACE | MODFLAG_DURACE;
+    @commands[commandCount] = @topscore;
+    commandCount++;
 }
 
 /*
@@ -1149,9 +1151,9 @@ void RS_InitCommands()
 
     for (int i = 0; i < commandCount; i++)
     {
-        if ( ( commands[i].modFlag & RS_GetModFlagByName( rs_gametype.getString() ) ) == 0 )
-            continue ;
-        
+        if ( commands[i].modFlag & gametypeFlag == 0 )
+            continue;
+
         G_RegisterCommand( commands[i].name );
     }
 }
@@ -1171,26 +1173,4 @@ Racesow_Command@ RS_GetCommandByName(cString name)
     }
 
     return null;
-}
-
-/**
- * Find a modflag value by the gametype name
- *
- * @param name The name of the gametype you are looking for
- * @return int the modflag value, -1 if not found
- */
-int RS_GetModFlagByName(cString name)
-{
-    if ( name == "race" )
-        return MODFLAG_RACE;
-    if ( name == "freestyle" )
-        return MODFLAG_FREESTYLE;
-    if ( name == "fastcap" )
-        return MODFLAG_FASTCAP;
-    if ( name == "drace" )
-        return MODFLAG_DRACE;
-    if ( name == "durace" )
-        return MODFLAG_DURACE;
-    
-    return MODFLAG_ALL;
 }

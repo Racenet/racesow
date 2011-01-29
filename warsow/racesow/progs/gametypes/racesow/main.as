@@ -21,6 +21,7 @@ Racesow_Map @map;
 Racesow_Adapter_Abstract @racesowAdapter;
 Racesow_Gametype @racesowGametype;
 
+int gametypeFlag = 0;
 int prcFlagIconStolen;
 
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET );
@@ -313,11 +314,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		}
 
     }
-
-	else if ( ( cmdString == "position" ) )
-	{
-		return player.position( argsString );
-	}
 
     return racesowGametype.Command( @client, @cmdString, @argsString, argc );
 }
@@ -810,11 +806,23 @@ void GT_InitGametype()
     gametype.setTitle( "Racesow" );
     gametype.setVersion( "0.6.0" );
     gametype.setAuthor( "warsow-race.net" );
-    
-      if ( !(g_freestyle.getBool()) )
-          @racesowGametype = @Racesow_Gametype_Race();
-      else
-          @racesowGametype = @Racesow_Gametype_Freestyle();
+
+    gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
+
+    switch (gametypeFlag)
+    {
+        case MODFLAG_RACE:
+            @racesowGametype = @Racesow_Gametype_Race();
+            break;
+
+        case MODFLAG_FREESTYLE:
+            @racesowGametype = @Racesow_Gametype_Freestyle();
+            break;
+
+        default:
+            @racesowGametype = @Racesow_Gametype_Race();
+            break;
+    }
 
 	// initalize weapondef config
 	weaponDefInit();
@@ -906,10 +914,10 @@ void GT_InitGametype()
 	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
 	G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
 	G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
-  G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
-  G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
+	G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
+	G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
 
-    demoRecording = false;
+	demoRecording = false;
 
 	if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
 	{
@@ -929,9 +937,8 @@ void GT_InitGametype()
 	oldTimelimit = g_timelimit.getInteger();
 
 	// load maps list (basic or mysql)
-	RS_LoadMapList( g_freestyle.getInteger() );
+	RS_LoadMapList( gametypeFlag & MODFLAG_FREESTYLE );
 
 	racesowGametype.InitGametype();
-    G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
+    G_Print( "Gametype '" + gametype.getTitle() + '/' + rs_gametype.getString() +"' initialized\n" );
 }
-

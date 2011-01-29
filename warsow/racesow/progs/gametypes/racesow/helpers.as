@@ -197,3 +197,26 @@ void RS_ircSendMessage( cString message )
         return;
     G_CmdExecute( "irc_chanmsg \"" + message + "\" \n");
 }
+
+/**
+ * Find a modflag value by the gametype name
+ *
+ * @param name The name of the gametype you are looking for
+ * @return int the modflag value, -1 if not found
+ */
+int RS_GetModFlagByName(cString name)
+{
+    if ( name == "race" )
+        return MODFLAG_RACE;
+    if ( name == "freestyle" )
+        return MODFLAG_FREESTYLE;
+    if ( name == "fastcap" )
+        return MODFLAG_FASTCAP;
+    if ( name == "drace" )
+        return MODFLAG_DRACE;
+    if ( name == "durace" )
+        return MODFLAG_DURACE;
+
+    G_Print("Gametype " + name + " doesn't exist. Check your config.\n");
+    return -1;
+}
