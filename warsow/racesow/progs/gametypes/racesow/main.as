@@ -23,6 +23,7 @@ Racesow_Gametype @racesowGametype;
 
 int gametypeFlag = 0;
 int prcFlagIconStolen;
+int prcYesIcon;
 
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET );
@@ -83,8 +84,14 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 	else if ( cmdString == "whoisgod" )
 	{
-	    cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo" };
-	    int index = brandom(0, 6);
+	    int index;
+	    cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
+	    
+	    if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE )
+	      index = brandom(0, 7);
+	    else
+	      index = brandom(0, 6);
+      
 	    player.sendMessage( devs[index] + "\n" );
 	}
 
@@ -225,7 +232,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 			return true;
 		}
-
+		
 		client.printMessage( "Unknown callvote " + vote + "\n" );
 		return false;
 	}
@@ -287,7 +294,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         return true;
   		}
 
-            return true;
+      return true;
     }
     /*
 	else if ( ( cmdString == "weapondef" ) )
@@ -482,30 +489,26 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
 	Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
 
-    if (new_team == TEAM_PLAYERS) {
+  if (new_team == TEAM_PLAYERS) {
 
-        if (map.inOvertime) {
-            player.client.team = TEAM_SPECTATOR;
-            player.client.respawn( true );
-            player.sendMessage(S_COLOR_RED + "No spawning in overtime. Please wait for the other players to finish.\n");
-            return;
-        }
-    }
+      if (map.inOvertime) {
+          player.client.team = TEAM_SPECTATOR;
+          player.client.respawn( true );
+          player.sendMessage(S_COLOR_RED + "No spawning in overtime. Please wait for the other players to finish.\n");
+          return;
+      }
+  }
 
-	if ( ent.isGhosting() )
-	    return;
+  racesowGametype.playerRespawn( @ent, old_team, new_team );
 
-	racesowGametype.playerRespawn( @ent, old_team, new_team );
-    // select rocket launcher if available
-    if ( ent.client.canSelectWeapon( WEAP_ROCKETLAUNCHER ) )
-        ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
-    else
-        ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
+  // select rocket launcher if available
+  if ( ent.client.canSelectWeapon( WEAP_ROCKETLAUNCHER ) )
+      ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
+  else
+      ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
 	// make dash 450
 	ent.client.setPMoveDashSpeed( 450 );
-
-    player.restartingRace();
 }
 
 /**
@@ -626,6 +629,7 @@ void GT_ThinkRules()
     	if( player.isUsingChrono )
     		client.setHUDStat( STAT_TIME_ALPHA, (levelTime - player.chronoTime()) / 100 );
     }
+    
     racesowGametype.ThinkRules();
     if( scoreboardUpdated )
         scoreboardUpdated = false; //custom scoreboard got updated
@@ -644,12 +648,6 @@ void GT_ThinkRules()
  */
 bool GT_MatchStateFinished( int incomingMatchState )
 {
-    if (incomingMatchState == MATCH_STATE_POSTMATCH)
-    {
-        map.startOvertime();
-        return map.allowEndGame();
-    }
-
     if ( match.getState() == MATCH_STATE_POSTMATCH ) // LOL this should not be in here ;)
     {
     	g_timelimit.set(oldTimelimit); //restore the old timelimit
@@ -670,28 +668,6 @@ bool GT_MatchStateFinished( int incomingMatchState )
  */
 void GT_MatchStateStarted()
 {
-    switch ( match.getState() )
-    {
-    case MATCH_STATE_WARMUP:
-        match.launchState( MATCH_STATE_PLAYTIME );
-        break;
-
-    case MATCH_STATE_COUNTDOWN:
-        break;
-
-    case MATCH_STATE_PLAYTIME:
-        map.setUpMatch();
-        break;
-
-    case MATCH_STATE_POSTMATCH:
-        gametype.pickableItemsMask = 0;
-        gametype.dropableItemsMask = 0;
-        GENERIC_SetUpEndMatch();
-        break;
-
-    default:
-        break;
-    }
     racesowGametype.MatchStateStarted();
 }
 
@@ -803,121 +779,101 @@ void GT_SpawnGametype()
  */
 void GT_InitGametype()
 {
-    gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.6.0" );
-    gametype.setAuthor( "warsow-race.net" );
+  gametype.setTitle( "Racesow" );
+  gametype.setVersion( "0.6.0" );
+  gametype.setAuthor( "warsow-race.net" );
 
-    gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
-
-    switch (gametypeFlag)
-    {
-        case MODFLAG_RACE:
-            @racesowGametype = @Racesow_Gametype_Race();
-            break;
-
-        case MODFLAG_FREESTYLE:
-            @racesowGametype = @Racesow_Gametype_Freestyle();
-            break;
-
-        default:
-            @racesowGametype = @Racesow_Gametype_Race();
-            break;
-    }
-
-	// initalize weapondef config
+  // initalize weapondef config
 	weaponDefInit();
+  
+  // if the gametype doesn't have a config file, create it
+  if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
+  {
+      cString config;
 
-    G_WriteFile( "configs/server/gametypes/race.cfg", "" );
+      // the config file doesn't exist or it's empty, create it
+      config = "//*\n"
+               + "//* Racesow Base settings\n"
+               + "//*\n"
+               + "// WARNING: if you touch any of theese settings\n"
+               + "// it can really have a very negative impact on\n"
+               + "// racesow's gameplay!\n"
+               + "\n"
+               + "set g_allow_falldamage \"0\" // suxx\n"
+               + "set g_allow_selfdamage \"0\" // meeeh\n"
+               + "set g_allow_stun \"0\" // LOL!\n"
+               + "set g_allow_bunny \"0\" // learn it!\n"
+               + "set g_antilag \"0\" // do NEVER touch!\n"
+               + "set rs_projectilePrestep \"24\" // is it used?\n"
+               + "set rs_movementStyle \"1\"\n"
+               + "set rs_gametype \"race\"\n"
+               + "\n"
+               + "exec configs/server/gametypes/racesow_weapondefs.cfg"
+               + "\n"
+			 + "echo racesow.cfg executed\n";
 
-    // if the gametype doesn't have a config file, create it
-    if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
-    {
-        cString config;
+      G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
+      G_Print( "Created default base config file for racesow\n" );
+  }
 
-        // the config file doesn't exist or it's empty, create it
-        config = "//*\n"
-                 + "//* Racesow Base settings\n"
-                 + "//*\n"
-                 + "// WARNING: if you touch any of theese settings\n"
-                 + "// it can really have a very negative impact on\n"
-                 + "// racesow's gameplay!\n"
-                 + "\n"
-                 + "set g_gametype \"race\"\n"
-                 + "set g_allow_falldamage \"0\" // suxx\n"
-                 + "set g_allow_selfdamage \"0\" // meeeh\n"
-                 + "set g_allow_stun \"0\" // LOL!\n"
-                 + "set g_allow_bunny \"0\" // learn it!\n"
-                 + "set g_antilag \"0\" // do NEVER touch!\n"
-                 + "set g_scorelimit \"0\" // a new feature..?\n"
-								 + "set g_warmup_timelimit \"0\" // ... \n"
-                 + "set rs_projectilePrestep \"24\" // is it used?\n"
-                 + "set rs_movementStyle \"1\"\n"
-                 + "\n"
-                 + "exec configs/server/gametypes/racesow_weapondefs.cfg"
-                 + "\n"
-				 + "echo racesow.cfg executed\n";
+  // always execute racesow.cfg
+  G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
 
-        G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
-        G_Print( "Created default base config file for racesow\n" );
-	}
+  gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
+  
+  gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
+  if ( gametype.isInstagib() )
+      gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
 
-	// always execute racesow.cfg
-    G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
+  gametype.respawnableItemsMask = gametype.spawnableItemsMask;
+  gametype.dropableItemsMask = 0;
+  gametype.pickableItemsMask = 0;
 
-    gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
-    if ( gametype.isInstagib() )
-        gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
+  gametype.isRace = true;
 
-    gametype.respawnableItemsMask = gametype.spawnableItemsMask;
-    gametype.dropableItemsMask = 0;
-    gametype.pickableItemsMask = 0;
+  gametype.ammoRespawn = 0;
+  gametype.armorRespawn = 0;
+  gametype.weaponRespawn = 0;
+  gametype.healthRespawn = 0;
+  gametype.powerupRespawn = 0;
+  gametype.megahealthRespawn = 0;
+  gametype.ultrahealthRespawn = 0;
 
-    gametype.isTeamBased = false;
-    gametype.isRace = true;
-    gametype.hasChallengersQueue = false;
-    gametype.maxPlayersPerTeam = 0;
-
-    gametype.ammoRespawn = 0;
-    gametype.armorRespawn = 0;
-    gametype.weaponRespawn = 0;
-    gametype.healthRespawn = 0;
-    gametype.powerupRespawn = 0;
-    gametype.megahealthRespawn = 0;
-    gametype.ultrahealthRespawn = 0;
-
-    gametype.readyAnnouncementEnabled = false;
-    gametype.scoreAnnouncementEnabled = false;
-    gametype.countdownEnabled = false;
-    gametype.mathAbortDisabled = true;
-    gametype.shootingDisabled = false;
-    gametype.infiniteAmmo = true;
-    gametype.canForceModels = true;
-    gametype.canShowMinimap = false;
-  	gametype.teamOnlyMinimap = true;
-
-    // set spawnsystem type
-    for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
-        gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
-
-	prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );	
+  gametype.readyAnnouncementEnabled = false;
+  gametype.scoreAnnouncementEnabled = false;
+  gametype.countdownEnabled = false;
+  gametype.mathAbortDisabled = true;
+  gametype.shootingDisabled = false;
+  gametype.infiniteAmmo = true;
+  gametype.canForceModels = true;
+  gametype.canShowMinimap = false;
+	gametype.teamOnlyMinimap = true;
 	
-    // add commands
-	RS_InitCommands();
-	
-	// weapondef not needed anymore, we're not testing weapons
-	//G_RegisterCommand( "weapondef" );
-	
+  // set spawnsystem type
+  for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
+      gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
+
+  // precache images that can be used by the scoreboard
+  prcYesIcon = G_ImageIndex( "gfx/hud/icons/vsay/yes" );
+  prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );
+
+  // add commands
+  RS_InitCommands();
+
+  // weapondef not needed anymore, we're not testing weapons
+  //G_RegisterCommand( "weapondef" );
+
 	G_RegisterCommand( "ammoswitch" );
-	G_RegisterCommand( "whoisgod" );
+  G_RegisterCommand( "whoisgod" );
 
-	//add callvotes
-	G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
-	G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
-	G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
+  //add callvotes
+  G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
+  G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
+  G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
 	G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
 	G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
 
-	demoRecording = false;
+  demoRecording = false;
 
 	if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
 	{
@@ -928,9 +884,6 @@ void GT_InitGametype()
 		G_Print( "* " + S_COLOR_GREEN + "MD5 hashing works fine...\n" );
 	}
 
-	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
-	g_warmup_timelimit.set("0"); //g_warmup_enabled was removed in warsow 0.6
-
 	g_self_knockback.forceSet("1.25"); // 1.18 in basewsw.6
 	
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
@@ -939,6 +892,29 @@ void GT_InitGametype()
 	// load maps list (basic or mysql)
 	RS_LoadMapList( gametypeFlag & MODFLAG_FREESTYLE );
 
+  switch (gametypeFlag)
+  {
+      case MODFLAG_DRACE:
+          @racesowGametype = @Racesow_Gametype_Drace();
+          break;
+        
+      case MODFLAG_DURACE:
+          @racesowGametype = @Racesow_Gametype_Durace();
+          break;
+          
+      case MODFLAG_RACE:
+          @racesowGametype = @Racesow_Gametype_Race();
+          break;
+
+      case MODFLAG_FREESTYLE:
+          @racesowGametype = @Racesow_Gametype_Freestyle();
+          break;
+
+       default:
+          @racesowGametype = @Racesow_Gametype_Race();
+          break;
+  }
+
 	racesowGametype.InitGametype();
-    G_Print( "Gametype '" + gametype.getTitle() + '/' + rs_gametype.getString() +"' initialized\n" );
 }
+

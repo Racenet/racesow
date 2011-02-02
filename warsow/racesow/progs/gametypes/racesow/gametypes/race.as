@@ -13,8 +13,38 @@ class Racesow_Gametype_Race : Racesow_Gametype
     
     void InitGametype()
     {
-        gametype.spawnpointRadius = 0;
-        G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %i 48 %l 48 %s 85" );
+      gametype.setTitle( "Race" );
+      
+      // if the gametype doesn't have a config file, create it
+      if ( !G_FileExists( "configs/server/gametypes/race.cfg" ) )
+      {
+          cString config;
+    
+          // the config file doesn't exist or it's empty, create it
+          config = "//*\n"
+                   + "//* Race settings\n"
+                   + "//*\n"
+                   + "set g_gametype \"race\"\n"
+                   + "set g_scorelimit \"0\" // a new feature..?\n"
+                   + "set g_warmup_timelimit \"0\" // ... \n"
+                   + "set rs_gametype \"race\"\n"
+                   + "\n"
+    			 + "echo race.cfg executed\n";
+    
+          G_WriteFile( "configs/server/gametypes/race.cfg", config );
+          G_Print( "Created default base config file for race\n" );
+          G_CmdExecute( "exec configs/server/gametypes/race.cfg silent" );
+      }
+   
+      gametype.isTeamBased = false;
+      gametype.hasChallengersQueue = false;
+      gametype.maxPlayersPerTeam = 0;
+      gametype.spawnpointRadius = 0;
+    
+    	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
+      g_warmup_timelimit.set("0"); //g_warmup_enabled was removed in warsow 0.6
+	
+      G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %i 48 %l 48 %s 85" );
 	    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Speed Ping State" );
     }
     
@@ -30,12 +60,38 @@ class Racesow_Gametype_Race : Racesow_Gametype
     
     bool MatchStateFinished( int incomingMatchState )
     {
+        if (incomingMatchState == MATCH_STATE_POSTMATCH)
+        {
+            map.startOvertime();
+            return map.allowEndGame();
+        }
         return true;
     }
     
     void MatchStateStarted()
     {
-        
+        switch ( match.getState() )
+        {
+        case MATCH_STATE_WARMUP:
+            match.launchState( MATCH_STATE_PLAYTIME );
+            break;
+    
+        case MATCH_STATE_COUNTDOWN:
+            break;
+    
+        case MATCH_STATE_PLAYTIME:
+            map.setUpMatch();
+            break;
+    
+        case MATCH_STATE_POSTMATCH:
+            gametype.pickableItemsMask = 0;
+            gametype.dropableItemsMask = 0;
+            GENERIC_SetUpEndMatch();
+            break;
+    
+        default:
+            break;
+        }
     }
     
     void ThinkRules()
@@ -76,6 +132,10 @@ class Racesow_Gametype_Race : Racesow_Gametype
     
     void playerRespawn( cEntity @ent, int old_team, int new_team )
     {
+        if ( ent.isGhosting() )
+	        return;
+	        
+        Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
         // set player movement to pass through other players and remove gunblade auto attacking
         ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
 
@@ -86,6 +146,8 @@ class Racesow_Gametype_Race : Racesow_Gametype
         }
         
         ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
+        
+        player.restartingRace();
     }
     
     void scoreEvent( cClient @client, cString &score_event, cString &args )

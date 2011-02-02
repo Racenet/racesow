@@ -566,7 +566,6 @@ class Racesow_Player
 
 	/**
 	 * touchCheckPoint
-	 * @param cClient @client
 	 * @param int id
 	 * @return void
 	 */
@@ -582,8 +581,7 @@ class Racesow_Player
     }
 
 	/**
-	 * completeRace
-	 * @param cClient @client
+	 * touchStopTimer
 	 * @return void
 	 */
     void touchStopTimer()
@@ -600,10 +598,34 @@ class Racesow_Player
 			practiceRespawner.count = client.playerNum();
 		}
 			
-        // when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
+    // when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
 		if ( @this.race == null || !this.race.stop() )
             return;
-			
+		
+		switch (gametypeFlag)
+    {
+    case MODFLAG_DRACE:
+        // we kill the player who lost
+        if (@DRACERound.roundChallenger != null) {
+          if (@this.client == @DRACERound.roundWinner)
+            DRACERound.roundChallenger.getEnt().health = -1;
+        }
+  
+        if (@DRACERound.roundWinner != null) {  
+          if (@this.client == @DRACERound.roundChallenger)
+            DRACERound.roundWinner.getEnt().health = -1;
+        }
+        break;
+      
+    case MODFLAG_DURACE:
+        this.client.stats.addScore( 1 );
+        G_GetTeam( this.client.getEnt().team ).stats.setScore( this.client.stats.score );
+        break;
+
+    default:
+      break;
+    }
+    	
 		this.isSpawned = false;
 		this.setLastRace(@this.race);
 		this.racingTime += this.race.getTime();
@@ -613,10 +635,10 @@ class Racesow_Player
 		this.racingTimeSinceLastRace = 0;
 		@this.race = null;
 
-        // set up for respawning the player with a delay
-        cEntity @respawner = G_SpawnEntity( "race_respawner" );
-        respawner.nextThink = levelTime + 3000;
-        respawner.count = client.playerNum();
+    // set up for respawning the player with a delay
+    cEntity @respawner = G_SpawnEntity( "race_respawner" );
+    respawner.nextThink = levelTime + 3000;
+    respawner.count = client.playerNum();
     }
 
 	/**
@@ -627,10 +649,18 @@ class Racesow_Player
 	void restartRace()
 	{
 		if ( this.client !is null )
-        {
-            this.client.team = TEAM_PLAYERS;
-            this.client.respawn( false );
-        }
+    {
+      if ( gametypeFlag == MODFLAG_DURACE )
+      {
+        this.cancelRace();
+        this.client.respawn( false );
+      }
+      else
+      {
+        this.client.team = TEAM_PLAYERS;
+        this.client.respawn( false );
+      }
+    }
 	}
 	
 	/**
@@ -639,29 +669,28 @@ class Racesow_Player
 	 */
     void restartingRace()
     {
-		this.isSpawned = true;
-		
-		if ( this.practicing && this.positionSaved )
-		{
-			this.teleport( this.positionOrigin, this.positionAngles, false, false );
-			this.client.selectWeapon( this.positionWeapon );
-			if ( this.completedInPracticemode )
-				this.completedInPracticemode = false;
-			
-		} else if ( this.isRacing() )
-		{
-			this.racingTime += levelTime - this.race.getStartTime();
-			this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
-			this.sendMessage( this.race.checkPointsString );
-		}
-
-		@this.race = null;
-		//remove all projectiles.
-		if( @this.client.getEnt() != null )
-			removeProjectiles( this.client.getEnt() );
-		if ( !this.practicing )
-			RS_ResetPjState(this.getClient().playerNum());
-		
+  		this.isSpawned = true;
+  		
+  		if ( this.practicing && this.positionSaved )
+  		{
+  			this.teleport( this.positionOrigin, this.positionAngles, false, false );
+  			this.client.selectWeapon( this.positionWeapon );
+  			if ( this.completedInPracticemode )
+  				this.completedInPracticemode = false;
+  			
+  		} else if ( this.isRacing() )
+  		{
+  			this.racingTime += levelTime - this.race.getStartTime();
+  			this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
+  			this.sendMessage( this.race.checkPointsString );
+  		}
+  
+  		@this.race = null;
+  		//remove all projectiles.
+  		if( @this.client.getEnt() != null )
+  			removeProjectiles( this.client.getEnt() );
+  		if ( !this.practicing )
+  			RS_ResetPjState(this.getClient().playerNum());
     }
 
 	/**

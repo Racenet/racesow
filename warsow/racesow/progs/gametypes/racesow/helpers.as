@@ -152,7 +152,7 @@ Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
 
 
 /**
- * Racesow_GetPlayerNumber
+ * Racesow_GetClientNumber
  * @param cString playerName
  * @return int
  */
@@ -171,6 +171,40 @@ int Racesow_GetClientNumber( cString playerName )
     }
     return -1;
 }
+
+//Jerm's Begin
+/**
+ * Racesow_GetClientByString
+ * @param cString playerString
+ * @return cClient
+ */
+cClient @Racesow_GetClientByString( cString playerString )
+{
+
+  cClient @client;
+  
+  if ( playerString.isNumerical() && playerString.toInt() < maxClients )
+  {
+    @client = @G_GetClient( playerString.toInt() );
+    
+    if ( @client.getEnt() != null )
+    {
+      if ( client.getEnt().inuse )
+        return @client;
+    }
+  }
+  else
+  {
+    for ( int i = 0; i < maxClients; i++ )
+    {
+      @client = @G_GetClient( i );
+      if ( client.getName().removeColorTokens() == playerString )
+        return @client;
+    }
+  }
+  return null;
+}
+//Jerm's End
 
 /**
  * Cancel the current vote (equals to /opcall cancelvote)

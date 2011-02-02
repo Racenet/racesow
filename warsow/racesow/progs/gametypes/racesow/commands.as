@@ -183,13 +183,17 @@ class Command_RaceRestart : Racesow_Command
             return false;
         }
 
+        //racerestart command is disabled in DRACE during WARMUP 
+        if ( gametypeFlag == MODFLAG_DRACE && this.name == "racerestart" && match.getState() != MATCH_STATE_WARMUP ) 
+          return false;
+                  
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         player.restartRace();
-		return true;
+		    return true;
     }
 }
 
@@ -847,55 +851,6 @@ class Command_Practicemode : Racesow_Command
 	}
 }
 
-class Command_Topscore : Racesow_Command
-{/*
-	bool validate( Racesow_Player @player, cString &args, int argc )
-	{
-	  cClient @cli;
-	  
-		if( argc > 1 )
-  	{
-  		G_PrintMsg( player.client.getEnt(), "Usage: topscore <id or name>\n" );
-  		G_PrintMsg( player.client.getEnt(), "- List of current players:\n" );
-  		
-  		for ( int i = 0; i < maxClients; i++ )
-      {
-        @cli = @G_GetClient( i );
-        
-        if ( @cli.getEnt() != null )
-        {
-          if ( cli.getEnt().inuse )
-            G_PrintMsg( player.client.getEnt(), "  " + cli.playerNum() + ": " + cli.getName() + "\n");
-        }
-      }
-  		
-  		return false;
-  	}
-  	
-  	return true;
-	}
-	bool execute( Racesow_Player @player, cString &args, int argc )
-	{
-	  cClient @cli;
-	  
-	  if( argc == 1 )
-  	{
-  		@cli = Racesow_GetClientByString( args );
-  		if( @cli == null )
-  		{
-  			G_PrintMsg( player.client.getEnt(), S_COLOR_RED + "No such player\n" );
-  			return false;
-  		}
-  	}
-  	
-  	if ( argc == 0 )
-  	    @cli = player.client;
-  	    
-		//DURACE_WritePlayerBestTime( player.client, cli );
-    return true;
-	}*/
-}
-
 /**
  * Fill the commands array and set the command counter to the correct value
  */
@@ -955,6 +910,7 @@ void RS_CreateCommands()
     join.name = "join";
     join.description = "Join the game";
     join.usage = "";
+    join.modFlag = MODFLAG_ALL - MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
     @commands[commandCount] = @join;
     commandCount++;
 
@@ -962,6 +918,7 @@ void RS_CreateCommands()
     spec.name = "spec";
     spec.description = "Spectate";
     spec.usage = "";
+    spec.modFlag = MODFLAG_ALL - MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
     @commands[commandCount] = @spec;
     commandCount++;
 
@@ -970,6 +927,7 @@ void RS_CreateCommands()
     chase.name = "chase";
     chase.description = "Spectate";
     chase.usage = "";
+    chase.modFlag = MODFLAG_ALL - MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
     @commands[commandCount] = @chase;
     commandCount++;
 	
@@ -977,7 +935,7 @@ void RS_CreateCommands()
     racerestart.name = "racerestart";
     racerestart.description = "Go back to the start area whenever you want";
     racerestart.usage = "";
-    racerestart.modFlag = MODFLAG_RACE | MODFLAG_FASTCAP;
+    racerestart.modFlag = MODFLAG_ALL - MODFLAG_FREESTYLE;
     @commands[commandCount] = @racerestart;
     commandCount++;
 
@@ -985,6 +943,7 @@ void RS_CreateCommands()
     kill.name = "kill";
     kill.description = "Go back to the start area whenever you want";
     kill.usage = "";
+    kill.modFlag = MODFLAG_ALL - MODFLAG_DRACE; //for DRACE we need to be able to kill himself
     @commands[commandCount] = @kill;
     commandCount++;
     
@@ -1121,7 +1080,7 @@ void RS_CreateCommands()
     top.name = "top";
     top.description = "Print the best times of a given map (default: current map)";
     top.usage = "top <pj/nopj> <limit(3-30)> <mapname>";
-    top.modFlag = MODFLAG_RACE;
+    top.modFlag = MODFLAG_RACE | MODFLAG_DURACE | MODFLAG_DRACE;
     @commands[commandCount] = @top;
     commandCount++;
 	
@@ -1131,14 +1090,6 @@ void RS_CreateCommands()
     practicemode.usage = "practicemode\nAllows usage of the position and noclip commands";
     practicemode.modFlag = MODFLAG_RACE;
     @commands[commandCount] = @practicemode;
-    commandCount++;
-	  
-    Command_Topscore topscore;
-    topscore.name = "topscore";
-    topscore.description = "Displays the top scores of the current map and the given player";
-    topscore.usage = "topscore <id or name>\n";
-    topscore.modFlag = MODFLAG_DRACE | MODFLAG_DURACE;
-    @commands[commandCount] = @topscore;
     commandCount++;
 }
 
