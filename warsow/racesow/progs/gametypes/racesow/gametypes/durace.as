@@ -33,6 +33,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
                      + "set g_countdown_time \"3\"\n"
                      + "set g_maxtimeouts \"-1\" // -1 = unlimited\n"
                      + "set g_challengers_queue \"1\"\n"
+                     + "set rs_gametype \"durace\"\n"
                      
                      + "\necho durace.cfg executed\"\n";
     

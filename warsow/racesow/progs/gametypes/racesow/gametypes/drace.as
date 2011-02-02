@@ -578,6 +578,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
                      + "set g_challengers_queue \"0\"\n"
                      + "set g_inactivity_maxtime \"360.0\"\n"
                      + "set g_drace_max_victories \"0\"\n"
+                     + "set rs_gametype \"drace\"\n"
     
                      + "\necho drace.cfg executed\"\n";
     
@@ -600,7 +601,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         G_RegisterCommand( "max_victories" );
         
         // add callvotes
-        G_RegisterCallvote( "draw", "<1>", "Declares the current round Draw." ) ;
+        G_RegisterCallvote( "draw", "", "Declares the current round Draw." ) ;
         G_RegisterCallvote( "max_victories", "<number>", "Maximum successive victories." ) ;
     
         G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
