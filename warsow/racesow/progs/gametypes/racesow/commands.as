@@ -476,7 +476,7 @@ class Command_Help : Racesow_Command
         if ( argc >= 1 )
         {
             Racesow_Command@ command = RS_GetCommandByName( args.getToken(0) );
-            if ( command !is null)
+            if ( command != null)
             {
                 player.sendMessage( command.getDescription() + command.getUsage() );
                 return true;
@@ -827,7 +827,7 @@ class Command_Practicemode : Racesow_Command
 	}
 	bool execute( Racesow_Player @player, cString &args, int argc )
 	{
-		if ( @player.client !is null )
+		if ( @player.client != null )
 		{
 			if ( player.isRacing() )
 				player.cancelRace();
