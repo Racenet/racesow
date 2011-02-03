@@ -77,6 +77,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	Racesow_Player @player = Racesow_GetPlayerByClient( client );
 	Racesow_Command@ command = RS_GetCommandByName( cmdString );
 
+  //we firstly check if the command is manage in the gametype
+  bool result = racesowGametype.Command( @client, @cmdString, @argsString, argc );
+  
+  if ( result )   //if true is returned, the command is ok no need to go further
+    return true;
+  
 	if ( command !is null )
 	{
 	    player.executeCommand(command, argsString, argc);
@@ -84,15 +90,15 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 	else if ( cmdString == "whoisgod" )
 	{
-	    int index;
-	    cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
+	  int index;
+	  cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
 	    
-	    if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE )
-	      index = brandom(0, 7);
-	    else
-	      index = brandom(0, 6);
-      
-	    player.sendMessage( devs[index] + "\n" );
+	  if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE )
+	    index = brandom(0, 7);
+	  else
+	    index = brandom(0, 6);
+     
+	  player.sendMessage( devs[index] + "\n" );
 	}
 
 	else if ( ( cmdString == "ammoswitch" ) )
@@ -100,7 +106,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		return player.ammoSwitch();
 	}
 
-   	else if ( ( cmdString == "callvotecheckpermission" ) )
+  else if ( ( cmdString == "callvotecheckpermission" ) )
 	{
 		if( player.isVotemuted )
 		{
@@ -239,21 +245,21 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 	else if ( cmdString == "callvotepassed" )
 	{
-            cString vote = argsString.getToken( 0 );
+    cString vote = argsString.getToken( 0 );
 
-            if ( vote == "extend_time" )
-            {
-            	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+    if ( vote == "extend_time" )
+    {
+      g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
 
-                map.cancelOvertime();
-				for ( int i = 0; i < maxClients; i++ )
-				{
+      map.cancelOvertime();
+			for ( int i = 0; i < maxClients; i++ )
+			{
 					players[i].cancelOvertime();
-				}
-            }
+			}
+    }
 
-			if ( vote == "timelimit" )
-            {
+		if ( vote == "timelimit" )
+    {
 				int new_timelimit = argsString.getToken( 1 ).toInt();
 				g_timelimit.set(new_timelimit);
 
@@ -263,10 +269,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 				{
 					oldTimelimit = g_timelimit.getInteger();
 				}
-            }
+    }
 
-			if ( vote == "spec" )
-			{
+		if ( vote == "spec" )
+		{
 				for ( int i = 0; i < maxClients; i++ )
 				{
 					if ( @players[i].getClient() != null )
@@ -275,10 +281,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					}
 				}
 
-			}
+		}
 
-      if ( vote == "joinlock" || vote == "joinunlock" )
-  		{
+    if ( vote == "joinlock" || vote == "joinunlock" )
+  	{
       	Racesow_Player@ target = null;
    
         if ( argsString.getToken( 1 ).isNumerical() && argsString.getToken( 1 ).toInt() <= maxClients )
@@ -292,18 +298,18 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
           target.isJoinlocked = false;
           
         return true;
-  		}
+  	}
 
       return true;
-    }
-    /*
+  }
+  /*
 	else if ( ( cmdString == "weapondef" ) )
-    {
+  {
 		return weaponDefCommand( argsString, @client );
-    }
+  }
     */
 	else if ( ( cmdString == "cvarinfo" ) )
-    {
+  {
 		//token0: cVar name; token1: cVar value
 		cString cvarName = argsString.getToken(0);
 		cString cvarValue = argsString.getToken(1);
@@ -319,10 +325,9 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			angles.y = positionValues.getToken(5).toFloat();
 			player.teleport( origin, angles, false, false );
 		}
-
-    }
-
-    return racesowGametype.Command( @client, @cmdString, @argsString, argc );
+  }
+  
+  return false;
 }
 
 /**

@@ -49,6 +49,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         gametype.hasChallengersQueue = true;
         gametype.maxPlayersPerTeam = 1;
         gametype.spawnpointRadius = 0;
+        gametype.mathAbortDisabled = false;
     
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );

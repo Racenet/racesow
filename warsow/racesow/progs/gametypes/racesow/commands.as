@@ -183,7 +183,7 @@ class Command_RaceRestart : Racesow_Command
             return false;
         }
 
-        //racerestart command is disabled in DRACE during WARMUP 
+        //racerestart command is only avaiblable in DRACE during WARMUP 
         if ( gametypeFlag == MODFLAG_DRACE && this.name == "racerestart" && match.getState() != MATCH_STATE_WARMUP ) 
           return false;
                   
@@ -910,7 +910,7 @@ void RS_CreateCommands()
     join.name = "join";
     join.description = "Join the game";
     join.usage = "";
-    join.modFlag = MODFLAG_ALL - MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
+    join.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
     @commands[commandCount] = @join;
     commandCount++;
 
@@ -918,7 +918,7 @@ void RS_CreateCommands()
     spec.name = "spec";
     spec.description = "Spectate";
     spec.usage = "";
-    spec.modFlag = MODFLAG_ALL - MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
+    spec.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
     @commands[commandCount] = @spec;
     commandCount++;
 
@@ -927,7 +927,7 @@ void RS_CreateCommands()
     chase.name = "chase";
     chase.description = "Spectate";
     chase.usage = "";
-    chase.modFlag = MODFLAG_ALL - MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
+    chase.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
     @commands[commandCount] = @chase;
     commandCount++;
 	
@@ -935,7 +935,7 @@ void RS_CreateCommands()
     racerestart.name = "racerestart";
     racerestart.description = "Go back to the start area whenever you want";
     racerestart.usage = "";
-    racerestart.modFlag = MODFLAG_ALL - MODFLAG_FREESTYLE;
+    racerestart.modFlag = MODFLAG_ALL ^ MODFLAG_FREESTYLE;
     @commands[commandCount] = @racerestart;
     commandCount++;
 
@@ -943,7 +943,7 @@ void RS_CreateCommands()
     kill.name = "kill";
     kill.description = "Go back to the start area whenever you want";
     kill.usage = "";
-    kill.modFlag = MODFLAG_ALL - MODFLAG_DRACE; //for DRACE we need to be able to kill himself
+    kill.modFlag = MODFLAG_ALL ^ MODFLAG_DRACE; //for DRACE we need to be able to kill himself
     @commands[commandCount] = @kill;
     commandCount++;
     

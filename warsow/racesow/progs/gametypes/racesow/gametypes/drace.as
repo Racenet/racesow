@@ -591,6 +591,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         gametype.hasChallengersQueue = false;
         gametype.maxPlayersPerTeam = 0;
         gametype.spawnpointRadius = 0;
+        gametype.mathAbortDisabled = false;
 
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );
@@ -752,14 +753,13 @@ class Racesow_Gametype_Drace : Racesow_Gametype
 
       if ( old_team != new_team )
           DRACERound.playerTeamChanged( ent.client, new_team );
+          
+      if ( ent.isGhosting() )
+	      return;
       
       // set player movement to pass through other players and remove gunblade auto attacking
       ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
-      
       ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
-      
-      if ( ent.isGhosting() )
-	      return;
     }
     
     void scoreEvent( cClient @client, cString &score_event, cString &args )
