@@ -83,7 +83,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
   if ( result )   //if true is returned, the command is ok no need to go further
     return true;
   
-	if ( command != null )
+	if ( @command != null )
 	{
 	    player.executeCommand(command, argsString, argc);
 	}

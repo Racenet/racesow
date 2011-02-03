@@ -476,7 +476,7 @@ class Command_Help : Racesow_Command
         if ( argc >= 1 )
         {
             Racesow_Command@ command = RS_GetCommandByName( args.getToken(0) );
-            if ( command != null)
+            if ( @command != null)
             {
                 player.sendMessage( command.getDescription() + command.getUsage() );
                 return true;

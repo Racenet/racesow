@@ -648,7 +648,7 @@ class Racesow_Player
 	 */
 	void restartRace()
 	{
-		if ( this.client != null )
+		if ( @this.client != null )
     {
       if ( gametypeFlag == MODFLAG_DURACE )
       {
