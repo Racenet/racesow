@@ -12,7 +12,8 @@ const int MODFLAG_FREESTYLE = 2;
 const int MODFLAG_FASTCAP = 4;
 const int MODFLAG_DRACE = 8;
 const int MODFLAG_DURACE = 16;
-const int MODFLAG_ALL = 31;
+const int MODFLAG_TRACE = 32;
+const int MODFLAG_ALL = 63;
 
 /**
  * Container for all the commands, filled in RS_CreateCommands
@@ -910,7 +911,9 @@ void RS_CreateCommands()
     join.name = "join";
     join.description = "Join the game";
     join.usage = "";
-    join.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
+    //registered in all mod except in durace and trace
+    //durace because of challengers queue, trace to be able to join alpha or beta team
+    join.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE ^ MODFLAG_TRACE;
     @commands[commandCount] = @join;
     commandCount++;
 
@@ -918,7 +921,7 @@ void RS_CreateCommands()
     spec.name = "spec";
     spec.description = "Spectate";
     spec.usage = "";
-    spec.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
+    spec.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod except in durace, because of challengers queue
     @commands[commandCount] = @spec;
     commandCount++;
 
@@ -927,7 +930,7 @@ void RS_CreateCommands()
     chase.name = "chase";
     chase.description = "Spectate";
     chase.usage = "";
-    chase.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod excapt in durace, because of challengers queue
+    chase.modFlag = MODFLAG_ALL ^ MODFLAG_DURACE;  //registered in all mod except in durace, because of challengers queue
     @commands[commandCount] = @chase;
     commandCount++;
 	
@@ -1080,7 +1083,7 @@ void RS_CreateCommands()
     top.name = "top";
     top.description = "Print the best times of a given map (default: current map)";
     top.usage = "top <pj/nopj> <limit(3-30)> <mapname>";
-    top.modFlag = MODFLAG_RACE | MODFLAG_DURACE | MODFLAG_DRACE;
+    top.modFlag = MODFLAG_RACE | MODFLAG_DURACE | MODFLAG_DRACE | MODFLAG_TRACE;
     @commands[commandCount] = @top;
     commandCount++;
 	

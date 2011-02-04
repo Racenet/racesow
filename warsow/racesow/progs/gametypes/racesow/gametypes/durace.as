@@ -13,44 +13,25 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     
     void InitGametype()
     {
-        gametype.setTitle( "Duel Race 1vs1" );
-        // if the gametype doesn't have a config file, create it
-        if ( !G_FileExists( "configs/server/gametypes/durace.cfg" ) )
+        switch (gametypeFlag)
         {
-            cString config;
-    
-            // the config file doesn't exist or it's empty, create it
-            config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
-                     + "// This config will be executed each time the gametype is started\n"
-                     + "\n// game settings\n"
-                     + "set g_scorelimit \"0\"\n"
-                     + "set g_timelimit \"10\"\n"
-                     + "set g_warmup_enabled \"1\"\n"
-                     + "set g_warmup_timelimit \"3\"\n"
-                     + "set g_match_extendedtime \"0\"\n"
-                     + "set g_teams_maxplayers \"1\"\n"
-                     + "set g_teams_allow_uneven \"0\"\n"
-                     + "set g_countdown_time \"3\"\n"
-                     + "set g_maxtimeouts \"-1\" // -1 = unlimited\n"
-                     + "set g_challengers_queue \"1\"\n"
-                     + "set rs_gametype \"durace\"\n"
-                     
-                     + "\necho durace.cfg executed\"\n";
-    
-            G_WriteFile( "configs/server/gametypes/durace.cfg", config );
-            G_Print( "Created default config file for 'durace'\n" );
-            G_CmdExecute( "exec configs/server/gametypes/durace.cfg silent" );
+        case MODFLAG_DURACE:
+          DURACE_InitGametype();
+          break;
+        case MODFLAG_TRACE:
+          TRACE_InitGametype();
+          break;
+        default:
+          break;
         }
         
-        //store the timelimit because value in DURACE is not the same than in RACE
-        oldTimelimit = g_timelimit.getInteger();  
-    
         gametype.isTeamBased = true;
-        gametype.hasChallengersQueue = true;
-        gametype.maxPlayersPerTeam = 1;
         gametype.spawnpointRadius = 0;
         gametype.mathAbortDisabled = false;
-    
+
+        //store the timelimit because value in DURACE is not the same than in RACE
+        oldTimelimit = g_timelimit.getInteger();
+            
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );
         G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Score Time Ping Racing R" );
@@ -357,4 +338,73 @@ void DURACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter
       return;
 
     Racesow_GetPlayerByClient( target.client ).cancelRace();
+}
+
+void DURACE_InitGametype()
+{
+  gametype.setTitle( "Duel Race 1vs1" );
+  // if the gametype doesn't have a config file, create it
+  if ( !G_FileExists( "configs/server/gametypes/durace.cfg" ) )
+  {
+      cString config;
+
+      // the config file doesn't exist or it's empty, create it
+      config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
+               + "// This config will be executed each time the gametype is started\n"
+               + "\n// game settings\n"
+               + "set g_scorelimit \"0\"\n"
+               + "set g_timelimit \"10\"\n"
+               + "set g_warmup_enabled \"1\"\n"
+               + "set g_warmup_timelimit \"3\"\n"
+               + "set g_match_extendedtime \"0\"\n"
+               + "set g_teams_maxplayers \"1\"\n"
+               + "set g_teams_allow_uneven \"0\"\n"
+               + "set g_countdown_time \"3\"\n"
+               + "set g_maxtimeouts \"-1\" // -1 = unlimited\n"
+               + "set g_challengers_queue \"1\"\n"
+               + "set rs_gametype \"durace\"\n"
+               
+               + "\necho durace.cfg executed\"\n";
+
+      G_WriteFile( "configs/server/gametypes/durace.cfg", config );
+      G_Print( "Created default config file for 'durace'\n" );
+      G_CmdExecute( "exec configs/server/gametypes/durace.cfg silent" );
+  }
+  
+  gametype.hasChallengersQueue = true;
+  gametype.maxPlayersPerTeam = 1;
+}
+
+void TRACE_InitGametype()
+{
+  gametype.setTitle( "Team Race" );
+  // if the gametype doesn't have a config file, create it
+  if ( !G_FileExists( "configs/server/gametypes/trace.cfg" ) )
+  {
+      cString config;
+
+      // the config file doesn't exist or it's empty, create it
+      config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
+               + "// This config will be executed each time the gametype is started\n"
+               + "\n// game settings\n"
+               + "set g_scorelimit \"0\"\n"
+               + "set g_timelimit \"10\"\n"
+               + "set g_warmup_enabled \"1\"\n"
+               + "set g_warmup_timelimit \"3\"\n"
+               + "set g_match_extendedtime \"0\"\n"
+               + "set g_teams_maxplayers \"8\"\n"
+               + "set g_teams_allow_uneven \"0\"\n"
+               + "set g_countdown_time \"3\"\n"
+               + "set g_maxtimeouts \"-1\" // -1 = unlimited\n"
+               + "set g_challengers_queue \"0\"\n"
+               + "set rs_gametype \"trace\"\n"
+               
+               + "\necho trace.cfg executed\"\n";
+
+      G_WriteFile( "configs/server/gametypes/trace.cfg", config );
+      G_Print( "Created default config file for 'trace'\n" );
+      G_CmdExecute( "exec configs/server/gametypes/trace.cfg silent" );
+  }
+  
+  gametype.hasChallengersQueue = false;
 }

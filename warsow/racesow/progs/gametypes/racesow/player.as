@@ -617,9 +617,11 @@ class Racesow_Player
         }
         break;
       
+    case MODFLAG_TRACE:
     case MODFLAG_DURACE:
         this.client.stats.addScore( 1 );
-        G_GetTeam( this.client.getEnt().team ).stats.setScore( this.client.stats.score );
+        //G_GetTeam( this.client.getEnt().team ).stats.setScore( this.client.stats.score );
+        G_GetTeam( this.client.getEnt().team ).stats.addScore( 1 );
         break;
 
     default:

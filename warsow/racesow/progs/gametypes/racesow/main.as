@@ -93,7 +93,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	  int index;
 	  cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
 	    
-	  if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE )
+	  if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE || gametypeFlag == MODFLAG_TRACE )
 	    index = brandom(0, 7);
 	  else
 	    index = brandom(0, 6);
@@ -902,7 +902,8 @@ void GT_InitGametype()
       case MODFLAG_DRACE:
           @racesowGametype = @Racesow_Gametype_Drace();
           break;
-        
+      
+      case MODFLAG_TRACE:
       case MODFLAG_DURACE:
           @racesowGametype = @Racesow_Gametype_Durace();
           break;
