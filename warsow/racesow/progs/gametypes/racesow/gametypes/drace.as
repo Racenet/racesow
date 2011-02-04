@@ -592,6 +592,10 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         gametype.maxPlayersPerTeam = 0;
         gametype.spawnpointRadius = 0;
         gametype.mathAbortDisabled = false;
+        gametype.autoInactivityRemove = true;
+        gametype.playerInteraction = false;
+        gametype.freestyleMapFix = false;
+        gametype.enableDrowning = true;
 
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );

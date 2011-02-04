@@ -40,6 +40,10 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
       gametype.hasChallengersQueue = false;
       gametype.maxPlayersPerTeam = 0;
       gametype.spawnpointRadius = 256;
+      gametype.autoInactivityRemove = true;
+      gametype.playerInteraction = true;
+      gametype.freestyleMapFix = true;
+      gametype.enableDrowning = false;
 
     	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
       g_warmup_timelimit.set("0"); //g_warmup_enabled was removed in warsow 0.6

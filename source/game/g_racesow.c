@@ -73,7 +73,6 @@ cvar_t *rs_authField_Pass;
 cvar_t *rs_authField_Token;
 cvar_t *rs_tokenSalt;
 
-cvar_t *g_freestyle;
 cvar_t *rs_loadHighscores;
 cvar_t *rs_loadPlayerCheckpoints;
 cvar_t *rs_historyDays;
@@ -160,7 +159,6 @@ void RS_Init()
 
     rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_ARCHIVE|CVAR_NOSET);
     rs_IRCstream = trap_Cvar_Get( "rs_IRCstream","0", CVAR_ARCHIVE|CVAR_NOSET );
-    g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
     rs_loadPlayerCheckpoints = trap_Cvar_Get( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE);
 
@@ -2903,16 +2901,6 @@ char *RS_GetMapByNum(int num)
 
     G_Free( s );
     return NULL;
-}
-
-qboolean isFreestyle( void )
-{
-    g_freestyle = trap_Cvar_Get( "g_freestyle", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET);
-
-    if( g_freestyle->integer == 1 )
-        return qtrue;
-    else
-        return qfalse;
 }
 
 static void RS_Irc_ConnectedListener_f( void *connected )

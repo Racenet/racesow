@@ -28,6 +28,10 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         gametype.isTeamBased = true;
         gametype.spawnpointRadius = 0;
         gametype.mathAbortDisabled = false;
+        gametype.autoInactivityRemove = true;
+        gametype.playerInteraction = false;
+        gametype.freestyleMapFix = false;
+        gametype.enableDrowning = true;
 
         //store the timelimit because value in DURACE is not the same than in RACE
         oldTimelimit = g_timelimit.getInteger();

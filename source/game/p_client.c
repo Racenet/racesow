@@ -356,6 +356,9 @@ void G_Client_InactivityRemove( gclient_t *client )
 	if( !client )
 		return;
 
+	if( !level.gametype.autoInactivityRemove )//racesow
+	    return;
+
 	if( trap_GetClientState( client - game.clients ) < CS_SPAWNED )
 		return;
 

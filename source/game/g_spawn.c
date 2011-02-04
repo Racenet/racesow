@@ -876,7 +876,7 @@ void G_InitLevel( char *mapname, char *entities, int entstrlen, unsigned int lev
 		{
 			i++;
 			//racesow: introducing the freestyle map bug again in order to make some freestyle maps work
-			if( !isFreestyle() )
+			if( !level.gametype.freestyleMapFix )
 				G_FreeEdict( ent );
 			//!racesow
 			continue;

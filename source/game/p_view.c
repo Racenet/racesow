@@ -243,7 +243,7 @@ static void G_PlayerWorldEffects( edict_t *ent )
 	int waterlevel, old_waterlevel;
 	int watertype, old_watertype;
 
-	if( ent->movetype == MOVETYPE_NOCLIP || isFreestyle() ) //racesow
+	if( ent->movetype == MOVETYPE_NOCLIP || !level.gametype.enableDrowning ) //racesow
 	{
 		ent->air_finished = level.time + ( 12*1000 ); // don't need air
 		return;

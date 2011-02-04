@@ -1900,6 +1900,13 @@ void G_Gametype_SetDefaults( void )
 	level.gametype.customDeadBodyCam = qfalse;
 
     level.gametype.spawnpoint_radius = 64;
+
+    //racesow
+    level.gametype.autoInactivityRemove = qtrue;
+    level.gametype.playerInteraction = qfalse;
+    level.gametype.freestyleMapFix = qfalse;
+    level.gametype.enableDrowning = qtrue;
+    //!racesow
 }
 
 /*

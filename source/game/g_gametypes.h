@@ -121,6 +121,13 @@ typedef struct
 
 	int spawnpoint_radius;
 
+	//racesow
+	qboolean autoInactivityRemove;
+	qboolean playerInteraction;
+	qboolean freestyleMapFix;
+	qboolean enableDrowning;
+	//!racesow
+
 } gametype_descriptor_t;
 
 typedef struct

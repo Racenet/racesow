@@ -3500,6 +3500,13 @@ static const asProperty_t gametypedescr_Properties[] =
 	{ SCRIPT_PROPERTY_DECL(int, spawnpointRadius), FOFFSET(gametype_descriptor_t, spawnpoint_radius) },
 	{ SCRIPT_PROPERTY_DECL(bool, customDeadBodyCam), FOFFSET(gametype_descriptor_t, customDeadBodyCam) },
 
+	//racesow
+	{ SCRIPT_PROPERTY_DECL(bool, autoInactivityRemove), FOFFSET(gametype_descriptor_t, autoInactivityRemove) },
+	{ SCRIPT_PROPERTY_DECL(bool, playerInteraction), FOFFSET(gametype_descriptor_t, playerInteraction) },
+	{ SCRIPT_PROPERTY_DECL(bool, freestyleMapFix), FOFFSET(gametype_descriptor_t, freestyleMapFix) },
+	{ SCRIPT_PROPERTY_DECL(bool, enableDrowning), FOFFSET(gametype_descriptor_t, enableDrowning) },
+	//!racesow
+
 	SCRIPT_PROPERTY_NULL
 };
 

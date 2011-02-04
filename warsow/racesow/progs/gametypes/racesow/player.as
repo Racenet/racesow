@@ -876,7 +876,7 @@ class Racesow_Player
 			cVec3 mins, maxs;
 			ent.getSize(mins, maxs);
 			cTrace tr;
-			if(	g_freestyle.getBool() && tr.doTrace( origin, mins, maxs, origin, 0, MASK_PLAYERSOLID ))
+			if(	gametypeFlag == MODFLAG_FREESTYLE && tr.doTrace( origin, mins, maxs, origin, 0, MASK_PLAYERSOLID ))
 			{
 				cEntity @other = @G_GetEntity(tr.entNum);
 				if(@other == @ent)
@@ -1170,7 +1170,7 @@ class Racesow_Player
 	 */
 	bool ammoSwitch(  )
 	{
-		if ( g_freestyle.getBool() || g_allowammoswitch.getBool() )
+		if ( gametypeFlag == MODFLAG_FREESTYLE || g_allowammoswitch.getBool() )
 		{
 			if ( @this.client.getEnt() == null )
 			{
@@ -1389,7 +1389,7 @@ class Racesow_Player
 	        }
 	    }
 
-		if ( command.practiceEnabled && !g_freestyle.getBool() )
+		if ( command.practiceEnabled && gametypeFlag != MODFLAG_FREESTYLE )
 		{
 			// if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
 			// i guess we'll have a better solution to this when the new command system is up.

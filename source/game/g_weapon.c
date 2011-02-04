@@ -152,7 +152,7 @@ int G_Projectile_HitStyle( edict_t *projectile, edict_t *target )
 	//racesow
 	    if( projectile->r.owner->r.client && target->r.client )
 	    {
-	        if( GS_RaceGametype() && target->team == projectile->r.owner->team && !isFreestyle() )
+	        if( GS_RaceGametype() && target->team == projectile->r.owner->team && !level.gametype.playerInteraction )
 	            return PROJECTILE_TOUCH_NOT;
 	    }
 	//!racesow
@@ -281,7 +281,7 @@ static edict_t *W_Fire_LinearProjectile( edict_t *self, vec3_t start, vec3_t ang
 	projectile->s.linearProjectile = qtrue;
 
 	projectile->r.solid = SOLID_YES;
-	projectile->r.clipmask = ( GS_RaceGametype() && !isFreestyle() ) ? MASK_SOLID : MASK_SHOT; //racesow projectiles interact with others
+	projectile->r.clipmask = ( GS_RaceGametype() && !level.gametype.playerInteraction ) ? MASK_SOLID : MASK_SHOT; //racesow projectiles interact with others
 
 	projectile->r.svflags = SVF_PROJECTILE;
 	// enable me when drawing exception is added to cgame
@@ -339,7 +339,7 @@ static edict_t *W_Fire_TossProjectile( edict_t *self, vec3_t start, vec3_t angle
 	projectile->movetype = MOVETYPE_BOUNCEGRENADE;
 
 	// make missile fly through players in race
-	if( GS_RaceGametype() && !isFreestyle() )
+	if( GS_RaceGametype() && !level.gametype.playerInteraction )
 		projectile->r.clipmask = MASK_SOLID;
 	else
 		projectile->r.clipmask = MASK_SHOT;
@@ -395,7 +395,7 @@ void W_Fire_Blade( edict_t *self, int range, vec3_t start, vec3_t angles, float 
 	AngleVectors( angles, dir, NULL, NULL );
 	VectorMA( start, range, dir, end );
 
-	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectile interact with others
+	if( GS_RaceGametype() && !level.gametype.playerInteraction )//racesow make projectile interact with others
 		mask = MASK_SOLID;
 
 	G_Trace4D( &trace, start, NULL, NULL, end, self, MASK_SHOT, timeDelta );
@@ -986,7 +986,7 @@ void W_Plasma_Backtrace( edict_t *ent, const vec3_t start )
 	vec3_t oldorigin;
 	vec3_t mins = { -2, -2, -2 }, maxs = { 2, 2, 2 };
 
-	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectiles interact with others in freestyle
+	if( GS_RaceGametype() && !level.gametype.playerInteraction )//racesow make projectiles interact with others in freestyle
 		return;
 
 	VectorCopy( ent->s.origin, oldorigin );
@@ -1180,7 +1180,7 @@ void W_Fire_Electrobolt_Combined( edict_t *self, vec3_t start, vec3_t angles, fl
 	hit = damaged = NULL;
 
 	mask = MASK_SHOT;
-	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectiles interact with others in freestyle
+	if( GS_RaceGametype() && !level.gametype.playerInteraction )//racesow make projectiles interact with others in freestyle
 		mask = MASK_SOLID;
 
 	clamp_high( mindamage, maxdamage );
@@ -1274,7 +1274,7 @@ void W_Fire_Electrobolt_FullInstant( edict_t *self, vec3_t start, vec3_t angles,
 	hit = damaged = NULL;
 
 	mask = MASK_SHOT;
-	if( GS_RaceGametype() && !isFreestyle() )//racesow make projectiles interact with others in freestyle
+	if( GS_RaceGametype() && !level.gametype.playerInteraction )//racesow make projectiles interact with others in freestyle
 		mask = MASK_SOLID;
 
 	clamp_high( mindamage, maxdamage );
@@ -1397,7 +1397,7 @@ void W_Fire_Instagun( edict_t *self, vec3_t start, vec3_t angles, float damage, 
 	VectorCopy( start, from );
 	ignore = self;
 	mask = MASK_SHOT;
-	if( GS_RaceGametype() && !isFreestyle() )//racesow: make projectiles interact with others in freestyle
+	if( GS_RaceGametype() && !level.gametype.playerInteraction )//racesow: make projectiles interact with others in freestyle
 		mask = MASK_SOLID;
 	tr.ent = -1;
 	while( ignore )

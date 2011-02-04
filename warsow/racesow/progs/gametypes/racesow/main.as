@@ -35,7 +35,6 @@ cVar rs_loadPlayerCheckpoints( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE );
 cVar rs_allowAutoHop( "rs_allowAutoHop", "1", CVAR_ARCHIVE );
 cVar rs_gametype( "rs_gametype", "race", CVAR_ARCHIVE );
 
-cVar g_freestyle( "g_freestyle", "1", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit_reset( "g_timelimit_reset", "1", CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
@@ -527,7 +526,7 @@ void GT_ThinkRules()
 	// perform a C callback if there is one pending
 	racesowAdapter.thinkCallbackQueue();
 
-	bool timelimited = not (g_freestyle.getBool() || !g_maprotation.getBool());
+	bool timelimited = not ( gametypeFlag == MODFLAG_FREESTYLE  || !g_maprotation.getBool());
 	
 	if ( timelimited )
 	{
@@ -784,18 +783,18 @@ void GT_SpawnGametype()
  */
 void GT_InitGametype()
 {
-  gametype.setTitle( "Racesow" );
-  gametype.setVersion( "0.6.0" );
-  gametype.setAuthor( "warsow-race.net" );
-
-  // initalize weapondef config
-	weaponDefInit();
-  
-  // if the gametype doesn't have a config file, create it
-  if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
-  {
+    gametype.setTitle( "Racesow" );
+    gametype.setVersion( "0.6.0" );
+    gametype.setAuthor( "warsow-race.net" );
+    
+    // initalize weapondef config
+    weaponDefInit();
+    
+    // if the gametype doesn't have a config file, create it
+    if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
+    {
       cString config;
-
+    
       // the config file doesn't exist or it's empty, create it
       config = "//*\n"
                + "//* Racesow Base settings\n"
@@ -815,70 +814,72 @@ void GT_InitGametype()
                + "\n"
                + "exec configs/server/gametypes/racesow_weapondefs.cfg"
                + "\n"
-			 + "echo racesow.cfg executed\n";
-
+             + "echo racesow.cfg executed\n";
+    
       G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
       G_Print( "Created default base config file for racesow\n" );
-  }
-
-  // always execute racesow.cfg
-  G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
-
-  gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
-  
-  gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
-  if ( gametype.isInstagib() )
+    }
+    
+    // always execute racesow.cfg
+    G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
+    
+    gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
+    
+    gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
+    if ( gametype.isInstagib() )
       gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
-
-  gametype.respawnableItemsMask = gametype.spawnableItemsMask;
-  gametype.dropableItemsMask = 0;
-  gametype.pickableItemsMask = 0;
-
-  gametype.isRace = true;
-
-  gametype.ammoRespawn = 0;
-  gametype.armorRespawn = 0;
-  gametype.weaponRespawn = 0;
-  gametype.healthRespawn = 0;
-  gametype.powerupRespawn = 0;
-  gametype.megahealthRespawn = 0;
-  gametype.ultrahealthRespawn = 0;
-
-  gametype.readyAnnouncementEnabled = false;
-  gametype.scoreAnnouncementEnabled = false;
-  gametype.countdownEnabled = false;
-  gametype.mathAbortDisabled = true;
-  gametype.shootingDisabled = false;
-  gametype.infiniteAmmo = true;
-  gametype.canForceModels = true;
-  gametype.canShowMinimap = false;
-	gametype.teamOnlyMinimap = true;
+    
+    gametype.respawnableItemsMask = gametype.spawnableItemsMask;
+    gametype.dropableItemsMask = 0;
+    gametype.pickableItemsMask = 0;
+    
+    gametype.isRace = true;
+    
+    gametype.ammoRespawn = 0;
+    gametype.armorRespawn = 0;
+    gametype.weaponRespawn = 0;
+    gametype.healthRespawn = 0;
+    gametype.powerupRespawn = 0;
+    gametype.megahealthRespawn = 0;
+    gametype.ultrahealthRespawn = 0;
+    
+    gametype.readyAnnouncementEnabled = false;
+    gametype.scoreAnnouncementEnabled = false;
+    gametype.countdownEnabled = false;
+    gametype.mathAbortDisabled = true;
+    gametype.shootingDisabled = false;
+    gametype.infiniteAmmo = true;
+    gametype.canForceModels = true;
+    gametype.canShowMinimap = false;
+    gametype.teamOnlyMinimap = true;
 	
-  // set spawnsystem type
-  for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
+    
+    
+    // set spawnsystem type
+    for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
       gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
-
-  // precache images that can be used by the scoreboard
-  prcYesIcon = G_ImageIndex( "gfx/hud/icons/vsay/yes" );
-  prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );
-
-  // add commands
-  RS_InitCommands();
-
-  // weapondef not needed anymore, we're not testing weapons
-  //G_RegisterCommand( "weapondef" );
-
-	G_RegisterCommand( "ammoswitch" );
-  G_RegisterCommand( "whoisgod" );
-
-  //add callvotes
-  G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
-  G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
-  G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
-	G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
-	G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
-
-  demoRecording = false;
+    
+    // precache images that can be used by the scoreboard
+    prcYesIcon = G_ImageIndex( "gfx/hud/icons/vsay/yes" );
+    prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );
+    
+    // add commands
+    RS_InitCommands();
+    
+    // weapondef not needed anymore, we're not testing weapons
+    //G_RegisterCommand( "weapondef" );
+    
+    G_RegisterCommand( "ammoswitch" );
+    G_RegisterCommand( "whoisgod" );
+    
+    //add callvotes
+    G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
+    G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
+    G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
+    G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
+    G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
+    
+    demoRecording = false;
 
 	if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
 	{
@@ -897,8 +898,8 @@ void GT_InitGametype()
 	// load maps list (basic or mysql)
 	RS_LoadMapList( gametypeFlag & MODFLAG_FREESTYLE );
 
-  switch (gametypeFlag)
-  {
+    switch (gametypeFlag)
+    {
       case MODFLAG_DRACE:
           @racesowGametype = @Racesow_Gametype_Drace();
           break;
@@ -911,15 +912,15 @@ void GT_InitGametype()
       case MODFLAG_RACE:
           @racesowGametype = @Racesow_Gametype_Race();
           break;
-
+    
       case MODFLAG_FREESTYLE:
           @racesowGametype = @Racesow_Gametype_Freestyle();
           break;
-
+    
        default:
           @racesowGametype = @Racesow_Gametype_Race();
           break;
-  }
+    }
 
 	racesowGametype.InitGametype();
 }
