@@ -6,12 +6,51 @@ Mostly printing the frags/fraglimit isn't done yet.
 */
 
 int[] scoreCounter(maxClients);
+bool isAccuracyMap=false;
 
 //Hardcoded spawnFlags for target_fragsFilter
 int REMOVER = 1;
 int RUNONCE = 2;
 int SILENT = 4;
 int RESET = 8;
+
+void checkForAccuracyMap()
+{
+    int position;
+    isAccuracyMap = false;
+
+	if( @map == null )
+	{
+        //Debug Print
+		//G_Print("Map is null\n");
+		return;
+	}
+
+	if( G_FileLength( "scripts/" + map.name + ".defi" ) > 0 )
+	{
+		cString defifile;
+        cString style;
+		defifile = G_LoadFile( "scripts/" + map.name + ".defi" );
+
+        //Debug Print
+		//G_Print(defifile + "\n");
+
+        if( ( position = defifile.locate("style",0) ) > -1 )
+        {
+            style = defifile.substr( position, defifile.len() );
+            if( ( position = style.locate("\n", 0 ) ) > -1 )
+            {
+                style = style.substr( 0, position );
+                //Debug Print
+                //G_Print(style + "\n");
+                if( style.locate("accuracy", 0) > -1 )
+		        {
+			        isAccuracyMap = true;
+		        }
+            }
+        }
+	}
+}
 
 void target_fragsFilter_think( cEntity @ent )
 {
@@ -33,17 +72,17 @@ void target_fragsFilter_use( cEntity @ent, cEntity @other, cEntity @activator )
         || @Racesow_GetPlayerByClient( activator.client ) == null )
         return;
 
-	  if( frags <= 0 )
-	  {
-	      frags = 1;
-	  }
+	if( frags <= 0 )
+	{
+	    frags = 1;
+	}
 
-		if( scoreCounter[activator.client.playerNum()] > frags )
-			scoreCounter[activator.client.playerNum()] = frags;
+	if( scoreCounter[activator.client.playerNum()] > frags )
+		scoreCounter[activator.client.playerNum()] = frags;
 
     if(	scoreCounter[activator.client.playerNum()] == frags)
     {
-				//Debug print
+		//Debug print
         //G_Print( "Fraglimit reached\n" );
         ent.useTargets( activator );
     }
@@ -58,11 +97,15 @@ void target_fragsFilter_use( cEntity @ent, cEntity @other, cEntity @activator )
     }
     if( ( ent.spawnFlags & SILENT ) > 0 )
     {
+		//FIXME: This needs to be printed somewhere else. Maybe add it to the hud. (This function is called every millisecond keep that in mind!)
+		/*if( isAccuracyMap )
+		{
+           	activator.client.printMessage( "You have " + scoreCounter[activator.client.playerNum()] + "/" + frags + "\n" );
+	    }*/
     }
     else
     {
-				//FIXME: This needs to be printed somewhere else. Maybe add it to the hud.
-        //activator.client.printMessage( "You have " + scoreCounter[activator.client.playerNum()] + "/" + frags + "\n" );
+        //Maybe add centerprint here
     }
     if( ( ent.spawnFlags & RESET ) > 0 )
     {
@@ -87,43 +130,43 @@ Defrag is limited to 10 independant target_fragsFilter.
 
 void target_fragsFilter( cEntity @ent )
 {
-  cString frags = G_SpawnTempValue("frags");
+    cString frags = G_SpawnTempValue("frags");
 
 	addToEntStorage( ent.entNum(), frags );
 
 	if( @ent.findTargetingEntity( null ) == null )
-  {
-      ent.spawnFlags |= SILENT;
-      ent.nextThink = levelTime + 1;
-  }
+    {
+        ent.spawnFlags |= SILENT;
+        ent.nextThink = levelTime + 1;
+    }
 
-	//Debug prints
-  /*G_Print( "REMOVER: " + ( ent.spawnFlags & REMOVER ) + "\n" );
-  G_Print( "RUNONCE: " + ( ent.spawnFlags & RUNONCE ) + "\n" );
-  G_Print( "SILENT: " + ( ent.spawnFlags & SILENT ) + "\n" );
-  G_Print( "RESET: " + ( ent.spawnFlags & RESET ) + "\n" );*/
+    //Debug prints
+    /*G_Print( "REMOVER: " + ( ent.spawnFlags & REMOVER ) + "\n" );
+    G_Print( "RUNONCE: " + ( ent.spawnFlags & RUNONCE ) + "\n" );
+    G_Print( "SILENT: " + ( ent.spawnFlags & SILENT ) + "\n" );
+    G_Print( "RESET: " + ( ent.spawnFlags & RESET ) + "\n" );*/
 }
 
 /*
 ============
-AddScore
+fragsFilter_addScore
 
-Adds score to both the client and his team
+Adds score to both the client and his team in the fragfilter
 ============
 */
-void AddScore( cEntity @ent, cVec3 @origin, int score ) {
+void fragsFilter_addScore( cEntity @ent, cVec3 @origin, int score ) {
 	if(@ent == null || (ent.svflags & SVF_NOCLIENT) == 1 || @ent.client == null
-			|| @Racesow_GetPlayerByClient( ent.client ) == null)
+		|| @Racesow_GetPlayerByClient( ent.client ) == null)
         return;
 
 	// I'm not sure what this did in Defrag
 	// show score plum
 	//ScorePlum(ent, origin, score);
 	
-	//FIXME: If there is only need for < 256 scores we could use a char
-	if( ( scoreCounter[ent.client.playerNum()] + score ) > 300 )
+	//Just setting it to an reasonable limit for now. Maybe i'll make use of the full int later ;)
+	if( ( scoreCounter[ent.client.playerNum()] + score ) > 500 )
 	{
-		scoreCounter[ent.client.playerNum()] = 300;
+		scoreCounter[ent.client.playerNum()] = 500;
 		return;
 	}
 
@@ -134,17 +177,17 @@ void AddScore( cEntity @ent, cVec3 @origin, int score ) {
 		level.teamScores[ ent->client->ps.persistant[PERS_TEAM] ] += score;*/
 
 	//Debug print
-  //ent.client.printMessage( "Your score is: " + scoreCounter[ent.client.playerNum()] + "\n" );
+    //ent.client.printMessage( "Your score is: " + scoreCounter[ent.client.playerNum()] + "\n" );
 
 	//CalculateRanks();
 }
 
 void target_score( cEntity @ent )
 {
-  if ( ent.count <= 0 )
-  {
-		ent.count = 1;
-	}
+    if ( ent.count <= 0 )
+    {
+	    ent.count = 1;
+    }
 }
 
 void target_score_use( cEntity @ent, cEntity @other, cEntity @activator )
@@ -153,6 +196,9 @@ void target_score_use( cEntity @ent, cEntity @other, cEntity @activator )
 		|| @Racesow_GetPlayerByClient( activator.client ) == null )
         return;
 
-    AddScore( activator, ent.getOrigin(), ent.count);
+    fragsFilter_addScore( activator, ent.getOrigin(), ent.count);
+	//Debug print
+    /*if( isAccuracyMap )
+        activator.client.printMessage( "You have " + scoreCounter[activator.client.playerNum()] + " frags\n" );*/
     ent.useTargets( activator );
 }
