@@ -339,7 +339,9 @@ void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const v
 	client = targ->r.client;
 
 	// Cgg - race mode: players don't interact with one another
+	// racesow
 	if( GS_RaceGametype() && !level.gametype.playerInteraction )
+	// ! racesow
 	{
 		if( attacker->r.client && targ->r.client && attacker != targ )
 			return;

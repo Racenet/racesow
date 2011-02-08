@@ -30,11 +30,13 @@ public:
     bool canShowMinimap;
     bool teamOnlyMinimap;
     int spawnpointRadius;
-    bool customDeadBodyCam;
+    bool customDeadBodyCam; 
+	// racesow
     bool autoInactivityRemove;
     bool playerInteraction;
     bool freestyleMapFix;
     bool enableDrowning;
+	// ! racesow
 
     /* object behaviors */
 
