@@ -400,9 +400,13 @@ added:
 	this seems to be different in 0.6 for certain gametypes
 	maybe has something to do with the base speed
 %max_accel - the maximum possible acceleration based on current speed, same unit as %acceleration
+%ROCKETACCEL - returns big speed differences between two frames
 */
 
 #define RACE_CP_LENGTH	20
+
+//used for calculating horizontal speed, should probably be moved to q_math.h
+#define VectorLengthHorizontal( v )	( sqrt ( v[0]*v[0] + v[1]*v[1] ) )
 
 char race_checkpoints[15][RACE_CP_LENGTH];		//cG^ said: no map with more than 15 checkpoints
 qboolean race_started = qfalse;
@@ -439,12 +443,12 @@ static int CG_GetJumpSpeed( void* parameter )
 
 static int CG_GetMouseAngleY( void* parameter )
 {
-	return round(100 * cg.predictedPlayerState.viewangles[PITCH]);
+	return round( 100 * cg.predictedPlayerState.viewangles[PITCH] );
 }
 
 static int CG_GetMouseAngleX( void* parameter )
 {
-	return round(100 * cg.predictedPlayerState.viewangles[YAW]);
+	return round( 100 * cg.predictedPlayerState.viewangles[YAW] );
 }
 
 static int CG_GetMoveAngle( void* parameter )
@@ -454,7 +458,7 @@ static int CG_GetMoveAngle( void* parameter )
 	hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
 	hor_vel[2] = 0;
 	VecToAngles( hor_vel, an );
-	int MoveAngle = round(100 * an[YAW]);
+	int MoveAngle = round( 100 * an[YAW] );
 	while( MoveAngle > 18000 )
 		MoveAngle -= 36000;
 	while( MoveAngle < -18000 )
@@ -469,7 +473,7 @@ static int CG_GetDiffAngle( void* parameter )
 	hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
 	hor_vel[2] = 0;
 	VecToAngles( hor_vel, an );
-	int diffAngle = round(100 * (cg.predictedPlayerState.viewangles[YAW] - an[YAW]));
+	int diffAngle = round( 100 * ( cg.predictedPlayerState.viewangles[YAW] - an[YAW] ) );
 	while( diffAngle > 18000 )
 		diffAngle -= 36000;
 	while( diffAngle < -18000 )
@@ -481,9 +485,12 @@ static int CG_GetStrafeAngle( void* parameter )
 {
 	int base_speed = cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED];
 	float base_accel = base_speed * cg.realFrameTime;
+	float speed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
 
-	int strafeAngle = round(100 * (acos((base_speed-base_accel)/CG_GetSpeed(0))*180/M_PI-45) ); //maybe need to check if speed below 320 is allowed for acos
-	if (strafeAngle > 0)
+//	int strafeAngle = round( 100*( RAD2DEG( acos( ( cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED] * ( 1 - cg.realFrameTime ) ) / VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity ) ) ) - 45 ) );
+
+	int strafeAngle = round( 100*( RAD2DEG( acos( ( base_speed - base_accel ) / speed ) ) - 45 ) );
+	if ( strafeAngle > 0 )
 		return strafeAngle;
 	else
 		return 0;
@@ -494,17 +501,31 @@ static int CG_GetMaxAccel( void* parameter )
 	int base_speed = cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED];
 	float base_accel = base_speed * cg.realFrameTime;
 
-	//copied from CG_GetSpeed, because int isnt accurate enough
-	vec3_t hvel;
-	VectorSet( hvel, cg.predictedPlayerState.pmove.velocity[0], cg.predictedPlayerState.pmove.velocity[1], 0 );
-	float speed = VectorLength( hvel );
-	//---------------------------------------------------------
+	float speed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
 	return (int)( 1000 *
 			(
-				sqrt(speed*speed + base_accel*(2*base_speed - base_accel))
+				sqrt( speed*speed + base_accel*(2*base_speed - base_accel) )
 				- speed
 			)
 			/ cg.realFrameTime);
+}
+
+static int CG_GetRocketAccel( void* parameter )
+{
+#define MINSPEEDDIFF 100.0f
+#define RASAMPLESCOUNT 2
+#define RASAMPLESMASK ( RASAMPLESCOUNT-1 )
+	static float speeds[RASAMPLESCOUNT];
+	static int speedDiff = 0;
+	float newSpeed;
+
+	newSpeed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
+	speeds[cg.frameCount & RASAMPLESMASK] = newSpeed;
+	if ( fabs( newSpeed - speeds[(cg.frameCount-1) & RASAMPLESMASK] ) > MINSPEEDDIFF )
+	{
+		speedDiff = (int)( newSpeed - speeds[(cg.frameCount-1) & RASAMPLESMASK] );
+	}
+	return speedDiff;
 }
 
 static int CG_GetAccel( void* parameter )
@@ -517,23 +538,14 @@ static int CG_GetAccel( void* parameter )
 	float newSpeed;
 	int i;
 
-	//copied from CG_GetSpeed, because int isnt accurate enough
-	vec3_t hvel;
-	VectorSet( hvel, cg.predictedPlayerState.pmove.velocity[0], cg.predictedPlayerState.pmove.velocity[1], 0 );
-	newSpeed = VectorLength( hvel );
-	//---------------------------------------------------------
-
-	//newSpeed = CG_GetSpeed( 0 );
+	newSpeed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
 	accels[cg.frameCount & ACCELSAMPLESMASK] =
-			(newSpeed - speeds[(cg.frameCount-1) & ACCELSAMPLESMASK]) / cg.realFrameTime;
+			( newSpeed - speeds[(cg.frameCount-1) & ACCELSAMPLESMASK] ) / cg.realFrameTime;
 	speeds[cg.frameCount & ACCELSAMPLESMASK] = newSpeed;
 
 	for( i = 0; i < ACCELSAMPLESCOUNT; i++ )
 		avAccel += accels[i];
-	if( avAccel < 0 )
-		return 0;
-	else
-		return (int)(1000 * avAccel / ACCELSAMPLESCOUNT);
+	return (int)( 1000 * avAccel / ACCELSAMPLESCOUNT );
 }
 
 qboolean CG_IsBounce()
@@ -547,7 +559,7 @@ qboolean CG_IsBounce()
 
 void CG_AddJumpspeed( void )
 {
-	race_jump = CG_GetSpeed( 0 );
+	race_jump = (int)VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
 }
 
 void CG_RaceAddCheckpoint( char* msg )
@@ -673,6 +685,7 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "MOUSE_X", CG_GetMouseAngleX, NULL },
 	{ "MOUSE_Y", CG_GetMouseAngleY, NULL },
 	{ "ACCELERATION", CG_GetAccel, NULL },
+	{ "ROCKETACCEL", CG_GetRocketAccel, NULL},
 	{ "JUMPSPEED", CG_GetJumpSpeed, NULL },
 	{ "MOVEANGLE", CG_GetMoveAngle, NULL },
 	{ "STRAFEANGLE", CG_GetStrafeAngle, NULL },
@@ -1674,85 +1687,85 @@ static int CG_LFuncDrawModelByItemIndex( struct cg_layoutnode_s *commandnode, st
 
 static int CG_LFuncCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_x = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_y = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
 	return qtrue;
 }
 
 static int CG_LFuncCursorX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_x = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_y = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
 	return qtrue;
 }
 
 static int CG_LFuncCursorY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	layout_cursor_y = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_x = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_y = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
 	return qtrue;
 }
 
 static int CG_LFuncPixelCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x = (int)CG_GetNumericArg( &argumentnode );
-	layout_cursor_y = (int)CG_GetNumericArg( &argumentnode );
+	layout_cursor_x = round( CG_GetNumericArg( &argumentnode ) );
+	layout_cursor_y = round( CG_GetNumericArg( &argumentnode ) );
 	return qtrue;
 }
 
 static int CG_LFuncMoveCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_x += round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_y += round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
 	return qtrue;
 }
 
 static int CG_LFuncMoveCursorX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_x += round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_y += round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
 	return qtrue;
 }
 
 static int CG_LFuncMoveCursorY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	layout_cursor_y += (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_x += round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_y += round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
 	return qtrue;
 }
 
 static int CG_LFuncMovePixelCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x += (int)CG_GetNumericArg( &argumentnode );
-	layout_cursor_y += (int)CG_GetNumericArg( &argumentnode );
+	layout_cursor_x += round( CG_GetNumericArg( &argumentnode ) );
+	layout_cursor_y += round( CG_GetNumericArg( &argumentnode ) );
 	return qtrue;
 }
 
 static int CG_LFuncSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_height = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
 	return qtrue;
 }
 
 static int CG_LFuncSizeX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_height = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
 	return qtrue;
 }
 
 static int CG_LFuncSizeY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	layout_cursor_height = (int)( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
 	return qtrue;
 }
 
 static int CG_LFuncPixelSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = (int)CG_GetNumericArg( &argumentnode );
-	layout_cursor_height = (int)CG_GetNumericArg( &argumentnode );
+	layout_cursor_width = round( CG_GetNumericArg( &argumentnode ) );
+	layout_cursor_height = round( CG_GetNumericArg( &argumentnode ) );
 	return qtrue;
 }
 
