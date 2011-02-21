@@ -1,18 +1,20 @@
 //accelmeter bar
+if 0 == 16 & %SHOW_SPEED
+	setFont "virtue_12"
+	
+	setCursor 400, 300
+	movePixelCursor 0, 80
+	moveCursorY -103, 8
 
-setFont "virtue_12"
-
-setAlign #LEFT, #MIDDLE
-setCursor 400, 370
-moveCursorY -103, 0
-setSizeY 206, 16
-setcolor 1, 1, 1, 0.1
-drawPicByName gfx/ui/white
-
-moveCursorY 3, 0
-setSizeY 200, 10
-setColor 0, 1, 0, 0.3
-drawBar %ACCELERATION, %MAX_ACCEL
+	setSizeY 206, 16
+	setcolor 1, 1, 1, 0.1
+	setAlign #LEFT, #MIDDLE
+	drawPicByName gfx/ui/white
+	
+	moveCursorY 3, 0
+	setSizeY 200, 10
+	setColor 0, 1, 0, 0.3
+	drawBar %ACCELERATION, %MAX_ACCEL
 
 //alternative way, draws a black line where acceleration is maximum
 //drawBar %ACCELERATION, 200000
@@ -27,3 +29,4 @@ drawBar %ACCELERATION, %MAX_ACCEL
 //setColor 1, 1, 1, 1
 //drawStringNum %ACCELERATION
 
+endif

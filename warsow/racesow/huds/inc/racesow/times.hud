@@ -1,73 +1,112 @@
 //
+if 0 == 4 & %SHOW_TIMER
+	//draw Strings:
+	//	Race Time
+	//	Own Best
+	//	Server Best
 
-setFont "virtue_12"
-setCursor #WIDTH, 510
-movePixelCursor -70, 0
+	setFont "virtue_12"
+	setCursor #WIDTH, 550
+	movePixelCursor -70, 0
+	
+	if %RACE
+		setColor 0.8 0.8 0.8 1
+		setAlign #RIGHT, #BOTTOM
+		if %TIME_RECORD != #NOTSET
+			drawString "Srv Best: "
+		endif
+		movePixelCursor 0, -15
+		if %TIME_BEST != #NOTSET
+			drawString "Own Best: "
+		endif
+		movePixelCursor 0, -15
+		if %TIME_SELF != #NOTSET
+			drawString "Time: "
+		endif
+		movePixelCursor 0, 30
+	endif
 
-//draw Strings:
-//	Race Time
-//	Own Best
-//	Server Best
-if %RACE
-	setColor 0.8 0.8 0.8 1
-	setAlign #RIGHT, #MIDDLE
-	if %TIME_SELF != #NOTSET
-		drawString "Time: "
-	endif
-	movePixelCursor 0, 15
-	if %TIME_BEST != #NOTSET
-		drawString "Own Best: "
-	endif
-	movePixelCursor 0, 15
+	//draw Times
+	setColor 1 1 1 1
+	setAlign #LEFT, #BOTTOM
 	if %TIME_RECORD != #NOTSET
-		drawString "Srv Best: "
+		drawTimer %TIME_RECORD
 	endif
-	movePixelCursor 0, -30
+	movePixelCursor 0, -15
+	if %TIME_BEST != #NOTSET
+		drawTimer %TIME_BEST
+	endif
+	movePixelCursor 0, -15
+	if %TIME_SELF != #NOTSET
+		drawTimer %TIME_SELF
+	endif
 endif
-
-
-//draw Times
-setColor 1 1 1 1
-setAlign #LEFT, #MIDDLE
-if %TIME_SELF != #NOTSET
-	drawTimer %TIME_SELF
-endif
-movePixelCursor 0, 15
-if %TIME_BEST != #NOTSET
-	drawTimer %TIME_BEST
-endif
-movePixelCursor 0, 15
-if %TIME_RECORD != #NOTSET
-	drawTimer %TIME_RECORD
-endif
-
+	
 // TODO: add a world best here, using TIME_ALPHA
 
 
-//crazy big timer
+if 0 == 2 & %SHOW_TIMER
+	//crazy big timer
 
-// minus time
+	setFont "virtue_16"
 
+	setCursor 400, 0
+	movePixelCursor -37, 22
 
-setFont "virtue_16"
+	setAlign #LEFT, #TOP
 
-if %TIME_SELF < %TIME_BEST
+	if %TIME_SELF <= %TIME_BEST
+		setcolor 0, 0, 0, 1
+		drawTimer %TIME_SELF
+		movePixelCursor 1, 2
+		setcolor 0, 1, 0, 1
+		drawTimer %TIME_SELF
+		movePixelCursor -1, -2
+	endif
 
-    setAlign #CENTER, #BOTTOM
-    setcolor 0, 1, 0, 1
-    setCursor 400, 50
-    drawTimer %TIME_SELF
+	if %TIME_SELF > %TIME_BEST
+		setcolor 0, 0, 0, 1
+		drawTimer %TIME_SELF - %TIME_BEST
+		movePixelCursor 1, 2
+		setcolor 1, 0, 0, 1
+		drawTimer %TIME_SELF - %TIME_BEST
 
+		movePixelCursor -14, -2
+		setAlign #LEFT, #TOP
+		setcolor 0, 0, 0, 1
+		drawString "- " //space prevents warsow from using "-" as operator
+		movePixelCursor 1, 2
+		setcolor 1, 0, 0, 1
+		drawString "- " //space prevents warsow from using "-" as operator
+		movePixelCursor 12, -2
+	endif
 endif
 
-if %TIME_SELF > %TIME_BEST
-
-    setAlign #CENTER, #BOTTOM
-    setcolor 1, 0, 0, 1
-    setCursor 400, 50
-    drawTimer %TIME_SELF - %TIME_BEST
+if 0 == 8 & %SHOW_TIMER
+	// 10 seconds countdown
+	if %TIME_SELF < %TIME_BEST
+	if 100 > %TIME_BEST - %TIME_SELF
+		setFont "virtue_16"
+		setCursor 400, 120
+		movePixelCursor -37, 0
+		setAlign #LEFT, #TOP
+		moveCursor 0, 100 - %TIME_BEST - %TIME_SELF
+		if 50 > %TIME_BEST - %TIME_SELF
+			setFont "virtue_22"
+			movePixelCursor -10, 0
+		endif
+		if 20 > %TIME_BEST - %TIME_SELF
+			setFont "virtue_28"
+			movePixelCursor -12, 0
+		endif
+		setcolor 0, 0, 0, 1
+		drawTimer %TIME_BEST - %TIME_SELF
+		movePixelCursor 1, 2
+		setcolor 0, 1, 0, 1
+		drawTimer %TIME_BEST - %TIME_SELF
+	endif
+	endif
 endif
-
 
 //from default times.hud:
 if %TIME_ALPHA != #NOTSET

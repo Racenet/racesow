@@ -7,6 +7,23 @@
 // - cryzis2 (health/armor/ammo)
 // - warsow hud (basewsw)
 
+//settings for cg_showspeed:
+//0 - disable speed/angle view
+//1 - new speed/angle view
+//2 - old speed/angle view
+//3 - new speed/angle view without angle
+//
+//bitmask for cg_showspeed:
+//4 - disable speed/angle description
+//8 - disable dotstrafer
+//16 - disable accelmeter
+//64 - enable plasmahelper
+
+//bitmask for cg_showtimer:
+//1 - enable Match Time
+//2 - disable Race Time
+//4 - disable Records
+//8 - disable 10 seconds countdown
 
 setFont con_fontSystemsmall
 
