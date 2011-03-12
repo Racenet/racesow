@@ -17,24 +17,34 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
 	
 		bool success;
 
-        // Call to a c-function which should result
-        // in a callback to player.raceCallback()
-		// ..unless the player uses a protected nick
-        success = RS_MysqlInsertRace(
-            race.getPlayer().getId(),
-            race.getPlayer().getNickId(),
-            map.getId(),
-            race.getTime(),
-            race.getPlayer().getClient().playerNum(),
-            race.getPlayer().triesSinceLastRace,
-            race.getPlayer().racingTimeSinceLastRace,
-            race.getCheckpoints(),
-            race.prejumped
-        );
-
-		if ( ! success )
+		if ( gametypeFlag == MODFLAG_RACE )
 		{
-			G_PrintMsg( race.getPlayer().getClient().getEnt(), S_COLOR_RED + "Could not insert this race into the database, are you using a protected nick? " + "\n" );
+            // Call to a c-function which should result
+            // in a callback to player.raceCallback()
+            // ..unless the player uses a protected nick
+            success = RS_MysqlInsertRace(
+                race.getPlayer().getId(),
+                race.getPlayer().getNickId(),
+                map.getId(),
+                race.getTime(),
+                race.getPlayer().getClient().playerNum(),
+                race.getPlayer().triesSinceLastRace,
+                race.getPlayer().racingTimeSinceLastRace,
+                race.getCheckpoints(),
+                race.prejumped
+            );
+
+            if ( ! success )
+            {
+                G_PrintMsg( race.getPlayer().getClient().getEnt(), S_COLOR_RED + "Could not insert this race into the database, are you using a protected nick? " + "\n" );
+            }
+		}
+		else
+		{
+	        race.getPlayer().raceCallback(0,0,0,
+	                race.getPlayer().bestRaceTime,
+	                map.getHighScore().getTime(),
+	                race.getTime());
 		}
     }
 
