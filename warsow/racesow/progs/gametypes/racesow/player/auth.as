@@ -272,10 +272,13 @@ const uint RACESOW_AUTH_ADMIN		= 31;
         this.playerId = playerId;
         this.player.sendMessage( S_COLOR_BLUE + "Your PlayerID: "+ playerId +"\n" );
     
-        if ( playerId != 0 && this.lastViolateProtectionMessage != 0 )
+        if ( playerId != 0)
         {
+            if (this.lastViolateProtectionMessage != 0)
+            {
+                this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
+            }
             this.resetViolateState();
-            this.player.sendMessage( S_COLOR_GREEN + "Countdown stopped.\n" );
         }
     }
 

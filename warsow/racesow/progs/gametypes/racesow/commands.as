@@ -388,11 +388,6 @@ class Command_Auth : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( player.auth.playerId == 0 )
-        {
-            player.sendErrorMessage("Please wait until you have a player id");
-            return false;
-        }
         if ( argc < 2 )
         {
             player.sendErrorMessage("You must provide your name and password");
