@@ -761,10 +761,11 @@ class Racesow_Gametype_Drace : Racesow_Gametype
           DRACERound.playerTeamChanged( ent.client, new_team );
       }
 
-      if ( DRACERound.state == DRACE_ROUNDSTATE_ROUND )
+      if ( DRACERound.state == DRACE_ROUNDSTATE_ROUND && new_team == TEAM_PLAYERS )
       {
-          player.client.respawn( true );
-          player.sendMessage(S_COLOR_RED + "Sorry you can't spawn during a round.\n");
+          player.sendMessage(S_COLOR_RED + "You can't spawn during round.\n");
+          ent.client.respawn( true );
+          ent.client.chaseCam( null, true );
           return;
       }
 
