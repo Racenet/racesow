@@ -789,7 +789,10 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       }
       else if ( score_event == "enterGame" )
       {
-          Racesow_GetPlayerByClient( client ).reset();
+          Racesow_Player @player = Racesow_GetPlayerByClient( client );
+          player.reset();
+          player.client.team = TEAM_SPECTATOR;
+          player.client.respawn( true );
       }
     }
     
