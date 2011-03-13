@@ -756,8 +756,17 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       Racesow_GetPlayerByClient( ent.client ).cancelRace();
 
       if ( old_team != new_team )
+      {
           DRACERound.playerTeamChanged( ent.client, new_team );
-          
+      }
+
+      if ( DRACERound.state == DRACE_ROUNDSTATE_ROUND )
+      {
+          player.client.respawn( true );
+          player.sendMessage(S_COLOR_RED + "Sorry you can't spawn during a round.\n");
+          return;
+      }
+
       if ( ent.isGhosting() )
 	      return;
       
@@ -791,8 +800,6 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       {
           Racesow_Player @player = Racesow_GetPlayerByClient( client );
           player.reset();
-          player.client.team = TEAM_SPECTATOR;
-          player.client.respawn( true );
       }
     }
     
