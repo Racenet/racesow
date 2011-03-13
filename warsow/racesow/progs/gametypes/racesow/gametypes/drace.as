@@ -753,7 +753,8 @@ class Racesow_Gametype_Drace : Racesow_Gametype
     
     void playerRespawn( cEntity @ent, int old_team, int new_team )
     {
-      Racesow_GetPlayerByClient( ent.client ).cancelRace();
+      Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+      player.cancelRace();
 
       if ( old_team != new_team )
       {
