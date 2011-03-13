@@ -174,6 +174,24 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			return true;
 		}
 
+		if ( vote == "gametype" )
+		{
+	        if (argc < 1)
+	        {
+	            player.sendErrorMessage( "You must provide a gametype." );
+	            return false;
+	        }
+	        cString gametype = argsString.getToken( 1 );
+	        if ( !(gametype == "race" || gametype == "freestyle" || gametype == "drace"
+	                || gametype == "durace") )
+	        {
+                player.sendErrorMessage( "You must provide a valid gametype." );
+                return false;
+	        }
+
+	        return true;
+		}
+
 		if ( vote == "timelimit" )
 		{
 			int new_timelimit = argsString.getToken( 1 ).toInt();
@@ -269,6 +287,14 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					oldTimelimit = g_timelimit.getInteger();
 				}
     }
+
+		if ( vote == "gametype")
+		{
+		    cString gametype = argsString.getToken( 1 );
+		    rs_gametype.set(gametype);
+		    match.launchState( match.getState() + 1 );
+		}
+
 
 		if ( vote == "spec" )
 		{
@@ -878,6 +904,7 @@ void GT_InitGametype()
     G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
     G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
     G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
+    G_RegisterCallvote( "gametype", "<race|freestyle|drace|durace>", "Change the gametype" );
     
     demoRecording = false;
 
