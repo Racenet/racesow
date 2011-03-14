@@ -761,16 +761,16 @@ class Racesow_Gametype_Drace : Racesow_Gametype
           DRACERound.playerTeamChanged( ent.client, new_team );
       }
 
+      if ( ent.isGhosting() )
+          return;
+
       if ( DRACERound.state == DRACE_ROUNDSTATE_ROUND && new_team == TEAM_PLAYERS )
       {
-          player.sendMessage(S_COLOR_RED + "You can't spawn during round.\n");
           ent.client.respawn( true );
           ent.client.chaseCam( null, true );
+          player.sendErrorMessage("You can't join during round.");
           return;
       }
-
-      if ( ent.isGhosting() )
-	      return;
       
       // set player movement to pass through other players and remove gunblade auto attacking
       ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
