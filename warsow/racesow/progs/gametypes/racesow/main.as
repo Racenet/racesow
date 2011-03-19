@@ -293,7 +293,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		    cString gametype = argsString.getToken( 1 );
 		    rs_gametype.set(gametype);
 		    gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
-		    match.launchState( match.getState() + 1 );
+		    match.launchState( MATCH_STATE_POSTMATCH );
 		}
 
 

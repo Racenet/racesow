@@ -198,9 +198,7 @@ class Racesow_Map
                 players[i].getClient().team != TEAM_SPECTATOR &&
                 players[i].inOvertime) {
                  
-                cVec3 velocity = players[i].getClient().getEnt().getVelocity();
-
-                if ( velocity.x == 0 && velocity.y == 0 && velocity.z == 0 )
+                if ( players[i].getSpeed() == 0 )
                 {
                     if ( !players[i].startedIdling() )
                     {
@@ -214,10 +212,8 @@ class Racesow_Map
 
                 if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
                 {
-					players[i].remove("");
+					players[i].remove("You have been moved to spectators because you were idle during overtime.");
                     players[i].cancelRace();
-                    G_PrintMsg( players[i].getClient().getEnt(), S_COLOR_RED
-                        + "You have been moved to spectators because you were idle during overtime.\n" );
                 }
                 else
                 {
