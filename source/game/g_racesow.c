@@ -2756,108 +2756,126 @@ void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta )
 char *RS_ChooseNextMap()
 {
     edict_t *ent = NULL;
-     char *s, *t, *f;
-     static const char *seps = " ,\n\r";
+    char *s, *t, *f;
+    static const char *seps = " ,\n\r";
 
-     if( *level.forcemap )
+    if( *level.forcemap )
     {
         return level.forcemap;
     }
 
-     if( !( *maplist ) || strlen( maplist ) == 0 || g_maprotation->integer == 0 )
+    if( !( *maplist ) || strlen( maplist ) == 0 || g_maprotation->integer == 0 )
     {
-        //same map again
+        // same map again
         return level.mapname;
     }
-     else if( g_maprotation->integer == 1 )
-     {
-         // next map in list
-         s = G_CopyString( maplist );
-         f = NULL;
-         t = strtok( s, seps );
-
-         while( t != NULL )
+    else if( g_maprotation->integer == 1 )
     {
-             if( !Q_stricmp( t, level.mapname ) )
+        // next map in list
+        s = G_CopyString( maplist );
+        f = NULL;
+        t = strtok( s, seps );
+
+        while( t != NULL )
         {
-                 // it's in the list, go to the next one
-                 t = strtok( NULL, seps );
-                 if( t == NULL )
-                 { // end of list, go to first one
-                     if( f == NULL )// there isn't a first one, same level
+            if( !Q_stricmp( t, level.mapname ) )
             {
-                         G_Free( s );
-                         return level.mapname;
-                     }
+                // it's in the list, go to the next one
+                do {
+                t = strtok( NULL, seps );
+                } while ( t && !trap_ML_FilenameExists( t ) );
+
+                if( t == NULL )
+                {
+                    // end of list, go to first one. if there isn't a first one, same level
+                    if ( f == NULL )
+                    {
+                        G_Free( s );
+                        return level.mapname;
+                    }
+                    else
+                    {
+                        G_Free( s );
+                        return f;
+                    }
+                }
                 else
                 {
-                         G_Free( s );
-                         return f;
+                    G_Free( s );
+                    return t;
                 }
             }
-                 else
-                 {
-                     G_Free( s );
-                     return t;
-        }
-             }
-
-             if( !f )
-                 f = t;
-
-             t = strtok( NULL, seps );
+            if( !f && trap_ML_FilenameExists( t ) )
+                f = t;
+            t = strtok( NULL, seps );
         }
 
-         // not in the list, we go for the first one
-         G_Free( s );
-         return f;
+        // not in the list, we go for the first one
+        if ( f == NULL )
+        {
+            G_Free( s );
+            return level.mapname;
+        }
+        else
+        {
+            G_Free( s );
+            return f;
+        }
     }
-     else if( g_maprotation->integer == 2 )
-     {
-         // random from the list, but not the same
-         int count = 0;
-         s = G_CopyString( maplist );
-
-         t = strtok( s, seps );
-         while( t != NULL )
+    else if( g_maprotation->integer == 2 )
     {
-             if( Q_stricmp( t, level.mapname ) )
-                 count++;
-             t = strtok( NULL, seps );
-         }
+        // random from the list, but not the same
+        char *s1;
+        size_t str_size;
 
-         G_Free( s );
-         s = G_CopyString( maplist );
+        int count = 0;
+        s = G_CopyString( maplist );
 
-         if( count < 1 )
-         {
-             // no other maps found, restart
-             G_Free( s );
-             return level.mapname;
-         }
-         else
-         {
-            int seed = game.realtime;
-             count -= (int)Q_brandom( &seed, 0, count ); // this should give random integer from 0 to count-1
-             ent = NULL; // shutup compiler warning;
+        str_size = strlen( s ) + 1;
+        s1 = G_Malloc( str_size );
+        s1[0] = s1[str_size-1] = '\0';
 
-             t = strtok( s, seps );
-             while( t != NULL )
-            {
-                 if( Q_stricmp( t, level.mapname ) )
-                {
-                     count--;
-                     if( count == 0 )
-                     {
-                         G_Free( s );
-                         return t;
-                         break;
+        t = strtok( s, seps );
+        while( t != NULL )
+        {
+            if( Q_stricmp( t, level.mapname ) && trap_ML_FilenameExists( t ) ) {
+                count++;
+                if( *s1 ) {
+                    Q_strncatz( s1, " ", str_size );
                 }
+                Q_strncatz( s1, t, str_size );
             }
-                 t = strtok( NULL, seps );
+            t = strtok( NULL, seps );
+        }
+
+        G_Free( s );
+        s = NULL;
+
+        if( count < 1 )
+        {
+            // no other maps found, restart
+            G_Free( s1 );
+            return level.mapname;
+        }
+        else
+        {
+            int seed = game.realtime;
+            count -= (int)Q_brandom( &seed, 0, count ); // this should give random integer from 0 to count-1
+            ent = NULL; // shutup compiler warning;
+
+            t = strtok( s1, seps );
+            while( t != NULL )
+            {
+                count--;
+                if( count == 0 )
+                {
+                    G_Free( s1 );
+                    return t;
+                }
+                t = strtok( NULL, seps );
+            }
+        }
     }
-         }
-     }
 
     if( level.nextmap[0] )  // go to a specific map
         return level.nextmap;
@@ -2867,7 +2885,7 @@ char *RS_ChooseNextMap()
     if( !ent )
     {
         // the map designer didn't include a changelevel,
-         // so create a fake ent that goes back to the same level
+        // so create a fake ent that goes back to the same level
         return level.mapname;
     }
     return ent->map;
