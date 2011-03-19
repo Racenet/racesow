@@ -27,7 +27,6 @@ centity_t cg_entities[MAX_EDICTS];
 cvar_t *cg_predict;
 cvar_t *cg_predict_optimize;
 cvar_t *cg_showMiss;
-cvar_t *cg_extrapolate;
 
 cvar_t *model;
 cvar_t *skin;
@@ -307,7 +306,7 @@ static void CG_InitGameShared( void )
 	gs.module = GS_MODULE_CGAME;
 	trap_GetConfigString( CS_MAXCLIENTS, cstring, MAX_CONFIGSTRING_CHARS );
 	gs.maxclients = atoi( cstring );
-	if( gs.maxclients < 1 || gs.maxclients > MAX_EDICTS )
+	if( gs.maxclients < 1 || gs.maxclients > MAX_CLIENTS )
 		gs.maxclients = MAX_CLIENTS;
 
 	module_PredictedEvent = CG_PredictedEvent;
@@ -541,7 +540,6 @@ static void CG_RegisterVariables( void )
 	cg_predict =	    trap_Cvar_Get( "cg_predict", "1", 0 );
 	cg_predict_optimize = trap_Cvar_Get( "cg_predict_optimize", "1", 0 );
 	cg_showMiss =	    trap_Cvar_Get( "cg_showMiss", "0", 0 );
-	cg_extrapolate =	trap_Cvar_Get( "cg_extrapolate", "1", CVAR_ARCHIVE|CVAR_LATCH );
 
 	cg_debugPlayerModels =	trap_Cvar_Get( "cg_debugPlayerModels", "0", CVAR_CHEAT|CVAR_ARCHIVE );
 	cg_debugWeaponModels =	trap_Cvar_Get( "cg_debugWeaponModels", "0", CVAR_CHEAT|CVAR_ARCHIVE );

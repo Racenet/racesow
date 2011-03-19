@@ -630,6 +630,7 @@ void door_go_down( edict_t *self )
 	}
 	if( self->max_health )
 	{
+		self->deadflag = DEAD_NO;
 		self->takedamage = DAMAGE_YES;
 		self->health = self->max_health;
 	}

@@ -316,7 +316,7 @@ void Cbuf_Execute( void )
 		i = 0;
 		quotes = qfalse;
 		quoteskip = qfalse;
-		while( cbuf_text_tail != cbuf_text_head && i < sizeof( line ) )
+		while( cbuf_text_tail != cbuf_text_head && i < sizeof( line )-1 )
 		{
 			if( !quoteskip && cbuf_text[cbuf_text_tail] == '"' )
 				quotes = !quotes;

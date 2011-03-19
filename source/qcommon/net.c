@@ -1021,6 +1021,9 @@ int NET_GetPacket( const socket_t *socket, netadr_t *address, msg_t *message )
 {
 	assert( socket->open );
 
+	if( !socket->open )
+		return -1;
+
 	switch( socket->type )
 	{
 	case SOCKET_LOOPBACK:
@@ -1054,6 +1057,9 @@ int NET_Get( const socket_t *socket, netadr_t *address, void *data, size_t lengt
 {
 	assert( socket->open );
 
+	if( !socket->open )
+		return -1;
+
 	switch( socket->type )
 	{
 	case SOCKET_LOOPBACK:
@@ -1081,6 +1087,9 @@ int NET_Get( const socket_t *socket, netadr_t *address, void *data, size_t lengt
 qboolean NET_SendPacket( const socket_t *socket, const void *data, size_t length, const netadr_t *address )
 {
 	assert( socket->open );
+
+	if( !socket->open )
+		return qfalse;
 
 	if( address->type == NA_NOTRANSMIT )
 		return qtrue;
@@ -1113,6 +1122,9 @@ qboolean NET_SendPacket( const socket_t *socket, const void *data, size_t length
 qboolean NET_Send( const socket_t *socket, const void *data, size_t length, const netadr_t *address )
 {
 	assert( socket->open );
+
+	if( !socket->open )
+		return qfalse;
 
 	if( address->type == NA_NOTRANSMIT )
 		return qtrue;

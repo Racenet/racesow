@@ -1003,3 +1003,214 @@ void R_ModelBounds( const model_t *model, vec3_t mins, vec3_t maxs )
 		VectorCopy( r_worldmodel->maxs, maxs );
 	}
 }
+
+//==================================================================================
+
+/*
+=================
+R_ExportSkm2Iqe
+
+IQE format export according to http://lee.fov120.com/iqm/iqe.txt
+=================
+*/
+static void R_ExportSkmToIqe( model_t *mod )
+{
+	unsigned int i;
+	unsigned int j, k;
+	int filenum;
+	char buf[4096];
+	char *checkname;
+	size_t checkname_size;
+	mskmodel_t *skmodel;
+	mskbone_t *bone;
+	mskmesh_t *mesh;
+	bonepose_t *bp;
+
+	assert( mod );
+	assert( mod->type == mod_skeletal );
+
+	if( !mod )
+		return;
+
+	if( mod->type != mod_skeletal )
+	{
+		Com_Printf( "R_ExportSkmToIqe: bad model type %i for '%s'\n", mod->type, mod->name );
+		return;
+	}
+
+	checkname_size = strlen( "iqe/" ) + strlen( mod->name ) + 4;
+	checkname = Mem_TempMalloc( checkname_size );
+
+	Q_snprintfz( checkname, checkname_size, "iqe/%s", mod->name );
+	COM_ReplaceExtension( checkname, ".iqe", checkname_size );
+
+	FS_FOpenFile( checkname, &filenum, FS_WRITE );
+	if( !filenum )
+	{
+		Com_Printf( "R_ExportSkmToIqe: failed opening '%s' for writing\n", checkname );
+		Mem_Free( checkname );
+		return;
+	}
+
+	// start
+	Q_snprintfz( buf, sizeof( buf ), "# Inter-Quake Export\n" );
+	FS_Write( buf, strlen( buf ), filenum );
+
+
+	// joints
+	Q_snprintfz( buf, sizeof( buf ), "\n" );
+	FS_Write( buf, strlen( buf ), filenum );
+
+	skmodel = ( mskmodel_t * )mod->extradata;
+	for( i = 0, bone = skmodel->bones; i < skmodel->numbones; i++, bone++ )
+	{
+		bp = &skmodel->frames[0].boneposes[i];
+
+		Q_snprintfz( buf, sizeof( buf ), 
+			"joint \"%s\" %i\n"
+			"\tpq %f %f %f %f %f %f %f\n", 
+				bone->name, bone->parent,
+				bp->origin[0], bp->origin[1], bp->origin[2], bp->quat[0], bp->quat[1], bp->quat[2], bp->quat[3] );
+		FS_Write( buf, strlen( buf ), filenum );
+	}
+
+
+	// meshes
+	for( i = 0, mesh = skmodel->meshes; i < skmodel->nummeshes; i++, mesh++ )
+	{
+		unsigned int *bones;
+		float *influences;
+
+		Q_snprintfz( buf, sizeof( buf ), "\n" );
+		FS_Write( buf, strlen( buf ), filenum );
+
+		Q_snprintfz( buf, sizeof( buf ), 
+			"mesh \"%s\"\n" 
+			"\tmaterial \"%s\"\n",
+			mesh->name, mesh->skin.shader->name );
+		FS_Write( buf, strlen( buf ), filenum );
+
+		// vertices
+		Q_snprintfz( buf, sizeof( buf ), "\n" );
+		FS_Write( buf, strlen( buf ), filenum );
+
+		bones = mesh->bones;
+		influences = mesh->influences;
+		for( j = 0; j < mesh->numverts; j++ )
+		{
+			// vertex position, texture coordinates and normal
+			Q_snprintfz( buf, sizeof( buf ), 
+				"vp %f %f %f\n"
+				"\tvt %f %f\n"
+				"\tvn %f %f %f\n",
+				mesh->xyzArray[j][0], mesh->xyzArray[j][1], mesh->xyzArray[j][2],
+				mesh->stArray[j][0], mesh->stArray[j][1],
+				mesh->normalsArray[j][0], mesh->normalsArray[j][1], mesh->normalsArray[j][2]
+			);
+			FS_Write( buf, strlen( buf ), filenum );
+
+			// influences
+			Q_snprintfz( buf, sizeof( buf ), "\tvb" );
+
+			for( k = 0; k < SKM_MAX_WEIGHTS; k++ )
+			{
+				if( !influences[k] )
+					break;
+				Q_strncatz( buf, va( " %i %f", bones[k], influences[k] ), sizeof( buf ) );
+			}
+			Q_strncatz( buf, "\n", sizeof( buf ) );
+			FS_Write( buf, strlen( buf ), filenum );
+
+			bones += SKM_MAX_WEIGHTS;
+			influences += SKM_MAX_WEIGHTS;
+		}
+
+		// triangles
+		Q_snprintfz( buf, sizeof( buf ), "\n" );
+		FS_Write( buf, strlen( buf ), filenum );
+
+		for( j = 0; j < mesh->numtris; j++ )
+		{
+			Q_snprintfz( buf, sizeof( buf ), 
+				"fm %i %i %i\n",
+				mesh->elems[j*3+0], mesh->elems[j*3+1], mesh->elems[j*3+2] );
+			FS_Write( buf, strlen( buf ), filenum );
+		}
+	}
+
+
+	// animation
+	Q_snprintfz( buf, sizeof( buf ), "\n" );
+	FS_Write( buf, strlen( buf ), filenum );
+
+	Q_snprintfz( buf, sizeof( buf ), 
+		"animation\n"
+		"\tframerate 0\n" );
+	FS_Write( buf, strlen( buf ), filenum );
+
+	// frames
+	for( i = 0; i < skmodel->numframes; i++ )
+	{
+		Q_snprintfz( buf, sizeof( buf ), "\n" );
+		FS_Write( buf, strlen( buf ), filenum );
+
+		Q_snprintfz( buf, sizeof( buf ), 
+			"frame\n"
+			"#%s\n",
+			skmodel->frames[i].name );
+		FS_Write( buf, strlen( buf ), filenum );
+
+		for( j = 0, bp = skmodel->frames[i].boneposes; j < skmodel->numbones; j++, bp++ )
+		{
+			Q_snprintfz( buf, sizeof( buf ), "pq %f %f %f %f %f %f %f\n", 
+				bp->origin[0], bp->origin[1], bp->origin[2], bp->quat[0], bp->quat[1], bp->quat[2], bp->quat[3] );
+			FS_Write( buf, strlen( buf ), filenum );
+		}
+	}
+
+
+	// end
+	FS_FCloseFile( filenum );
+
+	Com_Printf( "R_ExportSkmToIqe: wrote '%s'\n", checkname );
+
+	Mem_Free( checkname );
+}
+
+/*
+=================
+R_Skm2Iqe_f
+=================
+*/
+void R_Skm2Iqe_f( void )
+{
+	model_t *mod;
+	const char *mod_name;
+
+	mod_name = Cmd_Argv( 1 );
+	if( !strcmp( mod_name, "*" ) )
+	{
+		int i;
+
+		for( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
+		{
+			if( !mod->name )
+				break;
+			if( mod->type != mod_skeletal )
+				continue;
+
+			R_ExportSkmToIqe( mod );
+		}
+	}
+	else
+	{
+		mod = Mod_ForName( mod_name, qfalse );
+		if( !mod )
+		{
+			Com_Printf( "R_Skm2Iqe_f: no such model '%s'\n", mod_name );
+			return;
+		}
+
+		R_ExportSkmToIqe( mod );
+	}
+}

@@ -1353,7 +1353,7 @@ int FS_Seek( int file, int offset, int whence )
 
 	fh = FS_FileHandleForNum( file );
 	if( !fh->fstream )
-		return 0;
+		return -1;
 
 	currentOffset = fh->uncompressedSize - fh->restReadUncompressed;
 

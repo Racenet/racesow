@@ -653,7 +653,7 @@ void R_DrawElements( void )
 	}
 
 	if( glConfig.ext.draw_range_elements )
-		qglDrawRangeElementsEXT( GL_TRIANGLES, 0, numVerts, numElems, GL_UNSIGNED_INT, elems );
+		qglDrawRangeElementsEXT( GL_TRIANGLES, 0, numVerts - 1, numElems, GL_UNSIGNED_INT, elems );
 	else
 		qglDrawElements( GL_TRIANGLES, numElems, GL_UNSIGNED_INT, elems );
 

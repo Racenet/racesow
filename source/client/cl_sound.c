@@ -164,13 +164,13 @@ static qboolean CL_SoundModule_Load( const char *name, sound_import_t *import, q
 
 	Mem_TempFree( file );
 
-	se = ( sound_export_t * )GetSoundAPI( import );
-	if( !se )
+	if( !sound_library )
 	{
 		Com_Printf( "Loading %s failed\n", name );
 		return qfalse;
 	}
 
+	se = ( sound_export_t * )GetSoundAPI( import );
 	apiversion = se->API();
 	if( apiversion != SOUND_API_VERSION )
 	{
@@ -596,6 +596,7 @@ MUMBLE SUPPORT
 #include "libmumblelink.h"
 
 static cvar_t *cl_mumble;
+static cvar_t *cl_mumble_alltalk;
 static cvar_t *cl_mumble_scale;
 
 /*
@@ -604,6 +605,7 @@ static cvar_t *cl_mumble_scale;
 void CL_Mumble_Init( void )
 {
 	cl_mumble =         Cvar_Get( "cl_mumble", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	cl_mumble_alltalk = Cvar_Get( "cl_mumble_alltalk", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	cl_mumble_scale =   Cvar_Get( "cl_mumble_scale", "0.0254", CVAR_ARCHIVE );
 }
 
@@ -641,6 +643,7 @@ void CL_Mumble_Unlink( void )
 void CL_Mumble_Update( const vec3_t origin, const vec3_t forward, const vec3_t right, const vec3_t up )
 {
 	vec3_t mp, mf, mt;
+	char context[256];
 
 	if( !cl_mumble->integer )
 		return;
@@ -653,6 +656,16 @@ void CL_Mumble_Update( const vec3_t origin, const vec3_t forward, const vec3_t r
 		Com_Printf( "MumbleUpdate:\n%f, %f, %f\n%f, %f, %f\n%f, %f, %f", mp[0], mp[1], mp[2], mf[0], mf[1], mf[2], mt[0], mt[1], mt[2] );
 
 	mumble_update_coordinates( mp, mf, mt );
+
+	/*
+	// for Mumble 1.2+  http://mumble.sourceforge.net/Link
+	mumble_set_identity( playername ); // TODO: fetch playername from somewhere
+	if ( cl_mumble_alltalk->integer )
+		Q_strncpyz( context, va( "%s:%d", ip, port ), sizeof( context ) ); // TODO: fetch ip, port from somewhere
+	else
+		Q_strncpyz( context, va( "%s:%d/%s", ip, port, team ), sizeof( context ) ); // TODO: fetch ip, port, team from somewhere
+	mumble_set_context( context,  strlen( context ) + 1 );
+	*/
 }
 
 /*

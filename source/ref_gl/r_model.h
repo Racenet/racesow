@@ -298,6 +298,7 @@ typedef struct
 
 typedef struct
 {
+	char			name[SKM_MAX_NAME];
 	vec3_t			mins, maxs;
 	float			radius;
 	bonepose_t		*boneposes;
@@ -402,5 +403,7 @@ model_t		*Mod_ForHandle( unsigned int elem );
 void		Mod_StripLODSuffix( char *name );
 
 void		Mod_Modellist_f( void );
+
+void		R_Skm2Iqe_f( void );
 
 #endif /*__R_MODEL_H__*/

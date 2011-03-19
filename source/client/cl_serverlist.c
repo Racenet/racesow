@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // cl_serverlist.c  -- interactuates with the master server
 
 #include "client.h"
+#include "../qcommon/trie.h"
 
 //=========================================================
 
@@ -31,8 +32,17 @@ typedef struct serverlist_s
 	struct serverlist_s *pnext;
 } serverlist_t;
 
+typedef struct masteradrcache_s
+{
+	netadr_t adr;
+	struct masteradrcache_s *next;
+} masteradrcache_t;
+
 serverlist_t *masterList, *favoritesList;
 
+// cache of resolved master server addresses/names
+static trie_t *serverlist_masters_trie = NULL;
+static masteradrcache_t *serverlist_masters_head = NULL;
 
 static qboolean filter_allow_full = qfalse;
 static qboolean filter_allow_empty = qfalse;
@@ -522,6 +532,75 @@ void CL_ParseGetServersResponse( const socket_t *socket, const netadr_t *address
 */
 
 /*
+* CL_ResolveMasterAddress
+*/
+static void CL_ResolveMasterAddress( const char *master, netadr_t *adr )
+{
+	trie_error_t err;
+	masteradrcache_t *cache;
+
+	// check memory cache
+	err = Trie_Find( serverlist_masters_trie, master, TRIE_EXACT_MATCH, (void **)&cache );
+	if( err == TRIE_OK )
+	{
+		if( adr )
+			*adr = cache->adr;
+		return;
+	}
+
+	// send a unicast packet
+	cache = Mem_ZoneMalloc( sizeof( *cache ) );
+	NET_StringToAddress( master, &cache->adr );
+
+	if( adr )
+		*adr = cache->adr;
+	cache->next = serverlist_masters_head;
+	serverlist_masters_head = cache;
+
+	Trie_Insert( serverlist_masters_trie, master, (void *)cache );
+}
+
+/*
+* CL_MasterAddressCache_Init
+*/
+static void CL_MasterAddressCache_Init( void )
+{
+	char *master;
+	const char *mlist;
+
+	serverlist_masters_head = NULL;
+	Trie_Create( TRIE_CASE_INSENSITIVE, &serverlist_masters_trie );
+
+	// synchronous DNS queries cause interruption of sounds, background music, etc
+	// so precache results of resolution queries for all master servers
+	mlist = Cvar_String( "masterservers" );
+	while( mlist )
+	{
+		master = COM_Parse( &mlist );
+		if( !*master )
+			break;
+		CL_ResolveMasterAddress( master, NULL );
+	}
+}
+
+/*
+* CL_MasterAddressCache_Shutdown
+*/
+static void CL_MasterAddressCache_Shutdown( void )
+{
+	masteradrcache_t *next;
+
+	// free allocated memory
+	Trie_Destroy( serverlist_masters_trie );
+	while( serverlist_masters_head )
+	{
+		next = serverlist_masters_head->next;
+		Mem_ZoneFree( serverlist_masters_head );
+		serverlist_masters_head = next;
+	}
+}
+
+/*
 * CL_GetServers_f
 */
 void CL_GetServers_f( void )
@@ -573,8 +652,10 @@ void CL_GetServers_f( void )
 
 	assert( modname[0] );
 
-	// send a unicast packet
-	if( NET_StringToAddress( master, &adr ) && ( adr.type == NA_IP || adr.type == NA_IP6 ) )
+	// fetch from cache or query DNS server
+	CL_ResolveMasterAddress( master, &adr );
+
+	if( adr.type == NA_IP || adr.type == NA_IP6 )
 	{
 		const char *cmdname;
 		socket_t *socket;
@@ -617,6 +698,8 @@ void CL_InitServerList( void )
 	CL_FreeServerlist( &favoritesList );
 
 	CL_ReadServerCache();
+
+	CL_MasterAddressCache_Init();
 }
 
 /*
@@ -628,4 +711,6 @@ void CL_ShutDownServerList( void )
 
 	CL_FreeServerlist( &masterList );
 	CL_FreeServerlist( &favoritesList );
+
+	CL_MasterAddressCache_Shutdown();
 }

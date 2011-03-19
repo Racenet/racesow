@@ -39,6 +39,7 @@ cvar_t *cl_compresspackets;
 cvar_t *cl_shownet;
 
 cvar_t *cl_extrapolationTime;
+cvar_t *cl_extrapolate;
 
 cvar_t *cl_timedemo;
 cvar_t *cl_demoavi_video;
@@ -1738,6 +1739,7 @@ void CL_SetClientState( int state )
 		break;
 	case CA_CONNECTING:
 		Con_Close();
+		CL_UIModule_ForceMenuOff();
 		CL_SetKeyDest( key_game );
 		//SCR_UpdateScreen();
 		break;
@@ -1748,6 +1750,7 @@ void CL_SetClientState( int state )
 		break;
 	case CA_ACTIVE:
 		Con_Close();
+		CL_UIModule_ForceMenuOff();
 		CL_SetKeyDest( key_game );
 		//SCR_UpdateScreen();
 		if( !cls.sv_tv )
@@ -1913,27 +1916,6 @@ static void CL_ShowServerIP_f( void )
 
 /*
 =================
-CL_AsyncResolveMasterServers
-=================
-*/
-static void CL_AsyncResolveMasterServers( void )
-{
-	char *s, *t;
-	const char *delim = " ";
-
-	s = TempCopyString( cl_masterservers->string );
-	t = strtok( s, delim );
-	while( t != NULL )
-	{
-		NET_AsyncResolveHostname( t );
-		t = strtok( NULL, delim );
-	}
-
-	Mem_Free( s );
-}
-
-/*
-=================
 CL_InitLocal
 =================
 */
@@ -1958,6 +1940,7 @@ static void CL_InitLocal( void )
 	cl_compresspackets =	Cvar_Get( "cl_compresspackets", "1", CVAR_ARCHIVE );
 
 	cl_extrapolationTime =	Cvar_Get( "cl_extrapolationTime", "0", CVAR_DEVELOPER );
+	cl_extrapolate = Cvar_Get( "cl_extrapolate", "1", CVAR_ARCHIVE );
 
 	cl_yawspeed =		Cvar_Get( "cl_yawspeed", "140", 0 );
 	cl_pitchspeed =		Cvar_Get( "cl_pitchspeed", "150", 0 );
@@ -2221,7 +2204,7 @@ int CL_SmoothTimeDeltas( void )
 		return cl.serverTimeDeltas[cl.currentSnapNum & MASK_TIMEDELTAS_BACKUP];
 	}
 
-	i = cl.receivedSnapNum - min( MASK_TIMEDELTAS_BACKUP, 8 );
+	i = cl.receivedSnapNum - min( MAX_TIMEDELTAS_BACKUP, 8 );
 	if( i < 0 )
 	{
 		i = 0;
@@ -2281,7 +2264,7 @@ void CL_UpdateSnapshot( void )
 				cl_extrapolationTime->modified = qfalse;
 			}
 
-			if( !cls.demo.playing )
+			if( !cls.demo.playing && cl_extrapolate->integer )
 				cl.newServerTimeDelta += cl_extrapolationTime->integer;
 
 			// if we don't have current snap (or delay is too big) don't wait to fire the pending one
@@ -2934,8 +2917,6 @@ void CL_Init( void )
 	CL_CheckForUpdate();
 
 	CL_CheckForAnnouncement();
-
-	CL_AsyncResolveMasterServers();
 
 	CL_InitServerList();
 

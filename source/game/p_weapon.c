@@ -21,8 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-//#define GETUNUSED
-
 void SV_Physics_LinearProjectile( edict_t *ent );
 
 static qboolean	is_quad;
@@ -220,7 +218,6 @@ static void G_ProjectileDistancePrestep( edict_t *projectile, float distance )
 #endif
 }
 
-#ifdef GETUNUSED
 /*
 * G_ProjectileTimePrestep
 */
@@ -245,7 +242,7 @@ static void G_ProjectileTimePrestep( edict_t *projectile, int timeOffset )
 	projectile->s.linearProjectileTimeStamp -= timeOffset;
 	SV_Physics_LinearProjectile( projectile );
 }
-#endif
+
 /*
 * G_Fire_Gunblade_Knife
 */

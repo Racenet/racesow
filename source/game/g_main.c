@@ -490,45 +490,58 @@ static edict_t *G_ChooseNextMap( void )
 			if( !Q_stricmp( t, level.mapname ) )
 			{
 				// it's in the list, go to the next one
+				do {
 				t = strtok( NULL, seps );
+				} while ( t && !trap_ML_FilenameExists( t ) );
+
 				if( t == NULL )
-				{ // end of list, go to first one
-					if( f == NULL )  // there isn't a first one, same level
-						ent = CreateTargetChangeLevel( level.mapname );
-					else
-						ent = CreateTargetChangeLevel( f );
+				{
+					// end of list, go to first one. if there isn't a first one, same level
+					ent = CreateTargetChangeLevel( f ? f : level.mapname );
 				}
 				else
 					ent = CreateTargetChangeLevel( t );
 				G_Free( s );
 				return ent;
 			}
-			if( !f )
+			if( !f && trap_ML_FilenameExists( t ) )
 				f = t;
 			t = strtok( NULL, seps );
 		}
 
 		// not in the list, we go for the first one
-		ent = CreateTargetChangeLevel( f );
+		ent = CreateTargetChangeLevel( f ? f : level.mapname );
 		G_Free( s );
 		return ent;
 	}
 	else if( g_maprotation->integer == 2 )
 	{
 		// random from the list, but not the same
+		char *s1;
+		size_t str_size;
+
 		int count = 0;
 		s = G_CopyString( g_maplist->string );
+
+		str_size = strlen( s ) + 1;
+		s1 = G_Malloc( str_size );
+		s1[0] = s1[str_size-1] = '\0';
 
 		t = strtok( s, seps );
 		while( t != NULL )
 		{
-			if( Q_stricmp( t, level.mapname ) )
+			if( Q_stricmp( t, level.mapname ) && trap_ML_FilenameExists( t ) ) {
 				count++;
+				if( *s1 ) {
+					Q_strncatz( s1, " ", str_size );
+				}
+				Q_strncatz( s1, t, str_size );
+			}	
 			t = strtok( NULL, seps );
 		}
 
 		G_Free( s );
-		s = G_CopyString( g_maplist->string );
+		s = NULL;
 
 		if( count < 1 )
 		{
@@ -541,23 +554,20 @@ static edict_t *G_ChooseNextMap( void )
 			count -= (int)Q_brandom( &seed, 0, count ); // this should give random integer from 0 to count-1
 			ent = NULL; // shutup compiler warning;
 
-			t = strtok( s, seps );
+			t = strtok( s1, seps );
 			while( t != NULL )
 			{
-				if( Q_stricmp( t, level.mapname ) )
+				count--;
+				if( count == 0 )
 				{
-					count--;
-					if( count == 0 )
-					{
-						ent = CreateTargetChangeLevel( t );
-						break;
-					}
+					ent = CreateTargetChangeLevel( t );
+					break;
 				}
 				t = strtok( NULL, seps );
 			}
 		}
 
-		G_Free( s );
+		G_Free( s1 );
 		return ent;
 	}
 

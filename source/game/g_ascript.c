@@ -4366,7 +4366,7 @@ static void objectGameClient_asGeneric_InventorySetCount( void *gen )
 static void objectGameClient_InventoryGiveItemExt( int index, int count, gclient_t *self )
 {
 	gsitem_t *it;
-	edict_t tmpEnt, *selfEnt;
+	edict_t *tmpEnt, *selfEnt;
 	int playerNum;
 
 	if( index < 0 || index >= MAX_ITEMS )
@@ -4380,21 +4380,20 @@ static void objectGameClient_InventoryGiveItemExt( int index, int count, gclient
 		return;
 
 	playerNum = self - game.clients;
-	if( playerNum < 0 || playerNum > gs.maxclients )
+	if( playerNum < 0 || playerNum >= gs.maxclients )
 		return;
 
-	selfEnt = &game.edicts[ playerNum + 1 ];
+	selfEnt = PLAYERENT( playerNum );
 
-	G_InitEdict( &tmpEnt );
-	tmpEnt.s.number = 0;
-	tmpEnt.r.solid = SOLID_TRIGGER;
-	tmpEnt.spawnflags &= ~( DROPPED_ITEM | DROPPED_PLAYER_ITEM );
-	tmpEnt.s.type = ET_ITEM;
-	tmpEnt.count = count < 0 ? it->quantity : count;
-	tmpEnt.item = it;
-	tmpEnt.r.inuse = qfalse;
+	tmpEnt = G_Spawn();
+	tmpEnt->r.solid = SOLID_TRIGGER;
+	tmpEnt->s.type = ET_ITEM;
+	tmpEnt->count = count < 0 ? it->quantity : count;
+	tmpEnt->item = it;
 
-	G_PickupItem( &tmpEnt, selfEnt );
+	G_PickupItem( tmpEnt, selfEnt );
+
+	G_FreeEdict( tmpEnt );
 }
 
 static void objectGameClient_asGeneric_InventoryGiveItemExt( void *gen )

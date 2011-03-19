@@ -444,5 +444,5 @@ void CL_GameModule_RenderView( float stereo_separation )
 {
 	if( cge )
 		cge->RenderView( cls.frametime, cls.realframetime, cls.realtime, cl.serverTime, stereo_separation, 
-		cls.demo.playing ? 0 : cl_extrapolationTime->integer );
+		cl_extrapolate->integer && !cls.demo.playing ? cl_extrapolationTime->integer : 0 );
 }

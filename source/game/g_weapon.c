@@ -409,7 +409,7 @@ void W_Fire_Blade( edict_t *self, int range, vec3_t start, vec3_t angles, float 
 		// wall impact
 		VectorMA( trace.endpos, -0.02, dir, end );
 		event = G_SpawnEvent( EV_BLADE_IMPACT, 0, end );
-		event->s.ownerNum = self - game.edicts;
+		event->s.ownerNum = ENTNUM( self );
 		VectorScale( trace.plane.normal, 1024, event->s.origin2 );
 		event->r.svflags = SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
 		return;
@@ -1415,21 +1415,24 @@ void W_Fire_Instagun( edict_t *self, vec3_t start, vec3_t angles, float damage, 
 		{
 			if( g_instajump->integer && self && self->r.client )
 			{
-				// create a fake inflictor entity
-				edict_t inflictor;
-				memset( &inflictor, 0, sizeof( inflictor ) );
-				inflictor.s.number = MAX_EDICTS;
-				inflictor.s.solid = SOLID_NOT;
-				inflictor.timeDelta = 0;
-				VectorCopy( tr.endpos, inflictor.s.origin );
-				inflictor.s.ownerNum = ENTNUM( self );
-				inflictor.projectileInfo.maxDamage = 0;
-				inflictor.projectileInfo.minDamage = 0;
-				inflictor.projectileInfo.maxKnockback = knockback;
-				inflictor.projectileInfo.minKnockback = 1;
-				inflictor.projectileInfo.stun = 0;
-				inflictor.projectileInfo.radius = radius;
-				G_TakeRadiusDamage( &inflictor, self, &tr.plane, NULL, mod );
+				// create a temporary inflictor entity
+				edict_t *inflictor;
+
+				inflictor = G_Spawn();
+				inflictor->s.solid = SOLID_NOT;
+				inflictor->timeDelta = 0;
+				VectorCopy( tr.endpos, inflictor->s.origin );
+				inflictor->s.ownerNum = ENTNUM( self );
+				inflictor->projectileInfo.maxDamage = 0;
+				inflictor->projectileInfo.minDamage = 0;
+				inflictor->projectileInfo.maxKnockback = knockback;
+				inflictor->projectileInfo.minKnockback = 1;
+				inflictor->projectileInfo.stun = 0;
+				inflictor->projectileInfo.radius = radius;
+
+				G_TakeRadiusDamage( inflictor, self, &tr.plane, NULL, mod );
+
+				G_FreeEdict( inflictor );
 			}
 			break;
 		}
@@ -1467,7 +1470,7 @@ void G_HideLaser( edict_t *ent )
 
 	ent->s.modelindex = 0;
 	ent->s.sound = 0;
-	ent->r.svflags |= SVF_NOCLIENT;
+	ent->r.svflags = SVF_NOCLIENT;
 
 	if( ent->s.type == ET_CURVELASERBEAM )
 		soundindex = trap_SoundIndex( S_WEAPON_LASERGUN_W_STOP );
@@ -1531,29 +1534,22 @@ static void _LaserImpact( trace_t *trace, vec3_t dir )
 	}
 }
 
-//==================
-//W_Fire_Lasergun
-//==================
-edict_t	*W_Fire_Lasergun( edict_t *self, vec3_t start, vec3_t angles, float damage, int knockback, int stun, int range, int mod, int timeDelta )
+static edict_t *_FindOrSpawnLaser( edict_t *owner, int entType, qboolean *newLaser )
 {
-	int i, playernum;
+	int i, ownerNum;
 	edict_t	*e, *laser;
-	trace_t	tr;
-	vec3_t dir;
-
-	if( GS_Instagib() )
-		damage = 9999;
 
 	// first of all, see if we already have a beam entity for this laser
+	*newLaser = qfalse;
 	laser = NULL;
-	playernum = ENTNUM( self );
-	for( i = gs.maxclients; i < game.maxentities; i++ )
+	ownerNum = ENTNUM( owner );
+	for( i = gs.maxclients+1; i < game.maxentities; i++ )
 	{
 		e = &game.edicts[i];
 		if( !e->r.inuse )
 			continue;
 
-		if( e->s.ownerNum == playernum && ( e->s.type == ET_LASERBEAM || e->s.type == ET_CURVELASERBEAM ) )
+		if( e->s.ownerNum == ownerNum && ( e->s.type == ET_LASERBEAM || e->s.type == ET_CURVELASERBEAM ) )
 		{
 			laser = e;
 			break;
@@ -1561,23 +1557,44 @@ edict_t	*W_Fire_Lasergun( edict_t *self, vec3_t start, vec3_t angles, float dama
 	}
 
 	// if no ent was found we have to create one
-	if( !laser || laser->s.type == ET_CURVELASERBEAM || !laser->s.modelindex )
+	if( !laser || laser->s.type != entType || !laser->s.modelindex )
 	{
 		if( !laser )
 		{
-			// the quad start sound is added from the server
-			if( self->r.client && self->r.client->ps.inventory[POWERUP_QUAD] > 0 )
-				G_Sound( self, CHAN_AUTO, trap_SoundIndex( S_QUAD_FIRE ), ATTN_NORM );
-
+			*newLaser = qtrue;
 			laser = G_Spawn();
 		}
 
-		laser->s.type = ET_LASERBEAM;
-		laser->s.ownerNum = playernum;
+		laser->s.type = entType;
+		laser->s.ownerNum = ownerNum;
 		laser->movetype = MOVETYPE_NONE;
 		laser->r.solid = SOLID_NOT;
 		laser->r.svflags = SVF_TRANSMITORIGIN2; // force PHS culling
 		laser->s.modelindex = 255; // needs to have some value so it isn't filtered by the server culling
+	}
+
+	return laser;
+}
+
+//==================
+//W_Fire_Lasergun
+//==================
+edict_t	*W_Fire_Lasergun( edict_t *self, vec3_t start, vec3_t angles, float damage, int knockback, int stun, int range, int mod, int timeDelta )
+{
+	edict_t	*laser;
+	qboolean newLaser;
+	trace_t	tr;
+	vec3_t dir;
+
+	if( GS_Instagib() )
+		damage = 9999;
+
+	laser = _FindOrSpawnLaser( self, ET_LASERBEAM, &newLaser );
+	if( newLaser )
+	{
+		// the quad start sound is added from the server
+		if( self->r.client && self->r.client->ps.inventory[POWERUP_QUAD] > 0 )
+			G_Sound( self, CHAN_AUTO, trap_SoundIndex( S_QUAD_FIRE ), ATTN_NORM );
 	}
 
 	laser_damage = damage;
@@ -1608,50 +1625,20 @@ edict_t	*W_Fire_Lasergun( edict_t *self, vec3_t start, vec3_t angles, float dama
 //void AITools_DrawLine(vec3_t origin, vec3_t dest);
 edict_t	*W_Fire_Lasergun_Weak( edict_t *self, vec3_t start, vec3_t end, float damage, int knockback, int stun, int range, int mod, int timeDelta )
 {
-	int i, playernum;
-	edict_t	*e, *laser;
+	edict_t	*laser;
+	qboolean newLaser;
 	trace_t	trace;
 
 	if( GS_Instagib() )
 		damage = 9999;
 
-	// first of all, see if we already have a beam entity for this laser
-	laser = NULL;
-	playernum = ENTNUM( self );
-	for( i = gs.maxclients; i < game.maxentities; i++ )
+	laser = _FindOrSpawnLaser( self, ET_CURVELASERBEAM, &newLaser );
+	if( newLaser )
 	{
-		e = &game.edicts[i];
-		if( !e->r.inuse )
-			continue;
-
-		if( e->s.ownerNum == playernum && ( e->s.type == ET_CURVELASERBEAM || e->s.type == ET_LASERBEAM ) )
-		{
-			laser = e;
-			break;
-		}
+		// the quad start sound is added from the server
+		if( self->r.client && self->r.client->ps.inventory[POWERUP_QUAD] > 0 )
+			G_Sound( self, CHAN_AUTO, trap_SoundIndex( S_QUAD_FIRE ), ATTN_NORM );
 	}
-
-	// if no ent was found we have to create one
-	if( !laser || laser->s.type == ET_LASERBEAM || !laser->s.modelindex )
-	{
-		if( !laser )
-		{
-			// the quad start sound is added from the server
-			if( self->r.client && self->r.client->ps.inventory[POWERUP_QUAD] > 0 )
-				G_Sound( self, CHAN_AUTO, trap_SoundIndex( S_QUAD_FIRE ), ATTN_NORM );
-
-			laser = G_Spawn();
-		}
-
-		laser->s.type = ET_CURVELASERBEAM;
-		laser->s.teleported = qtrue;
-		laser->s.ownerNum = playernum;
-		laser->movetype = MOVETYPE_NONE;
-		laser->r.solid = SOLID_NOT;
-		laser->r.svflags = SVF_TRANSMITORIGIN2;
-		laser->s.modelindex = 255; // needs to have some value so it isn't filtered by server culling
-	}
-
 
 	laser_damage = damage;
 	laser_knockback = knockback;

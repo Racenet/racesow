@@ -101,6 +101,7 @@ void Mod_LoadSkeletalPose( char *name, model_t *mod, void *buffer )
 		pinbonepose = ( dskpbonepose_t * )( ( qbyte * )pinmodel + LittleLong( pinframe->ofs_bonepositions ) );
 		poutbonepose = poutframe->boneposes = ( bonepose_t * )membuffer; membuffer += sizeof( bonepose_t ) * poutmodel->numbones;
 
+		Q_strncpyz( poutframe->name, pinframe->name, sizeof( poutframe->name ) );
 		ClearBounds( poutframe->mins, poutframe->maxs );
 
 		for( j = 0; j < poutmodel->numbones; j++, pinbonepose++, poutbonepose++ )

@@ -880,6 +880,11 @@ static void CL_ParseServerData( msg_t *msg )
 	gamedir = FS_GameDirectory();
 	if( strcmp( str, gamedir ) )
 	{
+		// shutdown the cgame module first in case it is running for whatever reason
+		// (happens on wswtv in lobby), otherwise precaches that will follow are going 
+		// to run will probably fuck up (like models trying to load before the world model)
+		CL_GameModule_Shutdown();
+
 		if( !FS_SetGameDirectory( str, qtrue ) )
 			Com_Error( ERR_DROP, "Failed to load game directory set by server: %s", str );
 		ML_Restart( qtrue );

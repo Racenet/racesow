@@ -752,7 +752,6 @@ void SCR_UpdatePlayerStatsMessage( const char *string );
 //
 extern cvar_t *developer;
 extern cvar_t *cg_showClamp;
-extern cvar_t *cg_extrapolate;
 
 // wsw
 extern cvar_t *cg_showObituaries;

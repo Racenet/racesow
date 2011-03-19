@@ -744,6 +744,7 @@ void R_Register( void )
 	Cmd_AddCommand( "gfxinfo", R_GfxInfo_f );
 	Cmd_AddCommand( "glslprogramlist", R_ProgramList_f );
 	Cmd_AddCommand( "glslprogramdump", R_ProgramDump_f );
+	Cmd_AddCommand( "skm2iqe", R_Skm2Iqe_f );
 }
 
 /*

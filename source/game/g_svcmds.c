@@ -377,6 +377,7 @@ void G_AddServerCommands( void )
 
 	// match controls
 	trap_Cmd_AddCommand( "match", Cmd_Match_f );
+
 	// banning
 	trap_Cmd_AddCommand( "addip", Cmd_AddIP_f );
 	trap_Cmd_AddCommand( "removeip", Cmd_RemoveIP_f );

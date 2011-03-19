@@ -2702,7 +2702,7 @@ static qbyte *R_InitFogTexture( int *w, int *h, int *depth, int *flags, int *sam
 	*w = FOG_TEXTURE_WIDTH;
 	*h = FOG_TEXTURE_HEIGHT;
 	*depth = 1;
-	*flags = IT_NOMIPMAP|IT_CLAMP;
+	*flags = IT_NOPICMIP|IT_NOMIPMAP|IT_CLAMP;
 	*samples = 4;
 
 	data = R_PrepareImageBuffer( TEXTURE_LOADING_BUF0, FOG_TEXTURE_WIDTH*FOG_TEXTURE_HEIGHT*4 );

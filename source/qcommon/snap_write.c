@@ -986,7 +986,7 @@ static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_
 	}
 
 	// no need of merging when we are sending the whole level
-	if( !frame->allentities )
+	if( !frame->allentities && clientarea >= 0 )
 	{
 		// make a pass checking for sky portal and portal entities and merge PVS in case of finding any
 		if( skyorg )
@@ -1026,8 +1026,19 @@ static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_
 		// add it
 		SNAP_AddEntNumToSnapList( entNum, entsList );
 
-		if( ( ent->r.svflags & SVF_FORCEOWNER ) && ent->s.ownerNum > 0 )
-			SNAP_AddEntNumToSnapList( ent->s.ownerNum, entsList );
+		if( ent->r.svflags & SVF_FORCEOWNER )
+		{
+			// make sure owner number is valid too
+			if( ent->s.ownerNum > 0 && ent->s.ownerNum < gi->num_edicts )
+			{
+				SNAP_AddEntNumToSnapList( ent->s.ownerNum, entsList );
+			}
+			else
+			{
+				Com_Printf( "FIXING ENT->S.OWNERNUM: %i %i!!!\n", ent->s.type, ent->s.ownerNum );
+				ent->s.ownerNum = 0;
+			}
+		}
 	}
 
 	SNAP_SortSnapList( entsList );

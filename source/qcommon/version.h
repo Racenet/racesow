@@ -35,7 +35,7 @@
 #endif
 
 #ifndef APP_VERSION_UPDATE
-#define APP_VERSION_UPDATE				0
+#define APP_VERSION_UPDATE				1
 #endif
 
 #ifndef APP_VERSION
