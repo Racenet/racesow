@@ -598,41 +598,55 @@ class Racesow_Player
 			practiceRespawner.count = client.playerNum();
 		}
 			
-    // when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
+		// when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
 		if ( @this.race == null || !this.race.stop() )
             return;
 		
-		switch (gametypeFlag)
-    {
-    case MODFLAG_DRACE:
-        // we kill the player who lost
-        if (@DRACERound.roundChallenger != null) {
-          if (@this.client == @DRACERound.roundWinner)
-            DRACERound.roundChallenger.getEnt().health = -1;
-        }
-  
-        if (@DRACERound.roundWinner != null) {  
-          if (@this.client == @DRACERound.roundChallenger)
-            DRACERound.roundWinner.getEnt().health = -1;
-        }
-        break;
-      
-    case MODFLAG_TRACE:
-    case MODFLAG_DURACE:
-        this.client.stats.addScore( 1 );
-        //G_GetTeam( this.client.getEnt().team ).stats.setScore( this.client.stats.score );
-        G_GetTeam( this.client.getEnt().team ).stats.addScore( 1 );
-        break;
+        this.setLastRace(@this.race);
 
-    default:
-      break;
-    }
+		switch (gametypeFlag) {
+            case MODFLAG_DRACE:
+                // we kill the player who lost
+                if (@DRACERound.roundChallenger != null) {
+                    if (@this.client == @DRACERound.roundWinner)
+                        DRACERound.roundChallenger.getEnt().health = -1;
+                }
+
+                if (@DRACERound.roundWinner != null) {
+                    if (@this.client == @DRACERound.roundChallenger)
+                        DRACERound.roundWinner.getEnt().health = -1;
+                }
+
+                this.raceCallback(0,0,0,
+                                    this.bestRaceTime,
+                                    map.getHighScore().getTime(),
+                                    this.race.getTime());
+
+                break;
+
+            case MODFLAG_TRACE:
+            case MODFLAG_DURACE:
+                this.client.stats.addScore( 1 );
+                //G_GetTeam( this.client.getEnt().team ).stats.setScore( this.client.stats.score );
+                G_GetTeam( this.client.getEnt().team ).stats.addScore( 1 );
+                this.raceCallback(0,0,0,
+                                    this.bestRaceTime,
+                                    map.getHighScore().getTime(),
+                                    this.race.getTime());
+
+                break;
+
+            case MODFLAG_RACE:
+                racesowAdapter.raceFinish(@this.race);
+                break;
+
+            default:
+                break;
+        }
     	
 		this.isSpawned = false;
-		this.setLastRace(@this.race);
 		this.racingTime += this.race.getTime();
 		this.racingTimeSinceLastRace += this.race.getTime();
-		racesowAdapter.raceFinish(@this.race);
 		this.triesSinceLastRace = 0;
 		this.racingTimeSinceLastRace = 0;
 		@this.race = null;
