@@ -874,6 +874,7 @@ void RS_CreateCommands()
             + S_COLOR_RED + "admin vote(un)mute  " + S_COLOR_YELLOW + "enable/disable voting for the given player\n"
             + S_COLOR_RED + "admin joinlock  " + S_COLOR_YELLOW + "prevent the given player from joining\n"
             + S_COLOR_RED + "admin cancelvote    " + S_COLOR_YELLOW + "cancel the currently active vote\n"
+            + S_COLOR_RED + "admin updateml    " + S_COLOR_YELLOW + "Update the maplist\n"
             + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n";
     @commands[commandCount] = @admin;
     commandCount++;

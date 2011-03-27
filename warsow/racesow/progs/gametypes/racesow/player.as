@@ -1259,6 +1259,14 @@ class Racesow_Player
 			showNotification = true;
 		}
 
+		//update maplist
+		if ( command == "updateml")
+		{
+		    commandExists = true;
+		    RS_UpdateMapList( this.client.playerNum() );
+		    return true;
+		}
+
       // restart command
         if ( commandExists = command == "restart" )
         {
