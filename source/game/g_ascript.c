@@ -6195,6 +6195,19 @@ static void asFunc_asGeneric_RS_MapFilter( void *gen )
             (unsigned int)G_asGeneric_GetArgInt(gen, 2)));
 }
 
+// RS_UpdateMapList
+static qboolean asFunc_RS_UpdateMapList( int playerNum )
+{
+     return RS_UpdateMapList( playerNum );
+}
+
+static void asFunc_asGeneric_RS_UpdateMapList( void *gen )
+{
+    G_asGeneric_SetReturnBool( gen, asFunc_RS_UpdateMapList(
+            (int)G_asGeneric_GetArgInt(gen, 0)
+    ));
+}
+
 // RS_LoadStats
 static qboolean asFunc_RS_LoadStats(int player_id, asstring_t *what, asstring_t *which)
 {
@@ -7088,6 +7101,7 @@ static asglobfuncs_t asGlobFuncs[] =
     { "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
     { "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
     { "bool RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},
+    { "bool RS_UpdateMapList( int playerNum)", asFunc_RS_UpdateMapList, asFunc_asGeneric_RS_UpdateMapList},
     { "bool RS_LoadStats( int playerNum, cString &, cString & )", asFunc_RS_LoadStats, asFunc_asGeneric_RS_LoadStats},
     { "cString @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback, asFunc_asGeneric_RS_PrintQueryCallback },
     { "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },

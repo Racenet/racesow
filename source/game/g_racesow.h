@@ -150,3 +150,7 @@ void RS_ircSendMessage( const char *name,  const char *text );
 void RS_AddServerCommands( void );
 void RS_RemoveServerCommands( void );
 static void RS_Irc_ConnectedListener_f( void *connected );
+void RS_VoteMapExtraHelp( edict_t *ent );
+qboolean RS_UpdateMapList(int playerNum);
+void *RS_UpdateMapList_Thread(void *in);
+

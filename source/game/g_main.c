@@ -611,7 +611,7 @@ void G_ExitLevel( void )
 
 	level.exitNow = qfalse;
 
-	nextmapname = RS_ChooseNextMap();
+	nextmapname = RS_ChooseNextMap(); //racesow
 	timeLimit = g_timelimit->integer > 0 ? max( g_timelimit->integer, 60 ) : 60;
 	timeLimit *= 60 * 1000;
 

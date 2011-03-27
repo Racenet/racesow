@@ -2356,7 +2356,8 @@ void G_CallVotes_Init( void )
 	callvote->validate = G_VoteMapValidate;
 	callvote->execute = G_VoteMapPassed;
 	callvote->current = G_VoteMapCurrent;
-	callvote->extraHelp = G_VoteMapExtraHelp;
+	// callvote->extraHelp = G_VoteMapExtraHelp; racesow
+	callvote->extraHelp = RS_VoteMapExtraHelp;
 	callvote->argument_format = G_LevelCopyString( "<name/[startnum]>" );
 	callvote->help = G_LevelCopyString( "- Changes map" );
 

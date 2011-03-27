@@ -12,6 +12,7 @@ cvar_t *sv_hostname;
 /**
  * MySQL CVARs
  */
+cvar_t *rs_mysqlDebug;
 cvar_t *rs_mysqlEnabled;
 cvar_t *rs_mysqlHost;
 cvar_t *rs_mysqlPort;
@@ -142,7 +143,19 @@ int MysqlConnected = 0;
  *
  * not a function anymore
  */
-#define RS_CheckMysqlThreadError() {if (RS_MysqlError()) { G_Printf("file=%s line=%d MySQL Error!\n",__FILE__,__LINE__); RS_EndMysqlThread(); } }
+void RS_CheckMysqlThreadError(char* query)
+{
+    if ( rs_mysqlDebug->integer )
+    {
+        G_Printf("%s\n", query);
+    }
+
+    if (RS_MysqlError())
+    {
+        G_Printf("file=%s line=%d MySQL Error!\n",__FILE__,__LINE__);
+        RS_EndMysqlThread();
+    }
+}
 
 /**
  * Initializes racesow specific stuff
@@ -161,6 +174,7 @@ void RS_Init()
     rs_IRCstream = trap_Cvar_Get( "rs_IRCstream","0", CVAR_ARCHIVE|CVAR_NOSET );
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
     rs_loadPlayerCheckpoints = trap_Cvar_Get( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE);
+    rs_mysqlDebug = trap_Cvar_Get( "rs_mysqlDebug", "0", CVAR_ARCHIVE|CVAR_NOSET);
 
 	previousMapName[0]='\0';
 
@@ -526,9 +540,9 @@ void *RS_MysqlLoadMap_Thread(void *in)
 
 	sprintf(query, rs_queryGetMap->string, name);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
 	if ((row = mysql_fetch_row(mysql_res)) != NULL) {
         map_id=atoi(row[0]);
@@ -536,7 +550,7 @@ void *RS_MysqlLoadMap_Thread(void *in)
 
         sprintf(query, rs_queryAddMap->string, name);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
 		map_id=(int)mysql_insert_id(&mysql);
     }
@@ -545,9 +559,9 @@ void *RS_MysqlLoadMap_Thread(void *in)
     // retrieve server best
 	sprintf(query, rs_queryGetPlayerMapHighscores->string, map_id, "'false'");
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	{
 		if (row[0] !=NULL && row[1] != NULL)
@@ -655,9 +669,9 @@ void *RS_MysqlInsertRace_Thread(void *in)
 	// read current points and time
 	sprintf(query, rs_queryGetPlayerMap->string, raceData->player_id, raceData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 	mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
 		if (row[0] != NULL && row[1] != NULL)
         {
@@ -671,9 +685,9 @@ void *RS_MysqlInsertRace_Thread(void *in)
     // retrieve server best in the category (pj/nopj) of the race to be inserted
 	sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, raceData->prejumped?"'true'":"'false'");
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	{
 		if (row[1] !=NULL)
@@ -687,9 +701,9 @@ void *RS_MysqlInsertRace_Thread(void *in)
     // retrieve server best in the other category (pj/nopj) of the race to be inserted
     sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, raceData->prejumped?"'false'":"'true'");
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
     {
         if (row[1] !=NULL)
@@ -704,9 +718,9 @@ void *RS_MysqlInsertRace_Thread(void *in)
     // get server_id
     sprintf(query, rs_queryGetServer->string, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
 	if ((row = mysql_fetch_row(mysql_res)) != NULL)
     {
@@ -723,27 +737,27 @@ void *RS_MysqlInsertRace_Thread(void *in)
         // insert race
         sprintf(query, rs_queryAddRace->string, raceData->player_id, raceData->map_id, raceData->race_time, raceData->tries, raceData->duration, server_id, raceData->prejumped?"true":"false");
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
         // increment player races
         sprintf(query, rs_queryUpdatePlayerRaces->string, raceData->player_id);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
         // increment map races
         sprintf(query, rs_queryUpdateMapRaces->string, raceData->map_id);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
         // increment server races
         sprintf(query, rs_queryIncrementServerRaces->string, sv_port->integer);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
         // insert or update player_map (aka personal record)
         sprintf(query, rs_queryUpdatePlayerMap->string, raceData->player_id, raceData->map_id, raceData->race_time, server_id, raceData->player_id, raceData->map_id, raceData->player_id, raceData->map_id, raceData->prejumped?"true":"false");
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
         // only when the new time is better than the old one, recompute the points
         if (oldTime == 0 || raceData->race_time < oldTime)
@@ -756,7 +770,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
                 empty_oneliner[0] = '\0';
                 sprintf(query, rs_querySetMapOneliner->string, raceData->prejumped?"pj_oneliner":"oneliner", empty_oneliner, raceData->map_id);
                 mysql_real_query(&mysql, query, strlen(query));
-                RS_CheckMysqlThreadError();
+                RS_CheckMysqlThreadError(query);
             }
 
             // - clear the current oneliner in the other category if current racer was the record holder in this category
@@ -768,7 +782,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
                 empty_oneliner[0] = '\0';
                 sprintf(query, rs_querySetMapOneliner->string, raceData->prejumped?"oneliner":"pj_oneliner", empty_oneliner, raceData->map_id);
                 mysql_real_query(&mysql, query, strlen(query));
-                RS_CheckMysqlThreadError();
+                RS_CheckMysqlThreadError(query);
             }
 
             //update player checkpoints
@@ -778,21 +792,21 @@ void *RS_MysqlInsertRace_Thread(void *in)
                 index++;
                 sprintf(query, rs_queryUpdateCheckpoint->string, raceData->player_id, raceData->map_id, atoi(t), index);
                 mysql_real_query(&mysql, query, strlen(query));
-                RS_CheckMysqlThreadError();
+                RS_CheckMysqlThreadError(query);
                 t = strtok( NULL, seps);
             }
 
             // reset points in player_map
             sprintf(query, rs_queryResetPlayerMapPoints->string, raceData->map_id);
             mysql_real_query(&mysql, query, strlen(query));
-            RS_CheckMysqlThreadError();
+            RS_CheckMysqlThreadError(query);
 
             // update points in player_map
             sprintf(query, rs_queryGetPlayerMapHighscores->string, raceData->map_id, "'true','false'");
             mysql_real_query(&mysql, query, strlen(query));
-            RS_CheckMysqlThreadError();
+            RS_CheckMysqlThreadError(query);
             mysql_res = mysql_store_result(&mysql);
-            RS_CheckMysqlThreadError();
+            RS_CheckMysqlThreadError(query);
             while ((row = mysql_fetch_row(mysql_res)) != NULL)
             {
                 points = 0;
@@ -864,25 +878,26 @@ void *RS_MysqlInsertRace_Thread(void *in)
                     // set points in player_map
                     sprintf(query, rs_queryUpdatePlayerMapPoints->string, points, raceData->map_id, playerId);
                     mysql_real_query(&mysql, query, strlen(query));
-                    RS_CheckMysqlThreadError();
+                    RS_CheckMysqlThreadError(query);
                 }
             }
 
             mysql_free_result(mysql_res);
-            RS_CheckMysqlThreadError();
+            RS_CheckMysqlThreadError(query);
 
             // update points for affected players
             sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
+            G_Printf("%s\n",query);
             mysql_real_query(&mysql, query, strlen(query));
-            RS_CheckMysqlThreadError();
+            RS_CheckMysqlThreadError(query);
 
         }
 
         sprintf(query, rs_queryGetPlayerPoints->string, raceData->player_id);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0] !=NULL)
@@ -1007,9 +1022,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         sprintf(query, rs_queryGetPlayerAuthBySession->string, sessionToken);
         mysql_real_query(&mysql, query, strlen(query));
 
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL && row[1]!=NULL )
@@ -1029,9 +1044,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         sprintf(query, rs_queryGetPlayerAuthByToken->string, authToken, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
 
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL && row[1]!=NULL )
@@ -1050,9 +1065,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         sprintf(query, rs_queryGetPlayerAuth->string, authName, authPass, rs_tokenSalt->string);
 
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL && row[1]!=NULL) // token may be null
@@ -1086,9 +1101,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     // try to get information about the player the nickname belongs to
     sprintf(query, rs_queryGetPlayer->string, simplified);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
     {
         if (row[0]!=NULL && row[1]!=NULL)
@@ -1107,7 +1122,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     {
         sprintf(query, rs_queryAddPlayer->string, name, simplified);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
         player_id_for_nick = (int)mysql_insert_id(&mysql);
     }
@@ -1126,9 +1141,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 		// retrieve personal best
 		sprintf(query, rs_queryGetPlayerMapHighscore->string, playerData->map_id, player_id_for_time);
 		mysql_real_query(&mysql, query, strlen(query));
-		RS_CheckMysqlThreadError();
+		RS_CheckMysqlThreadError(query);
 		mysql_res = mysql_store_result(&mysql);
-		RS_CheckMysqlThreadError();
+		RS_CheckMysqlThreadError(query);
 
 		if ((row = mysql_fetch_row(mysql_res)) != NULL)
 		{
@@ -1147,9 +1162,9 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 	    //get player checkpoints on this map
 	    sprintf(query, rs_queryGetPlayerMapCheckpoints->string, playerData->map_id, player_id_for_time);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
         while ( (row = mysql_fetch_row(mysql_res) ) != NULL )
         {
@@ -1232,14 +1247,14 @@ char *RS_GenerateNewToken(int playerId)
 
         sprintf(query, rs_queryGetPlayerAuthByToken->string, hex_output, rs_tokenSalt->string);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if (mysql_fetch_row(mysql_res) == NULL)
         {
             sprintf(query, rs_querySetTokenForPlayer->string, hex_output, rs_tokenSalt->string, playerId);
             mysql_real_query(&mysql, query, strlen(query));
-            RS_CheckMysqlThreadError();
+            RS_CheckMysqlThreadError(query);
 
             mysql_free_result(mysql_res);
             return hex_output;
@@ -1288,14 +1303,14 @@ char *RS_StartPlayerSession(int playerId)
 
         sprintf(query, rs_queryGetPlayerAuthBySession->string, hex_output);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if (mysql_fetch_row(mysql_res) == NULL)
         {
             sprintf(query, rs_querySetSessionForPlayer->string, hex_output, playerId);
             mysql_real_query(&mysql, query, strlen(query));
-            RS_CheckMysqlThreadError();
+            RS_CheckMysqlThreadError(query);
 
             mysql_free_result(mysql_res);
             return hex_output;
@@ -1384,29 +1399,29 @@ void *RS_MysqlPlayerDisappear_Thread(void *in)
     // increment map playtime
 	sprintf(query, rs_queryUpdateMapPlaytime->string, playtimeData->playtime, playtimeData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
     // increment player playtime
     sprintf(query, rs_queryUpdatePlayerPlaytime->string, playtimeData->playtime, playtimeData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
     // update player map info
     sprintf(query, rs_queryUpdatePlayerMapInfo->string, playtimeData->player_id, playtimeData->map_id, playtimeData->playtime, playtimeData->overall_tries, playtimeData->racing_time);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
     // update the players's number of played maps
     sprintf(query, rs_queryUpdatePlayerMaps->string,  playtimeData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
     // update the server's number of played maps and playtime and the hostname
     Q_strncpyz ( servername, sv_hostname->string, sizeof(servername) );
 	RS_EscapeString(servername);
     sprintf(query, rs_queryUpdateServerData->string, servername, playtimeData->playtime, sv_port->integer);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
 	free(playtimeData->name);
 	free(playtimeData);
@@ -1557,9 +1572,9 @@ void *RS_UpdatePlayerNick_Thread( void *in )
 	// test if the wanted nick is protected
 	sprintf(query, rs_queryGetPlayer->string, simplified);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
     {
         if (row[0]!=NULL && row[1]!=NULL)
@@ -1589,7 +1604,7 @@ void *RS_UpdatePlayerNick_Thread( void *in )
 	// update nick
 	sprintf(query, rs_queryUpdatePlayerNick->string, name, simplified, playerData->player_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
 	// return confirmation of the new nick to the player
 	size = strlen( name )+1;
@@ -1605,6 +1620,40 @@ void *RS_UpdatePlayerNick_Thread( void *in )
     return NULL;
 }
 
+/**
+ * RS_UpdateMapList function registered in AS API
+ *
+ * This function just creates a thread that actually does the job
+ * @param int playerNum the player making the request
+ */
+qboolean RS_UpdateMapList(int playerNum)
+{
+    pthread_t thread;
+    int returnCode;
+    int* player = malloc(sizeof(int));
+    *player = playerNum;
+    returnCode = pthread_create(&thread, &threadAttr, RS_UpdateMapList_Thread, (void *)player);
+
+    if (returnCode) {
+
+           G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+           return qfalse;
+       }
+
+       return qtrue;
+}
+
+/**
+ * RS_UpdateMapList_Thread
+ *
+ * Calls the trap_ML_Update function
+ * Hoping this is thread safe
+ */
+void *RS_UpdateMapList_Thread(void* in)
+{
+    trap_ML_Update();
+    return NULL;
+}
 
 /**
  * Mapfilter function registered in AS API.
@@ -1811,9 +1860,9 @@ void *RS_LoadStats_Thread( void *in )
 		RS_EscapeString(which);
         sprintf(query, rs_queryGetMapStats->string, which);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             if (row[0]!=NULL)
@@ -1889,9 +1938,9 @@ void *RS_LoadStats_Thread( void *in )
 		RS_EscapeString(which);
         sprintf(query, rs_queryGetPlayerStats->string, which);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         if ((row = mysql_fetch_row(mysql_res)) != NULL)
         {
             int oHour, oMin, oMilli, rHour, rMin, rMilli;
@@ -2179,9 +2228,9 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		    //get the map_id corresponding to the mapname
 		    sprintf(query, rs_queryGetMap->string, mapname);
 		    mysql_real_query(&mysql, query, strlen(query));
-	        RS_CheckMysqlThreadError();
+	        RS_CheckMysqlThreadError(query);
 	        mysql_res = mysql_store_result(&mysql);
-	        RS_CheckMysqlThreadError();
+	        RS_CheckMysqlThreadError(query);
 
 	        if ( (row = mysql_fetch_row(mysql_res)) != NULL )
 	            map_id = atoi(row[0]);
@@ -2202,9 +2251,9 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		pjoneliner[0]='\0';
 		sprintf(query, rs_queryLoadMapOneliners->string, map_id);
 		mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 		if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	    {
 		    if (row[0] !=NULL)
@@ -2227,9 +2276,9 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
         // get top players on map
 		sprintf(query, rs_queryLoadMapHighscores->string, map_id, prejumpflag, limit);
         mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 
 		highscores[0]='\0';
 
@@ -2379,9 +2428,9 @@ void *RS_MysqlSetOneliner_Thread( void *in )
     // read current player record to know if it was prejumped or not
     sprintf(query, rs_queryGetPlayerMap->string, onelinerData->player_id, onelinerData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL) {
         if (row[0] != NULL && row[1] != NULL)
         {
@@ -2396,9 +2445,9 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 	// retrieve server best
 	sprintf(query, rs_queryGetPlayerMapHighscores->string, onelinerData->map_id, prejumped?"'true','false'":"'false'");
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     mysql_res = mysql_store_result(&mysql);
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
     if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	{
 		if (row[0] !=NULL && row[1] != NULL)
@@ -2422,9 +2471,9 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 		old_oneliner[0]='\0';
 		sprintf(query, rs_queryLoadMapOneliners->string, onelinerData->map_id);
 		mysql_real_query(&mysql, query, strlen(query));
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
-        RS_CheckMysqlThreadError();
+        RS_CheckMysqlThreadError(query);
 		if ((row = mysql_fetch_row(mysql_res)) != NULL)
 	    {
 		    if ( !prejumped && row[0] !=NULL)
@@ -2465,7 +2514,7 @@ void *RS_MysqlSetOneliner_Thread( void *in )
 	RS_EscapeString(oneliner);
 	sprintf(query, rs_querySetMapOneliner->string, prejumped?"pj_oneliner":"oneliner", oneliner, onelinerData->map_id);
     mysql_real_query(&mysql, query, strlen(query));
-    RS_CheckMysqlThreadError();
+    RS_CheckMysqlThreadError(query);
 
 	// return confirmation to the player (needed, because the command is waiting for a callback)
 	Q_strncpyz( response, va("Oneliner successfully set to: %s\n", oneliner), sizeof(response));
@@ -2967,4 +3016,20 @@ void RS_RemoveServerCommands( void )
 {
     if( rs_IRCstream->integer )
         trap_Cmd_RemoveCommand( "ircprint" );
+}
+
+/**
+ * Extra help function for callvote map
+ *
+ * This function replaces the G_VoteMapExtraHelp function of basewsw
+ * The basewsw version updates the maplist (which makes the server lag)
+ * and displays the maplist.
+ *
+ * Here we just advice to use the maplist command
+ *
+ * @param ent the player entity doing the vote
+ */
+void RS_VoteMapExtraHelp( edict_t *ent )
+{
+    G_PrintMsg(ent, "Use the maplist command to see the available maps. Type 'help maplist' for details.");
 }
