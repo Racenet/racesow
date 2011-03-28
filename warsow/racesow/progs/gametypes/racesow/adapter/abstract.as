@@ -93,12 +93,6 @@ class Racesow_Adapter_Abstract
             return;
         }
         
-        if ( @player.getClient() == null)
-        {
-            G_PrintMsg( null, "Warning: Callback to non-existant playerNum: " + playerNum + "\n" );
-            return;
-        }
-
         switch( command )	
         {
             case RACESOW_ADAPTER_LOADMAP:
@@ -108,6 +102,11 @@ class Racesow_Adapter_Abstract
             case RACESOW_ADAPTER_APPEAR:
                 if ( @player != null )
                 {
+                    if ( @player.getClient() == null)
+                    {
+                        G_PrintMsg( null, "Warning: Callback to non-existant playerNum: " + playerNum + "\n" );
+                        return;
+                    }
                     player.getAuth().appearCallback(arg2, arg3, arg4, arg5, arg6, arg7);
                 }
                 break;
@@ -115,6 +114,11 @@ class Racesow_Adapter_Abstract
             case RACESOW_ADAPTER_RACE:
                 if ( @player != null )
                 {
+                    if ( @player.getClient() == null)
+                    {
+                        G_PrintMsg( null, "Warning: Callback to non-existant playerNum: " + playerNum + "\n" );
+                        return;
+                    }
                     player.raceCallback(arg2, arg3, arg4, arg5, arg6, arg7);
                 }
                 break;
@@ -122,6 +126,11 @@ class Racesow_Adapter_Abstract
 			case RACESOW_ADAPTER_PLAYERNICK:
 				if ( @player != null )
 				{
+			        if ( @player.getClient() == null)
+			        {
+			            G_PrintMsg( null, "Warning: Callback to non-existant playerNum: " + playerNum + "\n" );
+			            return;
+			        }
 					cString result = RS_PrintQueryCallback( playerNum );
 					player.isWaitingForCommand = false;
 					player.getAuth().nickCallback( arg2, result );
@@ -135,6 +144,11 @@ class Racesow_Adapter_Abstract
 			case RACESOW_ADAPTER_ONELINER:
                 if ( @player != null )
                 {
+                    if ( @player.getClient() == null)
+                    {
+                        G_PrintMsg( null, "Warning: Callback to non-existant playerNum: " + playerNum + "\n" );
+                        return;
+                    }
                     cString result = RS_PrintQueryCallback(playerNum);
                     player.sendLongMessage(result);
                     player.isWaitingForCommand = false;
