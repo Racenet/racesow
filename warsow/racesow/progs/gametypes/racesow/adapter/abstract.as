@@ -93,6 +93,12 @@ class Racesow_Adapter_Abstract
             return;
         }
         
+        if ( @player.getClient() == null)
+        {
+            G_PrintMsg( null, "Warning: Callback to non-existant playerNum: " + playerNum + "\n" );
+            return;
+        }
+
         switch( command )	
         {
             case RACESOW_ADAPTER_LOADMAP:

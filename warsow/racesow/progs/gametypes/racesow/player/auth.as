@@ -420,7 +420,7 @@ const uint RACESOW_AUTH_ADMIN		= 31;
 
         if ( rs_loadPlayerCheckpoints.getBool() )
         {
-            cString checkpoints = RS_PrintQueryCallback(this.player.getClient().getEnt().playerNum());
+            cString checkpoints = RS_PrintQueryCallback(this.player.getClient().playerNum());
 
             for ( int i = 0; i < numCheckpoints; i++ )
             {
