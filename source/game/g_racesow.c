@@ -143,19 +143,16 @@ int MysqlConnected = 0;
  *
  * not a function anymore
  */
-void RS_CheckMysqlThreadError(char* query)
-{
-    if ( rs_mysqlDebug->integer )
-    {
-        G_Printf("%s\n", query);
-    }
-
-    if (RS_MysqlError())
-    {
-        G_Printf("file=%s line=%d MySQL Error!\n",__FILE__,__LINE__);
-        RS_EndMysqlThread();
-    }
+#define RS_CheckMysqlThreadError(query) { \
+    if (rs_mysqlDebug->integer){\
+        G_Printf("%s\n", query);\
+    }\
+    if (RS_MysqlError()){\
+        G_Printf("file=%s line=%d MySQL Error!\n",__FILE__,__LINE__);\
+        RS_EndMysqlThread();\
+    }\
 }
+
 
 /**
  * Initializes racesow specific stuff
@@ -3039,5 +3036,5 @@ void RS_RemoveServerCommands( void )
  */
 void RS_VoteMapExtraHelp( edict_t *ent )
 {
-    G_PrintMsg(ent, "Use the maplist command to see the available maps. Type 'help maplist' for details.");
+    G_PrintMsg(ent, "Use the maplist command to see the available maps. Type 'help maplist' for details.\n");
 }
