@@ -632,7 +632,8 @@ void *RS_MysqlInsertRace_Thread(void *in)
 {
     char query[MYSQL_QUERY_LENGTH];
     char affectedPlayerIds[1000];
-	unsigned int maxPositions, newPoints, currentPosition, currentCleanPosition, realPosition, offset, cleanOffset, points, oldpoints, lastRaceTime, lastCleanRaceTime, bestTime, oldTime, oldPoints, oldBestTime, oldOtherBestTime, oldBestPlayerId, oldOtherBestPlayerId, allPoints, newPosition, server_id;
+	unsigned int maxPositions, newPoints, currentPosition, currentCleanPosition, realPosition, offset, cleanOffset, lastRaceTime, lastCleanRaceTime, bestTime, oldTime, oldPoints, oldBestTime, oldOtherBestTime, oldBestPlayerId, oldOtherBestPlayerId, allPoints, newPosition, server_id;
+	int points, oldpoints;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -871,6 +872,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 
                     lastRaceTime = raceTime;
 
+                    //only update points for players whose points have changed
                     if ( oldpoints != points )
                     {
                         // set points in player_map
@@ -878,6 +880,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
                         mysql_real_query(&mysql, query, strlen(query));
                         RS_CheckMysqlThreadError(query);
 
+                        //select the player for global point re-computation
                         if ( Q_stricmp( affectedPlayerIds, "" ) )
                             Q_strncatz( affectedPlayerIds, ",", sizeof(affectedPlayerIds));
 
@@ -900,6 +903,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 
         }
 
+        //get the global number of points
         sprintf(query, rs_queryGetPlayerPoints->string, raceData->player_id);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError(query);
