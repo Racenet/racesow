@@ -891,10 +891,12 @@ void *RS_MysqlInsertRace_Thread(void *in)
             RS_CheckMysqlThreadError(query);
 
             // update points for affected players
-            sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
-            G_Printf("%s\n",query);
-            mysql_real_query(&mysql, query, strlen(query));
-            RS_CheckMysqlThreadError(query);
+            if ( Q_stricmp( affectedPlayerIds, "" ) )
+            {
+                sprintf(query, rs_queryUpdatePlayerPoints->string, affectedPlayerIds);
+                mysql_real_query(&mysql, query, strlen(query));
+                RS_CheckMysqlThreadError(query);
+            }
 
         }
 
