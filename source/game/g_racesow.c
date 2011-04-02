@@ -186,7 +186,7 @@ void RS_Init()
 
 	previousMapName[0]='\0';
 
-    if ( rs_mysqlEnabled->integer )
+    if ( rs_mysqlEnabled->integer && mysqlclient_present )
     {
         // initialize mysql
         RS_LoadCvars();
