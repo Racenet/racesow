@@ -5,6 +5,11 @@
 #include <pthread.h>
 #include <mysql.h>
 #include <errmsg.h>
+#if !defined(_WIN32) && !defined(_WIN64)
+#include "g_dynamicmysql.h"
+#endif
+
+qboolean mysqlclient_present;
 
 cvar_t *sv_port;
 cvar_t *sv_hostname;
@@ -161,6 +166,12 @@ int MysqlConnected = 0;
  */
 void RS_Init()
 {
+#if !defined(_WIN32) && !defined(_WIN64)
+    mysqlclient_present = RS_LoadMySQL();
+#else
+    mysqlclient_present = qtrue;
+#endif
+
 	// initialize threading
     pthread_mutex_init(&mutexsum, NULL);
 	pthread_mutex_init(&mutex_callback, NULL);
@@ -277,6 +288,35 @@ void RS_LoadCvars( void )
 	rs_queryLoadMapOneliners		= trap_Cvar_Get( "rs_queryLoadMapOneliners",		"SELECT `oneliner`, `pj_oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `%s` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
 
+}
+
+/**
+ * RS_LoadMySQL
+ *
+ * @return qboolean
+ */
+qboolean RS_LoadMySQL( void )
+{
+#ifdef __apple__
+    libmysqlclient = dlopen("libmysqlclient.dylib", RTLD_LAZY);
+    if(libmysqlclient == NULL)
+    {
+        //FIXME:I don't know the name of the mysql framework yet
+        //libmysqlclient = dlopen("/Library/Frameworks/,RTLD_LAZY);
+        if(libmysqlclient == NULL)
+        {
+            return qfalse;
+        }
+    }
+#else
+    libmysqlclient = dlopen("libmysqlclient.so", RTLD_LAZY);
+    if(libmysqlclient == NULL)
+    {
+        return qfalse;
+    }
+#endif
+
+    return LoadMySQLFunctions();
 }
 
 /**
@@ -408,7 +448,18 @@ qboolean RS_MysqlError( void )
 void RS_Shutdown()
 {
 
-	RS_MysqlDisconnect();
+    if ( rs_mysqlEnabled->integer && mysqlclient_present )
+    {
+	    RS_MysqlDisconnect();
+    }
+
+#if !defined(_WIN32) && !defined(_WIN64)
+    if ( libmysqlclient != NULL )
+    {
+        UnLoadMySQLFunctions();
+        dlclose(libmysqlclient);
+    }
+#endif
 
     // shutdown threading
 	pthread_mutex_destroy(&mutexsum);
