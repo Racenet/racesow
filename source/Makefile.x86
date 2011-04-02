@@ -134,7 +134,7 @@ endif
 
 CFLAGS_DED=-DDEDICATED_ONLY -DCURL_STATICLIB
 CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../dxsdk/include -DCURL_STATICLIB
-CFLAGS_MODULE=-DPIC -I/win32/include/mysql -DUSE_MYSQL -DPTW32_STATIC_LIB
+CFLAGS_MODULE=-DPIC -I../source/win32/include/mysql -DUSE_MYSQL -DPTW32_STATIC_LIB
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DTV_MODULE_HARD_LINKED
 
 RESFLAGS_COMMON=-I. -Iwin32/include
@@ -154,7 +154,7 @@ LDFLAGS_DED=-lcurlstat -lwsock32
 LDFLAGS_MODULE=-shared
 
 LDFLAGS_CGAME=$(LDFLAGS_MODULE)
-LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclient -lpthreadstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
 LDFLAGS_UI=$(LDFLAGS_MODULE)
 
 LDFLAGS_TV_SERVER=
@@ -388,7 +388,11 @@ endif
 #########
 # GAME
 #########
+ifeq ($(USE_MINGW), YES)
+CFILES_GAME = $(filter-out game/g_dynamicmysql.c, $(wildcard game/*.c))
+else
 CFILES_GAME  = $(wildcard game/*.c)
+endif
 CFILES_GAME += $(wildcard game/ai/*.c)
 CFILES_GAME += $(wildcard gameshared/*.c)
 CFILES_GAME += qcommon/md5.c

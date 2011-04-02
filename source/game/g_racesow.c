@@ -295,6 +295,7 @@ void RS_LoadCvars( void )
  *
  * @return qboolean
  */
+#if !defined(_WIN32) && !defined(_WIN64)
 qboolean RS_LoadMySQL( void )
 {
 #ifdef __apple__
@@ -318,6 +319,7 @@ qboolean RS_LoadMySQL( void )
 
     return LoadMySQLFunctions();
 }
+#endif
 
 /**
  * RS_MysqlConnect
