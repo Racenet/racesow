@@ -6,25 +6,25 @@
 DEBUG_BUILD?=NO
 
 # use mingw and build Windows binaries?
-USE_MINGW?=NO
+USE_MINGW?=YES
 
 # client and dedicated server binaries
-BUILD_CLIENT?=YES
+BUILD_CLIENT?=NO
 BUILD_SERVER?=YES
 
 # engine modules
-BUILD_IRC?=YES
-BUILD_SND_QF?=YES
-BUILD_SND_OPENAL?=YES
+BUILD_IRC?=NO
+BUILD_SND_QF?=NO
+BUILD_SND_OPENAL?=NO
 
 # game modules
 BUILD_CGAME?=YES
 BUILD_GAME?=YES
 BUILD_UI?=YES
-BUILD_ANGELWRAP=YES
+BUILD_ANGELWRAP=NO
 
 # Warsow TV
-BUILD_TV_SERVER?=YES
+BUILD_TV_SERVER?=NO
 
 # Build Warsow client without server capabilities?
 BUILD_THIN_CLIENT?=NO
@@ -32,8 +32,8 @@ BUILD_THIN_CLIENT?=NO
 ###########################################################
 
 ifeq ($(USE_MINGW),YES)
-ARCH?=x86
-HOST?=i586-mingw32msvc
+ARCH?=x64
+HOST?=x86_64-w64-mingw32
 
 HOST_PREFIX=$(HOST)-
 
@@ -46,14 +46,22 @@ RANLIB=$(HOST_PREFIX)ranlib
 
 SHARED_LIBRARY_EXTENSION=dll
 else
-CC?=gcc
-CXX?=g++
-LD=gcc
-AR=ar
-RANLIB=ranlib
+BASE_ARCH?=i386
+
+ifeq ($(BASE_ARCH), x86_64)
+MACHINE=-m64
+else
+MACHINE=-m32
+endif
+
+CC=gcc $(MACHINE)
+CXX=g++ $(MACHINE)
+LD=gcc $(MACHINE)
+AR=ar $(MACHINE)
+RANLIB=ranlib $(MACHINE)
 
 # this nice line comes from the linux kernel makefile
-BASE_ARCH:=$(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc/ -e s/sparc64/sparc/ -e s/arm.*/arm/ -e s/sa110/arm/ -e s/alpha/axp/)
+#BASE_ARCH:=$(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc/ -e s/sparc64/sparc/ -e s/arm.*/arm/ -e s/sa110/arm/ -e s/alpha/axp/)
 OS=$(shell uname)
 
 ifeq ($(OS),FreeBSD)
@@ -126,7 +134,7 @@ endif
 
 CFLAGS_DED=-DDEDICATED_ONLY -DCURL_STATICLIB
 CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../dxsdk/include -DCURL_STATICLIB
-CFLAGS_MODULE=-DPIC
+CFLAGS_MODULE=-DPIC -I/win32/include/mysql -DUSE_MYSQL -DPTW32_STATIC_LIB
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DTV_MODULE_HARD_LINKED
 
 RESFLAGS_COMMON=-I. -Iwin32/include
@@ -143,7 +151,14 @@ endif
 
 LDFLAGS_CLIENT=-lcurlstat -lwsock32 -ljpegstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
 LDFLAGS_DED=-lcurlstat -lwsock32
-LDFLAGS_MODULE=-shared -llibmysql -lpthread
+LDFLAGS_MODULE=-shared
+
+#lpthreadstatmodified is a modified version of libpthread. The modification was needed to solve some problems with the 64 bit version of mysql
+
+LDFLAGS_CGAME=$(LDFLAGS_MODULE)
+LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclient -lpthreadstatmodified -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+LDFLAGS_UI=$(LDFLAGS_MODULE)
+
 LDFLAGS_TV_SERVER=
 
 # openal
@@ -193,12 +208,12 @@ endif
 ifeq ($(ARCH),x86_64)
 LIB=lib64
 else
-LIB=lib
+LIB=lib32
 endif
 
 LDFLAGS_CLIENT=-ljpeg -lz -L$(X11BASE)/$(LIB) -lX11 -lXext -lXxf86dga -lXxf86vm -lXinerama -lrt $(shell curl-config --libs)
 LDFLAGS_DED=-lz $(shell curl-config --libs) -pthread
-LDFLAGS_MODULE=-shared #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
+LDFLAGS_MODULE=-shared `mysql_config --libs`
 LDFLAGS_TV_SERVER=-lz
 
 # openal
@@ -686,15 +701,15 @@ $(BINDIR)/libs/snd_qf_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_QF)
 ########
 $(BINDIR)/basewsw/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_CGAME)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_CGAME)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_CGAME) $(DEF_CGAME)
 
 $(BINDIR)/basewsw/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_GAME)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_GAME)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_GAME) $(DEF_GAME)
 
 $(BINDIR)/basewsw/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_UI)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_UI)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_UI) $(DEF_UI)
 
 $(BINDIR)/libs/irc_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_IRC)
 	@echo "  > Linking $@" && \
