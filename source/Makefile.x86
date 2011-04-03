@@ -134,7 +134,7 @@ endif
 
 CFLAGS_DED=-DDEDICATED_ONLY -DCURL_STATICLIB
 CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../dxsdk/include -DCURL_STATICLIB
-CFLAGS_MODULE=-DPIC -I../source/win32/include/mysql -DUSE_MYSQL -DPTW32_STATIC_LIB
+CFLAGS_MODULE=-DPIC -Iwin32/include/mysql -DUSE_MYSQL -DPTW32_STATIC_LIB
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DTV_MODULE_HARD_LINKED
 
 RESFLAGS_COMMON=-I. -Iwin32/include
@@ -211,7 +211,12 @@ endif
 
 LDFLAGS_CLIENT=-ljpeg -lz -L$(X11BASE)/$(LIB) -lX11 -lXext -lXxf86dga -lXxf86vm -lXinerama -lrt $(shell curl-config --libs)
 LDFLAGS_DED=-lz $(shell curl-config --libs) -pthread
-LDFLAGS_MODULE=-shared `mysql_config --libs`
+LDFLAGS_MODULE=-shared
+
+LDFLAGS_CGAME=$(LDFLAGS_MODULE)
+LDFLAGS_GAME=$(LDFLAGS_MODULE) #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
+LDFLAGS_UI=$(LDFLAGS_MODULE)
+
 LDFLAGS_TV_SERVER=-lz
 
 # openal

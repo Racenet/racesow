@@ -375,7 +375,11 @@ endif
 #########
 # GAME
 #########
+ifeq ($(USE_MINGW), YES)
+CFILES_GAME = $(filter-out game/g_dynamicmysql.c, $(wildcard game/*.c))
+else
 CFILES_GAME  = $(wildcard game/*.c)
+endif
 CFILES_GAME += $(wildcard game/ai/*.c)
 CFILES_GAME += $(wildcard gameshared/*.c)
 CFILES_GAME += qcommon/md5.c

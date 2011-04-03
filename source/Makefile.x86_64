@@ -134,7 +134,7 @@ endif
 
 CFLAGS_DED=-DDEDICATED_ONLY -DCURL_STATICLIB
 CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../dxsdk/include -DCURL_STATICLIB
-CFLAGS_MODULE=-DPIC
+CFLAGS_MODULE=-DPIC -Iwin32/include/mysql -DUSE_MYSQL -DPTW32_STATIC_LIB
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DTV_MODULE_HARD_LINKED
 
 RESFLAGS_COMMON=-I. -Iwin32/include
@@ -152,6 +152,11 @@ endif
 LDFLAGS_CLIENT=-lcurlstat -lwsock32 -ljpegstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
 LDFLAGS_DED=-lcurlstat -lwsock32
 LDFLAGS_MODULE=-shared
+
+LDFLAGS_CGAME=$(LDFLAGS_MODULE)
+LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+LDFLAGS_UI=$(LDFLAGS_MODULE)
+
 LDFLAGS_TV_SERVER=
 
 # openal
