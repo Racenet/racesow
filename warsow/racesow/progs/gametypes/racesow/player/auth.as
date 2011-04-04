@@ -415,6 +415,10 @@ const uint RACESOW_AUTH_ADMIN		= 31;
         if ( rs_loadHighscores.getBool() )
 		{
 		    this.player.bestRaceTime = personalBest;
+		    if ( gametypeFlag == MODFLAG_RACE )
+		    {
+		        this.player.getClient().stats.setScore(personalBest);
+		    }
 		    this.player.overallTries = overallTries;
 		}
 

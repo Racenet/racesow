@@ -637,6 +637,10 @@ class Racesow_Player
                 break;
 
             case MODFLAG_RACE:
+                if ( this.race.getTime() > this.bestRaceTime )
+                {
+                    this.getClient().stats.setScore(this.race.getTime());
+                }
                 racesowAdapter.raceFinish(@this.race);
                 break;
 
