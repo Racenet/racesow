@@ -9,7 +9,7 @@
 #include "g_dynamicmysql.h"
 #endif
 
-qboolean mysqlclient_present;
+qboolean mysqlclient_present=qfalse;
 
 cvar_t *sv_port;
 cvar_t *sv_hostname;
@@ -166,12 +166,6 @@ int MysqlConnected = 0;
  */
 void RS_Init()
 {
-#if !defined(_WIN32) && !defined(_WIN64)
-    mysqlclient_present = RS_LoadMySQL();
-#else
-    mysqlclient_present = qtrue;
-#endif
-
 	// initialize threading
     pthread_mutex_init(&mutexsum, NULL);
 	pthread_mutex_init(&mutex_callback, NULL);
@@ -183,6 +177,13 @@ void RS_Init()
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
     rs_loadPlayerCheckpoints = trap_Cvar_Get( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE);
     rs_mysqlDebug = trap_Cvar_Get( "rs_mysqlDebug", "0", CVAR_ARCHIVE|CVAR_NOSET);
+
+#if !defined(_WIN32) && !defined(_WIN64)
+    if ( rs_mysqlEnabled->integer )
+        mysqlclient_present = RS_LoadMySQL();
+#else
+    mysqlclient_present = qtrue;
+#endif
 
 	previousMapName[0]='\0';
 
