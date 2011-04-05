@@ -209,6 +209,8 @@ static char *SV_LongInfoString( qboolean fullStatus )
 	size_t statusLength;
 	size_t tempstrLength;
 
+	cvar_t* rs_gametype = Cvar_Get( "rs_gametype", "race", CVAR_ARCHIVE ); //racesow
+
 	Q_strncpyz( status, Cvar_Serverinfo(), sizeof( status ) );
 
 	// convert "g_gametype" to "gametype"
@@ -218,6 +220,8 @@ static char *SV_LongInfoString( qboolean fullStatus )
 		Info_RemoveKey( status, "g_gametype" );
 		Info_SetValueForKey( status, "gametype", gametype );
 	}
+
+	Info_SetValueForKey(status,"rs_gametype", rs_gametype->string); //racesow
 
 	statusLength = strlen( status );
 

@@ -150,7 +150,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
         }
         
         ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
-        
+        player.getClient().stats.setScore(player.bestRaceTime);
         player.restartingRace();
     }
     
