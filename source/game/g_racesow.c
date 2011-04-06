@@ -237,6 +237,7 @@ void RS_LoadCvars( void )
 
     if (!Q_stricmp( rs_authField_Name->string, "" ) || !Q_stricmp( rs_authField_Pass->string, "" ) ||!Q_stricmp( rs_authField_Token->string, "" ))
     {
+        RS_Shutdown();
         G_Error("\033[31;40m\nthe cVars rs_authField_Name, rs_authField_Pass and rs_authField_Token must be set and should be unique for your database!\n\nie. racenet uses the following settings:\n\tset rs_authField_Name \"racenet_user\"\n\tset rs_authField_Pass \"racenet_pass\"\n\tset rs_authField_Token \"racenet_token\"\n\nlike that you can store authentications for multiple servers in a single config.\n\033[0m\n");
     }
 
@@ -453,7 +454,10 @@ void RS_Shutdown()
 
     if ( rs_mysqlEnabled->integer && mysqlclient_present )
     {
-	    RS_MysqlDisconnect();
+        if( MysqlConnected != 0 )
+        {
+	        RS_MysqlDisconnect();
+        }    
     }
 
 #if !defined(_WIN32) && !defined(_WIN64)
@@ -471,7 +475,8 @@ void RS_Shutdown()
 	// removed it because of crash in win32 implementation, also this may be not necessary at all because this isnt in a thread
 	//pthread_exit(NULL);
 	RS_RemoveServerCommands();
-	trap_Dynvar_RemoveListener( irc_connected, RS_Irc_ConnectedListener_f );
+    if( irc_connected )
+	    trap_Dynvar_RemoveListener( irc_connected, RS_Irc_ConnectedListener_f );
 }
 
 
