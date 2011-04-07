@@ -469,9 +469,10 @@ void RS_Shutdown()
 #endif
 
     // shutdown threading
-	pthread_mutex_destroy(&mutexsum);
-	pthread_mutex_destroy(&mutex_callback);
-
+    if( mutexsum != NULL )
+	    pthread_mutex_destroy(&mutexsum);
+    if( mutex_callback != NULL )
+	    pthread_mutex_destroy(&mutex_callback);
 	// removed it because of crash in win32 implementation, also this may be not necessary at all because this isnt in a thread
 	//pthread_exit(NULL);
 	RS_RemoveServerCommands();
