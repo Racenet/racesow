@@ -1,0 +1,49 @@
+//mouse angles
+
+setFont "virtue_12"
+setColor 1 1 1 1
+
+if 1 & %SHOW_SPEED
+if 0 == 2 & %SHOW_SPEED
+	setCursor 400, 300
+	movePixelCursor -80, 30
+
+	setPixelSize 2, 90
+	setAlign #LEFT, #MIDDLE
+	drawPicByName gfx/ui/white
+
+	movePixelCursor 0, 0.005 * %MOUSE_Y
+	setPixelSize 30, 2
+	setAlign #RIGHT, #MIDDLE
+	drawPicByName gfx/ui/white
+
+	movePixelCursor -9, 0
+	setAlign #RIGHT, #TOP
+	drawStringNum 0.01 * %MOUSE_Y
+
+	setAlign #LEFT, #TOP
+	drawString "°"
+
+	if 0 == 4 & %SHOW_SPEED
+		movePixelCursor 7, 0
+		setFont "bitstream_7"
+		setAlign #RIGHT, #BOTTOM
+		drawString "angle"
+	endif
+endif
+endif
+
+if 2 & %SHOW_SPEED
+if 0 == 1 & %SHOW_SPEED
+	setCursor 400, 340
+	setAlign #CENTER, #MIDDLE
+	
+	movePixelCursor -80, 0
+	drawStringNum 0.01 * %DIFF_ANGLE
+	
+	movePixelCursor 160, 0
+	drawStringNum 0.01 * %MOUSE_Y
+endif
+endif
+
+

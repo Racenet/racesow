@@ -1,0 +1,48 @@
+//
+if 1 & %SHOW_TIMER
+	// draw Match Time
+
+	// draws the backdrop shadow
+	setCursor 400, 0
+	movePixelCursor 2, 2
+	setFont "virtue_16"
+	setAlign #CENTER, #TOP
+	setColor 0, 0, 0, 1
+	drawClock
+
+	// change color according to item
+	setColor 1, 1, 0.6, 1
+	if %PICKUP_ITEM == #ITEM_RED_ARMOR
+		setColor 1, 0, 0, 1 // red
+	endif
+	if %PICKUP_ITEM == #ITEM_YELLOW_ARMOR
+		setColor 1, 1, 0, 1 // yellow
+	endif
+	if %PICKUP_ITEM == #ITEM_GREEN_ARMOR
+		setColor 0, 1, 0, 1 // green
+	endif
+	if %PICKUP_ITEM == #ITEM_MEGA_HEALTH
+		setColor 1, 0, 1, 1 // magenta
+	endif
+	if %PICKUP_ITEM == #ITEM_QUAD
+		setColor 1, 0.5, 0, 1 // orange
+	endif
+	if %PICKUP_ITEM == #ITEM_WARSHELL
+		setColor 0, 1, 1, 1 // lightblue
+	endif
+
+	// draws clock
+	movePixelCursor -2, -2
+	drawClock
+endif
+
+//draws Warmup
+if %MATCH_STATE == #MATCH_STATE_WARMUP
+	setFont "virtue_12"
+	setAlign #CENTER, #MIDDLE
+	setCursor 400, 125
+	setColor 0.4, 1, 0.4, 0.5
+	drawstring Warmup
+endif
+
+

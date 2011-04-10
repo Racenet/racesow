@@ -1,0 +1,16 @@
+// pointing
+if %VIDHEIGHT >= 768
+		setFont con_fontSystemMedium
+endif
+if %VIDHEIGHT < 768
+	if %VIDHEIGHT >= 600
+		setFont bitstream_9
+	endif
+	if %VIDHEIGHT < 600
+		setFont bitstream_7
+	endif
+endif
+setColor 1 1 1 1
+setAlign #CENTER #MIDDLE
+setCursor #WIDTH / 2 #HEIGHT / 2 + 32
+drawPointing

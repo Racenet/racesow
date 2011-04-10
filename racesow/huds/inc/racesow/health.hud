@@ -1,0 +1,31 @@
+//
+if %HEALTH != #NOTSET
+	setColor 1, 1, 1, 1
+
+	setSizeY 32, 32
+
+	setCursorY 110, #HEIGHT - 10
+
+	//draw health icon
+	setAlign #LEFT, #BOTTOM
+	if %HEALTH > 100
+		drawPicByItemIndex #ITEM_MEGA_HEALTH
+	endif
+	if %HEALTH <= 100
+	if %HEALTH >= 50
+		drawPicByItemIndex #ITEM_50_HEALTH
+	endif
+	endif
+	if %HEALTH < 50
+		drawPicByItemIndex #ITEM_25_HEALTH
+	endif
+
+	//draw health number
+	moveCursorY -4, 0
+	setAlign #RIGHT, #BOTTOM
+	if %HEALTH > 100
+		setColor 1, 0, 1, 1
+	endif
+	drawNum %HEALTH
+endif
+

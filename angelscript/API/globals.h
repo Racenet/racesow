@@ -443,6 +443,7 @@ bool RS_MysqlSetOneliner( int, int, int, cString &);
 bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out );
 bool RS_MapFilter( int, cString &, int );
 bool RS_Maplist( int, int );
+bool RS_UpdateMapList( int playerNum);
 bool RS_LoadStats( int playerNum, cString &, cString & );
 cString @RS_PrintQueryCallback( int );
 cString @RS_NextMap();

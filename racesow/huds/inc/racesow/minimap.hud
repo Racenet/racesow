@@ -1,0 +1,7 @@
+setAlign #RIGHT #TOP
+setCursor #WIDTH - 24, 24
+setSize 256, 256
+SetColor 0.5 0.5 0.5 0.7
+drawMiniMap 0 0
+
+

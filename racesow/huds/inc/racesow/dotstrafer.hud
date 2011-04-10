@@ -1,0 +1,175 @@
+//
+
+if 0 == 8 & %SHOW_SPEED
+
+setCursor 400, 300
+movePixelCursor 0, -20
+if %STRAFEANGLE > 0
+
+	//set size of arrows
+	setSizeY 0.03 * 4500 - %STRAFEANGLE, 10
+	
+	//set color of arrows
+	//default: white
+	setColor 1, 1, 1, 0.8
+	//negative acceleration: red
+	if -5000 > %ACCELERATION
+		setColor 1, 0, 0, 0.8
+	endif
+	//good strafe: green
+	if 0.8 < %ACCELERATION / %MAX_ACCEL
+		setColor 0, 1, 0, 0.8
+	endif
+
+	//dotstrafer for plasma
+	if 64 & %SHOW_SPEED
+	if %WEAPON_ITEM == #WEAP_PLASMAGUN
+
+		//move cursor in position and draw arrows
+		moveCursorY 0.03 * %DIFF_ANGLE + %STRAFEANGLE + 9000, 0
+		setAlign #LEFT, #BOTTOM
+		drawPicByName gfx/hud/joki/strafearrow_right
+	
+		moveCursorY -0.06 * %STRAFEANGLE + 9000, 0
+		setAlign #RIGHT, #BOTTOM
+		drawPicByName gfx/hud/joki/strafearrow_left
+
+		//move Cursor back to the middle
+		moveCursorY -0.03 * %DIFF_ANGLE + %STRAFEANGLE + 9000, 0
+		moveCursorY 0.06 * %STRAFEANGLE + 9000, 0
+
+	endif
+	endif
+
+	//standard dotstrafer
+	//move cursor in position and draw arrows
+	moveCursorY 0.03 * %DIFF_ANGLE + %STRAFEANGLE , 0
+	setAlign #LEFT, #BOTTOM
+	drawPicByName gfx/hud/racesow/strafearrow_right
+
+	moveCursorY -0.06 * %STRAFEANGLE , 0
+	setAlign #RIGHT, #BOTTOM
+	drawPicByName gfx/hud/racesow/strafearrow_left
+
+	//move Cursor back to the middle
+	moveCursorY -0.03 * %STRAFEANGLE + %DIFF_ANGLE, 0
+	moveCursorY 0.06 * %STRAFEANGLE, 0
+
+endif
+//set size,color and draw "crosshair"
+setPixelSize 2, %VIDHEIGHT / 60 //600 / 60 = 10
+//setSizeY 2, 10
+setColor 0, 0, 0, 1
+setAlign #CENTER, #BOTTOM
+drawPicByName gfx/ui/white
+
+endif
+
+
+
+
+if 0 //debug
+
+setColor 1 1 1 1
+setCursor #WIDTH - 50, 100
+setAlign #RIGHT, #MIDDLE
+drawString "StrafeAngle: "
+setAlign #LEFT, #MIDDLE
+drawStringNum %STRAFEANGLE
+
+moveCursor 0, 20
+
+setAlign #RIGHT, #MIDDLE
+drawString "RocketAccel: "
+setAlign #LEFT, #MIDDLE
+drawStringNum %ROCKETACCEL
+
+moveCursor 0, 20
+
+setAlign #RIGHT, #MIDDLE
+drawString "MaxAccel: "
+setAlign #LEFT, #MIDDLE
+drawStringNum %MAX_ACCEL
+
+
+
+setFont "bitstream_7"
+
+setPixelCursor 20, 520
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 0
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 1
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 2
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 3
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 5
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 6
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 7
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 8
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 9
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 10
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 11
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 12
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 13
+
+moveCursor 0, 9
+
+setAlign #LEFT, #MIDDLE
+drawStatString 32
+
+
+
+
+
+
+endif
