@@ -1,5 +1,0 @@
-if %WEAPON_ITEM
-	setAlign #CENTER, #MIDDLE
-	setCursor #WIDTH / 2, #HEIGHT / 2
-	drawCrosshair
-endif

@@ -1,7 +1,0 @@
-if %SHOW_FPS
-
-	setAlign #RIGHT, #TOP
-	setCursor #WIDTH - 4, 4
-	drawStringNum %FPS
-
-endif

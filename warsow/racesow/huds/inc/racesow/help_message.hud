@@ -1,9 +1,0 @@
-// match message
-setFont con_fontSystemSmall
-setColorAlpha 0.5
-setSize #WIDTH, 32
-setAlign #CENTER #TOP
-setCursor #WIDTH / 2, #HEIGHT * 0.22
-drawHelpString
-setFont con_fontSystemMedium
-setColorAlpha 1
