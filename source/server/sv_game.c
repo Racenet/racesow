@@ -333,15 +333,16 @@ static void SV_AddPureShader( const char *name )
 */
 static void SV_AddPureBSP( void )
 {
-	//int i; racesow unused variable
-	//const char *shader; racesow : unused variable
+	int i;
+	const char *shader;
 
 	SV_AddPureFile( sv.configstrings[CS_WORLDMODEL] );
-	// racesow : comment this to avoid multiple downloads in pure mode
+	// racesow : set sv_pure to "2" to avoid multiple downloads in pure mode
 	// maps use too many duplicate textures so we don't want pure check
 	// for each one of them
-	/*for( i = 0; ( shader = CM_ShaderrefName( svs.cms, i ) ); i++ )
-		SV_AddPureShader( shader );*/
+	if ( !( sv_pure->integer & 2 ) )
+		for( i = 0; ( shader = CM_ShaderrefName( svs.cms, i ) ); i++ )
+			SV_AddPureShader( shader );
 }
 
 /*
