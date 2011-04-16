@@ -515,6 +515,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
  * @param int old_team
  * @param int new_team
  * @return void
+
 */
 void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
@@ -612,6 +613,8 @@ void GT_ThinkRules()
             continue;
 
 		Racesow_Player @player = Racesow_GetPlayerByClient( client );
+
+		player.advanceDistance();
 
 		if( scoreboardUpdated && player.challengerList != "")//send the scoreboard to the player
 		{
