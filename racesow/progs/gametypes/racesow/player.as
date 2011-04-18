@@ -19,13 +19,13 @@ class Racesow_Player
 	 */
 	bool practicing;
 	bool completedInPracticemode;
-	
+
 	/**
 	 * What state is the player in: racing, practicing, prerace?
 	 * @var cString
 	 */
 	cString state;
-	
+
 	/**
 	 * Is the player still racing in the overtime?
 	 * @var bool
@@ -126,6 +126,11 @@ class Racesow_Player
      * Distance
      */
     uint64 distance;
+
+    /**
+     * Old Position
+     */
+    cVec3 oldPosition;
 
 	/**
 	 * Local time of the last top command (flood protection)
@@ -303,7 +308,7 @@ class Racesow_Player
         //bestTime = oldBestTime // diff to server best
 
 		oldServerBestTime = map.getHighScore().getTime();
-		
+
         //print general info to player
         this.sendAward( S_COLOR_CYAN + "Race Finished!" );
 		bool noDelta = 0 == bestTime;
@@ -522,7 +527,7 @@ class Racesow_Player
 	    cVec3 horizontalSpeed = cVec3(globalSpeed.x, globalSpeed.y, 0);
 	    return horizontalSpeed.length();
 	}
-	
+
 	/**
 	 * Get the state of the player;
 	 * @return cString
@@ -535,7 +540,7 @@ class Racesow_Player
 			this.state = "^2racing";
 		else
 			this.state = "^3prerace";
-		
+
 		return state;
 	}
 	/**
@@ -552,17 +557,17 @@ class Racesow_Player
 
 		if ( gametypeFlag == MODFLAG_FREESTYLE )
 			return;
-		
+
 		if ( this.practicing )
 			return;
-			
+
 		@this.race = Racesow_Player_Race();
 		this.race.setPlayer(@this);
 		this.race.start();
         this.tries++;
         this.triesSinceLastRace++;
         int tries = this.overallTries+this.tries;
-		
+
 		this.race.prejumped=RS_QueryPjState(this.getClient().playerNum());
 		if (this.race.prejumped)
 		{
@@ -595,7 +600,7 @@ class Racesow_Player
 		if ( this.practicing && !this.completedInPracticemode )
 		{
 			this.sendAward( S_COLOR_CYAN + "You completed the map in practicemode, no time was set" );
-			
+
 			this.isSpawned = false;
 			this.completedInPracticemode = true;
 			// set up for respawning the player with a delay
@@ -603,11 +608,11 @@ class Racesow_Player
 			practiceRespawner.nextThink = levelTime + 3000;
 			practiceRespawner.count = client.playerNum();
 		}
-			
+
 		// when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
 		if ( @this.race == null || !this.race.stop() )
             return;
-		
+
         this.setLastRace(@this.race);
 
 		switch (gametypeFlag) {
@@ -653,7 +658,7 @@ class Racesow_Player
             default:
                 break;
         }
-    	
+
 		this.isSpawned = false;
 		this.racingTime += this.race.getTime();
 		this.racingTimeSinceLastRace += this.race.getTime();
@@ -688,7 +693,7 @@ class Racesow_Player
       }
     }
 	}
-	
+
 	/**
 	 * restartingRace
 	 * @return void
@@ -696,21 +701,21 @@ class Racesow_Player
     void restartingRace()
     {
   		this.isSpawned = true;
-  		
+
   		if ( this.practicing && this.positionSaved )
   		{
   			this.teleport( this.positionOrigin, this.positionAngles, false, false );
   			this.client.selectWeapon( this.positionWeapon );
   			if ( this.completedInPracticemode )
   				this.completedInPracticemode = false;
-  			
+
   		} else if ( this.isRacing() )
   		{
   			this.racingTime += levelTime - this.race.getStartTime();
   			this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
   			this.sendMessage( this.race.checkPointsString );
   		}
-  
+
   		@this.race = null;
   		//remove all projectiles.
   		if( @this.client.getEnt() != null )
@@ -792,11 +797,11 @@ class Racesow_Player
 	 */
 	void advanceDistance()
 	{
-	    cVec3 globalSpeed = this.getClient().getEnt().getVelocity();
-	    cVec3 horizontalSpeed = cVec3(globalSpeed.x, globalSpeed.y, 0);
-        this.distance += horizontalSpeed.length()*frameTime;
+        cVec3 position = this.getClient().getEnt().getOrigin();
+        position.z = 0;
+        this.distance += ( position.distance( this.oldPosition ) * 1000 );
+        this.oldPosition = position;
 	}
-
 
 	/**
 	 * set Trigger Timout for map entitys
@@ -1082,7 +1087,7 @@ class Racesow_Player
             }
         }
     }
-	
+
     /**
      * Send a message to console of the player
      * when the message is too long, split it in several parts
@@ -1299,7 +1304,7 @@ class Racesow_Player
             G_CmdExecute("match restart\n");
             showNotification = true;
         }
-		
+
         // extend_time command
         if ( commandExists = command == "extend_time" )
         {
@@ -1322,7 +1327,7 @@ class Racesow_Player
             }
             showNotification = true;
         }
-        
+
 		// kick, votemute, remove, mute, joinlock  commands (RACESOW_AUTH_KICK)
 		else if ( command == "mute" || command == "unmute" || command == "vmute" ||
 				command == "vunmute" || command == "remove"|| command == "kick"
@@ -1378,7 +1383,7 @@ class Racesow_Player
 			RS_cancelvote();
 		}
 
-        
+
         // ban
 		else if ( commandExists = command == "kickban" )
         {
@@ -1397,7 +1402,7 @@ class Racesow_Player
             if (@player != null )
                 player.kickban("");
         }
-        
+
 		// don't touch the rest of the method!
 		if( !commandExists )
 		{

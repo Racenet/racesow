@@ -23,7 +23,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 * @var uint
 	 */
     uint startTime;
-	
+
 	/**
 	 * Duration of the race
 	 * @var uint
@@ -41,7 +41,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 * @var uint64
 	 */
     uint64 stopDistance;
-	
+
 	/**
 	 * Local time when race has finished
 	 * @var uint64
@@ -53,18 +53,18 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 * @var int
 	 */
 	int delta;
-	
+
 	/**
 	 * The last passed checkpoint in the race
 	 * @var int
 	 */
     int lastCheckPoint;
-	
-	/* Prejumped race flag 
+
+	/* Prejumped race flag
 	 * @var bool
 	 */
     bool prejumped;
-	
+
 	/**
 	 * Constructor
 	 *
@@ -77,13 +77,13 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		this.lastCheckPoint = 0;
 		this.startTime = 0;
 		this.prejumped = false;
-		
+
 		for ( int i = 0; i < numCheckpoints; i++ )
 		{
             this.checkPoints[i] = 0;
 		}
     }
-	
+
 	/**
 	 * Check if it's is currently being raced
 	 * @return bool
@@ -95,7 +95,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		else
 			return false;
 	}
-	
+
 	/**
 	 * See if the race was finished
 	 * @return bool
@@ -104,7 +104,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	{
 		return (this.stopTime != 0);
 	}
-	
+
 	/**
 	 * Get the race time
 	 * @return uint
@@ -125,7 +125,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         else
             return 0;
 	}
-	
+
 	/**
 	 * getCheckPoint
 	 * @param uint id
@@ -135,7 +135,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	{
 		if ( id >= this.checkPoints.length() )
             return 0;
-		
+
 		return this.checkPoints[id];
 	}
 
@@ -152,7 +152,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         }
         return checkpoints;
 	}
-	
+
 	/**
 	 * getStartTime
 	 * @return uint
@@ -160,8 +160,8 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	uint getStartTime()
 	{
 		return this.startTime;
-	}	
-	
+	}
+
 	/**
 	 * getTimeStamp
 	 * @return uint64
@@ -170,7 +170,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	{
 		return this.timeStamp;
 	}
-	
+
 	/**
 	 * Save a checkpoint in the race
 	 * @param int id
@@ -186,15 +186,15 @@ class Racesow_Player_Race : Racesow_Player_Implemented
             return;
 
 		this.checkPoints[id] = levelTime - this.startTime;
-		
+
 		uint newTime =  this.checkPoints[id];
 		uint serverBestTime = map.getHighScore().getCheckPoint(id);
 		uint personalBestTime = this.player.getBestCheckPoint(id);
 		bool noDelta = 0 == serverBestTime;
-		
+
         G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime ) + "\n"
 			+ ( noDelta ? "" : diffString( serverBestTime, newTime ) ) );
-        
+
         //print the checkpoint times to specs too
         cTeam @spectators = @G_GetTeam( TEAM_SPECTATOR );
         cEntity @other;
@@ -226,7 +226,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
                 + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString( personalBestTime, newTime )
                 + S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n";
 	}
-	
+
 	/**
 	 * Start the race timer
 	 * @return void
@@ -236,7 +236,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		this.startTime = levelTime;
 		this.startDistance = this.player.distance;
 	}
-	
+
 	/**
 	 * Stop the race timer and check the result
 	 * @return bool
@@ -252,10 +252,10 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         this.stopTime = levelTime;
 		this.stopDistance = this.player.distance;
 		this.timeStamp = localTime;
-        
+
 		return true;
 	}
-	
+
 	/**
 	 * Get race data as string
 	 * @return cString
@@ -269,7 +269,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 			raceString += "\"" + this.getCheckPoint( i ) + "\" ";
 
 		raceString += "\n";
-	
+
 		return raceString;
 	}
 }

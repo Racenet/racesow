@@ -78,10 +78,10 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
   //we firstly check if the command is manage in the gametype
   bool result = racesowGametype.Command( @client, @cmdString, @argsString, argc );
-  
+
   if ( result )   //if true is returned, the command is ok no need to go further
     return true;
-  
+
 	if ( @command != null )
 	{
 	    player.executeCommand(command, argsString, argc);
@@ -91,12 +91,12 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 	{
 	  int index;
 	  cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
-	    
+
 	  if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE || gametypeFlag == MODFLAG_TRACE )
 	    index = brandom(0, 7);
 	  else
 	    index = brandom(0, 6);
-     
+
 	  player.sendMessage( devs[index] + "\n" );
 	}
 
@@ -221,31 +221,31 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 			return true;
 		}
-		
+
 		if ( vote == "joinlock" || vote == "joinunlock" )
     {
       if( argc != 2 )
     	{
         client.printMessage( "Usage: callvote " + vote + " <id or name>\n" );
     		client.printMessage( "- List of current players:\n" );
-    		
+
     		for ( int i = 0; i < maxClients; i++ )
     		{
     		  if ( @players[i].getClient() != null )
             client.printMessage( "  " + players[i].getClient().playerNum() + ": " + players[i].getClient().getName() + "\n");
         }
-        
+
        	return false;
     	}
       else
     	{
     	  cClient@ target = null;
- 
+
         if ( argsString.getToken( 1 ).isNumerical() && argsString.getToken( 1 ).toInt() <= maxClients )
             @target = @G_GetClient( argsString.getToken( 1 ).toInt() );
         else if ( Racesow_GetClientNumber( argsString.getToken( 1 ) ) != -1 )
             @target = @G_GetClient( Racesow_GetClientNumber( argsString.getToken( 1 ) ) );
- 
+
         if ( @target == null || !target.getEnt().inuse )
         {
             client.printMessage( S_COLOR_RED + "Invalid player\n" );
@@ -255,7 +255,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 			return true;
 		}
-		
+
 		client.printMessage( "Unknown callvote " + vote + "\n" );
 		return false;
 	}
@@ -312,17 +312,17 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     if ( vote == "joinlock" || vote == "joinunlock" )
   	{
       	Racesow_Player@ target = null;
-   
+
         if ( argsString.getToken( 1 ).isNumerical() && argsString.getToken( 1 ).toInt() <= maxClients )
           @target = @Racesow_GetPlayerByNumber( argsString.getToken( 1 ).toInt() );
         else if ( Racesow_GetClientNumber( argsString.getToken( 1 ) ) != -1 )
           @target = @Racesow_GetPlayerByNumber( Racesow_GetClientNumber( argsString.getToken( 1 ) ) );
-        
+
         if ( vote == "joinlock" )
           target.isJoinlocked = true;
         else
           target.isJoinlocked = false;
-          
+
         return true;
   	}
 
@@ -352,7 +352,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			player.teleport( origin, angles, false, false );
 		}
   }
-  
+
   return false;
 }
 
@@ -395,7 +395,7 @@ cEntity @GT_SelectSpawnPoint( cEntity @self )
 cString @GT_ScoreboardMessage( int maxlen )
 {
     cString @scoreboardMessage = @racesowGametype.ScoreboardMessage( maxlen );
-    
+
     //custom scoreboard for ppl who are getting spectated
     if( levelTime > scoreboardLastUpdate + 1800 )
     {
@@ -515,8 +515,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
  * @param int old_team
  * @param int new_team
  * @return void
-
-*/
+ */
 void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 {
 	Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
@@ -555,21 +554,21 @@ void GT_ThinkRules()
 	racesowAdapter.thinkCallbackQueue();
 
 	bool timelimited = not ( gametypeFlag == MODFLAG_FREESTYLE  || !g_maprotation.getBool());
-	
+
 	if ( timelimited )
 	{
-	
+
 		if ( match.timeLimitHit() )
 		{
 			match.launchState( match.getState() + 1 );
 		}
-		
+
 		map.PrintMinutesLeft();
 	}
-	
+
 	// needs to be always executed, because overtime occurs even in time-unlimited mode
 	map.allowEndGame();
-	
+
 	// allowEndGame() should -always- be called at each think even during POSTMATCH, hence before this line.
 	if ( match.getState() >= MATCH_STATE_POSTMATCH )
 	{
@@ -578,7 +577,7 @@ void GT_ThinkRules()
 		{
 			match.launchState( match.getState() + 1 );
 		}
-		
+
         return;
 	}
 
@@ -624,7 +623,7 @@ void GT_ThinkRules()
                     + "&w " + player.challengerList + "\"";
             client.execGameCommand( command );
 		}
-		
+
 		int countdownState;
 		if ( 0 != ( countdownState = player.getAuth().wontGiveUpViolatingNickProtection() ) )
 		{
@@ -663,7 +662,7 @@ void GT_ThinkRules()
     	if( player.isUsingChrono )
     		client.setHUDStat( STAT_TIME_ALPHA, (levelTime - player.chronoTime()) / 100 );
     }
-    
+
     racesowGametype.ThinkRules();
     if( scoreboardUpdated )
         scoreboardUpdated = false; //custom scoreboard got updated
@@ -718,14 +717,14 @@ void GT_Shutdown()
         g_gravity.reset();
         G_Print( "Note: custom g_gravity reset\n" );
     }
-    
+
     for ( int i = 0; i < maxClients; i++ )
 		if ( @players[i].getClient() != null )
 		{
 		    // run it unthreaded to prevent a mysql crash
 			players[i].disappear(players[i].getName(),false);
 		}
-    
+
     racesowGametype.Shutdown();
     RS_ircSendMessage( "Map changed to: \'" + RS_NextMap() + "\'" );
 }
@@ -764,7 +763,7 @@ void GT_SpawnGametype()
         cEntity @ent = @G_GetEntity( i );
         if( @ent == null )
             continue;
-        
+
         if( ent.getClassname() == "trigger_multiple" )
         {
             cEntity @target = @ent.findTargetEntity( @ent );
@@ -798,7 +797,7 @@ void GT_SpawnGametype()
         }
     }
     racesowGametype.SpawnGametype();
-    
+
 }
 
 /**
@@ -816,15 +815,15 @@ void GT_InitGametype()
     gametype.setTitle( "Racesow" );
     gametype.setVersion( "0.6.1" );
     gametype.setAuthor( "warsow-race.net" );
-    
+
     // initalize weapondef config
     weaponDefInit();
-    
+
     // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
     {
       cString config;
-    
+
       // the config file doesn't exist or it's empty, create it
       config = "//*\n"
                + "//* Racesow Base settings\n"
@@ -845,26 +844,26 @@ void GT_InitGametype()
                + "exec configs/server/gametypes/racesow_weapondefs.cfg"
                + "\n"
              + "echo racesow.cfg executed\n";
-    
+
       G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
       G_Print( "Created default base config file for racesow\n" );
     }
-    
+
     // always execute racesow.cfg
     G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
-    
+
     gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
-    
+
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
       gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
-    
+
     gametype.respawnableItemsMask = gametype.spawnableItemsMask;
     gametype.dropableItemsMask = 0;
     gametype.pickableItemsMask = 0;
-    
+
     gametype.isRace = true;
-    
+
     gametype.ammoRespawn = 0;
     gametype.armorRespawn = 0;
     gametype.weaponRespawn = 0;
@@ -872,7 +871,7 @@ void GT_InitGametype()
     gametype.powerupRespawn = 0;
     gametype.megahealthRespawn = 0;
     gametype.ultrahealthRespawn = 0;
-    
+
     gametype.readyAnnouncementEnabled = false;
     gametype.scoreAnnouncementEnabled = false;
     gametype.countdownEnabled = false;
@@ -882,26 +881,26 @@ void GT_InitGametype()
     gametype.canForceModels = true;
     gametype.canShowMinimap = false;
     gametype.teamOnlyMinimap = true;
-	
-    
-    
+
+
+
     // set spawnsystem type
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
       gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
-    
+
     // precache images that can be used by the scoreboard
     prcYesIcon = G_ImageIndex( "gfx/hud/icons/vsay/yes" );
     prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );
-    
+
     // add commands
     RS_InitCommands();
-    
+
     // weapondef not needed anymore, we're not testing weapons
     //G_RegisterCommand( "weapondef" );
-    
+
     G_RegisterCommand( "ammoswitch" );
     G_RegisterCommand( "whoisgod" );
-    
+
     //add callvotes
     G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
     G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
@@ -909,7 +908,7 @@ void GT_InitGametype()
     G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
     G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
     G_RegisterCallvote( "gametype", "<race|freestyle|drace|durace>", "Change the gametype" );
-    
+
     demoRecording = false;
 
 	if ( G_Md5( "www.warsow-race.net" ) != "bdd5b303ccc88e5c63ce71bfc250a561" )
@@ -922,7 +921,7 @@ void GT_InitGametype()
 	}
 
 	g_self_knockback.forceSet("1.25"); // 1.18 in basewsw.6
-	
+
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
 	oldTimelimit = g_timelimit.getInteger();
 
@@ -934,20 +933,20 @@ void GT_InitGametype()
       case MODFLAG_DRACE:
           @racesowGametype = @Racesow_Gametype_Drace();
           break;
-      
+
       case MODFLAG_TRACE:
       case MODFLAG_DURACE:
           @racesowGametype = @Racesow_Gametype_Durace();
           break;
-          
+
       case MODFLAG_RACE:
           @racesowGametype = @Racesow_Gametype_Race();
           break;
-    
+
       case MODFLAG_FREESTYLE:
           @racesowGametype = @Racesow_Gametype_Freestyle();
           break;
-    
+
        default:
           @racesowGametype = @Racesow_Gametype_Race();
           break;
