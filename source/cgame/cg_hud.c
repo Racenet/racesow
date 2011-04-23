@@ -1702,7 +1702,7 @@ static int CG_LFuncCursorX( struct cg_layoutnode_s *commandnode, struct cg_layou
 	float x, y;
 
 	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
 
 	layout_cursor_x = Q_rint( x );
 	layout_cursor_y = Q_rint( y );
@@ -1713,7 +1713,7 @@ static int CG_LFuncCursorY( struct cg_layoutnode_s *commandnode, struct cg_layou
 {
 	float x, y;
 
-	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/600;
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 
 	layout_cursor_x = Q_rint( x );
@@ -1750,7 +1750,7 @@ static int CG_LFuncMoveCursorX( struct cg_layoutnode_s *commandnode, struct cg_l
 	float x, y;
 
 	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
 
 	layout_cursor_x += Q_rint( x );
 	layout_cursor_y += Q_rint( y );
@@ -1761,7 +1761,7 @@ static int CG_LFuncMoveCursorY( struct cg_layoutnode_s *commandnode, struct cg_l
 {
 	float x, y;
 
-	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/600;
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 
 	layout_cursor_x += Q_rint( x );
@@ -1798,7 +1798,7 @@ static int CG_LFuncSizeX( struct cg_layoutnode_s *commandnode, struct cg_layoutn
 	float x, y;
 
 	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
 
 	layout_cursor_width = Q_rint( x );
 	layout_cursor_height = Q_rint( y );
@@ -1809,7 +1809,7 @@ static int CG_LFuncSizeY( struct cg_layoutnode_s *commandnode, struct cg_layoutn
 {
 	float x, y;
 
-	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/600;
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 
 	layout_cursor_width = Q_rint( x );
