@@ -304,12 +304,12 @@ qboolean RS_LoadMySQL( void )
     libmysqlclient = dlopen("libmysqlclient.dylib", RTLD_LAZY);
     if(libmysqlclient == NULL)
     {
-        //FIXME:I don't know the name of the mysql framework yet
-        //libmysqlclient = dlopen("/Library/Frameworks/,RTLD_LAZY);
+        //FIXME:I don't know the name of the mysql framework yet (if there is any)
+        /*libmysqlclient = dlopen("/Library/Frameworks/,RTLD_LAZY);
         if(libmysqlclient == NULL)
-        {
+        {*/
             return qfalse;
-        }
+        //}
     }
 #else
     libmysqlclient = dlopen("libmysqlclient.so", RTLD_LAZY);

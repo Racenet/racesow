@@ -430,8 +430,7 @@ typedef struct
 	qbyte weaponState;
 
 	int inventory[MAX_ITEMS];
-	// racesow : use int for scores cause we use it for time
-	int stats[PS_MAX_STATS];	// fast status bar updates
+	short stats[PS_MAX_STATS];	// fast status bar updates
 	qbyte plrkeys;				// infos on the pressed keys of chased player (self if not chasing)
 } player_state_t;
 

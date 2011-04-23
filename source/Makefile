@@ -503,7 +503,7 @@ clean-depend:
 	@echo "  > Removing depend files" && \
 	$(RM) $(DEPENDFILE_CLIENT) $(DEPENDFILE_DED) $(DEPENDFILE_CGAME) $(DEPENDFILE_GAME) $(DEPENDFILE_UI) $(DEPENDFILE_OPENAL) $(DEPENDFILE_TV_SERVER) $(DEPENDFILE_QF) $(DEPENDFILE_IRC) $(DEPENDFILE_ANGELWRAP)
 
-$(BUILDDIRS) $(BINDIR) $(BINDIR)/basewsw $(BINDIR)/libs:
+$(BUILDDIRS) $(BINDIR) $(BINDIR)/racesow $(BINDIR)/libs:
 	@mkdir -p $@
 
 ifeq ($(BUILD_CLIENT),YES)
@@ -562,7 +562,7 @@ message-cgame:
 	@echo "> * Building cgame"
 	@echo "> *********************************************************"
 compile-cgame: $(OBJS_CGAME)
-link-cgame: $(BINDIR)/basewsw $(BINDIR)/basewsw/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
+link-cgame: $(BINDIR)/racesow $(BINDIR)/racesow/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
 clean-cgame:
 	@echo "  > Removing cgame objects" && \
 	$(RM) $(OBJS_CGAME)
@@ -574,7 +574,7 @@ message-game:
 	@echo "> * Building game"
 	@echo "> *********************************************************"
 compile-game: $(OBJS_GAME)
-link-game: $(BINDIR)/basewsw $(BINDIR)/basewsw/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
+link-game: $(BINDIR)/racesow $(BINDIR)/racesow/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
 clean-game:
 	@echo "  > Removing game objects" && \
 	$(RM) $(OBJS_GAME)
@@ -586,7 +586,7 @@ message-ui:
 	@echo "> * Building ui"
 	@echo "> *********************************************************"
 compile-ui: $(OBJS_UI)
-link-ui: $(BINDIR)/basewsw $(BINDIR)/basewsw/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
+link-ui: $(BINDIR)/racesow $(BINDIR)/racesow/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
 clean-ui:
 	@echo "  > Removing ui objects" && \
 	$(RM) $(OBJS_UI)
@@ -688,15 +688,15 @@ $(BINDIR)/libs/snd_qf_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_QF)
 ########
 # .SO
 ########
-$(BINDIR)/basewsw/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_CGAME)
+$(BINDIR)/racesow/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_CGAME)
 	@echo "  > Linking $@" && \
 	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_CGAME)
 
-$(BINDIR)/basewsw/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_GAME)
+$(BINDIR)/racesow/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_GAME)
 	@echo "  > Linking $@" && \
 	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_GAME)
 
-$(BINDIR)/basewsw/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_UI)
+$(BINDIR)/racesow/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_UI)
 	@echo "  > Linking $@" && \
 	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_UI)
 

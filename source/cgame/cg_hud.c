@@ -1217,7 +1217,7 @@ static void CG_DrawWeaponIcons( int x, int y, int offx, int offy, int iw, int ih
 //================
 static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, int ammotype, int align )
 {
-	int curx, cury, curh;
+	int curx, cury, curw, curh;
 	int i, j, n, fs;
 	float fj, fn;
 	vec4_t color;
@@ -1235,7 +1235,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		fs = fontsize;
 	else
 		fs = 12; // 12 = default size for font
-	//curw = (int)( fs * cgs.vidWidth/800 );
+	curw = (int)( fs * cgs.vidWidth/800 );
 	curh = (int)( fs * cgs.vidHeight/600 );
 
 	n = 0;
@@ -1265,7 +1265,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		cury = y + (int)( offy * ( fj - fn / 2.0f ) );
 
 		if( cg.predictedPlayerState.inventory[i+startammo] )
-			CG_DrawHUDNumeric( curx, cury, align, color, curh, curh, cg.predictedPlayerState.inventory[i+startammo] );
+			CG_DrawHUDNumeric( curx, cury, align, color, curw, curh, cg.predictedPlayerState.inventory[i+startammo] );
 		j++;
 	}
 }
@@ -1687,85 +1687,37 @@ static int CG_LFuncDrawModelByItemIndex( struct cg_layoutnode_s *commandnode, st
 
 static int CG_LFuncCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	return qtrue;
-}
+	float x, y;
 
-static int CG_LFuncCursorX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_x = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	return qtrue;
-}
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 
-static int CG_LFuncCursorY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_x = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	layout_cursor_y = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	return qtrue;
-}
-
-static int CG_LFuncPixelCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_x = round( CG_GetNumericArg( &argumentnode ) );
-	layout_cursor_y = round( CG_GetNumericArg( &argumentnode ) );
+	layout_cursor_x = Q_rint( x );
+	layout_cursor_y = Q_rint( y );
 	return qtrue;
 }
 
 static int CG_LFuncMoveCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_x += round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y += round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	return qtrue;
-}
+	float x, y;
 
-static int CG_LFuncMoveCursorX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_x += round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_y += round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	return qtrue;
-}
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 
-static int CG_LFuncMoveCursorY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_x += round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	layout_cursor_y += round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	return qtrue;
-}
-
-static int CG_LFuncMovePixelCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_x += round( CG_GetNumericArg( &argumentnode ) );
-	layout_cursor_y += round( CG_GetNumericArg( &argumentnode ) );
+	layout_cursor_x += Q_rint( x );
+	layout_cursor_y += Q_rint( y );
 	return qtrue;
 }
 
 static int CG_LFuncSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	return qtrue;
-}
+	float x, y;
 
-static int CG_LFuncSizeX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	return qtrue;
-}
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
 
-static int CG_LFuncSizeY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	return qtrue;
-}
-
-static int CG_LFuncPixelSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
-{
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode ) );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode ) );
+	layout_cursor_width = Q_rint( x );
+	layout_cursor_height = Q_rint( y );
 	return qtrue;
 }
 
@@ -2211,52 +2163,10 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 	},
 
 	{
-		"setCursorX",
-		CG_LFuncCursorX,
-		2,
-		"Sets the cursor position to x and y coordinates. x and y depend on screen width."
-	},
-
-	{
-		"setCursorY",
-		CG_LFuncCursorY,
-		2,
-		"Sets the cursor position to x and y coordinates. x and y depend on screen height."
-	},
-
-	{
-		"setPixelCursor",
-		CG_LFuncPixelCursor,
-		2,
-		"Sets the cursor position to x and y coordinates based on screen resolution."
-	},
-
-	{
 		"MoveCursor",
 		CG_LFuncMoveCursor,
 		2,
 		"Moves the cursor position by dx and dy."
-	},
-
-	{
-		"MoveCursorX",
-		CG_LFuncMoveCursorX,
-		2,
-		"Moves the cursor position by dx and dy. dx and dy depend on screen width."
-	},
-
-	{
-		"MoveCursorY",
-		CG_LFuncMoveCursorY,
-		2,
-		"Moves the cursor position by dx and dy. dx and dy depend on screen height."
-	},
-
-	{
-		"MovePixelCursor",
-		CG_LFuncMovePixelCursor,
-		2,
-		"Moves the cursor position by dx and dy based on screen resolution."
 	},
 
 	{
@@ -2271,27 +2181,6 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		CG_LFuncSize,
 		2,
 		"Sets width and height. Used for pictures and models."
-	},
-
-	{
-		"setSizeX",
-		CG_LFuncSizeX,
-		2,
-		"Sets width and height. Width and height depend on screen width."
-	},
-
-	{
-		"setSizeY",
-		CG_LFuncSizeY,
-		2,
-		"Sets width and height. Width and height depend on screen height."
-	},
-
-	{
-		"setPixelSize",
-		CG_LFuncPixelSize,
-		2,
-		"Sets width and height in Pixels. Used for pictures and models."
 	},
 
 	{
