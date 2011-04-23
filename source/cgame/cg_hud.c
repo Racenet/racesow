@@ -1783,29 +1783,49 @@ static int CG_LFuncMovePixelCursor( struct cg_layoutnode_s *commandnode, struct 
 
 static int CG_LFuncSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	float x, y;
+
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
+
+	layout_cursor_width = Q_rint( x );
+	layout_cursor_height = Q_rint( y );
 	return qtrue;
 }
 
 static int CG_LFuncSizeX( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800 );
+	float x, y;
+
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/800;
+
+	layout_cursor_width = Q_rint( x );
+	layout_cursor_height = Q_rint( y );
 	return qtrue;
 }
 
 static int CG_LFuncSizeY( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600 );
+	float x, y;
+
+	x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/600;
+	y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
+
+	layout_cursor_width = Q_rint( x );
+	layout_cursor_height = Q_rint( y );
 	return qtrue;
 }
 
 static int CG_LFuncPixelSize( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-	layout_cursor_width = round( CG_GetNumericArg( &argumentnode ) );
-	layout_cursor_height = round( CG_GetNumericArg( &argumentnode ) );
+	float x, y;
+
+	x = CG_GetNumericArg( &argumentnode );
+	y = CG_GetNumericArg( &argumentnode );
+
+	layout_cursor_width = Q_rint( x );
+	layout_cursor_height = Q_rint( y );
 	return qtrue;
 }
 
