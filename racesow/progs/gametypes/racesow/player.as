@@ -328,7 +328,11 @@ class Racesow_Player
             this.sendMessage( this.lastRace.checkPointsString );
 
         earnedPoints = newPoints - oldPoints;
-        if (earnedPoints > 0) {
+        if (earnedPoints = 1) {
+            this.sendAward( S_COLOR_BLUE + "You earned "+ earnedPoints +" point!" );
+            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" point!\n" );
+        }
+        else if (earnedPoints > 1) {
             this.sendAward( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!" );
             this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!\n" );
         }
