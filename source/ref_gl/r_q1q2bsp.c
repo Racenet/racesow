@@ -2776,7 +2776,7 @@ static void Mod_Q1LoadLeafs( const lump_t *l, const lump_t *msLump, int numvisle
 		}
 	}
 
-	loadbmodel->numareas = out->area + 1;
+	loadbmodel->numareas = 1;
 }
 
 /*

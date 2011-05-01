@@ -154,10 +154,10 @@ static void CG_AllocDlight( vec3_t origin, float radius, float r, float g, float
 
 	if( radius <= 0 )
 		return;
+	if( cg_numDlights == MAX_DLIGHTS )
+		return;
 
-	dl = &cg_dlights[cg_numDlights % MAX_DLIGHTS];
-	cg_numDlights++;
-
+	dl = &cg_dlights[cg_numDlights++];
 	dl->radius = radius;
 	VectorCopy( origin, dl->origin );
 	dl->color[0] = r;

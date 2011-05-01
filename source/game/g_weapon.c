@@ -114,7 +114,7 @@ static void W_Fire_Lead( edict_t *self, vec3_t start, vec3_t aimdir, vec3_t axis
 #endif
 
 #define DIRECAIRTHIT_DAMAGE_BONUS 5
-#define DIRECTHIT_DAMAGE_BONUS 0
+#define DIRECTHIT_DAMAGE_BONUS 5
 
 enum {
 	PROJECTILE_TOUCH_NOT = 0,

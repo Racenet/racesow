@@ -761,6 +761,8 @@ void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane,
                 rs_radius = trap_Cvar_Get( "rs_plasma_splash", "45", CVAR_ARCHIVE )->integer;
                 rs_minKnockback = trap_Cvar_Get( "rs_plasma_minknockback", "1", CVAR_ARCHIVE)->integer;
 			}
+			else if( inflictor->s.type == ET_BLASTER )
+				weapondef = GS_GetWeaponDef( WEAP_GUNBLADE );
 
 			if( rs_maxKnockback && rs_radius && rs_minKnockback && weapondef )
 			{

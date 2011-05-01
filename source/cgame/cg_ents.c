@@ -1708,7 +1708,7 @@ static void CG_AddParticlesEnt( centity_t *cent )
 		cent->ent.shaderRGBA[1] / 255.0f,
 		cent->ent.shaderRGBA[2] / 255.0f,
 		cent->ent.shaderRGBA[3] / 255.0f,
-		300, // light radius
+		cent->current.light ? spriteRadius * 4 : 0, // light radius
 		COLOR_R( cent->current.light ) / 255.0f,
 		COLOR_G( cent->current.light ) / 255.0f,
 		COLOR_B( cent->current.light ) / 255.0f,

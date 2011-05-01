@@ -741,7 +741,7 @@ MYHALFTYPES
 "#endif\n"
 "\n"
 "#ifdef APPLY_DIRECTIONAL_LIGHT_MIX\n"
-"color.rgb += (LightDiffuse.rgb * 0.6 + gl_Color.rgb * 0.4) * myhalf(max (diffuseProduct, 0.0)) + LightAmbient;\n"
+"color.rgb += gl_Color.rgb;\n"
 "#else\n"
 "color.rgb += LightDiffuse.rgb * myhalf(max (diffuseProduct, 0.0)) + LightAmbient;\n"
 "#endif\n"

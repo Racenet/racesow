@@ -302,7 +302,10 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 {
 	int i, j, k;
 	qbyte *visdata = NULL;
+	qbyte *areadata = NULL;
 	int rowbytes, rowlongs;
+	int areabytes;
+	qbyte *arearow;
 	int *longrow, *longrow2;
 	mmodel_t *bm;
 	mbrushmodel_t *loadbmodel;
@@ -329,6 +332,7 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 
 		rowbytes = loadbmodel->pvs->rowsize;
 		rowlongs = (rowbytes + 3) / 4;
+		areabytes = (loadbmodel->numareas + 7) / 8;
 
 		if( !rowbytes )
 			return 0;
@@ -336,14 +340,18 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 		// build visibility data for each face, based on what leafs
 		// this face belongs to (visible from)
 		visdata = Mod_Malloc( mod, rowbytes * loadbmodel->numsurfaces );
+		areadata = Mod_Malloc( mod, areabytes * loadbmodel->numsurfaces );
 		for( pleaf = loadbmodel->visleafs, leaf = *pleaf; leaf; leaf = *pleaf++ )
 		{
 			mark = leaf->firstVisSurface;
 			do
 			{
+				int surfnum;
+
 				surf = *mark;
 
-				longrow  = ( int * )( visdata + (surf - loadbmodel->surfaces) * rowbytes );
+				surfnum = surf - loadbmodel->surfaces;
+				longrow  = ( int * )( visdata + surfnum * rowbytes );
 				longrow2 = ( int * )( Mod_ClusterPVS( leaf->cluster, mod ) );
 
 				// merge parent leaf cluster visibility into face visibility set
@@ -351,6 +359,11 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 				// shared among multiple leafs
 				for( j = 0; j < rowlongs; j++ )
 					longrow[j] |= longrow2[j];
+
+				if( leaf->area >= 0 ) {
+					arearow = areadata + surfnum * areabytes;
+					arearow[leaf->area>>3] |= (1<<(leaf->area&7));
+				}
 			} while( *++mark );
 		}
     }
@@ -360,6 +373,8 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 		rowbytes = 0;
 		rowlongs = 0;
 		visdata = NULL;
+		areabytes = 0;
+		areadata = NULL;
     }
 
 	// now linearly scan all faces for this submodel, merging them into
@@ -405,6 +420,9 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 		if( surf->fog && !glConfig.ext.GLSL )
 			continue;
 
+		longrow  = ( int * )( visdata + i * rowbytes );
+		arearow = areadata + i * areabytes;
+
 		fcount = 1;
 		mesh = surf->mesh;
 		vcount = mesh->numVerts;
@@ -436,8 +454,15 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 				if( !visdata )
 					goto merge;
 
+				// only merge faces that reside in same map areas
+				if( areabytes > 0 ) {
+					// if areabits aren't equal, faces have different area visibility
+					if( memcmp( arearow, areadata + j * areabytes, areabytes ) ) {
+						continue;
+					}
+				}
+
 				// if two faces potentially see same things, we can merge them
-				longrow  = ( int * )( visdata + i * rowbytes );
 				longrow2 = ( int * )( visdata + j * rowbytes );
 				for( k = 0; k < rowlongs && !(longrow[k] & longrow2[k]); k++ );
 
@@ -516,6 +541,8 @@ merge:
 
 	if( visdata )
 		Mem_Free( visdata );
+	if( areadata )
+		Mem_Free( areadata );
 
 	return num_vbos;
 }

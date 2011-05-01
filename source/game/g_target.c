@@ -64,8 +64,6 @@ void SP_target_temp_entity( edict_t *ent )
 
 static void Use_Target_Speaker( edict_t *ent, edict_t *other, edict_t *activator )
 {
-	ent->activator = activator;
-
 	if( ent->spawnflags & 3 )
 	{
 		// looping sound toggles
@@ -85,7 +83,6 @@ static void Use_Target_Speaker( edict_t *ent, edict_t *other, edict_t *activator
 		else
 			G_PositionedSound( ent->s.origin, CHAN_VOICE, ent->noise_index, ent->attenuation );
 	}
-	G_UseTargets( ent, ent->activator );
 }
 
 void SP_target_speaker( edict_t *ent )

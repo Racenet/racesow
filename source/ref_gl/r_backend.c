@@ -2450,33 +2450,23 @@ static void R_RenderMeshGLSL_Material( void )
 			}
 			else
 			{
-				float radius;
-				vec3_t lightingOrigin, mid;
-
-				radius = 0;
-				VectorCopy( ri.currententity->lightingOrigin, lightingOrigin );
-
 				if( r_currentMeshBuffer->infokey > 0 )
 				{
-					msurface_t *surf;
-
-					surf = &r_worldbrushmodel->surfaces[r_currentMeshBuffer->infokey-1];
-					VectorAdd( surf->mins, surf->maxs, mid );
-					VectorMA( lightingOrigin, 0.5, mid, lightingOrigin );
-
-					if( surf->facetype == FACETYPE_PLANAR )
-						VectorMA( lightingOrigin, 5, surf->plane->normal, lightingOrigin );
-
 					programFeatures |= PROGRAM_APPLY_DIRECTIONAL_LIGHT_MIX;
 					if( r_overBrightBits )
 						programFeatures |= PROGRAM_APPLY_OVERBRIGHT_SCALING;
 				}
 
 				if( ri.currententity->model && ri.currententity != r_worldent )
-					radius = ri.currententity->model->radius * ri.currententity->scale;
-
-				// get weighted incoming direction of world and dynamic lights
-				R_LightForOrigin( lightingOrigin, temp, ambient, diffuse, radius );
+				{
+					// get weighted incoming direction of world and dynamic lights
+					R_LightForOrigin( ri.currententity->lightingOrigin, temp, ambient, diffuse, 
+						ri.currententity->model->radius * ri.currententity->scale);
+				}
+				else
+				{
+					VectorSet( temp, 0.1f, 0.2f, 0.7f );
+				}
 
 				if( ri.currententity->flags & RF_MINLIGHT )
 				{

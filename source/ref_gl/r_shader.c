@@ -66,7 +66,6 @@ static qboolean	r_shaderHasDlightPass;
 static qboolean	r_shaderHasDistanceRamp;
 static qboolean r_shaderHasLightmapPass;
 static qboolean r_shaderPolygonOffset;
-static qboolean r_shaderDiffuseLighting;
 static qboolean r_shaderDisableVBO;
 static int		r_shaderAllDetail;
 
@@ -1448,10 +1447,7 @@ static void Shaderpass_RGBGen( shader_t *shader, shaderpass_t *pass, const char 
 	else if( !strcmp( token, "oneminusvertex" ) )
 		pass->rgbgen.type = RGB_GEN_ONE_MINUS_VERTEX;
 	else if( !strcmp( token, "lightingdiffuse" ) )
-	{
 		pass->rgbgen.type = RGB_GEN_LIGHTING_DIFFUSE;
-		r_shaderDiffuseLighting = qtrue;
-	}
 	else if( !strcmp( token, "lightingdiffuseonly" ) )
 		pass->rgbgen.type = RGB_GEN_LIGHTING_DIFFUSE_ONLY;
 	else if( !strcmp( token, "lightingambientonly" ) )
@@ -2216,7 +2212,7 @@ void Shader_SetFeatures( shader_t *s )
 		s->features |= MF_NOCULL;
 	if( s->flags & (SHADER_PORTAL_CAPTURE|SHADER_PORTAL_CAPTURE2) )
 		s->features |= MF_NONBATCHED;
-	if( r_shaderHasDistanceRamp || r_shaderDiffuseLighting )
+	if( r_shaderHasDistanceRamp )
 		s->features |= MF_NONBATCHED;
 	if( r_shaderPolygonOffset )
 		s->features |= MF_POLYGONOFFSET;
@@ -2644,7 +2640,6 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 	r_shaderHasDistanceRamp = qfalse;
 	r_shaderPolygonOffset = qfalse;
 	r_shaderHasLightmapPass = qfalse;
-	r_shaderDiffuseLighting = qfalse;
 	r_shaderDisableVBO = qfalse;
 	r_shaderAllDetail = SHADER_ALLDETAIL;
 	if( !r_defaultImage )
