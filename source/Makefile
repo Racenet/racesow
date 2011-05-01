@@ -184,7 +184,7 @@ LDFLAGS_COMMON=$(LDFLAGS)
 ifeq ($(OS),FreeBSD)
 LDFLAGS_COMMON+= -L/usr/local/lib -lm -pthread
 else
-LDFLAGS_COMMON+= -L/usr/local/lib -ldl -lm -Wl -O1 --as-needed
+LDFLAGS_COMMON+= -L/usr/local/lib -ldl -lm -Wl -O1 -Wl,--as-needed
 endif
 ifneq ($(DEBUG_BUILD),YES)
 LDFLAGS_COMMON+= -s
