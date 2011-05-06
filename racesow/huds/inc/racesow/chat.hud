@@ -1,5 +1,6 @@
 //
 
+setScale #DEFAULTSCALE
 setCursor 0, 384
 
 if %VIDWIDTH < 800
@@ -17,16 +18,20 @@ if %CHAT_MODE == 0
 endif
 
 setAlign #LEFT, #TOP
-setPixelSize %VIDWIDTH - 20, .18333 * %VIDHEIGHT //0.18333 * 600 = 110
+setScale #NOSCALE
+setSize %VIDWIDTH - 20, .18333 * %VIDHEIGHT //0.18333 * 600 = 110
 
-movePixelCursor 10, 0
+moveCursor 10, 0
 drawChat 7 3 gfx/2d/chat1
 
+setScale #DEFAULTSCALE
 moveCursor #WIDTH, 112
-movePixelCursor -30, 0
+setScale #NOSCALE
+moveCursor -30, 0
 
 if %CHAT_MODE > 0
-	setSizeY 32, 32
+	setScale #SCALEBYHEIGHT
+	setSize 32, 32
 	setAlign #RIGHT, #BOTTOM
 	drawPicByName gfx/2d/bubblechat    
 endif

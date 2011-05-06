@@ -1,11 +1,14 @@
 //
-setSizeY 18, 18
+setScale #SCALEBYHEIGHT
+setSize 18, 18
 setAlign 2 1
+setScale #DEFAULTSCALE
 setCursor #WIDTH / 2, 12
 // team ALPHA (lower opacity for enemy team)
 if %TEAM_ALPHA_SCORE != #NOTSET
 	setColorToTeamColor #TEAM_ALPHA
-	moveCursorY -75, 0
+	setScale #SCALEBYHEIGHT
+	moveCursor -75, 0
 	if %TEAM == #TEAM_ALPHA
 		setColorAlpha 1
 	endif
@@ -17,7 +20,8 @@ endif
 // team BETA (lower opacity for enemy team)
 if %TEAM_BETA_SCORE != #NOTSET
 	setColorToTeamColor #TEAM_BETA
-	moveCursorY 150, 0
+	setScale #SCALEBYHEIGHT
+	moveCursor 150, 0
 	if %TEAM == #TEAM_BETA
 		setColorAlpha 1
 	endif

@@ -5,6 +5,7 @@ if %TEAM >= #TEAM_ALPHA
 	setColorToTeamColor %TEAM
 	setColorAlpha .3
 	setAlign 1 3
+	setScale #DEFAULTSCALE
 	setCursor 0, 586
 	setSize 675, 28
 	drawPicByName gfx/ui/white
@@ -38,34 +39,42 @@ endif
 // self status pic (Quad, flag carrier), center, lower side of screen
 if %IMAGE_SELF
 		setColorToTeamColor %TEAM
+		setScale #DEFAULTSCALE
 		setCursor 360, 450
 		setAlign #RIGHT, #MIDDLE
-		setSizeY 64, 64
+		setScale #SCALEBYHEIGHT
+		setSize 64, 64
 		drawPicByIndex %IMAGE_SELF
 endif
 
 // enemy's info. Right side of screen. Smaller
 if %IMAGE_OTHER
 		setColorToTeamColor %TEAM_ENEMY
+		setScale #DEFAULTSCALE
 		setCursor 440, 450
 		setAlign #LEFT, #MIDDLE
-		setSizeY 64, 64
+		setScale #SCALEBYHEIGHT
+		setSize 64, 64
 		drawPicByIndex %IMAGE_OTHER
 endif
 
 if %IMAGE_ALPHA
 		setColorToTeamColor #TEAM_ALPHA
+		setScale #DEFAULTSCALE
 		setCursor 300, 40
 		setAlign #RIGHT, #BOTTOM
-		setSizeY 32, 32
+		setScale #SCALEBYHEIGHT
+		setSize 32, 32
 		drawPicByIndex %IMAGE_ALPHA
 endif
 
 if %IMAGE_BETA
 		setColorToTeamColor #TEAM_BETA
+		setScale #DEFAULTSCALE
 		setCursor 500, 40
 		setAlign #LEFT, #BOTTOM
-		setSizeY 32, 32
+		setScale #SCALEBYHEIGHT
+		setSize 32, 32
 		drawPicByIndex %IMAGE_BETA
 endif
 
@@ -76,7 +85,9 @@ endif
 
 if %PROGRESS_OTHER
 
-	setSizeY 64, 64
+	setScale #SCALEBYHEIGHT
+	setSize 64, 64
+	setScale #DEFAULTSCALE
 	setCursor 416, 460
 	setAlign #CENTER, #MIDDLE
 
@@ -106,7 +117,9 @@ endif
 
 if %PROGRESS_SELF
 
-	setSizeY 64, 64
+	setScale #SCALEBYHEIGHT
+	setSize 64, 64
+	setScale #DEFAULTSCALE
 	setCursor 384, 440
 	setAlign #CENTER, #MIDDLE
 
@@ -123,7 +136,8 @@ if %PROGRESS_SELF
 	endif
 
 	// eye candy layer
-	setSizeY 82, 82
+	setScale #SCALEBYHEIGHT
+	setSize 82, 82
 	setColor 1, 0.95, 0.825, 0.4
 	if %VIDHEIGHT <= 600
 		drawPicByName "gfx/hud/kuhjoe/middle_toyish_lowres"
@@ -136,9 +150,12 @@ endif
 
 if %PROGRESS_ALPHA
 
-	setSizeY 48, 48
+	setScale #SCALEBYHEIGHT
+	setSize 48, 48
+	//setScale #DEFAULTSCALE
 	//setCursor 330, 450
 	setAlign #CENTER, #MIDDLE
+	setScale #DEFAULTSCALE
 	setCursor 286, 24
 
 // we draw positive value charts in team color and negative value charts in enemy color
@@ -154,7 +171,8 @@ if %PROGRESS_ALPHA
 	endif
 
 	// eye candy layer
-	setSizeY 64, 64
+	setScale #SCALEBYHEIGHT
+	setSize 64, 64
 	setColor 1, 0.95, 0.825, 0.4
 	if %VIDHEIGHT <= 600
 		drawPicByName "gfx/hud/kuhjoe/middle_toyish_lowres"
@@ -167,9 +185,12 @@ endif
 
 if %PROGRESS_BETA
 
-	setSizeY 48, 48
+	setScale #SCALEBYHEIGHT
+	setSize 48, 48
+	//setScale #DEFAULTSCALE
 	//setCursor 470, 450
 	setAlign #CENTER, #MIDDLE
+	setScale #DEFAULTSCALE
 	setCursor 514, 24
 
 // we draw positive value charts in team color and negative value charts in enemy color
@@ -185,7 +206,8 @@ if %PROGRESS_BETA
 	endif
 
 	// eye candy layer
-	setSizeY 64, 64
+	setScale #SCALEBYHEIGHT
+	setSize 64, 64
 	setColor 1, 0.95, 0.825, 0.4
 	if %VIDHEIGHT <= 600
 		drawPicByName "gfx/hud/kuhjoe/middle_toyish_lowres"
@@ -202,6 +224,7 @@ endif
 
 if %MESSAGE_SELF
 		setColor 1, 1, 1, 1
+		setScale #DEFAULTSCALE
 		setCursor #WIDTH / 2, 380
 		setAlign #CENTER, #TOP
 		setFont con_fontSystemsmall
@@ -212,6 +235,7 @@ endif
 if %RACE == 0
 	if %MESSAGE_OTHER
 		setColor 1, 1, 1, 1
+		setScale #DEFAULTSCALE
 		setCursor #WIDTH / 2, 504
 		setAlign #CENTER, #TOP
 		setFont con_fontSystemsmall
@@ -220,6 +244,7 @@ if %RACE == 0
 
 	if %MESSAGE_ALPHA
 		setColorToTeamColor #TEAM_ALPHA
+		setScale #DEFAULTSCALE
 		setCursor 400 - 100, 482 + 8
 		setAlign #RIGHT, #TOP
 		setFont con_fontSystemsmall
@@ -228,6 +253,7 @@ if %RACE == 0
 
 	if %MESSAGE_BETA
 		setColorToTeamColor #TEAM_BETA
+		setScale #DEFAULTSCALE
 		setCursor 400 + 100, 482 + 8
 		setAlign #LEFT, #TOP
 		setFont con_fontSystemsmall
@@ -239,6 +265,7 @@ endif
 if %RACE
 	if %MESSAGE_OTHER
 		setColor 1, 1, 1, 1
+		setScale #DEFAULTSCALE
 		setCursor 8, 80
 		setAlign #LEFT, #TOP
 		setFont con_fontSystemsmall
@@ -247,6 +274,7 @@ if %RACE
 
 	if %MESSAGE_ALPHA
 		setColor 1, 1, 1, 1
+		setScale #DEFAULTSCALE
 		setCursor 8, 96
 		setAlign #LEFT, #TOP
 		setFont con_fontSystemsmall
@@ -255,6 +283,7 @@ if %RACE
 
 	if %MESSAGE_BETA
 		setColor 1, 1, 1, 1
+		setScale #DEFAULTSCALE
 		setCursor 8, 112
 		setAlign #LEFT, #TOP
 		setFont con_fontSystemsmall

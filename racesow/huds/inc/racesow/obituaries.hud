@@ -1,6 +1,7 @@
 //
 setFont "virtue_8"
 setAlign #RIGHT, #TOP
+setScale #DEFAULTSCALE
 setCursor #WIDTH - 4, 10
 setSize 200 300
 drawObituaries #RIGHT, 20

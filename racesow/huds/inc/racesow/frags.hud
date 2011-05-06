@@ -6,8 +6,10 @@ if %RACE == 0
 if %INDIVIDUAL == 0
 
 	setColor 1, 1, 1, 1
-	setSizeY 16, 16
+	setScale #SCALEBYHEIGHT
+	setSize 16, 16
 	setAlign #LEFT, #BOTTOM
+	setScale #DEFAULTSCALE
 	setCursor 58, 550
 	drawNum %SCORE
 
@@ -33,6 +35,7 @@ if %TEAMBASED && %INDIVIDUAL
 
 	setFont con_fontSystemsmall
 	setColor 0 0 0 1
+	setScale #DEFAULTSCALE
 	setCursor 70, 552
 	setAlign #RIGHT, #BOTTOM
 	drawString "Spread:"
@@ -43,8 +46,10 @@ if %TEAMBASED && %INDIVIDUAL
 	drawString "Spread:"
 
 	setColor 1, 1, 1, 1
-	setSizeY 16, 16
+	setScale #SCALEBYHEIGHT
+	setSize 16, 16
 	setAlign #LEFT, #BOTTOM
+	setScale #DEFAULTSCALE
 	setCursor 70, 550
 
 	if %TEAM == #TEAM_ALPHA

@@ -1,9 +1,10 @@
 //
 if %ARMOR > 0
 	setColor 1, 1, 1, 1
-	setSizeY 32, 32
+	setScale #SCALEBYHEIGHT
+	setSize 32, 32
 
-	setCursorY 252, #HEIGHT - 10
+	setCursor 252, #HEIGHT - 10
 
 	setAlign #LEFT, #BOTTOM
 	if %ARMOR < 95
@@ -31,7 +32,7 @@ if %ARMOR > 0
 
 	//draw armor number
 	setAlign #RIGHT, #BOTTOM
-	moveCursorY -4, 0
+	moveCursor -4, 0
 	drawNum %ARMOR
 endif
 

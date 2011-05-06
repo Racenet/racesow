@@ -6,8 +6,10 @@ if 0 == 4 & %SHOW_TIMER
 	//	Server Best
 
 	setFont "virtue_12"
+	setScale #DEFAULTSCALE
 	setCursor #WIDTH, 550
-	movePixelCursor -70, 0
+	setScale #NOSCALE
+	moveCursor -70, 0
 	
 	if %RACE
 		setColor 0.8 0.8 0.8 1
@@ -15,15 +17,15 @@ if 0 == 4 & %SHOW_TIMER
 		if %TIME_RECORD != #NOTSET
 			drawString "Srv Best: "
 		endif
-		movePixelCursor 0, -15
+		moveCursor 0, -15
 		if %TIME_BEST != #NOTSET
 			drawString "Own Best: "
 		endif
-		movePixelCursor 0, -15
+		moveCursor 0, -15
 		if %TIME_SELF != #NOTSET
 			drawString "Time: "
 		endif
-		movePixelCursor 0, 30
+		moveCursor 0, 30
 	endif
 
 	//draw Times
@@ -32,11 +34,11 @@ if 0 == 4 & %SHOW_TIMER
 	if %TIME_RECORD != #NOTSET
 		drawTimer %TIME_RECORD
 	endif
-	movePixelCursor 0, -15
+	moveCursor 0, -15
 	if %TIME_BEST != #NOTSET
 		drawTimer %TIME_BEST
 	endif
-	movePixelCursor 0, -15
+	moveCursor 0, -15
 	if %TIME_SELF != #NOTSET
 		drawTimer %TIME_SELF
 	endif
@@ -50,35 +52,37 @@ if 0 == 2 & %SHOW_TIMER
 
 	setFont "virtue_16"
 
+	setScale #DEFAULTSCALE
 	setCursor 400, 0
-	movePixelCursor -37, 22
+	setScale #NOSCALE
+	moveCursor -37, 22
 
 	setAlign #LEFT, #TOP
 
 	if %TIME_SELF <= %TIME_BEST
 		setcolor 0, 0, 0, 1
 		drawTimer %TIME_SELF
-		movePixelCursor 1, 2
+		moveCursor 1, 2
 		setcolor 0, 1, 0, 1
 		drawTimer %TIME_SELF
-		movePixelCursor -1, -2
+		moveCursor -1, -2
 	endif
 
 	if %TIME_SELF > %TIME_BEST
 		setcolor 0, 0, 0, 1
 		drawTimer %TIME_SELF - %TIME_BEST
-		movePixelCursor 1, 2
+		moveCursor 1, 2
 		setcolor 1, 0, 0, 1
 		drawTimer %TIME_SELF - %TIME_BEST
 
-		movePixelCursor -14, -2
+		moveCursor -14, -2
 		setAlign #LEFT, #TOP
 		setcolor 0, 0, 0, 1
 		drawString "- " //space prevents warsow from using "-" as operator
-		movePixelCursor 1, 2
+		moveCursor 1, 2
 		setcolor 1, 0, 0, 1
 		drawString "- " //space prevents warsow from using "-" as operator
-		movePixelCursor 12, -2
+		moveCursor 12, -2
 	endif
 endif
 
@@ -87,21 +91,27 @@ if 0 == 8 & %SHOW_TIMER
 	if %TIME_SELF < %TIME_BEST
 	if 100 > %TIME_BEST - %TIME_SELF
 		setFont "virtue_16"
+		setScale #DEFAULTSCALE
 		setCursor 400, 120
-		movePixelCursor -37, 0
+		setScale #NOSCALE
+		moveCursor -37, 0
 		setAlign #LEFT, #TOP
+		setScale #DEFAULTSCALE
 		moveCursor 0, 100 - %TIME_BEST - %TIME_SELF
 		if 50 > %TIME_BEST - %TIME_SELF
 			setFont "virtue_22"
-			movePixelCursor -10, 0
+			setScale #NOSCALE
+			moveCursor -10, 0
 		endif
 		if 20 > %TIME_BEST - %TIME_SELF
 			setFont "virtue_28"
-			movePixelCursor -12, 0
+			setScale #NOSCALE
+			moveCursor -12, 0
 		endif
 		setcolor 0, 0, 0, 1
 		drawTimer %TIME_BEST - %TIME_SELF
-		movePixelCursor 1, 2
+		setScale #NOSCALE
+		moveCursor 1, 2
 		setcolor 0, 1, 0, 1
 		drawTimer %TIME_BEST - %TIME_SELF
 	endif
@@ -113,6 +123,7 @@ if %TIME_ALPHA != #NOTSET
 	setFont "virtue_16"
 	setColor 0 0 0 1
 	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
 	setCursor 786, 392
 	drawString "Alpha Time:"
 
@@ -138,6 +149,7 @@ if %TIME_BETA != #NOTSET
 	setFont "virtue_16"
 	setColor 0 0 0 1
 	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
 	setCursor 786, 444
 	drawString "Beta Time:"
 

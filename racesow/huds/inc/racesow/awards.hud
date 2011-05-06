@@ -1,3 +1,5 @@
+//
+setScale #DEFAULTSCALE
 setCursor 400, 72
 setFont electrofield_18
 setColor 1, 1, 1, 1

@@ -1,10 +1,12 @@
-
+//
 precache gfx/hud/damage_down
 precache gfx/hud/damage_left
 precache gfx/hud/damage_right
 precache gfx/hud/damage_up
 
 setAlign #TOP, #LEFT
+
+setScale #DEFAULTSCALE
 
 if %STUNNED
 	setFont con_fontSystemBig

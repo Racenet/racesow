@@ -2,9 +2,10 @@
 if %HEALTH != #NOTSET
 	setColor 1, 1, 1, 1
 
-	setSizeY 32, 32
+	setScale #SCALEBYHEIGHT
+	setSize 32, 32
 
-	setCursorY 110, #HEIGHT - 10
+	setCursor 110, #HEIGHT - 10
 
 	//draw health icon
 	setAlign #LEFT, #BOTTOM
@@ -21,7 +22,7 @@ if %HEALTH != #NOTSET
 	endif
 
 	//draw health number
-	moveCursorY -4, 0
+	moveCursor -4, 0
 	setAlign #RIGHT, #BOTTOM
 	if %HEALTH > 100
 		setColor 1, 0, 1, 1

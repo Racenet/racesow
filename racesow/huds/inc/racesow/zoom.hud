@@ -1,10 +1,13 @@
+//
 if %ZOOM && %SHOW_ZOOM_EFFECT
 	setAlign #CENTER, #MIDDLE
+	setScale #DEFAULTSCALE
 	setCursor #WIDTH / 2, #HEIGHT / 2
 	setSize #WIDTH, #HEIGHT
 	setColor 1, 1, 1, 1
 	drawPicByName gfx/hud/zoomscreen
 
-	setSizeY 512, 512
+	setScale #SCALEBYHEIGHT
+	setSize 512, 512
 	drawPicByName gfx/hud/zoomscreencross
 endif

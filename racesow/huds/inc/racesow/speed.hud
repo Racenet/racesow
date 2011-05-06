@@ -1,53 +1,69 @@
 //speed meter
 
-setFont "virtue_12"
-
+setScale #DEFAULTSCALE
 setCursor 400, 300
-movePixelCursor 0, 39
+setScale #NOSCALE
+moveCursor 0, 50
 setColor 1, 1, 1, 1
 
 if 1 & %SHOW_SPEED
+	//horizontal bar
 	setAlign #CENTER, #MIDDLE
-	setPixelSize 2, 16
+	setSize 140, 2
 	drawPicByName gfx/ui/white
 	
-	movePixelCursor -4, 1
+	//description
+	if 0 == 4 & %SHOW_SPEED
+		setFont "bitstream_7"
+		setAlign #CENTER, #BOTTOM
+		drawString "speed"
+	endif
+
+	//vertical bar
+	moveCursor 16, 16
+	setAlign #CENTER, #MIDDLE
+	setSize 2, 30
+	drawPicByName gfx/ui/white
+	
+	//speed number
+	//black background
+	moveCursor -6, -1
 	setAlign #RIGHT, #MIDDLE
+	setFont "virtue_22"
+	setColor 0, 0, 0, 1
+	drawStringNum %SPEED
+	moveCursor 0, 4
+	drawStringNum %SPEED
+	moveCursor 4, -4
+	drawStringNum %SPEED
+	moveCursor 0, 4
+	drawStringNum %SPEED
+	//white number
+	moveCursor -2, -2
+	setColor 1, 1, 1, 1
 	drawStringNum %SPEED
 	
-	movePixelCursor 8, 0
+	//rocketaccel number
+	moveCursor 8, -5
 	setAlign #LEFT, #MIDDLE
+	setFont "virtue_12"
 	if 0 <= %ROCKETACCEL
 		setColor 0, 1, 0, 1
 		drawString "+ " //space prevents warsow from using "+" as operator
-		movePixelCursor 10, 0
+		moveCursor 10, 0
 		drawStringNum %ROCKETACCEL
-		movePixelCursor -10, 0
+		moveCursor -10, 0
 	endif
 	if 0 > %ROCKETACCEL
 		setColor 1, 0, 0, 1
 		drawStringNum %ROCKETACCEL
 	endif
-	
-	movePixelCursor -4, 0
-	
-	setFont "bitstream_7"
-	setColor 1, 1, 1, 1
-	
-	movePixelCursor 0, -10
-	
-	setAlign #CENTER, #MIDDLE
-	setPixelSize 100, 2
-	drawPicByName gfx/ui/white
-	
-	if 0 == 4 & %SHOW_SPEED
-		setAlign #CENTER, #BOTTOM
-		drawString "speed"
-	endif
 endif
 
+//old speed number
 if 2 & %SHOW_SPEED
 if 0 == 1 & %SHOW_SPEED
+	setFont "virtue_12"
 	setAlign #CENTER, #MIDDLE
 	drawStringNum %SPEED
 endif

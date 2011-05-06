@@ -1,8 +1,10 @@
+//
 if %SHOW_PICKUP
 if %PICKUP_ITEM
 
 	setColor 0, 0, 0, 1
 	setAlign #CENTER, #TOP
+	setScale #DEFAULTSCALE
 	setCursor 602, 520
 	setFont "virtue_16"
 	drawItemName %PICKUP_ITEM

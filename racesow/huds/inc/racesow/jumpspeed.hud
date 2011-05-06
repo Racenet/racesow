@@ -4,9 +4,11 @@ setFont "virtue_12"
 setColor 1 1 1 1
 
 setAlign #LEFT, #BOTTOM
+setScale #DEFAULTSCALE
 setCursor 0, 380
-movePixelCursor 10, 0
+setScale #NOSCALE
+moveCursor 10, 0
 drawString "j-speed:"
-movePixelCursor 76, 0
+moveCursor 76, 0
 drawStringNum %JUMPSPEED
 

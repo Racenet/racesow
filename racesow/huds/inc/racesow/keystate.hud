@@ -1,28 +1,31 @@
 //
 setAlign #CENTER, #BOTTOM
-setSizeY 32, 32
+setScale #SCALEBYHEIGHT
+setSize 32, 32
 
+setScale #DEFAULTSCALE
 setCursor #WIDTH, 255
-moveCursorY -74, 0
+setScale #SCALEBYHEIGHT
+moveCursor -74, 0
 drawKeyState forward
 
 moveCursor 0, 34
 drawKeyState backward
 
-moveCursorY -32, 0
+moveCursor -32, 0
 drawKeyState left
 
-moveCursorY 66, 0
+moveCursor 66, 0
 drawKeyState right
 
-moveCursorY -66, -34
+moveCursor -66, -34
 drawKeyState jump
 
-moveCursorY 66, 0
+moveCursor 66, 0
 drawKeyState special
 
 moveCursor 0, 68
 drawKeyState fire
 
-moveCursorY -66, 0
+moveCursor -66, 0
 drawKeyState crouch

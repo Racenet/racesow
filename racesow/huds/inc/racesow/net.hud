@@ -1,6 +1,8 @@
 // disconnection icon
 setAlign #LEFT, #TOP
+setScale #DEFAULTSCALE
 setCursor 0, 64
 setColor 1 1 1 1
-setSizeY 32, 32
+setScale #SCALEBYHEIGHT
+setSize 32, 32
 drawNetIcon

@@ -12,5 +12,6 @@ if %VIDHEIGHT < 768
 endif
 setColor 1 1 1 1
 setAlign #CENTER #MIDDLE
+setScale #DEFAULTSCALE
 setCursor #WIDTH / 2 #HEIGHT / 2 + 32
 drawPointing

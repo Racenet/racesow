@@ -1,5 +1,7 @@
+//
 if %DOWNLOAD_IN_PROGRESS
 	setAlign #LEFT, #TOP
+	setScale #DEFAULTSCALE
 	setCursor 105, 528
 	setSize 160, 28
 

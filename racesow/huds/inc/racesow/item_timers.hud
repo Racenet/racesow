@@ -2,213 +2,242 @@
 
 if %SHOW_ITEM_TIMERS
 setAlign #LEFT, #MIDDLE
-setCursorY 8, 120
+setScale #SCALEBYHEIGHT
+setCursor 8, 120
 if %ITEM_TIMER0
 	if %ITEM_TIMER0_TEAM
 		setColorToTeamColor %ITEM_TIMER0_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER0_COUNT > 99
-			setSizeY 74, 25
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER0_COUNT < 100
-			setSizeY 60, 25
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER0
 
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER0_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER0_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 if %ITEM_TIMER1
+	setScale #DEFAULTSCALE
 	moveCursor 0 30
 
 	if %ITEM_TIMER1_TEAM
 		setColorToTeamColor %ITEM_TIMER1_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER1_COUNT > 99
-			setSizeY 74, 25
+			setScale #SCALEBYHEIGHT
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER1_COUNT < 100
-			setSizeY 60, 25
+			setScale #SCALEBYHEIGHT
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setScale #SCALEBYHEIGHT
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER1
 
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER1_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER1_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 if %ITEM_TIMER2
+	setScale #DEFAULTSCALE
 	moveCursor 0 30
 	if %ITEM_TIMER2_TEAM
 		setColorToTeamColor %ITEM_TIMER2_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER2_COUNT > 99
-			setSizeY 74, 25
+			setScale #SCALEBYHEIGHT
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER2_COUNT < 100
-			setSizeY 60, 25
+			setScale #SCALEBYHEIGHT
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setScale #SCALEBYHEIGHT
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER2
 	
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER2_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER2_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 if %ITEM_TIMER3
+	setScale #DEFAULTSCALE
 	moveCursor 0 30
 	if %ITEM_TIMER3_TEAM
 		setColorToTeamColor %ITEM_TIMER3_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER3_COUNT > 99
-			setSizeY 74, 25
+			setScale #SCALEBYHEIGHT
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER3_COUNT < 100
-			setSizeY 60, 25
+			setScale #SCALEBYHEIGHT
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setScale #SCALEBYHEIGHT
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER3
 
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER3_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER3_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 if %ITEM_TIMER4
+	setScale #DEFAULTSCALE
 	moveCursor 0 30
 	if %ITEM_TIMER4_TEAM
 		setColorToTeamColor %ITEM_TIMER4_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER4_COUNT > 99
-			setSizeY 74, 25
+			setScale #SCALEBYHEIGHT
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER4_COUNT < 100
-			setSizeY 60, 25
+			setScale #SCALEBYHEIGHT
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setScale #SCALEBYHEIGHT
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER4
 
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER4_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER4_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 if %ITEM_TIMER5
+	setScale #DEFAULTSCALE
 	moveCursor 0 30
 	if %ITEM_TIMER5_TEAM
 		setColorToTeamColor %ITEM_TIMER5_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER5_COUNT > 99
-			setSizeY 74, 25
+			setScale #SCALEBYHEIGHT
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER5_COUNT < 100
-			setSizeY 60, 25
+			setScale #SCALEBYHEIGHT
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setScale #SCALEBYHEIGHT
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER5
 
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER5_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER5_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 if %ITEM_TIMER6
+	setScale #DEFAULTSCALE
 	moveCursor 0 30
 	if %ITEM_TIMER6_TEAM
 		setColorToTeamColor %ITEM_TIMER6_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER6_COUNT > 99
-			setSizeY 74, 25
+			setScale #SCALEBYHEIGHT
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER6_COUNT < 100
-			setSizeY 60, 25
+			setScale #SCALEBYHEIGHT
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setScale #SCALEBYHEIGHT
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER6
 
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER6_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER0_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 if %ITEM_TIMER7
+	setScale #DEFAULTSCALE
 	moveCursor 0 30
 	if %ITEM_TIMER7_TEAM
 		setColorToTeamColor %ITEM_TIMER7_TEAM
 		setColorAlpha 0.5
 		if %ITEM_TIMER7_COUNT > 99
-			setSizeY 74, 25
+			setScale #SCALEBYHEIGHT
+			setSize 74, 25
 		endif
 		if %ITEM_TIMER7_COUNT < 100
-			setSizeY 60, 25
+			setScale #SCALEBYHEIGHT
+			setSize 60, 25
 		endif
 		drawBar 1, 1
 	endif
 
 	setColor 1 1 1 1
-	setSizeY 24, 24
+	setScale #SCALEBYHEIGHT
+	setSize 24, 24
 	drawPicByItemIndex %ITEM_TIMER7
 
-	moveCursorY 26, 1
+	moveCursor 26, 1
 	if %ITEM_TIMER7_COUNT
-		setSizeY 14, 14
+		setSize 14, 14
 		drawNum %ITEM_TIMER7_COUNT
 	endif
-	moveCursorY -26, 1
+	moveCursor -26, 1
 endif
 
 endif

@@ -1,4 +1,6 @@
+//
 setAlign #RIGHT #TOP
+setScale #DEFAULTSCALE
 setCursor #WIDTH - 24, 24
 setSize 256, 256
 SetColor 0.5 0.5 0.5 0.7

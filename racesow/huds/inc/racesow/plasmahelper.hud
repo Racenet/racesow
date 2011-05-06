@@ -2,11 +2,13 @@
 if 64 & %SHOW_SPEED
 if %WEAPON_ITEM == #WEAP_PLASMAGUN
 
+//setScale #DEFAULTSCALE
 //setCursor #WIDTH / 2, 0.3 * #HEIGHT
 //setColor 1, 1, 0, 1
 //drawstringNum %MOUSE_Y
 
 //set position
+setScale #DEFAULTSCALE
 setCursor 0.47 * #WIDTH, 0.5 * #HEIGHT
 
 // zoomfactor 0.2
