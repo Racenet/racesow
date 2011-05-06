@@ -68,4 +68,7 @@ include damage_indicator_screen
 // alternatively can use
 //include danlin/damage_indicator_screen
 
+//workaround for changing to older huds
+setScale #DEFAULTSCALE
+
 
