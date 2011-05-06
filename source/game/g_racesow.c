@@ -172,7 +172,7 @@ void RS_Init()
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
-    rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "1", CVAR_ARCHIVE|CVAR_NOSET);
+    rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "0", CVAR_ARCHIVE|CVAR_NOSET);
     rs_IRCstream = trap_Cvar_Get( "rs_IRCstream","0", CVAR_ARCHIVE|CVAR_NOSET );
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
     rs_loadPlayerCheckpoints = trap_Cvar_Get( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE);

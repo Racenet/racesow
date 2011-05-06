@@ -73,82 +73,83 @@ bool isUsingRacesowClient( cClient @client )
  */
 bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int argc )
 {
-	Racesow_Player @player = Racesow_GetPlayerByClient( client );
-	Racesow_Command@ command = RS_GetCommandByName( cmdString );
+    Racesow_Player @player = Racesow_GetPlayerByClient( client );
+    Racesow_Command@ command = RS_GetCommandByName( cmdString );
 
-  //we firstly check if the command is manage in the gametype
-  bool result = racesowGametype.Command( @client, @cmdString, @argsString, argc );
+    //we firstly check if the command is manage in the gametype
+    bool result = racesowGametype.Command( @client, @cmdString, @argsString, argc );
 
-  if ( result )   //if true is returned, the command is ok no need to go further
-    return true;
+    if ( result ) //if true is returned, the command is ok no need to go further
+        return true;
 
-	if ( @command != null )
-	{
-	    player.executeCommand(command, argsString, argc);
-	}
+    if ( @command != null )
+    {
+        player.executeCommand( command, argsString, argc );
+    }
 
-	else if ( cmdString == "whoisgod" )
-	{
-	  int index;
-	  cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
+    else if ( cmdString == "whoisgod" )
+    {
+        int index;
+        cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
+        if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE || gametypeFlag == MODFLAG_TRACE )
+            index = brandom( 0, 7 );
+        else
+            index = brandom( 0, 6 );
+        player.sendMessage( devs[index] + "\n" );
+    }
 
-	  if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE || gametypeFlag == MODFLAG_TRACE )
-	    index = brandom(0, 7);
-	  else
-	    index = brandom(0, 6);
+    else if ( ( cmdString == "ammoswitch" ) )
+    {
+        return player.ammoSwitch();
+    }
 
-	  player.sendMessage( devs[index] + "\n" );
-	}
+    else if ( (cmdString == "callvotecheckpermission") )
+    {
+        if ( player.isVotemuted )
+        {
+            player.sendErrorMessage( "You are votemuted" );
+            return false;
+        }
+        else
+        {
+            cString vote = argsString.getToken( 0 );
+            if( vote == "mute" || vote == "vmute" ||
+                vote == "kickban" || vote == "kick" || vote == "remove" ||
+                vote == "joinlock" || vote == "joinunlock" )
+            {
+                Racesow_Player @victimPlayer;
+                cString victim = argsString.getToken( 1 );
 
-	else if ( ( cmdString == "ammoswitch" ) )
-	{
-		return player.ammoSwitch();
-	}
+                if ( Racesow_GetClientNumber( victim ) != -1 )
+                    @victimPlayer = players[ Racesow_GetClientNumber( victim ) ];
+                else if( victim.isNumerical() )
+                {
+                    if ( victim.toInt() > maxClients )
+                        return true;
+                    else
+                        @victimPlayer = players[ victim.toInt() ];
+                }
+                else
+                    return true;
 
-  else if ( ( cmdString == "callvotecheckpermission" ) )
-	{
-		if( player.isVotemuted )
-		{
-			sendMessage( S_COLOR_RED + "You are votemuted\n", @client );
-			return false;
-		}
-		else
-		{
-			cString vote = argsString.getToken( 0 );
-			if( vote == "mute" || vote == "vmute" ||
-					vote == "kickban" || vote == "kick" || vote == "remove" ||
-          vote == "joinlock" || vote == "joinunlock" )
-			{
-				Racesow_Player @victimPlayer;
-				cString victim = argsString.getToken( 1 );
-
-				if ( Racesow_GetClientNumber( victim ) != -1)
-					@victimPlayer = players[ Racesow_GetClientNumber( victim ) ];
-				else if( victim.isNumerical() )
-					if ( victim.toInt() > maxClients )
-						return true;
-					else
-						@victimPlayer = players[ victim.toInt() ];
-				else
-					return true;
-
-				if( victimPlayer.auth.allow( RACESOW_AUTH_ADMIN ))
-				{
-					G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
-						+ " tried to " + argsString.getToken( 0 ) + " an admin.\n" );
-					return false;
-				}
-				else
-				{
-					return true;
-				}
-			}
-			else
-			{
-				return true;
-			}
-		}
-	}
+                if( victimPlayer.auth.isAdmin() )
+                {
+                    G_PrintMsg( null, S_COLOR_WHITE + player.getName()
+                                + S_COLOR_RED + " tried to "
+                                + argsString.getToken( 0 ) + " an admin.\n" );
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
+        }
+    }
 
 	else if ( cmdString == "callvotevalidate" )
 	{

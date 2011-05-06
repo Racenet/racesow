@@ -1129,7 +1129,7 @@ class Racesow_Player
             return;
 
         G_PrintMsg( this.client.getEnt(), S_COLOR_RED + "Error: " + S_COLOR_WHITE
-                + message +"\n");
+                    + message +"\n");
     }
 
 	/**
@@ -1258,47 +1258,50 @@ class Racesow_Player
 	}
 
 
-	/**
-	 * Execute an admin command
-	 * @param cString &cmdString
-	 * @return bool
-	 */
-	bool adminCommand( cString &cmdString )
-	{
-		bool commandExists = false;
-		bool showNotification = false;
-		cString command = cmdString.getToken( 0 );
+    /**
+     * Execute an admin command
+     * @param cString &cmdString
+     * @return bool
+     */
+    bool adminCommand( cString &cmdString )
+    {
+        bool showNotification = false;
+        cString command = cmdString.getToken( 0 );
 
-		// map command
-		if ( commandExists = command == "map" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
-			{
-				this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
-				return false;
-			}
+        // map command
+        if ( command == "map" )
+        {
+            if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
+            {
+                this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
+                return false;
+            }
 
-			cString mapName = cmdString.getToken( 1 );
-			if ( mapName == "" )
-			{
-				this.sendErrorMessage("No map name given" );
-				return false;
-			}
+            cString mapName = cmdString.getToken( 1 );
+            if ( mapName == "" )
+            {
+                this.sendErrorMessage( "No map name given" );
+                return false;
+            }
 
-			G_CmdExecute("gamemap "+ mapName + "\n");
-			showNotification = true;
-		}
+            G_CmdExecute( "gamemap " + mapName + "\n" );
+            showNotification = true;
+        }
 
-		//update maplist
-		if ( command == "updateml")
-		{
-		    commandExists = true;
-		    RS_UpdateMapList( this.client.playerNum() );
-		    return true;
-		}
+        //update maplist
+        if ( command == "updateml" )
+        {
+            if ( !this.auth.isAdmin() )
+            {
+                this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
+                return false;
+            }
+            RS_UpdateMapList( this.client.playerNum() );
+            showNotification = true;
+        }
 
-      // restart command
-        if ( commandExists = command == "restart" )
+        // restart command
+        if ( command == "restart" )
         {
             if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
             {
@@ -1310,7 +1313,7 @@ class Racesow_Player
         }
 
         // extend_time command
-        if ( commandExists = command == "extend_time" )
+        if ( command == "extend_time" )
         {
             if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
             {
@@ -1332,66 +1335,66 @@ class Racesow_Player
             showNotification = true;
         }
 
-		// kick, votemute, remove, mute, joinlock  commands (RACESOW_AUTH_KICK)
-		else if ( command == "mute" || command == "unmute" || command == "vmute" ||
-				command == "vunmute" || command == "remove"|| command == "kick"
-					|| command == "votemute" || command == "unvotemute")
-		{
-			commandExists = true;
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString );
-				return false;
-			}
-			if( cmdString.getToken( 1 ) == "" )
-			{
-				this.client.execGameCommand("cmd players");
-				showNotification = false;
-				return false;
-			}
-			Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+        // kick, votemute, remove, mute, joinlock  commands (RACESOW_AUTH_KICK)
+        else if ( command == "mute" || command == "unmute" || command == "vmute" ||
+                  command == "vunmute" || command == "remove"|| command == "kick" ||
+                  command == "votemute" || command == "unvotemute" )
+        {
+            if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
+            {
+                this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString );
+                return false;
+            }
+            if( cmdString.getToken( 1 ) == "" )
+            {
+                this.client.execGameCommand("cmd players");
+                showNotification = false;
+                return false;
+            }
+            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
             if (@player == null )
                 return false;
 
-			if( command == "kick" )
-				player.kick("");
-			else if( command == "votemute" )
-				player.isVotemuted = true;
-			else if( command == "unvotemute" )
-				player.isVotemuted = false;
-			else if( command == "remove" )
-				player.remove("");
-			else if( command == "mute" )
-			    player.client.muted |= 1;
-			else if( command == "unmute" )
-				player.client.muted &= ~1;
-			else if( command == "vmute" )
-				player.client.muted |= 2;
-			else if( command == "vunmute" )
-				player.client.muted &= ~2;
-			else if( command == "joinlock" )
-				player.isJoinlocked = true;
-			else if( command == "unjoinlock" )
-				player.isJoinlocked = false;
-			showNotification = true;
-		}
+            if( command == "kick" )
+                player.kick("");
+            else if( command == "votemute" )
+                player.isVotemuted = true;
+            else if( command == "unvotemute" )
+                player.isVotemuted = false;
+            else if( command == "remove" )
+                player.remove("");
+            else if( command == "mute" )
+                player.client.muted |= 1;
+            else if( command == "unmute" )
+                player.client.muted &= ~1;
+            else if( command == "vmute" )
+                player.client.muted |= 2;
+            else if( command == "vunmute" )
+                player.client.muted &= ~2;
+            else if( command == "joinlock" )
+                player.isJoinlocked = true;
+            else if( command == "unjoinlock" )
+                player.isJoinlocked = false;
+            showNotification = true;
+        }
 
-		// cancelvote command
-		else if ( commandExists = command == "cancelvote" )
-		{
-			if ( !this.auth.allow( RACESOW_AUTH_KICK ) )
-			{
-				this.sendErrorMessage("You are not permitted to execute the command 'admin "+ cmdString);
-				return false;
-			}
-			RS_cancelvote();
-		}
+        // cancelvote command
+        else if ( command == "cancelvote" )
+        {
+            if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
+            {
+                this.sendErrorMessage("You are not permitted to execute the command 'admin "+ cmdString);
+                return false;
+            }
+            RS_cancelvote();
+            showNotification = true;
+        }
 
 
         // ban
-		else if ( commandExists = command == "kickban" )
+        else if ( command == "kickban" )
         {
-            if ( !this.auth.allow( RACESOW_AUTH_ADMIN ) )
+            if ( !this.auth.isAdmin() )
             {
                 this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString );
                 return false;
@@ -1407,19 +1410,19 @@ class Racesow_Player
                 player.kickban("");
         }
 
-		// don't touch the rest of the method!
-		if( !commandExists )
-		{
-			this.sendErrorMessage("The command 'admin " + cmdString + "' does not exist" );
-			return false;
-		}
-		else if ( showNotification )
-		{
-			G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
-				+ " executed command '"+ cmdString +"'\n" );
-		}
-		return true;
-	}
+        else
+        {
+            this.sendErrorMessage("The command 'admin " + cmdString + "' does not exist" );
+            return false;
+        }
+
+        if ( showNotification )
+        {
+            G_PrintMsg( null, S_COLOR_WHITE + this.getName() + S_COLOR_GREEN
+                        + " executed command '"+ cmdString + "'\n" );
+        }
+        return true;
+    }
 
 	/**
 	 * execute a Racesow_Command

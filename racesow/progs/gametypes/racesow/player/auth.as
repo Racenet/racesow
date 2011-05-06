@@ -314,13 +314,22 @@ const uint RACESOW_AUTH_ADMIN		= 31;
 	 */
 	bool allow( const uint permission )
 	{
-        this.player.sendMessage("mask: " + this.authorizationsMask + ", test: " + (this.authorizationsMask & permission) + "\n");
-        
-        
-    
+        this.player.sendMessage("mask: " + this.authorizationsMask + ", perm: " + permission + "\n");
 		return ( this.authorizationsMask & permission != 0 );
 	}
     
+	/**
+	 * Check if the player is an admin
+	 * Must not be done with auth.allow(RACESOW_AUTH_ADMIN)
+	 * because RACESOW_AUTH_ADMIN is not a specific permission
+	 * and has all bits set to 1
+	 * @return bool
+	 */
+	bool isAdmin()
+	{
+	    return ( this.authorizationsMask == RACESOW_AUTH_ADMIN );
+	}
+
 	/**
 	 * Get the player's status concerning nickname protection
 	 * @return int
