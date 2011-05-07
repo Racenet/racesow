@@ -1228,7 +1228,7 @@ static void CG_DrawWeaponIcons( int x, int y, int offx, int offy, int iw, int ih
 //================
 static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, int ammotype, int align )
 {
-	int curx, cury, curwh;
+	int curx, cury, curwh; //racesow, fixes a basewsw bug
 	int i, j, n, fs;
 	float fj, fn;
 	vec4_t color;
@@ -1246,7 +1246,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		fs = fontsize;
 	else
 		fs = 12; // 12 = default size for font
-	curwh = (int)( fs * cgs.vidHeight/600 );
+	curwh = (int)( fs * cgs.vidHeight/600 ); //racesow, scale fontsize only by vidheight
 
 	n = 0;
 
@@ -1275,7 +1275,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		cury = y + (int)( offy * ( fj - fn / 2.0f ) );
 
 		if( cg.predictedPlayerState.inventory[i+startammo] )
-			CG_DrawHUDNumeric( curx, cury, align, color, curwh, curwh, cg.predictedPlayerState.inventory[i+startammo] );
+			CG_DrawHUDNumeric( curx, cury, align, color, curwh, curwh, cg.predictedPlayerState.inventory[i+startammo] ); //racesow
 		j++;
 	}
 }
@@ -1703,28 +1703,15 @@ static int CG_LFuncScale( struct cg_layoutnode_s *commandnode, struct cg_layoutn
 	return qtrue;
 }
 
+#define SCALE_X( f ) ( (layout_cursor_scale == NOSCALE) ? f : (layout_cursor_scale == SCALEBYHEIGHT) ? f*cgs.vidHeight/600.0f : f*cgs.vidWidth/800.0f )
+#define SCALE_Y( f ) ( (layout_cursor_scale == NOSCALE) ? f : (layout_cursor_scale == SCALEBYWIDTH) ? f*cgs.vidWidth/800.0f : f*cgs.vidHeight/600.0f )
+
 static int CG_LFuncCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
 	float x, y;
 
-	switch( layout_cursor_scale )
-	{
-	case NOSCALE:
-		x = CG_GetNumericArg( &argumentnode );
-		y = CG_GetNumericArg( &argumentnode );
-		break;
-	case SCALEBYWIDTH:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		break;
-	case SCALEBYHEIGHT:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-		break;
-	default:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-	}
+	x = SCALE_X( CG_GetNumericArg( &argumentnode ) );
+	y = SCALE_Y( CG_GetNumericArg( &argumentnode ) );
 
 	layout_cursor_x = Q_rint( x );
 	layout_cursor_y = Q_rint( y );
@@ -1735,24 +1722,8 @@ static int CG_LFuncMoveCursor( struct cg_layoutnode_s *commandnode, struct cg_la
 {
 	float x, y;
 
-	switch( layout_cursor_scale )
-	{
-	case NOSCALE:
-		x = CG_GetNumericArg( &argumentnode );
-		y = CG_GetNumericArg( &argumentnode );
-		break;
-	case SCALEBYWIDTH:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		break;
-	case SCALEBYHEIGHT:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-		break;
-	default:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-	}
+	x = SCALE_X( CG_GetNumericArg( &argumentnode ) );
+	y = SCALE_Y( CG_GetNumericArg( &argumentnode ) );
 
 	layout_cursor_x += Q_rint( x );
 	layout_cursor_y += Q_rint( y );
@@ -1763,24 +1734,8 @@ static int CG_LFuncSize( struct cg_layoutnode_s *commandnode, struct cg_layoutno
 {
 	float x, y;
 
-	switch( layout_cursor_scale )
-	{
-	case NOSCALE:
-		x = CG_GetNumericArg( &argumentnode );
-		y = CG_GetNumericArg( &argumentnode );
-		break;
-	case SCALEBYWIDTH:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		break;
-	case SCALEBYHEIGHT:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-		break;
-	default:
-		x = CG_GetNumericArg( &argumentnode )*cgs.vidWidth/800;
-		y = CG_GetNumericArg( &argumentnode )*cgs.vidHeight/600;
-	}
+	x = SCALE_X( CG_GetNumericArg( &argumentnode ) );
+	y = SCALE_Y( CG_GetNumericArg( &argumentnode ) );
 
 	layout_cursor_width = Q_rint( x );
 	layout_cursor_height = Q_rint( y );
