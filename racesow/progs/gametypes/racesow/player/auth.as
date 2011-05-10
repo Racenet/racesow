@@ -6,12 +6,17 @@
  * @version 0.6.1
  */
 
-const uint RACESOW_AUTH_REGISTERED	= 1;
-const uint RACESOW_AUTH_MAP			= 2;
-const uint RACESOW_AUTH_KICK		= 4;
-const uint RACESOW_AUTH_TIMELIMIT	= 8;
-const uint RACESOW_AUTH_RESTART		= 16;
-const uint RACESOW_AUTH_ADMIN		= 31;
+const uint RACESOW_AUTH_REGISTERED      = 1;
+const uint RACESOW_AUTH_MAP             = 2;
+const uint RACESOW_AUTH_MUTE            = 4;
+const uint RACESOW_AUTH_KICK            = 8;
+const uint RACESOW_AUTH_TIMELIMIT       = 16;
+const uint RACESOW_AUTH_RESTART         = 32;
+const uint RACESOW_AUTH_SETPERMISSION   = 64;
+const uint RACESOW_AUTH_ALL             = 127;
+
+//By default an admin has all permissions except RACESOW_AUTH_SETPERMISSION
+const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUTH_MAP | RACESOW_AUTH_MUTE | RACESOW_AUTH_KICK | RACESOW_AUTH_TIMELIMIT | RACESOW_AUTH_RESTART);
  
  class Racesow_Player_Auth : Racesow_Player_Implemented
  {

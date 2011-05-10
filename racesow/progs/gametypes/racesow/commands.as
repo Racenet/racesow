@@ -621,12 +621,13 @@ class Command_Admin : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( !player.auth.allow( RACESOW_AUTH_ADMIN ) )
+        // i think this needs to be removed
+        /*if ( !player.auth.allow( RACESOW_AUTH_ADMIN ) )
         {
             G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
                 + " tried to execute an admin command without permission.\n" );
             return false;
-        }
+        }*/
 
         if ( argc < 1 )
         {
@@ -864,6 +865,9 @@ void RS_CreateCommands()
             S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
             + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
             + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
+            /*+ S_COLOR_RED + "admin add           " + S_COLOR_YELLOW + "add player as an admin\n" //The command string is not long enough to hold all commands
+            + S_COLOR_RED + "admin delete           " + S_COLOR_YELLOW + "remove admin rights from player\n"
+            + S_COLOR_RED + "admin setpermission           " + S_COLOR_YELLOW + "change permissions of a player\n"*/
             + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
             + S_COLOR_RED + "admin restart  " + S_COLOR_YELLOW + "restart the match immedeatly\n"
             + S_COLOR_RED + "admin extend_time  " + S_COLOR_YELLOW + "extend the matchtime immedeatly\n"
