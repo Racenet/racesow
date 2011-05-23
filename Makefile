@@ -26,9 +26,15 @@ version:
 	$(DOC_DIRECTORY)/$(DOXYGEN_FILE)
 	
 gametype:
-	cd $(RACESOW_DIRECTORY); zip -r rs_gametype$(SIMPLE_VERSION_NUMBER)pure progs cfgs -x \*.svn/\*
-	mv $(RACESOW_DIRECTORY)/rs_gametype$(SIMPLE_VERSION_NUMBER)pure.zip rs_gametype$(SIMPLE_VERSION_NUMBER)pure.pk3
+	cd $(RACESOW_DIRECTORY); zip -r racesow_gametype$(SIMPLE_VERSION_NUMBER)pure progs cfgs
+	mv $(RACESOW_DIRECTORY)/racesow_gametype$(SIMPLE_VERSION_NUMBER)pure.zip racesow_gametype$(SIMPLE_VERSION_NUMBER)pure.pk3
 
 data:
-	cd $(RACESOW_DIRECTORY); zip -r rs_data$(SIMPLE_VERSION_NUMBER)pure gfx huds -x \*.svn/\*
-	mv $(RACESOW_DIRECTORY)/rs_data$(SIMPLE_VERSION_NUMBER)pure.zip rs_data$(SIMPLE_VERSION_NUMBER)pure.pk3
+	cd $(RACESOW_DIRECTORY); zip -r racesow_data$(SIMPLE_VERSION_NUMBER)pure gfx huds
+	mv $(RACESOW_DIRECTORY)/racesow_data$(SIMPLE_VERSION_NUMBER)pure.zip racesow_data$(SIMPLE_VERSION_NUMBER)pure.pk3
+
+install: gametype data
+	mv  racesow_data$(SIMPLE_VERSION_NUMBER)pure.pk3 racesow_gametype$(SIMPLE_VERSION_NUMBER)pure.pk3 $(SOURCE_DIRECTORY)/release/racesow/
+
+clean:
+	rm *pk3
