@@ -1268,9 +1268,10 @@ class Racesow_Player
         bool showNotification = false;
         cString command = cmdString.getToken( 0 );
 
+        //Commented out for release - Per server admin/authmasks will be finished when the new http DB-Interaction is done
         // add command - adds a new admin (sets all permissions except RACESOW_AUTH_SETPERMISSION)
         // delete command - deletes admin rights for the given player
-        if ( command == "add" || command == "delete" )
+        /*if ( command == "add" || command == "delete" )
         {
             if( !this.auth.allow( RACESOW_AUTH_ADMIN | RACESOW_AUTH_SETPERMISSION ) )
             {
@@ -1332,16 +1333,22 @@ class Racesow_Player
 
             if( cmdString.getToken( 2 ) == "map" )
                 permission = RACESOW_AUTH_MAP;
-            if( cmdString.getToken( 2 ) == "mute" )
+            else if( cmdString.getToken( 2 ) == "mute" )
                 permission = RACESOW_AUTH_MUTE;
-            if( cmdString.getToken( 2 ) == "kick" )
+            else if( cmdString.getToken( 2 ) == "kick" )
                 permission = RACESOW_AUTH_KICK;
-            if( cmdString.getToken( 2 ) == "timelimit" )
+            else if( cmdString.getToken( 2 ) == "timelimit" )
                 permission = RACESOW_AUTH_TIMELIMIT;
-            if( cmdString.getToken( 2 ) == "restart" )
+            else if( cmdString.getToken( 2 ) == "restart" )
                 permission = RACESOW_AUTH_RESTART;
-            if( cmdString.getToken( 2 ) == "setpermission" )
+            else if( cmdString.getToken( 2 ) == "setpermission" )
                 permission = RACESOW_AUTH_SETPERMISSION;
+            else
+                return false;
+
+            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+            if (@player == null )
+                return false;
 
             if( cmdString.getToken( 3 ).toInt() == 1 )
                 this.sendErrorMessage( cmdString.getToken( 2 ) + "enabled" );
@@ -1349,16 +1356,10 @@ class Racesow_Player
             else
                 this.sendErrorMessage( cmdString.getToken( 2 ) + "disabled" );
                 //player.setAuthmask( player.authmask & ~permission );
-
-            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
-            if (@player == null )
-                return false;
-
-            //Set authmask
-        }
+        }*/
 
         // map command
-        else if ( command == "map" )
+        if ( command == "map" )
         {
             if ( !this.auth.allow( RACESOW_AUTH_MAP ) )
             {
