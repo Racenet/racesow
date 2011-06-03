@@ -132,7 +132,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
                 else
                     return true;
 
-                if( victimPlayer.auth.isAdmin() )
+                if( victimPlayer.auth.allow(RACESOW_AUTH_ADMIN) )
                 {
                     G_PrintMsg( null, S_COLOR_WHITE + player.getName()
                                 + S_COLOR_RED + " tried to "

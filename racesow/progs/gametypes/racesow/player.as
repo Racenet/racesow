@@ -1381,7 +1381,7 @@ class Racesow_Player
         // update maplist
         else if ( command == "updateml" )
         {
-            if ( !this.auth.isAdmin() )
+            if ( !this.auth.allow(RACESOW_AUTH_ADMIN) )
             {
                 this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
                 return false;
@@ -1504,7 +1504,7 @@ class Racesow_Player
         // ban
         else if ( command == "kickban" )
         {
-            if ( !this.auth.isAdmin() )
+            if ( !this.auth.allow(RACESOW_AUTH_ADMIN) )
             {
                 this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString );
                 return false;
