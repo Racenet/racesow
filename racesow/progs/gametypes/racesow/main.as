@@ -2,7 +2,7 @@
  * Racesow Gametype Interface
  *
  * based on warsow 0.5 race gametype
- * @version 0.6.1
+ * @version 0.6.2
  */
 
 int numCheckpoints = 0;
@@ -814,7 +814,7 @@ void GT_SpawnGametype()
 void GT_InitGametype()
 {
     gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.6.1" );
+    gametype.setVersion( "0.6.2" );
     gametype.setAuthor( "warsow-race.net" );
 
     // initalize weapondef config
@@ -838,9 +838,9 @@ void GT_InitGametype()
                + "set g_allow_stun \"0\" // LOL!\n"
                + "set g_allow_bunny \"0\" // learn it!\n"
                + "set g_antilag \"0\" // do NEVER touch!\n"
+               + "set g_instagib \"0\"\n"
                + "set rs_projectilePrestep \"24\" // is it used?\n"
                + "set rs_movementStyle \"1\"\n"
-               + "set rs_gametype \"race\"\n"
                + "\n"
                + "exec configs/server/gametypes/racesow_weapondefs.cfg"
                + "\n"

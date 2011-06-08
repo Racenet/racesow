@@ -1,0 +1,27 @@
+Racesow is a popular race modification for the first person shooter Warsow,
+developed since 2006. Physics of the game are faithful to Warsow base physics,
+and were only carefully optimized to enable better tricking and racing.
+
+This repository contains:
+
+* racesow game code, in source/
+Very close to warsow game code. Modifications include various optimizations for
+racing and race maps support, a database system to record many statistics about
+players and races (records, activity,...). This code is kept up to date with
+warsow game code and is compatible with basewsw clients.
+
+* several gametypes in racesow/progs
+Based on the gametype scripting system of warsow (using AngelScript to
+interpret gametype code at runtime).
+
+* racesow hud in racesow/huds
+Dedicated to race and designed both for beginners and advanced players. This
+hud relies on racesow client library and is thus not usable with basewsw
+libraries.
+
+More info at:
+http://racesow.warsow-race.net/
+
+Racesow is developed and supported by Racenet, a racing community
+website: http://www.warsow-race.net
+contact: #racenet@quakenet
