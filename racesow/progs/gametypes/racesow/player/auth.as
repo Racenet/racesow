@@ -319,8 +319,8 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
 	 */
 	bool allow( const uint permission )
 	{
-        this.player.sendMessage("mask: " + this.authorizationsMask + ", perm: " + permission + "\n");
-		return ( this.authorizationsMask & permission != 0 );
+        //this.player.sendMessage("mask: " + this.authorizationsMask + ", perm: " + permission + " mask & perm:" + ( this.authorizationsMask & permission ) + "\n");
+		return ( this.authorizationsMask & permission == permission );
 	}
 
 	/**

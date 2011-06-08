@@ -33,6 +33,12 @@ data:
 	cd $(RACESOW_DIRECTORY); zip -r racesow_data$(SIMPLE_VERSION_NUMBER)pure gfx huds
 	mv $(RACESOW_DIRECTORY)/racesow_data$(SIMPLE_VERSION_NUMBER)pure.zip racesow_data$(SIMPLE_VERSION_NUMBER)pure.pk3
 
+modules:
+	cd $(SOURCE_DIRECTORY); make -f Makefile.i386 cgame game ui; make -f Makefile.x86 cgame game ui; make -f Makefile.x64 cgame game ui; \
+	make -f Makefile.x86_64 cgame game ui
+	cd $(SOURCE_DIRECTORY)/release/racesow; zip modules_racesow$(SIMPLE_VERSION_NUMBER) *i386.so *x86.dll *x64.dll *x86_64.so
+	mv $(SOURCE_DIRECTORY)/release/racesow/modules_racesow$(SIMPLE_VERSION_NUMBER).zip $(SOURCE_DIRECTORY)/release/racesow/modules_racesow$(SIMPLE_VERSION_NUMBER).pk3
+
 install: gametype data
 	mv  racesow_data$(SIMPLE_VERSION_NUMBER)pure.pk3 racesow_gametype$(SIMPLE_VERSION_NUMBER)pure.pk3 $(SOURCE_DIRECTORY)/release/racesow/
 
