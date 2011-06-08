@@ -39,7 +39,7 @@ cvar_t *cg_strafeHUD;
 
 //=============================================================================
 
-enum { DEFAULTSCALE=0, NOSCALE, SCALEBYWIDTH, SCALEBYHEIGHT }; //racesow
+enum { DEFAULTSCALE=0, NOSCALE, SCALEBYWIDTH, SCALEBYHEIGHT };
 
 typedef struct
 {
@@ -67,13 +67,11 @@ static const constant_numeric_t cg_numeric_constants[] = {
 	{ "WIDTH", 800 },
 	{ "HEIGHT", 600 },
 
-	//racesow
 	// scale
 	{ "DEFAULTSCALE", DEFAULTSCALE },
 	{ "NOSCALE", NOSCALE },
 	{ "SCALEBYWIDTH", SCALEBYWIDTH },
 	{ "SCALEBYHEIGHT", SCALEBYHEIGHT },
-	//!racesow
 
 	// match states
 	{ "MATCH_STATE_NONE", MATCH_STATE_NONE },
@@ -1228,7 +1226,7 @@ static void CG_DrawWeaponIcons( int x, int y, int offx, int offy, int iw, int ih
 //================
 static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, int ammotype, int align )
 {
-	int curx, cury, curwh; //racesow, fixes a basewsw bug
+	int curx, cury, curwh;
 	int i, j, n, fs;
 	float fj, fn;
 	vec4_t color;
@@ -1246,7 +1244,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		fs = fontsize;
 	else
 		fs = 12; // 12 = default size for font
-	curwh = (int)( fs * cgs.vidHeight/600 ); //racesow, scale fontsize only by vidheight
+	curwh = (int)( fs * cgs.vidHeight/600 );
 
 	n = 0;
 
@@ -1275,7 +1273,7 @@ static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, 
 		cury = y + (int)( offy * ( fj - fn / 2.0f ) );
 
 		if( cg.predictedPlayerState.inventory[i+startammo] )
-			CG_DrawHUDNumeric( curx, cury, align, color, curwh, curwh, cg.predictedPlayerState.inventory[i+startammo] ); //racesow
+			CG_DrawHUDNumeric( curx, cury, align, color, curwh, curwh, cg.predictedPlayerState.inventory[i+startammo] );
 		j++;
 	}
 }
@@ -1478,7 +1476,7 @@ static float CG_GetNumericArg( struct cg_layoutnode_s **argumentsnode );
 
 //=============================================================================
 
-static int layout_cursor_scale = DEFAULTSCALE; //racesow
+static int layout_cursor_scale = DEFAULTSCALE;
 static int layout_cursor_x = 400;
 static int layout_cursor_y = 300;
 static int layout_cursor_width = 100;
@@ -1696,7 +1694,6 @@ static int CG_LFuncDrawModelByItemIndex( struct cg_layoutnode_s *commandnode, st
 	return qtrue;
 }
 
-//racesow
 static int CG_LFuncScale( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
 	layout_cursor_scale = (int)CG_GetNumericArg( &argumentnode );
@@ -1741,7 +1738,6 @@ static int CG_LFuncSize( struct cg_layoutnode_s *commandnode, struct cg_layoutno
 	layout_cursor_height = Q_rint( y );
 	return qtrue;
 }
-//!racesow
 
 static int CG_LFuncColor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
@@ -2177,14 +2173,12 @@ typedef struct cg_layoutcommand_s
 
 static cg_layoutcommand_t cg_LayoutCommands[] =
 {
-	//racesow
 	{
 		"setScale",
 		CG_LFuncScale,
 		1,
 		"Sets the cursor scaling method."
 	},
-	//!racesow
 
 	{
 		"setCursor",
