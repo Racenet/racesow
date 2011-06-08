@@ -9,8 +9,9 @@ PROJECT_VERSION_STRING = $(PROJECT_NAME) $(PROJECT_VERSION_NUMBER)
 DOC_DIRECTORY = doc
 DOXYGEN_FILE = api.dox
 RACESOW_DIRECTORY = racesow
-GAMETYPE_DIRECTORY = racesow/progs/gametypes/racesow/
+GAMETYPE_DIRECTORY = $(RACESOW_DIRECTORY)/progs/gametypes/racesow
 SOURCE_DIRECTORY = source
+RELEASE_DIRECTORY = $(SOURCE_DIRECTORY)/release/racesow
 
 .PHONY: doc
 
@@ -36,12 +37,13 @@ data:
 modules:
 	cd $(SOURCE_DIRECTORY); make -f Makefile.i386 cgame game ui; make -f Makefile.x86 cgame game ui; make -f Makefile.x64 cgame game ui; \
 	make -f Makefile.x86_64 cgame game ui
-	echo "/*\n* Racesow manifest\n*/\n{\n\"Version\" \"$(PROJECT_VERSION_NUMBER)\"\n\"Author\" \"Racesow Dev Team\"\n}" > $(SOURCE_DIRECTORY)/release/racesow/manifest.txt 
-	cd $(SOURCE_DIRECTORY)/release/racesow; zip modules_racesow$(SIMPLE_VERSION_NUMBER) manifest.txt *.so *.dll *.dylib
-	mv $(SOURCE_DIRECTORY)/release/racesow/modules_racesow$(SIMPLE_VERSION_NUMBER).zip $(SOURCE_DIRECTORY)/release/racesow/modules_racesow$(SIMPLE_VERSION_NUMBER).pk3
+	echo -e "/*\n* Racesow manifest\n*/\n{\n\"Version\" \"$(PROJECT_VERSION_NUMBER)\"\n\"Author\" \"Racesow Dev Team\"\n}" > $(RELEASE_DIRECTORY)/manifest.txt 
+	cd $(RELEASE_DIRECTORY); zip modules_racesow$(SIMPLE_VERSION_NUMBER) manifest.txt *.so *.dll *.dylib
+	mv $(RELEASE_DIRECTORY)/modules_racesow$(SIMPLE_VERSION_NUMBER).zip $(RELEASE_DIRECTORY)//modules_racesow$(SIMPLE_VERSION_NUMBER).pk3
+	rm $(RELEASE_DIRECTORY)/manifest.txt
 
 install: gametype data
-	mv  racesow_data$(SIMPLE_VERSION_NUMBER)pure.pk3 racesow_gametype$(SIMPLE_VERSION_NUMBER)pure.pk3 $(SOURCE_DIRECTORY)/release/racesow/
+	mv  racesow_data$(SIMPLE_VERSION_NUMBER)pure.pk3 racesow_gametype$(SIMPLE_VERSION_NUMBER)pure.pk3 $(RELEASE_DIRECTORY)
 
 clean:
-	rm *pk3
+	rm -f *pk3
