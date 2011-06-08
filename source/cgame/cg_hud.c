@@ -35,6 +35,7 @@ extern cvar_t *cg_clientHUD;
 cvar_t *cg_showminimap;
 cvar_t *cg_showitemtimers;
 cvar_t *cg_placebo;
+cvar_t *cg_strafeHUD;
 
 //=============================================================================
 
@@ -133,13 +134,18 @@ static int CG_GetArmorItem( void *parameter )
 	return GS_Armor_TagForCount( cg.predictedPlayerState.stats[STAT_ARMOR] );
 }
 
-static int CG_GetSpeed( void *parameter )
+static float _getspeed( void )
 {
 	vec3_t hvel;
 
 	VectorSet( hvel, cg.predictedPlayerState.pmove.velocity[0], cg.predictedPlayerState.pmove.velocity[1], 0 );
 
-	return (int)VectorLength( hvel );
+	return VectorLength( hvel );
+}
+
+static int CG_GetSpeed( void *parameter )
+{
+	return (int)_getspeed();
 }
 
 static int CG_GetSpeedVertical( void *parameter )
@@ -385,49 +391,48 @@ enum race_index {
 	cp13,
 	cp14,
 	cp15,
+	mouse_x,
+	mouse_y,
+	jumpspeed,
+	move_an,
+	diff_an,
+	strafe_an,
 	max_index
 };
 
 /*
-%mouse_x - display currently mouse x (-180,180)
-%mouse_y - display currently mouse y (-90,90)
+%mouse_x - display currently mouse x (-18000,18000)
+%mouse_y - display currently mouse y (-9000,9000)
 %acceleration - speed increase over last 1/10th of second (0, MAX_SPEED
 %jumpspeed - speed at the last jump (either wall or dash)
-%moveangle - angle of the direction currently moving towards (-180,180)
+%moveangle - angle of the direction currently moving towards (-18000,18000)
 %cp1 ... %cp15 - index to use with drawCheckPoint (only use if %cpXX != #NOTSET)
-
-LMTODO: strafing 
-		- dots firstly ill need the angle on map u are moving. Like before we will need tangens or contanges alpha (dun remember wich one was that) but im sure it was sth like world_x fivide by world_y. Then probably ill have to check the square function graph of biggest accel for every speed. And then we will work on it more)
-*/
-/* edited by joki:
-%mouse_x, %mouse_y, %moveangle now use units of 0.01degrees for more precision
-=>angles are now (-18000,18000) and (-9000,9000)
-substituted int casts with round functions
-acceleration now reports average speed increase per 1000 seconds over X frames (8, 16, 32 or 64 should be good)
-added:
 %diff_angle - difference of %mouse_x and %moveangle (%mouse_x - %moveangle)
 %strafe_angle - the optimal strafe angle based on current speed and FrameTime
 	this seems to be different in 0.6 for certain gametypes
 	maybe has something to do with the base speed
 %max_accel - the maximum possible acceleration based on current speed, same unit as %acceleration
-%ROCKETACCEL - returns big speed differences between two frames
+%rocketaccel - returns big speed differences between two frames
+
+LMTODO: strafing 
+		- dots firstly ill need the angle on map u are moving. Like before we will need tangens or contanges alpha (dun remember wich one was that) but im sure it was sth like world_x fivide by world_y. Then probably ill have to check the square function graph of biggest accel for every speed. And then we will work on it more)
 */
 
 #define RACE_CP_LENGTH	20
-
-//used for calculating horizontal speed, should probably be moved to q_math.h
-#define VectorLengthHorizontal( v )	( sqrt ( v[0]*v[0] + v[1]*v[1] ) )
-
 char race_checkpoints[15][RACE_CP_LENGTH];		//cG^ said: no map with more than 15 checkpoints
 qboolean race_started = qfalse;
 int cur_check = 0;
-
 int race_jump = 0;
 
-static int CG_GetCheckPoint( void* parameter )
+static int CG_GetRaceVars( void* parameter )
 {
 	int index = (qintptr)parameter;
 	int iNum;
+	vec3_t hor_vel, view_dir, an;
+
+	if( GS_MatchState() != MATCH_STATE_WARMUP )
+		return 0;
+
 	switch( index ) {
 		case cp1: case cp2: case cp3: case cp4: case cp5: case cp6: case cp7: case cp8:
 		case cp9: case cp10: case cp11: case cp12: case cp13: case cp14: case cp15:
@@ -441,69 +446,56 @@ static int CG_GetCheckPoint( void* parameter )
 			if( iNum < cur_check )
 				return iNum;
 			return STAT_NOTSET;
+		case diff_an:
+			// difference of look and move angles
+			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
+			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
+			hor_vel[2] = 0;
+			VecToAngles( hor_vel, an );
+			AngleVectors( cg.predictedPlayerState.viewangles, view_dir, NULL, NULL );
+			iNum = Q_rint(100 * (cg.predictedPlayerState.viewangles[YAW] - an[YAW]));
+			while( iNum > 18000 )
+				iNum -= 36000;
+			while( iNum < -18000 )
+				iNum += 36000;
+
+			// ch : check if player is moving backwards so iNum wont wrap around
+			if( DotProduct( hor_vel, view_dir ) >= 0.0 )
+				return iNum;
+
+			else if( iNum < 0 )
+				return 18000 + iNum;
+			else
+				return -18000 + iNum;
+
+		case strafe_an:
+			// optimal strafing angle
+			iNum = Q_rint(100 * (acos(cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED]*(1-cg.realFrameTime)/_getspeed())*180/M_PI-45) ); //maybe need to check if speed below 320 is allowed for acos
+			if (iNum > 0)
+				return iNum;
+			else
+				return 0;
+		case move_an:
+			// angle of current moving direction
+			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
+			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
+			hor_vel[2] = 0;
+			VecToAngles( hor_vel, an );
+			iNum = Q_rint(100 * an[YAW]);
+			while( iNum > 18000 )
+				iNum -= 36000;
+			while( iNum < -18000 )
+				iNum += 36000;
+			return iNum;
+		case jumpspeed:
+			return race_jump;
+		case mouse_x:
+			return Q_rint(100 * cg.predictedPlayerState.viewangles[YAW]);
+		case mouse_y:
+			return Q_rint(100 * cg.predictedPlayerState.viewangles[PITCH]);
 		default:
 			return STAT_NOTSET;
 	}
-}
-
-static int CG_GetJumpSpeed( void* parameter )
-{
-	return race_jump;
-}
-
-static int CG_GetMouseAngleY( void* parameter )
-{
-	return round( 100 * cg.predictedPlayerState.viewangles[PITCH] );
-}
-
-static int CG_GetMouseAngleX( void* parameter )
-{
-	return round( 100 * cg.predictedPlayerState.viewangles[YAW] );
-}
-
-static int CG_GetMoveAngle( void* parameter )
-{
-	vec3_t hor_vel, an;
-	hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
-	hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
-	hor_vel[2] = 0;
-	VecToAngles( hor_vel, an );
-	int MoveAngle = round( 100 * an[YAW] );
-	while( MoveAngle > 18000 )
-		MoveAngle -= 36000;
-	while( MoveAngle < -18000 )
-		MoveAngle += 36000;
-	return MoveAngle;
-}
-
-static int CG_GetDiffAngle( void* parameter )
-{
-	vec3_t hor_vel, an;
-	hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
-	hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
-	hor_vel[2] = 0;
-	VecToAngles( hor_vel, an );
-	int diffAngle = round( 100*( cg.predictedPlayerState.viewangles[YAW] - an[YAW] ) );
-	while( diffAngle > 18000 )
-		diffAngle -= 36000;
-	while( diffAngle < -18000 )
-		diffAngle += 36000;
-	return diffAngle;
-}
-
-static int CG_GetStrafeAngle( void* parameter )
-{
-	int base_speed = cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED];
-	float base_accel = base_speed * cg.realFrameTime;
-	float speed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
-
-//	int strafeAngle = round( 100*( RAD2DEG( acos( ( cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED] * ( 1 - cg.realFrameTime ) ) / VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity ) ) ) - 45 ) );
-
-	int strafeAngle = round( 100*( RAD2DEG( acos( ( base_speed - base_accel ) / speed ) ) - 45 ) );
-	if ( strafeAngle > 0 )
-		return strafeAngle;
-	else
-		return 0;
 }
 
 static int CG_GetMaxAccel( void* parameter )
@@ -511,7 +503,7 @@ static int CG_GetMaxAccel( void* parameter )
 	int base_speed = cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED];
 	float base_accel = base_speed * cg.realFrameTime;
 
-	float speed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
+	float speed = _getspeed();
 	return (int)( 1000 *
 			(
 				sqrt( speed*speed + base_accel*( 2*base_speed - base_accel ) )
@@ -529,7 +521,7 @@ static int CG_GetRocketAccel( void* parameter )
 	static int speedDiff = 0;
 	float newSpeed;
 
-	newSpeed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
+	newSpeed = _getspeed();
 	speeds[cg.frameCount & RASAMPLESMASK] = newSpeed;
 	if ( fabs( newSpeed - speeds[(cg.frameCount-1) & RASAMPLESMASK] ) > MINSPEEDDIFF )
 	{
@@ -540,37 +532,45 @@ static int CG_GetRocketAccel( void* parameter )
 
 static int CG_GetAccel( void* parameter )
 {
-#define ACCELSAMPLESCOUNT 16
-#define ACCELSAMPLESMASK ( ACCELSAMPLESCOUNT-1 )
-	static float speeds[ACCELSAMPLESCOUNT];
-	static float accels[ACCELSAMPLESCOUNT];
-	float avAccel = 0.0f;
-	float newSpeed;
+#define ACCEL_SAMPLE_COUNT 16
+#define ACCEL_SAMPLE_MASK (ACCEL_SAMPLE_COUNT-1)
 	int i;
+	float t, dt;
+	float accel;
+	float newSpeed;
+	static float oldSpeed = 0.0;
+	static float oldTime = 0.0;
+	static float accelHistory[ACCEL_SAMPLE_COUNT] = {0.0};
+	static int sampleCount = 0;
 
-	newSpeed = VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
-	accels[cg.frameCount & ACCELSAMPLESMASK] =
-			( newSpeed - speeds[(cg.frameCount-1) & ACCELSAMPLESMASK] ) / cg.realFrameTime;
-	speeds[cg.frameCount & ACCELSAMPLESMASK] = newSpeed;
+	t = cg.realTime * 0.001f;
+	dt = t - oldTime;
+	if( dt > 0.0 )
+	{
+		// raw acceleration
+		newSpeed = _getspeed();
+		accel = ( newSpeed - oldSpeed ) / dt;
+		accelHistory[sampleCount&ACCEL_SAMPLE_MASK] = accel;
+		sampleCount++;
+		oldSpeed = newSpeed;
+		oldTime = t;
+	}
 
-	for( i = 0; i < ACCELSAMPLESCOUNT; i++ )
-		avAccel += accels[i];
-	return (int)( 1000 * avAccel / ACCELSAMPLESCOUNT );
-}
+	// average accel for n frames (TODO: emphasis on later frames)
+	accel = 0.0f;
+	for( i = 0; i < ACCEL_SAMPLE_COUNT; i++ )
+		accel += accelHistory[i];
+	accel /= (float)(ACCEL_SAMPLE_COUNT);
 
-//unused function?
-qboolean CG_IsBounce()
-{
-	if( cg.predictedPlayerState.pmove.pm_flags & PMF_ON_GROUND )
-		return qtrue;
-	if( cg.predictedPlayerState.pmove.pm_flags & PMF_WALLJUMPING )
-		return qtrue;
-	return qfalse;
+	if( GS_MatchState() == MATCH_STATE_WARMUP )
+		return 0;
+
+	return (int)(1000*accel);
 }
 
 void CG_AddJumpspeed( void )
 {
-	race_jump = (int)VectorLengthHorizontal( cg.predictedPlayerState.pmove.velocity );
+	race_jump = CG_GetSpeed(0);
 }
 
 void CG_RaceAddCheckpoint( char* msg )
@@ -606,8 +606,7 @@ void CG_RaceAddCheckpoint( char* msg )
 		cur_check++;
 	}
 }
-
-//!racesow - lm: end race functions
+//!racesow
 
 typedef struct
 {
@@ -692,33 +691,33 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "DAMAGE_INDICATOR_BOTTOM", CG_GetDamageIndicatorDirValue, (void *)2 },
 	{ "DAMAGE_INDICATOR_LEFT", CG_GetDamageIndicatorDirValue, (void *)3 },
 
-//racesow - lm: race stuff 
-	{ "MOUSE_X", CG_GetMouseAngleX, NULL },
-	{ "MOUSE_Y", CG_GetMouseAngleY, NULL },
+	//racesow - lm: race stuff 
+	{ "MOUSE_X", CG_GetRaceVars, (void *)mouse_x },
+	{ "MOUSE_Y", CG_GetRaceVars, (void *)mouse_y },
 	{ "ACCELERATION", CG_GetAccel, NULL },
 	{ "ROCKETACCEL", CG_GetRocketAccel, NULL},
-	{ "JUMPSPEED", CG_GetJumpSpeed, NULL },
-	{ "MOVEANGLE", CG_GetMoveAngle, NULL },
-	{ "STRAFEANGLE", CG_GetStrafeAngle, NULL },
-	{ "DIFF_ANGLE", CG_GetDiffAngle, NULL },
+	{ "JUMPSPEED", CG_GetRaceVars, (void *)jumpspeed },
+	{ "MOVEANGLE", CG_GetRaceVars, (void *)move_an	},
+	{ "STRAFEANGLE", CG_GetRaceVars, (void *)strafe_an },
+	{ "DIFF_ANGLE", CG_GetRaceVars, (void *)diff_an	},
 	{ "MAX_ACCEL", CG_GetMaxAccel, NULL },
 
-	{ "CP1", CG_GetCheckPoint, (void *)cp1 },
-	{ "CP2", CG_GetCheckPoint, (void *)cp2, }, //why is there another comma?
-	{ "CP3", CG_GetCheckPoint, (void *)cp3, }, //
-	{ "CP4", CG_GetCheckPoint, (void *)cp4 },
-	{ "CP5", CG_GetCheckPoint, (void *)cp5 },
-	{ "CP6", CG_GetCheckPoint, (void *)cp6 },
-	{ "CP7", CG_GetCheckPoint, (void *)cp7 },
-	{ "CP8", CG_GetCheckPoint, (void *)cp8 },
-	{ "CP9", CG_GetCheckPoint, (void *)cp9 },
-	{ "CP10", CG_GetCheckPoint, (void *)cp10 },
-	{ "CP11", CG_GetCheckPoint, (void *)cp11 },
-	{ "CP12", CG_GetCheckPoint, (void *)cp12 },
-	{ "CP13", CG_GetCheckPoint, (void *)cp13 },
-	{ "CP14", CG_GetCheckPoint, (void *)cp14 },
-	{ "CP15", CG_GetCheckPoint, (void *)cp15 },
-//!racesow
+	{ "CP1", CG_GetRaceVars, (void *)cp1 },
+	{ "CP2", CG_GetRaceVars, (void *)cp2 },
+	{ "CP3", CG_GetRaceVars, (void *)cp3 },
+	{ "CP4", CG_GetRaceVars, (void *)cp4 },
+	{ "CP5", CG_GetRaceVars, (void *)cp5 },
+	{ "CP6", CG_GetRaceVars, (void *)cp6 },
+	{ "CP7", CG_GetRaceVars, (void *)cp7 },
+	{ "CP8", CG_GetRaceVars, (void *)cp8 },
+	{ "CP9", CG_GetRaceVars, (void *)cp9 },
+	{ "CP10", CG_GetRaceVars, (void *)cp10 },
+	{ "CP11", CG_GetRaceVars, (void *)cp11 },
+	{ "CP12", CG_GetRaceVars, (void *)cp12 },
+	{ "CP13", CG_GetRaceVars, (void *)cp13 },
+	{ "CP14", CG_GetRaceVars, (void *)cp14 },
+	{ "CP15", CG_GetRaceVars, (void *)cp15 },
+	//!racesow
 
 	// cvars
 	{ "SHOW_FPS", CG_GetCvar, "cg_showFPS" },
@@ -733,6 +732,7 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "SHOW_ZOOM_EFFECT", CG_GetCvar, "cg_showZoomEffect" },
 	{ "SHOW_R_SPEEDS", CG_GetCvar, "r_speeds" },
 	{ "SHOW_ITEM_TIMERS", CG_GetShowItemTimers, "cg_showItemTimers" },
+	{ "SHOW_STRAFE", CG_GetCvar, "cg_strafeHUD" },
 
 	{ "DOWNLOAD_IN_PROGRESS", CG_DownloadInProgress, NULL },
 	{ "DOWNLOAD_PERCENT", CG_GetCvar, "cl_download_percent" },
