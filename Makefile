@@ -36,7 +36,8 @@ data:
 modules:
 	cd $(SOURCE_DIRECTORY); make -f Makefile.i386 cgame game ui; make -f Makefile.x86 cgame game ui; make -f Makefile.x64 cgame game ui; \
 	make -f Makefile.x86_64 cgame game ui
-	cd $(SOURCE_DIRECTORY)/release/racesow; zip modules_racesow$(SIMPLE_VERSION_NUMBER) *i386.so *x86.dll *x64.dll *x86_64.so
+	echo "/*\n* Racesow manifest\n*/\n{\n\"Version\" \"$(PROJECT_VERSION_NUMBER)\"\n\"Author\" \"Racesow Dev Team\"\n}" > $(SOURCE_DIRECTORY)/release/racesow/manifest.txt 
+	cd $(SOURCE_DIRECTORY)/release/racesow; zip modules_racesow$(SIMPLE_VERSION_NUMBER) manifest.txt *.so *.dll *.dylib
 	mv $(SOURCE_DIRECTORY)/release/racesow/modules_racesow$(SIMPLE_VERSION_NUMBER).zip $(SOURCE_DIRECTORY)/release/racesow/modules_racesow$(SIMPLE_VERSION_NUMBER).pk3
 
 install: gametype data
