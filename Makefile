@@ -37,7 +37,7 @@ data:
 modules:
 	cd $(SOURCE_DIRECTORY); make -f Makefile.i386 cgame game ui; make -f Makefile.x86 cgame game ui; make -f Makefile.x64 cgame game ui; \
 	make -f Makefile.x86_64 cgame game ui
-	echo -e "/*\n* Racesow manifest\n*/\n{\n\"Version\" \"$(PROJECT_VERSION_NUMBER)\"\n\"Author\" \"Racesow Dev Team\"\n}" > $(RELEASE_DIRECTORY)/manifest.txt 
+	printf "/*\n* Racesow manifest\n*/\n{\n\"Version\" \"$(PROJECT_VERSION_NUMBER)\"\n\"Author\" \"Racesow Dev Team\"\n}" > $(RELEASE_DIRECTORY)/manifest.txt
 	cd $(RELEASE_DIRECTORY); zip modules_racesow$(SIMPLE_VERSION_NUMBER) manifest.txt *.so *.dll *.dylib
 	mv $(RELEASE_DIRECTORY)/modules_racesow$(SIMPLE_VERSION_NUMBER).zip $(RELEASE_DIRECTORY)/modules_racesow$(SIMPLE_VERSION_NUMBER).pk3
 	rm $(RELEASE_DIRECTORY)/manifest.txt
