@@ -190,8 +190,14 @@ void RS_Init()
     if ( rs_mysqlEnabled->integer && mysqlclient_present )
     {
         // initialize mysql
-        RS_LoadCvars();
-        MysqlConnected = RS_MysqlConnect();
+        if( RS_LoadCvars() )
+        {
+            MysqlConnected = RS_MysqlConnect();
+        }
+        else
+        {
+            MysqlConnected = qfalse;
+        }
     }
 
     if (MysqlConnected != 0 && rs_historyDays->integer != 0)
@@ -215,9 +221,9 @@ void RS_Init()
 /**
  * RS_LoadCvars
  *
- * @return void
+ * @return qboolean
  */
-void RS_LoadCvars( void )
+qboolean RS_LoadCvars( void )
 {
     sv_port = trap_Cvar_Get( "sv_port", "44400", CVAR_ARCHIVE );
     sv_hostname = trap_Cvar_Get( "sv_hostname", "racesow server", CVAR_ARCHIVE );
@@ -238,10 +244,11 @@ void RS_LoadCvars( void )
     if (!Q_stricmp( rs_authField_Name->string, "" ) || !Q_stricmp( rs_authField_Pass->string, "" ) ||!Q_stricmp( rs_authField_Token->string, "" ))
     {
         RS_Shutdown();
-        G_Error("\033[31;40m\nthe cVars rs_authField_Name, rs_authField_Pass and rs_authField_Token must be set and should be unique for your database!\n\nie. racenet uses the following settings:\n\tset rs_authField_Name \"racenet_user\"\n\tset rs_authField_Pass \"racenet_pass\"\n\tset rs_authField_Token \"racenet_token\"\n\nlike that you can store authentications for multiple servers in a single config.\n\033[0m\n");
+        G_Printf("WARNING: The cVars rs_authField_Name, rs_authField_Pass and rs_authField_Token must be set and should be unique for your database!\n\nie. racenet uses the following settings:\n\tset rs_authField_Name \"racenet_user\"\n\tset rs_authField_Pass \"racenet_pass\"\n\tset rs_authField_Token \"racenet_token\"\n\nlike that you can store authentications for multiple servers in a single config.\nIf you don't want to use mysql set rs_mysqlenabled to 0\n");
+        return qfalse;
     }
 
-    G_Printf("-------------------------------------\nClient authentication via userinfo:\nsetu %s \"username\"\nsetu %s \"password\"\nor the more secure method using an enrypted token\nsetu %s \"token\"\n-------------------------------------\n", rs_authField_Name->string, rs_authField_Pass->string, rs_authField_Token->string);
+    G_Printf("-------------------------------------\nClient authentication via userinfo:\nsetu %s \"username\"\nsetu %s \"password\"\nor the more secure method using an encrypted token\nsetu %s \"token\"\n-------------------------------------\n", rs_authField_Name->string, rs_authField_Pass->string, rs_authField_Token->string);
 
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
@@ -289,7 +296,8 @@ void RS_LoadCvars( void )
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created, pm.prejumped FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d AND pm.prejumped in (%s) ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
 	rs_queryLoadMapOneliners		= trap_Cvar_Get( "rs_queryLoadMapOneliners",		"SELECT `oneliner`, `pj_oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `%s` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
-
+    
+    return qtrue;
 }
 
 /**
@@ -434,8 +442,14 @@ qboolean RS_MysqlError( void )
 
         if (errNo == CR_SERVER_GONE_ERROR || errNo == CR_SERVER_LOST)
         {
-            RS_LoadCvars();
-            MysqlConnected = RS_MysqlConnect();
+            if( RS_LoadCvars() )
+            {
+                MysqlConnected = RS_MysqlConnect();
+            }
+            else
+            {
+                MysqlConnected = qfalse;
+            }
         }
 
         return qtrue;

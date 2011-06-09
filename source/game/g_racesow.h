@@ -102,7 +102,7 @@ struct onelinerDataStruct {
 	char *oneliner;
 };
 
-void RS_LoadCvars( void );
+qboolean RS_LoadCvars( void );
 qboolean RS_MysqlConnect( void );
 qboolean RS_MysqlDisconnect( void );
 qboolean RS_MysqlQuery( char *query );
@@ -146,7 +146,7 @@ void RS_LoadMaplist( int is_freestyle );
 char *RS_ChooseNextMap();
 char *RS_GetMapByNum(int num);
 void rs_TimeDeltaPrestepProjectile( edict_t *projectile, int timeDelta );
-void RS_ircSendMessage( const char *name,  const char *text );
+void RS_ircSendMessage( const char *name, const char *text );
 void RS_AddServerCommands( void );
 void RS_RemoveServerCommands( void );
 static void RS_Irc_ConnectedListener_f( void *connected );
