@@ -428,7 +428,7 @@ static int CG_GetRaceVars( void* parameter )
 	int iNum;
 	vec3_t hor_vel, view_dir, an;
 
-	if( GS_MatchState() != MATCH_STATE_WARMUP )
+	if( GS_MatchState() != MATCH_STATE_WARMUP && !GS_RaceGametype() )
 		return 0;
 
 	switch( index ) {
@@ -560,7 +560,7 @@ static int CG_GetAccel( void* parameter )
 		accel += accelHistory[i];
 	accel /= (float)(ACCEL_SAMPLE_COUNT);
 
-	if( GS_MatchState() == MATCH_STATE_WARMUP )
+	if( GS_MatchState() != MATCH_STATE_WARMUP && !GS_RaceGametype() )
 		return 0;
 
 	return (int)(1000*accel);
