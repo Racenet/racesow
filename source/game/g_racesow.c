@@ -130,7 +130,7 @@ pthread_mutex_t mutex_callback;
 /**
  * callback queue variables used for de-threadization of mysql calls
  */
-#define MAX_SIZE_CALLBACK_QUEUE 50
+#define MAX_SIZE_CALLBACK_QUEUE 100
 int callback_queue_size=0;
 int callback_queue_write_index=0;
 int callback_queue_read_index=0;
