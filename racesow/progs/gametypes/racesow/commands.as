@@ -1,6 +1,6 @@
 /**
  * Change this if more than 50 commands are needed
- * There is another limitation in C so this number will never be reacher anyway
+ * There is another limitation in C so this number will never be reached anyway
  */
 const int MAX_COMMANDS = 50;
 
@@ -732,7 +732,6 @@ class Command_Machinegun : Racesow_Command
     }
 }
 
-
 class Command_Mapname : Racesow_Command
 {
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -976,21 +975,24 @@ void RS_CreateCommands()
     @commands[commandCount] = @maplist;
     commandCount++;
 
-    Command_Mapname mapname;
-    mapname.name = "mapname";
-    mapname.description = "Print the name of current map";
-    mapname.usage = "";
-    @commands[commandCount] = @mapname;
-    commandCount++;
+    if (dedicated.getBool())
+    {
+        Command_Mapname mapname;
+        mapname.name = "mapname";
+        mapname.description = "Print the name of current map";
+        mapname.usage = "";
+        @commands[commandCount] = @mapname;
+        commandCount++;
 
-    Command_NextMap nextmap;
-    nextmap.name = "nextmap";
-    nextmap.description = "Print the name of the next map in map rotation";
-    nextmap.usage = "";
-    @commands[commandCount] = @nextmap;
-    commandCount++;
-	
-	  Command_Oneliner oneliner;
+        Command_NextMap nextmap;
+        nextmap.name = "nextmap";
+        nextmap.description = "Print the name of the next map in map rotation";
+        nextmap.usage = "";
+        @commands[commandCount] = @nextmap;
+        commandCount++;
+    }
+
+	Command_Oneliner oneliner;
     oneliner.name = "oneliner";
     oneliner.description = "Set a one-line message that is displayed right next to your top time";
     oneliner.usage = "";

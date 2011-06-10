@@ -25,6 +25,7 @@ int gametypeFlag = 0;
 int prcFlagIconStolen;
 int prcYesIcon;
 
+cVar dedicated( "dedicated", "0", CVAR_ARCHIVE);
 cVar rs_authField_Name( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET );
 cVar rs_authField_Token( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET );
