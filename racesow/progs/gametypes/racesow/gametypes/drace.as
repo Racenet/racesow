@@ -558,7 +558,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         DRACERound.init();
     
         // if the gametype doesn't have a config file, create it
-        if ( !G_FileExists( "configs/server/gametypes/drace.cfg" ) )
+        if ( !G_FileExists( "configs/server/gametypes/racesow/drace.cfg" ) )
         {
             cString config;
     
@@ -582,9 +582,9 @@ class Racesow_Gametype_Drace : Racesow_Gametype
     
                      + "\necho drace.cfg executed\"\n";
     
-            G_WriteFile( "configs/server/gametypes/drace.cfg", config );
+            G_WriteFile( "configs/server/gametypes/racesow/drace.cfg", config );
             G_Print( "Created default config file for 'drace'\n" );
-            G_CmdExecute( "exec configs/server/gametypes/drace.cfg silent" );
+            G_CmdExecute( "exec configs/server/gametypes/racesow/drace.cfg silent" );
         }
 
         gametype.isTeamBased = false;

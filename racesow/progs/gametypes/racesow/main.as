@@ -822,37 +822,19 @@ void GT_InitGametype()
     weaponDefInit();
 
     // if the gametype doesn't have a config file, create it
-    if ( !G_FileExists( "configs/server/gametypes/racesow.cfg" ) )
+    if ( !G_FileExists( "configs/server/gametypes/racesow/racesow.cfg" ) )
     {
-      cString config;
-
-      // the config file doesn't exist or it's empty, create it
-      config = "//*\n"
-               + "//* Racesow Base settings\n"
-               + "//*\n"
-               + "// WARNING: if you touch any of theese settings\n"
-               + "// it can really have a very negative impact on\n"
-               + "// racesow's gameplay!\n"
-               + "\n"
-               + "set g_allow_falldamage \"0\" // suxx\n"
-               + "set g_allow_selfdamage \"0\" // meeeh\n"
-               + "set g_allow_stun \"0\" // LOL!\n"
-               + "set g_allow_bunny \"0\" // learn it!\n"
-               + "set g_antilag \"0\" // do NEVER touch!\n"
-               + "set g_instagib \"0\"\n"
-               + "set rs_projectilePrestep \"24\" // is it used?\n"
-               + "set rs_movementStyle \"1\"\n"
-               + "\n"
-               + "exec configs/server/gametypes/racesow_weapondefs.cfg"
-               + "\n"
-             + "echo racesow.cfg executed\n";
-
-      G_WriteFile( "configs/server/gametypes/racesow.cfg", config );
-      G_Print( "Created default base config file for racesow\n" );
+      G_WriteFile( "configs/server/gametypes/racesow/racesow.cfg", config_general );
+      G_Print( "Created default general config file for racesow\n" );
+    }
+    if ( !G_FileExists( "configs/server/gametypes/racesow/database.cfg" ) )
+    {
+      G_WriteFile( "configs/server/gametypes/racesow/database.cfg", config_database );
+      G_Print( "Created default database config file for racesow\n" );
     }
 
     // always execute racesow.cfg
-    G_CmdExecute( "exec configs/server/gametypes/racesow.cfg silent" );
+    G_CmdExecute( "exec configs/server/gametypes/racesow/racesow.cfg silent" );
 
     gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
 

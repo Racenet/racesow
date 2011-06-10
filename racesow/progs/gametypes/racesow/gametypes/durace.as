@@ -348,7 +348,7 @@ void DURACE_InitGametype()
 {
   gametype.setTitle( "Duel Race 1vs1" );
   // if the gametype doesn't have a config file, create it
-  if ( !G_FileExists( "configs/server/gametypes/durace.cfg" ) )
+  if ( !G_FileExists( "configs/server/gametypes/racesow/durace.cfg" ) )
   {
       cString config;
 
@@ -370,9 +370,9 @@ void DURACE_InitGametype()
                
                + "\necho durace.cfg executed\"\n";
 
-      G_WriteFile( "configs/server/gametypes/durace.cfg", config );
+      G_WriteFile( "configs/server/gametypes/racesow/durace.cfg", config );
       G_Print( "Created default config file for 'durace'\n" );
-      G_CmdExecute( "exec configs/server/gametypes/durace.cfg silent" );
+      G_CmdExecute( "exec configs/server/gametypes/racesow/durace.cfg silent" );
   }
   
   gametype.hasChallengersQueue = true;
@@ -383,7 +383,7 @@ void TRACE_InitGametype()
 {
   gametype.setTitle( "Team Race" );
   // if the gametype doesn't have a config file, create it
-  if ( !G_FileExists( "configs/server/gametypes/trace.cfg" ) )
+  if ( !G_FileExists( "configs/server/gametypes/racesow/trace.cfg" ) )
   {
       cString config;
 
@@ -405,9 +405,9 @@ void TRACE_InitGametype()
                
                + "\necho trace.cfg executed\"\n";
 
-      G_WriteFile( "configs/server/gametypes/trace.cfg", config );
+      G_WriteFile( "configs/server/gametypes/racesow/trace.cfg", config );
       G_Print( "Created default config file for 'trace'\n" );
-      G_CmdExecute( "exec configs/server/gametypes/trace.cfg silent" );
+      G_CmdExecute( "exec configs/server/gametypes/racesow/trace.cfg silent" );
   }
   
   gametype.hasChallengersQueue = false;

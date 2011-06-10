@@ -16,7 +16,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
       gametype.setTitle( "Race" );
       
       // if the gametype doesn't have a config file, create it
-      if ( !G_FileExists( "configs/server/gametypes/race.cfg" ) )
+      if ( !G_FileExists( "configs/server/gametypes/racesow/race.cfg" ) )
       {
           cString config;
     
@@ -27,13 +27,17 @@ class Racesow_Gametype_Race : Racesow_Gametype
                    + "set g_gametype \"race\"\n"
                    + "set g_scorelimit \"0\" // a new feature..?\n"
                    + "set g_warmup_timelimit \"0\" // ... \n"
+                   + "set g_maxtimeouts \"0\" \n"
+                   + "set g_disable_vote_timeout \"1\" \n"
+                   + "set g_disable_vote_timein \"1\" \n"
+                   + "set g_disable_vote_scorelimit \"1\" \n"
                    + "set rs_gametype \"race\"\n"
                    + "\n"
     			 + "echo race.cfg executed\n";
     
-          G_WriteFile( "configs/server/gametypes/race.cfg", config );
+          G_WriteFile( "configs/server/gametypes/racesow/race.cfg", config );
           G_Print( "Created default base config file for race\n" );
-          G_CmdExecute( "exec configs/server/gametypes/race.cfg silent" );
+          G_CmdExecute( "exec configs/server/gametypes/racesow/race.cfg silent" );
       }
    
       gametype.isTeamBased = false;

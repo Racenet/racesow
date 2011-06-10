@@ -16,7 +16,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
       gametype.setTitle( "Freestyle" );
       
       // if the gametype doesn't have a config file, create it
-      if ( !G_FileExists( "configs/server/gametypes/freestyle.cfg" ) )
+      if ( !G_FileExists( "configs/server/gametypes/racesow/freestyle.cfg" ) )
       {
           cString config;
     
@@ -27,13 +27,17 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
                    + "set g_gametype \"race\"\n"
                    + "set g_scorelimit \"0\" // a new feature..?\n"
                    + "set g_warmup_timelimit \"0\" // ... \n"
+                   + "set g_maxtimeouts \"0\" \n"
+                   + "set g_disable_vote_timeout \"1\" \n"
+                   + "set g_disable_vote_timein \"1\" \n"
+                   + "set g_disable_vote_scorelimit \"1\" \n"
                    + "set rs_gametype \"freestyle\"\n"
                    + "\n"
     			 + "echo freestyle.cfg executed\n";
     
-          G_WriteFile( "configs/server/gametypes/freestyle.cfg", config );
+          G_WriteFile( "configs/server/gametypes/racesow/freestyle.cfg", config );
           G_Print( "Created default base config file for freestyle\n" );
-          G_CmdExecute( "exec configs/server/gametypes/freestyle.cfg silent" );
+          G_CmdExecute( "exec configs/server/gametypes/racesow/freestyle.cfg silent" );
       }
       
       gametype.isTeamBased = false;

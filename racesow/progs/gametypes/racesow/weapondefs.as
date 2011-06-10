@@ -263,7 +263,7 @@ void weaponDefInitCfg(cString suffix)
         + "\n"
         + "\necho racesow_weapondefs.cfg executed\n";
 	
-	G_WriteFile( "configs/server/gametypes/racesow_weapondefs"+suffix+".cfg", config_wpdef );
+	G_WriteFile( "configs/server/gametypes/racesow/racesow_weapondefs"+suffix+".cfg", config_wpdef );
 	G_Print( "Created default weapondefs config for 'racesow'\n" );
 }
 
@@ -362,7 +362,7 @@ void weaponDefSave()
 		+ "set rs_grenade_prestep \""+sps+"\"\n"
 		+ "\necho racesow_weapondefs.cfg executed\n";;
 	}
-	G_WriteFile( "configs/server/gametypes/racesow_weapondefs.cfg", config_wpdef );
+	G_WriteFile( "configs/server/gametypes/racesow/racesow_weapondefs.cfg", config_wpdef );
 	G_Print( "Saved weapondef file in 'racesow'\n" );
 }
 
@@ -376,6 +376,6 @@ void weaponDefSave()
 void weaponDefInit()
 {
 	// if weapondefs don't have a config file, create it
-	if ( !G_FileExists( "configs/server/gametypes/racesow_weapondefs.cfg" ) )
+	if ( !G_FileExists( "configs/server/gametypes/racesow/racesow_weapondefs.cfg" ) )
 		weaponDefInitCfg("");
 }

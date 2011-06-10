@@ -11,6 +11,7 @@ legacy/quake3_items.as;
 legacy/quake1_ctf.as;
 legacy/quake3_ctf.as;
 
+racesow/config.as;
 racesow/main.as;
 racesow/helpers.as;
 racesow/entities.as;
