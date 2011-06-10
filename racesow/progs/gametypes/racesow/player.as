@@ -307,67 +307,80 @@ class Racesow_Player
         bestTime = oldTime; // diff to own best
         //bestTime = oldBestTime // diff to server best
 
-		oldServerBestTime = map.getHighScore().getTime();
+        oldServerBestTime = map.getHighScore().getTime();
 
         //print general info to player
         this.sendAward( S_COLOR_CYAN + "Race Finished!" );
-		bool noDelta = 0 == bestTime;
-        G_CenterPrintMsg( this.getClient().getEnt(), "Time: " + TimeToString( newTime ) + "\n"
-            + ( noDelta ? "" : diffString( bestTime, newTime ) ) );
+        bool noDelta = 0 == bestTime;
 
-        this.sendMessage(S_COLOR_WHITE + "Race " + S_COLOR_ORANGE + "#"
-                + this.tries + S_COLOR_WHITE + " finished: "
-                + TimeToString( newTime)
-                + S_COLOR_ORANGE + " Distance: " + S_COLOR_WHITE + ((this.lastRace.stopDistance - this.lastRace.startDistance)/1000) // racing distance
-                + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
-				+ S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
-                + S_COLOR_ORANGE + "/" + Capitalize(rs_networkName.getString()) + ": " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
-				+ "\n");
+        if ( @this.getClient() != null)
+		{
+            G_CenterPrintMsg( this.getClient().getEnt(),
+                              "Time: " + TimeToString( newTime ) + "\n"
+                              + ( noDelta ? "" : diffString( bestTime, newTime ) ) );
+
+            this.sendMessage(S_COLOR_WHITE + "Race " + S_COLOR_ORANGE + "#"
+                    + this.tries + S_COLOR_WHITE + " finished: "
+                    + TimeToString( newTime)
+                    + S_COLOR_ORANGE + " Distance: " + S_COLOR_WHITE + ((this.lastRace.stopDistance - this.lastRace.startDistance)/1000) // racing distance
+                    + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
+                    + S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
+                    + S_COLOR_ORANGE + "/" + Capitalize(rs_networkName.getString()) + ": " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
+                    + "\n");
+		}
 
         if ( this.lastRace.checkPointsString.len() > 0 )
             this.sendMessage( this.lastRace.checkPointsString );
 
         earnedPoints = newPoints - oldPoints;
-        if (earnedPoints == 1) {
-            this.sendAward( S_COLOR_BLUE + "You earned "+ earnedPoints +" point!" );
-            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" point!\n" );
-        }
-        else if (earnedPoints > 1) {
-            this.sendAward( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!" );
-            this.sendMessage( S_COLOR_BLUE + "You earned "+ earnedPoints +" points!\n" );
+        if (earnedPoints > 0)
+        {
+            cString pointsAward =  S_COLOR_BLUE + "You earned "+ earnedPoints
+                                   + ((earnedPoints > 1)? " points!" : " point!")
+                                   + "\n";
+            this.sendAward( pointsAward );
+            this.sendMessage( pointsAward );
         }
 
-        if ( oldTime == 0 || newTime < oldTime ) //set new personal record
+        //personal record
+        if ( oldTime == 0 || newTime < oldTime )
         {
             this.setBestTime(newTime);
             this.setBestCheckPointsFromRace(this.lastRace);
+            this.sendAward( "Personal record!" );
         }
 
-        if ( oldServerBestTime == 0 || newTime < oldServerBestTime )//set new server record
+        //server record
+        if ( oldServerBestTime == 0 || newTime < oldServerBestTime )
         {
             map.getHighScore().fromRace(this.lastRace);
+            this.sendAward( S_COLOR_GREEN + "New server record!" );
+            G_PrintMsg(null, this.getName() + " "
+                             + S_COLOR_YELLOW + "made a new server record: "
+                             + TimeToString( newTime ) + "\n");
+
+            RS_ircSendMessage( this.getName().removeColorTokens()
+                               + " made a new server record: "
+                               + TimeToString( newTime ) );
         }
 
-        //print record awards
-		if ( ( oldBestTime == 0 || newTime < oldBestTime ) and ( newTime < oldTime ) ) //world record award
+        //world record
+        if ( ( oldBestTime == 0 || newTime < oldBestTime ) and ( newTime < oldTime ) )
         {
-		    this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
-		    G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
-		            + "made a new " + S_COLOR_GREEN  + rs_networkName.getString() + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
-			this.sendMessage(S_COLOR_YELLOW + "Congratulations! You can now set a " + S_COLOR_WHITE + "oneliner" + S_COLOR_YELLOW + ". Careful though, only one try.\n");
-        }
+            this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
+            G_PrintMsg(null, this.getName() + " "
+                             + S_COLOR_YELLOW + "made a new "
+                             + S_COLOR_GREEN  + rs_networkName.getString()
+                             + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
 
-        else if ( oldServerBestTime == 0 || newTime < oldServerBestTime ) //server record award
-        {
-			this.sendAward( S_COLOR_GREEN + "New server record!" );
-			G_PrintMsg(null, this.getName() + " " + S_COLOR_YELLOW
-				+ "made a new server record: " + TimeToString( newTime ) + "\n");
-			RS_ircSendMessage( this.getName().removeColorTokens()
-			        + " made a new server record: " + TimeToString( newTime ) );
-        }
-        else if ( oldTime == 0 || newTime < oldTime ) //personal record award
-        {
-			this.sendAward( "Personal record!" );
+            if ( mysqlConnected == 1)
+            {
+                this.sendMessage(S_COLOR_YELLOW
+                                 + "Congratulations! You can now set a "
+                                 + S_COLOR_WHITE + "oneliner"
+                                 + S_COLOR_YELLOW +
+                                 ". Careful though, only one try.\n");
+            }
         }
     }
 
