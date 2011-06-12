@@ -24,7 +24,6 @@ class Racesow_Gametype_Race : Racesow_Gametype
           config = "//*\n"
                    + "//* Race settings\n"
                    + "//*\n"
-                   + "set g_gametype \"race\"\n"
                    + "set g_scorelimit \"0\" // a new feature..?\n"
                    + "set g_warmup_timelimit \"0\" // ... \n"
                    + "set g_maxtimeouts \"0\" \n"
