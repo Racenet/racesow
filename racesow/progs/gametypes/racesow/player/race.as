@@ -192,8 +192,8 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		uint personalBestTime = this.player.getBestCheckPoint(id);
 		bool noDelta = 0 == serverBestTime;
 
-        G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime ) + "\n"
-			+ ( noDelta ? "" : diffString( serverBestTime, newTime ) ) );
+        G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime )
+			+ ( noDelta ? "" : ("\n" + diffString( serverBestTime, newTime ) )) );
 
         //print the checkpoint times to specs too
         cTeam @spectators = @G_GetTeam( TEAM_SPECTATOR );
