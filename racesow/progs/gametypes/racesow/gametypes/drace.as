@@ -558,7 +558,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         DRACERound.init();
     
         // if the gametype doesn't have a config file, create it
-        if ( !G_FileExists( "configs/server/gametypes/racesow/drace.cfg" ) )
+        if ( !G_FileExists( "configs/server/gametypes/drace.cfg" ) )
         {
             cString config;
     
@@ -578,13 +578,12 @@ class Racesow_Gametype_Drace : Racesow_Gametype
                      + "set g_challengers_queue \"0\"\n"
                      + "set g_inactivity_maxtime \"360.0\"\n"
                      + "set g_drace_max_victories \"0\"\n"
-                     + "set rs_gametype \"drace\"\n"
     
                      + "\necho drace.cfg executed\"\n";
     
-            G_WriteFile( "configs/server/gametypes/racesow/drace.cfg", config );
+            G_WriteFile( "configs/server/gametypes/drace.cfg", config );
             G_Print( "Created default config file for 'drace'\n" );
-            G_CmdExecute( "exec configs/server/gametypes/racesow/drace.cfg silent" );
+            G_CmdExecute( "exec configs/server/gametypes/drace.cfg silent" );
         }
 
         gametype.isTeamBased = false;

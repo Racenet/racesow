@@ -34,7 +34,6 @@ cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
 cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
 cVar rs_loadPlayerCheckpoints( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE );
 cVar rs_allowAutoHop( "rs_allowAutoHop", "1", CVAR_ARCHIVE );
-cVar rs_gametype( "rs_gametype", "race", CVAR_ARCHIVE );
 
 cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_ARCHIVE|CVAR_NOSET );
 cVar g_timelimit_reset( "g_timelimit_reset", "1", CVAR_ARCHIVE|CVAR_NOSET );
@@ -42,6 +41,7 @@ cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
 cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
 cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
 cVar g_warmup_timelimit( "g_warmup_timelimit", "0", CVAR_ARCHIVE ); //cvar g_warmup_enabled was removed in warsow 0.6
+cVar g_gametype( "g_gametype", "race", CVAR_ARCHIVE);
 
 cVar rs_welcomeMessage ("rs_welcomeMessage", S_COLOR_WHITE + "Welcome to this Racesow server. Type " + S_COLOR_ORANGE + "help" + S_COLOR_WHITE + " to get a list of commands\n", CVAR_ARCHIVE );
 cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_ARCHIVE|CVAR_NOSET );
@@ -176,24 +176,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 			return true;
 		}
 
-		if ( vote == "gametype" )
-		{
-	        if (argc < 1)
-	        {
-	            player.sendErrorMessage( "You must provide a gametype." );
-	            return false;
-	        }
-	        cString gametype = argsString.getToken( 1 );
-	        if ( !(gametype == "race" || gametype == "freestyle" || gametype == "drace"
-	                || gametype == "durace") )
-	        {
-                player.sendErrorMessage( "You must provide a valid gametype." );
-                return false;
-	        }
-
-	        return true;
-		}
-
 		if ( vote == "timelimit" )
 		{
 			int new_timelimit = argsString.getToken( 1 ).toInt();
@@ -289,15 +271,6 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 					oldTimelimit = g_timelimit.getInteger();
 				}
     }
-
-		if ( vote == "gametype")
-		{
-		    cString gametype = argsString.getToken( 1 );
-		    rs_gametype.set(gametype);
-		    gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
-		    match.launchState( MATCH_STATE_POSTMATCH );
-		}
-
 
 		if ( vote == "spec" )
 		{
@@ -821,22 +794,24 @@ void GT_InitGametype()
     // initalize weapondef config
     weaponDefInit();
 
-    // if the gametype doesn't have a config file, create it
     if ( !G_FileExists( "configs/server/gametypes/racesow/racesow.cfg" ) )
     {
-      G_WriteFile( "configs/server/gametypes/racesow/racesow.cfg", config_general );
-      G_Print( "Created default general config file for racesow\n" );
+        G_WriteFile( "configs/server/gametypes/racesow/racesow.cfg", config_general );
+        G_Print( "Created default base config file for racesow\n" );
+        G_CmdExecute( "exec configs/server/gametypes/racesow/racesow.cfg silent" );
     }
+
     if ( !G_FileExists( "configs/server/gametypes/racesow/database.cfg" ) )
     {
-      G_WriteFile( "configs/server/gametypes/racesow/database.cfg", config_database );
-      G_Print( "Created default database config file for racesow\n" );
+        G_WriteFile( "configs/server/gametypes/racesow/database.cfg", config_database );
+        G_Print( "Created default base config file for database\n" );
+        G_CmdExecute( "exec configs/server/gametypes/racesow/database.cfg silent" );
     }
 
     // always execute racesow.cfg
     G_CmdExecute( "exec configs/server/gametypes/racesow/racesow.cfg silent" );
 
-    gametypeFlag = RS_GetModFlagByName(rs_gametype.getString());
+    gametypeFlag = RS_GetModFlagByName(g_gametype.getString());
 
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
@@ -891,7 +866,6 @@ void GT_InitGametype()
     G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
     G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
     G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
-    G_RegisterCallvote( "gametype", "<race|freestyle|drace|durace>", "Change the gametype" );
 
     demoRecording = false;
 
