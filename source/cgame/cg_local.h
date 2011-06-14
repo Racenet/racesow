@@ -375,6 +375,7 @@ typedef struct
 #define PREDICTED_STEP_TIME 150 // stairs smoothing time
 #define MAX_AWARD_LINES 3
 #define MAX_AWARD_DISPLAYTIME 5000
+#define MAX_CHECKPOINTS 50 //racesow
 
 // view types
 enum
@@ -574,6 +575,11 @@ typedef struct
 	char award_lines[MAX_AWARD_LINES][MAX_CONFIGSTRING_CHARS];
 	unsigned int award_times[MAX_AWARD_LINES];
 	int award_head;
+
+	//racesow
+	// checkpoints
+	int checkpoints[MAX_CHECKPOINTS];
+	//!racesow
 
 	// statusbar program
 	struct cg_layoutnode_s *statusBar;

@@ -1,71 +1,153 @@
 //Checkpoints
+	
+if %RACE
+	
+	setFont "virtue_12"
+	setColor 1 1 1 1
+	
+	setScale #DEFAULTSCALE
+	setCursor 0, 380
+	setScale #NOSCALE
+	moveCursor 10, -45
+	setAlign #LEFT, #TOP
+	if %CP10 != #NOTSET
+		drawString "CP10:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP10
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP10
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP10
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP9 != #NOTSET
+		drawString "CP9:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP9
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP9
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP9
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP8 != #NOTSET
+		drawString "CP8:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP8
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP8
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP8
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP7 != #NOTSET
+		drawString "CP7:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP7
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP7
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP7
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP6 != #NOTSET
+		drawString "CP6:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP6
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP6
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP6
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP5 != #NOTSET
+		drawString "CP5:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP5
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP5
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP5
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP4 != #NOTSET
+		drawString "CP4:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP4
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP4
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP4
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP3 != #NOTSET
+		drawString "CP3:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP3
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP3
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP3
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP2 != #NOTSET
+		drawString "CP2:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP2
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP2
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP2
+		setColor 1, 1, 1, 1
+		moveCursor -40, -15
+	endif
+	if %CP1 != #NOTSET
+		drawString "CP1:"
+		moveCursor 40, 0
+		setColor 0, 1, 0, 1
+		if 0 < %CP1
+			setColor 1, 0, 0, 1
+		endif
+		if 0 == %CP1
+			setColor 1, 1, 0, 1
+		endif
+		drawCheckPoint %CP1
+		moveCursor -40, -15
+	endif
 
-setFont "virtue_12"
-setColor 1 1 1 1
-
-setScale #DEFAULTSCALE
-setCursor 0, 380
-setScale #NOSCALE
-moveCursor 10, -45
-setAlign #LEFT, #TOP
-if %CP10 != #NOTSET
-	drawString "CP10:"
-	moveCursor 40, 0
-	drawCheckPoint %CP10
-	moveCursor -40, -15
 endif
-if %CP9 != #NOTSET
-	drawString "CP9:"
-	moveCursor 40, 0
-	drawCheckPoint %CP9
-	moveCursor -40, -15
-endif
-if %CP8 != #NOTSET
-	drawString "CP8:"
-	moveCursor 40, 0
-	drawCheckPoint %CP8
-	moveCursor -40, -15
-endif
-if %CP7 != #NOTSET
-	drawString "CP7:"
-	moveCursor 40, 0
-	drawCheckPoint %CP7
-	moveCursor -40, -15
-endif
-if %CP6 != #NOTSET
-	drawString "CP6:"
-	moveCursor 40, 0
-	drawCheckPoint %CP6
-	moveCursor -40, -15
-endif
-if %CP5 != #NOTSET
-	drawString "CP5:"
-	moveCursor 40, 0
-	drawCheckPoint %CP5
-	moveCursor -40, -15
-endif
-if %CP4 != #NOTSET
-	drawString "CP4:"
-	moveCursor 40, 0
-	drawCheckPoint %CP4
-	moveCursor -40, -15
-endif
-if %CP3 != #NOTSET
-	drawString "CP3:"
-	moveCursor 40, 0
-	drawCheckPoint %CP3
-	moveCursor -40, -15
-endif
-if %CP2 != #NOTSET
-	drawString "CP2:"
-	moveCursor 40, 0
-	drawCheckPoint %CP2
-	moveCursor -40, -15
-endif
-if %CP1 != #NOTSET
-	drawString "CP1:"
-	moveCursor 40, 0
-	drawCheckPoint %CP1
-	moveCursor -40, -15
-endif
-

@@ -624,6 +624,47 @@ static void CG_SC_AddAward( void )
 	CG_AddAward( trap_Cmd_Argv( 1 ) );
 }
 
+//racesow
+/*
+* CG_CheckpointsAdd
+*/
+void CG_CheckpointsAdd( int cpNum, unsigned int time )
+{
+	cg.checkpoints[cpNum] = time;
+}
+
+/*
+* CG_SC_CheckpointsAdd
+*
+* 1: checkpoint number
+* 2: checkpoint time in msec
+*
+*/
+static void CG_SC_CheckpointsAdd( void )
+{
+	CG_CheckpointsAdd( atoi( trap_Cmd_Argv( 1 ) ), atoi( trap_Cmd_Argv( 2 ) ) );
+}
+
+/*
+* CG_CheckpointsClear
+*/
+void CG_CheckpointsClear( void )
+{
+	int i;
+	for ( i = 0; i < MAX_CHECKPOINTS; i++ ) {
+		cg.checkpoints[i] = STAT_NOTSET;
+	}
+}
+
+/*
+* CG_SC_CheckpointsClear
+*/
+static void CG_SC_CheckpointsClear( void )
+{
+	CG_CheckpointsClear();
+}
+//!racesow
+
 /*
 * CG_SC_ExecuteText
 */
@@ -659,6 +700,8 @@ svcmd_t cg_svcmds[] =
 	{ "mecu", CG_SC_MenuCustom },
 	{ "motd", CG_SC_MOTD },
 	{ "aw", CG_SC_AddAward },
+	{ "cpa", CG_SC_CheckpointsAdd }, //racesow
+	{ "cpc", CG_SC_CheckpointsClear }, //racesow
 	{ "cmd", CG_SC_ExecuteText },
 
 	{ NULL }

@@ -54,7 +54,7 @@ include racesow/minimap
 include racesow/download
 
 include racesow/angles
-include racesow/jumpspeed
+//include racesow/jumpspeed
 include racesow/checkpoints
 include racesow/acceleration
 include racesow/dotstrafer

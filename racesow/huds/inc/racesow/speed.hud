@@ -58,6 +58,11 @@ if 1 & %SHOW_SPEED
 		setColor 1, 0, 0, 1
 		drawStringNum %ROCKETACCEL
 	endif
+
+	//jumpspeed number
+	moveCursor 9, 14
+	setColor 0, 0, 1, 1
+	drawStringNum %JUMPSPEED
 endif
 
 //old speed number

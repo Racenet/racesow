@@ -434,16 +434,8 @@ static int CG_GetRaceVars( void* parameter )
 	switch( index ) {
 		case cp1: case cp2: case cp3: case cp4: case cp5: case cp6: case cp7: case cp8:
 		case cp9: case cp10: case cp11: case cp12: case cp13: case cp14: case cp15:
-			iNum = index - (int)cp1;
-			if( cg.predictedPlayerState.stats[STAT_TIME_SELF] == STAT_NOTSET && !race_started ) {
-				race_started = qtrue;
-			} else if( cg.predictedPlayerState.stats[STAT_TIME_SELF] != STAT_NOTSET && race_started ) {
-				race_started = qfalse;
-				cur_check = 0;
-			}
-			if( iNum < cur_check )
-				return iNum;
-			return STAT_NOTSET;
+			return cg.checkpoints[index];
+
 		case diff_an:
 			// difference of look and move angles
 			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
@@ -2153,13 +2145,41 @@ static int CG_LFuncIf( struct cg_layoutnode_s *commandnode, struct cg_layoutnode
 	return (int)CG_GetNumericArg( &argumentnode );
 }
 
-//racesow - lm: race mod helper function, draws the checkpoint on the hud (can't retrieve char* in hudscript?)
+//racesow - based on drawTimer
 static int CG_LFuncDrawCheckpoint( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
-  int itemindex = (int)CG_GetNumericArg( &argumentnode );
-  if( itemindex >= cur_check ) return qfalse;
-  trap_SCR_DrawString( layout_cursor_x, layout_cursor_y, layout_cursor_align, race_checkpoints[itemindex], layout_cursor_font, layout_cursor_color );
-  return qtrue;
+	char time[64];
+	char *sign;
+	int min, sec, milli;
+
+	milli = (int)CG_GetNumericArg( &argumentnode );
+
+	if ( milli < 0 )
+	{
+		milli *= -1;
+		sign = "-";
+	}
+	else
+		sign = "+";
+
+	min = milli/60000;
+	milli -= min*60000;
+	sec = milli/1000;
+	milli -= sec*1000;
+
+	if ( min >= 100 )
+		Q_snprintfz( time, sizeof( time ), "%s%003d:%02d.%003d", sign, min, sec, milli );
+	else if ( min >= 10 )
+		Q_snprintfz( time, sizeof( time ), "%s%02d:%02d.%003d", sign, min, sec, milli );
+	else if ( min >= 1 )
+		Q_snprintfz( time, sizeof( time ), "%s%1d:%02d.%003d", sign, min, sec, milli );
+	else if ( sec >= 10 )
+		Q_snprintfz( time, sizeof( time ), "%s%02d.%003d", sign, sec, milli );
+	else
+		Q_snprintfz( time, sizeof( time ), "%s%1d.%003d", sign, sec, milli );
+
+	trap_SCR_DrawString( layout_cursor_x, layout_cursor_y, layout_cursor_align, time, layout_cursor_font, layout_cursor_color );
+	return qtrue;
 }
 //!racesow
 
@@ -2306,14 +2326,14 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		"Draws configstring of argument id"
 	},
 
-  //racesow
-  {
-    "drawCheckPoint",
-    CG_LFuncDrawCheckpoint,
-    1,
-    "Draws last checkpoint time of argument id"
-  },
-  //!racesow
+	//racesow
+	{
+		"drawCheckPoint",
+		CG_LFuncDrawCheckpoint,
+		1,
+		"Draws last checkpoint time of argument id"
+	},
+	//!racesow
 
 	{
 		"drawItemName",

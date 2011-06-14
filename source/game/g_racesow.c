@@ -3118,3 +3118,19 @@ void RS_VoteMapExtraHelp( edict_t *ent )
 {
     G_PrintMsg(ent, "Use the maplist command to see the available maps. Type 'help maplist' for details.\n");
 }
+
+//============
+//RS_CheckpointsAdd
+//============
+void RS_CheckpointsAdd( edict_t *ent, int cpNum, int time )
+{
+	trap_GameCmd( ent, va( "cpa %i %i", cpNum, time ) );
+}
+
+//============
+//RS_CheckpointsClear
+//============
+void RS_CheckpointsClear( edict_t *ent )
+{
+	trap_GameCmd( ent, va( "cpc" ) );
+}
