@@ -112,11 +112,6 @@ void CG_CenterPrint( char *str )
 	scr_centertime_off = cg_centerTime->value;
 	scr_centertime_start = cg.time;
 
-	//racesow
-	if( GS_RaceGametype() == qtrue )
-			CG_RaceAddCheckpoint(scr_centerstring );
-	//!racesow
-
 	// count the number of lines for centering
 	scr_center_lines = 1;
 	s = scr_centerstring;

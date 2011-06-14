@@ -416,10 +416,6 @@ LMTODO: strafing
 		- dots firstly ill need the angle on map u are moving. Like before we will need tangens or contanges alpha (dun remember wich one was that) but im sure it was sth like world_x fivide by world_y. Then probably ill have to check the square function graph of biggest accel for every speed. And then we will work on it more)
 */
 
-#define RACE_CP_LENGTH	20
-char race_checkpoints[15][RACE_CP_LENGTH];		//cG^ said: no map with more than 15 checkpoints
-qboolean race_started = qfalse;
-int cur_check = 0;
 int race_jump = 0;
 
 static int CG_GetRaceVars( void* parameter )
@@ -561,40 +557,6 @@ static int CG_GetAccel( void* parameter )
 void CG_AddJumpspeed( void )
 {
 	race_jump = CG_GetSpeed(0);
-}
-
-void CG_RaceAddCheckpoint( char* msg )
-{
-	if( msg && msg[0] && cur_check < 14 && strstr( msg, "Current: " ) ) {
-		char* check, pos;
-		int mins, secs, millis;
-		char* help = strchr( msg, '\n' );
-		if( !help ) {
-			//lm: for racesow, when there is no previous time there is no \n
-			help = strchr( msg, ':' ) + 1;
-			check = 0;
-			Q_strncpyz( race_checkpoints[cur_check], S_COLOR_GREEN, 3 );
-		} else {
-			help++;
-			check = strchr( help, '#' );
-			Q_strncpyz( race_checkpoints[cur_check], help, 3 );
-			if( check )
-				help = check + 2;
-			else
-				help += 2;
-		}
-		sscanf( help, "%c%d:%d.%d", &pos, &mins, &secs, &millis );	//lm: wtf, %i did not always return correct values
-		if( mins ) {
-			strcat( race_checkpoints[cur_check], va( "%c%d min", pos, mins ) ); 
-		} else if( (secs *1000 + millis) > 9999 ) {
-			strcat( race_checkpoints[cur_check], va( "%c%d sec", pos, secs ) );
-		} else {
-			strcat( race_checkpoints[cur_check], va( "%c%02d.%03d", pos, secs, millis ) );
-		}
-		if( check )
-			strcat( race_checkpoints[cur_check], " R" );
-		cur_check++;
-	}
 }
 //!racesow
 
