@@ -1,0 +1,60 @@
+// JOKI HUD based on:
+////
+// ETR Hud v2
+// Scripting by ETR (ETR@lovesow.net)
+// I've commented most of the .hud files, 
+// to make it semi-understandable.
+// This hud supports all .hud features.
+
+// This HUD uses modified scripts from:
+// - kro (pwn hud) - spread in fragcounter - (basewsw)
+// - mapi (wa-wa-hud) - health/armor bars - http://www.warsow.net/forum/viewtopic.php?id=12716
+// - warsow hud (basewsw)
+////
+
+setFont con_fontSystemsmall
+
+include zoom
+include team_info
+//include ammo
+include scores
+//include times
+//include obituaries
+include powerups
+include picked_up_item
+include item_timers
+include chasing
+//include health
+//include armor
+include frags
+include net
+include pointing
+include help_message
+include fps
+include clock
+//include speed
+//include weaponlist
+include crosshair
+//include keystate
+include awards
+include minimap
+include download
+//include chat
+
+include joki/ammo
+include joki/keystate
+include joki/weaponlist
+include joki/race
+include joki/obituaries
+include joki/health
+include joki/armor
+include joki/speedbar
+include joki/speednumber
+include joki/speed_vertical
+//include joki/falling_damage_warning
+include racesow/dotstrafer
+include joki/compass
+include joki/chat
+
+setScale #DEFAULTSCALE
+

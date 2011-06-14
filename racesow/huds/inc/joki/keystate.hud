@@ -1,0 +1,32 @@
+//
+setAlign #CENTER, #BOTTOM
+
+setScale #DEFAULTSCALE
+setCursor #WIDTH, 255
+
+setScale #SCALEBYHEIGHT
+setSize 32, 32
+
+moveCursor -74, 0
+drawKeyState forward
+
+moveCursor 0, 34
+drawKeyState backward
+
+moveCursor -32, 0
+drawKeyState left
+
+moveCursor 66, 0
+drawKeyState right
+
+moveCursor -66, -34
+drawKeyState jump
+
+moveCursor 66, 0
+drawKeyState special
+
+moveCursor 0, 68
+drawKeyState fire
+
+moveCursor -66, 0
+drawKeyState crouch

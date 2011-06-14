@@ -1,0 +1,24 @@
+// draw damage warning
+if %WEAPON_ITEM
+	setFont con_fontSystemsmall
+	setScale #DEFAULTSCALE
+	setSize 20, 20
+	setColor 1, 0, 0, 1
+	if %SPEED_VERTICAL <= -675
+		setCursor 400, 440
+		setAlign #RIGHT, #BOTTOM
+		drawString "falling "
+		setAlign #RIGHT, #TOP
+		drawString "damage: "
+		if %SPEED_VERTICAL > -825
+			setCursor 440, 440
+			setAlign #RIGHT, #MIDDLE
+			drawNum -0.1 * %SPEED_VERTICAL + 665 
+		endif
+		if %SPEED_VERTICAL <= -825
+			setCursor 440, 440
+			setAlign #RIGHT, #MIDDLE
+			drawNum 15
+		endif
+	endif
+endif

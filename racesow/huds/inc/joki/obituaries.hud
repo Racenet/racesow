@@ -1,0 +1,11 @@
+//
+if %RACE == #NOTSET
+	setColor 1 1 1 1
+	setFont "virtue_8"
+	setAlign #RIGHT, #TOP
+	setScale #DEFAULTSCALE
+	setCursor #WIDTH - 4, 10
+	setSize 200, 300
+	drawObituaries #RIGHT, 20
+endif
+

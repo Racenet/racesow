@@ -1,0 +1,88 @@
+// draw speed number
+if %SHOW_SPEED
+
+setScale #DEFAULTSCALE
+setCursor 400, 300
+setScale #NOSCALE
+moveCursor -30, 0
+
+	// set color for background
+	setFont "virtue_16"
+	setAlign #RIGHT, #MIDDLE
+	if %SPEED <= 1250
+		setColor 0 0 0 1
+	endif
+	if %SPEED > 1250
+	if %SPEED <= 1500
+		setColor 1 1 1 0.4
+	endif
+	endif
+	if %SPEED > 1500
+	if %SPEED <= 3000
+		setColor 0 0 0 1
+	endif
+	endif
+	if %SPEED > 3000
+		setColor 1 1 1 0.7
+	endif
+	//draw background 4 times
+	moveCursor 0, -1
+	drawStringNum %SPEED
+	moveCursor 0, 2
+	drawStringNum %SPEED
+	moveCursor 2, -2
+	drawStringNum %SPEED
+	moveCursor 0, 2
+	drawStringNum %SPEED
+
+// 500-750: gray 1, 1, 1, 0.5
+// 751-1000: dark-green 0, 0.5, 0
+// 1001-1250: cyan 0, 1, 1
+// 1251-1500: blue 0, 0, 1
+// 1501-1750: purple 1, 0, 1
+// 1751-2000: orange 1, 0.5, 0
+// 2001-3000: red 1, 0, 0
+// 3001-4000: black 0, 0, 0
+
+// speed in different colors
+	moveCursor -1, -1
+	setAlign #RIGHT, #MIDDLE
+	if %SPEED <= 750
+		setColor 1, 1, 1, 1
+	endif
+	if %SPEED > 750
+	if %SPEED <= 1000
+		setColor 0, 0.5, 0, 1
+	endif
+	endif
+	if %SPEED > 1000
+	if %SPEED <= 1250
+		setColor 0, 1, 1, 1
+	endif
+	endif
+	if %SPEED > 1250
+	if %SPEED <= 1500
+		setColor 0, 0, 1, 1
+	endif
+	endif
+	if %SPEED > 1500
+	if %SPEED <= 1750
+		setColor 1, 0, 1, 1
+	endif
+	endif
+	if %SPEED > 1750
+	if %SPEED <= 2000
+		setColor 1, 0.5, 0, 1
+	endif
+	endif
+	if %SPEED > 2000
+	if %SPEED <= 3000
+		setColor 1, 0, 0, 1
+	endif
+	endif
+	if %SPEED > 3000
+		setColor 0, 0, 0, 1
+	endif
+	drawStringNum %SPEED
+
+endif

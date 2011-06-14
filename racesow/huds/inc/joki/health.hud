@@ -1,0 +1,42 @@
+// healthbar :S
+
+if %RACE == 0
+if %HEALTH != #NOTSET
+
+
+setScale #DEFAULTSCALE
+//draw background
+
+setAlign #LEFT, #TOP
+setCursor 84, 556
+setSize 200, 32
+setColor 0.2, 0.2, 0.2, 0.4
+drawPicByName gfx/ui/white
+
+// draw healthbar (range: 0-100 -> color red~green)
+setCursor 84, 556
+setAlign #LEFT, #TOP
+setSize 200, 32
+setColor -1 + 100 / %HEALTH , %HEALTH * 0.01 , 0, 1 // also possible: red: 40 / %HEALTH
+drawBar %HEALTH, 100
+
+//draw overlay healthbar (range: 101-200 -> opacity 0.5-1; color: magenta)
+if %HEALTH > 100
+	setCursor 84, 556
+	setAlign #LEFT, #TOP
+	setSize 200, 32
+	setColor 1, 0, 1, %HEALTH * 0.005 
+	drawBar %HEALTH - 100, 100
+endif
+
+//draw health number (top left inside the bar)
+setCursor 84 + 2, 556 + 2
+setAlign #LEFT, #TOP
+setScale #SCALEBYHEIGHT
+setSize 12, 12
+setColor 1 1 1 1
+drawNum %HEALTH
+
+
+endif
+endif

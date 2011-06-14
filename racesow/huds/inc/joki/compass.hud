@@ -1,0 +1,37 @@
+//show direction of movement
+if %SPEED != #NOTSET
+
+//set vertical position of bar (height can be edited)
+setScale #DEFAULTSCALE
+setCursor #WIDTH / 2, 0.03 * #HEIGHT
+
+//calculate horizontal positions
+//movement forward:
+if -9000 < %DIFF_ANGLE
+if 9000 >= %DIFF_ANGLE
+	moveCursor .00005555555555555 * #WIDTH * %DIFF_ANGLE, 0
+	setColor 0, 1, 0, 1
+endif
+endif
+//movement backward:
+if -18000 < %DIFF_ANGLE
+if -9000 >= %DIFF_ANGLE
+	moveCursor -.00005555555555555 * #WIDTH * %DIFF_ANGLE + 18000, 0
+	setColor 1, 0, 0, 1
+endif
+endif
+if 9000 < %DIFF_ANGLE
+if 18000 >= %DIFF_ANGLE
+	moveCursor -.00005555555555555 * #WIDTH * %DIFF_ANGLE - 18000, 0
+	setColor 1, 0, 0, 1
+endif
+endif
+
+//draw bar
+setScale #SCALEBYHEIGHT
+setSize 4, 20
+setAlign #CENTER, #TOP
+drawPicByName gfx/ui/white
+
+
+endif

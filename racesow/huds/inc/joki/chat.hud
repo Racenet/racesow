@@ -1,0 +1,39 @@
+//
+
+setScale #DEFAULTSCALE
+setCursor 0, 384
+
+if %VIDWIDTH < 800
+	setFont bitstream_9
+endif
+if %VIDWIDTH >= 800
+	setFont bitstream_10
+endif
+
+if %CHAT_MODE > 0
+    setColor 0 0 0 0.5
+endif
+if %CHAT_MODE == 0
+    setColor 0 0 0 0
+endif
+
+setAlign #LEFT, #TOP
+setScale #NOSCALE
+setSize %VIDWIDTH - 20, .18333 * %VIDHEIGHT //0.18333 * 600 = 110
+
+moveCursor 10, 0
+drawChat 7 3 gfx/2d/chat1
+
+setScale #DEFAULTSCALE
+moveCursor #WIDTH, 112
+setScale #NOSCALE
+moveCursor -30, 0
+
+if %CHAT_MODE > 0
+	setScale #SCALEBYHEIGHT
+	setSize 32, 32
+	setAlign #RIGHT, #BOTTOM
+	drawPicByName gfx/2d/bubblechat    
+endif
+
+

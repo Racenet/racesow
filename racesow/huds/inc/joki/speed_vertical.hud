@@ -1,0 +1,79 @@
+// SPEED_VERTICAL (vertical speedbar for vertical speed)
+
+setFont "virtue_16"
+setScale #DEFAULTSCALE
+setCursor 400, 300
+
+
+
+if %SPEED_VERTICAL > 0
+	setScale #SCALEBYWIDTH
+	moveCursor 0, -34
+
+	// draw a small bar to see if you are jumping (range: 1-370ups)
+	setSize 24, 4
+	setColor 0, 0.2, 0, 0.4
+	setAlign #CENTER, #BOTTOM
+	drawPicByName gfx/ui/white
+
+	// draw bar (range: 371-675ups)
+	if %SPEED_VERTICAL > 370
+		setSize 24, 100
+		setColor 0, 0.7, 0, 0.5
+		drawBar -370 + %SPEED_VERTICAL , 675 - 370
+		// draw overlaying bar (range: 371-2000ups)
+		setColor 0, 1, 0, 0.9
+		drawBar -370 + %SPEED_VERTICAL , 2000 - 370
+	endif
+
+	// draw vertical speed number
+	if %SPEED_VERTICAL > 370
+		moveCursor 18, 0
+		setScale #NOSCALE
+		moveCursor 2, 2
+		setColor 0, 0, 0, 1
+		setAlign #LEFT, #BOTTOM
+		drawStringNum %SPEED_VERTICAL
+		moveCursor -2, -2
+		setColor 0, 1, 0, 1
+		setAlign #LEFT, #BOTTOM
+		drawStringNum %SPEED_VERTICAL
+	endif
+endif
+
+
+
+if %SPEED_VERTICAL < 0 
+	setScale #SCALEBYWIDTH
+	moveCursor 0, 34
+	// draw a small bar to see if you are falling (range: 1-370ups)
+	setSize 24, 4
+	setColor 0.2, 0, 0, 0.4
+	setAlign #CENTER, #TOP
+	drawPicByName gfx/ui/white
+
+	// draw bar (range: 371-675ups)
+	if %SPEED_VERTICAL < -370
+		setSize 24, 100
+		setAlign #CENTER, #TOP
+		setColor 1, 0, 0, 0.5
+		drawBar -370 + %SPEED_VERTICAL * -1 , 675 - 370
+		// draw overlaying bar (range: 676-2000ups)
+		setColor 1, 0, 0, 0.9
+		drawBar -370 + %SPEED_VERTICAL * -1 , 2000 - 370
+	endif
+
+	// draw vertical speed number
+	if %SPEED_VERTICAL < -450
+		moveCursor 18, 0
+		setScale #NOSCALE
+		moveCursor 2, 2
+		setColor 0 0 0 1
+		setAlign #LEFT, #TOP
+		drawStringNum %SPEED_VERTICAL
+		moveCursor -2, -2
+		setColor 1 0 0 1
+		setAlign #LEFT, #TOP
+		drawStringNum %SPEED_VERTICAL
+	endif
+endif

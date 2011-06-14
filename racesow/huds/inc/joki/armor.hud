@@ -1,0 +1,29 @@
+//draw armor
+
+if %RACE == 0
+if %HEALTH != #NOTSET
+
+if %ARMOR > 0
+
+setScale #DEFAULTSCALE
+
+//draw armor 1-200 (overlay on top of health)
+setCursor 84 + 200 + 4, 588 + 4
+setAlign #RIGHT, #BOTTOM
+setSize 200, 16
+setColor 0.4, 0.4, 0.5, 1
+drawBar %ARMOR, 200
+
+//draw armor number
+setCursor 84 + 200 + 4 - 2, 588 + 4 - 2
+setAlign #RIGHT, #BOTTOM
+setScale #SCALEBYHEIGHT
+setSize 12, 12
+setcolor 1 1 1 1
+drawnum %ARMOR
+
+
+endif
+
+endif
+endif

@@ -1,0 +1,17 @@
+//
+if %INSTAGIB == 0
+if %WEAPON_ITEM
+	setAlign #CENTER #MIDDLE
+	setScale #DEFAULTSCALE
+	setCursor 520, 572
+	drawWeaponIcons 45, 0, 40 * 1.3333333333 * %VIDHEIGHT / %VIDWIDTH, 40
+
+	setCursor 520, 570
+	setAlign #CENTER #BOTTOM
+	drawWeaponStrongAmmo 45, 0, 18
+
+	setCursor 520, 570
+	setAlign #CENTER #TOP
+	drawWeaponWeakAmmo 45, 0, 14
+endif
+endif

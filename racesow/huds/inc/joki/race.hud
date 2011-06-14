@@ -1,0 +1,212 @@
+//
+setFont "virtue_16"
+if %RACE != #NOTSET
+    if %TIME_SELF != #NOTSET
+
+	setScale #DEFAULTSCALE
+setCursor 400, 300
+	setScale #SCALEBYWIDTH
+moveCursor 100, -42
+	setAlign #LEFT, #BOTTOM
+
+	// race time (shadow)
+	setScale #NOSCALE
+moveCursor 2, 2
+	if %TIME_SELF != 0
+		setColor 0 0 0 1
+	endif
+	if %TIME_SELF == 0
+		setColor 0 0 0 0.1
+	endif
+	drawTimer %TIME_SELF
+
+	// race time
+	setScale #NOSCALE
+moveCursor -2, -2
+	if %TIME_SELF != 0
+		setColor 1 1 1 1
+	endif
+	if %TIME_SELF == 0
+		setColor 1 1 1 0.1
+	endif
+	drawTimer %TIME_SELF
+
+	setScale #NOSCALE
+moveCursor 2, -30
+	// time string (shadow)
+	setColor 0 0 0 0.2
+	drawString "Time:"
+
+	// time string
+	setScale #NOSCALE
+moveCursor -2, -2
+	setColor 0.8 0.8 0.8 0.2
+	drawString "Time:"
+
+    endif
+
+	// time difference (TIME_RECORD - TIME_SELF)
+	if %TIME_RECORD != #NOTSET
+	  if %TIME_SELF != #NOTSET
+
+
+		setScale #DEFAULTSCALE
+setCursor 400, 300
+		setScale #SCALEBYWIDTH
+moveCursor 100, 42
+		setAlign #LEFT #TOP
+
+		setScale #NOSCALE
+moveCursor 2, 2
+
+		setColor 0 0 0 1
+		if %TIME_SELF < %TIME_RECORD
+			// time diff positive (shadow)
+			drawTimer %TIME_RECORD - %TIME_SELF
+
+			// time diff positive
+			setScale #NOSCALE
+moveCursor -2, -2
+			setColor %TIME_SELF / %TIME_RECORD, -1 + %TIME_RECORD / %TIME_SELF, 0, 1
+			drawTimer %TIME_RECORD - %TIME_SELF
+		endif
+
+		if %TIME_SELF >= %TIME_RECORD
+			// time diff negative (shadow)
+			setColor 0 0 0 1
+			drawTimer %TIME_SELF - %TIME_RECORD
+			setScale #NOSCALE
+moveCursor -14, 0
+			drawString "- "
+
+			// time diff negative
+			setScale #NOSCALE
+moveCursor 12, -2
+			setColor 1 0 0 1
+			drawTimer %TIME_SELF - %TIME_RECORD
+			setScale #NOSCALE
+moveCursor -14, 0
+			drawString "- "
+		endif
+	  endif
+	endif
+
+
+setFont "virtue_12"
+if %TIME_BEST != #NOTSET
+
+	if %RACE
+		// player best time (best lap in the race)
+		setColor 0 0 0 1
+		setAlign #CENTER, #BOTTOM
+		setScale #DEFAULTSCALE
+setCursor 102, 522
+		drawString "Best:"
+
+		setColor 0.8 0.8 0.8 1
+		setAlign #CENTER, #BOTTOM
+		setScale #DEFAULTSCALE
+setCursor 100, 520
+		drawString "Best:"
+	endif
+
+	// player best time (best lap in the race) (+shadow)
+	setColor 0 0 0 1
+	setAlign #CENTER, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 102, 542
+	drawTimer %TIME_BEST
+
+	setColor 1 1 1 1
+	setAlign #CENTER, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 100, 540
+	drawTimer %TIME_BEST
+endif
+
+if %TIME_RECORD != #NOTSET
+
+	if %RACE
+		// best time (best lap in the race)
+		setColor 0 0 0 1
+		setAlign #CENTER, #BOTTOM
+		setScale #DEFAULTSCALE
+setCursor 702, 522
+		drawString "Srv Best:"
+
+		setColor 0.8 0.8 0.8 1
+		setAlign #CENTER, #BOTTOM
+		setScale #DEFAULTSCALE
+setCursor 700, 520
+		drawString "Srv Best:"
+	endif
+
+	// best time (best lap in the race) (+shadow)
+	setColor 0 0 0 1
+	setAlign #CENTER, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 702, 542
+	drawTimer %TIME_RECORD
+
+	setColor 1 1 1 1
+	setAlign #CENTER, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 700, 540
+	drawTimer %TIME_RECORD
+endif
+
+setFont "virtue_16"
+if %TIME_ALPHA != #NOTSET
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 786, 392
+	drawString "Alpha Time:"
+
+	setColor 0.8 0.8 0.8 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 784, 390
+	drawString "Alpha Time:"
+
+	// current time (+shadow)
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 786, 408
+	drawTimer %TIME_ALPHA
+
+	setColor 1 1 1 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 784, 406
+	drawTimer %TIME_ALPHA
+endif
+
+if %TIME_BETA != #NOTSET
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 786, 444
+	drawString "Beta Time:"
+
+	setColor 0.8 0.8 0.8 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 784, 442
+	drawString "Beta Time:"
+
+	// current time (+shadow)
+	setColor 0 0 0 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 786, 460
+	drawTimer %TIME_ALPHA
+
+	setColor 1 1 1 1
+	setAlign #RIGHT, #BOTTOM
+	setScale #DEFAULTSCALE
+setCursor 784, 468
+	drawTimer %TIME_ALPHA
+endif
+endif
