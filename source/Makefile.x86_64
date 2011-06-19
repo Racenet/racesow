@@ -39,14 +39,14 @@ HOST_PREFIX=$(HOST)-
 
 CC=$(HOST_PREFIX)gcc
 CXX=$(HOST_PREFIX)g++
-LD=$(HOST_PREFIX)gcc
+LD=$(CC)
 AR=$(HOST_PREFIX)ar
 RES=$(HOST_PREFIX)windres
 RANLIB=$(HOST_PREFIX)ranlib
 
 SHARED_LIBRARY_EXTENSION=dll
 else
-ARCH=x86_64
+BASE_ARCH=x86_64
 
 ifeq ($(ARCH), x86_64)
 MACHINE=-m64
@@ -56,7 +56,7 @@ endif
 
 CC=gcc $(MACHINE)
 CXX=g++ $(MACHINE)
-LD=gcc $(MACHINE)
+LD=$(CC) $(MACHINE)
 AR=ar $(MACHINE)
 RANLIB=ranlib $(MACHINE)
 
@@ -66,8 +66,10 @@ OS=$(shell uname)
 
 ifeq ($(OS),FreeBSD)
 ARCH?=freebsd_$(BASE_ARCH)
+MAKE?=gmake
 else
 ARCH?=$(BASE_ARCH)
+MAKE?=make
 endif
 
 SHARED_LIBRARY_EXTENSION=so
@@ -125,7 +127,7 @@ endif
 ifeq ($(USE_MINGW),YES)
 CFLAGS_COMMON=-D_M_IX86 $(CFLAGS) -MD -I. -Iwin32/include -I../libsrcs/zlib -I../libsrcs/libcurl/include -D__WIN32 -D__USE_LARGEFILE -D__USE_LARGEFILE64 -mwindows -Wall -Wno-unknown-pragmas -Wno-unused-function
 CFLAGS_RELEASE=-O2 -fno-strict-aliasing -ffast-math -funroll-loops -DNDEBUG
-CFLAGS_DEBUG=-O0 -g -ggdb -D_DEBUG
+CFLAGS_DEBUG=-O0 -ggdb -D_DEBUG
 ifeq ($(DEBUG_BUILD),YES)
 CFLAGS_COMMON+=$(CFLAGS_DEBUG)
 else
@@ -181,7 +183,7 @@ X11BASE?=/usr/X11R6
 
 CFLAGS_COMMON=$(CFLAGS) -pipe -I. -I$(LOCALBASE)/include -I$(X11BASE)/include -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -Wall -Wno-unused-function
 CFLAGS_RELEASE=-O2 -fno-strict-aliasing -ffast-math -funroll-loops -DNDEBUG
-CFLAGS_DEBUG=-O0 -g -ggdb -D_DEBUG
+CFLAGS_DEBUG=-O0 -ggdb -D_DEBUG
 ifeq ($(DEBUG_BUILD),YES)
 CFLAGS_COMMON+=$(CFLAGS_DEBUG)
 else
@@ -265,6 +267,17 @@ LDFLAGS_COMMON=-arch ppc -arch i386 -framework AppKit -mmacosx-version-min=10.4 
 LDFLAGS_DED=-lz -lcurl
 LDFLAGS_QF=-framework SDL -framework Ogg -framework Vorbis 
 LDFLAGS_OPENAL=-framework OpenAL -framework Ogg -framework Vorbis
+endif
+
+##################### FreeBSD support #####################
+# At the end for the same reasons as Mac support
+ifeq ($(OS), FreeBSD)
+CFLAGS_RELEASE=-DNDEBUG
+ifeq ($(DEBUG_BUILD),YES)
+CFLAGS_COMMON+=$(CFLAGS_DEBUG)
+else
+CFLAGS_COMMON+=$(CFLAGS_RELEASE)
+endif
 endif
 
 ######################################################################################################
@@ -393,7 +406,11 @@ endif
 #########
 # GAME
 #########
+ifeq ($(USE_MINGW), YES)
+CFILES_GAME = $(filter-out game/g_dynamicmysql.c, $(wildcard game/*.c))
+else
 CFILES_GAME  = $(wildcard game/*.c)
+endif
 CFILES_GAME += $(wildcard game/ai/*.c)
 CFILES_GAME += $(wildcard gameshared/*.c)
 CFILES_GAME += qcommon/md5.c
@@ -635,7 +652,7 @@ $(ANGELSCRIPT_INC)/angelscript.h:
 
 $(ANGELSCRIPT_LIB): $(ANGELSCRIPT_INC)/angelscript.h
 	@echo "> * Building Angelscript library first"
-	@CXX=$(CXX) AR=$(AR) RANLIB=$(RANLIB) CXXFLAGS="$(CFLAGS)" make -C $(ANGELSCRIPT_PROJECT_DIR)
+	@CXX=$(CXX) AR=$(AR) RANLIB=$(RANLIB) CXXFLAGS="$(CFLAGS)" $(MAKE) -C $(ANGELSCRIPT_PROJECT_DIR)
 	@echo "> * Done building angelscript library."
 	@echo "> *********************************************************"
 	@echo "> * Continuing angelwrap building..."
@@ -644,7 +661,7 @@ compile-angelwrap: $(ANGELSCRIPT_LIB) $(OBJS_ANGELWRAP)
 link-angelwrap: $(BINDIR)/libs $(BINDIR)/libs/angelwrap_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
 clean-angelwrap:
 	@echo "  > Removing angelscript objects"
-	@CXX=$(CXX) make -C $(ANGELSCRIPT_PROJECT_DIR) clean
+	@CXX=$(CXX) $(MAKE) -C $(ANGELSCRIPT_PROJECT_DIR) clean
 	@echo "  > Removing angelwrap objects" && \
 	$(RM) $(OBJS_ANGELWRAP)
 endif
@@ -704,15 +721,15 @@ $(BINDIR)/libs/snd_qf_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_QF)
 ########
 $(BINDIR)/racesow/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_CGAME)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_CGAME)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_CGAME) $(DEF_CGAME)
 
 $(BINDIR)/racesow/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_GAME)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_GAME)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_GAME) $(DEF_GAME)
 
 $(BINDIR)/racesow/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_UI)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(DEF_UI)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_UI) $(DEF_UI)
 
 $(BINDIR)/libs/irc_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_IRC)
 	@echo "  > Linking $@" && \
