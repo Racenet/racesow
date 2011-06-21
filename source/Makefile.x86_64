@@ -48,7 +48,7 @@ SHARED_LIBRARY_EXTENSION=dll
 else
 BASE_ARCH=x86_64
 
-ifeq ($(ARCH), x86_64)
+ifeq ($(BASE_ARCH), x86_64)
 MACHINE=-m64
 else
 MACHINE=-m32

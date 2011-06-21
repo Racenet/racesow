@@ -338,6 +338,10 @@ typedef int socket_handle_t;
 #define qcdecl
 #endif
 
+#ifdef ALIGN
+#undef ALIGN
+#endif
+
 #if defined ( __GNUC__ )
 #define ALIGN( x )   __attribute__( ( aligned( x ) ) )
 #define NOINLINE     __attribute__((noinline))
