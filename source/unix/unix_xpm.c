@@ -22,6 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <string.h>
 #include <assert.h>
 
+#if defined __FreeBSD__
+#include <stdint.h>
+#endif
+
 /*
 	Die Zustaende unseres Automaten.
 */

@@ -39,7 +39,7 @@ HOST_PREFIX=$(HOST)-
 
 CC=$(HOST_PREFIX)gcc
 CXX=$(HOST_PREFIX)g++
-LD=$(HOST_PREFIX)gcc
+LD=$(CC)
 AR=$(HOST_PREFIX)ar
 RES=$(HOST_PREFIX)windres
 RANLIB=$(HOST_PREFIX)ranlib
@@ -56,7 +56,7 @@ endif
 
 CC=gcc $(MACHINE)
 CXX=g++ $(MACHINE)
-LD=gcc $(MACHINE)
+LD=$(CC) $(MACHINE)
 AR=ar $(MACHINE)
 RANLIB=ranlib $(MACHINE)
 
@@ -66,8 +66,10 @@ OS=$(shell uname)
 
 ifeq ($(OS),FreeBSD)
 ARCH?=freebsd_$(BASE_ARCH)
+MAKE?=gmake
 else
 ARCH?=$(BASE_ARCH)
+MAKE?=make
 endif
 
 SHARED_LIBRARY_EXTENSION=so
@@ -269,6 +271,17 @@ LDFLAGS_QF=-framework SDL -framework Ogg -framework Vorbis
 LDFLAGS_OPENAL=-framework OpenAL -framework Ogg -framework Vorbis
 endif
 
+##################### FreeBSD support #####################
+# At the end for the same reasons as Mac support
+ifeq ($(OS), FreeBSD)
+CFLAGS_RELEASE=-DNDEBUG
+ifeq ($(DEBUG_BUILD),YES)
+CFLAGS_COMMON+=$(CFLAGS_DEBUG)
+else
+CFLAGS_COMMON+=$(CFLAGS_RELEASE)
+endif
+endif
+
 ######################################################################################################
 # Helper functions
 ######################################################################################################
@@ -403,7 +416,6 @@ endif
 CFILES_GAME += $(wildcard game/ai/*.c)
 CFILES_GAME += $(wildcard gameshared/*.c)
 CFILES_GAME += qcommon/md5.c
-
 
 CFILES_GAME_WITHOUT_PATH= $(notdir  $(CFILES_GAME))
 OFILES_GAME=$(CFILES_GAME_WITHOUT_PATH:.c=.o)
@@ -642,7 +654,7 @@ $(ANGELSCRIPT_INC)/angelscript.h:
 
 $(ANGELSCRIPT_LIB): $(ANGELSCRIPT_INC)/angelscript.h
 	@echo "> * Building Angelscript library first"
-	@CXX=$(CXX) AR=$(AR) RANLIB=$(RANLIB) CXXFLAGS="$(CFLAGS)" make -C $(ANGELSCRIPT_PROJECT_DIR)
+	@CXX=$(CXX) AR=$(AR) RANLIB=$(RANLIB) CXXFLAGS="$(CFLAGS)" $(MAKE) -C $(ANGELSCRIPT_PROJECT_DIR)
 	@echo "> * Done building angelscript library."
 	@echo "> *********************************************************"
 	@echo "> * Continuing angelwrap building..."
@@ -651,7 +663,7 @@ compile-angelwrap: $(ANGELSCRIPT_LIB) $(OBJS_ANGELWRAP)
 link-angelwrap: $(BINDIR)/libs $(BINDIR)/libs/angelwrap_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
 clean-angelwrap:
 	@echo "  > Removing angelscript objects"
-	@CXX=$(CXX) make -C $(ANGELSCRIPT_PROJECT_DIR) clean
+	@CXX=$(CXX) $(MAKE) -C $(ANGELSCRIPT_PROJECT_DIR) clean
 	@echo "  > Removing angelwrap objects" && \
 	$(RM) $(OBJS_ANGELWRAP)
 endif

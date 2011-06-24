@@ -22,6 +22,10 @@
 
 #include "sys_net.h"
 
+#if defined __FreeBSD__
+#include <sys/socket.h>
+#endif
+
 #ifdef _WIN32
 #include "../win32/winquake.h"
 #else
