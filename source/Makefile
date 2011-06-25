@@ -39,7 +39,7 @@ HOST_PREFIX=$(HOST)-
 
 CC=$(HOST_PREFIX)gcc
 CXX=$(HOST_PREFIX)g++
-LD=$(HOST_PREFIX)gcc
+LD=$(CC)
 AR=$(HOST_PREFIX)ar
 RES=$(HOST_PREFIX)windres
 RANLIB=$(HOST_PREFIX)ranlib
@@ -48,7 +48,7 @@ SHARED_LIBRARY_EXTENSION=dll
 else
 CC?=gcc
 CXX?=g++
-LD=gcc
+LD=$(CC)
 AR=ar
 RANLIB=ranlib
 
@@ -58,8 +58,10 @@ OS=$(shell uname)
 
 ifeq ($(OS),FreeBSD)
 ARCH?=freebsd_$(BASE_ARCH)
+MAKE?=gmake
 else
 ARCH?=$(BASE_ARCH)
+MAKE?=make
 endif
 
 SHARED_LIBRARY_EXTENSION=so
@@ -247,6 +249,17 @@ LDFLAGS_COMMON=-arch ppc -arch i386 -framework AppKit -mmacosx-version-min=10.4 
 LDFLAGS_DED=-lz -lcurl
 LDFLAGS_QF=-framework SDL -framework Ogg -framework Vorbis 
 LDFLAGS_OPENAL=-framework OpenAL -framework Ogg -framework Vorbis
+endif
+
+##################### FreeBSD support #####################
+# At the end for the same reasons as Mac support
+ifeq ($(OS), FreeBSD)
+CFLAGS_RELEASE=-DNDEBUG
+ifeq ($(DEBUG_BUILD),YES)
+CFLAGS_COMMON+=$(CFLAGS_DEBUG)
+else
+CFLAGS_COMMON+=$(CFLAGS_RELEASE)
+endif
 endif
 
 ######################################################################################################
@@ -621,7 +634,7 @@ $(ANGELSCRIPT_INC)/angelscript.h:
 
 $(ANGELSCRIPT_LIB): $(ANGELSCRIPT_INC)/angelscript.h
 	@echo "> * Building Angelscript library first"
-	@CXX=$(CXX) AR=$(AR) RANLIB=$(RANLIB) CXXFLAGS="$(CFLAGS)" make -C $(ANGELSCRIPT_PROJECT_DIR)
+	@CXX=$(CXX) AR=$(AR) RANLIB=$(RANLIB) CXXFLAGS="$(CFLAGS)" $(MAKE) -C $(ANGELSCRIPT_PROJECT_DIR)
 	@echo "> * Done building angelscript library."
 	@echo "> *********************************************************"
 	@echo "> * Continuing angelwrap building..."
@@ -630,7 +643,7 @@ compile-angelwrap: $(ANGELSCRIPT_LIB) $(OBJS_ANGELWRAP)
 link-angelwrap: $(BINDIR)/libs $(BINDIR)/libs/angelwrap_$(ARCH).$(SHARED_LIBRARY_EXTENSION)
 clean-angelwrap:
 	@echo "  > Removing angelscript objects"
-	@CXX=$(CXX) make -C $(ANGELSCRIPT_PROJECT_DIR) clean
+	@CXX=$(CXX) $(MAKE) -C $(ANGELSCRIPT_PROJECT_DIR) clean
 	@echo "  > Removing angelwrap objects" && \
 	$(RM) $(OBJS_ANGELWRAP)
 endif
