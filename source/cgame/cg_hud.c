@@ -35,7 +35,7 @@ extern cvar_t *cg_clientHUD;
 cvar_t *cg_showminimap;
 cvar_t *cg_showitemtimers;
 cvar_t *cg_placebo;
-cvar_t *cg_strafeHUD;
+//cvar_t *cg_strafeHUD; //racesow - moved to cg_screen.c
 
 //=============================================================================
 
@@ -406,14 +406,10 @@ enum race_index {
 %moveangle - angle of the direction currently moving towards (-18000,18000)
 %cp1 ... %cp15 - index to use with drawCheckPoint (only use if %cpXX != #NOTSET)
 %diff_angle - difference of %mouse_x and %moveangle (%mouse_x - %moveangle)
+	moving backwards gives the same angles like moving forwards (-9000,9000)
 %strafe_angle - the optimal strafe angle based on current speed and FrameTime
-	this seems to be different in 0.6 for certain gametypes
-	maybe has something to do with the base speed
 %max_accel - the maximum possible acceleration based on current speed, same unit as %acceleration
 %rocketaccel - returns big speed differences between two frames
-
-LMTODO: strafing 
-		- dots firstly ill need the angle on map u are moving. Like before we will need tangens or contanges alpha (dun remember wich one was that) but im sure it was sth like world_x fivide by world_y. Then probably ill have to check the square function graph of biggest accel for every speed. And then we will work on it more)
 */
 
 int race_jump = 0;
@@ -421,8 +417,8 @@ int race_jump = 0;
 static int CG_GetRaceVars( void* parameter )
 {
 	int index = (qintptr)parameter;
-	int iNum;
-	vec3_t hor_vel, view_dir, an;
+	float fNum;
+	vec3_t hor_vel, an;
 
 	if( GS_MatchState() != MATCH_STATE_WARMUP && !GS_RaceGametype() )
 		return 0;
@@ -434,51 +430,35 @@ static int CG_GetRaceVars( void* parameter )
 
 		case diff_an:
 			// difference of look and move angles
-			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
-			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
-			hor_vel[2] = 0;
+			VectorSet( hor_vel, cg.predictedPlayerState.pmove.velocity[0], cg.predictedPlayerState.pmove.velocity[1], 0 );
 			VecToAngles( hor_vel, an );
-			AngleVectors( cg.predictedPlayerState.viewangles, view_dir, NULL, NULL );
-			iNum = Q_rint(100 * (cg.predictedPlayerState.viewangles[YAW] - an[YAW]));
-			while( iNum > 18000 )
-				iNum -= 36000;
-			while( iNum < -18000 )
-				iNum += 36000;
+			fNum = cg.predictedPlayerState.viewangles[YAW] - an[YAW];
 
-			// ch : check if player is moving backwards so iNum wont wrap around
-			if( DotProduct( hor_vel, view_dir ) >= 0.0 )
-				return iNum;
-
-			else if( iNum < 0 )
-				return 18000 + iNum;
-			else
-				return -18000 + iNum;
+			// forward and backward movement get the same angles
+			while ( fNum < -90 )
+				fNum += 180;
+			while ( fNum > 90 )
+				fNum -= 180;
+			return Q_rint( 100*fNum );
 
 		case strafe_an:
 			// optimal strafing angle
-			iNum = Q_rint(100 * (acos(cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED]*(1-cg.realFrameTime)/_getspeed())*180/M_PI-45) ); //maybe need to check if speed below 320 is allowed for acos
-			if (iNum > 0)
-				return iNum;
+			fNum = RAD2DEG( acos( cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED]*( 1 - cg.realFrameTime )/_getspeed() ) ) - 45;
+			if ( fNum > 0 )
+				return Q_rint( 100*fNum );
 			else
 				return 0;
 		case move_an:
 			// angle of current moving direction
-			hor_vel[0] = cg.predictedPlayerState.pmove.velocity[0];
-			hor_vel[1] = cg.predictedPlayerState.pmove.velocity[1];
-			hor_vel[2] = 0;
+			VectorSet( hor_vel, cg.predictedPlayerState.pmove.velocity[0], cg.predictedPlayerState.pmove.velocity[1], 0 );
 			VecToAngles( hor_vel, an );
-			iNum = Q_rint(100 * an[YAW]);
-			while( iNum > 18000 )
-				iNum -= 36000;
-			while( iNum < -18000 )
-				iNum += 36000;
-			return iNum;
+			return Q_rint( 100*an[YAW] );
 		case jumpspeed:
 			return race_jump;
 		case mouse_x:
-			return Q_rint(100 * cg.predictedPlayerState.viewangles[YAW]);
+			return Q_rint( 100*cg.predictedPlayerState.viewangles[YAW] );
 		case mouse_y:
-			return Q_rint(100 * cg.predictedPlayerState.viewangles[PITCH]);
+			return Q_rint( 100*cg.predictedPlayerState.viewangles[PITCH] );
 		default:
 			return STAT_NOTSET;
 	}
@@ -653,6 +633,7 @@ static const reference_numeric_t cg_numeric_references[] =
 	{ "STRAFEANGLE", CG_GetRaceVars, (void *)strafe_an },
 	{ "DIFF_ANGLE", CG_GetRaceVars, (void *)diff_an	},
 	{ "MAX_ACCEL", CG_GetMaxAccel, NULL },
+	{ "SHOW_ACCEL", CG_GetCvar, "cg_showAcceleration" },
 
 	{ "CP1", CG_GetRaceVars, (void *)cp1 },
 	{ "CP2", CG_GetRaceVars, (void *)cp2 },
