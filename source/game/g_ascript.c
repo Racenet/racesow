@@ -6470,28 +6470,6 @@ static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
         (int *)G_asGeneric_GetArgAddress(gen, 6),
         (int *)G_asGeneric_GetArgAddress(gen, 7)));
 }
-
-// RS_CheckpointsAdd
-static void asFunc_CheckpointsAdd( edict_t *ent, int cpNum, int time )
-{
-	RS_CheckpointsAdd( ent, cpNum, time );
-}
-
-static void asFunc_asGeneric_CheckpointsAdd( void *gen )
-{
-	asFunc_CheckpointsAdd( (edict_t *)G_asGeneric_GetArgAddress( gen, 0 ), (int)G_asGeneric_GetArgInt( gen, 1 ), (int)G_asGeneric_GetArgInt( gen, 2 ) );
-}
-
-// RS_CheckpointsClear
-static void asFunc_CheckpointsClear( edict_t *ent )
-{
-	RS_CheckpointsClear( ent );
-}
-
-static void asFunc_asGeneric_CheckpointsClear( void *gen )
-{
-	asFunc_CheckpointsClear( (edict_t *)G_asGeneric_GetArgAddress( gen, 0 ) );
-}
 // !racesow
 
 static int asFunc_FileLength( asstring_t *path )
@@ -7130,8 +7108,6 @@ static asglobfuncs_t asGlobFuncs[] =
     { "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
     { "bool RS_QueryPjState( int playerNum)", asFunc_RS_QueryPjState, asFunc_asGeneric_RS_QueryPjState},
     { "bool RS_ResetPjState( int playerNum)", asFunc_RS_ResetPjState, asFunc_asGeneric_RS_ResetPjState},
-    { "void RS_CheckpointsAdd( cEntity @, int cpNum, int time )", asFunc_CheckpointsAdd, asFunc_asGeneric_CheckpointsAdd },
-    { "void RS_CheckpointsClear( cEntity @ )", asFunc_CheckpointsClear, asFunc_asGeneric_CheckpointsClear },
     // !racesow
 
 	{ "cEntity @G_SpawnEntity( cString & )", asFunc_G_Spawn, asFunc_asGeneric_G_Spawn },

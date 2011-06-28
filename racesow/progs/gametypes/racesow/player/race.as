@@ -192,7 +192,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		uint personalBestTime = this.player.getBestCheckPoint(id);
 		bool noDelta = 0 == serverBestTime;
 
-        RS_CheckpointsAdd( this.player.getClient().getEnt(), id, newTime - serverBestTime );
+        addCheckpoint( id, noDelta ? 0 : ( newTime - serverBestTime ) );
         G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime )
 			+ ( noDelta ? "" : ("\n" + diffString( serverBestTime, newTime ) )) );
 
@@ -234,7 +234,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 */
 	void start()
 	{
-		RS_CheckpointsClear( this.player.getClient().getEnt() );
+		clearCheckpoints();
 		this.startTime = levelTime;
 		this.startDistance = this.player.distance;
 	}
@@ -273,5 +273,23 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		raceString += "\n";
 
 		return raceString;
+	}
+
+	/**
+	 * Add a Checkpoint for client
+	 * @param int id
+	 * @param int time difference to best time
+	 */
+	void addCheckpoint( int id, int time )
+	{
+		this.player.getClient().execGameCommand( "cpa " + id + " " + time );
+	}
+
+	/**
+	 * Clear Checkpoints for client
+	 */
+	void clearCheckpoints()
+	{
+		this.player.getClient().execGameCommand( "cpc" );
 	}
 }

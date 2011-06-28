@@ -153,6 +153,4 @@ static void RS_Irc_ConnectedListener_f( void *connected );
 void RS_VoteMapExtraHelp( edict_t *ent );
 qboolean RS_UpdateMapList(int playerNum);
 void *RS_UpdateMapList_Thread(void *in);
-void RS_CheckpointsAdd( edict_t *ent, int cpNum, int time );
-void RS_CheckpointsClear( edict_t *ent );
 
