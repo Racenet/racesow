@@ -178,7 +178,6 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 */
 	void check(int id)
 	{
-	    this.lastCheckPoint++;
 		if ( this.checkPoints[id] != 0 ) // already past this checkPoint
             return;
 
@@ -192,7 +191,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		uint personalBestTime = this.player.getBestCheckPoint(id);
 		bool noDelta = 0 == serverBestTime;
 
-        addCheckpoint( id, noDelta ? 0 : ( newTime - serverBestTime ) );
+        addCheckpoint( this.lastCheckPoint, noDelta ? 0 : ( newTime - serverBestTime ) );
         G_CenterPrintMsg( this.player.getClient().getEnt(), "Current: " + TimeToString( newTime )
 			+ ( noDelta ? "" : ("\n" + diffString( serverBestTime, newTime ) )) );
 
@@ -214,18 +213,20 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
         if ( newTime < serverBestTime || serverBestTime == 0 )
         {
-            this.player.sendAward( S_COLOR_GREEN + "#" + lastCheckPoint + " checkpoint record!" );
+            this.player.sendAward( S_COLOR_GREEN + "#" + ( this.lastCheckPoint + 1 ) + " checkpoint record!" );
         }
         else if ( newTime < personalBestTime || personalBestTime == 0 )
         {
-            this.player.sendAward( S_COLOR_YELLOW + "#" + lastCheckPoint + " checkpoint personal record!" );
+            this.player.sendAward( S_COLOR_YELLOW + "#" + ( this.lastCheckPoint + 1 ) + " checkpoint personal record!" );
         }
 
-        this.checkPointsString += S_COLOR_ORANGE + "#" + lastCheckPoint + ": "
+        this.checkPointsString += S_COLOR_ORANGE + "#" + ( this.lastCheckPoint + 1 ) + ": "
                 + S_COLOR_WHITE + TimeToString( newTime )
                 + S_COLOR_ORANGE + " Distance: " + S_COLOR_WHITE + this.getCurrentDistance()
                 + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString( personalBestTime, newTime )
                 + S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString( serverBestTime, newTime ) + "\n";
+
+	    this.lastCheckPoint++;
 	}
 
 	/**
