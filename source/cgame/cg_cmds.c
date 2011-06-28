@@ -628,9 +628,10 @@ static void CG_SC_AddAward( void )
 /*
 * CG_CheckpointsAdd
 */
-void CG_CheckpointsAdd( int cpNum, unsigned int time )
+void CG_CheckpointsAdd( int cpNum, int time )
 {
-	cg.checkpoints[cpNum] = time;
+	if ( cpNum >= 0 && cpNum < MAX_CHECKPOINTS )
+		cg.checkpoints[cpNum] = time;
 }
 
 /*
