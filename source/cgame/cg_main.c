@@ -954,6 +954,8 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 	CG_ConfigString( CS_AUTORECORDSTATE, cgs.configStrings[CS_AUTORECORDSTATE] );
 
 	CG_DemocamInit();
+
+	CG_CheckpointsClear(); //racesow
 }
 
 /*
