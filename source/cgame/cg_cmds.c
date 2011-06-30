@@ -356,6 +356,123 @@ static const char *CG_SC_AutoRecordName( void )
 	return name;
 }
 
+//racesow
+/*
+* CG_SC_RaceDemoName
+*/
+static const char *CG_SC_RaceDemoName( unsigned int raceTime )
+{
+	unsigned int hour, min, sec, milli;
+
+	static char name[MAX_STRING_CHARS];
+	char mapname[MAX_CONFIGSTRING_CHARS];
+
+	milli = raceTime;
+
+	hour = milli/3600000;
+	milli -= hour*3600000;
+	min = milli/60000;
+	milli -= min*60000;
+	sec = milli/1000;
+	milli -= sec*1000;
+
+	// lowercase mapname
+	Q_strncpyz( mapname, cgs.configStrings[CS_MAPNAME], sizeof( mapname ) );
+	Q_strlwr( mapname );
+
+	// make file name
+	// duel_year-month-day_hour-min_map_player
+	Q_snprintfz( name, sizeof( name ), "%s_%02u:%02u:%02u.%003u",
+		mapname, hour, min, sec, milli
+		);
+
+	return name;
+}
+
+enum {
+	RS_RACEDEMO_START = 0,
+	RS_RACEDEMO_STOP,
+	RS_RACEDEMO_CANCEL
+};
+
+/*
+* CG_SC_RaceDemo
+*/
+static void CG_SC_RaceDemo( int action, unsigned int raceTime )
+{
+	char *directory = "autorecord";
+//	char *demoname = "currentrace.demo";
+	const char *realname;
+	static qboolean autorecording = qfalse;
+
+	// filter out autorecord commands when playing a demo
+	if( cgs.demoPlaying )
+		return;
+
+	// avoid conflict with other autorecording
+	if ( cg_autoaction_demo->integer )
+		return;
+
+	if ( !rs_autoRaceDemo->integer )
+		return;
+
+
+	switch( action )
+	{
+	case RS_RACEDEMO_START:
+		trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
+		realname = CG_SC_AutoRecordName();
+//		CG_Printf( "CG_SC_RaceDemo: Starting recording %s\n", realname );
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s/%s silent",
+			directory, gs.gametypeName, realname ) );
+//		trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
+//				directory, demoname ) );
+		autorecording = qtrue;
+		break;
+	case RS_RACEDEMO_STOP:
+//		CG_Printf( "CG_SC_RaceDemo: Stopping recording\n" );
+		trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
+		/* renaming demo after the race is not easy!
+		if( autorecording && raceTime > 0 )
+		{
+			realname = CG_SC_RaceDemoName( raceTime );
+			CG_Printf( "CG_SC_RaceDemo: Renaming %s/%s to %s/%s.wd12 (not really)\n", directory, demoname, directory, realname );
+			//TODO: check if file "demoname" exists, rename demoname to realname
+			//TODO: best way would be to extend the stop command to take a
+			//filename as argument and then let the client do the renaming
+			//
+			//does not work:
+			//FS_MoveFile( va( "%s/%s", directory, demoname ),
+			//		va( "%s/%s", directory, realname ) );
+		}
+		*/
+		autorecording = qfalse;
+		break;
+	case RS_RACEDEMO_CANCEL:
+//		CG_Printf( "CG_SC_RaceDemo: Cancelling recording\n" );
+		trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
+		autorecording = qfalse;
+		break;
+	}
+}
+
+/*
+* RaceDemo control functions
+*/
+static void CG_SC_RaceDemoStart( void )
+{
+	CG_SC_RaceDemo( RS_RACEDEMO_START, 0 );
+}
+static void CG_SC_RaceDemoStop( void )
+{
+	CG_SC_RaceDemo( RS_RACEDEMO_STOP, atoi( trap_Cmd_Argv( 1 ) ) );
+}
+static void CG_SC_RaceDemoCancel( void )
+{
+	CG_SC_RaceDemo( RS_RACEDEMO_CANCEL, 0 );
+}
+//!racesow
+
 /*
 * CG_SC_AutoRecordAction
 */
@@ -703,6 +820,9 @@ svcmd_t cg_svcmds[] =
 	{ "aw", CG_SC_AddAward },
 	{ "cpa", CG_SC_CheckpointsAdd }, //racesow
 	{ "cpc", CG_SC_CheckpointsClear }, //racesow
+	{ "dstart", CG_SC_RaceDemoStart }, //racesow
+	{ "dstop", CG_SC_RaceDemoStop }, //racesow
+	{ "dcancel", CG_SC_RaceDemoCancel }, //racesow
 	{ "cmd", CG_SC_ExecuteText },
 
 	{ NULL }

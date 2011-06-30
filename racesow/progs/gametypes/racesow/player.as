@@ -178,6 +178,12 @@ class Racesow_Player
 	Racesow_Player_Race @lastRace;
 
 	/**
+	 * Controls the demo recording on the client
+	 * @var Racesow_Player_ClientDemo
+	 */
+	Racesow_Player_ClientDemo @demo;
+
+	/**
 	 * The weapon which was used before the noclip command, in order to restore it
 	 * @var int
 	 */
@@ -217,6 +223,7 @@ class Racesow_Player
     Racesow_Player()
     {
 		@this.auth = Racesow_Player_Auth();
+		@this.demo = Racesow_Player_ClientDemo();
     }
 
 	/**
@@ -246,6 +253,7 @@ class Racesow_Player
 		this.bestRaceTime = 0;
         this.resetAuth();
 		this.auth.setPlayer(@this);
+		this.demo.setPlayer(@this);
 		this.bestCheckPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )
 		{
@@ -521,6 +529,9 @@ class Racesow_Player
 	void onSpawn()
 	{
 	    this.isSpawned = true;
+
+	    // client should automatically cancel if already recording
+	    this.demo.start();
 	}
 
 	/**
@@ -629,6 +640,10 @@ class Racesow_Player
 		// when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
 		if ( @this.race == null || !this.race.stop() )
             return;
+
+		this.demo.setTime( this.race.getTime() );
+
+		this.demo.stop(); //TODO: execute this before the player respawns
 
         this.setLastRace(@this.race);
 
