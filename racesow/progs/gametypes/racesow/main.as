@@ -590,6 +590,8 @@ void GT_ThinkRules()
 
 		player.advanceDistance();
 
+		player.demo.think();
+
 		if( scoreboardUpdated && player.challengerList != "")//send the scoreboard to the player
 		{
             cString command = "scb \""

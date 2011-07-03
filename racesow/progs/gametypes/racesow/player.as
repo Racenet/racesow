@@ -530,6 +530,9 @@ class Racesow_Player
 	{
 	    this.isSpawned = true;
 
+	    if ( this.demo.isStopping() )
+	    	this.demo.stopNow();
+
 	    // client should automatically cancel if already recording
 	    this.demo.start();
 	}
@@ -641,9 +644,7 @@ class Racesow_Player
 		if ( @this.race == null || !this.race.stop() )
             return;
 
-		this.demo.setTime( this.race.getTime() );
-
-		this.demo.stop(); //TODO: execute this before the player respawns
+		this.demo.stop( this.race.getTime() );
 
         this.setLastRace(@this.race);
 

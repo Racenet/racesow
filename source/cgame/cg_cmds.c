@@ -358,6 +358,29 @@ static const char *CG_SC_AutoRecordName( void )
 
 //racesow
 /*
+* CG_SC_RaceDemoRename
+*/
+/* enable this, when trap_FS_MoveFile works! (untested)
+static qboolean CG_SC_RaceDemoRename( const char *src, const char *dst )
+{
+	int file;
+	char *ext = "wd";
+	int protocol = cgs.gameProtocol;
+
+	if ( !trap_FS_MoveFile( src, va( "%s.%s%d", dst, ext, protocol ) ) )
+	{
+		//workaround to create the path
+		trap_FS_FOpenFile( va( "%s.%s%d", dst, ext, protocol ), &file, FS_WRITE );
+		trap_FS_FCloseFile( file );
+
+		if ( !trap_FS_MoveFile( src, va( "%s.%s%d", dst, ext, protocol ) ) )
+			return qfalse;
+	}
+	return qtrue;
+}
+*/
+
+/*
 * CG_SC_RaceDemoName
 */
 static const char *CG_SC_RaceDemoName( unsigned int raceTime )
@@ -380,10 +403,10 @@ static const char *CG_SC_RaceDemoName( unsigned int raceTime )
 	Q_strncpyz( mapname, cgs.configStrings[CS_MAPNAME], sizeof( mapname ) );
 	Q_strlwr( mapname );
 
-	// make file name
-	// duel_year-month-day_hour-min_map_player
-	Q_snprintfz( name, sizeof( name ), "%s_%02u:%02u:%02u.%003u",
-		mapname, hour, min, sec, milli
+	// make file path
+	// "map/map_time"
+	Q_snprintfz( name, sizeof( name ), "%s/%s_%02u:%02u:%02u.%003u",
+		mapname, mapname, hour, min, sec, milli
 		);
 
 	return name;
@@ -400,8 +423,10 @@ enum {
 */
 static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 {
+	//enable this, when trap_FS_MoveFile works!
+//	char *demoname = "currentrace.rec";
+
 	char *directory = "autorecord";
-//	char *demoname = "currentrace.demo";
 	const char *realname;
 	static qboolean autorecording = qfalse;
 
@@ -420,35 +445,49 @@ static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 	switch( action )
 	{
 	case RS_RACEDEMO_START:
-		trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
+		if ( !rs_autoRaceDemo->integer )
+			break;
+		//delete "cancel", when trap_FS_MoveFile works!
+		trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
+
+		//delete this, when trap_FS_MoveFile works!
 		realname = CG_SC_AutoRecordName();
 //		CG_Printf( "CG_SC_RaceDemo: Starting recording %s\n", realname );
 		trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s/%s silent",
 			directory, gs.gametypeName, realname ) );
+
+		//enable this, when trap_FS_MoveFile works!
+//		CG_Printf( "CG_SC_RaceDemo: Starting recording %s/%s\n", directory, demoname );
 //		trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
 //				directory, demoname ) );
+
 		autorecording = qtrue;
 		break;
 	case RS_RACEDEMO_STOP:
 //		CG_Printf( "CG_SC_RaceDemo: Stopping recording\n" );
-		trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
-		/* renaming demo after the race is not easy!
+		if ( rs_autoRaceDemo->integer )
+			trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
+
 		if( autorecording && raceTime > 0 )
 		{
 			realname = CG_SC_RaceDemoName( raceTime );
-			CG_Printf( "CG_SC_RaceDemo: Renaming %s/%s to %s/%s.wd12 (not really)\n", directory, demoname, directory, realname );
-			//TODO: check if file "demoname" exists, rename demoname to realname
-			//TODO: best way would be to extend the stop command to take a
-			//filename as argument and then let the client do the renaming
-			//
-			//does not work:
-			//FS_MoveFile( va( "%s/%s", directory, demoname ),
-			//		va( "%s/%s", directory, realname ) );
+
+//			CG_Printf( "CG_SC_RaceDemo: Taking screenshot\n" );
+			if ( rs_autoRaceScreenshot->integer )
+				trap_Cmd_ExecuteText( EXEC_NOW, va( "screenshot %s/%s",
+						directory, realname ) );
+			//enable this, when trap_FS_MoveFile works!
+//			CG_Printf( "CG_SC_RaceDemo: Renaming %s/%s to %s/%s (testing)\n", directory, demoname, directory, realname );
+//			if ( rs_autoRaceDemo->integer )
+//				CG_SC_RaceDemoRename( va( "%s/%s", directory, demoname ),
+//						va( "%s/%s", directory, realname ) );
 		}
-		*/
+
 		autorecording = qfalse;
 		break;
 	case RS_RACEDEMO_CANCEL:
+		if ( !rs_autoRaceDemo->integer )
+			break;
 //		CG_Printf( "CG_SC_RaceDemo: Cancelling recording\n" );
 		trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
 		autorecording = qfalse;
