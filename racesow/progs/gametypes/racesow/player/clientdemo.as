@@ -6,7 +6,7 @@
  * @version 0.6.2
  */
 
-const int STOP_DELAY = 500;
+const int STOP_DELAY = 1000;
 
 class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 {
@@ -15,11 +15,6 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	 * @var bool
 	 */
 	bool recording;
-
-	/* stopping
-	 * @var bool
-	 */
-	bool stopping;
 
 	/* Time at finish
 	 * @var uint
@@ -32,24 +27,13 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	uint64 sendTime;
 
 	/**
-	 * Think
-	 */
-	void think()
-	{
-		if ( this.stopping && this.sendTime < levelTime )
-		{
-			this.sendStop();
-			this.stopping = false;
-		}
-	}
-
-	/**
 	 * Demo control methods
 	 */
 	void sendStop()
 	{
 		this.player.getClient().execGameCommand( "dstop " + this.time );
 		this.recording = false;
+		this.time = 0;
 	}
 	void sendStart()
 	{
@@ -60,16 +44,25 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	{
 		this.player.getClient().execGameCommand( "dcancel" );
 		this.recording = false;
+		this.time = 0;
 	}
 
 	/**
 	 * Constructor
-	 *
 	 */
 	Racesow_Player_ClientDemo()
 	{
 		this.recording = false;
-		this.stopping = false;
+		this.time = 0;
+	}
+
+	/**
+	 * Think
+	 */
+	void think()
+	{
+		if ( this.isStopping() && this.sendTime < levelTime )
+			this.sendStop();
 	}
 
 	/**
@@ -87,7 +80,9 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	 */
 	bool isStopping()
 	{
-		return this.stopping;
+		if ( this.time > 0 )
+			return true;
+		return false;
 	}
 
 	/**
@@ -104,7 +99,6 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	{
 		this.time = time;
 		this.sendTime = levelTime + STOP_DELAY;
-		this.stopping = true;
 	}
 	/**
 	 * Stop recording instantly
@@ -112,11 +106,8 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	 */
 	void stopNow()
 	{
-		if ( this.stopping )
-		{
+		if ( this.isStopping() )
 			this.sendStop();
-			this.stopping = false;
-		}
 	}
 	/**
 	 * Stop recording and delete file
@@ -124,6 +115,5 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	void cancel()
 	{
 		this.sendCancel();
-		this.stopping = false;
 	}
 }

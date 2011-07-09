@@ -404,9 +404,9 @@ static const char *CG_SC_RaceDemoName( unsigned int raceTime )
 	Q_strlwr( mapname );
 
 	// make file path
-	// "map/map_time"
-	Q_snprintfz( name, sizeof( name ), "%s/%s_%02u:%02u:%02u.%003u",
-		mapname, mapname, hour, min, sec, milli
+	// "gametype/map/map_time"
+	Q_snprintfz( name, sizeof( name ), "%s/%s/%s_%02u:%02u:%02u.%003u",
+		gs.gametypeName, mapname, mapname, hour, min, sec, milli
 		);
 
 	return name;
@@ -434,62 +434,50 @@ static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 	if( cgs.demoPlaying )
 		return;
 
-	// avoid conflict with other autorecording
-	if ( cg_autoaction_demo->integer )
-		return;
-
-	if ( !rs_autoRaceDemo->integer )
-		return;
-
 
 	switch( action )
 	{
 	case RS_RACEDEMO_START:
-		if ( !rs_autoRaceDemo->integer )
-			break;
-		//delete "cancel", when trap_FS_MoveFile works!
-		trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
+		if ( rs_autoRaceDemo->integer && !cg_autoaction_demo->integer )
+		{
+			//delete "cancel", when trap_FS_MoveFile works!
+			trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
 
-		//delete this, when trap_FS_MoveFile works!
-		realname = CG_SC_AutoRecordName();
-//		CG_Printf( "CG_SC_RaceDemo: Starting recording %s\n", realname );
-		trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s/%s silent",
-			directory, gs.gametypeName, realname ) );
+			//delete this, when trap_FS_MoveFile works!
+			realname = CG_SC_AutoRecordName();
+			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s/%s silent",
+				directory, gs.gametypeName, realname ) );
 
-		//enable this, when trap_FS_MoveFile works!
-//		CG_Printf( "CG_SC_RaceDemo: Starting recording %s/%s\n", directory, demoname );
-//		trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
-//				directory, demoname ) );
+			//enable this, when trap_FS_MoveFile works!
+//			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
+//					directory, demoname ) );
 
+		}
 		autorecording = qtrue;
 		break;
 	case RS_RACEDEMO_STOP:
-//		CG_Printf( "CG_SC_RaceDemo: Stopping recording\n" );
-		if ( rs_autoRaceDemo->integer )
+		if ( rs_autoRaceDemo->integer && !cg_autoaction_demo->integer )
 			trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
 
 		if( autorecording && raceTime > 0 )
 		{
 			realname = CG_SC_RaceDemoName( raceTime );
 
-//			CG_Printf( "CG_SC_RaceDemo: Taking screenshot\n" );
 			if ( rs_autoRaceScreenshot->integer )
-				trap_Cmd_ExecuteText( EXEC_NOW, va( "screenshot %s/%s",
+				trap_Cmd_ExecuteText( EXEC_NOW, va( "screenshot %s/%s silent",
 						directory, realname ) );
+
 			//enable this, when trap_FS_MoveFile works!
 //			CG_Printf( "CG_SC_RaceDemo: Renaming %s/%s to %s/%s (testing)\n", directory, demoname, directory, realname );
-//			if ( rs_autoRaceDemo->integer )
+//			if ( rs_autoRaceDemo->integer && !cg_autoaction_demo->integer )
 //				CG_SC_RaceDemoRename( va( "%s/%s", directory, demoname ),
 //						va( "%s/%s", directory, realname ) );
 		}
-
 		autorecording = qfalse;
 		break;
 	case RS_RACEDEMO_CANCEL:
-		if ( !rs_autoRaceDemo->integer )
-			break;
-//		CG_Printf( "CG_SC_RaceDemo: Cancelling recording\n" );
-		trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
+		if ( rs_autoRaceDemo->integer && !cg_autoaction_demo->integer )
+			trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
 		autorecording = qfalse;
 		break;
 	}
