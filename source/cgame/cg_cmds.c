@@ -405,7 +405,7 @@ static const char *CG_SC_RaceDemoName( unsigned int raceTime )
 
 	// make file path
 	// "gametype/map/map_time"
-	Q_snprintfz( name, sizeof( name ), "%s/%s/%s_%02u:%02u:%02u.%003u",
+	Q_snprintfz( name, sizeof( name ), "%s/%s/%s_%02u-%02u-%02u-%003u",
 		gs.gametypeName, mapname, mapname, hour, min, sec, milli
 		);
 
