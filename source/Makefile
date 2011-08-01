@@ -9,22 +9,22 @@ DEBUG_BUILD?=NO
 USE_MINGW?=NO
 
 # client and dedicated server binaries
-BUILD_CLIENT?=YES
+BUILD_CLIENT?=NO
 BUILD_SERVER?=YES
 
 # engine modules
 BUILD_IRC?=YES
-BUILD_SND_QF?=YES
-BUILD_SND_OPENAL?=YES
+BUILD_SND_QF?=NO
+BUILD_SND_OPENAL?=NO
 
 # game modules
 BUILD_CGAME?=YES
 BUILD_GAME?=YES
 BUILD_UI?=YES
-BUILD_ANGELWRAP=YES
+BUILD_ANGELWRAP=NO
 
 # Warsow TV
-BUILD_TV_SERVER?=YES
+BUILD_TV_SERVER?=NO
 
 # Build Warsow client without server capabilities?
 BUILD_THIN_CLIENT?=NO
@@ -479,16 +479,16 @@ OBJS_TV_SERVER = $(addprefix $(BUILDDIR)/tv_server/, $(OFILES_TV_SERVER) )
 # Building Rules
 ######################################################################################################
 .PHONY: all \
-	client message-client compile-client link-client \
+	client message-client compile-client link-client start-script-client \
 	openal message-openal compile-openal link-openal  \
 	qf message-qf compile-qf link-qf  \
-	ded message-ded compile-ded link-ded  \
+	ded message-ded compile-ded link-ded start-script-ded \
 	game message-game compile-game link-game  \
 	cgame message-cgame compile-cgame link-cgame  \
 	ui message-ui compile-ui link-ui  \
 	irc message-irc compile-irc link-irc \
 	angelwrap message-angelwrap compile-angelwrap link-angelwrap \
-	tv_server message-tv_server compile-tv_server link-tv_server  \
+	tv_server message-tv_server compile-tv_server link-tv_server start-script-tv_server \
 	clean clean-depend clean-client clean-openal clean-qf clean-ded \
 	clean-cgame clean-game clean-ui clean-irc clean-angelwrap clean-game clean-tv_server \
 	compile
