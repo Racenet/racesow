@@ -1072,3 +1072,7 @@ void DRACE_SetUpEndMatch()
     int soundIndex = G_SoundIndex( "sounds/announcer/postmatch/game_over0" + int( brandom( 1, 2 ) ) );
     G_AnnouncerSound( null, soundIndex, GS_MAX_TEAMS, true, null );
 }
+
+Racesow_Gametype@ getRacesowGametype() {
+    return @Racesow_Gametype_Drace();
+}

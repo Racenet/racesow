@@ -410,3 +410,7 @@ void TRACE_InitGametype()
   
   gametype.hasChallengersQueue = false;
 }
+
+Racesow_Gametype@ getRacesowGametype() {
+    return @Racesow_Gametype_Durace();
+}

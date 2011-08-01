@@ -888,29 +888,7 @@ void GT_InitGametype()
 	// load maps list (basic or mysql)
 	RS_LoadMapList( gametypeFlag & MODFLAG_FREESTYLE );
 
-    switch (gametypeFlag)
-    {
-      case MODFLAG_DRACE:
-          @racesowGametype = @Racesow_Gametype_Drace();
-          break;
-
-      case MODFLAG_TRACE:
-      case MODFLAG_DURACE:
-          @racesowGametype = @Racesow_Gametype_Durace();
-          break;
-
-      case MODFLAG_RACE:
-          @racesowGametype = @Racesow_Gametype_Race();
-          break;
-
-      case MODFLAG_FREESTYLE:
-          @racesowGametype = @Racesow_Gametype_Freestyle();
-          break;
-
-       default:
-          @racesowGametype = @Racesow_Gametype_Race();
-          break;
-    }
+    @racesowGametype = @getRacesowGametype();
 
 	racesowGametype.InitGametype();
 }

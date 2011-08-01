@@ -240,3 +240,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         return false;
     }
 }
+
+Racesow_Gametype@ getRacesowGametype() {
+    return @Racesow_Gametype_Freestyle();
+}
