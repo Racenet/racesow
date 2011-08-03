@@ -221,3 +221,5 @@ class Racesow_Gametype_Race : Racesow_Gametype
 Racesow_Gametype@ getRacesowGametype() {
     return @Racesow_Gametype_Race();
 }
+
+Racesow_Player[] players( maxClients );

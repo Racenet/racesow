@@ -414,3 +414,19 @@ void TRACE_InitGametype()
 Racesow_Gametype@ getRacesowGametype() {
     return @Racesow_Gametype_Durace();
 }
+
+class Racesow_Player_Durace : Racesow_Player
+{
+    void touchStopTimer_gametype()
+    {
+        this.client.stats.addScore( 1 );
+        //G_GetTeam( this.client.getEnt().team ).stats.setScore( this.client.stats.score );
+        G_GetTeam( this.client.getEnt().team ).stats.addScore( 1 );
+        this.raceCallback(0,0,0,
+                          this.bestRaceTime,
+                          map.getHighScore().getTime(),
+                          this.race.getTime());
+    }
+}
+
+Racesow_Player_Durace[] players( maxClients );

@@ -244,3 +244,20 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
 Racesow_Gametype@ getRacesowGametype() {
     return @Racesow_Gametype_Freestyle();
 }
+
+class Racesow_Player_Freestyle : Racesow_Player
+{
+    //Override the Race gametype functions with dummy functions
+    void touchStartTimer() { }
+
+    void touchCheckPoint( int id ) { }
+
+    void touchStopTimer() { }
+
+    void restartRace() { }
+
+    //This is just for consistency it'll never be called
+    void touchStopTimer_gametype() { }
+}
+
+Racesow_Player_Freestyle[] players( maxClients );

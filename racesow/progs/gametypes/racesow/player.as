@@ -622,6 +622,15 @@ class Racesow_Player
 		this.race.check( id );
     }
 
+    void touchStopTimer_gametype()
+    {
+        if ( this.bestRaceTime == 0 || this.race.getTime() < this.bestRaceTime )
+        {
+            this.getClient().stats.setScore(this.race.getTime()/100);
+        }
+        racesowAdapter.raceFinish(@this.race);
+    }
+
 	/**
 	 * touchStopTimer
 	 * @return void
@@ -648,49 +657,7 @@ class Racesow_Player
 
         this.setLastRace(@this.race);
 
-		switch (gametypeFlag) {
-            case MODFLAG_DRACE:
-                // we kill the player who lost
-                if (@DRACERound.roundChallenger != null) {
-                    if (@this.client == @DRACERound.roundWinner)
-                        DRACERound.roundChallenger.getEnt().health = -1;
-                }
-
-                if (@DRACERound.roundWinner != null) {
-                    if (@this.client == @DRACERound.roundChallenger)
-                        DRACERound.roundWinner.getEnt().health = -1;
-                }
-
-                this.raceCallback(0,0,0,
-                                    this.bestRaceTime,
-                                    map.getHighScore().getTime(),
-                                    this.race.getTime());
-
-                break;
-
-            case MODFLAG_TRACE:
-            case MODFLAG_DURACE:
-                this.client.stats.addScore( 1 );
-                //G_GetTeam( this.client.getEnt().team ).stats.setScore( this.client.stats.score );
-                G_GetTeam( this.client.getEnt().team ).stats.addScore( 1 );
-                this.raceCallback(0,0,0,
-                                    this.bestRaceTime,
-                                    map.getHighScore().getTime(),
-                                    this.race.getTime());
-
-                break;
-
-            case MODFLAG_RACE:
-                if ( this.bestRaceTime == 0 || this.race.getTime() < this.bestRaceTime )
-                {
-                    this.getClient().stats.setScore(this.race.getTime()/100);
-                }
-                racesowAdapter.raceFinish(@this.race);
-                break;
-
-            default:
-                break;
-        }
+        touchStopTimer_gametype();
 
 		this.isSpawned = false;
 		this.racingTime += this.race.getTime();

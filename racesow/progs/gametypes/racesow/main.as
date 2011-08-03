@@ -16,7 +16,7 @@ bool scoreboardUpdated = false; //GT_ScoreboardMessage got called
 
 cString previousMapName; // to remember the previous map on the server
 
-Racesow_Player[] players( maxClients );
+//Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 Racesow_Adapter_Abstract @racesowAdapter;
 Racesow_Gametype @racesowGametype;

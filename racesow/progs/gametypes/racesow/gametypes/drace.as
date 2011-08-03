@@ -1076,3 +1076,41 @@ void DRACE_SetUpEndMatch()
 Racesow_Gametype@ getRacesowGametype() {
     return @Racesow_Gametype_Drace();
 }
+
+class Racesow_Player_Drace : Racesow_Player
+{
+    void touchStopTimer_gametype()
+    {
+        // we kill the player who lost
+        if (@DRACERound.roundChallenger != null) {
+            if (@this.client == @DRACERound.roundWinner)
+                DRACERound.roundChallenger.getEnt().health = -1;
+            }
+
+            if (@DRACERound.roundWinner != null) {
+                if (@this.client == @DRACERound.roundChallenger)
+                    DRACERound.roundWinner.getEnt().health = -1;
+            }
+
+            this.raceCallback(0,0,0,
+                              this.bestRaceTime,
+                              map.getHighScore().getTime(),
+                              this.race.getTime());
+    }
+
+    /**
+	 * restartRace
+	 * @return void
+	 * for raceRestart and practicing mode.
+	 */
+	void restartRace()
+	{
+        if ( @this.client != null )
+        {
+            this.cancelRace();
+            this.client.respawn( false );
+        }
+	}
+}
+
+Racesow_Player_Drace[] players( maxClients );
