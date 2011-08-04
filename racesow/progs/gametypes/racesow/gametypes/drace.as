@@ -541,15 +541,16 @@ cDRACERound DRACERound;
 
 class Racesow_Gametype_Drace : Racesow_Gametype
 {
-    
     Racesow_Gametype_Drace()
     {
-        
+        this.players = Racesow_Player@[](maxClients);
+        for( int i= 0; i < maxClients; i++ )
+            @this.players[i] = @Racesow_Player_Drace();
     }
     
     ~Racesow_Gametype_Drace()
     {
-        
+
     }
     
     void InitGametype()
@@ -1112,5 +1113,3 @@ class Racesow_Player_Drace : Racesow_Player
         }
 	}
 }
-
-Racesow_Player_Drace[] players( maxClients );

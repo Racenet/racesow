@@ -1416,7 +1416,7 @@ class Racesow_Player
             map.cancelOvertime();
             for ( int i = 0; i < maxClients; i++ )
             {
-                players[i].cancelOvertime();
+                racesowGametype.players[i].cancelOvertime();
             }
             showNotification = true;
         }

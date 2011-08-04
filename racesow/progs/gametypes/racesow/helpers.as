@@ -134,7 +134,7 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
     if ( @client == null || client.playerNum() < 0 )
         return null;
 
-    return @players[ client.playerNum() ].setClient( @client );
+    return @racesowGametype.players[ client.playerNum() ].setClient( @client );
 }
 
 /**
@@ -147,7 +147,7 @@ Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
     if ( playerNum < 0 )
         return null;
 
-    return @players[ playerNum ];
+    return @racesowGametype.players[ playerNum ];
 }
 
 

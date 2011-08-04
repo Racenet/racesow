@@ -159,11 +159,11 @@ class Racesow_Map
 
         for ( int i = 0; i < maxClients; i++ )
         {
-            if ( @players[i] != null &&
-                 @players[i].getClient() != null &&
-                 players[i].isRacing() )
+            if ( @racesowGametype.players[i] != null &&
+                 @racesowGametype.players[i].getClient() != null &&
+                 racesowGametype.players[i].isRacing() )
             {
-                players[i].startOvertime();
+                racesowGametype.players[i].startOvertime();
                 numRacing++;
             }
         }
@@ -193,27 +193,27 @@ class Racesow_Map
 		uint numInOvertime = 0;
         for ( int i = 0; i < maxClients; i++ )
         {
-            if (@players[i] != null &&
-                @players[i].getClient() != null &&
-                players[i].getClient().team != TEAM_SPECTATOR &&
-                players[i].inOvertime) {
+            if (@racesowGametype.players[i] != null &&
+                @racesowGametype.players[i].getClient() != null &&
+                racesowGametype.players[i].getClient().team != TEAM_SPECTATOR &&
+                racesowGametype.players[i].inOvertime) {
                  
-                if ( players[i].getSpeed() == 0 )
+                if ( racesowGametype.players[i].getSpeed() == 0 )
                 {
-                    if ( !players[i].startedIdling() )
+                    if ( !racesowGametype.players[i].startedIdling() )
                     {
-                        players[i].startIdling();
+                        racesowGametype.players[i].startIdling();
                     }
                 }
-                else if ( players[i].startedIdling() )
+                else if ( racesowGametype.players[i].startedIdling() )
                 {
-                    players[i].stopIdling();
+                    racesowGametype.players[i].stopIdling();
                 }
 
-                if ( players[i].startedIdling() && players[i].getIdleTime()  > 5000 )
+                if ( racesowGametype.players[i].startedIdling() && racesowGametype.players[i].getIdleTime()  > 5000 )
                 {
-					players[i].remove("You have been moved to spectators because you were idle during overtime.");
-                    players[i].cancelRace();
+					racesowGametype.players[i].remove("You have been moved to spectators because you were idle during overtime.");
+                    racesowGametype.players[i].cancelRace();
                 }
                 else
                 {

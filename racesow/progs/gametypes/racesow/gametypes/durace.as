@@ -3,12 +3,14 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     
     Racesow_Gametype_Durace()
     {
-        
+        this.players = Racesow_Player@[](maxClients);
+        for( int i= 0; i < maxClients; i++ )
+            @this.players[i] = @Racesow_Player_Durace();
     }
     
     ~Racesow_Gametype_Durace()
     {
-        
+
     }
     
     void InitGametype()
@@ -411,10 +413,6 @@ void TRACE_InitGametype()
   gametype.hasChallengersQueue = false;
 }
 
-Racesow_Gametype@ getRacesowGametype() {
-    return @Racesow_Gametype_Durace();
-}
-
 class Racesow_Player_Durace : Racesow_Player
 {
     void touchStopTimer_gametype()
@@ -429,4 +427,6 @@ class Racesow_Player_Durace : Racesow_Player
     }
 }
 
-Racesow_Player_Durace[] players( maxClients );
+Racesow_Gametype@ getRacesowGametype() {
+    return @Racesow_Gametype_Durace();
+}

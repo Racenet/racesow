@@ -16,7 +16,6 @@ bool scoreboardUpdated = false; //GT_ScoreboardMessage got called
 
 cString previousMapName; // to remember the previous map on the server
 
-//Racesow_Player[] players( maxClients );
 Racesow_Map @map;
 Racesow_Adapter_Abstract @racesowAdapter;
 Racesow_Gametype @racesowGametype;
@@ -122,13 +121,13 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
                 cString victim = argsString.getToken( 1 );
 
                 if ( Racesow_GetClientNumber( victim ) != -1 )
-                    @victimPlayer = players[ Racesow_GetClientNumber( victim ) ];
+                    @victimPlayer = racesowGametype.players[ Racesow_GetClientNumber( victim ) ];
                 else if( victim.isNumerical() )
                 {
                     if ( victim.toInt() > maxClients )
                         return true;
                     else
-                        @victimPlayer = players[ victim.toInt() ];
+                        @victimPlayer = racesowGametype.players[ victim.toInt() ];
                 }
                 else
                     return true;
@@ -215,8 +214,8 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
     		for ( int i = 0; i < maxClients; i++ )
     		{
-    		  if ( @players[i].getClient() != null )
-            client.printMessage( "  " + players[i].getClient().playerNum() + ": " + players[i].getClient().getName() + "\n");
+    		  if ( @racesowGametype.players[i].getClient() != null )
+            client.printMessage( "  " + racesowGametype.players[i].getClient().playerNum() + ": " + racesowGametype.players[i].getClient().getName() + "\n");
         }
 
        	return false;
@@ -255,7 +254,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
       map.cancelOvertime();
 			for ( int i = 0; i < maxClients; i++ )
 			{
-					players[i].cancelOvertime();
+					racesowGametype.players[i].cancelOvertime();
 			}
     }
 
@@ -276,9 +275,9 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 		{
 				for ( int i = 0; i < maxClients; i++ )
 				{
-					if ( @players[i].getClient() != null )
+					if ( @racesowGametype.players[i].getClient() != null )
 					{
-						players[i].moveToSpec( S_COLOR_RED + "You have been moved to spec cause you were playing in overtime.\n");
+						racesowGametype.players[i].moveToSpec( S_COLOR_RED + "You have been moved to spec cause you were playing in overtime.\n");
 					}
 				}
 
@@ -376,7 +375,7 @@ cString @GT_ScoreboardMessage( int maxlen )
     {
         for ( int i = 0; i < maxClients; i++ )
         {
-            players[i].challengerList = "";
+            racesowGametype.players[i].challengerList = "";
         }
         cTeam @spectators = @G_GetTeam( TEAM_SPECTATOR );
         cEntity @other;
@@ -398,7 +397,7 @@ cString @GT_ScoreboardMessage( int maxlen )
                 if( other.client.chaseActive && other.client.chaseTarget != 0)
                     //add him to the challenger list of the player he's spectating
                 {
-                    Racesow_Player @player = players[other.client.chaseTarget-1];
+                    Racesow_Player @player = racesowGametype.players[other.client.chaseTarget-1];
                     player.challengerList += other.client.playerNum() + " " + other.client.ping + " ";
                 }
             }
@@ -696,10 +695,10 @@ void GT_Shutdown()
     }
 
     for ( int i = 0; i < maxClients; i++ )
-		if ( @players[i].getClient() != null )
+		if ( @racesowGametype.players[i].getClient() != null )
 		{
 		    // run it unthreaded to prevent a mysql crash
-			players[i].disappear(players[i].getName(),false);
+			racesowGametype.players[i].disappear(racesowGametype.players[i].getName(),false);
 		}
 
     racesowGametype.Shutdown();
@@ -733,7 +732,7 @@ void GT_SpawnGametype()
 
 	// setup players
     for ( int i = 0; i < maxClients; i++ )
-        players[i].reset();
+        racesowGametype.players[i].reset();
 
     for ( int i = 0; i <= numEntities; i++ )
     {

@@ -1,14 +1,15 @@
 class Racesow_Gametype_Freestyle : Racesow_Gametype
 {
-    
     Racesow_Gametype_Freestyle()
     {
-        
+        this.players = Racesow_Player@[](maxClients);
+        for( int i= 0; i < maxClients; i++ )
+            @this.players[i] = @Racesow_Player_Freestyle();
     }
     
     ~Racesow_Gametype_Freestyle()
     {
-        
+
     }
     
     void InitGametype()
@@ -259,5 +260,3 @@ class Racesow_Player_Freestyle : Racesow_Player
     //This is just for consistency it'll never be called
     void touchStopTimer_gametype() { }
 }
-
-Racesow_Player_Freestyle[] players( maxClients );
