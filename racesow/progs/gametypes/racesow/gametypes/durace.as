@@ -3,7 +3,6 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     
     Racesow_Gametype_Durace()
     {
-        this.players = Racesow_Player@[](maxClients);
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Durace();
     }

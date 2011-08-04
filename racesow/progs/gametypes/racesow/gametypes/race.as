@@ -2,7 +2,6 @@ class Racesow_Gametype_Race : Racesow_Gametype
 {
     Racesow_Gametype_Race()
     {
-        this.players = Racesow_Player@[](maxClients);
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player();
     }
