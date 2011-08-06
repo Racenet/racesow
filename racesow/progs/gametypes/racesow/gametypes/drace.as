@@ -974,6 +974,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       	{
             cString vote = argsString.getToken( 0 );
       
+
             if ( vote == "draw" )
             {
               if ( @DRACERound.roundWinner != null )

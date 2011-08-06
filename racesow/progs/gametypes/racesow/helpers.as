@@ -3,6 +3,23 @@
  */
 
 /**
+ * Print the Message when the Test fails and abort the Gametype by using a nullpointer access (dirty hack!)
+ *
+ * @param test The Test or Condition which will be used
+ * @param msg The Message which is printed when the test fails
+ */
+void assert( const bool test, const cString msg )
+{
+	if ( !test )
+	{
+        cString@ assertstring;
+		G_Print( S_COLOR_RED + "assert failed [" + gametype.getName() + " " + gametype.getVersion() + "]: " + "\n" );
+        G_Print( S_COLOR_RED + msg + "\n");
+        assertstring.length();
+	}
+}
+
+/**
  * Print the diff string beteween two times.
  * The diff colors change according to which time is best.
  * If the first time is 0 then we consider that the diff doesn't make sense
