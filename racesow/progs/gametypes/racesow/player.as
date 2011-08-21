@@ -532,8 +532,9 @@ class Racesow_Player
 
 	    if ( this.demo.isStopping() )
 	    	this.demo.stopNow();
+	    else if ( this.demo.isRecording() )
+	    	this.demo.cancel();
 
-	    // client should automatically cancel if already recording
 	    this.demo.start();
 	}
 

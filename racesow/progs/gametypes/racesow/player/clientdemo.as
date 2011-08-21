@@ -6,7 +6,8 @@
  * @version 0.6.2
  */
 
-const int STOP_DELAY = 1000;
+const uint CLIENTDEMO_STOP_DELAY = 1000;
+const uint CLIENTDEMO_COMMAND_DELAY = 200;
 
 class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 {
@@ -16,15 +17,25 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	 */
 	bool recording;
 
+	/* Indicates if the start command is in queue
+	 * @var bool
+	 */
+	bool starting;
+
 	/* Time at finish
 	 * @var uint
 	 */
 	uint time;
 
-	/* Timestamp at which the stop command will be sent (based on levelTime)
-	 * @var uint64
+	/* Timestamp at which the stop command will be sent (based on realTime)
+	 * @var uint
 	 */
-	uint64 sendTime;
+	uint stopTime;
+
+	/* Timestamp at which the last command was sent (based on realTime)
+	 * @var uint
+	 */
+	uint lastCommandTime;
 
 	/**
 	 * Demo control methods
@@ -32,17 +43,21 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	void sendStop()
 	{
 		this.player.getClient().execGameCommand( "dstop " + this.time );
+		this.lastCommandTime = realTime;
 		this.recording = false;
 		this.time = 0;
 	}
 	void sendStart()
 	{
 		this.player.getClient().execGameCommand( "dstart" );
+		this.lastCommandTime = realTime;
 		this.recording = true;
+		this.starting = false;
 	}
 	void sendCancel()
 	{
 		this.player.getClient().execGameCommand( "dcancel" );
+		this.lastCommandTime = realTime;
 		this.recording = false;
 		this.time = 0;
 	}
@@ -53,7 +68,10 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	Racesow_Player_ClientDemo()
 	{
 		this.recording = false;
+		this.starting = false;
 		this.time = 0;
+		this.stopTime = 0;
+		this.lastCommandTime = 0;
 	}
 
 	/**
@@ -61,8 +79,13 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	 */
 	void think()
 	{
-		if ( this.isStopping() && this.sendTime < levelTime )
-			this.sendStop();
+		if( this.lastCommandTime + CLIENTDEMO_COMMAND_DELAY < realTime )
+		{
+			if( this.isStopping() && this.stopTime < realTime )
+				this.sendStop();
+			if( this.isStarting() )
+				this.sendStart();
+		}
 	}
 
 	/**
@@ -75,22 +98,36 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	}
 
 	/**
-	 * Check if the stop command is sending
+	 * Check if the start command is in queue
+	 * @return bool
+	 */
+	bool isStarting()
+	{
+		return this.starting;
+	}
+
+	/**
+	 * Check if the stop command is in queue
 	 * @return bool
 	 */
 	bool isStopping()
 	{
-		if ( this.time > 0 )
-			return true;
-		return false;
+		return ( this.time > 0 );
 	}
 
 	/**
 	 * Start recording
+	 * @return bool
 	 */
-	void start()
+	bool start()
 	{
-		this.sendStart();
+		if( this.isRecording() || this.isStarting() )
+			return false;
+		if( this.isStopping() )
+			this.stopNow();
+		this.starting = true;
+		this.think();
+		return true;
 	}
 	/**
 	 * Stop recording (delayed)
@@ -98,7 +135,7 @@ class Racesow_Player_ClientDemo : Racesow_Player_Implemented
 	void stop( uint time )
 	{
 		this.time = time;
-		this.sendTime = levelTime + STOP_DELAY;
+		this.stopTime = realTime + CLIENTDEMO_STOP_DELAY;
 	}
 	/**
 	 * Stop recording instantly
