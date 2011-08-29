@@ -7189,7 +7189,7 @@ static asglobproperties_t asGlobProps[] =
 	{ "const uint levelTime", &level.time },
 	{ "const uint frameTime", &game.frametime },
 	{ "const uint realTime", &game.realtime },
-	//{ "const uint serverTime", &game.serverTime }, // I think this one isn't script business
+	{ "const uint serverTime", &game.serverTime }, // I think this one IS script business
 	{ "const uint64 localTime", &game.localTime },
 	{ "const int maxEntities", &game.maxentities },
 	{ "const int numEntities", &game.numentities },
