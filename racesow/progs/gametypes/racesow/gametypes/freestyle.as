@@ -4,6 +4,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Freestyle();
+        ammoSwitch = true;
     }
     
     ~Racesow_Gametype_Freestyle()
@@ -49,6 +50,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
 
     	// disallow warmup, no matter what config files say, because it's bad for racesow timelimit.
       g_warmup_timelimit.set("0"); //g_warmup_enabled was removed in warsow 0.6
+      g_allowammoswitch.set("1");
       
       G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 152 %s 90 %l 48" );
       G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Ping" );
@@ -247,6 +249,11 @@ Racesow_Gametype@ getRacesowGametype() {
 
 class Racesow_Player_Freestyle : Racesow_Player
 {
+    Racesow_Player_Freestyle()
+    {
+        this.Blocking = true;
+    }
+
     //Override the Race gametype functions with dummy functions
     void touchStartTimer() { }
 

@@ -4,10 +4,12 @@
 class Racesow_Gametype
 {
     Racesow_Player@[] players;
+    bool ammoSwitch;
 
     Racesow_Gametype() 
     {
         this.players = Racesow_Player@[](maxClients);
+        ammoSwitch = false;
     }
 
     ~Racesow_Gametype() 
@@ -20,6 +22,8 @@ class Racesow_Gametype
     void SpawnGametype() { }
     
     void Shutdown() { }
+
+    bool ammoSwitchAllowed() { return ammoSwitch; }
     
     bool MatchStateFinished( int incomingMatchState )
     {

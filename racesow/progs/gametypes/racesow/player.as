@@ -216,6 +216,11 @@ class Racesow_Player
 	cVec3 positionAngles; //stored angles
 	int positionWeapon; //stored weapon
 
+    /**
+     * Determines if the player normally blocks others
+     */
+    bool Blocking;
+
 	/**
 	 * Constructor
 	 *
@@ -224,6 +229,7 @@ class Racesow_Player
     {
 		@this.auth = Racesow_Player_Auth();
 		@this.demo = Racesow_Player_ClientDemo();
+        this.Blocking = false;
     }
 
 	/**
@@ -549,6 +555,15 @@ class Racesow_Player
 		return this.race.inRace();
 	}
 
+    /**
+     * Checks if the player is blocking others.
+     * @return bool
+     */
+    bool isBlocking()
+    {
+        return this.Blocking;
+    }
+
 	/**
 	 * Get the player current speed
 	 */
@@ -585,9 +600,6 @@ class Racesow_Player
 
 		if ( this.isRacing() )
             return;
-
-		if ( gametypeFlag == MODFLAG_FREESTYLE )
-			return;
 
 		if ( this.practicing )
 			return;
@@ -679,20 +691,12 @@ class Racesow_Player
 	 */
 	void restartRace()
 	{
-		if ( @this.client != null )
-    {
-      if ( gametypeFlag == MODFLAG_DURACE )
-      {
-        this.cancelRace();
-        this.client.respawn( false );
-      }
-      else
-      {
-        this.client.team = TEAM_PLAYERS;
-        this.client.respawn( false );
-      }
+	    if ( @this.client != null )
+        {
+            this.client.team = TEAM_PLAYERS;
+            this.client.respawn( false );
+        }
     }
-	}
 
 	/**
 	 * restartingRace
@@ -916,7 +920,7 @@ class Racesow_Player
 			cVec3 mins, maxs;
 			ent.getSize(mins, maxs);
 			cTrace tr;
-			if(	gametypeFlag == MODFLAG_FREESTYLE && tr.doTrace( origin, mins, maxs, origin, 0, MASK_PLAYERSOLID ))
+			if(	this.isBlocking() && tr.doTrace( origin, mins, maxs, origin, 0, MASK_PLAYERSOLID ))
 			{
 				cEntity @other = @G_GetEntity(tr.entNum);
 				if(@other == @ent)
@@ -1210,7 +1214,7 @@ class Racesow_Player
 	 */
 	bool ammoSwitch(  )
 	{
-		if ( gametypeFlag == MODFLAG_FREESTYLE || g_allowammoswitch.getBool() )
+		if ( racesowGametype.ammoSwitchAllowed() || g_allowammoswitch.getBool() )
 		{
 			if ( @this.client.getEnt() == null )
 			{
@@ -1550,7 +1554,7 @@ class Racesow_Player
 	        }
 	    }
 
-		if ( command.practiceEnabled && gametypeFlag != MODFLAG_FREESTYLE )
+		if ( command.practiceEnabled && gametypeFlag != MODFLAG_FREESTYLE ) //FIXME: Think of how to change the command system to get rid of this modflag check
 		{
 			// if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
 			// i guess we'll have a better solution to this when the new command system is up.

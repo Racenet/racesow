@@ -424,6 +424,15 @@ class Racesow_Player_Durace : Racesow_Player
                           map.getHighScore().getTime(),
                           this.race.getTime());
     }
+
+	void restartRace()
+	{
+	    if ( @this.client != null )
+        {
+            this.cancelRace();
+            this.client.respawn( false );
+        }
+    }
 }
 
 Racesow_Gametype@ getRacesowGametype() {
