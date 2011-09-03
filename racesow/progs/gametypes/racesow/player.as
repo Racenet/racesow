@@ -1533,35 +1533,4 @@ class Racesow_Player
         }
         return true;
     }
-
-	/**
-	 * execute a Racesow_Command
-	 * @param command Command to execute
-	 * @param argsString Arguments passed to the command
-	 * @param argc Number of arguments
-	 * @return Success boolean
-	 */
-	bool executeCommand(Racesow_Command@ command, cString &argsString, int argc)
-	{
-	    if(command.validate(@this, argsString, argc))
-	    {
-	        if(command.execute(@this, argsString, argc))
-	            return true;
-	        else
-	        {
-	            this.sendMessage(command.getUsage());
-	            return false;
-	        }
-	    }
-
-		if ( command.practiceEnabled && gametypeFlag != MODFLAG_FREESTYLE ) //FIXME: Think of how to change the command system to get rid of this modflag check
-		{
-			// if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
-			// i guess we'll have a better solution to this when the new command system is up.
-			this.sendErrorMessage( "The " + command.name + " command is only available in practice mode." );
-			return true;
-		}
-	    this.sendMessage(command.getUsage());
-	    return true;
-	}
 }

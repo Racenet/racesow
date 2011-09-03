@@ -4,6 +4,31 @@ class Racesow_Gametype_Race : Racesow_Gametype
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player();
+        //FIXME: These will hopefully be useable with the new angelscript version
+        /*@this.commandMap["join"] = @Command_Join();
+        @this.commandMap["spec"] = @Command_Spec();
+        @this.commandMap["chase"] = @Command_Chase();
+        @this.commandMap["racerestart"] = @Command_RaceRestart();
+        @this.commandMap["kill"] = @Command_Kill();
+        @this.commandMap["oneliner"] = @Command_Oneliner();
+        @this.commandMap["position"] = @Command_Position();
+        @this.commandMap["noclip"] = @Command_Noclip();
+        @this.commandMap["machinegun"] = @Command_Machinegun();
+        @this.commandMap["timeleft"] = @Command_Timeleft();
+        @this.commandMap["top"] = @Command_Top();
+        @this.commandMap["practicemode"] = @Command_Practicemode();*/
+        commandMap.set_opIndex("join", @Command_Join());
+        commandMap.set_opIndex("spec", @Command_Spec());
+        commandMap.set_opIndex("chase", @Command_Chase());
+        commandMap.set_opIndex("racerestart", @Command_RaceRestart());
+        commandMap.set_opIndex("kill", @Command_Kill());
+        commandMap.set_opIndex("oneliner", @Command_Oneliner());
+        commandMap.set_opIndex("position", @Command_Position());
+        commandMap.set_opIndex("noclip", @Command_Noclip());
+        commandMap.set_opIndex("machinegun", @Command_Machinegun());
+        commandMap.set_opIndex("timeleft", @Command_Timeleft());
+        commandMap.set_opIndex("top", @Command_Top());
+        commandMap.set_opIndex("practicemode", @Command_Practicemode());
     }
     
     ~Racesow_Gametype_Race()
@@ -211,10 +236,13 @@ class Racesow_Gametype_Race : Racesow_Gametype
     {
         return false;// let the default code handle it itself
     }
-    
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+
+    bool practiceCheck(Racesow_Player @player, cString &commandName)
     {
-        return false;
+	    // if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
+	    // i guess we'll have a better solution to this when the new command system is up. - K1ll i guess not :/
+	    player.sendErrorMessage( "The " + commandName + " command is only available in practice mode." );
+	    return true;        
     }
 }
 

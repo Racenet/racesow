@@ -539,12 +539,166 @@ class cDRACERound
 cDRACERound DRACERound;
 
 
+class Command_ResetCam : Racesow_Command
+{
+
+    Command_ResetCam() {
+        super("resetcam", "Reset the Camera", ""); //FIXME: Dunno if everything is right here
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+          if ( @player.getClient() == @DRACERound.roundWinner || @player.getClient() == @DRACERound.roundChallenger )
+          {
+            //nothing to do if it is winner or challenger
+          }
+          else
+            player.getClient().chaseCam( null, true );
+          
+          return true;
+    }
+}
+
+class Command_MaxVictories : Racesow_Command
+{
+
+    Command_MaxVictories() {
+        super("max_victories", "", ""); //FIXME: Description needed
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+          G_PrintMsg( player.getClient().getEnt(), "Current: " + g_drace_max_victories.getString() + "\n" );      
+          return true;
+    }
+}
+
+//FIXME: K1ll - I don't know if this should extend or replace the original object
+class Command_CallvoteValidateDrace : Command_CallvoteValidate
+{
+    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
+        cString vote = args.getToken( 0 );
+           
+          if ( vote == "draw" )
+          {
+            if ( match.getState() == MATCH_STATE_WARMUP )
+          	{
+              G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "Callvote draw unavailable in warmup\n");
+          	  return false;
+          	}
+          	if (player.getClient().muted == 2 )
+            {
+              G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "You are votemuted\n");
+          	  return false;
+          	}
+            return true;
+          }
+          
+
+          if ( vote == "max_victories" )
+          {
+            //if ( argsString.getToken( 1 ) )
+              //return false;
+              
+            return true;
+
+          }
+          
+          G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "Unknown callvote " + vote + "\n" );
+          return false;
+    }
+}
+
+/*class Command_CallvoteCheckPermissionDrace : Command_CallvoteCheckPermission
+{
+
+    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
+            cString vote = argsString.getToken( 0 );
+
+            if ( vote == "draw" )
+            {
+              if ( @DRACERound.roundWinner != null )
+            	 DRACERound.roundWinner.getEnt().health = -1;
+            	 
+
+            	if ( @DRACERound.roundChallenger != null )
+            	 DRACERound.roundChallenger.getEnt().health = -1;
+            	 
+            	return true;
+            }
+
+            
+            if ( vote == "max_victories" )
+            {
+              G_CmdExecute( "g_drace_max_victories " + argsString.getToken( 1 ).toInt() + "\n" );
+              return true;
+
+            }
+            
+            return false;
+        }
+        return false;
+    }
+
+}*/
+
+class Command_CallvotePassed : Racesow_Command
+{
+    Command_CallvotePassed() {
+        super("callvotepassed", "", ""); //FIXME: Description needed
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+            cString vote = args.getToken( 0 );
+
+            if ( vote == "draw" )
+            {
+              if ( @DRACERound.roundWinner != null )
+            	 DRACERound.roundWinner.getEnt().health = -1;
+            	 
+            	if ( @DRACERound.roundChallenger != null )
+            	 DRACERound.roundChallenger.getEnt().health = -1;
+            	 
+            	return true;
+            }
+            
+            if ( vote == "max_victories" )
+            {
+              G_CmdExecute( "g_drace_max_victories " + args.getToken( 1 ).toInt() + "\n" );
+              return true;
+            }
+            
+            return false;
+    }
+}
+
 class Racesow_Gametype_Drace : Racesow_Gametype
 {
     Racesow_Gametype_Drace()
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Drace();
+        //FIXME: These will hopefully be useable with the new angelscript version
+        /*@this.commandMap["callvotevalidate"] = @Command_CallvoteValidateDrace();
+        //@this.commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermissionDrace();
+        @this.commandMap["callvotepassed"] = @Command_CallvotePassed();
+        @this.commandMap["join"] = @Command_Join();
+        @this.commandMap["spec"] = @Command_Spec();
+        @this.commandMap["chase"] = @Command_Chase();
+        @this.commandMap["racerestart"] = @Command_RaceRestart();
+        @this.commandMap["resetcam"] = @Command_ResetCam();
+        @this.commandMap["top"] = @Command_Top();
+        @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
+        commandMap.set_opIndex("callvotevalidate",@Command_CallvoteValidateDrace());
+        //commandMap.set_opIndex("callvotecheckpermission", @Command_CallvoteCheckPermissionDrace());
+        commandMap.set_opIndex("callvotepassed", @Command_CallvotePassed());
+        commandMap.set_opIndex( "join", @Command_Join() );
+        commandMap.set_opIndex( "spec", @Command_Spec() );
+        commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
+        commandMap.set_opIndex( "resetcam", @Command_ResetCam() );
+        commandMap.set_opIndex( "top", @Command_Top() );
+        commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod("Jerm's") );
     }
     
     ~Racesow_Gametype_Drace()
@@ -599,10 +753,6 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );
         G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Score Time Ping Racing R" );
-    
-        // add commands
-        G_RegisterCommand( "resetcam" );
-        G_RegisterCommand( "max_victories" );
         
         // add callvotes
         G_RegisterCallvote( "draw", "", "Declares the current round Draw." ) ;
@@ -922,7 +1072,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         return false;
     }
     
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    /*bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
     {
         if (cmdString == "resetcam")
         {
@@ -975,6 +1125,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
             cString vote = argsString.getToken( 0 );
       
 
+
             if ( vote == "draw" )
             {
               if ( @DRACERound.roundWinner != null )
@@ -995,6 +1146,14 @@ class Racesow_Gametype_Drace : Racesow_Gametype
             return false;
         }
         return false;
+    }*/
+
+    bool practiceCheck(Racesow_Player @player, cString &commandName)
+    {
+	    // if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
+	    // i guess we'll have a better solution to this when the new command system is up. - K1ll i guess not :/
+	    player.sendErrorMessage( "The " + commandName + " command is only available in practice mode." );
+	    return true;        
     }
 }
 

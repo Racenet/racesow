@@ -250,7 +250,7 @@ void RS_ircSendMessage( cString message )
 }
 
 /**
- * Find a modflag value by the gametype name
+ * Find a modflag value by the gametype name - FIXME soon obsolete
  *
  * @param name The name of the gametype you are looking for
  * @return int the modflag value, -1 if not found
@@ -272,4 +272,38 @@ int RS_GetModFlagByName(cString name)
 
     G_Print("Gametype " + name + " doesn't exist. Check your config.\n");
     return -1;
+}
+
+/*
+ * Insert Default Racesow_Commands into the gametypes Command_Map
+ *
+ */
+void insertDefaultCommands( RC_Map @commandMap ) {
+    /*@commandMap["admin"] = @Command_Admin();
+    @commandMap["Command_AmmoSwitch"] = @Command_AmmoSwitch();
+    @commandMap["auth"] = @Command_Auth();
+    @commandMap["gametype"] = @Command_Gametype();
+    @commandMap["help"] = @Command_Help();
+    @commandMap["lastmap"] = @Command_LastMap();
+    @commandMap["mapfilter"] = @Command_Mapfilter();
+    @commandMap["maplist"] = @Command_Maplist();
+    if (dedicated.getBool())
+    {
+        @commandMap["mapname"] = @Command_Mapname();
+        @commandMap["nextmap"] = @Command_NextMap();
+    }
+    @commandMap["privsay"] = @Command_Privsay();
+    @commandMap["protectednick"] = @Command_ProtectedNick();
+    @commandMap["register"] = @Command_Register();
+    @commandMap["stats"] = @Command_Stats();
+    @commandMap["token"] = @Command_Token();
+    @commandMap["whoisgod"] = @Command_WhoIsGod();
+    @commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermission();
+    @commandMap["callvotevalidate"] = @Command_CallvoteValidate();*/
+    commandMap.set_opIndex( "admin", @Command_Admin() );
+    commandMap.set_opIndex( "auth", @Command_Auth() );
+    commandMap.set_opIndex( "gametype", @Command_Gametype() );
+    commandMap.set_opIndex( "help", @Command_Help(commandMap) );
+    commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod() );
+    commandMap.set_opIndex( "stats", @Command_Stats() );
 }

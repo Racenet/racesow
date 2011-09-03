@@ -5,6 +5,23 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Freestyle();
         ammoSwitch = true;
+        //FIXME: These will hopefully be useable with the new angelscript version
+        /*@this.commandMap["chrono"] = @Command_Chrono();
+        @this.commandMap["join"] = @Command_Join();
+        @this.commandMap["spec"] = @Command_Spec();
+        @this.commandMap["chase"] = @Command_Chase();
+        @this.commandMap["kill"] = @Command_Kill();
+        @this.commandMap["position"] = @Command_Position();
+        @this.commandMap["quad"] = @Command_Quad();
+        @this.commandMap["noclip"] = @Command_Noclip();*/
+        commandMap.set_opIndex("chrono", @Command_Chrono());
+        commandMap.set_opIndex("join", @Command_Join());
+        commandMap.set_opIndex("spec", @Command_Spec());
+        commandMap.set_opIndex("chase", @Command_Chase());
+        commandMap.set_opIndex("kill", @Command_Kill());
+        commandMap.set_opIndex("position", @Command_Position());
+        commandMap.set_opIndex("quad", @Command_Quad());
+        commandMap.set_opIndex("noclip", @Command_Noclip());
     }
     
     ~Racesow_Gametype_Freestyle()

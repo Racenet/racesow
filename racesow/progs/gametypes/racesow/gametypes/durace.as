@@ -5,6 +5,15 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Durace();
+        //FIXME: These will hopefully be useable with the new angelscript version
+        /*@this.commandMap["racerestart"] = @Command_RaceRestart();
+        @this.commandMap["kill"] = @Command_Kill();
+        @this.commandMap["top"] = @Command_Top();
+        @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
+        commandMap.set_opIndex("racerestart", @Command_RaceRestart());
+        commandMap.set_opIndex("kill", @Command_Kill());
+        commandMap.set_opIndex("top", @Command_Top());
+        commandMap.set_opIndex("whoisgod", @Command_WhoIsGod("Jerm's"));
     }
     
     ~Racesow_Gametype_Durace()
@@ -293,9 +302,12 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         return false;
     }
     
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    bool practiceCheck(Racesow_Player @player, cString &commandName)
     {
-        return false;
+	    // if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
+	    // i guess we'll have a better solution to this when the new command system is up. - K1ll i guess not :/
+	    player.sendErrorMessage( "The " + commandName + " command is only available in practice mode." );
+	    return true;        
     }
 }
 

@@ -32,3 +32,4 @@ racesow/weapondefs.as;
 racesow/commands.as;
 racesow/gametypes.as;
 racesow/gametypes/freestyle.as;
+racesow/command_map.as;

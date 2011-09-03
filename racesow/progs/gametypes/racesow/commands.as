@@ -1,10 +1,4 @@
 /**
- * Change this if more than 50 commands are needed
- * There is another limitation in C so this number will never be reached anyway
- */
-const int MAX_COMMANDS = 50;
-
-/**
  * MODFLAG, used to determine in which gametype a command is registered
  */
 const int MODFLAG_RACE = 1;
@@ -15,15 +9,7 @@ const int MODFLAG_DURACE = 16;
 const int MODFLAG_TRACE = 32;
 const int MODFLAG_ALL = 63;
 
-/**
- * Container for all the commands, filled in RS_CreateCommands
- */
-Racesow_Command@[] commands(MAX_COMMANDS);
-
-/**
- * Total number of commands, set in RS_CreateCommands
- */
-int commandCount = 0;
+const cString[] DEVS =  { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo" };
 
 /**
  * Generic command class, all commands inherit from this class
@@ -55,7 +41,7 @@ class Racesow_Command
     /**
      * In which mode should the command only be available ?
      */
-    int modFlag;
+    int modFlag; //FIXME: soon obsolete
     
 	/**
 	 * Should the command be available in practice mode ?
@@ -63,11 +49,13 @@ class Racesow_Command
 	bool practiceEnabled;
 	
     /**
-     * Default constructor
+     * Non-Default constructor to be used with super() in the derived classes
      */
-    Racesow_Command()
+    Racesow_Command(cString &in name, cString &in description, cString &in usage)
     {
-		    this.modFlag = MODFLAG_ALL ;
+        this.name = name;
+        this.description = description;
+        this.usage = usage;
     }
 
     /**
@@ -121,20 +109,43 @@ class Racesow_Command
     }
 }
 
-class Command_Mapfilter : Racesow_Command
+class Command_Admin : Racesow_Command
 {
+    Command_Admin() {
+        super("admin", "Execute an admin command",
+            S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
+            + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
+            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
+            /*+ S_COLOR_RED + "admin add           " + S_COLOR_YELLOW + "add player as an admin\n" //The command string is not long enough to hold all commands
+            + S_COLOR_RED + "admin delete           " + S_COLOR_YELLOW + "remove admin rights from player\n"
+            + S_COLOR_RED + "admin setpermission           " + S_COLOR_YELLOW + "change permissions of a player\n"*/
+            + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
+            + S_COLOR_RED + "admin restart  " + S_COLOR_YELLOW + "restart the match immedeatly\n"
+            + S_COLOR_RED + "admin extend_time  " + S_COLOR_YELLOW + "extend the matchtime immedeatly\n"
+            + S_COLOR_RED + "admin remove  " + S_COLOR_YELLOW + "remove the given player immedeatly\n"
+            + S_COLOR_RED + "admin kick          " + S_COLOR_YELLOW + "kick the given player immedeatly\n"
+            + S_COLOR_RED + "admin kickban       " + S_COLOR_YELLOW + "kickban the given player immedeatly\n"
+            + S_COLOR_RED + "admin [v](un)mute  " + S_COLOR_YELLOW + "[v](un)mute the given player immedeatly\n"
+            + S_COLOR_RED + "admin vote(un)mute  " + S_COLOR_YELLOW + "enable/disable voting for the given player\n"
+            + S_COLOR_RED + "admin joinlock  " + S_COLOR_YELLOW + "prevent the given player from joining\n"
+            + S_COLOR_RED + "admin cancelvote    " + S_COLOR_YELLOW + "cancel the currently active vote\n"
+            + S_COLOR_RED + "admin updateml    " + S_COLOR_YELLOW + "Update the maplist\n"
+            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if (argc < 1)
+        // i think this needs to be removed
+        /*if ( !player.auth.allow( RACESOW_AUTH_ADMIN ) )
         {
-            player.sendErrorMessage( "You must provide a filter name" );
+            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
+                + " tried to execute an admin command without permission.\n" );
             return false;
-        }
+        }*/
 
-        if (player.isWaitingForCommand)
+        if ( argc < 1 )
         {
-            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
-                    +"results of your previous command");
+            player.sendErrorMessage( "No command given. Use 'help admin' for more information" );
             return false;
         }
 
@@ -143,181 +154,243 @@ class Command_Mapfilter : Racesow_Command
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        cString filter = args.getToken( 0 );
-        int page = 1;
-        if ( argc >= 2 )
-            page = args.getToken( 1 ).toInt();
-
-        player.isWaitingForCommand = true;
-        return RS_MapFilter(player.client.playerNum(),filter,page);
+        return player.adminCommand( args );
     }
 }
 
-class Command_Gametype : Racesow_Command
+class Command_AmmoSwitch : Racesow_Command
 {
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        cString response = "";
-        cVar fs_game( "fs_game", "", 0 );
-        cString manifest = gametype.getManifest();
+    Command_AmmoSwitch() {
+        super("ammoswitch", "Switch between weak and strong Ammo", "ammoswitch");
+    }
 
-        response += "\n";
-        response += "Gametype " + gametype.getName() + " : " + gametype.getTitle() + "\n";
-        response += "----------------\n";
-        response += "Version: " + gametype.getVersion() + "\n";
-        response += "Author: " + gametype.getAuthor() + "\n";
-        response += "Mod: " + fs_game.getString() + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
-        response += "----------------\n";
-
-        player.sendMessage(response);
-        return true;
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+        return player.ammoSwitch();
     }
 }
 
-class Command_RaceRestart : Racesow_Command
+class Command_Auth : Racesow_Command
 {
+
+    Command_Auth() {
+        super("auth", "Authenticate with the server (alternatively you can use setu to save your login)", "auth <authname> <password>");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if (player.isJoinlocked)
+        if ( argc < 2 )
         {
-            player.sendErrorMessage( "You can't join, you are join locked" );
+            player.sendErrorMessage("You must provide your name and password");
             return false;
         }
 
-        //racerestart command is only avaiblable in DRACE during WARMUP 
-        if ( gametypeFlag == MODFLAG_DRACE && this.name == "racerestart" && match.getState() != MATCH_STATE_WARMUP ) 
-          return false;
-                  
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        player.restartRace();
-		    return true;
+        return player.getAuth().authenticate(
+                args.getToken( 0 ).removeColorTokens(),
+                args.getToken( 1 ),
+                false );
     }
 }
 
-class Command_Top : Racesow_Command
-{
-    int limit;
-    cString mapname;
-    int prejumped;
+class Command_CallvoteCheckPermission : Racesow_Command {
 
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        this.limit = 30;
-        this.mapname = "";
-        this.prejumped = 2;
+    Command_CallvoteCheckPermission() {
+        super("callvotecheckpermission", "Check if you have the permission to call the specified Callvote", "callvotecheckpermission <callvote>");
+    }
 
-        if ( mysqlConnected == 0 )
+    //When adding callvotes to a gametype derive from this command and add yours into this function
+    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
+    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
+        return false;
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+        if ( player.isVotemuted )
         {
-            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            player.sendErrorMessage( "You are votemuted" );
             return false;
         }
-
-        if (player.isWaitingForCommand)
+        else
         {
-            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
-                    +"results of your previous command");
-            return false;
-        }
-
-        if ( argc > 0 )
-        {
-            cString firstToken = args.getToken(0);
-            if ( firstToken.isNumerical() )
+            cString vote = args.getToken( 0 );
+            if( vote == "mute" || vote == "vmute" ||
+                vote == "kickban" || vote == "kick" || vote == "remove" ||
+                vote == "joinlock" || vote == "joinunlock" )
             {
-                this.limit = firstToken.toInt();
-                if ( argc > 1 )
-                    mapname = args.getToken(1);
+                Racesow_Player @victimPlayer;
+                cString victim = args.getToken( 1 );
+
+                if ( Racesow_GetClientNumber( victim ) != -1 )
+                    @victimPlayer = racesowGametype.players[ Racesow_GetClientNumber( victim ) ];
+                else if( victim.isNumerical() )
+                {
+                    if ( victim.toInt() > maxClients )
+                        return true;
+                    else
+                        @victimPlayer = racesowGametype.players[ victim.toInt() ];
+                }
+                else
+                    return true;
+
+                if( victimPlayer.auth.allow(RACESOW_AUTH_ADMIN) )
+                {
+                    G_PrintMsg( null, S_COLOR_WHITE + player.getName()
+                                + S_COLOR_RED + " tried to "
+                                + args.getToken( 0 ) + " an admin.\n" );
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
             }
             else
             {
-                if (firstToken == "pj")
-                    this.prejumped = 0;
-                else if (firstToken == "nopj")
-                    this.prejumped = 1;
-                else
-                    return false;
-                if ( argc > 1 )
-                    this.limit = args.getToken(1).toInt();
-                if ( argc > 2 )
-                    mapname = args.getToken(2);
-            }
-            if ( this.limit < 3 || this.limit > 30)
-            {
-                player.sendErrorMessage("You must use a limit between 3 and 30");
-                return false;
+                return true;
             }
         }
-        return true;
     }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.isWaitingForCommand=true;
-        RS_MysqlLoadHighscores(player.getClient().playerNum(), this.limit, map.getId(), this.mapname, this.prejumped);
-        return true;
-    }
-
 }
 
-class Command_Oneliner : Racesow_Command
+class Command_CallvoteValidate : Racesow_Command
 {
+
+    Command_CallvoteValidate() {
+        super("callvotevalidate","", ""); //FIXME: Needs description and usage
+    }
+
+    //When adding callvotes to a gametype derive from this command and add yours into this function
+    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
+    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
+        return false;
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+		cString vote = args.getToken( 0 );
+
+        if( this.gametypeVotes(player, args, argc) )
+            return true;
+
+		if ( vote == "extend_time" )
+		{
+			if( g_timelimit.getInteger() <= 0 )
+			{
+				player.getClient().printMessage( "This vote is only available for timelimits.\n");
+				return false;
+			}
+			uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+			uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
+			uint time = levelTime - match.startTime(); //in ms
+			uint remainingtime = timelimit - time;
+			bool isNegative = (timelimit < time ) ? true : false;
+			if( remainingtime > extendtimeperiod && !isNegative )
+			{
+				player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
+				return false;
+			}
+			return true;
+		}
+        if ( vote == "timelimit" )
+		{
+			int new_timelimit = args.getToken( 1 ).toInt();
+
+			if ( new_timelimit < 0 )
+			{
+				player.getClient().printMessage( "Can't set negative timelimit\n");
+				return false;
+			}
+
+			if ( new_timelimit == g_timelimit.getInteger() )
+			{
+				player.getClient().printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
+				return false;
+			}
+
+			return true;
+		}
+
+		if ( vote == "spec" )
+		{
+			if ( ! map.inOvertime )
+			{
+				player.getClient().printMessage( S_COLOR_RED + "Callvote spec is only valid during overtime\n");
+				return false;
+			}
+
+			return true;
+		}
+
+		if ( vote == "joinlock" || vote == "joinunlock" )
+    {
+      if( argc != 2 )
+    	{
+        player.getClient().printMessage( "Usage: callvote " + vote + " <id or name>\n" );
+    		player.getClient().printMessage( "- List of current players:\n" );
+
+    		for ( int i = 0; i < maxClients; i++ )
+    		{
+    		  if ( @racesowGametype.players[i].getClient() != null )
+            player.getClient().printMessage( "  " + racesowGametype.players[i].getClient().playerNum() + ": " + racesowGametype.players[i].getClient().getName() + "\n");
+        }
+
+       	return false;
+    	}
+      else
+    	{
+    	  cClient@ target = null;
+
+        if ( args.getToken( 1 ).isNumerical() && args.getToken( 1 ).toInt() <= maxClients )
+            @target = @G_GetClient( args.getToken( 1 ).toInt() );
+        else if ( Racesow_GetClientNumber( args.getToken( 1 ) ) != -1 )
+            @target = @G_GetClient( Racesow_GetClientNumber( args.getToken( 1 ) ) );
+
+        if ( @target == null || !target.getEnt().inuse )
+        {
+            player.getClient().printMessage( S_COLOR_RED + "Invalid player\n" );
+            return false;
+        }
+      }
+
+			return true;
+		}
+
+		player.getClient().printMessage( "Unknown callvote " + vote + "\n" );
+		return false;
+    }
+}
+
+class Command_Chase : Racesow_Command
+{
+
+    Command_Chase() {
+        super("chase", "Spectate", "");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( mysqlConnected == 0 )
-        {
-            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
-            return false;
-        }
-		
-		if ( args.len() > 100 )
-        {
-            player.sendMessage("Oneliner too long (" + args.len() + " chars), please keep it under 100 characters.\n" );
-            return false;
-        }
-		
-		if ( argc < 1 )
-        {
-			player.sendMessage("If you are #1 on a map, you can enter a one-line message that will be printed in the highscores.\n" );
-            return false;
-        }
-		
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-	    player.isWaitingForCommand = true;
-        RS_MysqlSetOneliner(player.getClient().playerNum(), player.getId(), map.getId(), args);
+        player.getClient().team = TEAM_SPECTATOR;
+        player.getClient().respawn( true ); // true means ghost
         return true;
     }
 
 }
-
-class Command_NextMap : Racesow_Command
-{
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.sendMessage( RS_NextMap() + "\n" );
-        return true;
-    }
-}
-
-class Command_LastMap : Racesow_Command
-{
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.sendMessage( previousMapName + "\n" );
-        return true;
-    }
-}
-
 
 class Command_Chrono : Racesow_Command
 {
+
+    Command_Chrono() {
+        super("chrono", "Chrono for tricks timing", "chrono <start/reset>");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
         if ( argc < 1 )
@@ -352,131 +425,73 @@ class Command_Chrono : Racesow_Command
     }
 }
 
-class Command_Maplist : Racesow_Command
+class Command_CvarInfo : Racesow_Command
 {
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if( player.isWaitingForCommand )
-        {
-            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
-                    +"results of your previous command");
-            return false;
-        }
-
-        return true;
+    Command_CvarInfo() {
+        super("cvarinfo", "", ""); //FIXME: Add description and usage
     }
 
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        int page = 1;
-        if (argc >= 1)
-            page = args.getToken(0).toInt();
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+		//token0: cVar name; token1: cVar value
+		cString cvarName = args.getToken(0);
+		cString cvarValue = args.getToken(1);
 
-        return RS_Maplist(player.client.playerNum(),page);
-    }
-}
-
-class Command_Token : Racesow_Command
-{
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        return player.getAuth().showToken();
-    }
-}
-
-class Command_Auth : Racesow_Command
-{
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if ( argc < 2 )
-        {
-            player.sendErrorMessage("You must provide your name and password");
-            return false;
-        }
-
-        return true;
-    }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        return player.getAuth().authenticate(
-                args.getToken( 0 ).removeColorTokens(),
-                args.getToken( 1 ),
-                false );
-    }
-}
-
-class Command_ProtectedNick : Racesow_Command
-{
-	bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-		bool is_authenticated = player.getAuth().isAuthenticated();
-		bool is_nickprotected = player.getAuth().wontGiveUpViolatingNickProtection() == 0;
-		bool valid = ( is_authenticated and is_nickprotected );
-		
-		if (not valid)
+		if( cvarName.substr(0,15) == "storedposition_")
 		{
-			player.sendErrorMessage( "You must be authenticated and not under nick protection.");
-			return false;
+			cString positionValues = cvarValue;
+			cVec3 origin, angles;
+			origin.x = positionValues.getToken(1).toFloat();
+			origin.y = positionValues.getToken(2).toFloat();
+			origin.z = positionValues.getToken(3).toFloat();
+			angles.x = positionValues.getToken(4).toFloat();
+			angles.y = positionValues.getToken(5).toFloat();
+			player.teleport( origin, angles, false, false );
 		}
-		
-		if( player.isWaitingForCommand )
-        {
-            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
-                    +"results of your previous command");
-            return false;
-        }
-		
-		return true;
-	}
-	
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-		if ( argc < 1 )
-		{
-			RS_GetPlayerNick( player.client.playerNum(), player.getId() );
-		}
-		else if ( args.getToken(0) == "update" )
-		{
-			RS_UpdatePlayerNick( player.getName(), player.client.playerNum(), player.getId() );
-		}
-		player.isWaitingForCommand = true;
-        return true;
+    return true;
     }
 }
 
-
-class Command_Register : Racesow_Command
+class Command_Gametype : Racesow_Command
 {
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if ( argc < 4)
-        {
-            player.sendErrorMessage("You must provide all required information");
-            return false;
-        }
 
-        return true;
+    Command_Gametype() {
+        super("gametype", "Print info about the game type", "");
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        cString authName = args.getToken( 0 ).removeColorTokens();
-        cString authEmail = args.getToken( 1 );
-        cString password = args.getToken( 2 );
-        cString confirmation = args.getToken( 3 );
+        cString response = "";
+        cVar fs_game( "fs_game", "", 0 );
+        cString manifest = gametype.getManifest();
 
-        return player.getAuth().signUp( authName, authEmail, password, confirmation );
+        response += "\n";
+        response += "Gametype " + gametype.getName() + " : " + gametype.getTitle() + "\n";
+        response += "----------------\n";
+        response += "Version: " + gametype.getVersion() + "\n";
+        response += "Author: " + gametype.getAuthor() + "\n";
+        response += "Mod: " + fs_game.getString() + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
+        response += "----------------\n";
+
+        player.sendMessage(response);
+        return true;
     }
 }
 
 class Command_Help : Racesow_Command
 {
+
+    RC_Map @commandMap;
+
+    Command_Help(RC_Map @commandMap) {
+        super("help", "Print this help, or give help on a specific command", "help <command>");
+        @this.commandMap = @commandMap;
+    }
+
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         if ( argc >= 1 )
         {
-            Racesow_Command@ command = RS_GetCommandByName( args.getToken(0) );
+            Racesow_Command@ command = @this.commandMap.get_opIndex( args.getToken(0) );
             if ( @command != null)
             {
                 player.sendMessage( command.getDescription() + command.getUsage() );
@@ -497,9 +512,9 @@ class Command_Help : Racesow_Command
             player.sendMessage(help);
             help = "";
 
-            for (int i = 0; i < commandCount; i++)
+            for (uint i = 0; i < this.commandMap.size(); i++)
             {
-                Racesow_Command@ command = commands[i];
+                Racesow_Command@ command = @this.commandMap.getCommandAt(i);
 
                 help += command.getDescription();
                 if ( (i/5)*5 == i ) //to avoid print buffer overflow
@@ -516,25 +531,24 @@ class Command_Help : Racesow_Command
     }
 }
 
-class Command_Timeleft : Racesow_Command
+class Command_Join : Racesow_Command
 {
+
+    Command_Join() {
+        super("join", "Join the game", "");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( match.getState() == MATCH_STATE_POSTMATCH )
+        if( player.isJoinlocked )
         {
-            player.sendErrorMessage( "The command isn't available in this match state");
+            player.sendErrorMessage( "You can't join: You are join locked");
             return false;
         }
-		
-		if ( !g_maprotation.getBool() )
-		{
-			player.sendErrorMessage( "The command isn't available when g_maprotation == 0.");
-            return false;
-		}
-		
-        if( g_timelimit.getInteger() <= 0 )
+
+        if( map.inOvertime )
         {
-            player.sendErrorMessage( "There is no timelimit set");
+            player.sendErrorMessage( "You can't join during overtime period" );
             return false;
         }
         return true;
@@ -542,27 +556,328 @@ class Command_Timeleft : Racesow_Command
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
-        uint time = levelTime - match.startTime(); //in ms
-        uint timeleft = timelimit - time;
-        if( timelimit < time )
-        {
-            player.sendMessage( "We are already in overtime.\n" );
-            return true;
-        }
-        else
-        {
-            player.sendMessage( "Time left: " + TimeToString( timeleft ) + "\n" );
-            return true;
-        }
+        player.getClient().team = TEAM_PLAYERS;
+        player.getClient().respawn( false );
+        return true;
     }
+}
+
+class Command_Kill : Racesow_Command
+{
+
+    Command_Kill() {
+        super("kill", "Go back to the start area whenever you want", "");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if (player.isJoinlocked)
+        {
+            player.sendErrorMessage( "You can't join, you are join locked" );
+            return false;
+        }
+
+        //racerestart command is only avaiblable in DRACE during WARMUP 
+        if ( gametypeFlag == MODFLAG_DRACE && this.name == "racerestart" && match.getState() != MATCH_STATE_WARMUP ) //FIXME: This doesn't seem right ...
+          return false;
+                  
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.restartRace();
+		    return true;
+    }
+}
+
+class Command_Machinegun : Racesow_Command
+{
+
+    Command_Machinegun() {
+        super("machinegun", "Gives you a machinegun", "");
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		//give machinegun (this is default behavior in defrag and usefull in some maps to shoot buttons)
+		player.getClient().inventoryGiveItem( WEAP_MACHINEGUN );
+		return true;
+    }
+}
+
+class Command_Mapfilter : Racesow_Command
+{
+
+    Command_Mapfilter() {
+        super("mapfilter", "Search for maps matching a given name", "mapfilter <filter> <pagenum>");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if (argc < 1)
+        {
+            player.sendErrorMessage( "You must provide a filter name" );
+            return false;
+        }
+
+        if (player.isWaitingForCommand)
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        cString filter = args.getToken( 0 );
+        int page = 1;
+        if ( argc >= 2 )
+            page = args.getToken( 1 ).toInt();
+
+        player.isWaitingForCommand = true;
+        return RS_MapFilter(player.getClient().playerNum(),filter,page);
+    }
+}
+
+class Command_Maplist : Racesow_Command
+{
+
+    Command_Maplist() {
+        super("maplist", "Print the maplist", "maplist <pagenum>");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( player.isWaitingForCommand )
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        int page = 1;
+        if (argc >= 1)
+            page = args.getToken(0).toInt();
+
+        return RS_Maplist(player.getClient().playerNum(),page);
+    }
+}
+
+class Command_Mapname : Racesow_Command
+{
+
+    Command_Mapname() {
+        super("mapname", "Print the name of current map", "");
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendMessage( map.name + "\n" );
+        return true;
+    }
+}
+
+class Command_LastMap : Racesow_Command
+{
+
+    Command_LastMap() {
+        super("lastmap", "Print the name of the previous map on the server, before this one", "");
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendMessage( previousMapName + "\n" );
+        return true;
+    }
+}
+
+class Command_NextMap : Racesow_Command
+{
+
+    Command_NextMap() {
+        super("nextmap", "Print the name of the next map in map rotation", "");
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendMessage( RS_NextMap() + "\n" );
+        return true;
+    }
+}
+
+class Command_Noclip : Racesow_Command
+{
+
+    Command_Noclip() {
+        super("noclip", "Disable your interaction with other players and objects", "");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( @player.getClient().getEnt() == null || player.getClient().getEnt().team == TEAM_SPECTATOR )
+        {
+            player.sendErrorMessage("Noclip is not available in your current state");
+            return false;
+        }
+        if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
+			return false;
+
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        return player.noclip();
+    }
+}
+
+class Command_Oneliner : Racesow_Command
+{
+
+    Command_Oneliner() {
+        super("oneliner", "Set a one-line message that is displayed right next to your top time", "");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if ( mysqlConnected == 0 )
+        {
+            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            return false;
+        }
+		
+		if ( args.len() > 100 )
+        {
+            player.sendMessage("Oneliner too long (" + args.len() + " chars), please keep it under 100 characters.\n" );
+            return false;
+        }
+		
+		if ( argc < 1 )
+        {
+			player.sendMessage("If you are #1 on a map, you can enter a one-line message that will be printed in the highscores.\n" );
+            return false;
+        }
+		
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+	    player.isWaitingForCommand = true;
+        RS_MysqlSetOneliner(player.getClient().playerNum(), player.getId(), map.getId(), args);
+        return true;
+    }
+
+}
+
+class Command_Position : Racesow_Command
+{
+
+    Command_Position() {
+        super("position", "Commands to store and load position",
+            "position <command> where command is one of :\n"
+            + "position load - Teleport to saved position\n"
+            + "position set <x> <y> <z> <pitch> <yaw> - Teleport to specified position\n"
+            + "position store <id> <name> - Store a position for another session\n"
+            + "position restore <id> - Restore a stored position from another session\n"
+            + "position storedlist <limit> - Sends you a list of your stored positions\n");
+    }
+
+	bool validate(Racesow_Player @player, cString &args, int argc)
+	{
+		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
+			return false;
+			
+		return true;
+	}
+	
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        return player.position(args);
+    }
+}
+
+class Command_Spec : Racesow_Command
+{
+
+    Command_Spec() {
+        super("spec", "Spectate", "");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.getClient().team = TEAM_SPECTATOR;
+        player.getClient().respawn( true ); // true means ghost
+        return true;
+    }
+}
+
+class Command_Practicemode : Racesow_Command
+{
+
+    Command_Practicemode() {
+        super("practicemode", "Enable or disable practicemode", "practicemode\nAllows usage of the position and noclip commands");
+    }
+
+	bool validate( Racesow_Player @player, cString &args, int argc )
+	{
+		if ( player.getClient().team != TEAM_PLAYERS )
+		{
+			player.sendErrorMessage( "You must join the game before going into practice mode" );
+			return false;
+		}
+		return true;
+	}
+	bool execute( Racesow_Player @player, cString &args, int argc )
+	{
+		if ( @player.getClient() != null )
+		{
+			if ( player.isRacing() )
+				player.cancelRace();
+				
+			if ( player.practicing )
+			{
+				player.practicing = false;
+				player.sendAward( S_COLOR_GREEN + "Leaving practice mode" );
+				player.restartRace();
+					
+				
+			} else {
+				player.practicing = true;
+				player.sendAward( S_COLOR_GREEN + "You have entered practice mode" );
+			}
+			return true;
+		}
+		/* something went wrong */
+		return false;
+		
+	}
 }
 
 class Command_Privsay : Racesow_Command
 {
+
+    Command_Privsay() {
+        super("privsay", "Send a private message to a player", "privsay <playerid/playername>");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( player.client.muted == 1 )
+        if ( player.getClient().muted == 1 )
         {
             player.sendErrorMessage("You can't talk, you're muted");
             return false;
@@ -599,11 +914,60 @@ class Command_Privsay : Racesow_Command
     }
 }
 
+class Command_ProtectedNick : Racesow_Command
+{
+
+    Command_ProtectedNick() {
+        super("protectednick", "Show/update your current protected nick", "protectednick <newnick>");
+    }
+
+	bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+		bool is_authenticated = player.getAuth().isAuthenticated();
+		bool is_nickprotected = player.getAuth().wontGiveUpViolatingNickProtection() == 0;
+		bool valid = ( is_authenticated and is_nickprotected );
+		
+		if (not valid)
+		{
+			player.sendErrorMessage( "You must be authenticated and not under nick protection.");
+			return false;
+		}
+		
+		if( player.isWaitingForCommand )
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+		
+		return true;
+	}
+	
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		if ( argc < 1 )
+		{
+			RS_GetPlayerNick( player.getClient().playerNum(), player.getId() );
+		}
+		else if ( args.getToken(0) == "update" )
+		{
+			RS_UpdatePlayerNick( player.getName(), player.getClient().playerNum(), player.getId() );
+		}
+		player.isWaitingForCommand = true;
+        return true;
+    }
+}
+
 class Command_Quad : Racesow_Command
 {
+
+    Command_Quad() {
+        super("quad", "Activate or desactivate the quad for weapons", "");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( @player.client.getEnt() == null || player.client.getEnt().team == TEAM_SPECTATOR )
+        if( @player.getClient().getEnt() == null || player.getClient().getEnt().team == TEAM_SPECTATOR )
         {
             player.sendErrorMessage("Quad is not available in your current state");
             return false;
@@ -617,21 +981,46 @@ class Command_Quad : Racesow_Command
     }
 }
 
-class Command_Admin : Racesow_Command
+class Command_RaceRestart : Racesow_Command
 {
+    Command_RaceRestart() {
+        super("racerestart", "Go back to the start area whenever you want", "");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        // i think this needs to be removed
-        /*if ( !player.auth.allow( RACESOW_AUTH_ADMIN ) )
+        if (player.isJoinlocked)
         {
-            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
-                + " tried to execute an admin command without permission.\n" );
+            player.sendErrorMessage( "You can't join, you are join locked" );
             return false;
-        }*/
+        }
 
-        if ( argc < 1 )
+        //racerestart command is only avaiblable in DRACE during WARMUP 
+        if ( gametypeFlag == MODFLAG_DRACE && this.name == "racerestart" && match.getState() != MATCH_STATE_WARMUP ) 
+          return false;
+                  
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.restartRace();
+		    return true;
+    }
+}
+
+class Command_Register : Racesow_Command
+{
+
+    Command_Register() {
+        super("register", "Register a new account on this server", "register <authname> <email> <password> <confirmation>");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if ( argc < 4)
         {
-            player.sendErrorMessage( "No command given. Use 'help admin' for more information" );
+            player.sendErrorMessage("You must provide all required information");
             return false;
         }
 
@@ -640,104 +1029,12 @@ class Command_Admin : Racesow_Command
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        return player.adminCommand( args );
-    }
-}
+        cString authName = args.getToken( 0 ).removeColorTokens();
+        cString authEmail = args.getToken( 1 );
+        cString password = args.getToken( 2 );
+        cString confirmation = args.getToken( 3 );
 
-class Command_Position : Racesow_Command
-{
-	bool validate(Racesow_Player @player, cString &args, int argc)
-	{
-		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
-			return false;
-			
-		return true;
-	}
-	
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        return player.position(args);
-    }
-}
-
-class Command_Join : Racesow_Command
-{
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if( player.isJoinlocked )
-        {
-            player.sendErrorMessage( "You can't join: You are join locked");
-            return false;
-        }
-
-        if( map.inOvertime )
-        {
-            player.sendErrorMessage( "You can't join during overtime period" );
-            return false;
-        }
-        return true;
-    }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.client.team = TEAM_PLAYERS;
-        player.client.respawn( false );
-        return true;
-    }
-}
-
-class Command_Spec : Racesow_Command
-{
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        return true;
-    }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.client.team = TEAM_SPECTATOR;
-        player.client.respawn( true ); // true means ghost
-        return true;
-    }
-}
-
-class Command_Noclip : Racesow_Command
-{
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if( @player.client.getEnt() == null || player.client.getEnt().team == TEAM_SPECTATOR )
-        {
-            player.sendErrorMessage("Noclip is not available in your current state");
-            return false;
-        }
-        if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
-			return false;
-
-        return true;
-    }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        return player.noclip();
-    }
-}
-
-class Command_Machinegun : Racesow_Command
-{
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-		//give machinegun (this is default behavior in defrag and usefull in some maps to shoot buttons)
-		player.client.inventoryGiveItem( WEAP_MACHINEGUN );
-		return true;
-    }
-}
-
-class Command_Mapname : Racesow_Command
-{
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.sendMessage( map.name + "\n" );
-        return true;
+        return player.getAuth().signUp( authName, authEmail, password, confirmation );
     }
 }
 
@@ -746,6 +1043,13 @@ class Command_Stats : Racesow_Command
     cString what;
     cString which;
     
+    Command_Stats() {
+        super("stats", "Show statistics", 
+        "stats <command> when no options given 'stats player' is executed\n"
+        +"stats player <name> - Prints stats for the given player or yourself if no name given\n"
+        +"stats map <name> - Print stats for the given map or the current map is no name given\n");
+    }
+
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
         if( player.isWaitingForCommand )
@@ -811,51 +1115,187 @@ class Command_Stats : Racesow_Command
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         //player.sendMessage( S_COLOR_RED + "TODO: " + S_COLOR_WHITE + "retrieve stats for " + this.what + " " + this.which + "\n" );
-        return RS_LoadStats(player.client.playerNum(), this.what, this.which);
+        return RS_LoadStats(player.getClient().playerNum(), this.what, this.which);
     }
 }
 
-class Command_Practicemode : Racesow_Command
+class Command_Timeleft : Racesow_Command
 {
-	bool validate( Racesow_Player @player, cString &args, int argc )
-	{
-		if ( player.client.team != TEAM_PLAYERS )
-		{
-			player.sendErrorMessage( "You must join the game before going into practice mode" );
-			return false;
-		}
-		return true;
-	}
-	bool execute( Racesow_Player @player, cString &args, int argc )
-	{
-		if ( @player.client != null )
-		{
-			if ( player.isRacing() )
-				player.cancelRace();
-				
-			if ( player.practicing )
-			{
-				player.practicing = false;
-				player.sendAward( S_COLOR_GREEN + "Leaving practice mode" );
-				player.restartRace();
-					
-				
-			} else {
-				player.practicing = true;
-				player.sendAward( S_COLOR_GREEN + "You have entered practice mode" );
-			}
-			return true;
-		}
-		/* something went wrong */
-		return false;
+
+    Command_Timeleft() {
+        super("timeleft", "Print remaining time before map change", "");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( match.getState() == MATCH_STATE_POSTMATCH )
+        {
+            player.sendErrorMessage( "The command isn't available in this match state");
+            return false;
+        }
 		
-	}
+		if ( !g_maprotation.getBool() )
+		{
+			player.sendErrorMessage( "The command isn't available when g_maprotation == 0.");
+            return false;
+		}
+		
+        if( g_timelimit.getInteger() <= 0 )
+        {
+            player.sendErrorMessage( "There is no timelimit set");
+            return false;
+        }
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+        uint time = levelTime - match.startTime(); //in ms
+        uint timeleft = timelimit - time;
+        if( timelimit < time )
+        {
+            player.sendMessage( "We are already in overtime.\n" );
+            return true;
+        }
+        else
+        {
+            player.sendMessage( "Time left: " + TimeToString( timeleft ) + "\n" );
+            return true;
+        }
+    }
+}
+
+class Command_Token : Racesow_Command
+{
+
+    Command_Token() {
+        super("token", "When authenticated, shows your unique login token you may setu in your config", "");
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        return player.getAuth().showToken();
+    }
+}
+
+class Command_Top : Racesow_Command
+{
+    int limit;
+    cString mapname;
+    int prejumped;
+
+    Command_Top() {
+        super("top", "Print the best times of a given map (default: current map)", "top <pj/nopj> <limit(3-30)> <mapname>");
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        this.limit = 30;
+        this.mapname = "";
+        this.prejumped = 2;
+
+        if ( mysqlConnected == 0 )
+        {
+            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            return false;
+        }
+
+        if (player.isWaitingForCommand)
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+
+        if ( argc > 0 )
+        {
+            cString firstToken = args.getToken(0);
+            if ( firstToken.isNumerical() )
+            {
+                this.limit = firstToken.toInt();
+                if ( argc > 1 )
+                    mapname = args.getToken(1);
+            }
+            else
+            {
+                if (firstToken == "pj")
+                    this.prejumped = 0;
+                else if (firstToken == "nopj")
+                    this.prejumped = 1;
+                else
+                    return false;
+                if ( argc > 1 )
+                    this.limit = args.getToken(1).toInt();
+                if ( argc > 2 )
+                    mapname = args.getToken(2);
+            }
+            if ( this.limit < 3 || this.limit > 30)
+            {
+                player.sendErrorMessage("You must use a limit between 3 and 30");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.isWaitingForCommand=true;
+        RS_MysqlLoadHighscores(player.getClient().playerNum(), this.limit, map.getId(), this.mapname, this.prejumped);
+        return true;
+    }
+
+}
+
+/*class Command_Weapondef : Racesow_Command
+{
+    Command_Weapondef() {
+        super( "weapondef", "", "" ) //FIXME: Either fully remove or add description and usage
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+		return weaponDefCommand( args, @client );
+    }
+}*/
+
+class Command_WhoIsGod : Racesow_Command
+{
+    cString[] devs;
+    Command_WhoIsGod() {
+        super("whoisgod", "Which one is yours?", "whoisgod");
+        this.devs.resize(DEVS.length());
+        for( uint i = 0; i < DEVS.length(); i++)
+            this.devs[i] = DEVS[i];
+    }
+
+    Command_WhoIsGod(cString &in extraDevName) {
+        super("whoisgod", "Which one is yours?", "whoisgod");
+        this.devs.resize(DEVS.length()+1);
+        for( uint i = 0; i < DEVS.length(); i++)
+            this.devs[i] = DEVS[i];
+        this.devs[DEVS.length()] = extraDevName;
+    }
+
+    Command_WhoIsGod(cString[] &in extraDevNames) {
+        super("whoisgod", "Which one is yours?", "whoisgod");
+        this.devs.resize(DEVS.length()+extraDevNames.length());
+        for( uint i = 0; i < DEVS.length(); i++)
+            this.devs[i] = DEVS[i];
+        for( uint i = 0; i < extraDevNames.length(); i++)
+            this.devs[i+DEVS.length()] = extraDevNames[i];
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+        player.sendMessage( devs[brandom( 0, devs.length())] + "\n");
+        return true;
+    }
 }
 
 /**
- * Fill the commands array and set the command counter to the correct value
+ * Fill the commands array and set the command counter to the correct value - FIXME soon obsolete
  */
-void RS_CreateCommands()
+/*void RS_CreateCommands()
 {
     Command_Admin admin;
     admin.name = "admin";
@@ -867,7 +1307,7 @@ void RS_CreateCommands()
             /*+ S_COLOR_RED + "admin add           " + S_COLOR_YELLOW + "add player as an admin\n" //The command string is not long enough to hold all commands
             + S_COLOR_RED + "admin delete           " + S_COLOR_YELLOW + "remove admin rights from player\n"
             + S_COLOR_RED + "admin setpermission           " + S_COLOR_YELLOW + "change permissions of a player\n"*/
-            + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
+            /*+ S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
             + S_COLOR_RED + "admin restart  " + S_COLOR_YELLOW + "restart the match immedeatly\n"
             + S_COLOR_RED + "admin extend_time  " + S_COLOR_YELLOW + "extend the matchtime immedeatly\n"
             + S_COLOR_RED + "admin remove  " + S_COLOR_YELLOW + "remove the given player immedeatly\n"
@@ -1101,12 +1541,12 @@ void RS_CreateCommands()
     practicemode.modFlag = MODFLAG_RACE;
     @commands[commandCount] = @practicemode;
     commandCount++;
-}
+}*/
 
 /*
  * Create all the commands and register them
  */
-void RS_InitCommands()
+/*void RS_InitCommands()
 {
     RS_CreateCommands();
 
@@ -1117,7 +1557,7 @@ void RS_InitCommands()
 
         G_RegisterCommand( commands[i].name );
     }
-}
+}*/
 
 /**
  * Find a command by its name
@@ -1125,7 +1565,7 @@ void RS_InitCommands()
  * @param name The name of the command you are looking for
  * @return Racesow_Command@ handler to the command found or null if not found
  */
-Racesow_Command@ RS_GetCommandByName(cString name)
+/*Racesow_Command@ RS_GetCommandByName(cString name)
 {
     for (int i = 0; i < commandCount; i++)
     {
@@ -1134,4 +1574,4 @@ Racesow_Command@ RS_GetCommandByName(cString name)
     }
 
     return null;
-}
+}*/

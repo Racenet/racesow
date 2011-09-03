@@ -73,261 +73,8 @@ bool isUsingRacesowClient( cClient @client )
  */
 bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int argc )
 {
-    Racesow_Player @player = Racesow_GetPlayerByClient( client );
-    Racesow_Command@ command = RS_GetCommandByName( cmdString );
-
-    //we firstly check if the command is manage in the gametype
-    bool result = racesowGametype.Command( @client, @cmdString, @argsString, argc );
-
-    if ( result ) //if true is returned, the command is ok no need to go further
-        return true;
-
-    if ( @command != null )
-    {
-        player.executeCommand( command, argsString, argc );
-    }
-
-    else if ( cmdString == "whoisgod" )
-    {
-        int index;
-        cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
-        if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE || gametypeFlag == MODFLAG_TRACE )
-            index = brandom( 0, 7 );
-        else
-            index = brandom( 0, 6 );
-        player.sendMessage( devs[index] + "\n" );
-    }
-
-    else if ( ( cmdString == "ammoswitch" ) )
-    {
-        return player.ammoSwitch();
-    }
-
-    else if ( (cmdString == "callvotecheckpermission") )
-    {
-        if ( player.isVotemuted )
-        {
-            player.sendErrorMessage( "You are votemuted" );
-            return false;
-        }
-        else
-        {
-            cString vote = argsString.getToken( 0 );
-            if( vote == "mute" || vote == "vmute" ||
-                vote == "kickban" || vote == "kick" || vote == "remove" ||
-                vote == "joinlock" || vote == "joinunlock" )
-            {
-                Racesow_Player @victimPlayer;
-                cString victim = argsString.getToken( 1 );
-
-                if ( Racesow_GetClientNumber( victim ) != -1 )
-                    @victimPlayer = racesowGametype.players[ Racesow_GetClientNumber( victim ) ];
-                else if( victim.isNumerical() )
-                {
-                    if ( victim.toInt() > maxClients )
-                        return true;
-                    else
-                        @victimPlayer = racesowGametype.players[ victim.toInt() ];
-                }
-                else
-                    return true;
-
-                if( victimPlayer.auth.allow(RACESOW_AUTH_ADMIN) )
-                {
-                    G_PrintMsg( null, S_COLOR_WHITE + player.getName()
-                                + S_COLOR_RED + " tried to "
-                                + argsString.getToken( 0 ) + " an admin.\n" );
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                return true;
-            }
-        }
-    }
-
-	else if ( cmdString == "callvotevalidate" )
-	{
-		cString vote = argsString.getToken( 0 );
-
-		if ( vote == "extend_time" )
-		{
-			if( g_timelimit.getInteger() <= 0 )
-			{
-				client.printMessage( "This vote is only available for timelimits.\n");
-				return false;
-			}
-			uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
-			uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
-			uint time = levelTime - match.startTime(); //in ms
-			uint remainingtime = timelimit - time;
-			bool isNegative = (timelimit < time ) ? true : false;
-			if( remainingtime > extendtimeperiod && !isNegative )
-			{
-				client.printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
-				return false;
-			}
-			return true;
-		}
-
-		if ( vote == "timelimit" )
-		{
-			int new_timelimit = argsString.getToken( 1 ).toInt();
-
-			if ( new_timelimit < 0 )
-			{
-				client.printMessage( "Can't set negative timelimit\n");
-				return false;
-			}
-
-			if ( new_timelimit == g_timelimit.getInteger() )
-			{
-				client.printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
-				return false;
-			}
-
-			return true;
-		}
-
-		if ( vote == "spec" )
-		{
-			if ( ! map.inOvertime )
-			{
-				client.printMessage( S_COLOR_RED + "Callvote spec is only valid during overtime\n");
-				return false;
-			}
-
-			return true;
-		}
-
-		if ( vote == "joinlock" || vote == "joinunlock" )
-    {
-      if( argc != 2 )
-    	{
-        client.printMessage( "Usage: callvote " + vote + " <id or name>\n" );
-    		client.printMessage( "- List of current players:\n" );
-
-    		for ( int i = 0; i < maxClients; i++ )
-    		{
-    		  if ( @racesowGametype.players[i].getClient() != null )
-            client.printMessage( "  " + racesowGametype.players[i].getClient().playerNum() + ": " + racesowGametype.players[i].getClient().getName() + "\n");
-        }
-
-       	return false;
-    	}
-      else
-    	{
-    	  cClient@ target = null;
-
-        if ( argsString.getToken( 1 ).isNumerical() && argsString.getToken( 1 ).toInt() <= maxClients )
-            @target = @G_GetClient( argsString.getToken( 1 ).toInt() );
-        else if ( Racesow_GetClientNumber( argsString.getToken( 1 ) ) != -1 )
-            @target = @G_GetClient( Racesow_GetClientNumber( argsString.getToken( 1 ) ) );
-
-        if ( @target == null || !target.getEnt().inuse )
-        {
-            client.printMessage( S_COLOR_RED + "Invalid player\n" );
-            return false;
-        }
-      }
-
-			return true;
-		}
-
-		client.printMessage( "Unknown callvote " + vote + "\n" );
-		return false;
-	}
-
-	else if ( cmdString == "callvotepassed" )
-	{
-    cString vote = argsString.getToken( 0 );
-
-    if ( vote == "extend_time" )
-    {
-      g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
-
-      map.cancelOvertime();
-			for ( int i = 0; i < maxClients; i++ )
-			{
-					racesowGametype.players[i].cancelOvertime();
-			}
-    }
-
-		if ( vote == "timelimit" )
-    {
-				int new_timelimit = argsString.getToken( 1 ).toInt();
-				g_timelimit.set(new_timelimit);
-
-				// g_timelimit_reset == 1: this timelimit value is not kept after current map
-				// g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
-				if (g_timelimit_reset.getBool() == false)
-				{
-					oldTimelimit = g_timelimit.getInteger();
-				}
-    }
-
-		if ( vote == "spec" )
-		{
-				for ( int i = 0; i < maxClients; i++ )
-				{
-					if ( @racesowGametype.players[i].getClient() != null )
-					{
-						racesowGametype.players[i].moveToSpec( S_COLOR_RED + "You have been moved to spec cause you were playing in overtime.\n");
-					}
-				}
-
-		}
-
-    if ( vote == "joinlock" || vote == "joinunlock" )
-  	{
-      	Racesow_Player@ target = null;
-
-        if ( argsString.getToken( 1 ).isNumerical() && argsString.getToken( 1 ).toInt() <= maxClients )
-          @target = @Racesow_GetPlayerByNumber( argsString.getToken( 1 ).toInt() );
-        else if ( Racesow_GetClientNumber( argsString.getToken( 1 ) ) != -1 )
-          @target = @Racesow_GetPlayerByNumber( Racesow_GetClientNumber( argsString.getToken( 1 ) ) );
-
-        if ( vote == "joinlock" )
-          target.isJoinlocked = true;
-        else
-          target.isJoinlocked = false;
-
-        return true;
-  	}
-
-      return true;
-  }
-  /*
-	else if ( ( cmdString == "weapondef" ) )
-  {
-		return weaponDefCommand( argsString, @client );
-  }
-    */
-	else if ( ( cmdString == "cvarinfo" ) )
-  {
-		//token0: cVar name; token1: cVar value
-		cString cvarName = argsString.getToken(0);
-		cString cvarValue = argsString.getToken(1);
-
-		if( cvarName.substr(0,15) == "storedposition_")
-		{
-			cString positionValues = cvarValue;
-			cVec3 origin, angles;
-			origin.x = positionValues.getToken(1).toFloat();
-			origin.y = positionValues.getToken(2).toFloat();
-			origin.z = positionValues.getToken(3).toFloat();
-			angles.x = positionValues.getToken(4).toFloat();
-			angles.y = positionValues.getToken(5).toFloat();
-			player.teleport( origin, angles, false, false );
-		}
-  }
-
-  return false;
+    //We let the gametype handle everything
+    return racesowGametype.Command( client, cmdString, argsString, argc );
 }
 
 /**
@@ -853,13 +600,13 @@ void GT_InitGametype()
     prcFlagIconStolen = G_ImageIndex( "gfx/hud/icons/flags/iconflag_stolen" );
 
     // add commands
-    RS_InitCommands();
+    //RS_InitCommands();
 
     // weapondef not needed anymore, we're not testing weapons
     //G_RegisterCommand( "weapondef" );
 
-    G_RegisterCommand( "ammoswitch" );
-    G_RegisterCommand( "whoisgod" );
+    /*G_RegisterCommand( "ammoswitch" );
+    G_RegisterCommand( "whoisgod" );*/
 
     //add callvotes
     G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
@@ -890,5 +637,7 @@ void GT_InitGametype()
     @racesowGametype = @getRacesowGametype();
 
 	racesowGametype.InitGametype();
+
+    racesowGametype.registerCommands();
 }
 
