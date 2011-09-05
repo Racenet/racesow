@@ -16,11 +16,6 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         commandMap.set_opIndex("whoisgod", @Command_WhoIsGod("Jerm's"));
     }
     
-    ~Racesow_Gametype_Durace()
-    {
-
-    }
-    
     void InitGametype()
     {
         switch (gametypeFlag)

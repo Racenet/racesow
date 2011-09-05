@@ -31,11 +31,6 @@ class Racesow_Gametype_Race : Racesow_Gametype
         commandMap.set_opIndex("practicemode", @Command_Practicemode());
     }
     
-    ~Racesow_Gametype_Race()
-    {
-
-    }
-    
     void InitGametype()
     {
       gametype.setTitle( "Race" );

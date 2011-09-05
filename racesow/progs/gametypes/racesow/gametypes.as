@@ -67,28 +67,6 @@ class Racesow_Gametype
 	 * @return Success boolean
 	 */
     bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
-    {
-        /*Racesow_Player @player = Racesow_GetPlayerByClient( client );
-
-	    if(command.validate(player, argsString, argc))
-	    {
-	        if(command.execute(player, argsString, argc))
-	            return true;
-	        else
-	        {
-	            this.sendMessage(command.getUsage());
-	            return false;
-	        }
-	    }
-
-		if ( command.practiceEnabled /|*&& gametypeFlag != MODFLAG_FREESTYLE*|/ ) //Overwrite in Freestyle
-		{
-			// if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
-			// i guess we'll have a better solution to this when the new command system is up.
-			this.sendErrorMessage( "The " + command.name + " command is only available in practice mode." );
-			return true;
-		}
-	    this.sendMessage(command.getUsage());*/
         Racesow_Command @command;
         Racesow_Player @player = Racesow_GetPlayerByClient( client );
 

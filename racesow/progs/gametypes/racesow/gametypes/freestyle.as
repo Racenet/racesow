@@ -24,11 +24,6 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         commandMap.set_opIndex("noclip", @Command_Noclip());
     }
     
-    ~Racesow_Gametype_Freestyle()
-    {
-
-    }
-    
     void InitGametype()
     {
       gametype.setTitle( "Freestyle" );
@@ -252,11 +247,6 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     bool UpdateBotStatus( cEntity @self )
     {
         return false;// let the default code handle it itself
-    }
-    
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
-    {
-        return false;
     }
 }
 

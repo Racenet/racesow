@@ -21,6 +21,10 @@ class RC_Pair {
         @this.second = second;
     }
 
+    cString @getFirst() {
+        return @this.first;
+    }
+
     Racesow_Command @getSecond() {
         return @this.second;
     }
@@ -44,12 +48,7 @@ class RC_Map {
     RC_Map() {
         this.max_size=MAX_COMMANDS;
         this.last = 0;
-        this.elements.resize(max_size);
-    }
-
-    ~RC_Map() {
-        for( uint i = 0; i < this.last; i++)
-            @this.elements[i] = null;
+        this.elements = RC_Pair@[](max_size);
     }
 
     Racesow_Command @get_opIndex(cString &in idx) {
@@ -76,7 +75,7 @@ class RC_Map {
     int find( cString &in search) {
         for (uint i = 0; i < this.max_size; i++) {
             if ( @elements[i] != null ) {
-                if ( elements[i].first == search )
+                if ( elements[i].getFirst() == search )
                     return i;
             }
             else
@@ -97,7 +96,7 @@ class RC_Map {
 
     void register() {
         for( uint i = 0; i < this.last; i++) {
-            G_RegisterCommand(this.elements[i].first);
+            G_RegisterCommand(this.elements[i].getFirst());
         }
     }
 }

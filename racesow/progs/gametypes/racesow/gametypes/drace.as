@@ -701,11 +701,6 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod("Jerm's") );
     }
     
-    ~Racesow_Gametype_Drace()
-    {
-
-    }
-    
     void InitGametype()
     {
         gametype.setTitle( "Duel Race" );
