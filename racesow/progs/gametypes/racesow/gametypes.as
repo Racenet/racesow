@@ -67,6 +67,7 @@ class Racesow_Gametype
 	 * @return Success boolean
 	 */
     bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    {
         Racesow_Command @command;
         Racesow_Player @player = Racesow_GetPlayerByClient( client );
 
