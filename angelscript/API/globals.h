@@ -419,6 +419,7 @@ typedef enum
 const uint levelTime;
 const uint frameTime;
 const uint realTime;
+const uint serverTime; // racesow
 const uint64 localTime;
 const int maxEntities;
 const int numEntities;
