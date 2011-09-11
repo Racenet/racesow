@@ -120,7 +120,7 @@ class Command_Admin : Racesow_Command
 	RC_Map @commandMap;
 
     Command_Admin() {
-        super("admin", "Execute an admin command", "admin <subcommand>");
+        super("admin", "Execute an admin command", "admin <subcommand> [args...]");
 
         @this.commandMap = @RC_Map();
         this.commandMap.set_opIndex( "map", @Command_AdminMap() );
@@ -138,7 +138,7 @@ class Command_Admin : Racesow_Command
         this.commandMap.set_opIndex( "joinlock", @Command_AdminJoinlock() );
         this.commandMap.set_opIndex( "cancelvote", @Command_AdminCancelvote() );
         this.commandMap.set_opIndex( "updateml", @Command_AdminUpdateml() );
-        this.commandMap.set_opIndex( "help", @Command_AdminHelp( @this.commandMap ) );
+        this.commandMap.set_opIndex( "help", @Command_AdminHelp( @this.commandMap, @this.name ) );
     }
 
     //validate only the first level of the command
@@ -146,7 +146,7 @@ class Command_Admin : Racesow_Command
     {
         if ( argc < 1 )
         {
-            player.sendErrorMessage( "No subcommand given. Use 'help admin' for more information" );
+            player.sendErrorMessage( "No subcommand given. Use 'admin help' for more information" );
             return false;
         }
 
@@ -154,20 +154,20 @@ class Command_Admin : Racesow_Command
     	if ( @cmd == null )
     		return false;
 
+        if ( !player.auth.allow( cmd.permissionMask ) )
+        {
+//            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
+//                + " tried to execute an admin command without permission.\n" );
+            player.sendErrorMessage( "You don't have permission to execute this command" );
+            return false;
+        }
+
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
     	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( 0 ) );
-
-        if ( !player.auth.allow( subCommand.permissionMask ) )
-        {
-//            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
-//                + " tried to execute an admin command without permission.\n" );
-            return false;
-        }
-
 
     	if( subCommand.validate( player, args, argc ) )
     		if( subCommand.execute( player, args, argc ) )
@@ -1622,11 +1622,13 @@ const int RACESOW_ADMINCOMMAND_LEVEL = 1;
 class Command_AdminHelp : Racesow_Command // (should be subclass of Racesow_AdminCommand )
 {
     RC_Map @commandMap;
+    cString @baseCommand;
 
-	Command_AdminHelp( RC_Map @commandMap )
+	Command_AdminHelp( RC_Map @commandMap, cString @baseCommand )
 	{
 		super( "help", "Print this help, or give help on a specific subcommand", "help [subcommand]" );
         @this.commandMap = @commandMap;
+        @this.baseCommand = @baseCommand;
 	}
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1649,7 +1651,7 @@ class Command_AdminHelp : Racesow_Command // (should be subclass of Racesow_Admi
         {
             cString help;
             help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-            help += S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n";
+            help += S_COLOR_RED + baseCommand.toupper() + " HELP for Racesow " + gametype.getVersion() + "\n";
             help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
             player.sendMessage(help);
             help = "";
@@ -1658,7 +1660,7 @@ class Command_AdminHelp : Racesow_Command // (should be subclass of Racesow_Admi
             {
                 Racesow_Command@ command = @this.commandMap.getCommandAt(i);
 
-                help += command.getDescription();
+                help += S_COLOR_ORANGE + baseCommand + " " + command.getDescription();
                 if ( (i/5)*5 == i ) //to avoid print buffer overflow
                 {
                     player.sendMessage(help);
