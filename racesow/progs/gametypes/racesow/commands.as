@@ -9,7 +9,7 @@ const int MODFLAG_DURACE = 16;
 const int MODFLAG_TRACE = 32;
 const int MODFLAG_ALL = 63;
 
-const cString[] DEVS =  { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo" };
+const cString[] DEVS =  { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Joki" };
 
 /**
  * Generic command class, all commands inherit from this class
@@ -48,6 +48,11 @@ class Racesow_Command
 	 */
 	bool practiceEnabled;
 	
+	/**
+	 * Required User Privileges
+	 */
+	int permissionMask;
+
     /**
      * Non-Default constructor to be used with super() in the derived classes
      */
@@ -56,6 +61,7 @@ class Racesow_Command
         this.name = name;
         this.description = description;
         this.usage = usage;
+        this.permissionMask = 0;
     }
 
     /**
@@ -111,50 +117,62 @@ class Racesow_Command
 
 class Command_Admin : Racesow_Command
 {
+	RC_Map @commandMap;
+
     Command_Admin() {
-        super("admin", "Execute an admin command",
-            S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
-            + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
-            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
-            /*+ S_COLOR_RED + "admin add           " + S_COLOR_YELLOW + "add player as an admin\n" //The command string is not long enough to hold all commands
-            + S_COLOR_RED + "admin delete           " + S_COLOR_YELLOW + "remove admin rights from player\n"
-            + S_COLOR_RED + "admin setpermission           " + S_COLOR_YELLOW + "change permissions of a player\n"*/
-            + S_COLOR_RED + "admin map           " + S_COLOR_YELLOW + "change to the given map immedeatly\n"
-            + S_COLOR_RED + "admin restart  " + S_COLOR_YELLOW + "restart the match immedeatly\n"
-            + S_COLOR_RED + "admin extend_time  " + S_COLOR_YELLOW + "extend the matchtime immedeatly\n"
-            + S_COLOR_RED + "admin remove  " + S_COLOR_YELLOW + "remove the given player immedeatly\n"
-            + S_COLOR_RED + "admin kick          " + S_COLOR_YELLOW + "kick the given player immedeatly\n"
-            + S_COLOR_RED + "admin kickban       " + S_COLOR_YELLOW + "kickban the given player immedeatly\n"
-            + S_COLOR_RED + "admin [v](un)mute  " + S_COLOR_YELLOW + "[v](un)mute the given player immedeatly\n"
-            + S_COLOR_RED + "admin vote(un)mute  " + S_COLOR_YELLOW + "enable/disable voting for the given player\n"
-            + S_COLOR_RED + "admin joinlock  " + S_COLOR_YELLOW + "prevent the given player from joining\n"
-            + S_COLOR_RED + "admin cancelvote    " + S_COLOR_YELLOW + "cancel the currently active vote\n"
-            + S_COLOR_RED + "admin updateml    " + S_COLOR_YELLOW + "Update the maplist\n"
-            + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n");
+        super("admin", "Execute an admin command", "admin <subcommand>");
+
+        @this.commandMap = @RC_Map();
+        this.commandMap.set_opIndex( "map", @Command_AdminMap() );
+        this.commandMap.set_opIndex( "restart", @Command_AdminRestart() );
+        this.commandMap.set_opIndex( "extend_time", @Command_AdminExtendtime() );
+        this.commandMap.set_opIndex( "remove", @Command_AdminRemove() );
+        this.commandMap.set_opIndex( "kick", @Command_AdminKick() );
+        this.commandMap.set_opIndex( "kickban", @Command_AdminKickban() );
+        this.commandMap.set_opIndex( "mute", @Command_AdminMute() );
+        this.commandMap.set_opIndex( "unmute", @Command_AdminUnmute() );
+        this.commandMap.set_opIndex( "vmute", @Command_AdminVmute() );
+        this.commandMap.set_opIndex( "vunmute", @Command_AdminVunmute() );
+        this.commandMap.set_opIndex( "votemute", @Command_AdminVotemute() );
+        this.commandMap.set_opIndex( "voteunmute", @Command_AdminUnvotemute() );
+        this.commandMap.set_opIndex( "joinlock", @Command_AdminJoinlock() );
+        this.commandMap.set_opIndex( "cancelvote", @Command_AdminCancelvote() );
+        this.commandMap.set_opIndex( "updateml", @Command_AdminUpdateml() );
+        this.commandMap.set_opIndex( "help", @Command_AdminHelp( @this.commandMap ) );
     }
 
+    //validate only the first level of the command
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        // i think this needs to be removed
-        /*if ( !player.auth.allow( RACESOW_AUTH_ADMIN ) )
-        {
-            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
-                + " tried to execute an admin command without permission.\n" );
-            return false;
-        }*/
-
         if ( argc < 1 )
         {
-            player.sendErrorMessage( "No command given. Use 'help admin' for more information" );
+            player.sendErrorMessage( "No subcommand given. Use 'help admin' for more information" );
             return false;
         }
+
+        Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( 0 ) );
+    	if ( @cmd == null )
+    		return false;
 
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        return player.adminCommand( args );
+    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( 0 ) );
+
+        if ( !player.auth.allow( subCommand.permissionMask ) )
+        {
+//            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
+//                + " tried to execute an admin command without permission.\n" );
+            return false;
+        }
+
+
+    	if( subCommand.validate( player, args, argc ) )
+    		if( subCommand.execute( player, args, argc ) )
+    	    	return true;
+    	return false;
     }
 }
 
@@ -1575,3 +1593,502 @@ class Command_WhoIsGod : Racesow_Command
 
     return null;
 }*/
+
+const int RACESOW_ADMINCOMMAND_LEVEL = 1;
+
+//class Racesow_AdminCommand : Racesow_Command
+//{
+//    /**
+//     * Required User Privileges
+//     */
+//    int permissionMask;
+//
+//    /**
+//     * Non-Default constructor to be used with super() in the derived classes
+//     */
+//    Racesow_AdminCommand( cString &in name, cString &in description, cString &in usage, int auth )
+//    {
+//        super( name, description, usage );
+//        this.permissionMask = auth;
+//    }
+//
+//    bool validate(Racesow_Player @player, cString &args, int argc) { return true; }
+//
+//    bool execute(Racesow_Player @player, cString &args, int argc) { return true; }
+//}
+
+
+
+class Command_AdminHelp : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+{
+    RC_Map @commandMap;
+
+	Command_AdminHelp( RC_Map @commandMap )
+	{
+		super( "help", "Print this help, or give help on a specific subcommand", "help [subcommand]" );
+        @this.commandMap = @commandMap;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        if ( argc >= RACESOW_ADMINCOMMAND_LEVEL + 1 )
+        {
+            Racesow_Command@ command = @this.commandMap.get_opIndex( args.getToken( RACESOW_ADMINCOMMAND_LEVEL ) );
+            if ( @command != null)
+            {
+                player.sendMessage( command.getDescription() + command.getUsage() );
+                return true;
+            }
+            else
+            {
+                player.sendErrorMessage("Command " + S_COLOR_YELLOW + args.getToken( RACESOW_ADMINCOMMAND_LEVEL ) + S_COLOR_WHITE + " not found");
+                return true;
+            }
+        }
+        else
+        {
+            cString help;
+            help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+            help += S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n";
+            help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
+            player.sendMessage(help);
+            help = "";
+
+            for (uint i = 0; i < this.commandMap.size(); i++)
+            {
+                Racesow_Command@ command = @this.commandMap.getCommandAt(i);
+
+                help += command.getDescription();
+                if ( (i/5)*5 == i ) //to avoid print buffer overflow
+                {
+                    player.sendMessage(help);
+                    help = "";
+                }
+            }
+
+            player.sendMessage(help);
+            player.sendMessage( S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n\n");
+            return true;
+        }
+    }
+}
+
+
+
+
+class Command_AdminMap : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+{
+	Command_AdminMap()
+	{
+		super( "map", "change to the given map immedeatly", "map <mapname>" );
+        this.permissionMask = RACESOW_AUTH_MAP;
+	}
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if ( argc < RACESOW_ADMINCOMMAND_LEVEL + 1 )
+        {
+            return false;
+        }
+
+        cString mapName = args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 );
+        if ( mapName == "" )
+        {
+            player.sendErrorMessage( "No map name given" );
+            return false;
+        }
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        cString mapName = args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 );
+        G_CmdExecute( "gamemap " + mapName + "\n" );
+        return true;
+    }
+}
+
+
+class Command_AdminUpdateml : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+{
+	Command_AdminUpdateml()
+	{
+		super( "updateml", "Update the maplist", "updateml" );
+        this.permissionMask = RACESOW_AUTH_ADMIN;
+	}
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        RS_UpdateMapList( player.client.playerNum() );
+        return true;
+    }
+}
+
+
+class Command_AdminRestart : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+{
+	Command_AdminRestart()
+	{
+		super( "restart", "restart the match immedeatly", "restart" );
+        this.permissionMask = RACESOW_AUTH_MAP;
+	}
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        G_CmdExecute("match restart\n");
+        return true;
+    }
+}
+
+
+class Command_AdminExtendtime : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+{
+	Command_AdminExtendtime()
+	{
+		super( "extend_time", "extend the matchtime immedeatly", "extend_time" );
+        this.permissionMask = RACESOW_AUTH_MAP;
+	}
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( g_timelimit.getInteger() <= 0 )
+        {
+            player.sendErrorMessage( "This command is only available for timelimits.\n");
+            return false;
+        }
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+
+        map.cancelOvertime(); //FIXME: merge player.cancelOvertime and map.cancelOvertime into a gametype function?
+        for ( int i = 0; i < maxClients; i++ )
+        {
+            racesowGametype.players[i].cancelOvertime();
+        }
+        return true;
+    }
+}
+
+
+class Command_AdminCancelvote : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+{
+	Command_AdminCancelvote()
+	{
+		super( "cancelvote", "cancel the currently active vote", "cancelvote" );
+        this.permissionMask = RACESOW_AUTH_MAP;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        RS_cancelvote();
+        return true;
+    }
+}
+
+// implementation of validate() for mute/kick commands
+class Racesow_TargetCommand : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+{
+	Racesow_TargetCommand( cString &in name, cString &in description, cString &in usage )
+	{
+        super( name, description, usage );
+	}
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ) == "" )
+        {
+            player.client.execGameCommand("cmd players");
+            return false;
+        }
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        if (@targetPlayer == null )
+            return false;
+        return true;
+    }
+}
+
+class Command_AdminMute : Racesow_TargetCommand
+{
+	Command_AdminMute()
+	{
+		super( "mute", "mute the given player immedeatly", "mute <playerid>" );
+        this.permissionMask = RACESOW_AUTH_MUTE;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.client.muted |= 1;
+        return true;
+    }
+}
+
+class Command_AdminUnmute : Racesow_TargetCommand
+{
+	Command_AdminUnmute()
+	{
+		super( "unmute", "unmute the given player immedeatly", "unmute <playerid>" );
+        this.permissionMask = RACESOW_AUTH_MUTE;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.client.muted &= ~1;
+        return true;
+    }
+}
+
+class Command_AdminVmute : Racesow_TargetCommand
+{
+	Command_AdminVmute()
+	{
+		super( "vmute", "vmute the given player immedeatly", "vmute <playerid>" );
+        this.permissionMask = RACESOW_AUTH_MUTE;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.client.muted |= 2;
+        return true;
+    }
+}
+
+class Command_AdminVunmute : Racesow_TargetCommand
+{
+	Command_AdminVunmute()
+	{
+		super( "vunmute", "vunmute the given player immedeatly", "vunmute <playerid>" );
+		this.permissionMask = RACESOW_AUTH_MUTE;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.client.muted &= ~2;
+        return true;
+    }
+}
+
+class Command_AdminVotemute : Racesow_TargetCommand
+{
+	Command_AdminVotemute()
+	{
+		super( "votemute", "disable voting for the given player", "votemute <playerid>" );
+		this.permissionMask = RACESOW_AUTH_MUTE;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.isVotemuted = true;
+        return true;
+    }
+}
+
+class Command_AdminUnvotemute : Racesow_TargetCommand
+{
+	Command_AdminUnvotemute()
+	{
+		super( "unvotemute", "enable voting for the given player", "unvotemute <playerid>" );
+		this.permissionMask = RACESOW_AUTH_MUTE;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.isVotemuted = false;
+        return true;
+    }
+}
+
+class Command_AdminRemove : Racesow_TargetCommand
+{
+	Command_AdminRemove()
+	{
+		super( "remove", "remove the given player immedeatly", "remove <playerid>" );
+		this.permissionMask = RACESOW_AUTH_KICK;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.remove("");
+        return true;
+    }
+}
+
+class Command_AdminKick : Racesow_TargetCommand
+{
+	Command_AdminKick()
+	{
+		super( "kick", "kick the given player immedeatly", "kick <playerid>" );
+		this.permissionMask = RACESOW_AUTH_KICK;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.kick("");
+        return true;
+    }
+}
+
+class Command_AdminJoinlock : Racesow_TargetCommand
+{
+	Command_AdminJoinlock()
+	{
+		super( "joinlock", "prevent the given player from joining", "joinlock <playerid>" );
+		this.permissionMask = RACESOW_AUTH_KICK;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.isJoinlocked = true;
+        return true;
+    }
+}
+
+class Command_AdminJoinunlock : Racesow_TargetCommand
+{
+	Command_AdminJoinunlock()
+	{
+		super( "joinunlock", "allow the given player to joining", "joinunlock <playerid>" );
+		this.permissionMask = RACESOW_AUTH_KICK;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.isJoinlocked = false;
+        return true;
+    }
+}
+
+class Command_AdminKickban : Racesow_TargetCommand
+{
+	Command_AdminKickban()
+	{
+		super( "kickban", "kickban the given player immedeatly", "kickban <playerid>" );
+		this.permissionMask = RACESOW_AUTH_ADMIN;
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 0 ).toInt() );
+        targetPlayer.kickban("");
+        return true;
+    }
+}
+
+
+
+
+
+
+//Commented out for release - Per server admin/authmasks will be finished when the new http DB-Interaction is done
+// add command - adds a new admin (sets all permissions except RACESOW_AUTH_SETPERMISSION)
+// delete command - deletes admin rights for the given player
+/*
+class Command_AdminAdd : Racesow_TargetCommand
+{
+	Command_AdminAdd()
+	{
+		super( "add", "add", "add", RACESOW_AUTH_ADMIN | RACESOW_AUTH_SETPERMISSION );
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendErrorMessage("added");
+        //player.setAuthmask( RACESOW_AUTH_ADMIN );
+        return true;
+    }
+}
+
+class Command_AdminDelete : Racesow_TargetCommand
+{
+	Command_AdminDelete()
+	{
+		super( "delete", "delete", "delete", RACESOW_AUTH_ADMIN | RACESOW_AUTH_SETPERMISSION );
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.sendErrorMessage("deleted");
+        //player.setAuthmask( RACESOW_AUTH_REGISTERED );
+        return true;
+    }
+}
+
+
+class Command_AdminSetpermission : Racesow_TargetCommand
+{
+	Command_AdminSetpermission()
+    {
+        super( "setpermission", "setpermission", "setpermission", RACESOW_AUTH_ADMIN | RACESOW_AUTH_SETPERMISSION );
+    }
+
+	bool validate( Racesow_Player @player, cString &args, int argc )
+	{
+		if( Racesow_TargetCommand::validate( player, args, argc ) ) //FIXME: does this work?
+		{
+
+	        if( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 1 ) == "" )
+	        {
+	            //show list of permissions: map, mute, kick, timelimit, restart, setpermission
+	            player.sendErrorMessage( "No permission specified. Available permissions:\n map, mute, kick, timelimit, restart, setpermission" );
+	            return false;
+	        }
+
+	        if( args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 2 ) == "" || args.getToken( RACESOW_ADMINCOMMAND_LEVEL + 2 ).toInt() > 1 )
+	        {
+	            //show: 1 to enable 0 to disable current: <enabled/disabled>
+	            player.sendErrorMessage( "1 to enable permission 0 to disable permission" );
+	            return false;
+	        }
+			return true;
+		}
+	}
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+    	uint permission;
+
+        if( args.getToken( 2 ) == "map" )
+            permission = RACESOW_AUTH_MAP;
+        else if( args.getToken( 2 ) == "mute" )
+            permission = RACESOW_AUTH_MUTE;
+        else if( args.getToken( 2 ) == "kick" )
+            permission = RACESOW_AUTH_KICK;
+        else if( args.getToken( 2 ) == "timelimit" )
+            permission = RACESOW_AUTH_TIMELIMIT;
+        else if( args.getToken( 2 ) == "restart" )
+            permission = RACESOW_AUTH_RESTART;
+        else if( args.getToken( 2 ) == "setpermission" )
+            permission = RACESOW_AUTH_SETPERMISSION;
+        else
+            return false;
+
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( 1 ).toInt() );
+
+        if( args.getToken( 3 ).toInt() == 1 )
+            player.sendErrorMessage( args.getToken( 2 ) + "enabled" );
+            //targetPlayer.setAuthmask( player.authmask | permission );
+        else
+            player.sendErrorMessage( args.getToken( 2 ) + "disabled" );
+            //targetPlayer.setAuthmask( player.authmask & ~permission );
+    }
+}
+*/
