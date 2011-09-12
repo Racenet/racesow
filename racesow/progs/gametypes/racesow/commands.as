@@ -171,13 +171,13 @@ class Command_Admin : Racesow_Command
     //validate only the first level of the command
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( argc < 1 )
+        if ( argc < this.getLevel() + 1 )
         {
-            player.sendErrorMessage( "No subcommand given. Use 'admin help' for more information" );
+            player.sendErrorMessage( "No subcommand given. Use '" + this.name + " help' for more information" );
             return false;
         }
 
-        Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( 0 ) );
+        Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
     	if ( @cmd == null )
     		return false;
 
@@ -194,7 +194,7 @@ class Command_Admin : Racesow_Command
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( 0 ) );
+    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
 
     	if( subCommand.validate( player, args, argc ) )
     		if( subCommand.execute( player, args, argc ) )
@@ -542,8 +542,6 @@ class Command_Help : Racesow_Command // (should be subclass of Racesow_AdminComm
     		baseCommandString += command.name + " ";
     		@command = @baseCommand.baseCommand;
     	}
-    	if( baseCommandString.length() > 0)
-    		baseCommandString += " ";
     	if ( argc >= this.getLevel() + 1 )
         {
             @command = @this.commandMap.get_opIndex( args.getToken( this.getLevel() ) );
@@ -831,33 +829,122 @@ class Command_Oneliner : Racesow_Command
         RS_MysqlSetOneliner(player.getClient().playerNum(), player.getId(), map.getId(), args);
         return true;
     }
-
 }
 
 class Command_Position : Racesow_Command
 {
+	RC_Map @commandMap;
+	Racesow_Command @cmd;
+	Command_Position() {
+        super("position", "Commands to store and load position", "<subcommand> [args...]");
 
-    Command_Position() {
-        super("position", "Commands to store and load position",
-            "position <command> where command is one of :\n"
-            + "position load - Teleport to saved position\n"
-            + "position set <x> <y> <z> <pitch> <yaw> - Teleport to specified position\n"
-            + "position store <id> <name> - Store a position for another session\n"
-            + "position restore <id> - Restore a stored position from another session\n"
-            + "position storedlist <limit> - Sends you a list of your stored positions\n");
+        @this.commandMap = @RC_Map();
+        @cmd = @Command_PositionSave( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_PositionLoad( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_PositionSet( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_PositionStore( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_PositionRestore( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_PositionStoredlist( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_Help( @this, @this.commandMap );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
     }
+    //validate only the first level of the command
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if ( argc < this.getLevel() + 1 )
+        {
+            player.sendErrorMessage( "No subcommand given. Use '" + this.name + " help' for more information" );
+            return false;
+        }
+        Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
+    	if ( @cmd == null )
+    	{
+            player.sendErrorMessage( "Subcommand " + args.getToken( this.getLevel() + 1 ) + " not found" );
+    		return false;
+    	}
+        return true;
+    }
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
+    	if( subCommand.validate( player, args, argc ) )
+    		if( subCommand.execute( player, args, argc ) )
+    	    	return true;
 
+    	return false;
+    }
+}
+
+//implements validate() and execute() for position commands //TODO: integrate execution of position commands here
+class Racesow_PositionCommand : Racesow_Command
+{
+	Racesow_PositionCommand( cString &in name, cString &in description, cString &in usage )
+	{
+        super( name, description, usage );
+	}
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
 		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
 			return false;
-			
 		return true;
 	}
-	
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         return player.position(args);
+    }
+}
+
+class Command_PositionSave : Racesow_PositionCommand
+{
+	Command_PositionSave( Racesow_Command @baseCommand ) {
+        super("save", "Save position", "");
+        @this.baseCommand = @baseCommand;
+    }
+}
+
+class Command_PositionLoad : Racesow_PositionCommand
+{
+	Command_PositionLoad( Racesow_Command @baseCommand ) {
+        super("load", "Teleport to saved position", "");
+        @this.baseCommand = @baseCommand;
+    }
+}
+
+class Command_PositionSet : Racesow_PositionCommand
+{
+	Command_PositionSet( Racesow_Command @baseCommand ) {
+        super("set", "Teleport to specified position", "<x> <y> <z> <pitch> <yaw>");
+        @this.baseCommand = @baseCommand;
+    }
+}
+
+class Command_PositionStore : Racesow_PositionCommand
+{
+	Command_PositionStore( Racesow_Command @baseCommand ) {
+        super("store", "Store a position for another session", "<id> <name>");
+        @this.baseCommand = @baseCommand;
+    }
+}
+
+class Command_PositionRestore : Racesow_PositionCommand
+{
+	Command_PositionRestore( Racesow_Command @baseCommand ) {
+        super("restore", "Restore a stored position from another session", "<id>");
+        @this.baseCommand = @baseCommand;
+    }
+}
+
+class Command_PositionStoredlist : Racesow_PositionCommand
+{
+	Command_PositionStoredlist( Racesow_Command @baseCommand ) {
+        super("storedlist", "Sends you a list of your stored positions", "<limit>");
+        @this.baseCommand = @baseCommand;
     }
 }
 
