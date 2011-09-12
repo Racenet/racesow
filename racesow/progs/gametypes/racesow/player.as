@@ -989,8 +989,8 @@ class Racesow_Player
 
 	bool positionSet( cVec3 origin, cVec3 angles )
 	{
-		return this.teleport( origin, angles, false, false );
 		this.positionLastcmd = realTime;
+		return this.teleport( origin, angles, false, false );
 	}
 
 	bool positionStore( int id, cString name )

@@ -882,7 +882,7 @@ class Command_Position : Racesow_Command
         Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
     	if ( @cmd == null )
     	{
-            player.sendErrorMessage( "Subcommand " + args.getToken( this.getLevel() + 1 ) + " not found" );
+            player.sendErrorMessage( "Subcommand " + args.getToken( this.getLevel() ) + " not found" );
     		return false;
     	}
         return true;
@@ -1015,7 +1015,7 @@ class Command_PositionRestore : Racesow_PositionCommand
     }
 }
 
-const int POSITION_STOREDLIST_LIMIT = 50; // put this into the position class, when it exists
+const int POSITION_STOREDLIST_LIMIT = 50; //FIXME: put this into the position class, when it exists
 
 class Command_PositionStoredlist : Racesow_PositionCommand
 {
@@ -1276,82 +1276,91 @@ class Command_Register : Racesow_Command
 
 class Command_Stats : Racesow_Command
 {
-    cString what;
-    cString which;
-    
-    Command_Stats() {
-        super("stats", "Show statistics", 
-        "stats <command> when no options given 'stats player' is executed\n"
-        +"stats player <name> - Prints stats for the given player or yourself if no name given\n"
-        +"stats map <name> - Print stats for the given map or the current map is no name given\n");
-    }
+	RC_Map @commandMap;
+	Command_Stats() {
+        super("stats", "Show statistics", "[subcommand] [args...]");
 
+    	Racesow_Command @cmd;
+        @this.commandMap = @RC_Map();
+        @cmd = @Command_StatsPlayer( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_StatsMap( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_Help( @this, @this.commandMap );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+    }
+    //validate only the first level of the command
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
+    	if( mysqlConnected == 0 )
+    	{
+            player.sendErrorMessage( "mysql not connected");
+//            return false;
+    	}
         if( player.isWaitingForCommand )
         {
             player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
                     +"results of your previous command");
             return false;
         }
-    
-        this.what = "";
-        this.which = "";
-    
-        if (argc == 0)
+        if ( argc > this.getLevel() )
         {
-            this.what = "player";
-            this.which = player.getName();
+        	Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
+        	if ( @cmd == null )
+        	{
+        		player.sendErrorMessage( "Subcommand " + args.getToken( this.getLevel() ) + " not found" );
+        		return false;
+        	}
         }
-        else
-        {
-            if (args.getToken(0) == "player")
-            {
-                this.what = "player";
-                if (argc == 2)
-                {
-                    this.which = args.getToken(1);
-                }
-                else
-                {
-                    this.which = player.getName();
-                }
-            }
-            else if (args.getToken(0) == "map")
-            {
-                this.what = "map";
-                if (argc == 2)
-                {
-                    this.which = args.getToken(1);
-                }
-                else
-                {
-                    this.which = map.name;
-                }
-            }
-            else
-            {
-                player.sendErrorMessage("stats command '"+ args.getToken(0) +"' not found");
-            }
-        }
-        
-        if (this.what == "")
-        {
-            return false;
-        }
-        
-        if (this.which == "")
-        {
-            return false;
-        }
-        
         return true;
     }
-
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        //player.sendMessage( S_COLOR_RED + "TODO: " + S_COLOR_WHITE + "retrieve stats for " + this.what + " " + this.which + "\n" );
-        return RS_LoadStats(player.getClient().playerNum(), this.what, this.which);
+        if ( argc == this.getLevel() )
+            return RS_LoadStats( player.getClient().playerNum(), "player", player.getName() );
+
+    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
+    	if( subCommand.validate( player, args, argc ) )
+    		if( subCommand.execute( player, args, argc ) )
+    	    	return true;
+
+    	return false;
+    }
+}
+
+class Command_StatsPlayer : Racesow_Command
+{
+    Command_StatsPlayer( Racesow_Command @baseCommand ) {
+        super("player", "Prints stats for the given player or yourself if no name given", "[name]" );
+        @this.baseCommand = @baseCommand;
+    }
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+    	cString target;
+        if( args.getToken( this.getLevel() ) != "")
+        	target = args.getToken( this.getLevel() );
+        else
+        	target = player.getName();
+
+        return RS_LoadStats(player.getClient().playerNum(), this.name, target);
+    }
+}
+
+class Command_StatsMap : Racesow_Command
+{
+    Command_StatsMap( Racesow_Command @baseCommand ) {
+        super("map", "Print stats for the given map or the current map is no name given", "<name>" );
+        @this.baseCommand = @baseCommand;
+    }
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+    	cString target;
+        if( args.getToken( this.getLevel() ) != "")
+        	target = args.getToken( this.getLevel() );
+        else
+        	target = map.name;
+
+        return RS_LoadStats(player.getClient().playerNum(), this.name, target);
     }
 }
 
@@ -1812,6 +1821,9 @@ class Command_WhoIsGod : Racesow_Command
     return null;
 }*/
 
+
+
+
 //class Racesow_AdminCommand : Racesow_Command
 //{
 //    /**
@@ -1832,9 +1844,6 @@ class Command_WhoIsGod : Racesow_Command
 //
 //    bool execute(Racesow_Player @player, cString &args, int argc) { return true; }
 //}
-
-
-
 
 class Command_AdminMap : Racesow_Command // (should be subclass of Racesow_AdminCommand )
 {
@@ -1869,7 +1878,6 @@ class Command_AdminMap : Racesow_Command // (should be subclass of Racesow_Admin
     }
 }
 
-
 class Command_AdminUpdateml : Racesow_Command // (should be subclass of Racesow_AdminCommand )
 {
 	Command_AdminUpdateml( Racesow_Command @baseCommand )
@@ -1890,7 +1898,6 @@ class Command_AdminUpdateml : Racesow_Command // (should be subclass of Racesow_
     }
 }
 
-
 class Command_AdminRestart : Racesow_Command // (should be subclass of Racesow_AdminCommand )
 {
 	Command_AdminRestart( Racesow_Command @baseCommand )
@@ -1910,7 +1917,6 @@ class Command_AdminRestart : Racesow_Command // (should be subclass of Racesow_A
         return true;
     }
 }
-
 
 class Command_AdminExtendtime : Racesow_Command // (should be subclass of Racesow_AdminCommand )
 {
@@ -1942,7 +1948,6 @@ class Command_AdminExtendtime : Racesow_Command // (should be subclass of Raceso
         return true;
     }
 }
-
 
 class Command_AdminCancelvote : Racesow_Command // (should be subclass of Racesow_AdminCommand )
 {
