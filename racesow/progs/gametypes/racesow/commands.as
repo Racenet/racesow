@@ -539,7 +539,7 @@ class Command_Gametype : Racesow_Command
     }
 }
 
-class Command_Help : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+class Command_Help : Racesow_Command
 {
     RC_Map @commandMap;
 
