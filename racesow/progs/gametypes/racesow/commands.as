@@ -149,23 +149,40 @@ class Command_Admin : Racesow_Command
     Command_Admin() {
         super("admin", "Execute an admin command", "<subcommand> [args...]");
 
+    	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        this.commandMap.set_opIndex( "map", @Command_AdminMap( @this ) );
-        this.commandMap.set_opIndex( "restart", @Command_AdminRestart( @this ) );
-        this.commandMap.set_opIndex( "extend_time", @Command_AdminExtendtime( @this ) );
-        this.commandMap.set_opIndex( "remove", @Command_AdminRemove( @this ) );
-        this.commandMap.set_opIndex( "kick", @Command_AdminKick( @this ) );
-        this.commandMap.set_opIndex( "kickban", @Command_AdminKickban( @this ) );
-        this.commandMap.set_opIndex( "mute", @Command_AdminMute( @this ) );
-        this.commandMap.set_opIndex( "unmute", @Command_AdminUnmute( @this ) );
-        this.commandMap.set_opIndex( "vmute", @Command_AdminVmute( @this ) );
-        this.commandMap.set_opIndex( "vunmute", @Command_AdminVunmute( @this ) );
-        this.commandMap.set_opIndex( "votemute", @Command_AdminVotemute( @this ) );
-        this.commandMap.set_opIndex( "voteunmute", @Command_AdminUnvotemute( @this ) );
-        this.commandMap.set_opIndex( "joinlock", @Command_AdminJoinlock( @this ) );
-        this.commandMap.set_opIndex( "cancelvote", @Command_AdminCancelvote( @this ) );
-        this.commandMap.set_opIndex( "updateml", @Command_AdminUpdateml( @this ) );
-        this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
+        @cmd = @Command_AdminMap( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminRestart( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminExtendtime( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminRemove( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminKick( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminKickban( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminMute( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminUnmute( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminVmute( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminVunmute( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminVotemute( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminUnvotemute( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminJoinlock( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminCancelvote( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_AdminUpdateml( @this );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
+        @cmd = @Command_Help( @this, @this.commandMap );
+        this.commandMap.set_opIndex( cmd.name, @cmd );
     }
 
     //validate only the first level of the command
@@ -834,10 +851,10 @@ class Command_Oneliner : Racesow_Command
 class Command_Position : Racesow_Command
 {
 	RC_Map @commandMap;
-	Racesow_Command @cmd;
 	Command_Position() {
         super("position", "Commands to store and load position", "<subcommand> [args...]");
 
+    	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
         @cmd = @Command_PositionSave( @this );
         this.commandMap.set_opIndex( cmd.name, @cmd );
@@ -881,7 +898,7 @@ class Command_Position : Racesow_Command
     }
 }
 
-//implements validate() and execute() for position commands //TODO: integrate execution of position commands here
+//implements validate() for position commands
 class Racesow_PositionCommand : Racesow_Command
 {
 	Racesow_PositionCommand( cString &in name, cString &in description, cString &in usage )
@@ -890,14 +907,18 @@ class Racesow_PositionCommand : Racesow_Command
 	}
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
-		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
+		if( player.positionLastcmd + 500 > realTime )
+		{
+            player.sendErrorMessage( "Commands are coming too fast. Please wait " + ( player.positionLastcmd + 500 - realTime ) + "ms." );
 			return false;
+		}
+		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
+		{
+            player.sendErrorMessage( "You must be practicing to execute this command" );
+			return false;
+		}
 		return true;
 	}
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        return player.position(args);
-    }
 }
 
 class Command_PositionSave : Racesow_PositionCommand
@@ -905,6 +926,10 @@ class Command_PositionSave : Racesow_PositionCommand
 	Command_PositionSave( Racesow_Command @baseCommand ) {
         super("save", "Save position", "");
         @this.baseCommand = @baseCommand;
+    }
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        return player.positionSave();
     }
 }
 
@@ -914,6 +939,10 @@ class Command_PositionLoad : Racesow_PositionCommand
         super("load", "Teleport to saved position", "");
         @this.baseCommand = @baseCommand;
     }
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        return player.positionLoad();
+    }
 }
 
 class Command_PositionSet : Racesow_PositionCommand
@@ -921,6 +950,25 @@ class Command_PositionSet : Racesow_PositionCommand
 	Command_PositionSet( Racesow_Command @baseCommand ) {
         super("set", "Teleport to specified position", "<x> <y> <z> <pitch> <yaw>");
         @this.baseCommand = @baseCommand;
+    }
+	bool validate(Racesow_Player @player, cString &args, int argc)
+	{
+		if( Racesow_PositionCommand::validate( player, args, argc ) )
+			if( argc >= this.getLevel() + 5 )
+				return true;
+		return false;
+	}
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		cVec3 origin, angles;
+
+		origin.x = args.getToken( this.getLevel() + 0 ).toFloat();
+		origin.y = args.getToken( this.getLevel() + 1 ).toFloat();
+		origin.z = args.getToken( this.getLevel() + 2 ).toFloat();
+		angles.x = args.getToken( this.getLevel() + 3 ).toFloat();
+		angles.y = args.getToken( this.getLevel() + 4 ).toFloat();
+
+		return player.positionSet( origin, angles );
     }
 }
 
@@ -930,6 +978,20 @@ class Command_PositionStore : Racesow_PositionCommand
         super("store", "Store a position for another session", "<id> <name>");
         @this.baseCommand = @baseCommand;
     }
+	bool validate(Racesow_Player @player, cString &args, int argc)
+	{
+		if( Racesow_PositionCommand::validate( player, args, argc ) )
+			if( args.getToken( this.getLevel() + 1 ) != "" )
+				return true;
+		return false;
+	}
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		int id = args.getToken( this.getLevel() + 0 ).toInt();
+		cString name = args.getToken( this.getLevel() + 1 );
+
+		return player.positionStore( id, name );
+    }
 }
 
 class Command_PositionRestore : Racesow_PositionCommand
@@ -938,13 +1000,45 @@ class Command_PositionRestore : Racesow_PositionCommand
         super("restore", "Restore a stored position from another session", "<id>");
         @this.baseCommand = @baseCommand;
     }
+	bool validate(Racesow_Player @player, cString &args, int argc)
+	{
+		if( Racesow_PositionCommand::validate( player, args, argc ) )
+			if( argc >= this.getLevel() + 1 )
+				return true;
+		return false;
+	}
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		int id = args.getToken( this.getLevel() + 1 ).toInt();
+
+		return player.positionRestore( id );
+    }
 }
+
+const int POSITION_STOREDLIST_LIMIT = 50; // put this into the position class, when it exists
 
 class Command_PositionStoredlist : Racesow_PositionCommand
 {
 	Command_PositionStoredlist( Racesow_Command @baseCommand ) {
         super("storedlist", "Sends you a list of your stored positions", "<limit>");
         @this.baseCommand = @baseCommand;
+    }
+	bool validate(Racesow_Player @player, cString &args, int argc)
+	{
+		if( Racesow_PositionCommand::validate( player, args, argc ) )
+			if( argc >= this.getLevel() + 1 )
+			{
+				if( args.getToken( this.getLevel() + 1 ).toInt() <= POSITION_STOREDLIST_LIMIT )
+					return true;
+				else
+					player.sendMessage( S_COLOR_WHITE + "You can only list the 50 the most\n" );
+			}
+		return false;
+	}
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+		int limit = args.getToken( this.getLevel() + 0 ).toInt();
+		return player.positionStoredlist( limit );
     }
 }
 

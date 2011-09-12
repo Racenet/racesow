@@ -955,100 +955,175 @@ class Racesow_Player
 		return true;
 	}
 
+
+
 	/**
-	 * position Command
+	 * position Commands
 	 * @return bool
 	 */
-	bool position( cString argsString )
+	bool positionSave()
 	{
-		if( this.positionLastcmd + 500 > realTime )
+		this.positionSaved = true;
+		cEntity@ ent = @this.client.getEnt();
+		if( @ent == null )
 			return false;
-		this.positionLastcmd = realTime;
-
-		cString action = argsString.getToken( 0 );
-
-		if( action == "save" )
-		{
-			this.positionSaved = true;
-			cEntity@ ent = @this.client.getEnt();
-			if( @ent == null )
-				return false;
-			this.positionOrigin = ent.getOrigin();
-			this.positionAngles = ent.getAngles();
-			if ( ent.moveType == MOVETYPE_NOCLIP )
-				this.positionWeapon = this.noclipWeapon;
-			else
-			this.positionWeapon = client.weapon;
-		}
-		else if( action == "load" )
-		{
-			if(!this.positionSaved)
-				return false;
-			if( this.teleport( this.positionOrigin, this.positionAngles, false, false ) )
-				this.client.selectWeapon( this.positionWeapon );
-			return true;
-		}
-		else if( action == "set" && argsString.getToken( 5 ) != "" )
-		{
-			cVec3 origin, angles;
-
-			origin.x = argsString.getToken( 1 ).toFloat();
-			origin.y = argsString.getToken( 2 ).toFloat();
-			origin.z = argsString.getToken( 3 ).toFloat();
-			angles.x = argsString.getToken( 4 ).toFloat();
-			angles.y = argsString.getToken( 5 ).toFloat();
-
-			return this.teleport( origin, angles, false, false );
-		}
-		else if( action == "store" && argsString.getToken( 2 ) != "" )
-		{
-			cVec3 position = client.getEnt().getOrigin();
-			cVec3 angles = client.getEnt().getAngles();
-			//position set <x> <y> <z> <pitch> <yaw>
-			this.client.execGameCommand("cmd seta storedposition_" + argsString.getToken(1)
-					+ " \"" +  argsString.getToken(2) + " "
-					+ position.x + " " + position.y + " " + position.z + " "
-					+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
-		}
-		else if( action == "restore" && argsString.getToken( 1 ) != "" )
-		{
-			G_CmdExecute( "cvarcheck " + this.client.playerNum()
-					+ " storedposition_" + argsString.getToken(1) );
-		}
-		else if( action == "storedlist" && argsString.getToken( 1 ) != "" )
-		{
-			if( argsString.getToken(1).toInt() > 50 )
-			{
-				this.sendMessage( S_COLOR_WHITE + "You can only list the 50 the most\n" );
-				return false;
-			}
-			this.sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n" );
-			int i;
-			for( i = 0; i < argsString.getToken(1).toInt(); i++ )
-			{
-				this.client.execGameCommand("cmd  echo ~~~;echo id#" + i
-						+ ";storedposition_" + i +";echo ~~~;" );
-			}
-		}
+		this.positionOrigin = ent.getOrigin();
+		this.positionAngles = ent.getAngles();
+		if ( ent.moveType == MOVETYPE_NOCLIP )
+			this.positionWeapon = this.noclipWeapon;
 		else
-		{
-			cEntity@ ent = @this.client.getEnt();
-			if( @ent == null )
-				return false;
-			cString msg;
-			msg = "Usage:\nposition save - Save current position\n";
-			msg += "position load - Teleport to saved position\n";
-			msg += "position set <x> <y> <z> <pitch> <yaw> - Teleport to specified position\n";
-			msg += "position store <id> <name> - Store a position for another session\n";
-			msg += "position restore <id> - Restore a stored position from another session\n";
-			msg += "position storedlist <limit> - Sends you a list of your stored positions\n";
-			msg += "Current position: " + " " + ent.getOrigin().x + " " + ent.getOrigin().y + " " +
-		ent.getOrigin().z + " " + ent.getAngles().x + " " + ent.getAngles().y + "\n";
-			this.sendMessage( msg );
-		}
-
+			this.positionWeapon = client.weapon;
+		this.positionLastcmd = realTime;
 		return true;
 	}
+
+	bool positionLoad()
+	{
+		if(!this.positionSaved)
+			return false;
+		if( this.teleport( this.positionOrigin, this.positionAngles, false, false ) )
+			this.client.selectWeapon( this.positionWeapon );
+		this.positionLastcmd = realTime;
+		return true;
+	}
+
+	bool positionSet( cVec3 origin, cVec3 angles )
+	{
+		return this.teleport( origin, angles, false, false );
+		this.positionLastcmd = realTime;
+	}
+
+	bool positionStore( int id, cString name )
+	{
+		cVec3 position = client.getEnt().getOrigin();
+		cVec3 angles = client.getEnt().getAngles();
+		//position set <x> <y> <z> <pitch> <yaw>
+		this.client.execGameCommand("cmd seta storedposition_" + id
+				+ " \"" + name + " "
+				+ position.x + " " + position.y + " " + position.z + " "
+				+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
+		this.positionLastcmd = realTime;
+		return true;
+	}
+
+	bool positionRestore( int id )
+	{
+		G_CmdExecute( "cvarcheck " + this.client.playerNum()
+				+ " storedposition_" + id );
+		this.positionLastcmd = realTime;
+		return true;
+	}
+
+	bool positionStoredlist( int limit )
+	{
+		this.sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n" );
+		int i;
+		for( i = 0; i < limit; i++ )
+		{
+			this.client.execGameCommand("cmd  echo ~~~;echo id#" + i
+					+ ";storedposition_" + i +";echo ~~~;" );
+		}
+		this.positionLastcmd = realTime;
+		return true;
+	}
+
+
+
+
+//	/**
+//	 * position Command
+//	 * @return bool
+//	 */
+//	bool position( cString argsString )
+//	{
+//		if( this.positionLastcmd + 500 > realTime )
+//			return false;
+//		this.positionLastcmd = realTime;
+//
+//		cString action = argsString.getToken( 0 );
+//
+//		if( action == "save" )
+//		{
+//			this.positionSaved = true;
+//			cEntity@ ent = @this.client.getEnt();
+//			if( @ent == null )
+//				return false;
+//			this.positionOrigin = ent.getOrigin();
+//			this.positionAngles = ent.getAngles();
+//			if ( ent.moveType == MOVETYPE_NOCLIP )
+//				this.positionWeapon = this.noclipWeapon;
+//			else
+//			this.positionWeapon = client.weapon;
+//		}
+//		else if( action == "load" )
+//		{
+//			if(!this.positionSaved)
+//				return false;
+//			if( this.teleport( this.positionOrigin, this.positionAngles, false, false ) )
+//				this.client.selectWeapon( this.positionWeapon );
+//			return true;
+//		}
+//		else if( action == "set" && argsString.getToken( 5 ) != "" )
+//		{
+//			cVec3 origin, angles;
+//
+//			origin.x = argsString.getToken( 1 ).toFloat();
+//			origin.y = argsString.getToken( 2 ).toFloat();
+//			origin.z = argsString.getToken( 3 ).toFloat();
+//			angles.x = argsString.getToken( 4 ).toFloat();
+//			angles.y = argsString.getToken( 5 ).toFloat();
+//
+//			return this.teleport( origin, angles, false, false );
+//		}
+//		else if( action == "store" && argsString.getToken( 2 ) != "" )
+//		{
+//			cVec3 position = client.getEnt().getOrigin();
+//			cVec3 angles = client.getEnt().getAngles();
+//			//position set <x> <y> <z> <pitch> <yaw>
+//			this.client.execGameCommand("cmd seta storedposition_" + argsString.getToken(1)
+//					+ " \"" +  argsString.getToken(2) + " "
+//					+ position.x + " " + position.y + " " + position.z + " "
+//					+ angles.x + " " + angles.y + "\";writeconfig config.cfg");
+//		}
+//		else if( action == "restore" && argsString.getToken( 1 ) != "" )
+//		{
+//			G_CmdExecute( "cvarcheck " + this.client.playerNum()
+//					+ " storedposition_" + argsString.getToken(1) );
+//		}
+//		else if( action == "storedlist" && argsString.getToken( 1 ) != "" )
+//		{
+//			if( argsString.getToken(1).toInt() > 50 )
+//			{
+//				this.sendMessage( S_COLOR_WHITE + "You can only list the 50 the most\n" );
+//				return false;
+//			}
+//			this.sendMessage( S_COLOR_WHITE + "###\n#List of stored positions\n###\n" );
+//			int i;
+//			for( i = 0; i < argsString.getToken(1).toInt(); i++ )
+//			{
+//				this.client.execGameCommand("cmd  echo ~~~;echo id#" + i
+//						+ ";storedposition_" + i +";echo ~~~;" );
+//			}
+//		}
+//		else
+//		{
+//			cEntity@ ent = @this.client.getEnt();
+//			if( @ent == null )
+//				return false;
+//			cString msg;
+//			msg = "Usage:\nposition save - Save current position\n";
+//			msg += "position load - Teleport to saved position\n";
+//			msg += "position set <x> <y> <z> <pitch> <yaw> - Teleport to specified position\n";
+//			msg += "position store <id> <name> - Store a position for another session\n";
+//			msg += "position restore <id> - Restore a stored position from another session\n";
+//			msg += "position storedlist <limit> - Sends you a list of your stored positions\n";
+//			msg += "Current position: " + " " + ent.getOrigin().x + " " + ent.getOrigin().y + " " +
+//		ent.getOrigin().z + " " + ent.getAngles().x + " " + ent.getAngles().y + "\n";
+//			this.sendMessage( msg );
+//		}
+//
+//		return true;
+//	}
 
 	/**
 	 * Send a message to console of the player
