@@ -300,10 +300,15 @@ void insertDefaultCommands( RC_Map @commandMap ) {
     @commandMap["whoisgod"] = @Command_WhoIsGod();
     @commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermission();
     @commandMap["callvotevalidate"] = @Command_CallvoteValidate();*/
-    commandMap.set_opIndex( "admin", @Command_Admin() );
-    commandMap.set_opIndex( "auth", @Command_Auth() );
-    commandMap.set_opIndex( "gametype", @Command_Gametype() );
-    commandMap.set_opIndex( "help", @Command_Help(commandMap) );
-    commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod() );
-    commandMap.set_opIndex( "stats", @Command_Stats() );
+    addCommandToCommandMap( @commandMap, @Command_Admin() );
+    addCommandToCommandMap( @commandMap, @Command_Auth() );
+    addCommandToCommandMap( @commandMap, @Command_Gametype() );
+    addCommandToCommandMap( @commandMap, @Command_Help( null, @commandMap ) );
+    addCommandToCommandMap( @commandMap, @Command_WhoIsGod() );
+    addCommandToCommandMap( @commandMap, @Command_Stats() );
+}
+
+void addCommandToCommandMap( RC_Map @commandMap, Racesow_Command @cmd )
+{
+    commandMap.set_opIndex( cmd.name, @cmd );
 }

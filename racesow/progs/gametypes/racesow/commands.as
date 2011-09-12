@@ -14,6 +14,7 @@ const cString COMMAND_COLOR_HEAD = S_COLOR_RED;
 const cString COMMAND_COLOR_LEFT = S_COLOR_ORANGE;
 const cString COMMAND_COLOR_DEFAULT = S_COLOR_WHITE;
 const cString COMMAND_COLOR_SPECIAL = S_COLOR_YELLOW;
+const cString COMMAND_ERROR_PRACTICE = "This Command is only available in practicemode";
 
 const cString[] DEVS =  { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Joki" };
 
@@ -28,6 +29,12 @@ class Racesow_Command
 	 * null, if this is not a subcommand
 	 */
 	Racesow_Command @baseCommand;
+
+	/**
+	 * Command map for subcommands
+	 * null, if this command has no subcommands
+	 */
+	RC_Map @commandMap;
 
     /**
      * The name of the command.
@@ -48,16 +55,6 @@ class Racesow_Command
      * When describing the syntax, put the arguments name into brackets (e.g <mapname>)
      */
     cString usage;
-
-    /**
-     * In which mode should the command only be available ?
-     */
-    int modFlag; //FIXME: soon obsolete
-    
-	/**
-	 * Should the command be available in practice mode ?
-	 */
-	bool practiceEnabled;
 	
 	/**
 	 * Required User Privileges
@@ -74,13 +71,15 @@ class Racesow_Command
         this.usage = usage;
         this.permissionMask = 0;
         @this.baseCommand = null;
+        @this.commandMap = null;
     }
 
     /**
      * This is called before the actual work is done.
      *
      * Here you should only check the number of arguments and that
-     * the player has the right to call the command
+     * the player has the right to call the command.
+     * Error messages should be sent in this function.
      *
      * @param player The player who calls the command
      * @param args The tokenized string of arguments
@@ -108,7 +107,10 @@ class Racesow_Command
     }
 
     /**
-     * Return the subcommand level
+     * Subcommand level
+     * This can be thought of as an offset for argc and argString tokens.
+     *
+     * @return subcommand level
      */
     int getLevel()
     {
@@ -131,58 +133,56 @@ class Racesow_Command
     }
 
     /**
+     * Return command line
+     */
+    cString getCommandLine()
+    {
+		if( @this.baseCommand != null )
+			return this.baseCommand.getCommandLine() + " " + this.name;
+		else
+			return " " + this.name;
+    }
+
+    /**
      * Return the command usage in a nice way to be printed
      */
     cString getUsage()
     {
-        if ( this.usage.len() > 0 )
-            return COMMAND_COLOR_LEFT + "Usage: " + COMMAND_COLOR_DEFAULT + this.usage + "\n";
-        else
-            return "";
+    	return COMMAND_COLOR_DEFAULT + "Type " + COMMAND_COLOR_LEFT + "help" + this.getCommandLine() + COMMAND_COLOR_DEFAULT + " for more information\n";
+    }
+
+    /**
+     * Return the "command not found"-message in a nice way to be printed
+     */
+    cString commandNotFound( cString cmd )
+    {
+    	return COMMAND_COLOR_DEFAULT + "Command" + COMMAND_COLOR_SPECIAL + this.getCommandLine() + " " + cmd + COMMAND_COLOR_DEFAULT + " not found";
     }
 }
 
 class Command_Admin : Racesow_Command
 {
-	RC_Map @commandMap;
-
     Command_Admin() {
         super("admin", "Execute an admin command", "<subcommand> [args...]");
 
     	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        @cmd = @Command_AdminMap( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminRestart( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminExtendtime( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminRemove( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminKick( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminKickban( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminMute( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminUnmute( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminVmute( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminVunmute( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminVotemute( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminUnvotemute( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminJoinlock( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminCancelvote( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_AdminUpdateml( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_Help( @this, @this.commandMap );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
+        addCommandToCommandMap( @commandMap, @Command_AdminMap( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminRestart( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminExtendtime( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminRemove( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminKick( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminKickban( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminMute( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminUnmute( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminVmute( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminVunmute( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminVotemute( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminUnvotemute( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminJoinlock( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminCancelvote( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminUpdateml( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_Help( @this, @this.commandMap ) );
     }
 
     //validate only the first level of the command
@@ -190,33 +190,32 @@ class Command_Admin : Racesow_Command
     {
         if ( argc < this.getLevel() + 1 )
         {
-            player.sendErrorMessage( "No subcommand given. Use '" + this.name + " help' for more information" );
+            player.sendErrorMessage( "No subcommand given." );
+            player.sendMessage( this.getUsage() );
             return false;
         }
 
-        Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-    	if ( @cmd == null )
+        Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
+    	if ( @subCommand == null )
+    	{
+            player.sendErrorMessage( this.commandNotFound( args.getToken( this.getLevel() ) ) );
     		return false;
+    	}
 
-        if ( !player.auth.allow( cmd.permissionMask ) )
+        if ( !player.auth.allow( subCommand.permissionMask ) )
         {
 //            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
 //                + " tried to execute an admin command without permission.\n" );
             player.sendErrorMessage( "You don't have permission to execute this command" );
             return false;
         }
-
-        return true;
+    	return subCommand.validate( player, args, argc );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
     	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-
-    	if( subCommand.validate( player, args, argc ) )
-    		if( subCommand.execute( player, args, argc ) )
-    	    	return true;
-    	return false;
+    	return subCommand.execute( player, args, argc );
     }
 }
 
@@ -541,35 +540,41 @@ class Command_Gametype : Racesow_Command
 
 class Command_Help : Racesow_Command
 {
-    RC_Map @commandMap;
+    RC_Map @targetCommandMap;
 
-	Command_Help( Racesow_Command @baseCommand, RC_Map @commandMap )
+	Command_Help( Racesow_Command @baseCommand, RC_Map @targetCommandMap )
 	{
 		super( "help", "Print this help, or give help on a specific command", "[command]" );
-        @this.commandMap = @commandMap;
+        @this.targetCommandMap = @targetCommandMap;
         @this.baseCommand = @baseCommand;
 	}
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-    	cString baseCommandString = "";
     	Racesow_Command @command = @baseCommand;
-    	while( @command != null )
-    	{
-    		baseCommandString += command.name + " ";
-    		@command = @baseCommand.baseCommand;
-    	}
+    	cString baseCommandString = "";
+    	if( @command != null )
+    		baseCommandString = command.getCommandLine();
     	if ( argc >= this.getLevel() + 1 )
         {
-            @command = @this.commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-            if ( @command != null)
+    		cString helpItemName = args.getToken( this.getLevel() );
+            @command = @this.targetCommandMap.get_opIndex( helpItemName );
+            if( @command != null )
             {
-                player.sendMessage( COMMAND_COLOR_LEFT + baseCommandString + command.name + " " + command.usage + ": " + COMMAND_COLOR_DEFAULT + command.description + "\n" );
-                return true;
+            	Racesow_Command @subHelp = null;
+            	if( @command.commandMap != null ) //call specific help, if this command has subcommands
+            		@subHelp = @command.commandMap.get_opIndex( this.name );
+        		if( @subHelp != null )
+        			return subHelp.execute( player, args, argc );
+            	else // print usage and description
+            	{
+            		player.sendMessage( COMMAND_COLOR_LEFT + baseCommandString + " " + command.name + " " + command.usage + ": " + COMMAND_COLOR_DEFAULT + command.description + "\n" );
+            		return true;
+            	}
             }
             else
             {
-                player.sendErrorMessage("Command " + COMMAND_COLOR_SPECIAL + baseCommandString + command.name + COMMAND_COLOR_DEFAULT + " not found");
+                player.sendErrorMessage( this.commandNotFound( helpItemName ) );
                 return true;
             }
         }
@@ -577,16 +582,16 @@ class Command_Help : Racesow_Command
         {
             cString help;
             help += COMMAND_COLOR_LINE + "--------------------------------------------------------------------------------------------------------------------------\n";
-            help += COMMAND_COLOR_HEAD + baseCommandString.toupper() + "HELP for Racesow " + gametype.getVersion() + "\n";
+            help += COMMAND_COLOR_HEAD + baseCommandString.toupper() + " " + "HELP for Racesow " + gametype.getVersion() + "\n";
             help += COMMAND_COLOR_LINE + "--------------------------------------------------------------------------------------------------------------------------\n";
             player.sendMessage(help);
             help = "";
 
-            for (uint i = 0; i < this.commandMap.size(); i++)
+            for (uint i = 0; i < this.targetCommandMap.size(); i++)
             {
-                @command = @this.commandMap.getCommandAt(i);
+                @command = @this.targetCommandMap.getCommandAt(i);
 
-                help += COMMAND_COLOR_LEFT + baseCommandString + command.name + " " + command.usage + ": " + COMMAND_COLOR_DEFAULT + command.description + "\n";
+                help += COMMAND_COLOR_LEFT + baseCommandString + " " + command.name + " " + command.usage + ": " + COMMAND_COLOR_DEFAULT + command.description + "\n";
                 if ( (i/5)*5 == i ) //to avoid print buffer overflow
                 {
                     player.sendMessage(help);
@@ -598,6 +603,17 @@ class Command_Help : Racesow_Command
             player.sendMessage( COMMAND_COLOR_LINE + "--------------------------------------------------------------------------------------------------------------------------\n");
             return true;
         }
+    }
+
+    /*
+     * Omit the help command, when printing the command line
+     */
+    cString getCommandLine()
+    {
+		if( @this.baseCommand != null )
+			return this.baseCommand.getCommandLine();
+		else
+			return "";
     }
 }
 
@@ -795,12 +811,14 @@ class Command_Noclip : Racesow_Command
     {
         if( @player.getClient().getEnt() == null || player.getClient().getEnt().team == TEAM_SPECTATOR )
         {
-            player.sendErrorMessage("Noclip is not available in your current state");
+            player.sendErrorMessage( "Noclip is not available in your current state" );
             return false;
         }
         if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
+        {
+            player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
 			return false;
-
+        }
         return true;
     }
 
@@ -850,26 +868,18 @@ class Command_Oneliner : Racesow_Command
 
 class Command_Position : Racesow_Command
 {
-	RC_Map @commandMap;
 	Command_Position() {
         super("position", "Commands to store and load position", "<subcommand> [args...]");
 
     	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        @cmd = @Command_PositionSave( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_PositionLoad( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_PositionSet( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_PositionStore( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_PositionRestore( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_PositionStoredlist( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_Help( @this, @this.commandMap );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
+        addCommandToCommandMap( @commandMap, @Command_PositionSave( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_PositionLoad( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_PositionSet( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_PositionStore( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_PositionRestore( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_PositionStoredlist( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_Help( @this, @this.commandMap ) );
     }
     //validate only the first level of the command
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -882,19 +892,15 @@ class Command_Position : Racesow_Command
         Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
     	if ( @cmd == null )
     	{
-            player.sendErrorMessage( "Subcommand " + args.getToken( this.getLevel() ) + " not found" );
+            player.sendErrorMessage( this.commandNotFound( args.getToken( this.getLevel() ) ) );
     		return false;
     	}
-        return true;
+    	return cmd.validate( player, args, argc );
     }
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
     	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-    	if( subCommand.validate( player, args, argc ) )
-    		if( subCommand.execute( player, args, argc ) )
-    	    	return true;
-
-    	return false;
+    	return subCommand.execute( player, args, argc );
     }
 }
 
@@ -914,7 +920,8 @@ class Racesow_PositionCommand : Racesow_Command
 		}
 		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
 		{
-            player.sendErrorMessage( "You must be practicing to execute this command" );
+            player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
+//            player.sendMessage( this.getUsage() );
 			return false;
 		}
 		return true;
@@ -1276,26 +1283,21 @@ class Command_Register : Racesow_Command
 
 class Command_Stats : Racesow_Command
 {
-	RC_Map @commandMap;
 	Command_Stats() {
         super("stats", "Show statistics", "[subcommand] [args...]");
 
     	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        @cmd = @Command_StatsPlayer( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_StatsMap( @this );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
-        @cmd = @Command_Help( @this, @this.commandMap );
-        this.commandMap.set_opIndex( cmd.name, @cmd );
+        addCommandToCommandMap( @commandMap, @Command_StatsPlayer( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_StatsMap( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_Help( @this, @this.commandMap ) );
     }
-    //validate only the first level of the command
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
     	if( mysqlConnected == 0 )
     	{
             player.sendErrorMessage( "mysql not connected");
-//            return false;
+            return false;
     	}
         if( player.isWaitingForCommand )
         {
@@ -1305,8 +1307,10 @@ class Command_Stats : Racesow_Command
         }
         if ( argc > this.getLevel() )
         {
-        	Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-        	if ( @cmd == null )
+        	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
+        	if ( @subCommand != null )
+            	return subCommand.validate( player, args, argc );
+        	else
         	{
         		player.sendErrorMessage( "Subcommand " + args.getToken( this.getLevel() ) + " not found" );
         		return false;
@@ -1319,12 +1323,8 @@ class Command_Stats : Racesow_Command
         if ( argc == this.getLevel() )
             return RS_LoadStats( player.getClient().playerNum(), "player", player.getName() );
 
-    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-    	if( subCommand.validate( player, args, argc ) )
-    		if( subCommand.execute( player, args, argc ) )
-    	    	return true;
-
-    	return false;
+        Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
+        return subCommand.execute( player, args, argc );
     }
 }
 
