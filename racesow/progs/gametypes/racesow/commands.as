@@ -181,6 +181,7 @@ class Command_Admin : Racesow_Command
         addCommandToCommandMap( @commandMap, @Command_AdminVotemute( @this ) );
         addCommandToCommandMap( @commandMap, @Command_AdminUnvotemute( @this ) );
         addCommandToCommandMap( @commandMap, @Command_AdminJoinlock( @this ) );
+        addCommandToCommandMap( @commandMap, @Command_AdminJoinunlock( @this ) );
         addCommandToCommandMap( @commandMap, @Command_AdminCancelvote( @this ) );
         addCommandToCommandMap( @commandMap, @Command_AdminUpdateml( @this ) );
         addCommandToCommandMap( @commandMap, @Command_Help( @this, @this.commandMap ) );
@@ -1266,23 +1267,30 @@ class Command_RaceRestart : Racesow_Command
 
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if (player.isJoinlocked)
-        {
-            player.sendErrorMessage( "You can't join, you are join locked" );
-            return false;
-        }
-
-        //racerestart command is only avaiblable in DRACE during WARMUP 
-        if ( gametypeFlag == MODFLAG_DRACE && this.name == "racerestart" && match.getState() != MATCH_STATE_WARMUP ) 
-          return false;
-                  
-        return true;
+        if( !player.isJoinlocked )
+        	return true;
+        player.sendErrorMessage( "You can't join, you are join locked" );
+        return false;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         player.restartRace();
-		    return true;
+		return true;
+    }
+}
+
+class Command_RaceRestart_Drace : Command_RaceRestart
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( !Command_RaceRestart::validate( player, args, argc ) )
+            return false;
+        //racerestart command is only avaiblable during WARMUP
+        if ( match.getState() == MATCH_STATE_WARMUP )
+            return true;
+        player.sendErrorMessage( "This command is only avaiblable during WARMUP." );
+        return false;
     }
 }
 
@@ -1891,18 +1899,15 @@ class Command_AdminMap : Racesow_Command // (should be subclass of Racesow_Admin
 
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( argc < this.getLevel() + 1 )
+        if ( argc >= this.getLevel() + 1 )
         {
-            return false;
+            cString mapName = args.getToken( this.getLevel() + 0 );
+            if ( mapName != "" )
+                return true;
         }
-
-        cString mapName = args.getToken( this.getLevel() + 0 );
-        if ( mapName == "" )
-        {
-            player.sendErrorMessage( "No map name given" );
-            return false;
-        }
-        return true;
+        player.sendErrorMessage( "No map name given" );
+        player.sendMessage( this.getUsage() );
+        return false;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1921,11 +1926,6 @@ class Command_AdminUpdateml : Racesow_Command // (should be subclass of Racesow_
         this.permissionMask = RACESOW_AUTH_ADMIN;
         @this.baseCommand = @baseCommand;
 	}
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        return true;
-    }
-
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         RS_UpdateMapList( player.client.playerNum() );
@@ -1941,11 +1941,6 @@ class Command_AdminRestart : Racesow_Command // (should be subclass of Racesow_A
         this.permissionMask = RACESOW_AUTH_MAP;
         @this.baseCommand = @baseCommand;
 	}
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        return true;
-    }
-
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         G_CmdExecute("match restart\n");
@@ -2177,7 +2172,7 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
 {
 	Command_AdminJoinunlock( Racesow_Command @baseCommand )
 	{
-		super( "joinunlock", "allow the given player to joining", "<playerid>" );
+		super( "joinunlock", "allow the given player to join", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}

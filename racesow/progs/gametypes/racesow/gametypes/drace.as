@@ -695,7 +695,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         commandMap.set_opIndex("callvotepassed", @Command_CallvotePassed());
         commandMap.set_opIndex( "join", @Command_Join() );
         commandMap.set_opIndex( "spec", @Command_Spec() );
-        commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
+        commandMap.set_opIndex( "racerestart", @Command_RaceRestart_Drace() );
         commandMap.set_opIndex( "resetcam", @Command_ResetCam() );
         commandMap.set_opIndex( "top", @Command_Top() );
         commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod("Jerm's") );
