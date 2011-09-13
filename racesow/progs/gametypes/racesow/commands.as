@@ -14,7 +14,8 @@ const cString COMMAND_COLOR_HEAD = S_COLOR_RED;
 const cString COMMAND_COLOR_LEFT = S_COLOR_ORANGE;
 const cString COMMAND_COLOR_DEFAULT = S_COLOR_WHITE;
 const cString COMMAND_COLOR_SPECIAL = S_COLOR_YELLOW;
-const cString COMMAND_ERROR_PRACTICE = "This Command is only available in practicemode";
+const cString COMMAND_ERROR_PRACTICE = "This Command is only available in practicemode.";
+const cString COMMAND_ERROR_MYSQL = "Database not connected.";
 
 const cString[] DEVS =  { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Joki" };
 
@@ -814,17 +815,25 @@ class Command_Noclip : Racesow_Command
             player.sendErrorMessage( "Noclip is not available in your current state" );
             return false;
         }
-        if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
-        {
-            player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
-			return false;
-        }
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         return player.noclip();
+    }
+}
+
+class Command_Noclip_Race : Command_Noclip
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( !Command_Noclip::validate( player, args, argc ) )
+            return false;
+        if( player.practicing )
+        	return true;
+        player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
+        return false;
     }
 }
 
@@ -839,7 +848,8 @@ class Command_Oneliner : Racesow_Command
     {
         if ( mysqlConnected == 0 )
         {
-            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            player.sendErrorMessage( "" + COMMAND_ERROR_MYSQL );
+//            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
             return false;
         }
 		
@@ -886,7 +896,8 @@ class Command_Position : Racesow_Command
     {
         if ( argc < this.getLevel() + 1 )
         {
-            player.sendErrorMessage( "No subcommand given. Use '" + this.name + " help' for more information" );
+            player.sendErrorMessage( "No subcommand given." );
+            player.sendMessage( this.getUsage() );
             return false;
         }
         Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
@@ -904,6 +915,20 @@ class Command_Position : Racesow_Command
     }
 }
 
+//maybe move this to gametypes/race.as ?
+class Command_Position_Race : Command_Position
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+    	if( !player.practicing )
+    	{
+            player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
+    		return false;
+    	}
+    	return Command_Position::validate( player, args, argc );
+    }
+}
+
 //implements validate() for position commands
 class Racesow_PositionCommand : Racesow_Command
 {
@@ -916,12 +941,6 @@ class Racesow_PositionCommand : Racesow_Command
 		if( player.positionLastcmd + 500 > realTime )
 		{
             player.sendErrorMessage( "Commands are coming too fast. Please wait " + ( player.positionLastcmd + 500 - realTime ) + "ms." );
-			return false;
-		}
-		if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
-		{
-            player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
-//            player.sendMessage( this.getUsage() );
 			return false;
 		}
 		return true;
@@ -960,9 +979,12 @@ class Command_PositionSet : Racesow_PositionCommand
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
-		if( Racesow_PositionCommand::validate( player, args, argc ) )
-			if( argc >= this.getLevel() + 5 )
-				return true;
+		if( !Racesow_PositionCommand::validate( player, args, argc ) )
+			return false;
+		if( argc >= this.getLevel() + 5 )
+			return true;
+		player.sendErrorMessage( "Wrong parameters" );
+		player.sendMessage( S_COLOR_WHITE + this.getUsage() );
 		return false;
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -987,9 +1009,12 @@ class Command_PositionStore : Racesow_PositionCommand
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
-		if( Racesow_PositionCommand::validate( player, args, argc ) )
-			if( args.getToken( this.getLevel() + 1 ) != "" )
-				return true;
+		if( !Racesow_PositionCommand::validate( player, args, argc ) )
+			return false;
+		if( args.getToken( this.getLevel() + 1 ) != "" )
+			return true;
+		player.sendErrorMessage( "Wrong parameters" );
+		player.sendMessage( S_COLOR_WHITE + this.getUsage() );
 		return false;
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1009,9 +1034,12 @@ class Command_PositionRestore : Racesow_PositionCommand
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
-		if( Racesow_PositionCommand::validate( player, args, argc ) )
-			if( argc >= this.getLevel() + 1 )
-				return true;
+		if( !Racesow_PositionCommand::validate( player, args, argc ) )
+			return false;
+		if( argc >= this.getLevel() + 1 )
+			return true;
+		player.sendErrorMessage( "Wrong parameters" );
+		player.sendMessage( S_COLOR_WHITE + this.getUsage() );
 		return false;
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1032,14 +1060,20 @@ class Command_PositionStoredlist : Racesow_PositionCommand
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
-		if( Racesow_PositionCommand::validate( player, args, argc ) )
-			if( argc >= this.getLevel() + 1 )
-			{
-				if( args.getToken( this.getLevel() + 1 ).toInt() <= POSITION_STOREDLIST_LIMIT )
-					return true;
-				else
-					player.sendMessage( S_COLOR_WHITE + "You can only list the 50 the most\n" );
-			}
+		if( !Racesow_PositionCommand::validate( player, args, argc ) )
+			return false;
+		if( argc >= this.getLevel() + 1 )
+		{
+			if( args.getToken( this.getLevel() + 1 ).toInt() <= POSITION_STOREDLIST_LIMIT )
+				return true;
+			else
+				player.sendMessage( S_COLOR_WHITE + "You can only list the 50 the most\n" );
+		}
+		else
+		{
+			player.sendErrorMessage( "Wrong parameters" );
+			player.sendMessage( S_COLOR_WHITE + this.getUsage() );
+		}
 		return false;
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1296,7 +1330,7 @@ class Command_Stats : Racesow_Command
     {
     	if( mysqlConnected == 0 )
     	{
-            player.sendErrorMessage( "mysql not connected");
+            player.sendErrorMessage( "" + COMMAND_ERROR_MYSQL );
             return false;
     	}
         if( player.isWaitingForCommand )
@@ -1442,7 +1476,8 @@ class Command_Top : Racesow_Command
 
         if ( mysqlConnected == 0 )
         {
-            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            player.sendErrorMessage( "" + COMMAND_ERROR_MYSQL );
+//            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
             return false;
         }
 
@@ -1981,9 +2016,7 @@ class Racesow_TargetCommand : Racesow_Command // (should be subclass of Racesow_
             return false;
         }
         Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
-        if (@targetPlayer == null )
-            return false;
-        return true;
+        return ( @targetPlayer != null );
     }
 }
 

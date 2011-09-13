@@ -55,8 +55,6 @@ class Racesow_Gametype
         assert( false, "You have to overwrite 'bool UpdateBotStatus( cEntity @self )' in your Racesow_Gametype." ); 
         return false;
     }
-    
-    bool practiceCheck(Racesow_Player @player, cString &commandName) { return false; }
 
 	/**
 	 * execute a Racesow_Command
@@ -80,13 +78,11 @@ class Racesow_Gametype
 	                return true;
 	            else
 	            {
-	                player.sendMessage(command.getUsage());
+	                player.sendErrorMessage( "Command " + command.name + " failed." );
 	                return false;
 	            }
 	        }
-            if( this.practiceCheck(player, command.name) )
-                return true;
-            player.sendMessage(command.getUsage());
+//            player.sendMessage( command.getUsage() );
         }
         return false;
     }

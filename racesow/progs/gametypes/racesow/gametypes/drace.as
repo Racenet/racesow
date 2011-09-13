@@ -1142,14 +1142,6 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         }
         return false;
     }*/
-
-    bool practiceCheck(Racesow_Player @player, cString &commandName)
-    {
-	    // if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
-	    // i guess we'll have a better solution to this when the new command system is up. - K1ll i guess not :/
-	    player.sendErrorMessage( "The " + commandName + " command is only available in practice mode." );
-	    return true;        
-    }
 }
 
 // a player has just died. The script is warned about it so it can account scores

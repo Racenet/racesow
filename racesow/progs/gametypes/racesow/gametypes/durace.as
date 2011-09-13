@@ -10,10 +10,10 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         @this.commandMap["kill"] = @Command_Kill();
         @this.commandMap["top"] = @Command_Top();
         @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
-        commandMap.set_opIndex("racerestart", @Command_RaceRestart());
-        commandMap.set_opIndex("kill", @Command_Kill());
-        commandMap.set_opIndex("top", @Command_Top());
-        commandMap.set_opIndex("whoisgod", @Command_WhoIsGod("Jerm's"));
+        addCommandToCommandMap( @commandMap, @Command_RaceRestart() );
+        addCommandToCommandMap( @commandMap, @Command_Kill() );
+        addCommandToCommandMap( @commandMap, @Command_Top() );
+        addCommandToCommandMap( @commandMap, @Command_WhoIsGod("Jerm's") );
     }
     
     void InitGametype()
@@ -295,14 +295,6 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     bool UpdateBotStatus( cEntity @self )
     {
         return false;
-    }
-    
-    bool practiceCheck(Racesow_Player @player, cString &commandName)
-    {
-	    // if a practiceEnabled command fails to validate, send this message instead of the cmd.getUsage().
-	    // i guess we'll have a better solution to this when the new command system is up. - K1ll i guess not :/
-	    player.sendErrorMessage( "The " + commandName + " command is only available in practice mode." );
-	    return true;        
     }
 }
 
