@@ -65,7 +65,7 @@ class Racesow_Command
     /**
      * Non-Default constructor to be used with super() in the derived classes
      */
-    Racesow_Command(cString &in name, cString &in description, cString &in usage)
+    Racesow_Command( cString &in description, cString &in usage )
     {
         this.name = name;
         this.description = description;
@@ -164,27 +164,27 @@ class Racesow_Command
 class Command_Admin : Racesow_Command
 {
     Command_Admin() {
-        super("admin", "Execute an admin command", "<subcommand> [args...]");
+        super( "Execute an admin command", "<subcommand> [args...]" );
 
     	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        addCommandToCommandMap( @commandMap, @Command_AdminMap( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminRestart( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminExtendtime( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminRemove( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminKick( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminKickban( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminMute( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminUnmute( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminVmute( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminVunmute( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminVotemute( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminUnvotemute( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminJoinlock( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminJoinunlock( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminCancelvote( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_AdminUpdateml( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_Help( @this, @this.commandMap ) );
+        commandMap.set_opIndex( "map", @Command_AdminMap( @this ) );
+        commandMap.set_opIndex( "restart", @Command_AdminRestart( @this ) );
+        commandMap.set_opIndex( "extend_time", @Command_AdminExtendtime( @this ) );
+        commandMap.set_opIndex( "remove", @Command_AdminRemove( @this ) );
+        commandMap.set_opIndex( "kick", @Command_AdminKick( @this ) );
+        commandMap.set_opIndex( "kickban", @Command_AdminKickban( @this ) );
+        commandMap.set_opIndex( "mute", @Command_AdminMute( @this ) );
+        commandMap.set_opIndex( "unmute", @Command_AdminUnmute( @this ) );
+        commandMap.set_opIndex( "vmute", @Command_AdminVmute( @this ) );
+        commandMap.set_opIndex( "vunmute", @Command_AdminVunmute( @this ) );
+        commandMap.set_opIndex( "votemute", @Command_AdminVotemute( @this ) );
+        commandMap.set_opIndex( "unvotemute", @Command_AdminUnvotemute( @this ) );
+        commandMap.set_opIndex( "joinlock", @Command_AdminJoinlock( @this ) );
+        commandMap.set_opIndex( "joinunlock", @Command_AdminJoinunlock( @this ) );
+        commandMap.set_opIndex( "cancelvote", @Command_AdminCancelvote( @this ) );
+        commandMap.set_opIndex( "updateml", @Command_AdminUpdateml( @this ) );
+        commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
     }
 
     //validate only the first level of the command
@@ -224,7 +224,7 @@ class Command_Admin : Racesow_Command
 class Command_AmmoSwitch : Racesow_Command
 {
     Command_AmmoSwitch() {
-        super("ammoswitch", "Switch between weak and strong Ammo", "");
+        super( "Switch between weak and strong Ammo", "" );
     }
 
     bool execute( Racesow_Player @player, cString &args, int argc ) {
@@ -236,7 +236,7 @@ class Command_Auth : Racesow_Command
 {
 
     Command_Auth() {
-        super("auth", "Authenticate with the server (alternatively you can use setu to save your login)", "<authname> <password>");
+        super( "Authenticate with the server (alternatively you can use setu to save your login)", "<authname> <password>" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -262,7 +262,7 @@ class Command_Auth : Racesow_Command
 class Command_CallvoteCheckPermission : Racesow_Command {
 
     Command_CallvoteCheckPermission() {
-        super("callvotecheckpermission", "Check if you have the permission to call the specified Callvote", "<callvote>");
+        super( "Check if you have the permission to call the specified Callvote", "<callvote>" );
     }
 
     //When adding callvotes to a gametype derive from this command and add yours into this function
@@ -323,7 +323,7 @@ class Command_CallvoteValidate : Racesow_Command
 {
 
     Command_CallvoteValidate() {
-        super("callvotevalidate","", ""); //FIXME: Needs description and usage
+        super( "", "" ); //FIXME: Needs description and usage
     }
 
     //When adding callvotes to a gametype derive from this command and add yours into this function
@@ -426,32 +426,11 @@ class Command_CallvoteValidate : Racesow_Command
     }
 }
 
-class Command_Chase : Racesow_Command
-{
-
-    Command_Chase() {
-        super("chase", "Spectate", "");
-    }
-
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        return true;
-    }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.getClient().team = TEAM_SPECTATOR;
-        player.getClient().respawn( true ); // true means ghost
-        return true;
-    }
-
-}
-
 class Command_Chrono : Racesow_Command
 {
 
     Command_Chrono() {
-        super("chrono", "Chrono for tricks timing", "<start/reset>");
+        super( "Chrono for tricks timing", "<start/reset>" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -491,7 +470,7 @@ class Command_Chrono : Racesow_Command
 class Command_CvarInfo : Racesow_Command
 {
     Command_CvarInfo() {
-        super("cvarinfo", "", ""); //FIXME: Add description and usage
+        super( "", "" ); //FIXME: Add description and usage
     }
 
     bool execute( Racesow_Player @player, cString &args, int argc ) {
@@ -518,7 +497,7 @@ class Command_Gametype : Racesow_Command
 {
 
     Command_Gametype() {
-        super("gametype", "Print info about the game type", "");
+        super( "Print info about the game type", "" );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -546,7 +525,7 @@ class Command_Help : Racesow_Command
 
 	Command_Help( Racesow_Command @baseCommand, RC_Map @targetCommandMap )
 	{
-		super( "help", "Print this help, or give help on a specific command", "[command]" );
+		super( "Print this help, or give help on a specific command", "[command]" );
         @this.targetCommandMap = @targetCommandMap;
         @this.baseCommand = @baseCommand;
 	}
@@ -623,7 +602,7 @@ class Command_Join : Racesow_Command
 {
 
     Command_Join() {
-        super("join", "Join the game", "");
+        super( "Join the game", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -654,7 +633,7 @@ class Command_Kill : Racesow_Command
 {
 
     Command_Kill() {
-        super("kill", "Go back to the start area whenever you want", "");
+        super( "Go back to the start area whenever you want", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -683,7 +662,7 @@ class Command_Machinegun : Racesow_Command
 {
 
     Command_Machinegun() {
-        super("machinegun", "Gives you a machinegun", "");
+        super( "Gives you a machinegun", "" );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -698,7 +677,7 @@ class Command_Mapfilter : Racesow_Command
 {
 
     Command_Mapfilter() {
-        super("mapfilter", "Search for maps matching a given name", "<filter> <pagenum>");
+        super( "Search for maps matching a given name", "<filter> <pagenum>" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -735,7 +714,7 @@ class Command_Maplist : Racesow_Command
 {
 
     Command_Maplist() {
-        super("maplist", "Print the maplist", "<pagenum>");
+        super( "Print the maplist", "<pagenum>" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -764,7 +743,7 @@ class Command_Mapname : Racesow_Command
 {
 
     Command_Mapname() {
-        super("mapname", "Print the name of current map", "");
+        super( "Print the name of current map", "" );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -778,7 +757,7 @@ class Command_LastMap : Racesow_Command
 {
 
     Command_LastMap() {
-        super("lastmap", "Print the name of the previous map on the server, before this one", "");
+        super( "Print the name of the previous map on the server, before this one", "" );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -792,7 +771,7 @@ class Command_NextMap : Racesow_Command
 {
 
     Command_NextMap() {
-        super("nextmap", "Print the name of the next map in map rotation", "");
+        super( "Print the name of the next map in map rotation", "" );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -806,7 +785,7 @@ class Command_Noclip : Racesow_Command
 {
 
     Command_Noclip() {
-        super("noclip", "Disable your interaction with other players and objects", "");
+        super( "Disable your interaction with other players and objects", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -829,7 +808,7 @@ class Command_Oneliner : Racesow_Command
 {
 
     Command_Oneliner() {
-        super("oneliner", "Set a one-line message that is displayed right next to your top time", "");
+        super( "Set a one-line message that is displayed right next to your top time", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -867,17 +846,17 @@ class Command_Oneliner : Racesow_Command
 class Command_Position : Racesow_Command
 {
 	Command_Position() {
-        super("position", "Commands to store and load position", "<subcommand> [args...]");
+        super( "Commands to store and load position", "<subcommand> [args...]" );
 
     	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        addCommandToCommandMap( @commandMap, @Command_PositionSave( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_PositionLoad( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_PositionSet( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_PositionStore( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_PositionRestore( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_PositionStoredlist( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_Help( @this, @this.commandMap ) );
+        commandMap.set_opIndex( "save", @Command_PositionSave( @this ) );
+        commandMap.set_opIndex( "load", @Command_PositionLoad( @this ) );
+        commandMap.set_opIndex( "set", @Command_PositionSet( @this ) );
+        commandMap.set_opIndex( "store", @Command_PositionStore( @this ) );
+        commandMap.set_opIndex( "restore", @Command_PositionRestore( @this ) );
+        commandMap.set_opIndex( "storedlist", @Command_PositionStoredlist( @this ) );
+        commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
     }
     //validate only the first level of the command
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -906,9 +885,9 @@ class Command_Position : Racesow_Command
 //implements validate() for position commands
 class Racesow_PositionCommand : Racesow_Command
 {
-	Racesow_PositionCommand( cString &in name, cString &in description, cString &in usage )
+	Racesow_PositionCommand( cString &in description, cString &in usage )
 	{
-        super( name, description, usage );
+        super( description, usage );
 	}
 	bool validate(Racesow_Player @player, cString &args, int argc)
 	{
@@ -924,7 +903,7 @@ class Racesow_PositionCommand : Racesow_Command
 class Command_PositionSave : Racesow_PositionCommand
 {
 	Command_PositionSave( Racesow_Command @baseCommand ) {
-        super("save", "Save position", "");
+        super( "Save position", "" );
         @this.baseCommand = @baseCommand;
     }
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -936,7 +915,7 @@ class Command_PositionSave : Racesow_PositionCommand
 class Command_PositionLoad : Racesow_PositionCommand
 {
 	Command_PositionLoad( Racesow_Command @baseCommand ) {
-        super("load", "Teleport to saved position", "");
+        super( "Teleport to saved position", "" );
         @this.baseCommand = @baseCommand;
     }
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -948,7 +927,7 @@ class Command_PositionLoad : Racesow_PositionCommand
 class Command_PositionSet : Racesow_PositionCommand
 {
 	Command_PositionSet( Racesow_Command @baseCommand ) {
-        super("set", "Teleport to specified position", "<x> <y> <z> <pitch> <yaw>");
+        super( "Teleport to specified position", "<x> <y> <z> <pitch> <yaw>" );
         @this.baseCommand = @baseCommand;
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
@@ -978,7 +957,7 @@ class Command_PositionSet : Racesow_PositionCommand
 class Command_PositionStore : Racesow_PositionCommand
 {
 	Command_PositionStore( Racesow_Command @baseCommand ) {
-        super("store", "Store a position for another session", "<id> <name>");
+        super( "Store a position for another session", "<id> <name>" );
         @this.baseCommand = @baseCommand;
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1003,7 +982,7 @@ class Command_PositionStore : Racesow_PositionCommand
 class Command_PositionRestore : Racesow_PositionCommand
 {
 	Command_PositionRestore( Racesow_Command @baseCommand ) {
-        super("restore", "Restore a stored position from another session", "<id>");
+        super( "Restore a stored position from another session", "<id>" );
         @this.baseCommand = @baseCommand;
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1029,7 +1008,7 @@ const int POSITION_STOREDLIST_LIMIT = 50; //FIXME: put this into the position cl
 class Command_PositionStoredlist : Racesow_PositionCommand
 {
 	Command_PositionStoredlist( Racesow_Command @baseCommand ) {
-        super("storedlist", "Sends you a list of your stored positions", "<limit>");
+        super( "Sends you a list of your stored positions", "<limit>" );
         @this.baseCommand = @baseCommand;
     }
 	bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1061,7 +1040,7 @@ class Command_Spec : Racesow_Command
 {
 
     Command_Spec() {
-        super("spec", "Spectate", "");
+        super( "Spectate", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1081,7 +1060,7 @@ class Command_Practicemode : Racesow_Command
 {
 
     Command_Practicemode() {
-        super("practicemode", "Allows usage of the position and noclip commands", "");
+        super( "Allows usage of the position and noclip commands", "" );
     }
 
 	bool validate( Racesow_Player @player, cString &args, int argc )
@@ -1122,7 +1101,7 @@ class Command_Practicemode : Racesow_Command
 class Command_Privsay : Racesow_TargetCommand
 {
     Command_Privsay() {
-        super("privsay", "Send a private message to a player", "<playerid/playername> <message>");
+        super( "Send a private message to a player", "<playerid|playername> <message>" );
     }
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
@@ -1158,7 +1137,7 @@ class Command_ProtectedNick : Racesow_Command
 {
 
     Command_ProtectedNick() {
-        super("protectednick", "Show/update your current protected nick", "[newnick]");
+        super( "Show/update your current protected nick", "[newnick]" );
     }
 
 	bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1202,7 +1181,7 @@ class Command_Quad : Racesow_Command
 {
 
     Command_Quad() {
-        super("quad", "Activate or desactivate the quad for weapons", "");
+        super( "Activate or desactivate the quad for weapons", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1224,7 +1203,7 @@ class Command_Quad : Racesow_Command
 class Command_RaceRestart : Racesow_Command
 {
     Command_RaceRestart() {
-        super("racerestart", "Go back to the start area whenever you want", "");
+        super( "Go back to the start area whenever you want", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1246,7 +1225,7 @@ class Command_Register : Racesow_Command
 {
 
     Command_Register() {
-        super("register", "Register a new account on this server", "<authname> <email> <password> <confirmation>");
+        super( "Register a new account on this server", "<authname> <email> <password> <confirmation>" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1274,13 +1253,13 @@ class Command_Register : Racesow_Command
 class Command_Stats : Racesow_Command
 {
 	Command_Stats() {
-        super("stats", "Show statistics", "[subcommand] [args...]");
+        super( "Show statistics", "[subcommand] [args...]" );
 
     	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        addCommandToCommandMap( @commandMap, @Command_StatsPlayer( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_StatsMap( @this ) );
-        addCommandToCommandMap( @commandMap, @Command_Help( @this, @this.commandMap ) );
+        commandMap.set_opIndex( "player", @Command_StatsPlayer( @this ) );
+        commandMap.set_opIndex( "map", @Command_StatsMap( @this ) );
+        commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
     }
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
@@ -1321,7 +1300,7 @@ class Command_Stats : Racesow_Command
 class Command_StatsPlayer : Racesow_Command
 {
     Command_StatsPlayer( Racesow_Command @baseCommand ) {
-        super("player", "Prints stats for the given player or yourself if no name given", "[name]" );
+        super( "Prints stats for the given player or yourself if no name given", "[name]" );
         @this.baseCommand = @baseCommand;
     }
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1339,7 +1318,7 @@ class Command_StatsPlayer : Racesow_Command
 class Command_StatsMap : Racesow_Command
 {
     Command_StatsMap( Racesow_Command @baseCommand ) {
-        super("map", "Print stats for the given map or the current map is no name given", "<name>" );
+        super( "Print stats for the given map or the current map is no name given", "<name>" );
         @this.baseCommand = @baseCommand;
     }
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1358,7 +1337,7 @@ class Command_Timeleft : Racesow_Command
 {
 
     Command_Timeleft() {
-        super("timeleft", "Print remaining time before map change", "");
+        super( "Print remaining time before map change", "" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1405,7 +1384,7 @@ class Command_Token : Racesow_Command
 {
 
     Command_Token() {
-        super("token", "When authenticated, shows your unique login token you may setu in your config", "");
+        super( "When authenticated, shows your unique login token you may setu in your config", "" );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -1421,7 +1400,7 @@ class Command_Top : Racesow_Command
     int prejumped;
 
     Command_Top() {
-        super("top", "Print the best times of a given map (default: current map)", "<pj/nopj> <limit(3-30)> <mapname>");
+        super( "Print the best times of a given map (default: current map)", "<pj/nopj> <limit(3-30)> <mapname>" );
     }
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1499,14 +1478,14 @@ class Command_WhoIsGod : Racesow_Command
 {
     cString[] devs;
     Command_WhoIsGod() {
-        super("whoisgod", "Which one is yours?", "");
+        super( "Which one is yours?", "" );
         this.devs.resize(DEVS.length());
         for( uint i = 0; i < DEVS.length(); i++)
             this.devs[i] = DEVS[i];
     }
 
     Command_WhoIsGod(cString &in extraDevName) {
-        super("whoisgod", "Which one is yours?", "");
+        super( "Which one is yours?", "" );
         this.devs.resize(DEVS.length()+1);
         for( uint i = 0; i < DEVS.length(); i++)
             this.devs[i] = DEVS[i];
@@ -1514,7 +1493,7 @@ class Command_WhoIsGod : Racesow_Command
     }
 
     Command_WhoIsGod(cString[] &in extraDevNames) {
-        super("whoisgod", "Which one is yours?", "");
+        super( "Which one is yours?", "" );
         this.devs.resize(DEVS.length()+extraDevNames.length());
         for( uint i = 0; i < DEVS.length(); i++)
             this.devs[i] = DEVS[i];
@@ -1825,9 +1804,9 @@ class Command_WhoIsGod : Racesow_Command
 //    /**
 //     * Non-Default constructor to be used with super() in the derived classes
 //     */
-//    Racesow_AdminCommand( cString &in name, cString &in description, cString &in usage, int auth )
+//    Racesow_AdminCommand( cString &in description, cString &in usage, int auth )
 //    {
-//        super( name, description, usage );
+//        super( description, usage );
 //        this.permissionMask = auth;
 //    }
 //
@@ -1840,7 +1819,7 @@ class Command_AdminMap : Racesow_Command // (should be subclass of Racesow_Admin
 {
 	Command_AdminMap( Racesow_Command @baseCommand )
 	{
-		super( "map", "change to the given map immediately", "<mapname>" );
+		super( "change to the given map immediately", "<mapname>" );
         this.permissionMask = RACESOW_AUTH_MAP;
         @this.baseCommand = @baseCommand;
 	}
@@ -1870,7 +1849,7 @@ class Command_AdminUpdateml : Racesow_Command // (should be subclass of Racesow_
 {
 	Command_AdminUpdateml( Racesow_Command @baseCommand )
 	{
-		super( "updateml", "Update the maplist", "" );
+		super( "Update the maplist", "" );
         this.permissionMask = RACESOW_AUTH_ADMIN;
         @this.baseCommand = @baseCommand;
 	}
@@ -1885,7 +1864,7 @@ class Command_AdminRestart : Racesow_Command // (should be subclass of Racesow_A
 {
 	Command_AdminRestart( Racesow_Command @baseCommand )
 	{
-		super( "restart", "restart the match immediately", "" );
+		super( "restart the match immediately", "" );
         this.permissionMask = RACESOW_AUTH_MAP;
         @this.baseCommand = @baseCommand;
 	}
@@ -1900,7 +1879,7 @@ class Command_AdminExtendtime : Racesow_Command // (should be subclass of Raceso
 {
 	Command_AdminExtendtime( Racesow_Command @baseCommand )
 	{
-		super( "extend_time", "extend the matchtime immediately", "" );
+		super( "extend the matchtime immediately", "" );
         this.permissionMask = RACESOW_AUTH_MAP;
         @this.baseCommand = @baseCommand;
 	}
@@ -1931,7 +1910,7 @@ class Command_AdminCancelvote : Racesow_Command // (should be subclass of Raceso
 {
 	Command_AdminCancelvote( Racesow_Command @baseCommand )
 	{
-		super( "cancelvote", "cancel the currently active vote", "" );
+		super( "cancel the currently active vote", "" );
         this.permissionMask = RACESOW_AUTH_MAP;
         @this.baseCommand = @baseCommand;
 	}
@@ -1946,9 +1925,9 @@ class Command_AdminCancelvote : Racesow_Command // (should be subclass of Raceso
 // implementation of validate() for commands with target
 class Racesow_TargetCommand : Racesow_Command
 {
-	Racesow_TargetCommand( cString &in name, cString &in description, cString &in usage )
+	Racesow_TargetCommand( cString &in description, cString &in usage )
 	{
-        super( name, description, usage );
+        super( description, usage );
 	}
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1987,7 +1966,7 @@ class Command_AdminMute : Racesow_TargetCommand
 {
 	Command_AdminMute( Racesow_Command @baseCommand )
 	{
-		super( "mute", "mute the given player immediately", "<playerid|playername>" );
+		super( "mute the given player immediately", "<playerid|playername>" );
         this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2006,7 +1985,7 @@ class Command_AdminUnmute : Racesow_TargetCommand
 {
 	Command_AdminUnmute( Racesow_Command @baseCommand )
 	{
-		super( "unmute", "unmute the given player immediately", "<playerid>" );
+		super( "unmute the given player immediately", "<playerid>" );
         this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2024,7 +2003,7 @@ class Command_AdminVmute : Racesow_TargetCommand
 {
 	Command_AdminVmute( Racesow_Command @baseCommand )
 	{
-		super( "vmute", "vmute the given player immediately", "<playerid>" );
+		super( "vmute the given player immediately", "<playerid>" );
         this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2042,7 +2021,7 @@ class Command_AdminVunmute : Racesow_TargetCommand
 {
 	Command_AdminVunmute( Racesow_Command @baseCommand )
 	{
-		super( "vunmute", "vunmute the given player immediately", "<playerid>" );
+		super( "vunmute the given player immediately", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2060,7 +2039,7 @@ class Command_AdminVotemute : Racesow_TargetCommand
 {
 	Command_AdminVotemute( Racesow_Command @baseCommand )
 	{
-		super( "votemute", "disable voting for the given player", "<playerid>" );
+		super( "disable voting for the given player", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2078,7 +2057,7 @@ class Command_AdminUnvotemute : Racesow_TargetCommand
 {
 	Command_AdminUnvotemute( Racesow_Command @baseCommand )
 	{
-		super( "unvotemute", "enable voting for the given player", "<playerid>" );
+		super( "enable voting for the given player", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2096,7 +2075,7 @@ class Command_AdminRemove : Racesow_TargetCommand
 {
 	Command_AdminRemove( Racesow_Command @baseCommand )
 	{
-		super( "remove", "remove the given player immediately", "<playerid>" );
+		super( "remove the given player immediately", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2114,7 +2093,7 @@ class Command_AdminKick : Racesow_TargetCommand
 {
 	Command_AdminKick( Racesow_Command @baseCommand )
 	{
-		super( "kick", "kick the given player immediately", "<playerid>" );
+		super( "kick the given player immediately", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2132,7 +2111,7 @@ class Command_AdminJoinlock : Racesow_TargetCommand
 {
 	Command_AdminJoinlock( Racesow_Command @baseCommand )
 	{
-		super( "joinlock", "prevent the given player from joining", "<playerid>" );
+		super( "prevent the given player from joining", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2150,7 +2129,7 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
 {
 	Command_AdminJoinunlock( Racesow_Command @baseCommand )
 	{
-		super( "joinunlock", "allow the given player to join", "<playerid>" );
+		super( "allow the given player to join", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2168,7 +2147,7 @@ class Command_AdminKickban : Racesow_TargetCommand
 {
 	Command_AdminKickban( Racesow_Command @baseCommand )
 	{
-		super( "kickban", "kickban the given player immediately", "<playerid>" );
+		super( "kickban the given player immediately", "<playerid>" );
 		this.permissionMask = RACESOW_AUTH_ADMIN;
         @this.baseCommand = @baseCommand;
 	}

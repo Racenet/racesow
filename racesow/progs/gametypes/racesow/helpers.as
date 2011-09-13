@@ -151,7 +151,7 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
     if ( @client == null || client.playerNum() < 0 )
         return null;
 
-    return @racesowGametype.players[ client.playerNum() ].setClient( @client );
+    return @racesowGametype.players[ client.playerNum() ].setClient( @client ); //FIXME: why set the client HERE??
 }
 
 /**
@@ -200,7 +200,7 @@ cClient @Racesow_GetClientByString( cString playerString )
 
   cClient @client;
   
-  if ( playerString.isNumerical() && playerString.toInt() < maxClients )
+  if ( playerString.isNumerical() && playerString.toInt() < maxClients ) // !!!!!!!! cString.isNumerical() returns true for empty strings (wsw0.62) !!!!!!!!
   {
     @client = @G_GetClient( playerString.toInt() );
     
@@ -300,12 +300,12 @@ void insertDefaultCommands( RC_Map @commandMap ) {
     @commandMap["whoisgod"] = @Command_WhoIsGod();
     @commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermission();
     @commandMap["callvotevalidate"] = @Command_CallvoteValidate();*/
-    addCommandToCommandMap( @commandMap, @Command_Admin() );
-    addCommandToCommandMap( @commandMap, @Command_Auth() );
-    addCommandToCommandMap( @commandMap, @Command_Gametype() );
-    addCommandToCommandMap( @commandMap, @Command_Help( null, @commandMap ) );
-    addCommandToCommandMap( @commandMap, @Command_WhoIsGod() );
-    addCommandToCommandMap( @commandMap, @Command_Stats() );
+    commandMap.set_opIndex( "admin", @Command_Admin() );
+    commandMap.set_opIndex( "auth", @Command_Auth() );
+    commandMap.set_opIndex( "gametype", @Command_Gametype() );
+    commandMap.set_opIndex( "help", @Command_Help( null, @commandMap ) );
+    commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod() );
+    commandMap.set_opIndex( "stats", @Command_Stats() );
 }
 
 void addCommandToCommandMap( RC_Map @commandMap, Racesow_Command @cmd )

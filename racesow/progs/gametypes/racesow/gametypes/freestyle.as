@@ -9,19 +9,19 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         /*@this.commandMap["chrono"] = @Command_Chrono();
         @this.commandMap["join"] = @Command_Join();
         @this.commandMap["spec"] = @Command_Spec();
-        @this.commandMap["chase"] = @Command_Chase();
+        @this.commandMap["chase"] = @Command_Spec();
         @this.commandMap["kill"] = @Command_Kill();
         @this.commandMap["position"] = @Command_Position();
         @this.commandMap["quad"] = @Command_Quad();
         @this.commandMap["noclip"] = @Command_Noclip();*/
-        addCommandToCommandMap( @commandMap, @Command_Chrono() );
-        addCommandToCommandMap( @commandMap, @Command_Join() );
-        addCommandToCommandMap( @commandMap, @Command_Spec() );
-        addCommandToCommandMap( @commandMap, @Command_Chase() );
-        addCommandToCommandMap( @commandMap, @Command_Kill() );
-        addCommandToCommandMap( @commandMap, @Command_Position() );
-        addCommandToCommandMap( @commandMap, @Command_Quad() );
-        addCommandToCommandMap( @commandMap, @Command_Noclip() );
+        commandMap.set_opIndex( "chrono", @Command_Chrono() );
+        commandMap.set_opIndex( "join", @Command_Join() );
+        commandMap.set_opIndex( "spec", @Command_Spec() );
+        commandMap.set_opIndex( "chase", @Command_Spec() );
+        commandMap.set_opIndex( "kill", @Command_Kill() );
+        commandMap.set_opIndex( "position", @Command_Position() );
+        commandMap.set_opIndex( "quad", @Command_Quad() );
+        commandMap.set_opIndex( "noclip", @Command_Noclip() );
     }
     
     void InitGametype()

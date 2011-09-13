@@ -685,20 +685,20 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         @this.commandMap["callvotepassed"] = @Command_CallvotePassed();
         @this.commandMap["join"] = @Command_Join();
         @this.commandMap["spec"] = @Command_Spec();
-        @this.commandMap["chase"] = @Command_Chase();
+        @this.commandMap["chase"] = @Command_Spec();
         @this.commandMap["racerestart"] = @Command_RaceRestart();
         @this.commandMap["resetcam"] = @Command_ResetCam();
         @this.commandMap["top"] = @Command_Top();
         @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
-        commandMap.set_opIndex("callvotevalidate",@Command_CallvoteValidateDrace());
-        //commandMap.set_opIndex("callvotecheckpermission", @Command_CallvoteCheckPermissionDrace());
-        commandMap.set_opIndex("callvotepassed", @Command_CallvotePassed());
+        commandMap.set_opIndex( "callvotevalidate",@Command_CallvoteValidateDrace() );
+        //commandMap.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermissionDrace() );
+        commandMap.set_opIndex( "callvotepassed", @Command_CallvotePassed() );
         commandMap.set_opIndex( "join", @Command_Join() );
         commandMap.set_opIndex( "spec", @Command_Spec() );
         commandMap.set_opIndex( "racerestart", @Command_RaceRestart_Drace() );
         commandMap.set_opIndex( "resetcam", @Command_ResetCam() );
         commandMap.set_opIndex( "top", @Command_Top() );
-        commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod("Jerm's") );
+        commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod( "Jerm's" ) );
     }
     
     void InitGametype()

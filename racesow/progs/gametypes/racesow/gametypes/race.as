@@ -1,3 +1,17 @@
+//debug...
+//class Command_SetAuth : Racesow_Command
+//{
+//    Command_SetAuth()
+//    {
+//        super( "set authmask (debug) 127 = superadmin", "<mask>" );
+//    }
+//    bool execute(Racesow_Player @player, cString &args, int argc)
+//    {
+//    	player.getAuth().authorizationsMask = args.getToken( 0 ).toInt();
+//        return true;
+//    }
+//}
+
 class Racesow_Gametype_Race : Racesow_Gametype
 {
     Racesow_Gametype_Race()
@@ -7,7 +21,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
         //FIXME: These will hopefully be useable with the new angelscript version
         /*@this.commandMap["join"] = @Command_Join();
         @this.commandMap["spec"] = @Command_Spec();
-        @this.commandMap["chase"] = @Command_Chase();
+        @this.commandMap["chase"] = @Command_Spec();
         @this.commandMap["racerestart"] = @Command_RaceRestart();
         @this.commandMap["kill"] = @Command_Kill();
         @this.commandMap["oneliner"] = @Command_Oneliner();
@@ -17,18 +31,19 @@ class Racesow_Gametype_Race : Racesow_Gametype
         @this.commandMap["timeleft"] = @Command_Timeleft();
         @this.commandMap["top"] = @Command_Top();
         @this.commandMap["practicemode"] = @Command_Practicemode();*/
-        addCommandToCommandMap( @commandMap, @Command_Join() );
-        addCommandToCommandMap( @commandMap, @Command_Spec() );
-        addCommandToCommandMap( @commandMap, @Command_Chase() );
-        addCommandToCommandMap( @commandMap, @Command_RaceRestart() );
-        addCommandToCommandMap( @commandMap, @Command_Kill() );
-        addCommandToCommandMap( @commandMap, @Command_Oneliner() );
-        addCommandToCommandMap( @commandMap, @Command_Position_Race() ); //practice command
-        addCommandToCommandMap( @commandMap, @Command_Noclip_Race() ); //practice command
-        addCommandToCommandMap( @commandMap, @Command_Machinegun() );
-        addCommandToCommandMap( @commandMap, @Command_Timeleft() );
-        addCommandToCommandMap( @commandMap, @Command_Top() );
-        addCommandToCommandMap( @commandMap, @Command_Practicemode() );
+        commandMap.set_opIndex( "join", @Command_Join() );
+        commandMap.set_opIndex( "spec", @Command_Spec() );
+        commandMap.set_opIndex( "chase", @Command_Spec() );
+        commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
+        commandMap.set_opIndex( "kill", @Command_Kill() );
+        commandMap.set_opIndex( "oneliner", @Command_Oneliner() );
+        commandMap.set_opIndex( "position", @Command_Position_Race() );
+        commandMap.set_opIndex( "noclip", @Command_Noclip_Race() );
+        commandMap.set_opIndex( "machinegun", @Command_Machinegun() );
+        commandMap.set_opIndex( "timeleft", @Command_Timeleft() );
+        commandMap.set_opIndex( "top", @Command_Top() );
+        commandMap.set_opIndex( "practicemode", @Command_Practicemode() );
+//        commandMap.set_opIndex( "setauth", @Command_SetAuth() );
     }
     
     void InitGametype()

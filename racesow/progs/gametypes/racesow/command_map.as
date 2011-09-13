@@ -61,6 +61,7 @@ class RC_Map {
 
     void set_opIndex(cString &idx, Racesow_Command @idy) {
         if ( @idx != null && @idy != null && this.last != this.max_size) {
+            idy.name = idx; // dunno where else to put this...
             int position;
             if ( ( position = this.find(idx)) != -1 ) {
                 this.elements[position].setSecond(idy);
