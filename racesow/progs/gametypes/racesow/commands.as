@@ -1146,49 +1146,38 @@ class Command_Practicemode : Racesow_Command
 	}
 }
 
-class Command_Privsay : Racesow_Command
+class Command_Privsay : Racesow_TargetCommand
 {
-
     Command_Privsay() {
         super("privsay", "Send a private message to a player", "<playerid/playername> <message>");
     }
-
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( player.getClient().muted == 1 )
+        if( player.getClient().muted == 1 )
         {
-            player.sendErrorMessage("You can't talk, you're muted");
+            player.sendErrorMessage( "You can't talk, you're muted." );
             return false;
         }
-
-        if (argc < 2)
+    	if( !Racesow_TargetCommand::validate( player, args, argc ) )
+    		return false;
+        if( args.getToken( this.getLevel() + 1 ) == "" )
         {
-            player.sendErrorMessage( "You must provide a player id and a message");
+            player.sendErrorMessage( "You must provide a message." );
             return false;
         }
         return true;
     }
-
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        cClient@ target = null;
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
 
-        if ( args.getToken( 0 ).isNumerical() && args.getToken( 0 ).toInt() <= maxClients )
-        {
-            @target = @G_GetClient( args.getToken( 0 ).toInt() );
-        }
-        else if ( Racesow_GetClientNumber( args.getToken( 0 ) ) != -1 )
-        {
-            @target = @G_GetClient( Racesow_GetClientNumber( args.getToken( 0 ) ) );
-        }
-
-        if ( @target == null || !target.getEnt().inuse )
-        {
-            player.sendErrorMessage("Invalid player");
-            return false;
-        }
         cString message = args.substr(args.getToken( 0 ).length()+1, args.len() );
-        return player.privSay(message, target);
+
+        player.sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + targetPlayer.getClient().getName()
+        		+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n");
+        targetPlayer.sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + player.getClient().getName()
+        		+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n" );
+        return true;
     }
 }
 
@@ -1995,8 +1984,8 @@ class Command_AdminCancelvote : Racesow_Command // (should be subclass of Raceso
     }
 }
 
-// implementation of validate() for mute/kick commands
-class Racesow_TargetCommand : Racesow_Command // (should be subclass of Racesow_AdminCommand )
+// implementation of validate() for commands with target
+class Racesow_TargetCommand : Racesow_Command
 {
 	Racesow_TargetCommand( cString &in name, cString &in description, cString &in usage )
 	{
@@ -2005,29 +1994,51 @@ class Racesow_TargetCommand : Racesow_Command // (should be subclass of Racesow_
 
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if( args.getToken( this.getLevel() + 0 ) == "" )
+    	if( argc < this.getLevel() + 1 )
+    	{
+            player.sendErrorMessage( "No player given." );
+            player.getClient().execGameCommand("cmd players");
+            return false;
+    	}
+//    	Racesow_Player @targetPlayer = @this.getTargetPlayer( args.getToken( this.getLevel() ) );
+    	Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        if( @targetPlayer == null || args.getToken( this.getLevel() ).length() == 0 )
         {
-            player.client.execGameCommand("cmd players");
+            player.sendErrorMessage( "Player " + args.getToken( this.getLevel() ) + COMMAND_COLOR_DEFAULT + " not found." );
+            player.getClient().execGameCommand("cmd players");
             return false;
         }
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
-        return ( @targetPlayer != null );
+        if( targetPlayer.getClient().getEnt().inuse )
+            return true;
+        player.sendErrorMessage( "Invalid player." );
+        return false;
     }
+    //why do these functions break subclasses???
+//    Racesow_Player@ getTargetPlayer( cString str )
+//    {
+//    	return @Racesow_GetPlayerByClient( @Racesow_GetClientByString( str ) );
+//    }
+//    cClient@ getTarget( cString str )
+//    {
+//    	return @Racesow_GetClientByString( str );
+//    }
 }
 
 class Command_AdminMute : Racesow_TargetCommand
 {
 	Command_AdminMute( Racesow_Command @baseCommand )
 	{
-		super( "mute", "mute the given player immediately", "<playerid>" );
+		super( "mute", "mute the given player immediately", "<playerid|playername>" );
         this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
-        targetPlayer.client.muted |= 1;
+//        cClient @target = @this.getTarget( args.getToken( this.getLevel() ) );
+        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+        target.muted |= 1;
+        player.sendMessage( "Muted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2043,8 +2054,9 @@ class Command_AdminUnmute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
-        targetPlayer.client.muted &= ~1;
+        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+        target.muted &= ~1;
+        player.sendMessage( "Unmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2060,8 +2072,9 @@ class Command_AdminVmute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
-        targetPlayer.client.muted |= 2;
+        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+        target.muted |= 2;
+        player.sendMessage( "Vmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2077,8 +2090,9 @@ class Command_AdminVunmute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
-        targetPlayer.client.muted &= ~2;
+        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+        target.muted &= ~2;
+        player.sendMessage( "Vunmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2094,8 +2108,9 @@ class Command_AdminVotemute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
         targetPlayer.isVotemuted = true;
+        player.sendMessage( "Votemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2111,8 +2126,9 @@ class Command_AdminUnvotemute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
         targetPlayer.isVotemuted = false;
+        player.sendMessage( "Unvotemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2128,8 +2144,9 @@ class Command_AdminRemove : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
         targetPlayer.remove("");
+        player.sendMessage( "Removed player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2145,8 +2162,9 @@ class Command_AdminKick : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
         targetPlayer.kick("");
+        player.sendMessage( "Kicked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2162,8 +2180,9 @@ class Command_AdminJoinlock : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
         targetPlayer.isJoinlocked = true;
+        player.sendMessage( "Joinlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2179,8 +2198,9 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
         targetPlayer.isJoinlocked = false;
+        player.sendMessage( "Joinunlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -2196,8 +2216,9 @@ class Command_AdminKickban : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( this.getLevel() + 0 ).toInt() );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
         targetPlayer.kickban("");
+        player.sendMessage( "Kickbanned player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
