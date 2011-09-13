@@ -236,3 +236,32 @@ class Racesow_Gametype_Race : Racesow_Gametype
 Racesow_Gametype@ getRacesowGametype() {
     return @Racesow_Gametype_Race();
 }
+
+/*
+ * Commands only used in this gametype
+ */
+class Command_Noclip_Race : Command_Noclip
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( !Command_Noclip::validate( player, args, argc ) )
+            return false;
+        if( player.practicing )
+        	return true;
+        player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
+        return false;
+    }
+}
+
+class Command_Position_Race : Command_Position
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+    	if( !player.practicing )
+    	{
+            player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
+    		return false;
+    	}
+    	return Command_Position::validate( player, args, argc );
+    }
+}

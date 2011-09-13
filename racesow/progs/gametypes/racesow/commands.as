@@ -825,19 +825,6 @@ class Command_Noclip : Racesow_Command
     }
 }
 
-class Command_Noclip_Race : Command_Noclip
-{
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if( !Command_Noclip::validate( player, args, argc ) )
-            return false;
-        if( player.practicing )
-        	return true;
-        player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
-        return false;
-    }
-}
-
 class Command_Oneliner : Racesow_Command
 {
 
@@ -913,20 +900,6 @@ class Command_Position : Racesow_Command
     {
     	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
     	return subCommand.execute( player, args, argc );
-    }
-}
-
-//maybe move this to gametypes/race.as ?
-class Command_Position_Race : Command_Position
-{
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-    	if( !player.practicing )
-    	{
-            player.sendErrorMessage( "" + COMMAND_ERROR_PRACTICE );
-    		return false;
-    	}
-    	return Command_Position::validate( player, args, argc );
     }
 }
 
@@ -1266,20 +1239,6 @@ class Command_RaceRestart : Racesow_Command
     {
         player.restartRace();
 		return true;
-    }
-}
-
-class Command_RaceRestart_Drace : Command_RaceRestart
-{
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if( !Command_RaceRestart::validate( player, args, argc ) )
-            return false;
-        //racerestart command is only avaiblable during WARMUP
-        if ( match.getState() == MATCH_STATE_WARMUP )
-            return true;
-        player.sendErrorMessage( "This command is only avaiblable during WARMUP." );
-        return false;
     }
 }
 

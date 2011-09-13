@@ -1259,3 +1259,21 @@ class Racesow_Player_Drace : Racesow_Player
         }
 	}
 }
+
+
+/*
+ * Commands only used in this gametype
+ */
+class Command_RaceRestart_Drace : Command_RaceRestart
+{
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( !Command_RaceRestart::validate( player, args, argc ) )
+            return false;
+        //racerestart command is only avaiblable during WARMUP
+        if ( match.getState() == MATCH_STATE_WARMUP )
+            return true;
+        player.sendErrorMessage( "This command is only avaiblable during WARMUP." );
+        return false;
+    }
+}
