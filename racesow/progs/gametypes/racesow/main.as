@@ -271,8 +271,8 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
  */
 void GT_ThinkRules()
 {
-	// perform a C callback if there is one pending
-	racesowAdapter.thinkCallbackQueue();
+	// perform an Adapter think (where stat callbacks are processed)
+	racesowAdapter.think();
 
 	bool timelimited = not ( gametypeFlag == MODFLAG_FREESTYLE  || !g_maprotation.getBool());
 
@@ -467,7 +467,7 @@ void GT_SpawnGametype()
 
     if (mysqlConnected != 0) {
 
-        @racesowAdapter = Racesow_Adapter_Full();
+        @racesowAdapter = Racesow_Adapter_Mysql();
 
     } else {
 
