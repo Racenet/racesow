@@ -426,6 +426,82 @@ class Command_CallvoteValidate : Racesow_Command
     }
 }
 
+class Command_CallvotePassed : Racesow_Command
+{
+
+    Command_CallvotePassed() {
+        super( "", "" ); //FIXME: Needs description and usage
+    }
+
+    //When adding callvotes to a gametype derive from this command and add yours into this function
+    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
+    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
+        return false;
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+		cString vote = args.getToken( 0 );
+
+        if( this.gametypeVotes(player, args, argc) )
+            return true;
+
+        if ( vote == "extend_time" )
+        {
+        	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+        	map.cancelOvertime();
+            for ( int i = 0; i < maxClients; i++ )
+            {
+            	racesowGametype.players[i].cancelOvertime();
+            }
+        }
+
+        if ( vote == "timelimit" )
+        {
+        	int new_timelimit = args.getToken( 1 ).toInt();
+        	g_timelimit.set(new_timelimit);
+
+        	// g_timelimit_reset == 1: this timelimit value is not kept after current map
+        	// g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
+        	if (g_timelimit_reset.getBool() == false)
+        	{
+        		oldTimelimit = g_timelimit.getInteger();
+        	}
+        }
+
+        if ( vote == "spec" )
+        {
+        	for ( int i = 0; i < maxClients; i++ )
+        	{
+        		if ( @racesowGametype.players[i].getClient() != null )
+        		{
+        			racesowGametype.players[i].moveToSpec( S_COLOR_RED + "You have been moved to spec cause you were playing in overtime.\n");
+        		}
+        	}
+
+        }
+
+        if ( vote == "joinlock" || vote == "joinunlock" )
+        {
+        	Racesow_Player@ target = null;
+
+        	if ( args.getToken( 1 ).isNumerical() && args.getToken( 1 ).toInt() <= maxClients )
+        		@target = @Racesow_GetPlayerByNumber( args.getToken( 1 ).toInt() );
+        	else if ( Racesow_GetClientNumber( args.getToken( 1 ) ) != -1 )
+        		@target = @Racesow_GetPlayerByNumber( Racesow_GetClientNumber( args.getToken( 1 ) ) );
+
+        	if ( vote == "joinlock" )
+        		target.isJoinlocked = true;
+        	else
+        		target.isJoinlocked = false;
+
+        	return true;
+        }
+
+        return true;
+    }
+
+}
+
 class Command_Chrono : Racesow_Command
 {
 

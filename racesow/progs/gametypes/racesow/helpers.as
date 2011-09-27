@@ -306,6 +306,9 @@ void insertDefaultCommands( RC_Map @commandMap ) {
     commandMap.set_opIndex( "help", @Command_Help( null, @commandMap ) );
     commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod() );
     commandMap.set_opIndex( "stats", @Command_Stats() );
+    commandMap.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermission() );
+    commandMap.set_opIndex( "callvotevalidate", @Command_CallvoteValidate() );
+    commandMap.set_opIndex( "callvotepassed", @Command_CallvotePassed() );
 }
 
 void addCommandToCommandMap( RC_Map @commandMap, Racesow_Command @cmd )
