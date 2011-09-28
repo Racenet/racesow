@@ -619,13 +619,15 @@ class Command_Help : Racesow_Command
             if( @command != null )
             {
             	Racesow_Command @subHelp = null;
-            	if( @command.commandMap != null ) //call specific help, if this command has subcommands
+            	if( @command.commandMap != null ) //call specific help, if target command has subcommands
             		@subHelp = @command.commandMap.get_opIndex( this.name );
         		if( @subHelp != null )
         			return subHelp.execute( player, args, argc );
             	else // print usage and description
             	{
-            		player.sendMessage( COMMAND_COLOR_LEFT + baseCommandString + " " + command.name + " " + command.usage + ": " + COMMAND_COLOR_DEFAULT + command.description + "\n" );
+            		player.sendMessage( COMMAND_COLOR_LEFT + baseCommandString + " " + command.name
+                            + ( command.usage == "" ? "" : " " + command.usage ) + ": "
+            		        + COMMAND_COLOR_DEFAULT + command.description + "\n" );
             		return true;
             	}
             }
@@ -648,7 +650,9 @@ class Command_Help : Racesow_Command
             {
                 @command = @this.targetCommandMap.getCommandAt(i);
 
-                help += COMMAND_COLOR_LEFT + baseCommandString + " " + command.name + " " + command.usage + ": " + COMMAND_COLOR_DEFAULT + command.description + "\n";
+                help += COMMAND_COLOR_LEFT + baseCommandString + " " + command.name
+                        + ( command.usage == "" ? "" : " " + command.usage ) + ": "
+                        + COMMAND_COLOR_DEFAULT + command.description + "\n";
                 if ( (i/5)*5 == i ) //to avoid print buffer overflow
                 {
                     player.sendMessage(help);
@@ -1177,7 +1181,7 @@ class Command_Practicemode : Racesow_Command
 class Command_Privsay : Racesow_TargetCommand
 {
     Command_Privsay() {
-        super( "Send a private message to a player", "<playerid|playername> <message>" );
+        super( "Send a private message to a player", "<message>" );
     }
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
@@ -1998,12 +2002,15 @@ class Command_AdminCancelvote : Racesow_Command // (should be subclass of Raceso
     }
 }
 
-// implementation of validate() for commands with target
+/*
+ * implementation of validate() for commands with target
+ * expects a playername or playerid as first argument
+ */
 class Racesow_TargetCommand : Racesow_Command
 {
 	Racesow_TargetCommand( cString &in description, cString &in usage )
 	{
-        super( description, usage );
+        super( description, "<playerid/playername>" + ( usage == "" ? "" : " " + usage ) );
 	}
 
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -2042,7 +2049,7 @@ class Command_AdminMute : Racesow_TargetCommand
 {
 	Command_AdminMute( Racesow_Command @baseCommand )
 	{
-		super( "mute the given player immediately", "<playerid|playername>" );
+		super( "mute the given player immediately", "" );
         this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2061,7 +2068,7 @@ class Command_AdminUnmute : Racesow_TargetCommand
 {
 	Command_AdminUnmute( Racesow_Command @baseCommand )
 	{
-		super( "unmute the given player immediately", "<playerid>" );
+		super( "unmute the given player immediately", "" );
         this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2079,7 +2086,7 @@ class Command_AdminVmute : Racesow_TargetCommand
 {
 	Command_AdminVmute( Racesow_Command @baseCommand )
 	{
-		super( "vmute the given player immediately", "<playerid>" );
+		super( "vmute the given player immediately", "" );
         this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2097,7 +2104,7 @@ class Command_AdminVunmute : Racesow_TargetCommand
 {
 	Command_AdminVunmute( Racesow_Command @baseCommand )
 	{
-		super( "vunmute the given player immediately", "<playerid>" );
+		super( "vunmute the given player immediately", "" );
 		this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2115,7 +2122,7 @@ class Command_AdminVotemute : Racesow_TargetCommand
 {
 	Command_AdminVotemute( Racesow_Command @baseCommand )
 	{
-		super( "disable voting for the given player", "<playerid>" );
+		super( "disable voting for the given player", "" );
 		this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2133,7 +2140,7 @@ class Command_AdminUnvotemute : Racesow_TargetCommand
 {
 	Command_AdminUnvotemute( Racesow_Command @baseCommand )
 	{
-		super( "enable voting for the given player", "<playerid>" );
+		super( "enable voting for the given player", "" );
 		this.permissionMask = RACESOW_AUTH_MUTE;
         @this.baseCommand = @baseCommand;
 	}
@@ -2151,7 +2158,7 @@ class Command_AdminRemove : Racesow_TargetCommand
 {
 	Command_AdminRemove( Racesow_Command @baseCommand )
 	{
-		super( "remove the given player immediately", "<playerid>" );
+		super( "remove the given player immediately", "" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2169,7 +2176,7 @@ class Command_AdminKick : Racesow_TargetCommand
 {
 	Command_AdminKick( Racesow_Command @baseCommand )
 	{
-		super( "kick the given player immediately", "<playerid>" );
+		super( "kick the given player immediately", "" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2187,7 +2194,7 @@ class Command_AdminJoinlock : Racesow_TargetCommand
 {
 	Command_AdminJoinlock( Racesow_Command @baseCommand )
 	{
-		super( "prevent the given player from joining", "<playerid>" );
+		super( "prevent the given player from joining", "" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2205,7 +2212,7 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
 {
 	Command_AdminJoinunlock( Racesow_Command @baseCommand )
 	{
-		super( "allow the given player to join", "<playerid>" );
+		super( "allow the given player to join", "" );
 		this.permissionMask = RACESOW_AUTH_KICK;
         @this.baseCommand = @baseCommand;
 	}
@@ -2223,7 +2230,7 @@ class Command_AdminKickban : Racesow_TargetCommand
 {
 	Command_AdminKickban( Racesow_Command @baseCommand )
 	{
-		super( "kickban the given player immediately", "<playerid>" );
+		super( "kickban the given player immediately", "" );
 		this.permissionMask = RACESOW_AUTH_ADMIN;
         @this.baseCommand = @baseCommand;
 	}

@@ -4,6 +4,7 @@
 class Racesow_Gametype
 {
     Racesow_Player@[] players;
+    RC_Map @commandMapInternal;
     RC_Map @commandMap;
 
     bool ammoSwitch;
@@ -11,6 +12,10 @@ class Racesow_Gametype
     Racesow_Gametype() 
     {
         this.players = Racesow_Player@[](maxClients);
+        @this.commandMapInternal = @RC_Map();
+        commandMapInternal.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermission() );
+        commandMapInternal.set_opIndex( "callvotevalidate", @Command_CallvoteValidate() );
+        commandMapInternal.set_opIndex( "callvotepassed", @Command_CallvotePassed() );
         @this.commandMap = @RC_Map();
         insertDefaultCommands(this.commandMap);
         ammoSwitch = false;
@@ -69,7 +74,10 @@ class Racesow_Gametype
         Racesow_Command @command;
         Racesow_Player @player = Racesow_GetPlayerByClient( client );
 
-        @command = @this.commandMap.get_opIndex(cmdString);
+        @command = @this.commandMapInternal.get_opIndex(cmdString);
+
+        if( @command == null )
+            @command = @this.commandMap.get_opIndex(cmdString);
 
         if( @command != null ) {
 	        if(command.validate(player, argsString, argc))
