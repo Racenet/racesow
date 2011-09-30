@@ -609,11 +609,11 @@ void GT_InitGametype()
     G_RegisterCommand( "whoisgod" );*/
 
     //add callvotes
-    G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
-    G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
-    G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
-    G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
-    G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
+//    G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
+//    G_RegisterCallvote( "timelimit", "<minutes>", "Set match timelimit." );
+//    G_RegisterCallvote( "spec", "", "During overtime, move all players to spectators." );
+//    G_RegisterCallvote( "joinlock", "<id or name>", "Prevent the player from joining the game." );
+//    G_RegisterCallvote( "joinunlock", "<id or name>", "Allow the player to join the game." );
 
     demoRecording = false;
 
@@ -639,5 +639,6 @@ void GT_InitGametype()
 	racesowGametype.InitGametype();
 
     racesowGametype.registerCommands();
+    racesowGametype.registerVotes();
 }
 

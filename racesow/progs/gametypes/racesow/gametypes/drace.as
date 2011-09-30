@@ -543,7 +543,7 @@ class Command_ResetCam : Racesow_Command
 {
 
     Command_ResetCam() {
-        super("resetcam", "Reset the Camera", ""); //FIXME: Dunno if everything is right here
+        super( "Reset the Camera", "" ); //FIXME: Dunno if everything is right here
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
@@ -563,51 +563,99 @@ class Command_MaxVictories : Racesow_Command
 {
 
     Command_MaxVictories() {
-        super("max_victories", "", ""); //FIXME: Description needed
+        super( "", "" ); //FIXME: Description needed
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-          G_PrintMsg( player.getClient().getEnt(), "Current: " + g_drace_max_victories.getString() + "\n" );      
+          G_PrintMsg( player.getClient().getEnt(), "Current: " + g_drace_max_victories.getString() + "\n" ); // why not player.sendMessage() ?
           return true;
     }
 }
 
-//FIXME: K1ll - I don't know if this should extend or replace the original object
-class Command_CallvoteValidateDrace : Command_CallvoteValidate
+class Command_CallvoteDraw : Racesow_Command
 {
-    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
-        cString vote = args.getToken( 0 );
-           
-          if ( vote == "draw" )
-          {
-            if ( match.getState() == MATCH_STATE_WARMUP )
-          	{
-              G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "Callvote draw unavailable in warmup\n");
-          	  return false;
-          	}
-          	if (player.getClient().muted == 2 )
-            {
-              G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "You are votemuted\n");
-          	  return false;
-          	}
-            return true;
-          }
-          
+    Command_CallvoteDraw()
+    {
+        super( "Declares the current round Draw.", "" );
+    }
 
-          if ( vote == "max_victories" )
-          {
-            //if ( argsString.getToken( 1 ) )
-              //return false;
-              
-            return true;
+    bool validate( Racesow_Player @player, cString &args, int argc )
+    {
+        if( match.getState() == MATCH_STATE_WARMUP )
+        {
+            G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "Callvote draw unavailable in warmup\n" );
+            return false;
+        }
+        if( player.getClient().muted == 2 )
+        {
+            G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "You are votemuted\n" );
+            return false;
+        }
+        return true;
+    }
 
-          }
-          
-          G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "Unknown callvote " + vote + "\n" );
-          return false;
+    bool execute( Racesow_Player @player, cString &args, int argc )
+    {
+        if( @DRACERound.roundWinner != null )
+            DRACERound.roundWinner.getEnt().health = -1;
+
+        if( @DRACERound.roundChallenger != null )
+            DRACERound.roundChallenger.getEnt().health = -1;
+
+        return true;
     }
 }
+
+class Command_CallvoteMaxVictories : Racesow_Command
+{
+    Command_CallvoteMaxVictories()
+    {
+        super( "Maximum successive victories.", "<number>" );
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc )
+    {
+        G_CmdExecute( "g_drace_max_victories " + args.getToken( 1 ).toInt() + "\n" );
+        return true;
+    }
+}
+
+//FIXME: K1ll - I don't know if this should extend or replace the original object
+//class Command_CallvoteValidateDrace : Command_CallvoteValidate
+//{
+//    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
+//        cString vote = args.getToken( 0 );
+//
+//          if ( vote == "draw" )
+//          {
+//            if ( match.getState() == MATCH_STATE_WARMUP )
+//          	{
+//              G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "Callvote draw unavailable in warmup\n");
+//          	  return false;
+//          	}
+//          	if (player.getClient().muted == 2 )
+//            {
+//              G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "You are votemuted\n");
+//          	  return false;
+//          	}
+//            return true;
+//          }
+//
+//
+//          if ( vote == "max_victories" )
+//          {
+//            //if ( argsString.getToken( 1 ) )
+//              //return false;
+//
+//            return true;
+//
+//          }
+//
+//          G_PrintMsg( player.getClient().getEnt(), S_COLOR_RED + "Unknown callvote " + vote + "\n" );
+//          return false;
+//    }
+//}
 
 /*class Command_CallvoteCheckPermissionDrace : Command_CallvoteCheckPermission
 {
@@ -642,36 +690,36 @@ class Command_CallvoteValidateDrace : Command_CallvoteValidate
 
 }*/
 
-class Command_CallvotePassed : Racesow_Command
-{
-    Command_CallvotePassed() {
-        super("callvotepassed", "", ""); //FIXME: Description needed
-    }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-            cString vote = args.getToken( 0 );
-
-            if ( vote == "draw" )
-            {
-              if ( @DRACERound.roundWinner != null )
-            	 DRACERound.roundWinner.getEnt().health = -1;
-            	 
-            	if ( @DRACERound.roundChallenger != null )
-            	 DRACERound.roundChallenger.getEnt().health = -1;
-            	 
-            	return true;
-            }
-            
-            if ( vote == "max_victories" )
-            {
-              G_CmdExecute( "g_drace_max_victories " + args.getToken( 1 ).toInt() + "\n" );
-              return true;
-            }
-            
-            return false;
-    }
-}
+//class Command_CallvotePassed : Racesow_Command
+//{
+//    Command_CallvotePassed() {
+//        super("callvotepassed", "", ""); //FIXME: Description needed
+//    }
+//
+//    bool execute(Racesow_Player @player, cString &args, int argc)
+//    {
+//            cString vote = args.getToken( 0 );
+//
+//            if ( vote == "draw" )
+//            {
+//              if ( @DRACERound.roundWinner != null )
+//            	 DRACERound.roundWinner.getEnt().health = -1;
+//
+//            	if ( @DRACERound.roundChallenger != null )
+//            	 DRACERound.roundChallenger.getEnt().health = -1;
+//
+//            	return true;
+//            }
+//
+//            if ( vote == "max_victories" )
+//            {
+//              G_CmdExecute( "g_drace_max_victories " + args.getToken( 1 ).toInt() + "\n" );
+//              return true;
+//            }
+//
+//            return false;
+//    }
+//}
 
 class Racesow_Gametype_Drace : Racesow_Gametype
 {
@@ -690,15 +738,18 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         @this.commandMap["resetcam"] = @Command_ResetCam();
         @this.commandMap["top"] = @Command_Top();
         @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
-        commandMap.set_opIndex( "callvotevalidate",@Command_CallvoteValidateDrace() );
-        //commandMap.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermissionDrace() );
-        commandMap.set_opIndex( "callvotepassed", @Command_CallvotePassed() );
-        commandMap.set_opIndex( "join", @Command_Join() );
-        commandMap.set_opIndex( "spec", @Command_Spec() );
-        commandMap.set_opIndex( "racerestart", @Command_RaceRestart_Drace() );
-        commandMap.set_opIndex( "resetcam", @Command_ResetCam() );
-        commandMap.set_opIndex( "top", @Command_Top() );
-        commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod( "Jerm's" ) );
+//        this.commandMap.set_opIndex( "callvotevalidate",@Command_CallvoteValidate() );
+        //this.commandMap.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermissionDrace() );
+//        this.commandMap.set_opIndex( "callvotepassed", @Command_CallvotePassed() );
+        this.commandMap.set_opIndex( "join", @Command_Join() );
+        this.commandMap.set_opIndex( "spec", @Command_Spec() );
+        this.commandMap.set_opIndex( "racerestart", @Command_RaceRestart_Drace() );
+        this.commandMap.set_opIndex( "resetcam", @Command_ResetCam() );
+        this.commandMap.set_opIndex( "top", @Command_Top() );
+        this.commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod( "Jerm's" ) );
+
+        this.voteMap.set_opIndex( "draw", @Command_CallvoteDraw() );
+        this.voteMap.set_opIndex( "max_victories", @Command_CallvoteMaxVictories() );
     }
     
     void InitGametype()
@@ -750,8 +801,8 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Score Time Ping Racing R" );
         
         // add callvotes
-        G_RegisterCallvote( "draw", "", "Declares the current round Draw." ) ;
-        G_RegisterCallvote( "max_victories", "<number>", "Maximum successive victories." ) ;
+//        G_RegisterCallvote( "draw", "", "Declares the current round Draw." ) ;
+//        G_RegisterCallvote( "max_victories", "<number>", "Maximum successive victories." ) ;
     
         G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
     }

@@ -4,7 +4,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Freestyle();
-        ammoSwitch = true;
+        this.ammoSwitch = true;
         //FIXME: These will hopefully be useable with the new angelscript version
         /*@this.commandMap["chrono"] = @Command_Chrono();
         @this.commandMap["join"] = @Command_Join();
@@ -14,14 +14,20 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         @this.commandMap["position"] = @Command_Position();
         @this.commandMap["quad"] = @Command_Quad();
         @this.commandMap["noclip"] = @Command_Noclip();*/
-        commandMap.set_opIndex( "chrono", @Command_Chrono() );
-        commandMap.set_opIndex( "join", @Command_Join() );
-        commandMap.set_opIndex( "spec", @Command_Spec() );
-        commandMap.set_opIndex( "chase", @Command_Spec() );
-        commandMap.set_opIndex( "kill", @Command_Kill() );
-        commandMap.set_opIndex( "position", @Command_Position() );
-        commandMap.set_opIndex( "quad", @Command_Quad() );
-        commandMap.set_opIndex( "noclip", @Command_Noclip() );
+        this.commandMap.set_opIndex( "chrono", @Command_Chrono() );
+        this.commandMap.set_opIndex( "join", @Command_Join() );
+        this.commandMap.set_opIndex( "spec", @Command_Spec() );
+        this.commandMap.set_opIndex( "chase", @Command_Spec() );
+        this.commandMap.set_opIndex( "kill", @Command_Kill() );
+        this.commandMap.set_opIndex( "position", @Command_Position() );
+        this.commandMap.set_opIndex( "quad", @Command_Quad() );
+        this.commandMap.set_opIndex( "noclip", @Command_Noclip() );
+
+        this.voteMap.set_opIndex( "joinlock", @Command_CallvoteJoinlock() );
+        this.voteMap.set_opIndex( "joinunlock", @Command_CallvoteJoinunlock() );
+        this.voteMap.set_opIndex( "extend_time", @Command_CallvoteExtend_time() );
+        this.voteMap.set_opIndex( "timelimit", @Command_CallvoteTimelimit() );
+        this.voteMap.set_opIndex( "spec", @Command_CallvoteSpec() ); // is this useful for freestyle?
     }
     
     void InitGametype()

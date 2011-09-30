@@ -308,7 +308,46 @@ void insertDefaultCommands( RC_Map @commandMap ) {
     commandMap.set_opIndex( "stats", @Command_Stats() );
 }
 
-void addCommandToCommandMap( RC_Map @commandMap, Racesow_Command @cmd )
+/*
+ * remove first token from a string
+ * expects the string to be trimmed (no leading or trailing whitespaces)
+ */
+cString shiftArguments( cString args )
 {
-    commandMap.set_opIndex( cmd.name, @cmd );
+    if( args.length() < 2 )
+        return "";
+
+    //args = args.trim(); // it's already trimmed
+
+    int pos;
+    cString arg = args.getToken( 0 );
+    if( arg == "" )
+    { // we have to shift out an empty string. we assume empty string looks like this: ""
+        for( pos = 0; pos < args.length(); pos++ )
+        {
+            if( args.subString( pos, 1 ) == "\"" )
+            {
+                pos += 2;
+                break;
+            }
+        }
+    }
+    else
+    {
+        bool quote = false;
+        for( pos = 0; pos < args.length(); pos++ )
+        {
+            if( args.subString( pos, 1 ) == "\"" )
+                quote = !quote;
+            if( args.subString( pos, arg.length() ) == arg )
+            {
+                if( quote )
+                    pos += arg.length() + 1;
+                else
+                    pos += arg.length();
+                break;
+            }
+        }
+    }
+    return args.subString( pos, args.length() - pos ).trim();
 }

@@ -31,19 +31,25 @@ class Racesow_Gametype_Race : Racesow_Gametype
         @this.commandMap["timeleft"] = @Command_Timeleft();
         @this.commandMap["top"] = @Command_Top();
         @this.commandMap["practicemode"] = @Command_Practicemode();*/
-        commandMap.set_opIndex( "join", @Command_Join() );
-        commandMap.set_opIndex( "spec", @Command_Spec() );
-        commandMap.set_opIndex( "chase", @Command_Spec() );
-        commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
-        commandMap.set_opIndex( "kill", @Command_Kill() );
-        commandMap.set_opIndex( "oneliner", @Command_Oneliner() );
-        commandMap.set_opIndex( "position", @Command_Position_Race() );
-        commandMap.set_opIndex( "noclip", @Command_Noclip_Race() );
-        commandMap.set_opIndex( "machinegun", @Command_Machinegun() );
-        commandMap.set_opIndex( "timeleft", @Command_Timeleft() );
-        commandMap.set_opIndex( "top", @Command_Top() );
-        commandMap.set_opIndex( "practicemode", @Command_Practicemode() );
-//        commandMap.set_opIndex( "setauth", @Command_SetAuth() );
+        this.commandMap.set_opIndex( "join", @Command_Join() );
+        this.commandMap.set_opIndex( "spec", @Command_Spec() );
+        this.commandMap.set_opIndex( "chase", @Command_Spec() );
+        this.commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
+        this.commandMap.set_opIndex( "kill", @Command_Kill() );
+        this.commandMap.set_opIndex( "oneliner", @Command_Oneliner() );
+        this.commandMap.set_opIndex( "position", @Command_Position_Race() );
+        this.commandMap.set_opIndex( "noclip", @Command_Noclip_Race() );
+        this.commandMap.set_opIndex( "machinegun", @Command_Machinegun() );
+        this.commandMap.set_opIndex( "timeleft", @Command_Timeleft() );
+        this.commandMap.set_opIndex( "top", @Command_Top() );
+        this.commandMap.set_opIndex( "practicemode", @Command_Practicemode() );
+//        this.commandMap.set_opIndex( "setauth", @Command_SetAuth() );
+
+        this.voteMap.set_opIndex( "joinlock", @Command_CallvoteJoinlock() );
+        this.voteMap.set_opIndex( "joinunlock", @Command_CallvoteJoinunlock() );
+        this.voteMap.set_opIndex( "extend_time", @Command_CallvoteExtend_time() );
+        this.voteMap.set_opIndex( "timelimit", @Command_CallvoteTimelimit() );
+        this.voteMap.set_opIndex( "spec", @Command_CallvoteSpec() );
     }
     
     void InitGametype()

@@ -59,6 +59,7 @@ class Racesow_Command
 	
 	/**
 	 * Required User Privileges
+	 * Currently only checked for admin subcommands!
 	 */
 	int permissionMask;
 
@@ -115,11 +116,11 @@ class Racesow_Command
      */
     int getLevel()
     {
-    	Racesow_Command @command = @baseCommand;
+    	Racesow_Command @command = @this.baseCommand;
     	int i = 0;
     	while( @command != null )
     	{
-    		@command = @baseCommand.baseCommand;
+    		@command = @this.baseCommand.baseCommand;
     		i++;
     	}
     	return i;
@@ -161,63 +162,81 @@ class Racesow_Command
     }
 }
 
-class Command_Admin : Racesow_Command
+/*
+ * implements validate() and execute() for commands that have subcommands
+ */
+class Racesow_BaseCommand : Racesow_Command
 {
-    Command_Admin() {
-        super( "Execute an admin command", "<subcommand> [args...]" );
-
-    	Racesow_Command @cmd;
-        @this.commandMap = @RC_Map();
-        commandMap.set_opIndex( "map", @Command_AdminMap( @this ) );
-        commandMap.set_opIndex( "restart", @Command_AdminRestart( @this ) );
-        commandMap.set_opIndex( "extend_time", @Command_AdminExtendtime( @this ) );
-        commandMap.set_opIndex( "remove", @Command_AdminRemove( @this ) );
-        commandMap.set_opIndex( "kick", @Command_AdminKick( @this ) );
-        commandMap.set_opIndex( "kickban", @Command_AdminKickban( @this ) );
-        commandMap.set_opIndex( "mute", @Command_AdminMute( @this ) );
-        commandMap.set_opIndex( "unmute", @Command_AdminUnmute( @this ) );
-        commandMap.set_opIndex( "vmute", @Command_AdminVmute( @this ) );
-        commandMap.set_opIndex( "vunmute", @Command_AdminVunmute( @this ) );
-        commandMap.set_opIndex( "votemute", @Command_AdminVotemute( @this ) );
-        commandMap.set_opIndex( "unvotemute", @Command_AdminUnvotemute( @this ) );
-        commandMap.set_opIndex( "joinlock", @Command_AdminJoinlock( @this ) );
-        commandMap.set_opIndex( "joinunlock", @Command_AdminJoinunlock( @this ) );
-        commandMap.set_opIndex( "cancelvote", @Command_AdminCancelvote( @this ) );
-        commandMap.set_opIndex( "updateml", @Command_AdminUpdateml( @this ) );
-        commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
+    Racesow_BaseCommand( cString &in description, cString &in usage )
+    {
+        super( description, usage );
     }
 
-    //validate only the first level of the command
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( argc < this.getLevel() + 1 )
+        if ( argc < 1 )
         {
             player.sendErrorMessage( "No subcommand given." );
             player.sendMessage( this.getUsage() );
             return false;
         }
 
-        Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-    	if ( @subCommand == null )
-    	{
-            player.sendErrorMessage( this.commandNotFound( args.getToken( this.getLevel() ) ) );
-    		return false;
-    	}
-
-        if ( !player.auth.allow( subCommand.permissionMask ) )
+        Racesow_Command @subCommand = this.commandMap.get_opIndex( args.getToken( 0 ) );
+        if ( @subCommand == null )
         {
-//            G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
-//                + " tried to execute an admin command without permission.\n" );
-            player.sendErrorMessage( "You don't have permission to execute this command" );
+            player.sendErrorMessage( this.commandNotFound( args.getToken( 0 ) ) );
             return false;
         }
-    	return subCommand.validate( player, args, argc );
+        cString newArgs = shiftArguments( args );
+        return subCommand.validate( player, newArgs, argc > 0 ? argc - 1 : 0 );
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-    	return subCommand.execute( player, args, argc );
+        Racesow_Command @subCommand = this.commandMap.get_opIndex( args.getToken( 0 ) );
+        cString newArgs = shiftArguments( args );
+        return subCommand.execute( player, newArgs, argc > 0 ? argc - 1 : 0 );
+    }
+}
+
+class Command_Admin : Racesow_BaseCommand
+{
+    Command_Admin() {
+        super( "Execute an admin command", "<subcommand> [args...]" );
+
+        @this.commandMap = @RC_Map();
+        this.commandMap.set_opIndex( "map", @Command_AdminMap( @this ) );
+        this.commandMap.set_opIndex( "restart", @Command_AdminRestart( @this ) );
+        this.commandMap.set_opIndex( "extend_time", @Command_AdminExtendtime( @this ) );
+        this.commandMap.set_opIndex( "remove", @Command_AdminRemove( @this ) );
+        this.commandMap.set_opIndex( "kick", @Command_AdminKick( @this ) );
+        this.commandMap.set_opIndex( "kickban", @Command_AdminKickban( @this ) );
+        this.commandMap.set_opIndex( "mute", @Command_AdminMute( @this ) );
+        this.commandMap.set_opIndex( "unmute", @Command_AdminUnmute( @this ) );
+        this.commandMap.set_opIndex( "vmute", @Command_AdminVmute( @this ) );
+        this.commandMap.set_opIndex( "vunmute", @Command_AdminVunmute( @this ) );
+        this.commandMap.set_opIndex( "votemute", @Command_AdminVotemute( @this ) );
+        this.commandMap.set_opIndex( "unvotemute", @Command_AdminUnvotemute( @this ) );
+        this.commandMap.set_opIndex( "joinlock", @Command_AdminJoinlock( @this ) );
+        this.commandMap.set_opIndex( "joinunlock", @Command_AdminJoinunlock( @this ) );
+        this.commandMap.set_opIndex( "cancelvote", @Command_AdminCancelvote( @this ) );
+        this.commandMap.set_opIndex( "updateml", @Command_AdminUpdateml( @this ) );
+        this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( !Racesow_BaseCommand::validate( player, args, argc ) )
+            return false;
+        Racesow_Command @subCommand = this.commandMap.get_opIndex( args.getToken( 0 ) );
+        if( !player.auth.allow( subCommand.permissionMask ) )
+        {
+//           G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
+//                + " tried to execute an admin command without permission.\n" );
+            player.sendErrorMessage( "You don't have permission to execute this command" );
+            return false;
+        }
+        return true;
     }
 }
 
@@ -257,249 +276,6 @@ class Command_Auth : Racesow_Command
                 args.getToken( 1 ),
                 false );
     }
-}
-
-class Command_CallvoteCheckPermission : Racesow_Command {
-
-    Command_CallvoteCheckPermission() {
-        super( "Check if you have the permission to call the specified Callvote", "<callvote>" );
-    }
-
-    //When adding callvotes to a gametype derive from this command and add yours into this function
-    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
-    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
-        return false;
-    }
-
-    bool execute( Racesow_Player @player, cString &args, int argc ) {
-        if ( player.isVotemuted )
-        {
-            player.sendErrorMessage( "You are votemuted" );
-            return false;
-        }
-        else
-        {
-            cString vote = args.getToken( 0 );
-            if( vote == "mute" || vote == "vmute" ||
-                vote == "kickban" || vote == "kick" || vote == "remove" ||
-                vote == "joinlock" || vote == "joinunlock" )
-            {
-                Racesow_Player @victimPlayer;
-                cString victim = args.getToken( 1 );
-
-                if ( Racesow_GetClientNumber( victim ) != -1 )
-                    @victimPlayer = racesowGametype.players[ Racesow_GetClientNumber( victim ) ];
-                else if( victim.isNumerical() )
-                {
-                    if ( victim.toInt() > maxClients )
-                        return true;
-                    else
-                        @victimPlayer = racesowGametype.players[ victim.toInt() ];
-                }
-                else
-                    return true;
-
-                if( victimPlayer.auth.allow(RACESOW_AUTH_ADMIN) )
-                {
-                    G_PrintMsg( null, S_COLOR_WHITE + player.getName()
-                                + S_COLOR_RED + " tried to "
-                                + args.getToken( 0 ) + " an admin.\n" );
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                return true;
-            }
-        }
-    }
-}
-
-class Command_CallvoteValidate : Racesow_Command
-{
-
-    Command_CallvoteValidate() {
-        super( "", "" ); //FIXME: Needs description and usage
-    }
-
-    //When adding callvotes to a gametype derive from this command and add yours into this function
-    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
-    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
-        return false;
-    }
-
-    bool execute( Racesow_Player @player, cString &args, int argc ) {
-		cString vote = args.getToken( 0 );
-
-        if( this.gametypeVotes(player, args, argc) )
-            return true;
-
-		if ( vote == "extend_time" )
-		{
-			if( g_timelimit.getInteger() <= 0 )
-			{
-				player.getClient().printMessage( "This vote is only available for timelimits.\n");
-				return false;
-			}
-			uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
-			uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
-			uint time = levelTime - match.startTime(); //in ms
-			uint remainingtime = timelimit - time;
-			bool isNegative = (timelimit < time ) ? true : false;
-			if( remainingtime > extendtimeperiod && !isNegative )
-			{
-				player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
-				return false;
-			}
-			return true;
-		}
-        if ( vote == "timelimit" )
-		{
-			int new_timelimit = args.getToken( 1 ).toInt();
-
-			if ( new_timelimit < 0 )
-			{
-				player.getClient().printMessage( "Can't set negative timelimit\n");
-				return false;
-			}
-
-			if ( new_timelimit == g_timelimit.getInteger() )
-			{
-				player.getClient().printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
-				return false;
-			}
-
-			return true;
-		}
-
-		if ( vote == "spec" )
-		{
-			if ( ! map.inOvertime )
-			{
-				player.getClient().printMessage( S_COLOR_RED + "Callvote spec is only valid during overtime\n");
-				return false;
-			}
-
-			return true;
-		}
-
-		if ( vote == "joinlock" || vote == "joinunlock" )
-    {
-      if( argc != 2 )
-    	{
-        player.getClient().printMessage( "Usage: callvote " + vote + " <id or name>\n" );
-    		player.getClient().printMessage( "- List of current players:\n" );
-
-    		for ( int i = 0; i < maxClients; i++ )
-    		{
-    		  if ( @racesowGametype.players[i].getClient() != null )
-            player.getClient().printMessage( "  " + racesowGametype.players[i].getClient().playerNum() + ": " + racesowGametype.players[i].getClient().getName() + "\n");
-        }
-
-       	return false;
-    	}
-      else
-    	{
-    	  cClient@ target = null;
-
-        if ( args.getToken( 1 ).isNumerical() && args.getToken( 1 ).toInt() <= maxClients )
-            @target = @G_GetClient( args.getToken( 1 ).toInt() );
-        else if ( Racesow_GetClientNumber( args.getToken( 1 ) ) != -1 )
-            @target = @G_GetClient( Racesow_GetClientNumber( args.getToken( 1 ) ) );
-
-        if ( @target == null || !target.getEnt().inuse )
-        {
-            player.getClient().printMessage( S_COLOR_RED + "Invalid player\n" );
-            return false;
-        }
-      }
-
-			return true;
-		}
-
-		player.getClient().printMessage( "Unknown callvote " + vote + "\n" );
-		return false;
-    }
-}
-
-class Command_CallvotePassed : Racesow_Command
-{
-
-    Command_CallvotePassed() {
-        super( "", "" ); //FIXME: Needs description and usage
-    }
-
-    //When adding callvotes to a gametype derive from this command and add yours into this function
-    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
-    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
-        return false;
-    }
-
-    bool execute( Racesow_Player @player, cString &args, int argc ) {
-		cString vote = args.getToken( 0 );
-
-        if( this.gametypeVotes(player, args, argc) )
-            return true;
-
-        if ( vote == "extend_time" )
-        {
-        	g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
-        	map.cancelOvertime();
-            for ( int i = 0; i < maxClients; i++ )
-            {
-            	racesowGametype.players[i].cancelOvertime();
-            }
-        }
-
-        if ( vote == "timelimit" )
-        {
-        	int new_timelimit = args.getToken( 1 ).toInt();
-        	g_timelimit.set(new_timelimit);
-
-        	// g_timelimit_reset == 1: this timelimit value is not kept after current map
-        	// g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
-        	if (g_timelimit_reset.getBool() == false)
-        	{
-        		oldTimelimit = g_timelimit.getInteger();
-        	}
-        }
-
-        if ( vote == "spec" )
-        {
-        	for ( int i = 0; i < maxClients; i++ )
-        	{
-        		if ( @racesowGametype.players[i].getClient() != null )
-        		{
-        			racesowGametype.players[i].moveToSpec( S_COLOR_RED + "You have been moved to spec cause you were playing in overtime.\n");
-        		}
-        	}
-
-        }
-
-        if ( vote == "joinlock" || vote == "joinunlock" )
-        {
-        	Racesow_Player@ target = null;
-
-        	if ( args.getToken( 1 ).isNumerical() && args.getToken( 1 ).toInt() <= maxClients )
-        		@target = @Racesow_GetPlayerByNumber( args.getToken( 1 ).toInt() );
-        	else if ( Racesow_GetClientNumber( args.getToken( 1 ) ) != -1 )
-        		@target = @Racesow_GetPlayerByNumber( Racesow_GetClientNumber( args.getToken( 1 ) ) );
-
-        	if ( vote == "joinlock" )
-        		target.isJoinlocked = true;
-        	else
-        		target.isJoinlocked = false;
-
-        	return true;
-        }
-
-        return true;
-    }
-
 }
 
 class Command_Chrono : Racesow_Command
@@ -551,18 +327,18 @@ class Command_CvarInfo : Racesow_Command
 
     bool execute( Racesow_Player @player, cString &args, int argc ) {
 		//token0: cVar name; token1: cVar value
-		cString cvarName = args.getToken(0);
-		cString cvarValue = args.getToken(1);
+		cString cvarName = args.getToken( 0 );
+		cString cvarValue = args.getToken( 1 );
 
 		if( cvarName.substr(0,15) == "storedposition_")
 		{
 			cString positionValues = cvarValue;
 			cVec3 origin, angles;
-			origin.x = positionValues.getToken(1).toFloat();
-			origin.y = positionValues.getToken(2).toFloat();
-			origin.z = positionValues.getToken(3).toFloat();
-			angles.x = positionValues.getToken(4).toFloat();
-			angles.y = positionValues.getToken(5).toFloat();
+			origin.x = positionValues.getToken( 1 ).toFloat();
+			origin.y = positionValues.getToken( 2 ).toFloat();
+			origin.z = positionValues.getToken( 3 ).toFloat();
+			angles.x = positionValues.getToken( 4 ).toFloat();
+			angles.y = positionValues.getToken( 5 ).toFloat();
 			player.teleport( origin, angles, false, false );
 		}
     return true;
@@ -608,13 +384,13 @@ class Command_Help : Racesow_Command
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-    	Racesow_Command @command = @baseCommand;
+    	Racesow_Command @command = @this.baseCommand;
     	cString baseCommandString = "";
     	if( @command != null )
     		baseCommandString = command.getCommandLine();
-    	if ( argc >= this.getLevel() + 1 )
+    	if ( argc >= 1 )
         {
-    		cString helpItemName = args.getToken( this.getLevel() );
+    		cString helpItemName = args.getToken( 0 );
             @command = @this.targetCommandMap.get_opIndex( helpItemName );
             if( @command != null )
             {
@@ -622,7 +398,10 @@ class Command_Help : Racesow_Command
             	if( @command.commandMap != null ) //call specific help, if target command has subcommands
             		@subHelp = @command.commandMap.get_opIndex( this.name );
         		if( @subHelp != null )
-        			return subHelp.execute( player, args, argc );
+        		{
+        	        cString newArgs = shiftArguments( args );
+        			return subHelp.execute( player, newArgs, argc > 0 ? argc - 1 : 0 );
+        		}
             	else // print usage and description
             	{
             		player.sendMessage( COMMAND_COLOR_LEFT + baseCommandString + " " + command.name
@@ -923,46 +702,23 @@ class Command_Oneliner : Racesow_Command
     }
 }
 
-class Command_Position : Racesow_Command
+class Command_Position : Racesow_BaseCommand
 {
 	Command_Position() {
         super( "Commands to store and load position", "<subcommand> [args...]" );
 
-    	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        commandMap.set_opIndex( "save", @Command_PositionSave( @this ) );
-        commandMap.set_opIndex( "load", @Command_PositionLoad( @this ) );
-        commandMap.set_opIndex( "set", @Command_PositionSet( @this ) );
-        commandMap.set_opIndex( "store", @Command_PositionStore( @this ) );
-        commandMap.set_opIndex( "restore", @Command_PositionRestore( @this ) );
-        commandMap.set_opIndex( "storedlist", @Command_PositionStoredlist( @this ) );
-        commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
-    }
-    //validate only the first level of the command
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if ( argc < this.getLevel() + 1 )
-        {
-            player.sendErrorMessage( "No subcommand given." );
-            player.sendMessage( this.getUsage() );
-            return false;
-        }
-        Racesow_Command @cmd = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-    	if ( @cmd == null )
-    	{
-            player.sendErrorMessage( this.commandNotFound( args.getToken( this.getLevel() ) ) );
-    		return false;
-    	}
-    	return cmd.validate( player, args, argc );
-    }
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-    	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-    	return subCommand.execute( player, args, argc );
+        this.commandMap.set_opIndex( "save", @Command_PositionSave( @this ) );
+        this.commandMap.set_opIndex( "load", @Command_PositionLoad( @this ) );
+        this.commandMap.set_opIndex( "set", @Command_PositionSet( @this ) );
+        this.commandMap.set_opIndex( "store", @Command_PositionStore( @this ) );
+        this.commandMap.set_opIndex( "restore", @Command_PositionRestore( @this ) );
+        this.commandMap.set_opIndex( "storedlist", @Command_PositionStoredlist( @this ) );
+        this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
     }
 }
 
-//implements validate() for position commands
+//implements validate() for position subcommands
 class Racesow_PositionCommand : Racesow_Command
 {
 	Racesow_PositionCommand( cString &in description, cString &in usage )
@@ -1014,7 +770,7 @@ class Command_PositionSet : Racesow_PositionCommand
 	{
 		if( !Racesow_PositionCommand::validate( player, args, argc ) )
 			return false;
-		if( argc >= this.getLevel() + 5 )
+		if( argc >= 5 )
 			return true;
 		player.sendErrorMessage( "Wrong parameters" );
 		player.sendMessage( S_COLOR_WHITE + this.getUsage() );
@@ -1024,11 +780,11 @@ class Command_PositionSet : Racesow_PositionCommand
     {
 		cVec3 origin, angles;
 
-		origin.x = args.getToken( this.getLevel() + 0 ).toFloat();
-		origin.y = args.getToken( this.getLevel() + 1 ).toFloat();
-		origin.z = args.getToken( this.getLevel() + 2 ).toFloat();
-		angles.x = args.getToken( this.getLevel() + 3 ).toFloat();
-		angles.y = args.getToken( this.getLevel() + 4 ).toFloat();
+		origin.x = args.getToken( 0 ).toFloat();
+		origin.y = args.getToken( 1 ).toFloat();
+		origin.z = args.getToken( 2 ).toFloat();
+		angles.x = args.getToken( 3 ).toFloat();
+		angles.y = args.getToken( 4 ).toFloat();
 
 		return player.positionSet( origin, angles );
     }
@@ -1044,7 +800,7 @@ class Command_PositionStore : Racesow_PositionCommand
 	{
 		if( !Racesow_PositionCommand::validate( player, args, argc ) )
 			return false;
-		if( args.getToken( this.getLevel() + 1 ) != "" )
+		if( args.getToken( 1 ) != "" )
 			return true;
 		player.sendErrorMessage( "Wrong parameters" );
 		player.sendMessage( S_COLOR_WHITE + this.getUsage() );
@@ -1052,8 +808,8 @@ class Command_PositionStore : Racesow_PositionCommand
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-		int id = args.getToken( this.getLevel() + 0 ).toInt();
-		cString name = args.getToken( this.getLevel() + 1 );
+		int id = args.getToken( 0 ).toInt();
+		cString name = args.getToken( 1 );
 
 		return player.positionStore( id, name );
     }
@@ -1069,7 +825,7 @@ class Command_PositionRestore : Racesow_PositionCommand
 	{
 		if( !Racesow_PositionCommand::validate( player, args, argc ) )
 			return false;
-		if( argc >= this.getLevel() + 1 )
+		if( argc >= 1 )
 			return true;
 		player.sendErrorMessage( "Wrong parameters" );
 		player.sendMessage( S_COLOR_WHITE + this.getUsage() );
@@ -1077,7 +833,7 @@ class Command_PositionRestore : Racesow_PositionCommand
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-		int id = args.getToken( this.getLevel() + 1 ).toInt();
+		int id = args.getToken( 1 ).toInt();
 
 		return player.positionRestore( id );
     }
@@ -1095,9 +851,9 @@ class Command_PositionStoredlist : Racesow_PositionCommand
 	{
 		if( !Racesow_PositionCommand::validate( player, args, argc ) )
 			return false;
-		if( argc >= this.getLevel() + 1 )
+		if( argc >= 1 )
 		{
-			if( args.getToken( this.getLevel() + 1 ).toInt() <= POSITION_STOREDLIST_LIMIT )
+			if( args.getToken( 1 ).toInt() <= POSITION_STOREDLIST_LIMIT )
 				return true;
 			else
 				player.sendMessage( S_COLOR_WHITE + "You can only list the 50 the most\n" );
@@ -1111,7 +867,7 @@ class Command_PositionStoredlist : Racesow_PositionCommand
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-		int limit = args.getToken( this.getLevel() + 0 ).toInt();
+		int limit = args.getToken( 0 ).toInt();
 		return player.positionStoredlist( limit );
     }
 }
@@ -1192,7 +948,7 @@ class Command_Privsay : Racesow_TargetCommand
         }
     	if( !Racesow_TargetCommand::validate( player, args, argc ) )
     		return false;
-        if( args.getToken( this.getLevel() + 1 ) == "" )
+        if( args.getToken( 1 ) == "" )
         {
             player.sendErrorMessage( "You must provide a message." );
             return false;
@@ -1201,7 +957,7 @@ class Command_Privsay : Racesow_TargetCommand
     }
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
 
         cString message = args.substr(args.getToken( 0 ).length()+1, args.len() );
 
@@ -1330,16 +1086,15 @@ class Command_Register : Racesow_Command
     }
 }
 
-class Command_Stats : Racesow_Command
+class Command_Stats : Racesow_BaseCommand
 {
 	Command_Stats() {
         super( "Show statistics", "[subcommand] [args...]" );
 
-    	Racesow_Command @cmd;
         @this.commandMap = @RC_Map();
-        commandMap.set_opIndex( "player", @Command_StatsPlayer( @this ) );
-        commandMap.set_opIndex( "map", @Command_StatsMap( @this ) );
-        commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
+        this.commandMap.set_opIndex( "player", @Command_StatsPlayer( @this ) );
+        this.commandMap.set_opIndex( "map", @Command_StatsMap( @this ) );
+        this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
     }
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
@@ -1354,26 +1109,17 @@ class Command_Stats : Racesow_Command
                     +"results of your previous command");
             return false;
         }
-        if ( argc > this.getLevel() )
-        {
-        	Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-        	if ( @subCommand != null )
-            	return subCommand.validate( player, args, argc );
-        	else
-        	{
-        		player.sendErrorMessage( "Subcommand " + args.getToken( this.getLevel() ) + " not found" );
-        		return false;
-        	}
-        }
+        if ( argc > 0 )
+            return Racesow_BaseCommand::validate( player, args, argc );
+
+        // no subcommand found. return true to get default stats.
         return true;
     }
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        if ( argc == this.getLevel() )
-            return RS_LoadStats( player.getClient().playerNum(), "player", player.getName() );
-
-        Racesow_Command @subCommand = commandMap.get_opIndex( args.getToken( this.getLevel() ) );
-        return subCommand.execute( player, args, argc );
+        if( argc > 0 )
+            return Racesow_BaseCommand::execute( player, args, argc );
+        return RS_LoadStats( player.getClient().playerNum(), "player", player.getName() );
     }
 }
 
@@ -1386,8 +1132,8 @@ class Command_StatsPlayer : Racesow_Command
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
     	cString target;
-        if( args.getToken( this.getLevel() ) != "")
-        	target = args.getToken( this.getLevel() );
+        if( args.getToken( 0 ) != "")
+        	target = args.getToken( 0 );
         else
         	target = player.getName();
 
@@ -1404,8 +1150,8 @@ class Command_StatsMap : Racesow_Command
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
     	cString target;
-        if( args.getToken( this.getLevel() ) != "")
-        	target = args.getToken( this.getLevel() );
+        if( args.getToken( 0 ) != "")
+        	target = args.getToken( 0 );
         else
         	target = map.name;
 
@@ -1906,9 +1652,9 @@ class Command_AdminMap : Racesow_Command // (should be subclass of Racesow_Admin
 
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-        if ( argc >= this.getLevel() + 1 )
+        if ( argc >= 1 )
         {
-            cString mapName = args.getToken( this.getLevel() + 0 );
+            cString mapName = args.getToken( 0 );
             if ( mapName != "" )
                 return true;
         }
@@ -1919,7 +1665,7 @@ class Command_AdminMap : Racesow_Command // (should be subclass of Racesow_Admin
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        cString mapName = args.getToken( this.getLevel() + 0 );
+        cString mapName = args.getToken( 0 );
         G_CmdExecute( "gamemap " + mapName + "\n" );
         return true;
     }
@@ -2015,17 +1761,17 @@ class Racesow_TargetCommand : Racesow_Command
 
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
-    	if( argc < this.getLevel() + 1 )
+    	if( argc < 1 )
     	{
             player.sendErrorMessage( "No player given." );
             player.getClient().execGameCommand("cmd players");
             return false;
     	}
-//    	Racesow_Player @targetPlayer = @this.getTargetPlayer( args.getToken( this.getLevel() ) );
-    	Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
-        if( @targetPlayer == null || args.getToken( this.getLevel() ).length() == 0 )
+//    	Racesow_Player @targetPlayer = @this.getTargetPlayer( args.getToken( 0 ) );
+    	Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null || args.getToken( 0 ).length() == 0 )
         {
-            player.sendErrorMessage( "Player " + args.getToken( this.getLevel() ) + COMMAND_COLOR_DEFAULT + " not found." );
+            player.sendErrorMessage( "Player " + args.getToken( 0 ) + COMMAND_COLOR_DEFAULT + " not found." );
             player.getClient().execGameCommand("cmd players");
             return false;
         }
@@ -2056,10 +1802,10 @@ class Command_AdminMute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-//        cClient @target = @this.getTarget( args.getToken( this.getLevel() ) );
-        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+//        cClient @target = @this.getTarget( args.getToken( 0 ) );
+        cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
         target.muted |= 1;
-        player.sendMessage( "Muted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Muted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" ); // send these messages to all players?
         return true;
     }
 }
@@ -2075,7 +1821,7 @@ class Command_AdminUnmute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+        cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
         target.muted &= ~1;
         player.sendMessage( "Unmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2093,7 +1839,7 @@ class Command_AdminVmute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+        cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
         target.muted |= 2;
         player.sendMessage( "Vmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2111,7 +1857,7 @@ class Command_AdminVunmute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        cClient @target = @Racesow_GetClientByString( args.getToken( this.getLevel() ) );
+        cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
         target.muted &= ~2;
         player.sendMessage( "Vunmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2129,7 +1875,7 @@ class Command_AdminVotemute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.isVotemuted = true;
         player.sendMessage( "Votemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2147,7 +1893,7 @@ class Command_AdminUnvotemute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.isVotemuted = false;
         player.sendMessage( "Unvotemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2165,7 +1911,7 @@ class Command_AdminRemove : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.remove("");
         player.sendMessage( "Removed player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2183,7 +1929,7 @@ class Command_AdminKick : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.kick("");
         player.sendMessage( "Kicked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2201,7 +1947,7 @@ class Command_AdminJoinlock : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.isJoinlocked = true;
         player.sendMessage( "Joinlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2219,7 +1965,7 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.isJoinlocked = false;
         player.sendMessage( "Joinunlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2237,7 +1983,7 @@ class Command_AdminKickban : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( this.getLevel() ) ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.kickban("");
         player.sendMessage( "Kickbanned player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2302,14 +2048,14 @@ class Command_AdminSetpermission : Racesow_TargetCommand
 		if( Racesow_TargetCommand::validate( player, args, argc ) ) //FIXME: does this work?
 		{
 
-	        if( args.getToken( this.getLevel() + 1 ) == "" )
+	        if( args.getToken( 1 ) == "" )
 	        {
 	            //show list of permissions: map, mute, kick, timelimit, restart, setpermission
 	            player.sendErrorMessage( "No permission specified. Available permissions:\n map, mute, kick, timelimit, restart, setpermission" );
 	            return false;
 	        }
 
-	        if( args.getToken( this.getLevel() + 2 ) == "" || args.getToken( this.getLevel() + 2 ).toInt() > 1 )
+	        if( args.getToken( 2 ) == "" || args.getToken( 2 ).toInt() > 1 )
 	        {
 	            //show: 1 to enable 0 to disable current: <enabled/disabled>
 	            player.sendErrorMessage( "1 to enable permission 0 to disable permission" );
@@ -2349,3 +2095,381 @@ class Command_AdminSetpermission : Racesow_TargetCommand
     }
 }
 */
+
+
+
+
+/*
+ * Internal Commands
+ */
+
+/*
+ * Command_CallvoteCheckPermission is like Command_CallvoteValidate,
+ * but it's called at EVERY callvote
+ * even if the callvote was not registered by the gametype script
+ */
+class Command_CallvoteCheckPermission : Racesow_Command {
+
+    Command_CallvoteCheckPermission( RC_Map @commandMap ) {
+        super( "", "" );
+        @this.commandMap = @commandMap;
+    }
+
+    //When adding callvotes to a gametype derive from this command and add yours into this function
+    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
+    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
+        return false;
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc ) {
+        if ( player.isVotemuted )
+        {
+            player.sendErrorMessage( "You are votemuted" );
+            return false;
+        }
+        else
+        {
+            cString vote = args.getToken( 0 );
+            if( vote == "mute" || vote == "vmute" ||
+                vote == "kickban" || vote == "kick" || vote == "remove" ||
+                vote == "joinlock" || vote == "joinunlock" )
+            {
+                Racesow_Player @victimPlayer;
+                cString victim = args.getToken( 1 );
+
+                if ( Racesow_GetClientNumber( victim ) != -1 )
+                    @victimPlayer = racesowGametype.players[ Racesow_GetClientNumber( victim ) ];
+                else if( victim.isNumerical() )
+                {
+                    if ( victim.toInt() > maxClients )
+                        return true;
+                    else
+                        @victimPlayer = racesowGametype.players[ victim.toInt() ];
+                }
+                else
+                    return true;
+
+                if( victimPlayer.auth.allow(RACESOW_AUTH_ADMIN) )
+                {
+                    G_PrintMsg( null, S_COLOR_WHITE + player.getName()
+                                + S_COLOR_RED + " tried to "
+                                + args.getToken( 0 ) + " an admin.\n" );
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
+        }
+    }
+}
+
+/*
+ * Command_CallvoteValidate and Command_CallvotePassed are only called
+ * at callvotes that were registered by the gametype script
+ */
+class Command_CallvoteValidate : Racesow_BaseCommand
+{
+
+    Command_CallvoteValidate( RC_Map @commandMap ) {
+        super( "", "" );
+        @this.commandMap = @commandMap;
+    }
+
+    // don't execute here
+    bool execute( Racesow_Player @player, cString &args, int argc ) { return true; }
+
+//    bool execute( Racesow_Player @player, cString &args, int argc ) {
+//        cString vote = args.getToken( 0 );
+//
+//        if( this.gametypeVotes(player, args, argc) )
+//            return true;
+//
+//        if ( vote == "extend_time" )
+//        {
+//            if( g_timelimit.getInteger() <= 0 )
+//            {
+//                player.getClient().printMessage( "This vote is only available for timelimits.\n");
+//                return false;
+//            }
+//            uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+//            uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
+//            uint time = levelTime - match.startTime(); //in ms
+//            uint remainingtime = timelimit - time;
+//            bool isNegative = (timelimit < time ) ? true : false;
+//            if( remainingtime > extendtimeperiod && !isNegative )
+//            {
+//                player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
+//                return false;
+//            }
+//            return true;
+//        }
+//        if ( vote == "timelimit" )
+//        {
+//            int new_timelimit = args.getToken( 1 ).toInt();
+//
+//            if ( new_timelimit < 0 )
+//            {
+//                player.getClient().printMessage( "Can't set negative timelimit\n");
+//                return false;
+//            }
+//
+//            if ( new_timelimit == g_timelimit.getInteger() )
+//            {
+//                player.getClient().printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
+//                return false;
+//            }
+//
+//            return true;
+//        }
+//
+//        if ( vote == "spec" )
+//        {
+//            if ( ! map.inOvertime )
+//            {
+//                player.getClient().printMessage( S_COLOR_RED + "Callvote spec is only valid during overtime\n");
+//                return false;
+//            }
+//
+//            return true;
+//        }
+//
+//        if ( vote == "joinlock" || vote == "joinunlock" )
+//    {
+//      if( argc != 2 )
+//        {
+//        player.getClient().printMessage( "Usage: callvote " + vote + " <id or name>\n" );
+//            player.getClient().printMessage( "- List of current players:\n" );
+//
+//            for ( int i = 0; i < maxClients; i++ )
+//            {
+//              if ( @racesowGametype.players[i].getClient() != null )
+//            player.getClient().printMessage( "  " + racesowGametype.players[i].getClient().playerNum() + ": " + racesowGametype.players[i].getClient().getName() + "\n");
+//        }
+//
+//        return false;
+//        }
+//      else
+//        {
+//          cClient@ target = null;
+//
+//        if ( args.getToken( 1 ).isNumerical() && args.getToken( 1 ).toInt() <= maxClients )
+//            @target = @G_GetClient( args.getToken( 1 ).toInt() );
+//        else if ( Racesow_GetClientNumber( args.getToken( 1 ) ) != -1 )
+//            @target = @G_GetClient( Racesow_GetClientNumber( args.getToken( 1 ) ) );
+//
+//        if ( @target == null || !target.getEnt().inuse )
+//        {
+//            player.getClient().printMessage( S_COLOR_RED + "Invalid player\n" );
+//            return false;
+//        }
+//      }
+//
+//            return true;
+//        }
+//
+//        player.getClient().printMessage( "Unknown callvote " + vote + "\n" );
+//        return false;
+//    }
+}
+
+class Command_CallvotePassed : Racesow_BaseCommand
+{
+
+    Command_CallvotePassed( RC_Map @commandMap ) {
+        super( "", "" );
+        @this.commandMap = @commandMap;
+
+    }
+
+    // don't validate here
+    bool validate( Racesow_Player @player, cString &args, int argc ) { return true; }
+
+//    bool execute( Racesow_Player @player, cString &args, int argc ) {
+//        cString vote = args.getToken( 0 );
+//
+//        if( this.gametypeVotes(player, args, argc) )
+//            return true;
+//
+//        if ( vote == "extend_time" )
+//        {
+//            g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+//            map.cancelOvertime();
+//            for ( int i = 0; i < maxClients; i++ )
+//            {
+//                racesowGametype.players[i].cancelOvertime();
+//            }
+//        }
+//
+//        if ( vote == "timelimit" )
+//        {
+//            int new_timelimit = args.getToken( 1 ).toInt();
+//            g_timelimit.set(new_timelimit);
+//
+//            // g_timelimit_reset == 1: this timelimit value is not kept after current map
+//            // g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
+//            if (g_timelimit_reset.getBool() == false)
+//            {
+//                oldTimelimit = g_timelimit.getInteger();
+//            }
+//        }
+//
+//        if ( vote == "spec" )
+//        {
+//            for ( int i = 0; i < maxClients; i++ )
+//            {
+//                if ( @racesowGametype.players[i].getClient() != null )
+//                {
+//                    racesowGametype.players[i].moveToSpec( S_COLOR_RED + "You have been moved to spec cause you were playing in overtime.\n");
+//                }
+//            }
+//
+//        }
+//
+//        if ( vote == "joinlock" || vote == "joinunlock" )
+//        {
+//            Racesow_Player@ target = null;
+//
+//            if ( args.getToken( 1 ).isNumerical() && args.getToken( 1 ).toInt() <= maxClients )
+//                @target = @Racesow_GetPlayerByNumber( args.getToken( 1 ).toInt() );
+//            else if ( Racesow_GetClientNumber( args.getToken( 1 ) ) != -1 )
+//                @target = @Racesow_GetPlayerByNumber( Racesow_GetClientNumber( args.getToken( 1 ) ) );
+//
+//            if ( vote == "joinlock" )
+//                target.isJoinlocked = true;
+//            else
+//                target.isJoinlocked = false;
+//
+//            return true;
+//        }
+//
+//        return true;
+//    }
+
+}
+
+
+
+
+/*
+ * Callvotes
+ */
+
+class Command_CallvoteJoinlock : Command_AdminJoinlock // recycle some code from admin commands
+{
+    Command_CallvoteJoinlock()
+    {
+        super( null ); // don't need a working command chain. there is no help available for these commands.
+        this.permissionMask = 0;
+    }
+}
+
+class Command_CallvoteJoinunlock : Command_AdminJoinunlock
+{
+    Command_CallvoteJoinunlock()
+    {
+        super( null );
+        this.permissionMask = 0;
+    }
+}
+
+class Command_CallvoteExtend_time : Command_AdminExtendtime
+{
+    Command_CallvoteExtend_time()
+    {
+        super( null );
+        this.permissionMask = 0;
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( !Command_AdminExtendtime::validate( player, args, argc ) )
+            return false;
+
+        //from callvoteextendtime
+        uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
+        uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
+        uint time = levelTime - match.startTime(); //in ms
+        uint remainingtime = timelimit - time;
+        bool isNegative = (timelimit < time ) ? true : false;
+        if( remainingtime > extendtimeperiod && !isNegative )
+        {
+            player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
+            return false;
+        }
+        return true;
+    }
+}
+
+class Command_CallvoteTimelimit : Racesow_Command
+{
+    Command_CallvoteTimelimit()
+    {
+        super( "Set match timelimit.", "<minutes>" );
+    }
+
+    bool validate( Racesow_Player @player, cString &args, int argc )
+    {
+        // TODO: check if arg is numerical
+        int new_timelimit = args.getToken( 0 ).toInt();
+
+        if( new_timelimit < 0 )
+        {
+            player.getClient().printMessage( "Can't set negative timelimit\n" );
+            return false;
+        }
+
+        if( new_timelimit == g_timelimit.getInteger() )
+        {
+            player.getClient().printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
+            return false;
+        }
+
+        return true;
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc )
+    {
+        int new_timelimit = args.getToken( 0 ).toInt();
+        g_timelimit.set(new_timelimit);
+
+        // g_timelimit_reset == 1: this timelimit value is not kept after current map
+        // g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
+        if (g_timelimit_reset.getBool() == false)
+        {
+            oldTimelimit = g_timelimit.getInteger();
+        }
+        return true;
+    }
+}
+
+class Command_CallvoteSpec : Racesow_Command
+{
+    Command_CallvoteSpec()
+    {
+        super( "During overtime, move all players to spectators.", "" );
+    }
+
+    bool validate( Racesow_Player @player, cString &args, int argc )
+    {
+        if( !map.inOvertime )
+        {
+            player.getClient().printMessage( S_COLOR_RED + "Callvote spec is only valid during overtime\n" );
+            return false;
+        }
+        return true;
+    }
+
+    bool execute( Racesow_Player @player, cString &args, int argc )
+    {
+        for( int i = 0; i < maxClients; i++ )
+            if( @racesowGametype.players[ i ].getClient() != null )
+                racesowGametype.players[ i ].moveToSpec( S_COLOR_RED + "You have been moved to spec cause you were playing in overtime.\n" );
+        return true;
+    }
+}

@@ -10,10 +10,10 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         @this.commandMap["kill"] = @Command_Kill();
         @this.commandMap["top"] = @Command_Top();
         @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
-        commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
-        commandMap.set_opIndex( "kill", @Command_Kill() );
-        commandMap.set_opIndex( "top", @Command_Top() );
-        commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod( "Jerm's" ) );
+        this.commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
+        this.commandMap.set_opIndex( "kill", @Command_Kill() );
+        this.commandMap.set_opIndex( "top", @Command_Top() );
+        this.commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod( "Jerm's" ) );
     }
     
     void InitGametype()

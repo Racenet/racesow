@@ -4,21 +4,34 @@
 class Racesow_Gametype
 {
     Racesow_Player@[] players;
+
+    // commands that are not available to players
     RC_Map @commandMapInternal;
+
+    // commands that can be called by players
     RC_Map @commandMap;
 
-    bool ammoSwitch;
+    /*
+     *  callvotes ( accessed by "callvotevalidate" and "callvotepassed" commands )
+     *  gametype registers these callvotes
+     */
+    RC_Map @voteMap;
 
-    Racesow_Gametype() 
+    bool ammoSwitch; // joki: I don't get the purpose of this variable... gametypes could just not register the ammoswitch command
+
+    Racesow_Gametype()
     {
         this.players = Racesow_Player@[](maxClients);
+
         @this.commandMapInternal = @RC_Map();
+        @this.voteMap = @RC_Map();
         commandMapInternal.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermission() );
-        commandMapInternal.set_opIndex( "callvotevalidate", @Command_CallvoteValidate() );
-        commandMapInternal.set_opIndex( "callvotepassed", @Command_CallvotePassed() );
+        commandMapInternal.set_opIndex( "callvotevalidate", @Command_CallvoteValidate( @this.voteMap ) );
+        commandMapInternal.set_opIndex( "callvotepassed", @Command_CallvotePassed( @this.voteMap ) );
+
         @this.commandMap = @RC_Map();
         insertDefaultCommands(this.commandMap);
-        ammoSwitch = false;
+        this.ammoSwitch = false;
     }
 
     void InitGametype() { }
@@ -27,7 +40,7 @@ class Racesow_Gametype
     
     void Shutdown() { }
 
-    bool ammoSwitchAllowed() { return ammoSwitch; }
+    bool ammoSwitchAllowed() { return this.ammoSwitch; }
     
     bool MatchStateFinished( int incomingMatchState )
     {
@@ -74,11 +87,17 @@ class Racesow_Gametype
         Racesow_Command @command;
         Racesow_Player @player = Racesow_GetPlayerByClient( client );
 
-        @command = @this.commandMapInternal.get_opIndex(cmdString);
 
-        if( @command == null )
-            @command = @this.commandMap.get_opIndex(cmdString);
+        // check if it was an internal command
+        @command = @this.commandMapInternal.get_opIndex( cmdString );
+        if( @command != null )
+        {
+            if( command.validate( player, argsString, argc ) )
+                return command.execute( player, argsString, argc );
+            return false;
+        }
 
+        @command = @this.commandMap.get_opIndex(cmdString);
         if( @command != null ) {
 	        if(command.validate(player, argsString, argc))
 	        {
@@ -90,10 +109,18 @@ class Racesow_Gametype
 	                return false;
 	            }
 	        }
-//            player.sendMessage( command.getUsage() );
         }
         return false;
     }
 
     void registerCommands() { this.commandMap.register(); }
+
+    void registerVotes()
+    {
+        for( uint i = 0; i < this.voteMap.size(); i++ )
+        {
+            Racesow_Command @cmd = @this.voteMap.getCommandAt( i );
+            G_RegisterCallvote( cmd.name, cmd.usage, cmd.description );
+        }
+    }
 }
