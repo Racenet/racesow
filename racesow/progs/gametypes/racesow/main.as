@@ -540,20 +540,22 @@ void GT_InitGametype()
     gametype.setAuthor( "warsow-race.net" );
 
     // initalize weapondef config
-    weaponDefInit();
-
-    if ( !G_FileExists( "configs/server/gametypes/racesow/racesow.cfg" ) )
+    if( !G_FileExists( "configs/server/gametypes/racesow/racesow_weapondefs.cfg" ) )
     {
-        G_WriteFile( "configs/server/gametypes/racesow/racesow.cfg", config_general );
-        G_Print( "Created default base config file for racesow\n" );
-        G_CmdExecute( "exec configs/server/gametypes/racesow/racesow.cfg silent" );
+        G_WriteFile( "configs/server/gametypes/racesow/racesow_weapondefs.cfg", config_weapondef );
+        G_Print( "Created default weapondefs config for 'racesow'\n" );
     }
 
-    if ( !G_FileExists( "configs/server/gametypes/racesow/database.cfg" ) )
+    if( !G_FileExists( "configs/server/gametypes/racesow/database.cfg" ) )
     {
         G_WriteFile( "configs/server/gametypes/racesow/database.cfg", config_database );
         G_Print( "Created default base config file for database\n" );
-        G_CmdExecute( "exec configs/server/gametypes/racesow/database.cfg silent" );
+    }
+
+    if( !G_FileExists( "configs/server/gametypes/racesow/racesow.cfg" ) )
+    {
+        G_WriteFile( "configs/server/gametypes/racesow/racesow.cfg", config_general );
+        G_Print( "Created default base config file for racesow\n" );
     }
 
     // always execute racesow.cfg

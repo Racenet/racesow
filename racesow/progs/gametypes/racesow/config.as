@@ -84,3 +84,54 @@ cString config_database =
 "\n" +
 "echo database.cfg executed\n"
 ;
+
+cString config_weapondef =
+"//*\n" +
+"//* Weapondefs\n" +
+"//*\n" +
+"// HINT: theese values were determined and tweaked\n" +
+"// while playing at weqo's testserver.\n" +
+"// you should only touch this config if you want\n" +
+"// to help us to improove the weapons-phsysics\n" +
+"\n" +
+"// rocket weak\n" +
+"set rs_rocketweak_knockback \"95\"\n" +
+"set rs_rocketweak_splash \"140\"\n" +
+"set rs_rocketweak_minknockback \"5\"\n" +
+"// rocket strong\n" +
+"set rs_rocket_knockback \"100\"\n" +
+"set rs_rocket_splash \"120\"\n" +
+"set rs_rocket_minknockback \"1\"\n" +
+"set rs_rocket_prestep \"10\"\n" +
+"set rs_rocket_antilag \"0\"\n" +
+"// plasma weak\n" +
+"set rs_plasmaweak_knockback \"14\"\n" +
+"set rs_plasmaweak_splash \"45\"\n" +
+"set rs_plasmaweak_minknockback \"1\"\n" +
+"set rs_plasmaweak_speed \"1700\"\n" +
+"// plasma strong\n" +
+"set rs_plasma_knockback \"23\"\n" +
+"set rs_plasma_splash \"40\"\n" +
+"set rs_plasma_minknockback \"1\"\n" +
+"set rs_plasma_speed \"1700\"\n" +
+"set rs_plasma_prestep \"32\"\n" +
+"set rs_plasma_hack \"1\"\n" +
+"// grenade weak\n" +
+"set rs_grenadeweak_timeout \"1650\"\n" +
+"set rs_grenadeweak_knockback \"90\"\n" +
+"set rs_grenadeweak_splash \"160\"\n" +
+"set rs_grenadeweak_minknockback \"10\"\n" +
+"set rs_grenadeweak_speed \"800\"\n" +
+"// grenade strong\n" +
+"set rs_grenade_timeout \"1650\"\n" +
+"set rs_grenade_knockback \"120\"\n" +
+"set rs_grenade_splash \"170\"\n" +
+"set rs_grenade_minknockback \"1\"\n" +
+"set rs_grenade_speed \"800\"\n" +
+"set rs_grenade_friction \"0.85\"\n" +
+"set rs_grenade_gravity \"1.22\"\n" +
+"set rs_grenade_prestep \"24\"\n" +
+"\n" +
+"\necho racesow_weapondefs.cfg executed\n"
+;
+
