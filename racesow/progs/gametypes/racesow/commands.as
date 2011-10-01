@@ -109,24 +109,6 @@ class Racesow_Command
     }
 
     /**
-     * Subcommand level
-     * This can be thought of as an offset for argc and argString tokens.
-     *
-     * @return subcommand level
-     */
-    int getLevel()
-    {
-    	Racesow_Command @command = @this.baseCommand;
-    	int i = 0;
-    	while( @command != null )
-    	{
-    		@command = @this.baseCommand.baseCommand;
-    		i++;
-    	}
-    	return i;
-    }
-
-    /**
      * Return the command description in a nice way to be printed
      */
     cString getDescription()
@@ -197,6 +179,49 @@ class Racesow_BaseCommand : Racesow_Command
         cString newArgs = shiftArguments( args );
         return subCommand.execute( player, newArgs, argc > 0 ? argc - 1 : 0 );
     }
+}
+
+/*
+ * implements validate() for commands that have a target
+ * expects a playername or playerid as first argument
+ */
+class Racesow_TargetCommand : Racesow_Command
+{
+    Racesow_TargetCommand( cString &in description, cString &in usage )
+    {
+        super( description, "<playerid/playername>" + ( usage == "" ? "" : " " + usage ) );
+    }
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        if( argc < 1 )
+        {
+            player.sendErrorMessage( "No player given." );
+            player.getClient().execGameCommand("cmd players");
+            return false;
+        }
+//      Racesow_Player @targetPlayer = @this.getTargetPlayer( args.getToken( 0 ) );
+        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null || args.getToken( 0 ).length() == 0 )
+        {
+            player.sendErrorMessage( "Player " + args.getToken( 0 ) + COMMAND_COLOR_DEFAULT + " not found." );
+            player.getClient().execGameCommand("cmd players");
+            return false;
+        }
+        if( targetPlayer.getClient().getEnt().inuse )
+            return true;
+        player.sendErrorMessage( "Invalid player." );
+        return false;
+    }
+    //why do these functions break subclasses???
+//    Racesow_Player@ getTargetPlayer( cString str )
+//    {
+//      return @Racesow_GetPlayerByClient( @Racesow_GetClientByString( str ) );
+//    }
+//    cClient@ getTarget( cString str )
+//    {
+//      return @Racesow_GetClientByString( str );
+//    }
 }
 
 class Command_Admin : Racesow_BaseCommand
@@ -278,6 +303,7 @@ class Command_Auth : Racesow_Command
     }
 }
 
+//TODO: split this into subcommands
 class Command_Chrono : Racesow_Command
 {
 
@@ -488,6 +514,7 @@ class Command_Join : Racesow_Command
     }
 }
 
+// joki: remove this command?
 class Command_Kill : Racesow_Command
 {
 
@@ -1118,7 +1145,7 @@ class Command_Stats : Racesow_BaseCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         if( argc > 0 )
-            return Racesow_BaseCommand::execute( player, args, argc );
+            return Racesow_BaseCommand::execute( player, args, argc ); // this executes the subcommand
         return RS_LoadStats( player.getClient().playerNum(), "player", player.getName() );
     }
 }
@@ -1748,49 +1775,6 @@ class Command_AdminCancelvote : Racesow_Command // (should be subclass of Raceso
     }
 }
 
-/*
- * implementation of validate() for commands with target
- * expects a playername or playerid as first argument
- */
-class Racesow_TargetCommand : Racesow_Command
-{
-	Racesow_TargetCommand( cString &in description, cString &in usage )
-	{
-        super( description, "<playerid/playername>" + ( usage == "" ? "" : " " + usage ) );
-	}
-
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-    	if( argc < 1 )
-    	{
-            player.sendErrorMessage( "No player given." );
-            player.getClient().execGameCommand("cmd players");
-            return false;
-    	}
-//    	Racesow_Player @targetPlayer = @this.getTargetPlayer( args.getToken( 0 ) );
-    	Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
-        if( @targetPlayer == null || args.getToken( 0 ).length() == 0 )
-        {
-            player.sendErrorMessage( "Player " + args.getToken( 0 ) + COMMAND_COLOR_DEFAULT + " not found." );
-            player.getClient().execGameCommand("cmd players");
-            return false;
-        }
-        if( targetPlayer.getClient().getEnt().inuse )
-            return true;
-        player.sendErrorMessage( "Invalid player." );
-        return false;
-    }
-    //why do these functions break subclasses???
-//    Racesow_Player@ getTargetPlayer( cString str )
-//    {
-//    	return @Racesow_GetPlayerByClient( @Racesow_GetClientByString( str ) );
-//    }
-//    cClient@ getTarget( cString str )
-//    {
-//    	return @Racesow_GetClientByString( str );
-//    }
-}
-
 class Command_AdminMute : Racesow_TargetCommand
 {
 	Command_AdminMute( Racesow_Command @baseCommand )
@@ -1802,8 +1786,9 @@ class Command_AdminMute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
-//        cClient @target = @this.getTarget( args.getToken( 0 ) );
         cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
+        if( @target == null )
+            return false;
         target.muted |= 1;
         player.sendMessage( "Muted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" ); // send these messages to all players?
         return true;
@@ -1822,6 +1807,8 @@ class Command_AdminUnmute : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
+        if( @target == null )
+            return false;
         target.muted &= ~1;
         player.sendMessage( "Unmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1840,6 +1827,8 @@ class Command_AdminVmute : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
+        if( @target == null )
+            return false;
         target.muted |= 2;
         player.sendMessage( "Vmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1858,6 +1847,8 @@ class Command_AdminVunmute : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         cClient @target = @Racesow_GetClientByString( args.getToken( 0 ) );
+        if( @target == null )
+            return false;
         target.muted &= ~2;
         player.sendMessage( "Vunmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1876,6 +1867,8 @@ class Command_AdminVotemute : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null )
+            return false;
         targetPlayer.isVotemuted = true;
         player.sendMessage( "Votemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1894,6 +1887,8 @@ class Command_AdminUnvotemute : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null )
+            return false;
         targetPlayer.isVotemuted = false;
         player.sendMessage( "Unvotemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1912,6 +1907,8 @@ class Command_AdminRemove : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null )
+            return false;
         targetPlayer.remove("");
         player.sendMessage( "Removed player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1930,6 +1927,8 @@ class Command_AdminKick : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null )
+            return false;
         targetPlayer.kick("");
         player.sendMessage( "Kicked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1948,6 +1947,8 @@ class Command_AdminJoinlock : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null )
+            return false;
         targetPlayer.isJoinlocked = true;
         player.sendMessage( "Joinlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1966,6 +1967,8 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        if( @targetPlayer == null )
+            return false;
         targetPlayer.isJoinlocked = false;
         player.sendMessage( "Joinunlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -2109,17 +2112,6 @@ class Command_AdminSetpermission : Racesow_TargetCommand
  * even if the callvote was not registered by the gametype script
  */
 class Command_CallvoteCheckPermission : Racesow_Command {
-
-    Command_CallvoteCheckPermission( RC_Map @commandMap ) {
-        super( "", "" );
-        @this.commandMap = @commandMap;
-    }
-
-    //When adding callvotes to a gametype derive from this command and add yours into this function
-    //Don't forget to add your Derived Class Object instead of adding a Base Class Object!
-    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
-        return false;
-    }
 
     bool execute( Racesow_Player @player, cString &args, int argc ) {
         if ( player.isVotemuted )
@@ -2391,7 +2383,6 @@ class Command_CallvoteExtend_time : Command_AdminExtendtime
         if( !Command_AdminExtendtime::validate( player, args, argc ) )
             return false;
 
-        //from callvoteextendtime
         uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
         uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
         uint time = levelTime - match.startTime(); //in ms

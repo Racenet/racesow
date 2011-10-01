@@ -1207,6 +1207,7 @@ class Racesow_Player
                     + message +"\n");
     }
 
+    // joki: make this a global function and move to helpers.as, IF THIS FUNCTION IS USED AT ALL
 	/**
 	* Send a message to another player's console
 	* @param cString message, cClient @client
@@ -1218,6 +1219,7 @@ class Racesow_Player
 	}
 
 
+	// joki: is this used???
 	/**
 	 * Send a message to another player
 	 * @param cString argString, cClient @client
@@ -1282,6 +1284,8 @@ class Racesow_Player
         this.client.respawn( true ); // true means ghost
         this.sendMessage( message );
     }
+
+    //TODO: move this to Command_AmmoSwitch
 	/**
 	 * Switch player ammo between strong/weak
 	 * @param cClient @client
@@ -1318,7 +1322,7 @@ class Racesow_Player
 		}
 		else
 		{
-			sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n", @this.client );
+			sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n", @this.client ); // why not this.sendMessage() ?
 		}
 		return true;
 	}
