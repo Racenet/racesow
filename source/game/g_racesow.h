@@ -114,7 +114,7 @@ void rs_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, c
 void RS_removeProjectiles( edict_t *owner ); //remove the projectiles by an owner
 void RS_Init( void );
 void RS_Shutdown( void );
-char *RS_GenerateNewToken( int );
+//char *RS_GenerateNewToken( int );
 qboolean RS_MysqlLoadMap();
 void *RS_MysqlLoadMap_Thread( void *in );
 qboolean RS_MysqlInsertRace( unsigned int player_id, unsigned int nick_id, unsigned int map_id, unsigned int race_time, unsigned int playerNum, unsigned int tries, unsigned int duration, char *checkpoints, qboolean prejumped );
@@ -153,4 +153,5 @@ static void RS_Irc_ConnectedListener_f( void *connected );
 void RS_VoteMapExtraHelp( edict_t *ent );
 qboolean RS_UpdateMapList(int playerNum);
 void *RS_UpdateMapList_Thread(void *in);
+//char *RS_StartPlayerSession(int playerId);
 

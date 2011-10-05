@@ -27,10 +27,10 @@ cvar_t *rs_mysqlDb;
 
 cvar_t *rs_queryGetPlayerAuth;
 cvar_t *rs_queryGetPlayerAuthByToken;
-cvar_t *rs_queryGetPlayerAuthBySession;
+//cvar_t *rs_queryGetPlayerAuthBySession;
 cvar_t *rs_queryGetPlayerByToken;
 cvar_t *rs_querySetTokenForPlayer;
-cvar_t *rs_querySetSessionForPlayer;
+//cvar_t *rs_querySetSessionForPlayer;
 cvar_t *rs_queryGetPlayer;
 cvar_t *rs_queryAddPlayer;
 cvar_t *rs_queryGetPlayerStats;
@@ -252,9 +252,9 @@ qboolean RS_LoadCvars( void )
 
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryGetPlayerAuthBySession  = trap_Cvar_Get( "rs_queryGetPlayerAuthBySession",	"SELECT `id`, `auth_mask` FROM `player` WHERE `session_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
+    //rs_queryGetPlayerAuthBySession  = trap_Cvar_Get( "rs_queryGetPlayerAuthBySession",	"SELECT `id`, `auth_mask` FROM `player` WHERE `session_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
     rs_querySetTokenForPlayer       = trap_Cvar_Get( "rs_querySetTokenForPlayer",	    "UPDATE `player` SET `auth_token` = MD5('%s%s') WHERE `id` = %d;", CVAR_ARCHIVE );
-    rs_querySetSessionForPlayer     = trap_Cvar_Get( "rs_querySetSessionForPlayer",	    "UPDATE `player` SET `session_token` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
+    //rs_querySetSessionForPlayer     = trap_Cvar_Get( "rs_querySetSessionForPlayer",	    "UPDATE `player` SET `session_token` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
 	rs_queryGetPlayerStats  		= trap_Cvar_Get( "rs_queryGetPlayerStats",			"SELECT `points`, `diff_points`, `races`, (SELECT SUM(`overall_tries`) FROM `player_map` WHERE `player_id` = `p`.`id` LIMIT 1) `race_tries`, `maps`, `playtime`, (SELECT SUM(`racing_time`) FROM `player_map` WHERE `player_id` = `p`.`id` LIMIT 1) `racing_time`, DATE_FORMAT(`created`, '%%Y-%%m-%%d') `first_seen`, (SELECT `date` FROM `player_history` WHERE `player_id` = `p`.`id` ORDER BY `date` DESC LIMIT 1) `last_seen` FROM `player` `p` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
@@ -1072,9 +1072,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     overall_tries = 0;
     playerData = (struct playerDataStruct*)in;
 
-    //ent = &game.edicts[ playerData->playerNum + 1 ];
-
-    /*
+	/*
+    ent = &game.edicts[ playerData->playerNum + 1 ];
     if( ent->r.client )
     {
         char *existingSession = Info_ValueForKey( ent->r.client->userinfo, "racesow_session" );
@@ -1082,7 +1081,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
             Q_strncpyz(sessionToken, existingSession, sizeof(sessionToken));
         }
     }
-    */
+	*/
 
     // escape strings
     Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
@@ -1100,7 +1099,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     Q_strncpyz ( authToken, playerData->authToken, sizeof(authToken) );
 	RS_EscapeString(authToken);
 
-    /*
+	/*
     // try to authenticate by session
     if (Q_stricmp( sessionToken, "" ))
     {
@@ -1121,8 +1120,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
         mysql_free_result(mysql_res);
     }
-    */
-
+	*/
+	
     // try to authenticate by token
     if (player_id == 0 && Q_stricmp( authToken, "" ))
     {
@@ -1170,19 +1169,19 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         mysql_free_result(mysql_res);
     }
 
+	/*
     if (!Q_stricmp( authToken, "" ) && player_id != 0)
     {
         char *newToken = RS_GenerateNewToken(player_id);
         Q_strncpyz ( authToken, newToken, sizeof(authToken) );
         free(newToken);
-        /*
         if( ent->r.inuse && ent->r.client )
         {
             G_PrintMsg(ent, "%san AUTHENTICATION TOKEN  has been generated for you: '%s' keep it secure!\n", S_COLOR_BLUE, authToken);
         }
-        */
     }
-
+	*/
+	
     // try to get information about the player the nickname belongs to
     sprintf(query, rs_queryGetPlayer->string, simplified);
     mysql_real_query(&mysql, query, strlen(query));
@@ -1263,7 +1262,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         Q_strncpyz( players_query[playerData->playerNum], checkpoints, size);
 	}
 
-    /*
+	/*
     if (player_id != 0 && ent->r.inuse && ent->r.client)
     {
         if (!Q_stricmp(sessionToken, "")) {
@@ -1277,11 +1276,11 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
         // always set him his session token... (may be lost when client changes his userinfo, so better set it immediately before changing a map etc.)
         // also maybe better do this outside the thread?
-        //Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
-        //ClientUserinfoChanged( ent, ent->r.client->userinfo );
+        Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
+        ClientUserinfoChanged( ent, ent->r.client->userinfo );
     }
-    */
-
+	*/
+	
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, overall_tries);
 
 	free(playerData->name);
@@ -1295,6 +1294,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 }
 
 
+/*
 // should return a new UNIQUE token for the playerId
 char *RS_GenerateNewToken(int playerId)
 {
@@ -1350,7 +1350,9 @@ char *RS_GenerateNewToken(int playerId)
 
     return NULL;
 }
+*/
 
+/*
 // should return a new UNIQUE token for the playerId
 char *RS_StartPlayerSession(int playerId)
 {
@@ -1406,6 +1408,7 @@ char *RS_StartPlayerSession(int playerId)
 
     return NULL;
 }
+*/
 
 /**
  * Calls the player disappear thread
