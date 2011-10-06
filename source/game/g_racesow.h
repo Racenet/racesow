@@ -78,6 +78,7 @@ struct rankingDataStruct {
 
 	int playerNum;
 	unsigned int page;
+	char *order;
 };
 
 struct filterDataStruct {
@@ -136,7 +137,7 @@ void *RS_UpdatePlayerNick_Thread( void *in );
 qboolean RS_MysqlLoadMaplist( int is_freestyle );
 qboolean RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, char *mapname, pjflag prejumpflag );
 void *RS_MysqlLoadHighscores_Thread( void *in );
-qboolean RS_MysqlLoadRanking( int playerNum, int page );
+qboolean RS_MysqlLoadRanking( int playerNum, int page, char *order );
 void *RS_MysqlLoadRanking_Thread( void *in );
 qboolean RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, char *oneliner);
 void *RS_MysqlSetOneliner_Thread( void *in );

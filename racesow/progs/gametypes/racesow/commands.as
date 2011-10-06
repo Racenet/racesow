@@ -266,11 +266,13 @@ class Command_Top : Racesow_Command
 class Command_Ranking : Racesow_Command
 {
     int page;
-
+	cString order;
+	
     bool validate(Racesow_Player @player, cString &args, int argc)
     {
         this.page = 1;
-
+		this.order = "points";
+		
         if ( mysqlConnected == 0 )
         {
             player.sendMessage("This server doesn't store the best times, this command is useless\n" );
@@ -293,13 +295,29 @@ class Command_Ranking : Racesow_Command
             }
         }
 		
+		if ( argc > 1 )
+		{
+			cString secondToken = args.getToken(1);
+			if ( secondToken == "points" || secondToken == "diff_points" ||
+				secondToken == "maps" || secondToken == "races" ||
+				secondToken == "playtime" ) {
+			
+				this.order = secondToken;
+				
+			} else if ( secondToken != "" ) {
+			
+				player.sendErrorMessage("invalid order given");
+				return false;
+			}
+		}
+		
         return true;
     }
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
         player.isWaitingForCommand = true;
-        RS_MysqlLoadRanking(player.getClient().playerNum(), this.page);
+        RS_MysqlLoadRanking(player.getClient().playerNum(), this.page, this.order);
         return true;
     }
 
@@ -1141,7 +1159,7 @@ void RS_CreateCommands()
 	Command_Ranking ranking;
     ranking.name = "ranking";
     ranking.description = "Print the server ranking";
-    ranking.usage = "ranking <page>";
+    ranking.usage = "ranking <page> <order(points|diff_points|races|maps|playtime)>";
     ranking.modFlag = MODFLAG_RACE | MODFLAG_DURACE | MODFLAG_DRACE | MODFLAG_TRACE;
     @commands[commandCount] = @ranking;
     commandCount++;

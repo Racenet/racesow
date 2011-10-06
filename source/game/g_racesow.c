@@ -2469,7 +2469,7 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
  * @param int page
  * @return qboolean
  */
-qboolean RS_MysqlLoadRanking( int playerNum, int  page )
+qboolean RS_MysqlLoadRanking( int playerNum, int  page, char *order )
 {
 	pthread_t thread;
 	int returnCode;
@@ -2478,6 +2478,7 @@ qboolean RS_MysqlLoadRanking( int playerNum, int  page )
 
 	rankingData->playerNum = playerNum;
     rankingData->page = page;
+	rankingData->order = strdup(order);
 
 	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadRanking_Thread, (void *)rankingData);
 	if (returnCode) {
@@ -2503,19 +2504,21 @@ void *RS_MysqlLoadRanking_Thread( void* in ) {
 		int offset;
 		int page;
 		char ranking[10000];
+		char *order;
 		struct rankingDataStruct *rankingData;
 
 		rankingData = (struct rankingData *)in;
 		playerNum = rankingData->playerNum;
 		page = rankingData->page;
-
+		order = strdup(rankingData->order);
+		
 		RS_StartMysqlThread();
 
         // get top players on map
 		limit = 20;
 		offset = (page - 1) * limit;
 		//SELECT `name`, `points`, `diff_points`, `races`, `maps`, `playtime` FROM player ORDER BY `%s` %s LIMIT %d, %d;
-		sprintf(query, rs_queryLoadRanking->string, "points", "DESC", offset, limit);
+		sprintf(query, rs_queryLoadRanking->string, order, "DESC", offset, limit);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError(query);
         mysql_res = mysql_store_result(&mysql);
@@ -2532,13 +2535,23 @@ void *RS_MysqlLoadRanking_Thread( void* in ) {
             unsigned int position = offset;
 
             Q_strncatz(ranking, va( "%sServer ranking, page %d\n", S_COLOR_ORANGE, page ), sizeof(ranking));
-            Q_strncatz(ranking, va( "%sPlayer      points (diff)\n", S_COLOR_ORANGE ), sizeof(ranking));
+            if ( !Q_stricmp(order, "points") || !Q_stricmp(order, "diff_points") )
+				Q_strncatz(ranking, va( "%sPlayer      points (diff)\n", S_COLOR_WHITE ), sizeof(ranking));
+			else
+				Q_strncatz(ranking, va( "%sPlayer      %s\n", S_COLOR_WHITE, order ), sizeof(ranking));
 
             while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
 			{
-
 				position++;
-                Q_strncatz( ranking, va( "%s%d. %s      %s%d (%d)\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[1]), atoi(row[2]) ), sizeof(ranking) );
+				
+				if ( !Q_stricmp(order, "points") || !Q_stricmp(order, "diff_points") )
+					Q_strncatz( ranking, va( "%s%d. %s      %s%d (%d)\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[1]), atoi(row[2]) ), sizeof(ranking) );
+				else if ( !Q_stricmp(order, "races") )
+					Q_strncatz( ranking, va( "%s%d. %s      %s%d\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[3]) ), sizeof(ranking) );
+				else if ( !Q_stricmp(order, "maps") )
+					Q_strncatz( ranking, va( "%s%d. %s      %s%d\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[4]) ), sizeof(ranking) );
+				else if ( !Q_stricmp(order, "playtime") )
+					Q_strncatz( ranking, va( "%s%d. %s      %s%d\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[5]) ), sizeof(ranking) );
 			}
         }
 
@@ -2550,7 +2563,9 @@ void *RS_MysqlLoadRanking_Thread( void* in ) {
 
 		RS_PushCallbackQueue(RACESOW_CALLBACK_RANKING, playerNum, 0, 0, 0, 0, 0, 0);
 
+		free(rankingData->order);
 		free(rankingData);
+		free(order);
 		RS_EndMysqlThread();
 		return NULL;
 }
