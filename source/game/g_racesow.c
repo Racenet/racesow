@@ -72,6 +72,7 @@ cvar_t *rs_queryMapFilter;
 cvar_t *rs_queryMapFilterCount;
 cvar_t *rs_queryUpdateCheckpoint;
 cvar_t *rs_queryGetPlayerMapCheckpoints;
+cvar_t *rs_queryLoadRanking;
 
 
 cvar_t *rs_authField_Name;
@@ -110,6 +111,7 @@ const unsigned int RACESOW_CALLBACK_MAPFILTER = 6;
 const unsigned int RACESOW_CALLBACK_MAPLIST = 7;
 const unsigned int RACESOW_CALLBACK_PLAYERNICK = 8;
 const unsigned int RACESOW_CALLBACK_ONELINER = 9;
+const unsigned int RACESOW_CALLBACK_RANKING = 10;
 
 /**
  * MySQL Socket
@@ -296,7 +298,8 @@ qboolean RS_LoadCvars( void )
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created, pm.prejumped FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d AND pm.prejumped in (%s) ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
 	rs_queryLoadMapOneliners		= trap_Cvar_Get( "rs_queryLoadMapOneliners",		"SELECT `oneliner`, `pj_oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `%s` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
-    
+    rs_queryLoadRanking				= trap_Cvar_Get( "rs_queryLoadRanking",				"SELECT `name`, `points`, `diff_points`, `races`, `maps`, `playtime` FROM player ORDER BY `%s` %s LIMIT %d, %d;", CVAR_ARCHIVE );
+	
     return qtrue;
 }
 
@@ -2455,6 +2458,99 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		free(highscoresData->mapname);
 		free(mapname);
 		free(highscoresData);
+		RS_EndMysqlThread();
+		return NULL;
+}
+
+/**
+ * Calls the ranking thread
+ *
+ * @param edict_t *ent
+ * @param int page
+ * @return qboolean
+ */
+qboolean RS_MysqlLoadRanking( int playerNum, int  page )
+{
+	pthread_t thread;
+	int returnCode;
+
+	struct rankingDataStruct *rankingData=malloc(sizeof(struct rankingDataStruct));
+
+	rankingData->playerNum = playerNum;
+    rankingData->page = page;
+
+	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadRanking_Thread, (void *)rankingData);
+	if (returnCode) {
+
+		G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/**
+ * Load the ranking
+ * @return void
+ */
+void *RS_MysqlLoadRanking_Thread( void* in ) {
+
+		MYSQL_ROW  row;
+        MYSQL_RES  *mysql_res;
+        char query[MYSQL_QUERY_LENGTH];
+		int playerNum;
+		int limit;
+		int offset;
+		int page;
+		char ranking[10000];
+		struct rankingDataStruct *rankingData;
+
+		rankingData = (struct rankingData *)in;
+		playerNum = rankingData->playerNum;
+		page = rankingData->page;
+
+		RS_StartMysqlThread();
+
+        // get top players on map
+		limit = 20;
+		offset = (page - 1) * limit;
+		//SELECT `name`, `points`, `diff_points`, `races`, `maps`, `playtime` FROM player ORDER BY `%s` %s LIMIT %d, %d;
+		sprintf(query, rs_queryLoadRanking->string, "points", "DESC", offset, limit);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError(query);
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError(query);
+
+		ranking[0]='\0';
+
+        if( (unsigned long)mysql_num_rows( mysql_res ) == 0 )
+		{
+            Q_strncatz(ranking, va( "%sNo ranking found!\n", S_COLOR_RED ), sizeof(ranking));
+		}
+        else
+		{
+            unsigned int position = offset;
+
+            Q_strncatz(ranking, va( "%sServer ranking, page %d\n", S_COLOR_ORANGE, page ), sizeof(ranking));
+            Q_strncatz(ranking, va( "%sPlayer      points (diff)\n", S_COLOR_ORANGE ), sizeof(ranking));
+
+            while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
+			{
+
+				position++;
+                Q_strncatz( ranking, va( "%s%d. %s      %s%d (%d)\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[1]), atoi(row[2]) ), sizeof(ranking) );
+			}
+        }
+
+        mysql_free_result(mysql_res);
+
+        players_query[playerNum]=malloc(strlen(ranking)+1);
+        players_query[playerNum][0]='\0';
+        Q_strncpyz( players_query[playerNum],ranking, strlen(ranking) + 1);
+
+		RS_PushCallbackQueue(RACESOW_CALLBACK_RANKING, playerNum, 0, 0, 0, 0, 0, 0);
+
+		free(rankingData);
 		RS_EndMysqlThread();
 		return NULL;
 }

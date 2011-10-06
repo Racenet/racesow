@@ -263,6 +263,48 @@ class Command_Top : Racesow_Command
 
 }
 
+class Command_Ranking : Racesow_Command
+{
+    int page;
+
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        this.page = 1;
+
+        if ( mysqlConnected == 0 )
+        {
+            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            return false;
+        }
+
+        if (player.isWaitingForCommand)
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+
+        if ( argc > 0 )
+        {
+            cString firstToken = args.getToken(0);
+            if ( firstToken.isNumerical() )
+            {
+                this.page = firstToken.toInt();
+            }
+        }
+		
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.isWaitingForCommand = true;
+        RS_MysqlLoadRanking(player.getClient().playerNum(), this.page);
+        return true;
+    }
+
+}
+
 class Command_Oneliner : Racesow_Command
 {
     bool validate(Racesow_Player @player, cString &args, int argc)
@@ -1079,12 +1121,14 @@ void RS_CreateCommands()
     @commands[commandCount] = @timeleft;
     commandCount++;
 
+	/*
     Command_Token token;
     token.name = "token";
     token.description = "When authenticated, shows your unique login token you may setu in your config";
     token.usage = "";
     @commands[commandCount] = @token;
     commandCount++;
+	*/
 
     Command_Top top;
     top.name = "top";
@@ -1092,6 +1136,14 @@ void RS_CreateCommands()
     top.usage = "top <pj/nopj> <limit(3-30)> <mapname>";
     top.modFlag = MODFLAG_RACE | MODFLAG_DURACE | MODFLAG_DRACE | MODFLAG_TRACE;
     @commands[commandCount] = @top;
+    commandCount++;
+	
+	Command_Ranking ranking;
+    ranking.name = "ranking";
+    ranking.description = "Print the server ranking";
+    ranking.usage = "ranking <page>";
+    ranking.modFlag = MODFLAG_RACE | MODFLAG_DURACE | MODFLAG_DRACE | MODFLAG_TRACE;
+    @commands[commandCount] = @ranking;
     commandCount++;
 	
     Command_Practicemode practicemode;

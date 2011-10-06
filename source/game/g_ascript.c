@@ -6436,6 +6436,19 @@ static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
         (int)G_asGeneric_GetArgInt(gen, 4)));
 }
 
+// RS_MysqlLoadRanking
+static qboolean asFunc_RS_MysqlLoadRanking( int playerNum, int page )
+{
+    return RS_MysqlLoadRanking(playerNum, page);
+}
+
+static void asFunc_asGeneric_RS_MysqlLoadRanking( void *gen )
+{
+    G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlLoadRanking(
+        (int)G_asGeneric_GetArgInt(gen, 0),
+        (int)G_asGeneric_GetArgInt(gen, 1)));
+}
+
 // RS_MysqlSetOneliner
 static qboolean asFunc_RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, asstring_t *oneliner)
 {
@@ -7096,6 +7109,7 @@ static asglobfuncs_t asGlobFuncs[] =
     { "bool RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
     { "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString &, bool )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
     { "bool RS_MysqlLoadHighscores( int, int, int, cString &, int)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
+    { "bool RS_MysqlLoadRanking( int, int )", asFunc_RS_MysqlLoadRanking, asFunc_asGeneric_RS_MysqlLoadRanking },
     { "bool RS_MysqlSetOneliner( int, int, int, cString &)", asFunc_RS_MysqlSetOneliner, asFunc_asGeneric_RS_MysqlSetOneliner },
     { "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
     { "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},

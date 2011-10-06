@@ -13,6 +13,7 @@ const uint RACESOW_ADAPTER_MAPFILTER = 6;
 const uint RACESOW_ADAPTER_MAPLIST = 7;
 const uint RACESOW_ADAPTER_PLAYERNICK = 8;
 const uint RACESOW_ADAPTER_ONELINER = 9;
+const uint RACESOW_ADAPTER_RANKING = 10;
 
 class Racesow_Adapter_Abstract
 {
@@ -128,6 +129,7 @@ class Racesow_Adapter_Abstract
                 case RACESOW_ADAPTER_MAPFILTER:
                 case RACESOW_ADAPTER_MAPLIST:
                 case RACESOW_ADAPTER_ONELINER:
+				case RACESOW_ADAPTER_RANKING:
                     result = RS_PrintQueryCallback(playerNum);
                     player.sendLongMessage(result);
                     player.isWaitingForCommand = false;
