@@ -2517,7 +2517,6 @@ void *RS_MysqlLoadRanking_Thread( void* in ) {
         // get top players on map
 		limit = 20;
 		offset = (page - 1) * limit;
-		//SELECT `name`, `points`, `diff_points`, `races`, `maps`, `playtime` FROM player ORDER BY `%s` %s LIMIT %d, %d;
 		sprintf(query, rs_queryLoadRanking->string, order, "DESC", offset, limit);
         mysql_real_query(&mysql, query, strlen(query));
         RS_CheckMysqlThreadError(query);
@@ -2551,7 +2550,24 @@ void *RS_MysqlLoadRanking_Thread( void* in ) {
 				else if ( !Q_stricmp(order, "maps") )
 					Q_strncatz( ranking, va( "%s%d. %s      %s%d\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[4]) ), sizeof(ranking) );
 				else if ( !Q_stricmp(order, "playtime") )
-					Q_strncatz( ranking, va( "%s%d. %s      %s%d\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[5]) ), sizeof(ranking) );
+				{
+					unsigned long int playtimeMillis, playtimeSeconds, playtimeMinutes, playtimeHours, playtimeDays, playtimeMonths, playtimeYears;
+					
+					playtimeMillis = strtoul(row[5], NULL, 10);
+					playtimeYears = playtimeMillis / 31104000000;
+					playtimeMillis -= playtimeYears * 31104000000;
+					playtimeMonths = playtimeMillis / 2592000000;
+					playtimeMillis -= playtimeMonths * 2592000000;
+					playtimeDays = playtimeMillis / 86400000;
+					playtimeMillis -= playtimeDays * 86400000;
+					playtimeHours = playtimeMillis / 3600000;
+					playtimeMillis -= playtimeHours * 3600000;
+					playtimeMinutes = playtimeMillis / 60000;
+					playtimeMillis -= playtimeMinutes * 60000;
+					playtimeSeconds = playtimeMillis / 1000;
+					
+					Q_strncatz( ranking, va( "%s%d. %s      %s%uY %uM %uD %uh %um %us\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, playtimeYears, playtimeMonths, playtimeDays, playtimeHours, playtimeMinutes, playtimeSeconds ), sizeof(ranking) );
+				}
 			}
         }
 
