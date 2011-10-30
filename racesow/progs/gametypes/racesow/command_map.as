@@ -51,6 +51,12 @@ class RC_Map {
         this.elements = RC_Pair@[](max_size);
     }
 
+    RC_Map(uint size) {
+        this.max_size = size;
+        this.last = 0;
+        this.elements = RC_Pair@[](max_size);
+    }
+
     Racesow_Command @get_opIndex(cString &in idx) {
         int position;
         if ( (position = this.find(idx)) != -1 ) {
@@ -60,7 +66,9 @@ class RC_Map {
     }
 
     void set_opIndex(cString &idx, Racesow_Command @idy) {
-        if ( @idx != null && @idy != null && this.last != this.max_size) {
+        if( @idx == null && @idy == null )
+            return;
+        if( this.last < this.max_size) {
             idy.name = idx; // dunno where else to put this...
             int position;
             if ( ( position = this.find(idx)) != -1 ) {
@@ -71,6 +79,8 @@ class RC_Map {
                 @this.elements[last++] = @RC_Pair( idx, idy );
             }
         }
+        else
+            G_Print("================================Warning: Map Full================================\n");
     }
 
     int find( cString &in search) {

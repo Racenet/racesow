@@ -5,6 +5,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Freestyle();
         this.ammoSwitch = true;
+        this.timelimited = false;
         //FIXME: These will hopefully be useable with the new angelscript version
         /*@this.commandMap["chrono"] = @Command_Chrono();
         @this.commandMap["join"] = @Command_Join();
@@ -18,7 +19,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         this.commandMap.set_opIndex( "join", @Command_Join() );
         this.commandMap.set_opIndex( "spec", @Command_Spec() );
         this.commandMap.set_opIndex( "chase", @Command_Spec() );
-        this.commandMap.set_opIndex( "kill", @Command_Kill() );
+        this.commandMap.set_opIndex( "kill", @Command_RaceRestart() );
         this.commandMap.set_opIndex( "position", @Command_Position() );
         this.commandMap.set_opIndex( "quad", @Command_Quad() );
         this.commandMap.set_opIndex( "noclip", @Command_Noclip() );
@@ -74,6 +75,12 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
       G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Ping" );
     }
     
+    void LoadMapList()
+    {
+        // load maps list (basic or mysql)
+	    RS_LoadMapList( 1 );
+    }
+
     void SpawnGametype()
     {
         

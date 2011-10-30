@@ -417,10 +417,12 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
         if ( rs_loadHighscores.getBool() )
 		{
 		    this.player.bestRaceTime = personalBest;
-		    if ( gametypeFlag == MODFLAG_RACE )
+            if( racesowGametype.racescore )//FIXME: This is just a temporary fix and needs to be refactored
+                this.player.getClient().stats.setScore(personalBest);
+		    /*if ( gametypeFlag == MODFLAG_RACE )
 		    {
 		        this.player.getClient().stats.setScore(personalBest);
-		    }
+		    }*/
 		    this.player.overallTries = overallTries;
 		}
 

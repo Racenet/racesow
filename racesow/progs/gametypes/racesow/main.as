@@ -20,7 +20,6 @@ Racesow_Map @map;
 Racesow_Adapter_Abstract @racesowAdapter;
 Racesow_Gametype @racesowGametype;
 
-int gametypeFlag = 0;
 int prcFlagIconStolen;
 int prcYesIcon;
 
@@ -274,9 +273,7 @@ void GT_ThinkRules()
 	// perform a C callback if there is one pending
 	racesowAdapter.thinkCallbackQueue();
 
-	bool timelimited = not ( gametypeFlag == MODFLAG_FREESTYLE  || !g_maprotation.getBool());
-
-	if ( timelimited )
+	if ( racesowGametype.timelimited || g_maprotation.getBool() )
 	{
 
 		if ( match.timeLimitHit() )
@@ -294,7 +291,7 @@ void GT_ThinkRules()
 	if ( match.getState() >= MATCH_STATE_POSTMATCH )
 	{
 		// that piece of code needs to be always executed during postmatch when g_maprotation=0 or freestyle=1
-		if ( ( not timelimited ) and match.timeLimitHit() )
+		if ( ( !racesowGametype.timelimited || !g_maprotation.getBool() ) && match.timeLimitHit() )
 		{
 			match.launchState( match.getState() + 1 );
 		}
@@ -561,8 +558,6 @@ void GT_InitGametype()
     // always execute racesow.cfg
     G_CmdExecute( "exec configs/server/gametypes/racesow/racesow.cfg silent" );
 
-    gametypeFlag = RS_GetModFlagByName(g_gametype.getString());
-
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib() )
       gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
@@ -633,12 +628,11 @@ void GT_InitGametype()
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
 	oldTimelimit = g_timelimit.getInteger();
 
-	// load maps list (basic or mysql)
-	RS_LoadMapList( gametypeFlag & MODFLAG_FREESTYLE );
-
     @racesowGametype = @getRacesowGametype();
 
 	racesowGametype.InitGametype();
+
+    racesowGametype.LoadMapList();
 
     racesowGametype.registerCommands();
     racesowGametype.registerVotes();

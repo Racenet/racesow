@@ -1322,7 +1322,7 @@ class Racesow_Player
 		}
 		else
 		{
-			sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n", @this.client ); // why not this.sendMessage() ?
+			this.sendMessage( S_COLOR_RED + "Ammoswitch is disabled.\n" );
 		}
 		return true;
 	}

@@ -1,14 +1,3 @@
-/**
- * MODFLAG, used to determine in which gametype a command is registered
- */
-const int MODFLAG_RACE = 1;
-const int MODFLAG_FREESTYLE = 2;
-const int MODFLAG_FASTCAP = 4;
-const int MODFLAG_DRACE = 8;
-const int MODFLAG_DURACE = 16;
-const int MODFLAG_TRACE = 32;
-const int MODFLAG_ALL = 63;
-
 const cString COMMAND_COLOR_LINE = S_COLOR_BLACK;
 const cString COMMAND_COLOR_HEAD = S_COLOR_RED;
 const cString COMMAND_COLOR_LEFT = S_COLOR_ORANGE;
@@ -229,7 +218,7 @@ class Command_Admin : Racesow_BaseCommand
     Command_Admin() {
         super( "Execute an admin command", "<subcommand> [args...]" );
 
-        @this.commandMap = @RC_Map();
+        @this.commandMap = @RC_Map( 17 );
         this.commandMap.set_opIndex( "map", @Command_AdminMap( @this ) );
         this.commandMap.set_opIndex( "restart", @Command_AdminRestart( @this ) );
         this.commandMap.set_opIndex( "extend_time", @Command_AdminExtendtime( @this ) );
@@ -514,36 +503,6 @@ class Command_Join : Racesow_Command
     }
 }
 
-// joki: remove this command?
-class Command_Kill : Racesow_Command
-{
-
-    Command_Kill() {
-        super( "Go back to the start area whenever you want", "" );
-    }
-
-    bool validate(Racesow_Player @player, cString &args, int argc)
-    {
-        if (player.isJoinlocked)
-        {
-            player.sendErrorMessage( "You can't join, you are join locked" );
-            return false;
-        }
-
-        //racerestart command is only avaiblable in DRACE during WARMUP 
-        if ( gametypeFlag == MODFLAG_DRACE && this.name == "racerestart" && match.getState() != MATCH_STATE_WARMUP ) //FIXME: This doesn't seem right ...
-          return false;
-                  
-        return true;
-    }
-
-    bool execute(Racesow_Player @player, cString &args, int argc)
-    {
-        player.restartRace();
-		    return true;
-    }
-}
-
 class Command_Machinegun : Racesow_Command
 {
 
@@ -734,7 +693,7 @@ class Command_Position : Racesow_BaseCommand
 	Command_Position() {
         super( "Commands to store and load position", "<subcommand> [args...]" );
 
-        @this.commandMap = @RC_Map();
+        @this.commandMap = @RC_Map( 7 );
         this.commandMap.set_opIndex( "save", @Command_PositionSave( @this ) );
         this.commandMap.set_opIndex( "load", @Command_PositionLoad( @this ) );
         this.commandMap.set_opIndex( "set", @Command_PositionSet( @this ) );
@@ -1118,7 +1077,7 @@ class Command_Stats : Racesow_BaseCommand
 	Command_Stats() {
         super( "Show statistics", "[subcommand] [args...]" );
 
-        @this.commandMap = @RC_Map();
+        @this.commandMap = @RC_Map( 3 );
         this.commandMap.set_opIndex( "player", @Command_StatsPlayer( @this ) );
         this.commandMap.set_opIndex( "map", @Command_StatsMap( @this ) );
         this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
@@ -1767,6 +1726,7 @@ class Command_AdminCancelvote : Racesow_Command // (should be subclass of Raceso
         this.permissionMask = RACESOW_AUTH_MAP;
         @this.baseCommand = @baseCommand;
 	}
+
 
     bool execute(Racesow_Player @player, cString &args, int argc)
     {

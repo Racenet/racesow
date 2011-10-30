@@ -18,12 +18,14 @@ class Racesow_Gametype
     RC_Map @voteMap;
 
     bool ammoSwitch; // joki: I don't get the purpose of this variable... gametypes could just not register the ammoswitch command
+    bool timelimited;
+    bool racescore; //FIXME: See player/auth.as
 
     Racesow_Gametype()
     {
         this.players = Racesow_Player@[](maxClients);
 
-        @this.commandMapInternal = @RC_Map();
+        @this.commandMapInternal = @RC_Map( 3 );
         @this.voteMap = @RC_Map();
         commandMapInternal.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermission() );
         commandMapInternal.set_opIndex( "callvotevalidate", @Command_CallvoteValidate( @this.voteMap ) );
@@ -32,9 +34,17 @@ class Racesow_Gametype
         @this.commandMap = @RC_Map();
         insertDefaultCommands(this.commandMap);
         this.ammoSwitch = false;
+        this.timelimited = true;
+        this.racescore = false;
     }
 
     void InitGametype() { }
+
+    void LoadMapList()
+    {
+        // load maps list (basic or mysql)
+	    RS_LoadMapList( 0 );
+    }
     
     void SpawnGametype() { }
     

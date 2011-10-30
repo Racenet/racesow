@@ -249,31 +249,6 @@ void RS_ircSendMessage( cString message )
     G_CmdExecute( "irc_chanmsg \"" + message + "\" \n");
 }
 
-/**
- * Find a modflag value by the gametype name - FIXME soon obsolete
- *
- * @param name The name of the gametype you are looking for
- * @return int the modflag value, -1 if not found
- */
-int RS_GetModFlagByName(cString name)
-{
-    if ( name == "race" )
-        return MODFLAG_RACE;
-    if ( name == "freestyle" )
-        return MODFLAG_FREESTYLE;
-    if ( name == "fastcap" )
-        return MODFLAG_FASTCAP;
-    if ( name == "drace" )
-        return MODFLAG_DRACE;
-    if ( name == "durace" )
-        return MODFLAG_DURACE;
-    if ( name == "trace" )
-        return MODFLAG_TRACE;
-
-    G_Print("Gametype " + name + " doesn't exist. Check your config.\n");
-    return -1;
-}
-
 /*
  * Insert Default Racesow_Commands into the gametypes Command_Map
  *
@@ -301,6 +276,7 @@ void insertDefaultCommands( RC_Map @commandMap ) {
     @commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermission();
     @commandMap["callvotevalidate"] = @Command_CallvoteValidate();*/
     commandMap.set_opIndex( "admin", @Command_Admin() );
+    commandMap.set_opIndex( "ammoswitch", @Command_AmmoSwitch() );
     commandMap.set_opIndex( "auth", @Command_Auth() );
     commandMap.set_opIndex( "gametype", @Command_Gametype() );
     commandMap.set_opIndex( "help", @Command_Help( null, @commandMap ) );

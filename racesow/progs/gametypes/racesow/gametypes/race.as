@@ -16,6 +16,8 @@ class Racesow_Gametype_Race : Racesow_Gametype
 {
     Racesow_Gametype_Race()
     {
+        this.racescore = true;
+
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player();
         //FIXME: These will hopefully be useable with the new angelscript version
@@ -35,7 +37,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
         this.commandMap.set_opIndex( "spec", @Command_Spec() );
         this.commandMap.set_opIndex( "chase", @Command_Spec() );
         this.commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
-        this.commandMap.set_opIndex( "kill", @Command_Kill() );
+        this.commandMap.set_opIndex( "kill", @Command_RaceRestart() );
         this.commandMap.set_opIndex( "oneliner", @Command_Oneliner() );
         this.commandMap.set_opIndex( "position", @Command_Position_Race() );
         this.commandMap.set_opIndex( "noclip", @Command_Noclip_Race() );

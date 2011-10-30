@@ -30,5 +30,6 @@ racesow/player/race.as;
 racesow/player/clientdemo.as;
 racesow/commands.as;
 racesow/gametypes.as;
-racesow/gametypes/durace.as;
+racesow/gametypes/trace.as;
+racesow/gametypes/durace_imp.as;
 racesow/command_map.as;
