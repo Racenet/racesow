@@ -745,8 +745,8 @@ class Racesow_Player
 
   		} else if ( this.isRacing() )
   		{
-  			this.racingTime += levelTime - this.race.getStartTime();
-  			this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
+  			this.racingTime += this.race.getCurrentTime();
+  			this.racingTimeSinceLastRace += this.race.getCurrentTime();
   			this.sendMessage( this.race.checkPointsString );
   		}
 
