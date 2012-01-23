@@ -443,7 +443,7 @@ static int CG_GetRaceVars( void* parameter )
 
 		case strafe_an:
 			// optimal strafing angle
-			fNum = RAD2DEG( acos( cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED]*( 1 - cg.realFrameTime )/_getspeed() ) ) - 45;
+			fNum = RAD2DEG( acos( cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED]*( 1 - cg.frameTime )/_getspeed() ) ) - 45;
 			if ( fNum > 0 )
 				return Q_rint( 100*fNum );
 			else
@@ -467,7 +467,7 @@ static int CG_GetRaceVars( void* parameter )
 static int CG_GetMaxAccel( void* parameter )
 {
 	int base_speed = cg.predictedPlayerState.pmove.stats[PM_STAT_MAXSPEED];
-	float base_accel = base_speed * cg.realFrameTime;
+	float base_accel = base_speed * cg.frameTime;
 
 	float speed = _getspeed();
 	return (int)( 1000 *
@@ -475,7 +475,7 @@ static int CG_GetMaxAccel( void* parameter )
 				sqrt( speed*speed + base_accel*( 2*base_speed - base_accel ) )
 				- speed
 			)
-			/ cg.realFrameTime);
+			/ cg.frameTime);
 }
 
 static int CG_GetRocketAccel( void* parameter )
@@ -509,9 +509,13 @@ static int CG_GetAccel( void* parameter )
 	static float accelHistory[ACCEL_SAMPLE_COUNT] = {0.0};
 	static int sampleCount = 0;
 
-	t = cg.realTime * 0.001f;
+	t = cg.time * 0.001f;
 	dt = t - oldTime;
-	if( dt > 0.0 )
+	if( dt < 0.0 )
+	{
+		oldTime = t;
+	}
+	else if( dt > 0.0 )
 	{
 		// raw acceleration
 		newSpeed = _getspeed();
