@@ -90,11 +90,19 @@ cvar_t *rs_IRCstream;
 dynvar_t *irc_connected;
 int ircConnected = 0;
 
+cvar_t *rs_mqttEnabled;
 cvar_t *rs_mqttClientId;
 cvar_t *rs_mqttHost;
 cvar_t *rs_mqttPort;
+char err[1024];
 char publish_message[1024];
-mqtt_broker_handle_t broker;
+char publish_topic[32];
+struct mosquitto *mosq = NULL;
+int rc;
+int keepalive = 0;
+int retain = 0;
+static uint16_t mid_sent = 0;
+static int qos = 0;
 
 /**
  * Store the result of different requests from players.
@@ -182,6 +190,7 @@ void RS_Init()
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
+	rs_mqttEnabled = trap_Cvar_Get( "rs_mqttEnabled", "0", CVAR_ARCHIVE );
 	rs_mqttClientId = trap_Cvar_Get( "rs_mqttClientId", "racesow", CVAR_ARCHIVE );
 	rs_mqttHost = trap_Cvar_Get( "rs_mqttHost", "127.0.0.1", CVAR_ARCHIVE );
 	rs_mqttPort = trap_Cvar_Get( "rs_mqttPort", "1883", CVAR_ARCHIVE );
@@ -230,10 +239,13 @@ void RS_Init()
     irc_connected = trap_Dynvar_Lookup( "irc_connected" );
     trap_Dynvar_AddListener( irc_connected, RS_Irc_ConnectedListener_f );
 
-	broker.port = rs_mqttPort->integer;
-	strcpy(broker.hostname, rs_mqttHost->string);
-	strcpy(broker.clientid, rs_mqttClientId->string);
-	mqtt_connect(&broker);
+	if (rs_mqttEnabled->integer) {
+		mosquitto_lib_init();
+		mosq = mosquitto_new(rs_mqttClientId->string, NULL);
+		if(!mosq){
+			G_Printf("QMTT Error: Out of memory.\n");
+		}
+	}
 }
 
 /**
@@ -513,6 +525,12 @@ void RS_Shutdown()
 	RS_RemoveServerCommands();
     if( irc_connected )
 	    trap_Dynvar_RemoveListener( irc_connected, RS_Irc_ConnectedListener_f );
+	
+	if (rs_mqttEnabled->integer) {
+	
+		mosquitto_destroy(mosq);
+		mosquitto_lib_cleanup();
+	}
 }
 
 
@@ -982,7 +1000,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 						
 						// notify the user! about his lost points
 						diffPoints = oldpoints - points;
-						if (diffPoints > 0) {
+						if (rs_mqttEnabled->integer && diffPoints > 0) {
 	
 							sprintf(query, rs_queryGetUserIdByPlayerId->string, playerId);
 							mysql_real_query(&mysql, query, strlen(query));
@@ -992,7 +1010,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
 							{
 								if (row[0] != NULL)
 								{
-									char topic[32];
 									unsigned int userId;
 									userId = atoi(row[0]);
 									
@@ -1004,11 +1021,15 @@ void *RS_MysqlInsertRace_Thread(void *in)
 									{
 										if (row[0] != NULL)
 										{
-											sprintf(topic, "user_%d", userId);
-											sprintf(publish_message, "%s stole %d points from you on %s", row[0], diffPoints, level.mapname);
-										
-											mqtt_connect(&broker);
-											mqtt_publish(&broker, topic, publish_message);
+											rc = mosquitto_connect(mosq, rs_mqttHost->string, rs_mqttPort->integer, 0, true);
+											if(!rc){
+											
+												sprintf(publish_topic, "user_%d", userId);
+												sprintf(publish_message, "<?xml version=\"1.0\"?><record><player><![CDATA[%s]]></player><map><![CDATA[%s]]></map><time><![CDATA[%d]]></time><oldpoints><![CDATA[%d]]></oldpoints><newpoints><![CDATA[%d]]></newpoints></record>", row[0], level.mapname, raceData->race_time, oldpoints, points);
+												rc =  mosquitto_publish(mosq, &mid_sent, publish_topic, strlen(publish_message), (uint8_t *)publish_message, qos, retain);
+											}
+
+											mosquitto_disconnect(mosq);
 										}
 									}
 								}
@@ -3297,119 +3318,4 @@ void RS_RemoveServerCommands( void )
 void RS_VoteMapExtraHelp( edict_t *ent )
 {
     G_PrintMsg(ent, "Use the maplist command to see the available maps. Type 'help maplist' for details.\n");
-}
-
-/*
- *  libmqtt
- *
- *  Created by Filipe Varela on 09/10/16.
- *  Copyright 2009 Caixa Mágica Software. All rights reserved.
- *
- */
-
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-int mqtt_connect(mqtt_broker_handle_t *broker)
-{
-	if (strlen(broker->clientid) > 127)
-		return -1;
-	
-	if ((broker->socket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-		return -1;
-	
-	// create the stuff we need to connect
-	broker->connected = 0;
-	broker->socket_address.sin_family = AF_INET;
-	broker->socket_address.sin_port = htons(broker->port);
-	broker->socket_address.sin_addr.s_addr = inet_addr(broker->hostname);
-	
-	// connect
-	if ((connect(broker->socket, (struct sockaddr *)&broker->socket_address, sizeof(broker->socket_address))) < 0)
-		return -1;
-	
-	// variable header
-	uint8_t var_header[] = {0x00,0x06,0x4d,0x51,0x49,0x73,0x64,0x70,0x03,0x02,0x00,KEEPALIVE/500,0x00,strlen(broker->clientid)};
-	
-	// fixed header: 2 bytes, big endian
-	uint8_t fixed_header[] = {MQTTCONNECT,12+strlen(broker->clientid)+2};
-	
-	uint8_t packet[sizeof(fixed_header)+sizeof(var_header)+strlen(broker->clientid)];
-	memset(packet,0,sizeof(packet));
-	memcpy(packet,fixed_header,sizeof(fixed_header));
-	memcpy(packet+sizeof(fixed_header),var_header,sizeof(var_header));
-	memcpy(packet+sizeof(fixed_header)+sizeof(var_header),broker->clientid,strlen(broker->clientid));
-		
-	if (send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet)) {
-		close(broker->socket);
-		return -1;
-	}
-	
-	// set connected flag
-	broker->connected = 1;
-	
-	return 1;
-}
-
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg)
-{
-	if (!broker->connected) {
-		if (mqtt_connect(broker) < 0)
-			return -1;
-	}
-	
-	int topiclen = strlen(topic);
-	int msglen = strlen(msg);
-
-	uint8_t var_header[topiclen+2];
-	memset(var_header, 0, topiclen+2);
-	var_header[1] = topiclen;
-	memcpy(var_header+2, topic, topiclen);
-
-	uint8_t fixed_header[] = {
-		MQTTPUBLISH, // Message Type, DUP flag, QoS level, Retain
-		sizeof(var_header)+msglen // Remaining length
-	};
-
-	uint8_t packet[sizeof(fixed_header)+sizeof(var_header)+msglen];
-	memset(packet, 0, sizeof(packet));
-	memcpy(packet, fixed_header, sizeof(fixed_header));
-	memcpy(packet+sizeof(fixed_header), var_header, sizeof(var_header));
-	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), msg, msglen);
-
-	if (send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet))
-		return -1;
-		
-	return 1;
-}
-
-int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic, void *(*callback)(mqtt_callback_data_t *))
-{
-	if (!broker->connected) {
-		if (mqtt_connect(broker) < 0)
-			return -1;
-	}
-	
-	uint8_t var_header[] = {0,10};	
-	uint8_t fixed_header[] = {MQTTSUBSCRIBE,sizeof(var_header)+strlen(topic)+3};
-	
-	// utf topic
-	uint8_t utf_topic[strlen(topic)+3];
-	strcpy((char *)&utf_topic[2], topic);
-
-	utf_topic[0] = 0;
-	utf_topic[1] = strlen(topic);
-	utf_topic[sizeof(utf_topic)-1] = 0;
-	
-	char packet[sizeof(var_header)+sizeof(fixed_header)+strlen(topic)+3];
-	memset(packet,0,sizeof(packet));
-	memcpy(packet,fixed_header,sizeof(fixed_header));
-	memcpy(packet+sizeof(fixed_header),var_header,sizeof(var_header));
-	memcpy(packet+sizeof(fixed_header)+sizeof(var_header),utf_topic,sizeof(utf_topic));
-	
-	if (send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet))
-		return -1;
-		
-	return 1;
 }

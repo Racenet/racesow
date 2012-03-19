@@ -1,4 +1,29 @@
 #include "../qcommon/md5.h"
+#include "mosquitto.h"
+
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifndef WIN32
+#include <unistd.h>
+#else
+#include <process.h>
+#include <winsock2.h>
+#define snprintf sprintf_s
+#endif
+
+#define MSGMODE_NONE 0
+#define MSGMODE_CMD 1
+#define MSGMODE_STDIN_LINE 2
+#define MSGMODE_STDIN_FILE 3
+#define MSGMODE_FILE 4
+#define MSGMODE_NULL 5
+
+void mqtt_connect_callback(void *obj, int result);
+void mqtt_disconnect_callback(void *obj);
+void mqtt_publish_callback(void *obj, uint16_t mid);
 
 char maplist[50000];
 unsigned int mapcount;
@@ -163,39 +188,3 @@ void RS_VoteMapExtraHelp( edict_t *ent );
 qboolean RS_UpdateMapList(int playerNum);
 void *RS_UpdateMapList_Thread(void *in);
 //char *RS_StartPlayerSession(int playerId);
-
-/*
- *  libmqtt
- *
- *  Created by Filipe Varela on 09/10/16.
- *  Copyright 2009 Caixa Mágica Software. All rights reserved.
- *
- */
- 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-
-#define KEEPALIVE 15000
-#define MQTTCONNECT 1<<4
-#define MQTTPUBLISH 3<<4
-#define MQTTSUBSCRIBE 8<<4
-
-typedef struct {
-	int socket;
-	struct sockaddr_in socket_address;
-	short port;
-	char hostname[128];
-	char clientid[33];
-	int connected;
-} mqtt_broker_handle_t;
-
-typedef struct {
-	mqtt_broker_handle_t *broker;
-	char *msg;
-} mqtt_callback_data_t;
-
-int mqtt_connect(mqtt_broker_handle_t *broker);
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg);
-int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic, void *(*callback)(mqtt_callback_data_t *));
