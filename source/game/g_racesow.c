@@ -8,6 +8,7 @@
 #if !defined(_WIN32) && !defined(_WIN64)
 #include "g_dynamicmysql.h"
 #endif
+#define MOSQUITTO
 
 qboolean mysqlclient_present=qfalse;
 
@@ -97,7 +98,9 @@ cvar_t *rs_mqttPort;
 char err[1024];
 char publish_message[1024];
 char publish_topic[32];
+#ifdef MOSQUITTO
 struct mosquitto *mosq = NULL;
+#endif
 int rc;
 int keepalive = 0;
 int retain = 0;
@@ -239,6 +242,7 @@ void RS_Init()
     irc_connected = trap_Dynvar_Lookup( "irc_connected" );
     trap_Dynvar_AddListener( irc_connected, RS_Irc_ConnectedListener_f );
 
+	#ifdef MOSQUITTO
 	if (rs_mqttEnabled->integer) {
 		mosquitto_lib_init();
 		mosq = mosquitto_new(rs_mqttClientId->string, NULL);
@@ -246,6 +250,7 @@ void RS_Init()
 			G_Printf("QMTT Error: Out of memory.\n");
 		}
 	}
+	#endif
 }
 
 /**
@@ -526,11 +531,13 @@ void RS_Shutdown()
     if( irc_connected )
 	    trap_Dynvar_RemoveListener( irc_connected, RS_Irc_ConnectedListener_f );
 	
+	#ifdef MOSQUITTO
 	if (rs_mqttEnabled->integer) {
 	
 		mosquitto_destroy(mosq);
 		mosquitto_lib_cleanup();
 	}
+	#endif
 }
 
 
@@ -1021,6 +1028,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 									{
 										if (row[0] != NULL)
 										{
+										#ifdef MOSQUITTO
 											rc = mosquitto_connect(mosq, rs_mqttHost->string, rs_mqttPort->integer, 0, true);
 											if(!rc){
 											
@@ -1030,6 +1038,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
 											}
 
 											mosquitto_disconnect(mosq);
+										#endif
 										}
 									}
 								}
