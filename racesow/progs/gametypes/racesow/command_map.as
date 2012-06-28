@@ -66,7 +66,7 @@ class RC_Map {
     }
 
     void set_opIndex(cString &idx, Racesow_Command @idy) {
-        if( @idx == null && @idy == null )
+        if( @idx == null || @idy == null )
             return;
         if( this.last < this.max_size) {
             idy.name = idx; // dunno where else to put this...
