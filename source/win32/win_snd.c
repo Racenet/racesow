@@ -36,10 +36,8 @@ static qboolean	dsound_init;
 static qboolean	wav_init;
 static qboolean	snd_isdirect, snd_iswave;
 
-// starts at 0 for disabled
-static int snd_buffer_count = 0;
 static int sample16;
-static int snd_sent, snd_completed;
+static unsigned int snd_sent, snd_completed;
 
 /*
 * Global variables. Must be visible to window-procedure function
@@ -236,9 +234,7 @@ static void DS_DestroyBuffers( void )
 }
 
 /*
-==================
-FreeSound
-==================
+* FreeSound
 */
 static void FreeSound( qboolean verbose )
 {
@@ -313,11 +309,9 @@ static void FreeSound( qboolean verbose )
 }
 
 /*
-==================
-SNDDMA_InitDirect
-
-Direct-Sound support
-==================
+* SNDDMA_InitDirect
+* 
+* Direct-Sound support
 */
 sndinitstat SNDDMA_InitDirect( qboolean verbose )
 {
@@ -327,7 +321,9 @@ sndinitstat SNDDMA_InitDirect( qboolean verbose )
 	dma.channels = 2;
 	dma.samplebits = 16;
 
-	if( s_khz->integer == 44 )
+	if( s_khz->integer == 48 )
+		dma.speed = 48000;
+	else if( s_khz->integer == 44 )
 		dma.speed = 44100;
 	else if( s_khz->integer == 22 )
 		dma.speed = 22050;
@@ -416,11 +412,9 @@ sndinitstat SNDDMA_InitDirect( qboolean verbose )
 }
 
 /*
-==================
-SNDDM_InitWav
-
-Crappy windows multimedia base
-==================
+* SNDDM_InitWav
+* 
+* Crappy windows multimedia base
 */
 qboolean SNDDMA_InitWav( qboolean verbose )
 {
@@ -437,7 +431,9 @@ qboolean SNDDMA_InitWav( qboolean verbose )
 	dma.channels = 2;
 	dma.samplebits = 16;
 
-	if( s_khz->integer == 44 )
+	if( s_khz->integer == 48 )
+		dma.speed = 48000;
+	else if( s_khz->integer == 44 )
 		dma.speed = 44100;
 	else if( s_khz->integer == 22 )
 		dma.speed = 22050;
@@ -584,12 +580,10 @@ qboolean SNDDMA_InitWav( qboolean verbose )
 }
 
 /*
-==================
-SNDDMA_Init
-
-Try to find a sound device to mix for.
-Returns false if nothing is found.
-==================
+* SNDDMA_Init
+* 
+* Try to find a sound device to mix for.
+* Returns false if nothing is found.
 */
 qboolean SNDDMA_Init( void *hwnd, qboolean verbose )
 {
@@ -649,8 +643,6 @@ qboolean SNDDMA_Init( void *hwnd, qboolean verbose )
 		}
 	}
 
-	snd_buffer_count = 1;
-
 	if( !dsound_init && !wav_init )
 	{
 		Com_Printf( "*** No sound device initialized ***\n" );
@@ -661,13 +653,11 @@ qboolean SNDDMA_Init( void *hwnd, qboolean verbose )
 }
 
 /*
-==============
-SNDDMA_GetDMAPos
-
-return the current sample position (in mono samples read)
-inside the recirculating dma buffer, so the mixing code will know
-how many sample are required to fill it up.
-===============
+* SNDDMA_GetDMAPos
+* 
+* return the current sample position (in mono samples read)
+* inside the recirculating dma buffer, so the mixing code will know
+* how many sample are required to fill it up.
 */
 int SNDDMA_GetDMAPos( void )
 {
@@ -694,11 +684,9 @@ int SNDDMA_GetDMAPos( void )
 }
 
 /*
-==============
-SNDDMA_BeginPainting
-
-Makes sure dma.buffer is valid
-===============
+* SNDDMA_BeginPainting
+* 
+* Makes sure dma.buffer is valid
 */
 DWORD locksize;
 void SNDDMA_BeginPainting( void )
@@ -748,12 +736,10 @@ void SNDDMA_BeginPainting( void )
 }
 
 /*
-==============
-SNDDMA_Submit
-
-Send sound to device if buffer isn't really the dma buffer
-Also unlocks the dsound buffer
-===============
+* SNDDMA_Submit
+* 
+* Send sound to device if buffer isn't really the dma buffer
+* Also unlocks the dsound buffer
 */
 void SNDDMA_Submit( void )
 {
@@ -815,11 +801,9 @@ void SNDDMA_Submit( void )
 }
 
 /*
-==============
-SNDDMA_Shutdown
-
-Reset the sound device for exiting
-===============
+* SNDDMA_Shutdown
+* 
+* Reset the sound device for exiting
 */
 void SNDDMA_Shutdown( qboolean verbose )
 {
@@ -828,13 +812,11 @@ void SNDDMA_Shutdown( qboolean verbose )
 
 
 /*
-===========
-S_Activate
-
-Called when the main window gains or loses focus.
-The window have been destroyed and recreated
-between a deactivate and an activate.
-===========
+* S_Activate
+* 
+* Called when the main window gains or loses focus.
+* The window have been destroyed and recreated
+* between a deactivate and an activate.
 */
 void S_Activate( qboolean active )
 {
@@ -848,12 +830,6 @@ void S_Activate( qboolean active )
 		SNDDMA_Shutdown( qfalse );
 	}
 
-	if( active )
-		DS_CreateBuffers();
-	else
-		DS_DestroyBuffers();
-
-	S_ClearSoundTime();
-	S_ClearPaintBuffer();
-	S_ClearPlaysounds();
+	// block the background track from being read from disk
+	S_LockBackgroundTrack( !active );
 }

@@ -1,38 +1,38 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
-
-/*
-    This code is part of DynGL, a method of dynamically loading an OpenGL
-    library without much pain designed by Joseph Carter and is based
-    loosely on previous work done both by Zephaniah E. Hull and Joseph.
-
-    Both contributors have decided to disclaim all Copyright to this work.
-    It is released to the Public Domain WITHOUT ANY WARRANTY whatsoever,
-    express or implied, in the hopes that others will use it instead of
-    other less-evolved hacks which usually don't work right.  ;)
- */
+*/
 
 /*
-    The following code is loosely based on DynGL code by Joseph Carter
-    and Zephaniah E. Hull. Adapted by Victor Luchits for qfusion project.
- */
+This code is part of DynGL, a method of dynamically loading an OpenGL
+library without much pain designed by Joseph Carter and is based
+loosely on previous work done both by Zephaniah E. Hull and Joseph.
+
+Both contributors have decided to disclaim all Copyright to this work.
+It is released to the Public Domain WITHOUT ANY WARRANTY whatsoever,
+express or implied, in the hopes that others will use it instead of
+other less-evolved hacks which usually don't work right.  ;)
+*/
+
+/*
+The following code is loosely based on DynGL code by Joseph Carter
+and Zephaniah E. Hull. Adapted by Victor Luchits for qfusion project.
+*/
 
 /*
 ** QGL_WIN.C
