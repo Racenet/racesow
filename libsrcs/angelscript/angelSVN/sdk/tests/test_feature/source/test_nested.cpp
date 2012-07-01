@@ -1,7 +1,7 @@
 #include "utils.h"
 using namespace std;
 
-#define TESTNAME "TestNested"
+static const char * const TESTNAME = "TestNested";
 
 static const char *script1 =
 "void TestNested()                         \n"
@@ -14,7 +14,7 @@ static void CallExecuteString(string &str)
 {
 	asIScriptContext *ctx = asGetActiveContext();
 	asIScriptEngine *engine = ctx->GetEngine();
-	if( engine->ExecuteString(0, str.c_str()) < 0 )
+	if( ExecuteString(engine, str.c_str()) < 0 )
 		ctx->SetException("ExecuteString() failed\n");
 }
 
@@ -55,24 +55,24 @@ bool TestNested()
 	if( i != 4 )
 	{
 		printf("%s: Failed to call nested ExecuteString() from other context\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	ctx->Release();
 
 	// Make the call with ExecuteString 
 	i = 0;
-	int r = engine->ExecuteString(0, "TestNested()");
+	int r = ExecuteString(engine, "TestNested()", mod);
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("%s: ExecuteString() didn't succeed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	if( i != 4 )
 	{
 		printf("%s: Failed to call nested ExecuteString() from ExecuteString()\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

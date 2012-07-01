@@ -3,7 +3,7 @@
 namespace TestArgRef
 {
 
-#define TESTNAME "TestArgRef"
+static const char * const TESTNAME = "TestArgRef";
 
 
 
@@ -39,11 +39,11 @@ bool Test()
 	int r;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-
+	RegisterScriptArray(engine, true);
 	RegisterScriptString_Generic(engine);
 
 	engine->RegisterObjectType("Obj", sizeof(Obj), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
-	engine->RegisterObjectProperty("Obj", "int v", offsetof(Obj, v));
+	engine->RegisterObjectProperty("Obj", "int v", asOFFSET(Obj, v));
 
 	COutStream out;
 
@@ -53,7 +53,7 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 

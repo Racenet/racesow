@@ -9,7 +9,7 @@
 namespace Test2Func
 {
 
-#define TESTNAME "Test2Func"
+static const char * const TESTNAME = "Test2Func";
 
 
 static const char *script1 =
@@ -34,7 +34,7 @@ bool Test()
 
 	if( out.buffer != "Test2Func (2, 1) : Error   : A function with the same name and parameters already exist\n" )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to identify the error with two equal functions\n", TESTNAME);
 	}
 
@@ -42,9 +42,9 @@ bool Test()
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script2, strlen(script2), 0);
 	r = mod->Build();
-	if( r >= 0 ) fail = true;
-	if( out.buffer != "Test2Func (1, 1) : Info    : Compiling void Test(void)\nTest2Func (1, 11) : Error   : Parameter type can't be 'void'\n" )
-		fail = true;
+	if( r < 0 ) TEST_FAILED;
+	if( out.buffer != "" )
+		TEST_FAILED;
 
 
 

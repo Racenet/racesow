@@ -3,7 +3,7 @@
 namespace TestFor
 {
 
-#define TESTNAME "TestFor"
+static const char * const TESTNAME = "TestFor";
 
 static const char *script1 = "\
 float[] myArray(70);                       \n\
@@ -33,7 +33,7 @@ void Test()                                \n\
 void Print_Generic(asIScriptGeneric *gen)
 {
 	CScriptString *str = (CScriptString*)gen->GetArgAddress(0);
-	printf(str->buffer.c_str());
+	printf("%s", str->buffer.c_str());
 }
 
 bool Test()
@@ -43,7 +43,7 @@ bool Test()
 	COutStream out;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-	
+	RegisterScriptArray(engine, true);
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 
 	RegisterScriptString_Generic(engine);
@@ -55,13 +55,13 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
-	r = engine->ExecuteString(0, "Test()");
+	r = ExecuteString(engine, "Test()", mod);
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

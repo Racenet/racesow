@@ -87,6 +87,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\..\..\..\add_on\contextmgr\contextmgr.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\source\main.cpp
 # End Source File
 # Begin Source File
@@ -95,7 +99,7 @@ SOURCE=..\..\..\..\add_on\scriptany\scriptany.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptstring\scriptstring.cpp
+SOURCE=..\..\..\..\add_on\scriptstdstring\scriptstdstring.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -107,11 +111,15 @@ SOURCE=..\..\..\..\angelscript\include\angelscript.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\add_on\contextmgr\contextmgr.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\add_on\scriptany\scriptany.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptstring\scriptstring.h
+SOURCE=..\..\..\..\add_on\scriptstdstring\scriptstdstring.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

@@ -3,15 +3,15 @@
 namespace TestObject2
 {
 
-#define TESTNAME "TestObject2"
+static const char * const TESTNAME = "TestObject2";
 
 
 
 static const char *script1 =
 "void TestObject2()                                                                          \n"
 "{                                                                                           \n"
-"  GuiButton@ btn = GUI.AddButton(\"Hello world 3!\", Vector2(200, 50), Vector2(100, 50));   \n"
-"  GUI.GetButton(\"Test\").SetName(\"Test2\");                                               \n"
+"  GuiButton@ btn = GUI.AddButton('Hello world 3!', Vector2(200, 50), Vector2(100, 50));     \n"
+"  GUI.GetButton('Test').SetName('Test2');                                                   \n"
 "}                                                                                           \n";
 
 class CGuiButton
@@ -101,13 +101,13 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "TestObject2()");
+	r = ExecuteString(engine, "TestObject2()", mod);
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 

@@ -3,10 +3,6 @@
 namespace TestImplicitCast
 {
 
-#define TESTNAME "TestImplicitCast"
-
-
-
 void Type_construct0(asIScriptGeneric *gen)
 {
 	int *a = (int*)gen->GetObject();
@@ -79,21 +75,11 @@ public:
 	static A* castToA(B*b) 
 	{
 		A *a = dynamic_cast<A*>(b);
-		if( a == 0 )
-		{
-			// Since the cast failed, we need to release the handle we received
-			a->release();
-		}
 		return a;
 	}
 	static B* AcastToB(A*a) 
 	{
 		B *b = dynamic_cast<B*>(a);
-		if( b == 0 )
-		{
-			// Since the cast failed, we need to release the handle we received
-			a->release();
-		}
 		return b;
 	}
 protected:
@@ -101,11 +87,22 @@ protected:
 	~B() {}
 };
 
-bool Test2();
+static bool Test2();
+static bool Test3();
+static bool Test4();
 
 bool Test()
 {
+	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
+	{
+		printf("Skipped due to AS_MAX_PORTABILITY\n");
+		return false;
+	}
+
+
 	bool fail = Test2();
+	fail = Test3() || fail;
+	fail = Test4() || fail;
 	int r;
 	asIScriptEngine *engine;
 
@@ -149,8 +146,8 @@ bool Test()
 	r = engine->RegisterObjectBehaviour("type", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTION(Type_construct1), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("type", asBEHAVE_IMPLICIT_VALUE_CAST, "int f()", asFUNCTION(Type_castInt), asCALL_GENERIC); assert( r >= 0 );
 
-	asIScriptContext *ctx = 0;
-	r = engine->ExecuteString(0, "type t(5); \n"
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "type t(5); \n"
 		                         "int a = t; \n"             // conversion to primitive in assignment
 								 "assert( a == 5 ); \n"
 								 "assert( a + t == 10 ); \n" // conversion to primitive with math operation
@@ -160,12 +157,12 @@ bool Test()
 								 "type b(t); \n"             // conversion to primitive with parameter
 								 "assert( 32 == (1 << t) ); \n"   // conversion to primitive with bitwise operation 
 	                             "assert( (int(5) & t) == 5 ); \n" // conversion to primitive with bitwise operation
-								 , &ctx);
+								 , 0, ctx);
 	if( r != 0 )
 	{
 		if( r == 3 )
 			PrintException(ctx);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( ctx ) ctx->Release();
 
@@ -176,30 +173,30 @@ bool Test()
 	// ex: t < t - It is not known what type t should be converted to
 	bout.buffer = "";
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
-	r = engine->ExecuteString(0, "type t(5); t << 1; ");
-	if( r >= 0 ) fail = true;
-	if( bout.buffer != "ExecuteString (1, 14) : Error   : Illegal operation on 'type&'\n" )
+	r = ExecuteString(engine, "type t(5); t << 1; ");
+	if( r >= 0 ) TEST_FAILED;
+	if( bout.buffer != "ExecuteString (1, 14) : Error   : Illegal operation on 'type'\n" )
 	{
-		printf(bout.buffer.c_str());
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "type t(5); t + t; ");
-	if( r >= 0 ) fail = true;
-	if( bout.buffer != "ExecuteString (1, 14) : Error   : No matching operator that takes the types 'type&' and 'type&' found\n" )
+	r = ExecuteString(engine, "type t(5); t + t; ");
+	if( r >= 0 ) TEST_FAILED;
+	if( bout.buffer != "ExecuteString (1, 14) : Error   : No matching operator that takes the types 'type' and 'type' found\n" )
 	{
-		printf(bout.buffer.c_str());
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "type t(5); t < t; ");
-	if( r >= 0 ) fail = true;
-	if( bout.buffer != "ExecuteString (1, 14) : Error   : No matching operator that takes the types 'type&' and 'type&' found\n" )
+	r = ExecuteString(engine, "type t(5); t < t; ");
+	if( r >= 0 ) TEST_FAILED;
+	if( bout.buffer != "ExecuteString (1, 14) : Error   : No matching operator that takes the types 'type' and 'type' found\n" )
 	{
-		printf(bout.buffer.c_str());
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	// Test3
@@ -207,21 +204,26 @@ bool Test()
 	// closest matching type will be used, i.e. Obj has cast to int and to float. A type of 
 	// int8 is requested, so the cast to int is used
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-	r = engine->ExecuteString(0, "type t(2); assert( (1.0 / t) == (1.0 / 2.0) );");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "type t(2); assert( (1.0 / t) == (1.0 / 2.0) );");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
 	engine->Release();
 
 	// Test4
 	// It shall not be possible to register a cast behaviour from an object to a boolean type
  	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-
+	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
+	bout.buffer = "";
 	r = engine->RegisterObjectType("type", sizeof(int), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("type", asBEHAVE_IMPLICIT_VALUE_CAST, "bool f()", asFUNCTION(Type_castInt), asCALL_GENERIC); 
 	if( r != asNOT_SUPPORTED )
 	{
-		fail = true;
+		TEST_FAILED;
+	}
+	if( bout.buffer != " (0, 0) : Error   : Failed in call to function 'RegisterObjectBehaviour' with 'type' and 'bool f()'\n" )
+	{
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	engine->Release();
@@ -240,37 +242,111 @@ bool Test()
 		r = engine->RegisterObjectBehaviour("type", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Type_construct0), asCALL_GENERIC); assert( r >= 0 );
 		r = engine->RegisterObjectBehaviour("type", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTION(Type_construct1), asCALL_GENERIC); assert( r >= 0 );
 		r = engine->RegisterObjectBehaviour("type", asBEHAVE_VALUE_CAST, "int f()", asFUNCTION(Type_castInt), asCALL_GENERIC); assert( r >= 0 );
-		r = engine->RegisterGlobalBehaviour(asBEHAVE_EQUAL, "bool f(const type &in, const type &in)", asFUNCTION(Type_equal), asCALL_CDECL); assert( r >= 0 );
+		r = engine->RegisterObjectMethod("type", "bool opEquals(const type &in) const", asFUNCTION(Type_equal), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 		r = engine->RegisterObjectProperty("type", "int v", 0);
 
 		// explicit cast to int is allowed
-		r = engine->ExecuteString(0, "type t; t.v = 5; int a = int(t); assert(a == 5);"); 
+		r = ExecuteString(engine, "type t; t.v = 5; int a = int(t); assert(a == 5);"); 
 		if( r < 0 )
-			fail = true;
+			TEST_FAILED;
 
 		// as cast to int is allowed, AngelScript also allows cast to float (using cast to int then implicit cast to int)
-		r = engine->ExecuteString(0, "type t; t.v = 5; float a = float(t); assert(a == 5.0f);");
+		r = ExecuteString(engine, "type t; t.v = 5; float a = float(t); assert(a == 5.0f);");
 		if( r < 0 )
-			fail = true;
+			TEST_FAILED;
 
 		// implicit cast to int is not allowed
 		bout.buffer = "";
 		engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
-		r = engine->ExecuteString(0, "type t; int a = t;");
+		r = ExecuteString(engine, "type t; int a = t;");
 		if( r >= 0 )
-			fail = true;
-		if( bout.buffer != "ExecuteString (1, 17) : Error   : Can't implicitly convert from 'type&' to 'int'.\n" )
+			TEST_FAILED;
+		if( bout.buffer != "ExecuteString (1, 17) : Error   : Can't implicitly convert from 'type' to 'int'.\n" )
 		{
-			printf(bout.buffer.c_str());
-			fail = true;
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
 		}
 /*
 		// Having an implicit constructor with an int param makes it possible to compare the type with int
 		engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-		r = engine->ExecuteString(0, "type t(5); assert( t == 5 );");
+		r = ExecuteString(engine, "type t(5); assert( t == 5 );");
 		if( r < 0 )
-			fail = true;
+			TEST_FAILED;
 */
+		engine->Release();
+	}
+
+	// Test6
+	// Must be possible to return a const string variable from a function returning a non-const string
+	// string registered as reference type
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+		RegisterScriptString(engine);
+
+		const char *script = "string test() { const string s = 'hello'; return s; }";
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+		int r = mod->Build();
+		if( r < 0 )
+		{
+			TEST_FAILED;
+		}
+
+		engine->Release();
+	}
+
+	// Test7
+	// Must be possible to return a const string variable from a function returning a non-const string
+	// string registered as value type
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+		RegisterStdString(engine);
+
+		const char *script = "string test() { const string s = 'hello'; return s; }";
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+		int r = mod->Build();
+		if( r < 0 )
+		{
+			TEST_FAILED;
+		}
+
+		engine->Release();
+	}
+
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+		const char *script = 
+			"class File { \n"
+			"  int64 readInt(uint a) { int64 v = -1; return v*512; } \n"
+			"} \n"
+			"const int origVal = -512; \n"
+			"void main() \n"
+			"{ \n"
+			"  File f; \n"
+			"  assert( f.readInt(4) == origVal ); \n"
+			"  assert( int(f.readInt(4)) == origVal ); \n"
+			"  const int localVal = -512; \n"
+			"  assert( f.readInt(4) == localVal ); \n"
+			"  assert( int(f.readInt(4)) == localVal ); \n"
+			"} \n";
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+		int r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		r = ExecuteString(engine, "main()", mod);
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+
 		engine->Release();
 	}
 
@@ -305,7 +381,7 @@ bool Test()
 		engine->RegisterObjectBehaviour("A", asBEHAVE_FACTORY, "A@f()", asFUNCTION(A::factory), asCALL_CDECL); 
 		engine->RegisterObjectBehaviour("A", asBEHAVE_RELEASE, "void f()", asMETHOD(A, release), asCALL_THISCALL);
 		engine->RegisterObjectBehaviour("A", asBEHAVE_ADDREF, "void f()", asMETHOD(A, addref), asCALL_THISCALL);
-		engine->RegisterObjectBehaviour("A", asBEHAVE_ASSIGNMENT, "A& f(const A &in)", asMETHOD(A, assign), asCALL_THISCALL);
+		engine->RegisterObjectMethod("A", "A& opAssign(const A &in)", asMETHOD(A, assign), asCALL_THISCALL);
 		engine->RegisterObjectMethod("A", "int test()", asMETHOD(A, test), asCALL_THISCALL);
 
 		// Class B inherits from class A
@@ -316,38 +392,77 @@ bool Test()
 		engine->RegisterObjectMethod("B", "int test()", asMETHOD(B, test), asCALL_THISCALL);
 		
 		// Test the classes to make sure they work
-		r = engine->ExecuteString(0, "A a; assert(a.test() == 1); B b; assert(b.test() == 2);");
+		r = ExecuteString(engine, "A a; assert(a.test() == 1); B b; assert(b.test() == 2);");
 		if( r != asEXECUTION_FINISHED )
-			fail = true;
+			TEST_FAILED;
 
 		// It should be possible to register a REF_CAST to allow implicit cast
 		// Test IMPLICIT_REF_CAST from subclass to baseclass
-		r = engine->RegisterGlobalBehaviour(asBEHAVE_IMPLICIT_REF_CAST, "A@ f(B@)", asFUNCTION(B::castToA), asCALL_CDECL); assert( r >= 0 );
-		r = engine->ExecuteString(0, "B b; A@ a = b; assert(a.test() == 2);");
+		r = engine->RegisterObjectBehaviour("B", asBEHAVE_IMPLICIT_REF_CAST, "A@+ f()", asFUNCTION(B::castToA), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+		r = ExecuteString(engine, "B b; A@ a = b; assert(a.test() == 2);");
 		if( r != asEXECUTION_FINISHED )
-			fail = true;
+			TEST_FAILED;
 
 		// Test explicit cast with registered IMPLICIT_REF_CAST
-		r = engine->ExecuteString(0, "B b; A@ a = cast<A>(b); assert(a.test() == 2);");
+		r = ExecuteString(engine, "B b; A@ a = cast<A>(b); assert(a.test() == 2);");
 		if( r != asEXECUTION_FINISHED )
-			fail = true;
+			TEST_FAILED;
 
 		// It should be possible to assign a value of type B 
 		// to and variable of type A due to the implicit ref cast
-		r = engine->ExecuteString(0, "A a; B b; a = b;");
+		r = ExecuteString(engine, "A a; B b; a = b;");
 		if( r != asEXECUTION_FINISHED )
-			fail = true;
+			TEST_FAILED;
 
 		// Test REF_CAST from baseclass to subclass
-		r = engine->RegisterGlobalBehaviour(asBEHAVE_REF_CAST, "B@ f(A@)", asFUNCTION(B::AcastToB), asCALL_CDECL); assert( r >= 0 );
-		r = engine->ExecuteString(0, "B b; A@ a = cast<A>(b); B@ _b = cast<B>(a); assert(_b.test() == 2);");
+		r = engine->RegisterObjectBehaviour("A", asBEHAVE_REF_CAST, "B@+ f()", asFUNCTION(B::AcastToB), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+		r = ExecuteString(engine, "B b; A@ a = cast<A>(b); B@ _b = cast<B>(a); assert(_b.test() == 2);");
 		if( r != asEXECUTION_FINISHED )
-			fail = true;
+			TEST_FAILED;
 
 		// Test REF_CAST from baseclass to subclass, where the cast is invalid
-		r = engine->ExecuteString(0, "A a; B@ b = cast<B>(a); assert(@b == null);");
+		r = ExecuteString(engine, "A a; B@ b = cast<B>(a); assert(@b == null);");
 		if( r != asEXECUTION_FINISHED )
-			fail = true;
+			TEST_FAILED;
+
+		// Doing a ref cast on a null pointer must not throw an exception
+		asIScriptContext *ctx = engine->CreateContext();
+		r = ExecuteString(engine, "A@ a;\n B@ b;\n @b = cast<B>(a);\n @a = @b;\n", 0, ctx);
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+		if( r == asEXECUTION_EXCEPTION )
+			PrintException(ctx);
+		ctx->Release();
+
+		// Various situations with ref casts on null pointers
+		const char* script =
+			"A@ global_a; \n"
+			"B@ global_b; \n"
+			"B@ global_b_nulled = null; \n"
+			"B@ ret_null() { return null; } \n"
+			"class C { B@ b; } \n"
+			"void testFunc() { \n"
+			"	A@ local_a = A(); \n"
+			"	B@ local_b = B(); \n"
+			"	@local_a = @local_b; \n"
+			"	@global_a = @local_b; \n"
+			"	@local_a = cast<A>(global_b); \n"
+			"	@local_a = @global_b; \n"
+			"	@local_a = @global_b_nulled; \n"
+			"   @local_a = @ret_null(); \n"
+			"   C c; \n"
+			"   @local_a = @c.b; \n"
+			"} \n";
+
+		asIScriptModule *mod = engine->GetModule("mod", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		r = ExecuteString(engine, "testFunc();", mod);
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
 
 		// TODO: This requires implicit value cast
 		// Test passing a value of B to a function expecting its base class
@@ -357,10 +472,10 @@ bool Test()
 		r = mod->AddScriptSection(0, "script", script, strlen(script));
 		r = mod->Build(0);
 		if( r < 0 )
-			fail = true;
-		r = engine->ExecuteString(0, "B b; func(b)");
+			TEST_FAILED;
+		r = ExecuteString(engine, "B b; func(b)");
 		if( r < 0 )
-			fail = true;
+			TEST_FAILED;
 */
 		// TODO: A handle to A can not be implicitly cast to a handle to B since it was registered as explicit REF_CAST
 		// TODO: It shouldn't be possible to cast away constness
@@ -381,7 +496,7 @@ struct Complex {
 void implicit(asIScriptGeneric * gen) {
 }
 
-bool Test2()
+static bool Test2()
 {
 	bool fail = false;
 	COutStream out;
@@ -409,7 +524,9 @@ bool Test2()
 	r = mod->AddScriptSection("script", script, sizeof(script) - 1); assert(r >= 0);
 	r = mod->Build(); 
 	if( r < 0 )
-		fail = true;
+	{
+		TEST_FAILED;
+	}
 	else
 	{
 		int func_id = mod->GetFunctionIdByDecl("void main()"); assert(func_id >= 0);
@@ -422,10 +539,10 @@ bool Test2()
 	}
 
 	// It must be possible to cast using an explicit construct cast
-	r = engine->ExecuteString(0, "complex c; simple s = simple(c);");
+	r = ExecuteString(engine, "complex c; simple s = simple(c);");
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
@@ -433,6 +550,205 @@ bool Test2()
 	return fail;
 }
 
+//========================================================================================
+
+class DisplayObject
+{
+public:
+	DisplayObject() {refCount=1;}
+	void AddRef() {refCount++;}
+	void Release() {if(--refCount==0)delete this;}
+	int refCount;
+};
+
+class MovieClip : public DisplayObject
+{
+public:
+	MovieClip() : DisplayObject() {}
+};
+
+#if !defined(_MSC_VER) || _MSC_VER > 1200
+// This doesn't seem to link well on MSVC6
+template<class A, class B>
+B* refCast(A* a)
+{
+    // If the handle already is a null handle, then just return the null handle
+    if( !a ) return 0;
+
+    // Now try to dynamically cast the pointer to the wanted type
+    B* b = dynamic_cast<B*>(a);
+    if( b != 0 )
+    {
+        // Since the cast was made, we need to increase the ref counter for the returned handle
+        b->AddRef();
+    }
+    return b;
+}
+#endif
+
+MovieClip *MovieClipFactory()
+{
+	return new MovieClip();
+}
+
+static bool Test3()
+{
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+	// This doesn't work on MSVC6
+	return false;
+#endif
+
+	bool fail = false;
+	asIScriptEngine *engine;
+	COutStream out;
+
+	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+	engine->RegisterObjectType("DisplayObject", 0, asOBJ_REF);
+	engine->RegisterObjectBehaviour("DisplayObject", asBEHAVE_ADDREF, "void f()", asMETHOD(DisplayObject, AddRef), asCALL_THISCALL);
+	engine->RegisterObjectBehaviour("DisplayObject", asBEHAVE_RELEASE, "void f()", asMETHOD(DisplayObject, Release), asCALL_THISCALL);
+
+	engine->RegisterObjectType("MovieClip", 0, asOBJ_REF);
+	engine->RegisterObjectBehaviour("MovieClip", asBEHAVE_FACTORY, "MovieClip @f()", asFUNCTION(MovieClipFactory), asCALL_CDECL);
+	engine->RegisterObjectBehaviour("MovieClip", asBEHAVE_ADDREF, "void f()", asMETHOD(MovieClip, AddRef), asCALL_THISCALL);
+	engine->RegisterObjectBehaviour("MovieClip", asBEHAVE_RELEASE, "void f()", asMETHOD(MovieClip, Release), asCALL_THISCALL);
+#if !defined(_MSC_VER) || _MSC_VER > 1200
+ #ifdef __BORLANDC__
+    // BCC cannot infer return values for function pointer types (QC #85378).
+    // Use explicit cast via asFUNCTIONPR() instead.
+	engine->RegisterObjectBehaviour("MovieClip", asBEHAVE_IMPLICIT_REF_CAST, "DisplayObject @f()", asFUNCTIONPR((refCast<MovieClip, DisplayObject>),(MovieClip*),DisplayObject*), asCALL_CDECL_OBJLAST);
+ #else
+	engine->RegisterObjectBehaviour("MovieClip", asBEHAVE_IMPLICIT_REF_CAST, "DisplayObject @f()", asFUNCTION((refCast<MovieClip, DisplayObject>)), asCALL_CDECL_OBJLAST);
+ #endif
+#endif
+
+	const char *script = 
+		"class TransitionManager { \n"
+		"  void MoveTo(DisplayObject @o) {} \n"
+		"} \n"
+		"TransitionManager mgr; \n"
+		"MovieClip movie; \n"
+		"void OnLoad() \n"
+		"{ \n"
+		"  mgr.MoveTo(movie); \n"
+		"  mgr.MoveTo(@movie); \n"
+		"} \n";
+
+	asIScriptModule *mod = engine->GetModule("mod", asGM_ALWAYS_CREATE);
+	mod->AddScriptSection("script", script);
+	int r = mod->Build();
+	if( r < 0 )
+		TEST_FAILED;
+	r = ExecuteString(engine, "OnLoad()", mod);
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
+
+	engine->Release();	
+
+	return fail;
+}
+
+//==========================================================================================================
+// Value cast didn't work when returning object by value
+// http://www.gamedev.net/topic/614070-implicit-value-cast-and-explicit-value-cast-no-longer-working-with-2212/
+
+struct Castee{
+	Castee() {}
+	Castee(int v) : m_v(v) {}
+	Castee(const Castee &v) : m_v(v.m_v) {}
+	Castee& operator=(const Castee& rhs) { m_v = rhs.m_v; return *this; } 
+	int GetValue() const { return m_v; }
+	int m_v;
+
+	static void Construct(void *mem) { new(mem) Castee(); }
+	static void Construct2(void *mem, const Castee &v) { new(mem) Castee(v); }
+	static void Destruct(void *mem) {}
+};
+struct Caster{ 
+	Caster() {}
+	Caster(int v) : m_v(v) {}
+	operator Castee() const { return Castee(m_v); } 
+	int m_v;
+
+	static void Construct(void *mem) { new(mem) Caster(); }
+	static void Construct2(void *mem, int v) { new(mem) Caster(v); }
+	static void Destruct(void *mem) {}
+}; 
+
+static bool Test4()
+{
+	bool fail = false;
+	int r;
+	COutStream out;
+
+	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+	r = engine->RegisterObjectType("Castee", sizeof(Castee), asOBJ_VALUE | asOBJ_APP_CLASS_CAK); assert( r >= 0 );
+	r = engine->RegisterObjectBehaviour("Castee", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Castee::Construct), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+//	r = engine->RegisterObjectBehaviour("Castee", asBEHAVE_CONSTRUCT, "void f(const Castee &in)", asFUNCTION(Castee::Construct2), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectBehaviour("Castee", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Castee::Destruct), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("Castee", "Castee &opAssign(const Castee &in)", asMETHOD(Castee, operator=), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("Castee", "int GetValue() const", asMETHOD(Castee, GetValue), asCALL_THISCALL); assert( r >= 0 );
+
+	r = engine->RegisterObjectType("Caster", sizeof(Caster), asOBJ_VALUE | asOBJ_APP_CLASS_C); assert( r >= 0 );
+	r = engine->RegisterObjectBehaviour("Caster", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Caster::Construct), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectBehaviour("Caster", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTION(Caster::Construct2), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectBehaviour("Caster", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Caster::Destruct), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectBehaviour("Caster", asBEHAVE_IMPLICIT_VALUE_CAST, "Castee f() const", asMETHOD(Caster, operator Castee), asCALL_THISCALL); assert( r >= 0 );
+
+	asIScriptModule *mod = engine->GetModule("test", asGM_ALWAYS_CREATE);
+
+	mod->AddScriptSection("test", "int Run() \n"
+							      "{ \n"
+								  "  return GetValueFromCastee(Caster(5)); \n"
+                                  "} \n"
+								  "int GetValueFromCastee(Castee castee) \n"
+	                              "{ \n"
+								  "  return castee.GetValue(); \n"
+                                  "} \n");
+	r = mod->Build();
+	if( r < 0 )
+		TEST_FAILED;
+
+	asIScriptContext *ctx = engine->CreateContext();
+	ctx->Prepare(mod->GetFunctionByDecl("int Run()"));
+	r = ctx->Execute();
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
+
+	r = ctx->GetReturnDWord();
+	if( r != 5 )
+		TEST_FAILED;
+
+	mod->AddScriptSection("test", "int Run() \n"
+								  "{ \n"
+								  "  Caster caster(5); \n"
+								  "  Castee castee = caster; \n"
+								  "  return GetValueFromCastee(castee); \n"
+								  "} \n"
+								  "int GetValueFromCastee(const Castee &in castee) \n"
+								  "{ \n"
+								  "  return castee.GetValue(); \n"
+								  "} \n");
+	r = mod->Build();
+	if( r < 0 )
+		TEST_FAILED;
+
+	ctx->Prepare(mod->GetFunctionByDecl("int Run()"));
+	r = ctx->Execute();
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
+
+	r = ctx->GetReturnDWord();
+	if( r != 5 )
+		TEST_FAILED;
+
+	ctx->Release();
+	engine->Release();
+
+	return fail;
+}
 
 } // namespace
 

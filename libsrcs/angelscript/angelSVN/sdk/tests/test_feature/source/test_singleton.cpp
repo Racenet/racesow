@@ -5,7 +5,7 @@ using namespace std;
 namespace TestSingleton
 {
 
-#define TESTNAME "TestSingleton"
+static const char * const TESTNAME = "TestSingleton";
 
 int GameMgr;
 int SoundMgr;
@@ -47,10 +47,10 @@ bool Test()
 	r = engine->RegisterObjectMethod("SoundMgr", "void Test()", asFUNCTION(TestMethod), asCALL_GENERIC); assert(r >= 0);
 	r = engine->RegisterGlobalProperty("SoundMgr SMgr", (void*)&SoundMgr); assert(r >= 0);
 
-	engine->ExecuteString(0, "Game.Test()");
-	engine->ExecuteString(0, "SMgr.Test()");
+	ExecuteString(engine, "Game.Test()", mod);
+	ExecuteString(engine, "SMgr.Test()", mod);
 	
-	engine->ExecuteString(0, "TestSingleton()");
+	ExecuteString(engine, "TestSingleton()", mod);
 
 	engine->Release();
 

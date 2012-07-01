@@ -158,10 +158,10 @@
 				RelativePath="..\..\..\..\add_on\scriptstdstring\scriptstdstring.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\add_on\scriptstring\scriptstring.cpp">
+				RelativePath="..\..\source\scriptstring.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\add_on\scriptstring\scriptstring_utils.cpp">
+				RelativePath="..\..\source\scriptstring_utils.cpp">
 			</File>
 			<File
 				RelativePath="..\..\source\test2modules.cpp">
@@ -428,9 +428,6 @@
 				RelativePath="..\..\source\testbstr.cpp">
 			</File>
 			<File
-				RelativePath="..\..\source\testbstr2.cpp">
-			</File>
-			<File
 				RelativePath="..\..\source\testcdecl_class.cpp">
 			</File>
 			<File
@@ -509,13 +506,7 @@
 				RelativePath="..\..\source\testoutput.cpp">
 			</File>
 			<File
-				RelativePath="..\..\source\testreturn.cpp">
-			</File>
-			<File
-				RelativePath="..\..\source\testreturnd.cpp">
-			</File>
-			<File
-				RelativePath="..\..\source\testreturnf.cpp">
+				RelativePath="..\..\source\test_cdecl_return.cpp">
 			</File>
 			<File
 				RelativePath="..\..\source\teststack.cpp">
@@ -568,7 +559,7 @@
 				RelativePath="..\..\..\..\add_on\scriptstdstring\scriptstdstring.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\add_on\scriptstring\scriptstring.h">
+				RelativePath="..\..\source\scriptstring.h">
 			</File>
 			<File
 				RelativePath="..\..\source\stdvector.h">

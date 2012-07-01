@@ -1,21 +1,32 @@
-/*****************************************************************************
+/***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
  *                             / __| | | | |_) | |
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- */
-
+ * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at http://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/
 /* used for test case 533, 534 and 535 */
 
 #include "test.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 
 #include "testutil.h"
+#include "warnless.h"
 #include "memdebug.h"
 
 #define MAIN_LOOP_HANG_TIMEOUT     90 * 1000
@@ -86,41 +97,38 @@ int test(char *URL)
     mp_timedout = FALSE;
     mp_start = tutil_tvnow();
 
-    while (res == CURLM_CALL_MULTI_PERFORM) {
-      res = (int)curl_multi_perform(m, &running);
-      if (tutil_tvdiff(tutil_tvnow(), mp_start) >
-          MULTI_PERFORM_HANG_TIMEOUT) {
-        mp_timedout = TRUE;
-        break;
-      }
-      if (running <= 0) {
-        if(!current++) {
-          fprintf(stderr, "Advancing to URL 1\n");
-          /* remove the handle we use */
-          curl_multi_remove_handle(m, curl);
+    res = (int)curl_multi_perform(m, &running);
+    if (tutil_tvdiff(tutil_tvnow(), mp_start) >
+        MULTI_PERFORM_HANG_TIMEOUT) {
+      mp_timedout = TRUE;
+      break;
+    }
+    if (running <= 0) {
+      if(!current++) {
+        fprintf(stderr, "Advancing to URL 1\n");
+        /* remove the handle we use */
+        curl_multi_remove_handle(m, curl);
 
-          /* make us re-use the same handle all the time, and try resetting
-             the handle first too */
-          curl_easy_reset(curl);
-          test_setopt(curl, CURLOPT_URL, libtest_arg2);
-          test_setopt(curl, CURLOPT_VERBOSE, 1);
-          test_setopt(curl, CURLOPT_FAILONERROR, 1);
+        /* make us re-use the same handle all the time, and try resetting
+           the handle first too */
+        curl_easy_reset(curl);
+        test_setopt(curl, CURLOPT_URL, libtest_arg2);
+        test_setopt(curl, CURLOPT_VERBOSE, 1);
+        test_setopt(curl, CURLOPT_FAILONERROR, 1);
 
-          /* re-add it */
-          res = (int)curl_multi_add_handle(m, curl);
-          if(res) {
-            fprintf(stderr, "add handle failed: %d.\n", res);
-            res = 243;
-            break;
-          }
+        /* re-add it */
+        res = (int)curl_multi_add_handle(m, curl);
+        if(res) {
+          fprintf(stderr, "add handle failed: %d.\n", res);
+          res = 243;
+          break;
         }
-        else
-          done = TRUE; /* bail out */
+      }
+      else {
+        done = TRUE; /* bail out */
         break;
       }
     }
-    if (mp_timedout || done)
-      break;
 
     if (res != CURLM_OK) {
       fprintf(stderr, "not okay???\n");

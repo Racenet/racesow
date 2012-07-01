@@ -5,8 +5,6 @@ using std::string;
 namespace TestScriptMath
 {
 
-#define TESTNAME "TestScriptMath"
-
 const char *script =
 "void test()                        \n"
 "{                                  \n"
@@ -17,6 +15,7 @@ const char *script =
 "   assert(asin(0) == 0);           \n"
 "   assert(acos(1) == 0);           \n"
 "   assert(atan(0) == 0);           \n"
+"   atan2(1,1);                     \n"
 "   sinh(0);                        \n"
 "   cosh(0);                        \n"
 "   tanh(0);                        \n"
@@ -49,11 +48,11 @@ bool Test()
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->ExecuteString(0, "test()");
+	r = ExecuteString(engine, "test()", mod);
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 
@@ -68,11 +67,11 @@ bool Test()
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->ExecuteString(0, "test()");
+	r = ExecuteString(engine, "test()", mod);
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 

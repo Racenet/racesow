@@ -19,20 +19,23 @@ const<br>
 continue<br>
 default<br>
 do<br>
+double<br>
 </code></td>
 <td width=100 valign=top><code>
-double<br>
 else<br>
 enum<br>
 false<br>
+final*<br>
 float<br>
 for<br>
 from*<br>
+funcdef<br>
+get*<br>
 if<br>
 import<br>
-in<br>
 </code></td>
 <td width=100 valign=top><code>
+in<br>
 inout<br>
 int<br>
 interface<br>
@@ -47,16 +50,20 @@ null<br>
 <td width=100 valign=top><code>
 or<br>
 out<br>
+override*<br>
+private<br>
 return<br>
+set*<br>
+shared*<br>
 super*<br>
 switch<br>
 this*<br>
 true<br>
+</code></td>
+<td width=100 valign=top><code>
 typedef<br>
 uint<br>
 uint8<br>
-</code></td>
-<td width=100 valign=top><code>
 uint16<br>
 uint32<br>
 uint64<br>
@@ -67,7 +74,7 @@ xor<br>
 </tr>
 </table>
 
-<small>%* Not really a reserved keyword, but is recognized by the compiler as a built-in keyword.</small>
+<small>* Not really a reserved keyword, but is recognized by the compiler as a built-in keyword.</small>
 
 These are the non-alphabetical tokens that are also used in the language syntax.
 

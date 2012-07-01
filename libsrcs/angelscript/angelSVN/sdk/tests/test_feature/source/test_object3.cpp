@@ -3,7 +3,7 @@
 namespace TestObject3
 {
 
-#define TESTNAME "TestObject3"
+static const char * const TESTNAME = "TestObject3";
 
 #ifdef __GNUC__
 #undef __cdecl
@@ -135,24 +135,24 @@ bool Register(asIScriptEngine*  pSE)
 {
 	pSE->RegisterObjectType("Float", sizeof(cFloat), asOBJ_VALUE | asOBJ_APP_CLASS);
 
-	if(pSE->RegisterObjectBehaviour("Float",asBEHAVE_ASSIGNMENT,"Float& f(float )",asFUNCTION(AssignFloat2Float),asCALL_CDECL_OBJLAST))
+	if(pSE->RegisterObjectMethod("Float","Float& opAssign(float )",asFUNCTION(AssignFloat2Float),asCALL_CDECL_OBJLAST))
 		return false;
 
 
 	// asBEHAVE_ADD
-	if(pSE->RegisterGlobalBehaviour(asBEHAVE_ADD,"float  f(Float &in ,Float &in)",asFUNCTION(OpPlusRR),  asCALL_CDECL))
+	if(pSE->RegisterObjectMethod("Float","float  opAdd(Float &in)",asFUNCTION(OpPlusRR),  asCALL_CDECL_OBJFIRST))
 		return false;
-	if(pSE->RegisterGlobalBehaviour(asBEHAVE_ADD,"float  f(Float &in ,float)",asFUNCTION(OpPlusRF),  asCALL_CDECL))
+	if(pSE->RegisterObjectMethod("Float","float  opAdd(float)",asFUNCTION(OpPlusRF),  asCALL_CDECL_OBJFIRST))
 		return false;
-	if(pSE->RegisterGlobalBehaviour(asBEHAVE_ADD,"float  f(float ,Float &in)",asFUNCTION(OpPlusFR),  asCALL_CDECL))
+	if(pSE->RegisterObjectMethod("Float","float  opAdd_r(float)",asFUNCTION(OpPlusFR),  asCALL_CDECL_OBJLAST))
 		return false;
 
 	// asBEHAVE_MULTIPLY
-	if(pSE->RegisterGlobalBehaviour(asBEHAVE_MULTIPLY, "float  f(Float &in ,Float &in)",asFUNCTION(OpMulRR),  asCALL_CDECL))
+	if(pSE->RegisterObjectMethod("Float", "float  opMul(Float &in)",asFUNCTION(OpMulRR),  asCALL_CDECL_OBJFIRST))
 		return false;
-	if(pSE->RegisterGlobalBehaviour(asBEHAVE_MULTIPLY, "float  f(Float &in ,float)",asFUNCTION(OpMulRF),  asCALL_CDECL))
+	if(pSE->RegisterObjectMethod("Float", "float  opMul(float)",asFUNCTION(OpMulRF),  asCALL_CDECL_OBJFIRST))
 		return false;
-	if(pSE->RegisterGlobalBehaviour(asBEHAVE_MULTIPLY, "float  f(float ,Float &in)",asFUNCTION(OpMulFR),  asCALL_CDECL))
+	if(pSE->RegisterObjectMethod("Float", "float  opMul_r(float)",asFUNCTION(OpMulFR),  asCALL_CDECL_OBJLAST))
 		return false;
 
 	return true;
@@ -185,7 +185,7 @@ bool Test()
 						   ret=Get(0)+(Get(1)*2.0f);\n\
 						   Print(ret);\n\
 						   \n";
-	pSE->ExecuteString("",script);
+	ExecuteString(pSE, script);
 
 	pSE->Release();
 

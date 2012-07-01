@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestExecute32Args (mixed arguments)"
+static const char * const TESTNAME = "TestExecute32Args (mixed arguments)";
 
 static bool testVal = false;
 static bool called  = false;
@@ -118,7 +118,7 @@ static void cfunction_gen(asIScriptGeneric *gen)
 
 bool TestExecute32MixedArgs()
 {
-	bool ret = false;
+	bool fail = false;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
@@ -148,7 +148,7 @@ bool TestExecute32MixedArgs()
 			")", asFUNCTION(cfunction), asCALL_CDECL);
 	}
 
-	engine->ExecuteString(0, 
+	ExecuteString(engine, 
 		"cfunction("
 			" 1,  2,  3,  4,"
 			" 5.0f,  6.0f,  7.0f,  8.0f,"
@@ -164,7 +164,7 @@ bool TestExecute32MixedArgs()
 	{
 		// failure
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	} 
 	else if( !testVal ) 
 	{
@@ -180,11 +180,11 @@ bool TestExecute32MixedArgs()
 				printf("fvalue[%d]: %f\n", pos+j, fvalues[pos+j]);
 			pos += 4;
 		}
-		ret = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
 	
 	// Success
-	return ret;
+	return fail;
 }

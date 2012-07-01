@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestExecute1Arg"
+static const char * const TESTNAME = "TestExecute1Arg";
 
 static int testVal = 0;
 static bool called = false;
@@ -35,19 +35,19 @@ bool TestExecute1Arg()
 	else
 		funcId = engine->RegisterGlobalFunction("void cfunction(int)", asFUNCTION(cfunction), asCALL_CDECL);
 
-	engine->ExecuteString(0, "cfunction(5)");
+	ExecuteString(engine, "cfunction(5)");
 
 	if( !called ) 
 	{
 		// failure
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	} 
 	else if( testVal != 5 ) 
 	{
 		// failure
 		printf("\n%s: testVal is not of expected value. Got %d, expected %d\n\n", TESTNAME, testVal, 5);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Now try to call the function directly via a context
@@ -58,7 +58,7 @@ bool TestExecute1Arg()
 	r = ctx->Prepare(funcId);
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	else
 	{
@@ -66,7 +66,7 @@ bool TestExecute1Arg()
 		r = ctx->Execute();
 		if( r != asEXECUTION_FINISHED )
 		{
-			fail = true;
+			TEST_FAILED;
 		}
 		else
 		{
@@ -74,13 +74,13 @@ bool TestExecute1Arg()
 			{
 				// failure
 				printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-				fail = true;
+				TEST_FAILED;
 			} 
 			else if( testVal != 5 ) 
 			{
 				// failure
 				printf("\n%s: testVal is not of expected value. Got %d, expected %d\n\n", TESTNAME, testVal, 5);
-				fail = true;
+				TEST_FAILED;
 			}
 		}
 	}

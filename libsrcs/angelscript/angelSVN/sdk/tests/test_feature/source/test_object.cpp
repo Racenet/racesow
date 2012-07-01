@@ -3,7 +3,7 @@
 namespace TestObject
 {
 
-#define TESTNAME "TestObject"
+const char * const TESTNAME = "TestObject";
 
 
 
@@ -158,13 +158,13 @@ bool Test()
 	engine->RegisterObjectBehaviour("Object", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Destruct), asCALL_CDECL_OBJLAST);
 	funcId = engine->RegisterObjectMethod("Object", "void Set(int)", asMETHOD(CObject, Set), asCALL_THISCALL);
 	engine->RegisterObjectMethod("Object", "int Get()", asMETHOD(CObject, Get), asCALL_THISCALL);
-	engine->RegisterObjectProperty("Object", "int val", offsetof(CObject, val));
+	engine->RegisterObjectProperty("Object", "int val", asOFFSET(CObject, val));
 	r = engine->RegisterObjectMethod("Object", "int &GetRef()", asMETHOD(CObject, GetRef), asCALL_THISCALL); assert( r >= 0 );
 
 	engine->RegisterObjectType("Object2", sizeof(CObject2), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
 	engine->RegisterObjectBehaviour("Object2", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Construct2), asCALL_CDECL_OBJLAST);
 	engine->RegisterObjectBehaviour("Object2", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Destruct2), asCALL_CDECL_OBJLAST);
-	engine->RegisterObjectProperty("Object2", "Object obj", offsetof(CObject2, obj));
+	engine->RegisterObjectProperty("Object2", "Object obj", asOFFSET(CObject2, obj));
 
 	engine->RegisterGlobalFunction("Object TestReturnObject()", asFUNCTION(TestReturnObject), asCALL_CDECL);
 	engine->RegisterGlobalFunction("Object &TestReturnObjectRef()", asFUNCTION(TestReturnObjectRef), asCALL_CDECL);
@@ -184,45 +184,46 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	asIScriptContext *ctx;
-	r = engine->ExecuteString(0, "TestObject()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestObject()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
 		printf("%s: Failed to execute script\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( ctx ) ctx->Release();
 
-	engine->ExecuteString(0, "ObjNoConstruct a; a = ObjNoConstruct();");
+	ExecuteString(engine, "ObjNoConstruct a; a = ObjNoConstruct();");
 	if( r != 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed\n", TESTNAME);
 	}
 
 	CBufferedOutStream bout;
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
-	r = engine->ExecuteString(0, "Object obj; float r = 0; obj = r;");
-	if( r >= 0 || bout.buffer != "ExecuteString (1, 32) : Error   : Can't implicitly convert from 'float' to 'Object&'.\n" )
+	r = ExecuteString(engine, "Object obj; float r = 0; obj = r;");
+	if( r >= 0 || bout.buffer != "ExecuteString (1, 32) : Error   : Can't implicitly convert from 'float' to 'const Object&'.\n" )
 	{
 		printf("%s: Didn't fail to compile as expected\n", TESTNAME);
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	// Verify that the registered types can be enumerated
 	int count = engine->GetObjectTypeCount();
 	if( count != 3 )
-		fail = true;
+		TEST_FAILED;
 	asIObjectType *type = engine->GetObjectTypeByIndex(0);
 	if( strcmp(type->GetName(), "Object") != 0 )
-		fail = true;
+		TEST_FAILED;
 	
 	// Test calling an application registered method directly with context
 	ctx = engine->CreateContext();
@@ -231,9 +232,9 @@ bool Test()
 	ctx->SetArgDWord(0, 42);
 	r = ctx->Execute();
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 	if( obj.val != 42 )
-		fail = true;
+		TEST_FAILED;
 	ctx->Release();
 
 	// Test GetObjectTypeCount for the module
@@ -245,35 +246,35 @@ bool Test()
 
 	count = engine->GetObjectTypeCount();
 	if( count != 3 )
-		fail = true;
+		TEST_FAILED;
 
 	count = engine->GetModule(0)->GetObjectTypeCount();
 	if( count != 1 )
-		fail = true;
+		TEST_FAILED;
 
 
 	// Test assigning value to reference returned by class method where the reference points to a member of the class
 	// This test attempts to verify that the object isn't freed before the reference goes out of scope.
-	r = engine->ExecuteString(0, "Object o; o.GetRef() = 10;");
+	r = ExecuteString(engine, "Object o; o.GetRef() = 10;");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
-	r = engine->ExecuteString(0, "Object().GetRef() = 10;");
+	engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+	bout.buffer = "";
+	r = ExecuteString(engine, "Object().GetRef() = 10;");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
+	}
+	if( bout.buffer != "" )
+	{
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	// TODO: Make the same test with the index operator
-
-	// Mustn't allow registration of assignment behaviour as global behaviour
-	r = engine->RegisterGlobalBehaviour(asBEHAVE_ASSIGNMENT, "Object &f(const Object &in, const Object &in)", asFUNCTION(0), asCALL_GENERIC);
-	if( r >= 0 )
-	{
-		fail = true;
-	}
 
 	engine->Release();
 
@@ -308,14 +309,14 @@ bool Test2()
 	r = mod->Build();
 	if( r >= 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	if( bout.buffer != "script (1, 17) : Error   : Object handle is not supported for this type\n"
 	                   "script (1, 1) : Info    : Compiling void Test(Creep)\n"
 	                   "script (1, 17) : Error   : Object handle is not supported for this type\n" )
 	{
-		fail = true;
-		printf(bout.buffer.c_str());
+		TEST_FAILED;
+		printf("%s", bout.buffer.c_str());
 	}
 
 	engine->Release();

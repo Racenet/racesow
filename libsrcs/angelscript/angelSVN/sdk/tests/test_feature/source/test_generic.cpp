@@ -7,7 +7,6 @@ using std::string;
 namespace TestGeneric
 {
 
-#define TESTNAME "TestGeneric"
 
 int obj;
 
@@ -130,7 +129,7 @@ bool Test()
 	r = engine->RegisterObjectType("string", sizeof(string), asOBJ_VALUE | asOBJ_APP_CLASS_CDA); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("string", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(GenericString_Construct), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("string", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(GenericString_Destruct), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("string", asBEHAVE_ASSIGNMENT, "string &f(string &in)", asFUNCTION(GenericString_Assignment), asCALL_GENERIC); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("string", "string &opAssign(string &in)", asFUNCTION(GenericString_Assignment), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterStringFactory("string", asFUNCTION(GenericString_Factory), asCALL_GENERIC); assert( r >= 0 );
 
 	r = engine->RegisterGlobalFunction("void test(double)", asFUNCTION(TestDouble), asCALL_GENERIC); assert( r >= 0 );
@@ -140,7 +139,7 @@ bool Test()
 
 	r = engine->RegisterObjectType("obj", 4, asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("obj", "string mthd1(int, double)", asFUNCTION(GenMethod1), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("obj", asBEHAVE_ASSIGNMENT, "obj &f(obj &in)", asFUNCTION(GenAssign), asCALL_GENERIC); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("obj", "obj &opAssign(obj &in)", asFUNCTION(GenAssign), asCALL_GENERIC); assert( r >= 0 );
 
 	r = engine->RegisterGlobalProperty("obj o", &obj);
 
@@ -149,13 +148,13 @@ bool Test()
 
 	COutStream out;
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-	engine->ExecuteString(0, "test(func1(23, 23, \"test\"))");
+	ExecuteString(engine, "test(func1(23, 23, \"test\"))");
 
-	engine->ExecuteString(0, "test(o.mthd1(23, 23))");
+	ExecuteString(engine, "test(o.mthd1(23, 23))");
 
-	engine->ExecuteString(0, "o = o");
+	ExecuteString(engine, "o = o");
 
-	engine->ExecuteString(0, "nullPtr(null)");
+	ExecuteString(engine, "nullPtr(null)");
 
 	engine->Release();
 
@@ -261,8 +260,9 @@ asDECLARE_METHOD_WRAPPER(B_b_generic, B, b);
 asDECLARE_METHOD_WRAPPERPR(C_c_generic, C, c, (int), void);
 asDECLARE_METHOD_WRAPPERPR(C_c2_generic, C, c, (float) const, void);
 
-void Construct_C(C *mem)
+void Construct_C(asIScriptGeneric *gen)
 {
+	void *mem = gen->GetObject();
 	new(mem) C();
 }
 // TODO: The wrapper doesn't work for the constructor behaviour, as the 
@@ -282,79 +282,79 @@ bool Test2()
 	RegisterStdString(engine);
 
 	r = engine->RegisterGlobalFunction("void TestNoArg()", asFUNCTION(TestNoArg_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "TestNoArg()");
+	r = ExecuteString(engine, "TestNoArg()");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("void TestStringByVal(string val)", asFUNCTION(TestStringByVal_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "TestStringByVal('test')");
+	r = ExecuteString(engine, "TestStringByVal('test')");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("void TestStringByRef(const string &in ref)", asFUNCTION(TestStringByRef_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "TestStringByRef('test')");
+	r = ExecuteString(engine, "TestStringByRef('test')");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("void TestIntByVal(int val)", asFUNCTION(TestIntByVal_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "TestIntByVal(42)");
+	r = ExecuteString(engine, "TestIntByVal(42)");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("void TestIntByRef(int &in ref)", asFUNCTION(TestIntByRef_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "TestIntByRef(42)");
+	r = ExecuteString(engine, "TestIntByRef(42)");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("int TestRetIntByVal()", asFUNCTION(TestRetIntByVal_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "assert(TestRetIntByVal() == 42)");
+	r = ExecuteString(engine, "assert(TestRetIntByVal() == 42)");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("int &TestRetIntByRef()", asFUNCTION(TestRetIntByRef_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "assert(TestRetIntByRef() == 42)");
+	r = ExecuteString(engine, "assert(TestRetIntByRef() == 42)");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("string TestRetStringByVal()", asFUNCTION(TestRetStringByVal_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "assert(TestRetStringByVal() == 'test')");
+	r = ExecuteString(engine, "assert(TestRetStringByVal() == 'test')");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterGlobalFunction("string &TestRetStringByRef()", asFUNCTION(TestRetStringByRef_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "assert(TestRetStringByRef() == 'test')");
+	r = ExecuteString(engine, "assert(TestRetStringByRef() == 'test')");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	r = engine->RegisterObjectType("C", sizeof(C), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("C", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Construct_C), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectBehaviour("C", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Construct_C), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("C", "void a() const", asFUNCTION(A_a_generic), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("C", "void b()", asFUNCTION(B_b_generic), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("C", "void c(int)", asFUNCTION(C_c_generic), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("C", "void c(float) const", asFUNCTION(C_c2_generic), asCALL_GENERIC); assert( r >= 0 );
 
-	r = engine->ExecuteString(0, "C c; c.a(); c.b(); c.c(1); c.c(1.1f);");
+	r = ExecuteString(engine, "C c; c.a(); c.b(); c.c(1); c.c(1.1f);");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

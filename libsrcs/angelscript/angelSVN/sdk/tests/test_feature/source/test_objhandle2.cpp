@@ -3,7 +3,7 @@
 namespace TestObjHandle2
 {
 
-#define TESTNAME "TestObjHandle2"
+static const char * const TESTNAME = "TestObjHandle2";
 
 static const char *script1 =
 "void TestObjHandle()                   \n"
@@ -128,10 +128,10 @@ bool Test()
 	RegisterScriptString_Generic(engine);
 
 	r = engine->RegisterObjectType("refclass", sizeof(CRefClass), asOBJ_REF); assert(r >= 0);
-	r = engine->RegisterObjectProperty("refclass", "int id", offsetof(CRefClass, id));
+	r = engine->RegisterObjectProperty("refclass", "int id", asOFFSET(CRefClass, id));
 	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_ADDREF, "void f()", asMETHOD(CRefClass, AddRef), asCALL_THISCALL); assert(r >= 0);
 	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_RELEASE, "void f()", asMETHOD(CRefClass, Release), asCALL_THISCALL); assert(r >= 0);
-	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_ASSIGNMENT, "refclass &f(const refclass &in)", asMETHOD(CRefClass, operator=), asCALL_THISCALL); assert(r >= 0);
+	r = engine->RegisterObjectMethod("refclass", "refclass &opAssign(const refclass &in)", asMETHOD(CRefClass, operator=), asCALL_THISCALL); assert(r >= 0);
 	
 	r = engine->RegisterObjectMethod("refclass", "void Method()", asMETHOD(CRefClass, Method), asCALL_THISCALL); assert( r >= 0 );
 
@@ -146,11 +146,11 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
-	asIScriptContext *ctx;
-	r = engine->ExecuteString(0, "TestObjHandle()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestObjHandle()", mod, ctx);
 
 	if( r != asEXECUTION_FINISHED )
 	{
@@ -163,7 +163,7 @@ bool Test()
 			printf("desc: %s\n", ctx->GetExceptionString());
 		}
 
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Execution failed\n", TESTNAME);
 	}
 	if( ctx ) ctx->Release();
@@ -171,17 +171,21 @@ bool Test()
 	// Verify that the compiler doesn't implicitly convert the lvalue in an assignment to a handle
 	CBufferedOutStream bout;
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
-	r = engine->ExecuteString(0, "refclass @a; a = @a;");
-	if( r >= 0 || bout.buffer != "ExecuteString (1, 18) : Error   : Can't implicitly convert from 'refclass@&' to 'refclass&'.\n" ) 
+	r = ExecuteString(engine, "refclass @a; a = @a;");
+	if( r >= 0 || bout.buffer != "ExecuteString (1, 18) : Error   : Can't implicitly convert from 'refclass@const&' to 'const refclass&'.\n"
+							     // TODO: This second error message doesn't make sense. Why is the compiler trying to instanciate a new refclass?
+		                         "ExecuteString (1, 18) : Error   : No default constructor for object of type 'refclass'.\n" ) 
 	{
-		fail = true;
+		TEST_FAILED;
+		printf("%s", bout.buffer.c_str());
 		printf("%s: failure\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "refclass@ a; a.Method();", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "refclass@ a; a.Method();", 0, ctx);
 	if( r != asEXECUTION_EXCEPTION )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: No exception\n", TESTNAME);
 	}
 	if( ctx ) ctx->Release();
@@ -202,10 +206,10 @@ bool Test()
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script2, strlen(script2), 0);
 	r = mod->Build();
-	if( r >= 0 ) fail = true;
+	if( r >= 0 ) TEST_FAILED;
 	if( bout.buffer != "TestObjHandle2 (3, 1) : Info    : Compiling void Test()\n"
                        "TestObjHandle2 (6, 6) : Error   : Reference is read-only\n" )
-		fail = true;
+		TEST_FAILED;
 	engine->Release();
 
 	// Success
@@ -407,8 +411,8 @@ bool TestHandleMemberCalling(void)
 		return false;
 	}
 
-	asIScriptContext *ctx;
-	r = engine->ExecuteString(0, "TestScript()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestScript()", mod, ctx);
 
 	if( r != asEXECUTION_FINISHED )
 	{

@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestExecuteString"
+static const char * const TESTNAME = "TestExecuteString";
 
 struct Obj
 {
@@ -22,8 +22,8 @@ bool TestExecuteString()
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 
 	engine->RegisterObjectType("Obj", sizeof(Obj), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
-	engine->RegisterObjectProperty("Obj", "bool a", offsetof(Obj,a));
-	engine->RegisterObjectProperty("Obj", "bool b", offsetof(Obj,b));
+	engine->RegisterObjectProperty("Obj", "bool a", asOFFSET(Obj,a));
+	engine->RegisterObjectProperty("Obj", "bool b", asOFFSET(Obj,b));
 
 	engine->RegisterGlobalProperty("Obj g_Obj", &g_Obj);
 
@@ -32,15 +32,15 @@ bool TestExecuteString()
 
 	COutStream out;
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-	engine->ExecuteString(0, "g_Obj.a = true;\n"
-		                     "g_Obj.b = false;\n");
+	ExecuteString(engine, "g_Obj.a = true;\n"
+		                  "g_Obj.b = false;\n");
 
 	engine->Release();
 
 	if( !g_Obj.a || g_Obj.b )
 	{
 		printf("%s: ExecuteString() didn't execute correctly\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	
 	// Success

@@ -5,7 +5,7 @@
 namespace TestCustomMem
 {
 
-#define TESTNAME "TestCustomMem"
+static const char * const TESTNAME = "TestCustomMem";
 
 int objectsAllocated = 0;
 void *MyAlloc(size_t size)
@@ -22,7 +22,7 @@ void MyFree(void *mem)
 	objectsAllocated--;
 
 //	printf("MyFree(%X)\n", mem);
-	delete[] mem;
+	delete[] (asBYTE*)mem;
 }
 
 int ReturnObj()
@@ -47,7 +47,7 @@ bool Test()
 	int r;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-
+	RegisterScriptArray(engine, true);
 	r = engine->RegisterObjectType("obj", 4, asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r >= 0 );
 //  r = engine->RegisterObjectBehaviour("obj", asBEHAVE_ALLOC, "obj &f(uint)", asFUNCTION(MyAlloc), asCALL_CDECL); assert( r >= 0 );
 //  r = engine->RegisterObjectBehaviour("obj", asBEHAVE_FREE, "void f(obj &in)", asFUNCTION(MyFree), asCALL_CDECL); assert( r >= 0 );
@@ -59,14 +59,14 @@ bool Test()
 
 	COutStream out;
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-	engine->ExecuteString(0, "obj o");
+	ExecuteString(engine, "obj o");
 
 	if( !strstr(asGetLibraryOptions(),"AS_MAX_PORTABILITY") )
-		engine->ExecuteString(0, "retObj()");
+		ExecuteString(engine, "retObj()");
 
-	engine->ExecuteString(0, "obj o; retObj2(o)");
+	ExecuteString(engine, "obj o; retObj2(o)");
 
-	engine->ExecuteString(0, "obj[] o(2)");
+	ExecuteString(engine, "obj[] o(2)");
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(0, script, strlen(script));
@@ -83,7 +83,7 @@ bool Test()
 	if( objectsAllocated )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Success

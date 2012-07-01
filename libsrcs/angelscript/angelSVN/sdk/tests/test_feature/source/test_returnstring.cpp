@@ -5,7 +5,7 @@
 namespace TestReturnString
 {
 
-#define TESTNAME "TestReturnString"
+static const char * const TESTNAME = "TestReturnString";
 
 
 struct Foo 
@@ -41,7 +41,14 @@ Foo& AssignFoo(const Foo& rhs, Foo* ptr) { return (*ptr) = rhs; }
 
 void ConstructString(std::string* ptr) { new (ptr) std::string(); }
 void CopyConstructString(const std::string& rhs, std::string* ptr) { new (ptr) std::string(rhs); }
-void DestroyString(std::string* ptr) { ptr->~basic_string(); } 
+void DestroyString(std::string* ptr)
+{
+#if !defined(__BORLANDC__) || __BORLANDC__ >= 0x590
+	// Some weird BCC bug (which was fixed in C++Builder 2007) prevents us from calling a
+	// destructor explicitly on template functions.
+	ptr->~basic_string();
+#endif
+}
 std::string& AssignString(const std::string& rhs, std::string* ptr) { return (*ptr) = rhs; }
 
 std::string StringFactory(unsigned int length, const char *s)
@@ -76,9 +83,8 @@ bool Test()
 		asFUNCTION(DestroyFoo),
 		asCALL_CDECL_OBJLAST);	assert( r >=0 );
 
-	r = engine->RegisterObjectBehaviour("Foo",
-		asBEHAVE_ASSIGNMENT,
-		"Foo& op_assign(const Foo&)",
+	r = engine->RegisterObjectMethod("Foo",
+		"Foo& opAssign(const Foo&)",
 		asFUNCTION(AssignFoo),
 		asCALL_CDECL_OBJLAST);	assert( r >=0 );
 
@@ -102,9 +108,8 @@ bool Test()
 		asFUNCTION(DestroyString),
 		asCALL_CDECL_OBJLAST);	assert( r >=0 );
 
-	r = engine->RegisterObjectBehaviour("string",
-		asBEHAVE_ASSIGNMENT,
-		"string& op_assign(const string&)",
+	r = engine->RegisterObjectMethod("string",
+		"string& opAssign(const string&)",
 		asFUNCTION(AssignString),
 		asCALL_CDECL_OBJLAST);	assert( r >=0 );
 

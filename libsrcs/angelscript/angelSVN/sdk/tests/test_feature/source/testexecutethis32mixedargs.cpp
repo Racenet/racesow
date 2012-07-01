@@ -7,7 +7,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "this->TestExecute32Args (mixed arguments)"
+static const char * const TESTNAME = "this->TestExecute32Args (mixed arguments)";
 
 
 class TestClass {
@@ -129,7 +129,7 @@ static TestClass test;
 
 bool TestExecuteThis32MixedArgs()
 {
-	bool ret = false;
+	bool fail = false;
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	int r;
@@ -172,7 +172,7 @@ bool TestExecuteThis32MixedArgs()
 	}
 	r = engine->RegisterGlobalProperty("TestClass test", &test);
 
-	engine->ExecuteString(0, 
+	ExecuteString(engine, 
 		"test.cfunction("
 			" 1,  2,  3,  4,"
 			" 5.0f,  6.0f,  7.0f,  8.0f,"
@@ -186,7 +186,7 @@ bool TestExecuteThis32MixedArgs()
 
 	if (!test.called) {
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	} else if (!test.testVal) {
 		printf("\n%s: testVal is not of expected value. Got:\n\n", TESTNAME);
 		int pos = 0;
@@ -200,11 +200,11 @@ bool TestExecuteThis32MixedArgs()
 			}
 			pos += 4;
 		}
-		ret = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
 	engine = NULL;
 
-	return ret;
+	return fail;
 }
