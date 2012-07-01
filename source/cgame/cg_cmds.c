@@ -92,7 +92,7 @@ static void CG_SC_CenterPrint( void )
 /*
 * CG_ConfigString
 */
-void CG_ConfigString( int i, char *s )
+void CG_ConfigString( int i, const char *s )
 {
 	size_t len;
 
@@ -161,7 +161,12 @@ void CG_ConfigString( int i, char *s )
 	else if( i >= CS_GAMECOMMANDS && i < CS_GAMECOMMANDS+MAX_GAMECOMMANDS )
 	{
 		if( !cgs.demoPlaying )
+		{
 			trap_Cmd_AddCommand( cgs.configStrings[i], NULL );
+			if( !Q_stricmp( cgs.configStrings[i], "gametypemenu" ) ) {
+				cgs.hasGametypeMenu = qtrue;
+			}
+		}
 	}
 	else if( i >= CS_WEAPONDEFS && i < CS_WEAPONDEFS + MAX_WEAPONDEFS )
 	{
@@ -591,7 +596,7 @@ static void CG_SC_ChannelAdd( void )
 {
 	char menuparms[MAX_STRING_CHARS];
 
-	Q_snprintfz( menuparms, sizeof( menuparms ), "menu_tv_channel_add %s\n", trap_Cmd_Args() );
+	Q_snprintfz( menuparms, sizeof( menuparms ), "menu_tvchannel_add %s\n", trap_Cmd_Args() );
 	trap_Cmd_ExecuteText( EXEC_NOW, menuparms );
 }
 
@@ -607,7 +612,7 @@ static void CG_SC_ChannelRemove( void )
 		id = atoi( trap_Cmd_Argv( i ) );
 		if( id <= 0 )
 			continue;
-		trap_Cmd_ExecuteText( EXEC_NOW, va( "menu_tv_channel_remove %i\n", id ) );
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "menu_tvchannel_remove %i\n", id ) );
 	}
 }
 
@@ -743,10 +748,24 @@ static void CG_SC_MOTD( void )
 */
 static void CG_SC_MenuCustom( void )
 {
+	char request[MAX_STRING_CHARS];
+	int i, c;
+
 	if( cgs.demoPlaying || cgs.tv )
 		return;
 
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "menu_custom %s %s", trap_Cmd_Args(), " Cancel \"\"\n"  ) );
+	if( trap_Cmd_Argc() < 2 )
+		return;
+
+	Q_strncpyz( request, va( "menu_open custom title \"%s\" ", trap_Cmd_Argv( 1 ) ), sizeof( request ) );
+	
+	for( i = 2, c = 1; i < trap_Cmd_Argc() - 1; i += 2, c++ )
+	{
+		Q_strncatz( request, va( "btn%i \"%s\" ", c, trap_Cmd_Argv( i ) ), sizeof( request ) );
+		Q_strncatz( request, va( "cmd%i \"%s\" ", c, trap_Cmd_Argv( i + 1 ) ), sizeof( request ) );
+	}
+
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s\n", request ) );
 }
 
 /*
@@ -1068,6 +1087,10 @@ void CG_RegisterCGameCommands( void )
 			if( cmd->name )
 				continue;
 
+			if( !cgs.hasGametypeMenu && !Q_stricmp( name, "gametypemenu" ) ) {
+				cgs.hasGametypeMenu = qtrue;
+			}
+
 			trap_Cmd_AddCommand( name, NULL );
 		}
 	}
@@ -1111,6 +1134,8 @@ void CG_UnregisterCGameCommands( void )
 
 			trap_Cmd_RemoveCommand( name );
 		}
+
+		cgs.hasGametypeMenu = qfalse;
 	}
 
 	// remove local commands

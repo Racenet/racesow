@@ -1,29 +1,29 @@
 /*
-   Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
-   and German Garcia Fernandez ("Jal") for Chasseur de bots association.
+Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
+and German Garcia Fernandez ("Jal") for Chasseur de bots association.
 
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 #include "cg_local.h"
 
-//==============
-// CG_ForceTeam
-//==============
+/*
+* CG_ForceTeam
+*/
 static int CG_ForceTeam( int entNum, int team )
 {
 	if( !GS_TeamBasedGametype() )
@@ -57,10 +57,10 @@ static int CG_ForceTeam( int entNum, int team )
 	}
 }
 
-//==============
-// CG_SetSceneTeamColors
-// Updates the team colors in the renderer with the ones assigned to each team.
-//==============
+/*
+* CG_SetSceneTeamColors
+* Updates the team colors in the renderer with the ones assigned to each team.
+*/
 void CG_SetSceneTeamColors( void )
 {
 	int team;
@@ -75,9 +75,9 @@ void CG_SetSceneTeamColors( void )
 	}
 }
 
-//==============
-// CG_RegisterForceModel
-//==============
+/*
+* CG_RegisterForceModel
+*/
 static void CG_RegisterForceModel( cvar_t *teamForceModel, cvar_t *teamForceSkin, pmodelinfo_t **ppmodelinfo, struct skinfile_s **pskin )
 {
 	pmodelinfo_t *pmodelinfo;
@@ -118,9 +118,9 @@ static void CG_RegisterForceModel( cvar_t *teamForceModel, cvar_t *teamForceSkin
 	}
 }
 
-//==============
-// CG_CheckUpdateTeamModelRegistration
-//==============
+/*
+* CG_CheckUpdateTeamModelRegistration
+*/
 static void CG_CheckUpdateTeamModelRegistration( int team )
 {
 	switch( team )
@@ -149,9 +149,9 @@ static void CG_CheckUpdateTeamModelRegistration( int team )
 	}
 }
 
-//==============
-// CG_PModelForCentity
-//==============
+/*
+* CG_PModelForCentity
+*/
 pmodelinfo_t *CG_PModelForCentity( centity_t *cent )
 {
 	int team;
@@ -181,9 +181,9 @@ pmodelinfo_t *CG_PModelForCentity( centity_t *cent )
 	return cgs.pModelsIndex[cent->current.modelindex];
 }
 
-//==============
-// CG_SkinForCentity
-//==============
+/*
+* CG_SkinForCentity
+*/
 struct skinfile_s *CG_SkinForCentity( centity_t *cent )
 {
 	int team;
@@ -208,9 +208,9 @@ struct skinfile_s *CG_SkinForCentity( centity_t *cent )
 	return cgs.skinPrecache[cent->current.skinnum];
 }
 
-//==============
-// CG_RegisterTeamColor
-//==============
+/*
+* CG_RegisterTeamColor
+*/
 void CG_RegisterTeamColor( int team )
 {
 	cvar_t *teamForceColor = NULL;
@@ -220,24 +220,24 @@ void CG_RegisterTeamColor( int team )
 	switch( team )
 	{
 	case TEAM_ALPHA:
-	{
-		teamForceColor = cg_teamALPHAcolor;
-		forceColor = &cgs.teamColor[TEAM_ALPHA];
-	}
+		{
+			teamForceColor = cg_teamALPHAcolor;
+			forceColor = &cgs.teamColor[TEAM_ALPHA];
+		}
 		break;
 	case TEAM_BETA:
-	{
-		teamForceColor = cg_teamBETAcolor;
-		forceColor = &cgs.teamColor[TEAM_BETA];
-	}
+		{
+			teamForceColor = cg_teamBETAcolor;
+			forceColor = &cgs.teamColor[TEAM_BETA];
+		}
 		break;
 
 	case TEAM_PLAYERS:
 	default:
-	{
-		teamForceColor = cg_teamPLAYERScolor;
-		forceColor = &cgs.teamColor[TEAM_PLAYERS];
-	}
+		{
+			teamForceColor = cg_teamPLAYERScolor;
+			forceColor = &cgs.teamColor[TEAM_PLAYERS];
+		}
 		break;
 	}
 
@@ -271,9 +271,9 @@ void CG_RegisterTeamColor( int team )
 	}
 }
 
-//==============
-// CG_TeamColor
-//==============
+/*
+* CG_TeamColor
+*/
 vec_t *CG_TeamColor( int team, vec4_t color )
 {
 	cvar_t *teamForceColor = NULL;
@@ -376,7 +376,7 @@ qbyte *_ColorForEntity( int entNum, byte_vec4_t color, qboolean player )
 	// Make corpses grey
 	else if ( cent->current.type == ET_CORPSE && cent->current.bodyOwner ) 
 	{
-		Vector4Set( color, 60, 60, 60, 60 );
+		Vector4Set( color, 60, 60, 60, 255 );
 	}
 	else // white for everything else
 	{
@@ -402,10 +402,10 @@ qbyte *CG_PlayerColorForEntity( int entNum, byte_vec4_t color )
 	return _ColorForEntity( entNum, color, qtrue );
 }
 
-//==============
-// CG_RegisterForceModels
-// initialize all
-//==============
+/*
+* CG_RegisterForceModels
+* initialize all
+*/
 void CG_RegisterForceModels( void )
 {
 	int team;

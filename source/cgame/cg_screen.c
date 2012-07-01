@@ -1,36 +1,36 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // cg_screen.c -- master status bar, crosshairs, hud, etc
 
 /*
 
-   full screen console
-   put up loading plaque
-   blanked background with loading plaque
-   blanked background with menu
-   cinematics
-   full screen image for quit and victory
+full screen console
+put up loading plaque
+blanked background with loading plaque
+blanked background with menu
+cinematics
+full screen image for quit and victory
 
-   end of unit intermissions
+end of unit intermissions
 
- */
+*/
 
 #include "cg_local.h"
 
@@ -68,6 +68,7 @@ cvar_t *cg_showPlayerNames;
 cvar_t *cg_showPlayerNames_alpha;
 cvar_t *cg_showPlayerNames_zfar;
 cvar_t *cg_showPlayerNames_barWidth;
+cvar_t *cg_showTeamMates;
 
 cvar_t *cg_showPressedKeys;
 
@@ -86,15 +87,13 @@ cvar_t *cg_strafeHUD;
 float scr_damagetime_start;
 float scr_damagetime_off;
 
-static int backgroundNum;
-
 /*
-   ===============================================================================
+===============================================================================
 
-   CENTER PRINTING
+CENTER PRINTING
 
-   ===============================================================================
- */
+===============================================================================
+*/
 
 char scr_centerstring[1024];
 float scr_centertime_start;   // for slow victory printing
@@ -103,13 +102,11 @@ int scr_center_lines;
 int scr_erase_center;
 
 /*
-   ==============
-   CG_CenterPrint
-
-   Called for important messages that should stay in the center of the screen
-   for a few moments
-   ==============
- */
+* CG_CenterPrint
+* 
+* Called for important messages that should stay in the center of the screen
+* for a few moments
+*/
 void CG_CenterPrint( char *str )
 {
 	char *s;
@@ -216,12 +213,10 @@ void CG_ScreenCrosshairDamageUpdate( void )
 //=============================================================================
 
 /*
-   =================
-   CG_CalcVrect
-
-   Sets scr_vrect, the coordinates of the rendered window
-   =================
- */
+* CG_CalcVrect
+* 
+* Sets scr_vrect, the coordinates of the rendered window
+*/
 void CG_CalcVrect( void )
 {
 	int size;
@@ -245,24 +240,20 @@ void CG_CalcVrect( void )
 }
 
 /*
-   =================
-   CG_SizeUp_f
-
-   Keybinding command
-   =================
- */
+* CG_SizeUp_f
+* 
+* Keybinding command
+*/
 static void CG_SizeUp_f( void )
 {
 	trap_Cvar_SetValue( "cg_viewSize", cg_viewSize->integer + 10 );
 }
 
 /*
-   =================
-   CG_SizeDown_f
-
-   Keybinding command
-   =================
- */
+* CG_SizeDown_f
+* 
+* Keybinding command
+*/
 static void CG_SizeDown_f( void )
 {
 	trap_Cvar_SetValue( "cg_viewSize", cg_viewSize->integer - 10 );
@@ -271,10 +262,8 @@ static void CG_SizeDown_f( void )
 //============================================================================
 
 /*
-   ==================
-   CG_ScreenInit
-   ==================
- */
+* CG_ScreenInit
+*/
 void CG_ScreenInit( void )
 {
 	cg_viewSize =		trap_Cvar_Get( "cg_viewSize", "100", CVAR_ARCHIVE );
@@ -302,7 +291,7 @@ void CG_ScreenInit( void )
 	cg_showSpeed =		trap_Cvar_Get( "cg_showSpeed", "0", CVAR_ARCHIVE );
 	cg_showPickup =		trap_Cvar_Get( "cg_showPickup", "1", CVAR_ARCHIVE );
 	cg_showPointedPlayer =	trap_Cvar_Get( "cg_showPointedPlayer", "1", CVAR_ARCHIVE );
-	cg_showTeamLocations =	trap_Cvar_Get( "cg_showTeamLocations", "1", CVAR_ARCHIVE );
+	cg_showTeamLocations =	trap_Cvar_Get( "cg_showTeamLocations", "0", CVAR_ARCHIVE );
 	cg_showViewBlends =	trap_Cvar_Get( "cg_showViewBlends", "1", CVAR_ARCHIVE );
 	cg_showAwards =		trap_Cvar_Get( "cg_showAwards", "1", CVAR_ARCHIVE );
 	cg_showZoomEffect =	trap_Cvar_Get( "cg_showZoomEffect", "1", CVAR_ARCHIVE );
@@ -312,6 +301,7 @@ void CG_ScreenInit( void )
 	cg_showPlayerNames_alpha =  trap_Cvar_Get( "cg_showPlayerNames_alpha", "0.4", CVAR_ARCHIVE );
 	cg_showPlayerNames_zfar =   trap_Cvar_Get( "cg_showPlayerNames_zfar", "1024", CVAR_ARCHIVE );
 	cg_showPlayerNames_barWidth =   trap_Cvar_Get( "cg_showPlayerNames_barWidth", "8", CVAR_ARCHIVE );
+	cg_showTeamMates =	    trap_Cvar_Get( "cg_showTeamMates", "1", CVAR_ARCHIVE );
 
 	cg_showPressedKeys = trap_Cvar_Get( "cg_showPressedKeys", "0", CVAR_ARCHIVE );
 
@@ -332,19 +322,15 @@ void CG_ScreenInit( void )
 	trap_Cmd_AddCommand( "sizeup", CG_SizeUp_f );
 	trap_Cmd_AddCommand( "sizedown", CG_SizeDown_f );
 	trap_Cmd_AddCommand( "help_hud", Cmd_CG_PrintHudHelp_f );
-
-	// random background image, note that this has to be in sync with UI module,
-	// so the order of Q_rand calls matters
-	backgroundNum = Q_rand( &cg.sharedSeed ) % UI_SHADER_MAX_BACKGROUNDS;
+	trap_Cmd_AddCommand( "gamemenu", CG_GameMenu_f );
 }
 
 /*
-   ==================
-   CG_ScreenShutdown
-   ==================
- */
+* CG_ScreenShutdown
+*/
 void CG_ScreenShutdown( void )
 {
+	trap_Cmd_RemoveCommand( "gamemenu" );
 	trap_Cmd_RemoveCommand( "sizeup" );
 	trap_Cmd_RemoveCommand( "sizedown" );
 	trap_Cmd_RemoveCommand( "help_hud" );
@@ -352,10 +338,8 @@ void CG_ScreenShutdown( void )
 
 
 /*
-   ================
-   CG_ParseValue
-   ================
- */
+* CG_ParseValue
+*/
 int CG_ParseValue( const char **s )
 {
 	int index;
@@ -375,10 +359,8 @@ int CG_ParseValue( const char **s )
 }
 
 /*
-   ==============
-   CG_DrawNet
-   ==============
- */
+* CG_DrawNet
+*/
 void CG_DrawNet( int x, int y, int w, int h, int align, vec4_t color )
 {
 	int incomingAcknowledged, outgoingSequence;
@@ -495,7 +477,7 @@ void CG_DrawCrosshair( int x, int y, int align )
 		y = CG_VerticalAlignForHeight( y, align, cg_crosshair_size->integer );
 
 		trap_R_DrawStretchPic( x, y, cg_crosshair_size->integer, cg_crosshair_size->integer,
-		                      0, 0, 1, 1, chColor, CG_MediaShader( cgs.media.shaderCrosshair[cg_crosshair->integer] ) );
+			0, 0, 1, 1, chColor, CG_MediaShader( cgs.media.shaderCrosshair[cg_crosshair->integer] ) );
 	}
 }
 
@@ -530,9 +512,9 @@ void CG_DrawKeyState( int x, int y, int w, int h, int align, char *key )
 		trap_R_DrawStretchPic( x, y, w, h, 0, 0, 1, 1, colorWhite, CG_MediaShader( cgs.media.shaderKeyIconOff[i] ) );
 }
 
-//================
-//CG_DrawClock
-//================
+/*
+* CG_DrawClock
+*/
 void CG_DrawClock( int x, int y, int align, struct mufont_s *font, vec4_t color )
 {
 	unsigned int clocktime, startTime, duration, curtime;
@@ -673,7 +655,7 @@ void CG_DrawPlayerNames( struct mufont_s *font, vec4_t color )
 			continue;
 
 		if( ( cg_showPlayerNames->integer == 2 ) && ( cent->current.team != cg.predictedPlayerState.stats[STAT_TEAM] ) )
-				continue;
+			continue;
 
 		if( !cent->current.modelindex || !cent->current.solid ||
 			cent->current.solid == SOLID_BMODEL || cent->current.team == TEAM_SPECTATOR )
@@ -719,9 +701,6 @@ void CG_DrawPlayerNames( struct mufont_s *font, vec4_t color )
 		trap_R_TransformVectorToScreen( &cg.view.refdef, drawOrigin, coords );
 		if( ( coords[0] < 0 || coords[0] > cgs.vidWidth ) || ( coords[1] < 0 || coords[1] > cgs.vidHeight ) )
 			continue;
-
-		// reverse the height to match the drawing functions coordinates
-		coords[1] = cgs.vidHeight - coords[1];
 
 		trap_SCR_DrawString( coords[0], coords[1], ALIGN_CENTER_BOTTOM, cgs.clientInfo[i].name, font, tmpcolor );
 
@@ -777,9 +756,71 @@ void CG_DrawPlayerNames( struct mufont_s *font, vec4_t color )
 	}
 }
 
-//================
-//CG_DrawTeamInfo
-//================
+/*
+* CG_DrawTeamMates
+*/
+void CG_DrawTeamMates( void )
+{
+	centity_t *cent;
+	vec3_t dir, drawOrigin;
+	vec2_t coords;
+	trace_t trace;
+	vec4_t color;
+	int i;
+
+	if( !cg_showTeamMates->integer )
+		return;
+
+	// don't draw when scoreboard is up
+	if( cg.predictedPlayerState.stats[STAT_LAYOUTS] & STAT_LAYOUT_SCOREBOARD )
+		return;
+	if(  cg.predictedPlayerState.stats[STAT_TEAM] < TEAM_ALPHA )
+		return;
+
+	for( i = 0; i < gs.maxclients; i++ )
+	{
+		if( !cgs.clientInfo[i].name[0] || ISVIEWERENTITY( i + 1 ) )
+			continue;
+
+		cent = &cg_entities[i + 1];
+		if( cent->serverFrame != cg.frame.serverFrame )
+			continue;
+
+		if( cent->current.team != cg.predictedPlayerState.stats[STAT_TEAM] )
+			continue;
+
+		if( !cent->current.modelindex || !cent->current.solid ||
+			cent->current.solid == SOLID_BMODEL || cent->current.team == TEAM_SPECTATOR )
+			continue;
+
+		// Kill if in the view
+		VectorSubtract( cent->ent.origin, cg.view.origin, dir );
+		if( DotProduct( dir, cg.view.axis[FORWARD] ) < 0 )
+			continue;
+			
+		CG_Trace( &trace, cg.view.origin, vec3_origin, vec3_origin, cent->ent.origin, cg.predictedPlayerState.POVnum, MASK_OPAQUE );
+		if( cg_showTeamMates->integer == 1 && trace.fraction == 1.0f )
+			continue;
+
+		VectorSet( drawOrigin, cent->ent.origin[0], cent->ent.origin[1], cent->ent.origin[2] + playerbox_stand_maxs[2] + 16 );
+
+		// find the 3d point in 2d screen
+		trap_R_TransformVectorToScreen( &cg.view.refdef, drawOrigin, coords );
+		if( ( coords[0] < 0 || coords[0] > cgs.vidWidth ) || ( coords[1] < 0 || coords[1] > cgs.vidHeight ) )
+			continue;
+		
+		CG_TeamColor( cg.predictedPlayerState.stats[STAT_TEAM], color );
+
+		trap_R_DrawStretchPic( coords[0],
+			coords[1],
+			16, 16, 0, 0, 1, 1,
+			color, CG_MediaShader( cgs.media.shaderTeamMateIndicator ) );
+	}
+}
+
+/*
+* CG_DrawTeamInfo
+*/
 void CG_DrawTeamInfo( int x, int y, int align, struct mufont_s *font, vec4_t color )
 {
 	char string[128];
@@ -803,7 +844,7 @@ void CG_DrawTeamInfo( int x, int y, int align, struct mufont_s *font, vec4_t col
 
 	team = cg.predictedPlayerState.stats[STAT_TEAM];
 	if( team <= TEAM_PLAYERS || team >= GS_MAX_TEAMS
-	    || !GS_TeamBasedGametype() || GS_InvidualGameType() )
+		|| !GS_TeamBasedGametype() || GS_InvidualGameType() )
 		return;
 
 	// time to parse the teaminfo string
@@ -896,18 +937,18 @@ void CG_DrawTeamInfo( int x, int y, int align, struct mufont_s *font, vec4_t col
 			continue;
 
 		Q_snprintfz( string, sizeof( string ), "%s%s %s%s (%i/%i)%s", cgs.clientInfo[teammate].name, S_COLOR_WHITE,
-		             cgs.configStrings[CS_LOCATIONS+locationTag], S_COLOR_WHITE,
-		             health, armor, S_COLOR_WHITE );
+			cgs.configStrings[CS_LOCATIONS+locationTag], S_COLOR_WHITE,
+			health, armor, S_COLOR_WHITE );
 
 		// draw the head-icon in the case this player has one
 		cent = &cg_entities[teammate+1];
 		if( cent->localEffects[LOCALEFFECT_VSAY_HEADICON_TIMEOUT] > cg.time &&
-		    cent->localEffects[LOCALEFFECT_VSAY_HEADICON] > 0 && cent->localEffects[LOCALEFFECT_VSAY_HEADICON] < VSAY_TOTAL )
+			cent->localEffects[LOCALEFFECT_VSAY_HEADICON] > 0 && cent->localEffects[LOCALEFFECT_VSAY_HEADICON] < VSAY_TOTAL )
 		{
 			trap_R_DrawStretchPic( CG_HorizontalAlignForWidth( x, align, height ),
-			                      CG_VerticalAlignForHeight( y, align, height ),
-			                      height, height, 0, 0, 1, 1,
-			                      color, CG_MediaShader( cgs.media.shaderVSayIcon[cent->localEffects[LOCALEFFECT_VSAY_HEADICON]] ) );
+				CG_VerticalAlignForHeight( y, align, height ),
+				height, height, 0, 0, 1, 1,
+				color, CG_MediaShader( cgs.media.shaderVSayIcon[cent->localEffects[LOCALEFFECT_VSAY_HEADICON]] ) );
 		}
 
 		trap_SCR_DrawString( x + height * ( align % 3 == 0 ), y, align, string, font, color );
@@ -916,9 +957,9 @@ void CG_DrawTeamInfo( int x, int y, int align, struct mufont_s *font, vec4_t col
 	}
 }
 
-//================
-//CG_DrawRSpeeds
-//================
+/*
+* CG_DrawRSpeeds
+*/
 void CG_DrawRSpeeds( int x, int y, int align, struct mufont_s *font, vec4_t color )
 {
 	char msg[1024];
@@ -953,23 +994,14 @@ void CG_DrawRSpeeds( int x, int y, int align, struct mufont_s *font, vec4_t colo
 
 //=============================================================================
 
-//================
-//CG_InGameMenu
-//================
+/*
+* CG_InGameMenu
+*/
 static void CG_InGameMenu( void )
 {
 	static char menuparms[MAX_STRING_CHARS];
 	int is_challenger = 0, needs_ready = 0, is_ready = 0;
 	int realteam = cg.predictedPlayerState.stats[STAT_REALTEAM];
-
-	if( !cgs.configStrings[CS_WORLDMODEL][0] )
-	{
-		trap_Cmd_ExecuteText( EXEC_APPEND, "menu_force 1\n" );
-	}
-	else
-	{
-		trap_Cmd_ExecuteText( EXEC_APPEND, "menu_force 0\n" );
-	}
 
 	if( GS_HasChallengers() && realteam == TEAM_SPECTATOR )
 		is_challenger = ( ( cg.predictedPlayerState.stats[STAT_LAYOUTS] & STAT_LAYOUT_CHALLENGER ) != 0 );
@@ -980,82 +1012,91 @@ static void CG_InGameMenu( void )
 	if( GS_MatchState() <= MATCH_STATE_WARMUP && realteam != TEAM_SPECTATOR )
 		is_ready = ( ( cg.predictedPlayerState.stats[STAT_LAYOUTS] & STAT_LAYOUT_READY ) != 0 );
 
-	Q_snprintfz( menuparms, sizeof( menuparms ), "menu_game %i %i %i %i %i \"%s %s\"\n",
-	            GS_TeamBasedGametype(),
-	            realteam,
-	            ( realteam == TEAM_SPECTATOR ) ? ( GS_HasChallengers() + is_challenger ) : 0,
-	            needs_ready,
-	            is_ready,
-				trap_Cvar_String( "gamename" ),
-	            gs.gametypeName );
+	Q_snprintfz( menuparms, sizeof( menuparms ), 
+		"menu_open game" 
+			" is_teambased %i" 
+			" team %i" 
+			" queue %i" 
+			" needs_ready %i" 
+			" is_ready %i" 
+			" gametype \"%s\""
+			" has_gametypemenu %i"
+			" team_spec %i"
+			" team_list \"%i %i\"",
 
-	trap_Cmd_ExecuteText( EXEC_APPEND, menuparms );
+			GS_TeamBasedGametype(),
+			realteam,
+			( realteam == TEAM_SPECTATOR ) ? ( GS_HasChallengers() + is_challenger ) : 0,
+			needs_ready,
+			is_ready,
+			gs.gametypeName,
+			cgs.hasGametypeMenu,
+			TEAM_SPECTATOR,
+			TEAM_ALPHA,	TEAM_BETA
+	);
+
+	trap_Cmd_ExecuteText( EXEC_NOW, menuparms );
 }
 
-//================
-//CG_EscapeKey
-//================
-void CG_EscapeKey( void )
+/*
+* CG_GameMenu_f
+*/
+void CG_GameMenu_f( void )
 {
 	if( cgs.demoPlaying )
 	{
-		trap_Cmd_ExecuteText( EXEC_APPEND, "menu_demoplay\n" );
+		trap_Cmd_ExecuteText( EXEC_NOW, "menu_open demoplay\n" );
 		return;
 	}
 
 	if( cgs.tv )
 	{
-		trap_Cmd_ExecuteText( EXEC_APPEND, "menu_tv\n" );
+		trap_Cmd_ExecuteText( EXEC_NOW, "menu_open tv\n" );
 		return;
 	}
 
 	// if the menu is up, close it
 	if( cg.predictedPlayerState.stats[STAT_LAYOUTS] & STAT_LAYOUT_SCOREBOARD )
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd putaway\n" );
+		trap_Cmd_ExecuteText( EXEC_NOW, "cmd putaway\n" );
 
 	CG_InGameMenu();
 }
 
+/*
+* CG_EscapeKey
+*/
+void CG_EscapeKey( void )
+{
+	CG_GameMenu_f();
+}
+
 //=============================================================================
 
-//==============
-//CG_DrawLoading
-//==============
+/*
+* CG_DrawLoading
+*/
 void CG_DrawLoading( void )
 {
-	char str[MAX_QPATH];
-	float percent;
-	int barwidth, x, y;
-	struct shader_s *barShader = trap_R_RegisterPic( UI_SHADER_PROGRESSBAR );
+	int percent;
+	int pic;
 
 	if( !cgs.configStrings[CS_MAPNAME][0] )
 		return;
 
-	trap_R_DrawStretchPic( 0, 0, cgs.vidWidth, cgs.vidHeight, 0, 0, 1, 1, colorWhite, trap_R_RegisterPic( va( UI_SHADER_BACKGROUND, backgroundNum ) ) );
+	trap_R_DrawStretchPic( 0, 0, cgs.vidWidth, cgs.vidHeight, 0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_BACKGROUND ) );
 
-	x = 64;
-	y = cgs.vidHeight - 48;
-
-	if( cg.precacheCount )
+	if( cg.precacheCount && cg.precacheTotal )
 	{
-		barwidth = cgs.vidWidth - ( x * 2 );
 		percent = ( (float)cg.precacheCount / (float)cg.precacheTotal ) * 100.0f;
+		pic = bound( 0, (percent - 1) / 20, 4 );
 
-		CG_DrawPicBar( x, y, barwidth, 24, ALIGN_LEFT_TOP, percent, barShader, colorDkGrey, colorOrange );
-	}
-
-	// what we're loading at the moment
-	if( cg.loadingstring[0] )
-	{
-		Q_snprintfz( str, sizeof( str ), "loading %s", cg.loadingstring );
-		trap_SCR_DrawString( x + 8, y, ALIGN_LEFT_BOTTOM, str, cgs.fontSystemMedium, colorWhite );
+		trap_R_DrawStretchPic( 0, 0, cgs.vidWidth, cgs.vidHeight, 0, 0, 1, 1, colorWhite, trap_R_RegisterPic( va( UI_SHADER_BACKGROUND_LOADING, pic ) ) );
 	}
 }
 
-
-//================
-//CG_LoadingString
-//================
+/*
+* CG_LoadingString
+*/
 void CG_LoadingString( char *str )
 {
 	cg.checkname[0] = '\0';
@@ -1063,9 +1104,9 @@ void CG_LoadingString( char *str )
 	trap_R_UpdateScreen();
 }
 
-//================
-//CG_LoadingItemName
-//================
+/*
+* CG_LoadingItemName
+*/
 void CG_LoadingItemName( char *str )
 {
 	cg.precacheCount++;
@@ -1080,12 +1121,12 @@ void CG_LoadingItemName( char *str )
 	trap_R_UpdateScreen();
 }
 
-//==============
-//CG_TileClearRect
-//
-//This repeats tile graphic to fill the screen around a sized down
-//refresh window.
-//==============
+/*
+* CG_TileClearRect
+* 
+* This repeats tile graphic to fill the screen around a sized down
+* refresh window.
+*/
 static void CG_TileClearRect( int x, int y, int w, int h, struct shader_s *shader )
 {
 	float iw, ih;
@@ -1097,12 +1138,10 @@ static void CG_TileClearRect( int x, int y, int w, int h, struct shader_s *shade
 }
 
 /*
-   ==============
-   CG_TileClear
-
-   Clear any parts of the tiled background that were drawn on last frame
-   ==============
- */
+* CG_TileClear
+* 
+* Clear any parts of the tiled background that were drawn on last frame
+*/
 void CG_TileClear( void )
 {
 	int w, h;
@@ -1137,9 +1176,9 @@ void CG_TileClear( void )
 
 //===============================================================
 
-//==============
-//CG_AddBlend - wsw
-//==============
+/*
+* CG_AddBlend - wsw
+*/
 static void CG_AddBlend( float r, float g, float b, float a, float *v_blend )
 {
 	float a2, a3;
@@ -1155,9 +1194,9 @@ static void CG_AddBlend( float r, float g, float b, float a, float *v_blend )
 	v_blend[3] = a2;
 }
 
-//==============
-//CG_CalcColorBlend - wsw
-//==============
+/*
+* CG_CalcColorBlend - wsw
+*/
 static void CG_CalcColorBlend( float *color )
 {
 	float time;
@@ -1193,16 +1232,16 @@ static void CG_CalcColorBlend( float *color )
 			continue;
 
 		CG_AddBlend( cg.colorblends[i].blend[0],
-		             cg.colorblends[i].blend[1],
-		             cg.colorblends[i].blend[2],
-		             cg.colorblends[i].blend[3] * delta,
-		             color );
+			cg.colorblends[i].blend[1],
+			cg.colorblends[i].blend[2],
+			cg.colorblends[i].blend[3] * delta,
+			color );
 	}
 }
 
-//==================
-//CG_SCRDrawViewBlend
-//==================
+/*
+* CG_SCRDrawViewBlend
+*/
 static void CG_SCRDrawViewBlend( void )
 {
 	vec4_t colorblend;

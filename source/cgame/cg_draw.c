@@ -1,32 +1,32 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2002-2003 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "cg_local.h"
 
 /*
-   ===============================================================================
+===============================================================================
 
-   HELPER FUNCTIONS
+HELPER FUNCTIONS
 
-   ===============================================================================
- */
+===============================================================================
+*/
 
 int CG_HorizontalAlignForWidth( const int x, int align, int width )
 {
@@ -57,18 +57,16 @@ int CG_VerticalAlignForHeight( const int y, int align, int height )
 }
 
 /*
-   ===============================================================================
+===============================================================================
 
-   STRINGS DRAWING
+STRINGS DRAWING
 
-   ===============================================================================
- */
+===============================================================================
+*/
 
 /*
-   ==============
-   CG_DrawHUDNumeric
-   ==============
- */
+* CG_DrawHUDNumeric
+*/
 void CG_DrawHUDNumeric( int x, int y, int align, float *color, int charwidth, int charheight, int value )
 {
 	char num[16], *ptr;
@@ -98,10 +96,8 @@ void CG_DrawHUDNumeric( int x, int y, int align, float *color, int charwidth, in
 }
 
 /*
-   ==============
-   CG_DrawHUDField
-   ==============
- */
+* CG_DrawHUDField
+*/
 void CG_DrawHUDField( int x, int y, int align, float *color, int size, int width, int value )
 {
 	char num[16], *ptr;
@@ -146,10 +142,8 @@ void CG_DrawHUDField( int x, int y, int align, float *color, int size, int width
 }
 
 /*
-   ================
-   CG_DrawModel
-   ================
- */
+* CG_DrawModel
+*/
 static void CG_DrawModel( int x, int y, int align, int w, int h, struct model_s *model, struct shader_s *shader, vec3_t origin, vec3_t angles, qboolean outline )
 {
 	refdef_t refdef;
@@ -194,10 +188,8 @@ static void CG_DrawModel( int x, int y, int align, int w, int h, struct model_s 
 }
 
 /*
-   ================
-   CG_DrawHUDModel
-   ================
- */
+* CG_DrawHUDModel
+*/
 void CG_DrawHUDModel( int x, int y, int align, int w, int h, struct model_s *model, struct shader_s *shader, float yawspeed )
 {
 	vec3_t mins, maxs;
@@ -215,9 +207,9 @@ void CG_DrawHUDModel( int x, int y, int align, int w, int h, struct model_s *mod
 	CG_DrawModel( x, y, align, w, h, model, shader, origin, angles, cg_outlineModels->integer ? qtrue : qfalse );
 }
 
-//================
-//CG_DrawMiniMap
-//================
+/*
+* CG_DrawMiniMap
+*/
 void CG_DrawMiniMap( int x, int y, int iw, int ih, qboolean draw_playernames, qboolean draw_itemnames, int align, vec4_t color )
 {
 	int i, entnum;
@@ -395,10 +387,8 @@ void CG_DrawMiniMap( int x, int y, int iw, int ih, qboolean draw_playernames, qb
 }
 
 /*
-   ================
-   CG_DrawHUDRect
-   ================
- */
+* CG_DrawHUDRect
+*/
 void CG_DrawHUDRect( int x, int y, int align, int w, int h, int val, int maxval, vec4_t color, struct shader_s *shader )
 {
 	float frac;

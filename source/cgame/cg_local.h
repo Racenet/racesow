@@ -189,6 +189,12 @@ typedef struct
 	cgs_media_handle_t *sfxPlasmaWeakHit;
 	cgs_media_handle_t *sfxPlasmaStrongHit;
 
+	// Lasergun sounds
+	cgs_media_handle_t *sfxLasergunWeakHum;
+	cgs_media_handle_t *sfxLasergunWeakQuadHum;
+	cgs_media_handle_t *sfxLasergunStrongHum;
+	cgs_media_handle_t *sfxLasergunStrongQuadHum;
+
 	cgs_media_handle_t *sfxQuadFireSound;
 
 	// VSAY sounds
@@ -241,6 +247,7 @@ typedef struct
 	cgs_media_handle_t *shaderCartoonHit;
 	cgs_media_handle_t *shaderCartoonHit2;
 	cgs_media_handle_t *shaderCartoonHit3;
+	cgs_media_handle_t *shaderTeamMateIndicator;
 	cgs_media_handle_t *shaderTeleporterSmokePuff;
 	cgs_media_handle_t *shaderBulletMark;
 	cgs_media_handle_t *shaderExplosionMark;
@@ -444,6 +451,8 @@ typedef struct
 	// locally derived information from server state
 	//
 	char configStrings[MAX_CONFIGSTRINGS][MAX_CONFIGSTRING_CHARS];
+
+	qboolean hasGametypeMenu;
 
 	char weaponModels[WEAP_TOTAL][MAX_QPATH];
 	int numWeaponModels;
@@ -716,9 +725,12 @@ int CG_ParseValue( const char **s );
 
 void CG_DrawClock( int x, int y, int align, struct mufont_s *font, vec4_t color );
 void CG_DrawPlayerNames( struct mufont_s *font, vec4_t color );
+void CG_DrawTeamMates( void );
 void CG_DrawHUDNumeric( int x, int y, int align, float *color, int charwidth, int charheight, int value );
 void CG_DrawTeamInfo( int x, int y, int align, struct mufont_s *font, vec4_t color );
 void CG_DrawNet( int x, int y, int w, int h, int align, vec4_t color );
+
+void CG_GameMenu_f( void );
 
 //
 // cg_hud.c
@@ -726,6 +738,7 @@ void CG_DrawNet( int x, int y, int w, int h, int align, vec4_t color );
 extern cvar_t *cg_showminimap;
 extern cvar_t *cg_showitemtimers;
 extern cvar_t *cg_placebo;
+extern cvar_t *cg_strafeHUD;
 
 void CG_SC_Obituary( void );
 void Cmd_CG_PrintHudHelp_f( void );
@@ -783,7 +796,6 @@ extern cvar_t *cg_rocketFireTrailAlpha;
 extern cvar_t *cg_grenadeTrailAlpha;
 extern cvar_t *cg_bloodTrailAlpha;
 
-extern cvar_t *cg_cartoonRockets;
 extern cvar_t *cg_cartoonEffects;
 extern cvar_t *cg_cartoonHitEffect;
 
@@ -838,6 +850,8 @@ extern cvar_t *cg_demoname;
 extern cvar_t *cg_playList;
 extern cvar_t *cg_playListShuffle;
 
+extern cvar_t *cg_flashWindowCount;
+
 #define CG_Malloc( size ) trap_MemAlloc( size, __FILE__, __LINE__ )
 #define CG_Free( data ) trap_MemFree( data, __FILE__, __LINE__ )
 
@@ -858,7 +872,7 @@ void CG_RegisterDemoCommands( void );
 void CG_UnregisterDemoCommands( void );
 void CG_UpdateTVServerString( void );
 void CG_AddAward( const char *str );
-void CG_OverrideWeapondef( int index, char *cstring );
+void CG_OverrideWeapondef( int index, const char *cstring );
 
 void CG_StartBackgroundTrack( void );
 void CG_LocalPrint( qboolean team, const char *format, ... );
@@ -867,7 +881,7 @@ void CG_LocalPrint( qboolean team, const char *format, ... );
 // cg_svcmds.c
 //
 void CG_Cmd_DemoGet_f( void );
-void CG_ConfigString( int i, char *s );
+void CG_ConfigString( int i, const char *s );
 void CG_GameCommand( const char *command );
 
 //
@@ -1005,6 +1019,7 @@ void CG_AddFragmentedDecal( vec3_t origin, vec3_t dir, float orient, float radiu
 void CG_AddParticles( void );
 void CG_ParticleEffect( vec3_t org, vec3_t dir, float r, float g, float b, int count );
 void CG_ParticleEffect2( vec3_t org, vec3_t dir, float r, float g, float b, int count );
+void CG_ParticleExplosionEffect( vec3_t org, vec3_t dir, float r, float g, float b, int count );
 void CG_BlasterTrail( vec3_t start, vec3_t end );
 void CG_FlyEffect( centity_t *ent, vec3_t origin );
 void CG_ElectroIonsTrail( vec3_t start, vec3_t end );

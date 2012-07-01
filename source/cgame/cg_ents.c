@@ -23,10 +23,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static void CG_UpdateEntities( void );
 
 /*
-==================
-CG_FixVolumeCvars
-Don't let the user go too far away with volumes
-==================
+* CG_FixVolumeCvars
+* Don't let the user go too far away with volumes
 */
 static void CG_FixVolumeCvars( void )
 {
@@ -122,9 +120,9 @@ static qboolean CG_UpdateLinearProjectilePosition( centity_t *cent )
 #undef MIN_DRAWDISTANCE_THIRDPERSON
 }
 
-//==================
-//CG_NewPacketEntityState
-//==================
+/*
+* CG_NewPacketEntityState
+*/
 static void CG_NewPacketEntityState( entity_state_t *state )
 {
 	centity_t *cent;
@@ -337,7 +335,7 @@ static void CG_SetFramePlayerState( snapshot_t *frame, int index )
 		!frame->playerState.pmove.stats[PM_STAT_ZOOMTIME] )
 	{
 		frame->playerState.fov = cg_fov->integer;
-		clamp( frame->playerState.fov, 60, 160 );
+		clamp( frame->playerState.fov, MIN_FOV, MAX_FOV );
 	}
 
 	if( cgs.tv )
@@ -415,10 +413,10 @@ static void CG_UpdatePlayerState( void )
 	cg.predictedPlayerState = cg.frame.playerState;
 }
 
-//==================
-//CG_NewFrameSnap
-// a new frame snap has been received from the server
-//==================
+/*
+* CG_NewFrameSnap
+* a new frame snap has been received from the server
+*/
 void CG_NewFrameSnap( snapshot_t *frame, snapshot_t *lerpframe )
 {
 	int i;
@@ -464,7 +462,7 @@ void CG_NewFrameSnap( snapshot_t *frame, snapshot_t *lerpframe )
 		else
 		{
 			if( !cgs.configStrings[CS_WORLDMODEL][0] )
-				trap_Cmd_ExecuteText( EXEC_APPEND, "menu_tv\n" ); // bring up the channels menu if in lobby
+				trap_Cmd_ExecuteText( EXEC_APPEND, "menu_open tv\n" ); // bring up the channels menu if in lobby
 		}
 		cgs.tvRequested = qtrue;
 	}
@@ -534,16 +532,19 @@ struct cmodel_s *CG_CModelForEntity( int entNum )
 		bmaxs[0] = bmaxs[1] = x;
 		bmins[2] = -zd;
 		bmaxs[2] = zu;
-		cmodel = trap_CM_ModelForBBox( bmins, bmaxs );
+		if( cent->type == ET_PLAYER || cent->type == ET_CORPSE )
+			cmodel = trap_CM_OctagonModelForBBox( bmins, bmaxs );
+		else
+			cmodel = trap_CM_ModelForBBox( bmins, bmaxs );
 	}
 
 	return cmodel;
 }
 
-//=================
-//CG_DrawEntityBox
-// draw the bounding box (in brush models case the box containing the model)
-//=================
+/*
+* CG_DrawEntityBox
+* draw the bounding box (in brush models case the box containing the model)
+*/
 void CG_DrawEntityBox( centity_t *cent )
 {
 #ifndef PUBLIC_BUILD
@@ -1796,10 +1797,10 @@ void CG_EntityLoopSound( entity_state_t *state, float attenuation )
 	trap_S_AddLoopSound( cgs.soundPrecache[state->sound], state->number, cg_volume_effects->value, ISVIEWERENTITY( state->number ) ? ATTN_NONE : ATTN_IDLE );
 }
 
-//===============
-//CG_AddPacketEntitiesToScene
-// Add the entities to the rendering list
-//===============
+/*
+* CG_AddPacketEntitiesToScene
+* Add the entities to the rendering list
+*/
 void CG_AddEntities( void )
 {
 	entity_state_t *state;
@@ -1975,10 +1976,10 @@ void CG_AddEntities( void )
 	}
 }
 
-//==============
-//CG_LerpEntities
-// Interpolate the entity states positions into the entity_t structs
-//==============
+/*
+* CG_LerpEntities
+* Interpolate the entity states positions into the entity_t structs
+*/
 void CG_LerpEntities( void )
 {
 	entity_state_t *state;
@@ -2053,10 +2054,10 @@ void CG_LerpEntities( void )
 	}
 }
 
-//==============
-//CG_UpdateEntities
-// Called at receiving a new serverframe. Sets up the model, type, etc to be drawn later on
-//==============
+/*
+* CG_UpdateEntities
+* Called at receiving a new serverframe. Sets up the model, type, etc to be drawn later on
+*/
 void CG_UpdateEntities( void )
 {
 	entity_state_t *state;
@@ -2180,11 +2181,9 @@ void CG_UpdateEntities( void )
 //=============================================================
 
 /*
-===============
-CG_GetEntitySpatilization
-
-Called to get the sound spatialization origin and velocity
-===============
+* CG_GetEntitySpatilization
+* 
+* Called to get the sound spatialization origin and velocity
 */
 void CG_GetEntitySpatilization( int entNum, vec3_t origin, vec3_t velocity )
 {
