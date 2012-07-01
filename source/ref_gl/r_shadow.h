@@ -34,6 +34,8 @@ typedef struct shadowGroup_s
 
 	float				projDist;
 	vec3_t				mins, maxs;
+	vec3_t				visMins, visMaxs;
+	vec3_t				visCorners[8]; // corners for world mins and maxs
 
 	vec4_t				lightAmbient;
 
@@ -49,7 +51,7 @@ void		R_InitShadows( void );
 void		R_ShutdownShadows( void );
 
 qboolean	R_CullPlanarShadow( entity_t *e, vec3_t mins, vec3_t maxs, qboolean occclusionQuery );
-void		R_DeformVPlanarShadow( int numV, float *v );
+qboolean	R_DeformVPlanarShadowParams( vec3_t planenormal, float *planedist, vec3_t lightdir );
 void		R_PlanarShadowPass( int state );
 shader_t	*R_PlanarShadowShader( void );
 

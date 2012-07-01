@@ -39,13 +39,12 @@ enum
 	MF_NONBATCHED		= 1 << 13,
 	MF_POLYGONOFFSET	= 1 << 14,
 	MF_HARDWARE 		= 1 << 15,
-
-	// global features
 	MF_NOCULL			= 1 << 16,
 	MF_TRIFAN			= 1 << 17,
-	MF_KEEPLOCK			= 1 << 18,
-	MF_NOCOLORWRITE		= 1 << 19,
-	MF_POLYGONOFFSET2	= 1 << 20
+	MF_NOCOLORWRITE		= 1 << 18,
+	MF_POLYGONOFFSET2	= 1 << 19,
+	MF_BONES			= 1 << 20,	// includes both weights and indices
+	MF_QUAD				= 1 << 21
 };
 
 enum
@@ -58,8 +57,19 @@ enum
 	MB_MAXTYPES = 4
 };
 
+typedef enum
+{
+	VBO_TAG_NONE,
+	VBO_TAG_WORLD,
+	VBO_TAG_MODEL
+} vbo_tag_t;
+
 typedef struct mesh_vbo_s
 {
+	unsigned int		index;
+	int					registration_sequence;
+	vbo_tag_t			tag;
+
 	unsigned int 		vertexId;
 	unsigned int		elemId;
 	void 				*owner;
@@ -75,6 +85,8 @@ typedef struct mesh_vbo_s
 	size_t 				stOffset;
 	size_t 				lmstOffset[MAX_LIGHTMAPS];
 	size_t 				colorsOffset[MAX_LIGHTMAPS];
+	size_t				bonesIndicesOffset;
+	size_t				bonesWeightsOffset;
 } mesh_vbo_t;
 
 typedef struct mesh_s
@@ -94,20 +106,32 @@ typedef struct mesh_s
 #define MB_FOG2NUM( fog )			( (fog) ? ((((int)((fog) - r_worldbrushmodel->fogs))+1) << 2) : 0 )
 #define MB_NUM2FOG( num, fog )		( (fog) = r_worldbrushmodel ? r_worldbrushmodel->fogs+(((num)>>2) & 0xFF) : 0, (fog) = r_worldbrushmodel ? ( (fog) == r_worldbrushmodel->fogs ? NULL : (fog)-1 ) : NULL )
 
-#define MB_ENTITY2NUM( ent )		( (int)((ent)-r_entities)<<20 )
-#define MB_NUM2ENTITY( num, ent )	( ent = r_entities+(((num)>>20)&1023) )
+#define MB_ENTITY2NUM( ent )		( (int)(R_ENT2NUM(ent))<<20 )
+#define MB_NUM2ENTITY( num, ent )	( ent = R_NUM2ENT(((num)>>20)&1023) )
 
 #define MB_SHADER2NUM( s )			( (s)->sort << 26 ) | ((s) - r_shaders )
 #define MB_NUM2SHADER( num, s )		( (s) = r_shaders + ((num) & 0xFFF) )
 #define MB_NUM2SHADERSORT( num )	( ((num) >> 26) & 0x1F )
 
+#define MB_DISTANCE2NUM( d )		( bound( 1, 0x4000 - (unsigned int)(d), 0x4000 - 1 ) << 12 )
+
 #define MIN_RENDER_MESHES			2048
 
 typedef struct
 {
+	unsigned int index;						// index into meshbuffers array
+
+	// comparison keys follow
+	unsigned int key1;
+	unsigned int key2;
+	unsigned int key3;
+} meshbufkey_t;
+
+typedef struct
+{
+	int					infokey;			// surface number or mesh number
 	int					shaderkey;
 	unsigned int		sortkey;
-	int					infokey;			// surface number or mesh number
 	union
 	{
 		int				lastPoly;
@@ -116,19 +140,22 @@ typedef struct
 	};
 	unsigned int		shadowbits;
 
-	// the following is only valid for world surfaces
-	const mesh_t		*mesh;
-	const mesh_vbo_t	*vbo;
-	unsigned			short numVerts, numElems;
+	unsigned int		vboIndex;
+	unsigned int		numVerts, numElems;
+	unsigned int		firstVBOVert, firstVBOElem;
 } meshbuffer_t;
 
 typedef struct
 {
 	int					num_opaque_meshes, max_opaque_meshes;
 	meshbuffer_t		*meshbuffer_opaque;
+	int					num_opaque_meshbuffer_keys;
+	meshbufkey_t		*meshbuffer_opaque_keys;
 
 	int					num_translucent_meshes, max_translucent_meshes;
 	meshbuffer_t		*meshbuffer_translucent;
+	int					num_translucent_meshbuffer_keys;
+	meshbufkey_t		*meshbuffer_translucent_keys;
 
 	int					num_portal_opaque_meshes;
 	int					num_portal_translucent_meshes;
@@ -151,6 +178,8 @@ typedef struct
 	mesh_t				*meshes;
 	vec2_t				*sphereStCoords[5];
 	vec2_t				*linearStCoords[6];
+
+	float				skyheight;
 
 	struct shader_s		*farboxShaders[6];
 	struct shader_s		*nearboxShaders[6];

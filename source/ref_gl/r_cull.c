@@ -30,11 +30,9 @@ FRUSTUM AND PVS CULLING
 */
 
 /*
-=================
-R_CullBox
-
-Returns true if the box is completely outside the frustum
-=================
+* R_CullBox
+* 
+* Returns true if the box is completely outside the frustum
 */
 qboolean R_CullBox( const vec3_t mins, const vec3_t maxs, const unsigned int clipflags )
 {
@@ -93,11 +91,9 @@ qboolean R_CullBox( const vec3_t mins, const vec3_t maxs, const unsigned int cli
 }
 
 /*
-=================
-R_CullSphere
-
-Returns true if the sphere is completely outside the frustum
-=================
+* R_CullSphere
+* 
+* Returns true if the sphere is completely outside the frustum
 */
 qboolean R_CullSphere( const vec3_t centre, const float radius, const unsigned int clipflags )
 {
@@ -120,9 +116,7 @@ qboolean R_CullSphere( const vec3_t centre, const float radius, const unsigned i
 }
 
 /*
-===================
-R_VisCullBox
-===================
+* R_VisCullBox
 */
 qboolean R_VisCullBox( const vec3_t mins, const vec3_t maxs )
 {
@@ -171,9 +165,7 @@ qboolean R_VisCullBox( const vec3_t mins, const vec3_t maxs )
 }
 
 /*
-===================
-R_VisCullSphere
-===================
+* R_VisCullSphere
 */
 qboolean R_VisCullSphere( const vec3_t origin, float radius )
 {
@@ -222,9 +214,7 @@ qboolean R_VisCullSphere( const vec3_t origin, float radius )
 }
 
 /*
-=============
-R_CullModel
-=============
+* R_CullModel
 */
 int R_CullModel( entity_t *e, vec3_t mins, vec3_t maxs, float radius )
 {
@@ -261,9 +251,7 @@ int R_CullModel( entity_t *e, vec3_t mins, vec3_t maxs, float radius )
 }
 
 /*
-=================
-R_CullBrushModel
-=================
+* R_CullBrushModel
 */
 qboolean R_CullBrushModel( entity_t *e )
 {
@@ -306,9 +294,7 @@ qboolean R_CullBrushModel( entity_t *e )
 }
 
 /*
-=================
-R_CullSprite
-=================
+* R_CullSprite
 */
 qboolean R_CullSprite( entity_t *e )
 {
@@ -368,9 +354,7 @@ static entity_t	*r_occlusionEntity;
 static void R_RenderOccludingSurfaces( void );
 
 /*
-===============
-R_InitOcclusionQueries
-===============
+* R_InitOcclusionQueries
 */
 void R_InitOcclusionQueries( void )
 {
@@ -389,9 +373,7 @@ void R_InitOcclusionQueries( void )
 }
 
 /*
-===============
-R_BeginOcclusionPass
-===============
+* R_BeginOcclusionPass
 */
 void R_BeginOcclusionPass( void )
 {
@@ -411,9 +393,7 @@ void R_BeginOcclusionPass( void )
 }
 
 /*
-===============
-R_EndOcclusionPass
-===============
+* R_EndOcclusionPass
 */
 void R_EndOcclusionPass( void )
 {
@@ -436,9 +416,7 @@ void R_EndOcclusionPass( void )
 }
 
 /*
-===============
-R_RenderOccludingSurfaces
-===============
+* R_RenderOccludingSurfaces
 */
 static void R_RenderOccludingSurfaces( void )
 {
@@ -448,13 +426,11 @@ static void R_RenderOccludingSurfaces( void )
 	r_occludersQueued = qfalse;
 	R_RotateForEntity( r_occlusionEntity );
 	R_BackendResetPassMask();
-	R_RenderMeshBuffer( &r_occluderMB );
+	R_RenderMeshBuffer( &r_occluderMB, NULL );
 }
 
 /*
-===============
-R_OcclusionShader
-===============
+* R_OcclusionShader
 */
 shader_t *R_OcclusionShader( void )
 {
@@ -462,9 +438,7 @@ shader_t *R_OcclusionShader( void )
 }
 
 /*
-===============
-R_AddOccludingSurface
-===============
+* R_AddOccludingSurface
 */
 void R_AddOccludingSurface( msurface_t *surf, shader_t *shader )
 {
@@ -479,13 +453,11 @@ void R_AddOccludingSurface( msurface_t *surf, shader_t *shader )
 	}
 	r_occludersQueued = qtrue;
 
-	R_PushMesh( surf->vbo, surf->mesh, MF_NOCOLORWRITE );
+	R_PushMesh( surf->mesh, surf->vbo != NULL, MF_NOCOLORWRITE );
 }
 
 /*
-===============
-R_GetOcclusionQueryNum
-===============
+* R_GetOcclusionQueryNum
 */
 int R_GetOcclusionQueryNum( int type, int key )
 {
@@ -505,9 +477,7 @@ int R_GetOcclusionQueryNum( int type, int key )
 }
 
 /*
-===============
-R_IssueOcclusionQuery
-===============
+* R_IssueOcclusionQuery
 */
 int R_IssueOcclusionQuery( int query, entity_t *e, vec3_t mins, vec3_t maxs )
 {
@@ -547,8 +517,8 @@ int R_IssueOcclusionQuery( int query, entity_t *e, vec3_t mins, vec3_t maxs )
 
 	R_RotateForEntity( e );
 	R_BackendSetPassMask( GLSTATE_MASK & ~GLSTATE_DEPTHWRITE );
-	R_PushMesh( NULL, &mesh, MF_NONBATCHED|MF_NOCULL );
-	R_RenderMeshBuffer( &r_occluderMB );
+	R_PushMesh( &mesh, qfalse, MF_NONBATCHED|MF_NOCULL );
+	R_RenderMeshBuffer( &r_occluderMB, NULL );
 
 	qglEndQueryARB( GL_SAMPLES_PASSED_ARB );
 
@@ -556,9 +526,7 @@ int R_IssueOcclusionQuery( int query, entity_t *e, vec3_t mins, vec3_t maxs )
 }
 
 /*
-===============
-R_OcclusionQueryIssued
-===============
+* R_OcclusionQueryIssued
 */
 qboolean R_OcclusionQueryIssued( int query )
 {
@@ -567,9 +535,7 @@ qboolean R_OcclusionQueryIssued( int query )
 }
 
 /*
-===============
-R_GetOcclusionQueryResult
-===============
+* R_GetOcclusionQueryResult
 */
 unsigned int R_GetOcclusionQueryResult( int query, qboolean wait )
 {
@@ -603,9 +569,7 @@ unsigned int R_GetOcclusionQueryResult( int query, qboolean wait )
 }
 
 /*
-===============
-R_GetOcclusionQueryResultBool
-===============
+* R_GetOcclusionQueryResultBool
 */
 qboolean R_GetOcclusionQueryResultBool( int type, int key, qboolean wait )
 {
@@ -622,9 +586,7 @@ qboolean R_GetOcclusionQueryResultBool( int type, int key, qboolean wait )
 }
 
 /*
-===============
-R_ShutdownOcclusionQueries
-===============
+* R_ShutdownOcclusionQueries
 */
 void R_ShutdownOcclusionQueries( void )
 {

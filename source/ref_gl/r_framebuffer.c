@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef struct
 {
+	int registration_sequence;
 	int objectID;
 	int renderBufferAttachment;
 	image_t *textureAttachment;
@@ -37,9 +38,7 @@ static int r_num_framebuffer_objects;
 static r_fbo_t r_framebuffer_objects[MAX_FRAMEBUFFER_OBJECTS];
 
 /*
-================
-R_InitFBObjects
-================
+* R_InitFBObjects
 */
 void R_InitFBObjects( void )
 {
@@ -56,11 +55,9 @@ void R_InitFBObjects( void )
 }
 
 /*
-================
-R_DeleteFBObject
-
-Delete framebuffer object along with attached render buffer
-================
+* R_DeleteFBObject
+* 
+* Delete framebuffer object along with attached render buffer
 */
 static void R_DeleteFBObject( r_fbo_t *fbo )
 {
@@ -82,9 +79,7 @@ static void R_DeleteFBObject( r_fbo_t *fbo )
 }
 
 /*
-================
-R_RegisterFBObject
-================
+* R_RegisterFBObject
 */
 int R_RegisterFBObject( void )
 {
@@ -94,16 +89,25 @@ int R_RegisterFBObject( void )
 
 	if( !r_frambuffer_objects_initialized )
 		return 0;
-	if( r_num_framebuffer_objects == MAX_FRAMEBUFFER_OBJECTS )
+
+	for( i = 0, fbo = r_framebuffer_objects; i < r_num_framebuffer_objects; i++, fbo++ ) {
+		if( !fbo->objectID ) {
+			// free slot
+			goto found;
+		}
+	}
+
+	if( i == MAX_FRAMEBUFFER_OBJECTS )
 	{
 		Com_Printf( S_COLOR_YELLOW "R_RegisterFBObject: framebuffer objects limit exceeded\n" );
 		return 0;
 	}
 
-	qglGenFramebuffersEXT( 1, &fbID );
-
 	i = r_num_framebuffer_objects++;
 	fbo = r_framebuffer_objects + i;
+
+found:
+	qglGenFramebuffersEXT( 1, &fbID );
 	memset( fbo, 0, sizeof( *fbo ) );
 	fbo->objectID = fbID;
 
@@ -111,9 +115,20 @@ int R_RegisterFBObject( void )
 }
 
 /*
-================
-R_ActiveFBObject
-================
+* R_TouchFBObject
+*/
+void R_TouchFBObject( int object )
+{
+	r_fbo_t *fbo;
+
+	assert( object > 0 && object <= r_num_framebuffer_objects );
+
+	fbo = r_framebuffer_objects + object - 1;
+	fbo->registration_sequence = r_front.registration_sequence;
+}
+
+/*
+* R_ActiveFBObject
 */
 int R_ActiveFBObject( void )
 {
@@ -121,9 +136,7 @@ int R_ActiveFBObject( void )
 }
 
 /*
-================
-R_UseFBObject
-================
+* R_UseFBObject
 */
 qboolean R_UseFBObject( int object )
 {
@@ -149,9 +162,7 @@ qboolean R_UseFBObject( int object )
 }
 
 /*
-================
-R_AttachTextureToFBOject
-================
+* R_AttachTextureToFBOject
 */
 qboolean R_AttachTextureToFBOject( int object, image_t *texture, qboolean depthOnly )
 {
@@ -216,11 +227,9 @@ qboolean R_AttachTextureToFBOject( int object, image_t *texture, qboolean depthO
 }
 
 /*
-================
-R_CheckFBObjectStatus
-
-Boolean, returns qfalse in case of error
-================
+* R_CheckFBObjectStatus
+* 
+* Boolean, returns qfalse in case of error
 */
 qboolean R_CheckFBObjectStatus( void )
 {
@@ -245,11 +254,27 @@ qboolean R_CheckFBObjectStatus( void )
 }
 
 /*
-================
-R_ShutdownFBObjects
+* R_FreeUnusedFBObjects
+*/
+void R_FreeUnusedFBObjects( void )
+{
+	int i;
 
-Delete all registered framebuffer and render buffer objects, clear memory
-================
+	if( !r_frambuffer_objects_initialized )
+		return;
+
+	for( i = 0; i < r_num_framebuffer_objects; i++ ) {
+		if( r_framebuffer_objects[i].registration_sequence == r_front.registration_sequence ) {
+			continue;
+		}
+		R_DeleteFBObject( r_framebuffer_objects + i );
+	}
+}
+
+/*
+* R_ShutdownFBObjects
+* 
+* Delete all registered framebuffer and render buffer objects, clear memory
 */
 void R_ShutdownFBObjects( void )
 {
@@ -258,8 +283,9 @@ void R_ShutdownFBObjects( void )
 	if( !r_frambuffer_objects_initialized )
 		return;
 
-	for( i = 0; i < r_num_framebuffer_objects; i++ )
+	for( i = 0; i < r_num_framebuffer_objects; i++ ) {
 		R_DeleteFBObject( r_framebuffer_objects + i );
+	}
 
 	qglBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
 	r_bound_framebuffer_object = 0;

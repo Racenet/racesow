@@ -22,21 +22,27 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../cgame/ref.h"
 
-int			R_Init( void *hinstance, void *hWnd, void *parentWid, qboolean verbose );
-void		R_Restart( void );
+rserr_t		R_Init( void *hinstance, void *wndproc, void *parenthWnd, int x, int y, int width, int height, qboolean fullScreen, qboolean wideScreen, qboolean verbose );
+rserr_t		R_SetMode( int x, int y, int width, int height, qboolean fullScreen, qboolean wideScreen );
+void		R_BeginRegistration( void );
+void		R_EndRegistration( void );
 void		R_Shutdown( qboolean verbose );
 
-void		R_RegisterWorldModel( const char *model, const dvis_t *pvsData, const dvis_t *phsData );
+void		R_RegisterWorldModel( const char *model, const dvis_t *pvsData );
 void		R_ModelBounds( const struct model_s *model, vec3_t mins, vec3_t maxs );
+void		R_ModelFrameBounds( const struct model_s *model, int frame, vec3_t mins, vec3_t maxs );
 
 struct model_s *R_RegisterModel( const char *name );
 struct shader_s *R_RegisterPic( const char *name );
+struct shader_s *R_RegisterRawPic( const char *name, int width, int height, qbyte *data );
 struct shader_s *R_RegisterLevelshot( const char *name, struct shader_s *defaultShader, qboolean *matchesDefault );
 struct shader_s *R_RegisterShader( const char *name );
 struct shader_s *R_RegisterSkin( const char *name );
 struct skinfile_s *R_RegisterSkinFile( const char *name );
+struct shader_s *R_RegisterVideo( const char *name );
 
 void		R_RemapShader( const char *from, const char *to, int timeOffset );
+void		R_GetShaderDimensions( const struct shader_s *shader, int *width, int *height, int *depth );
 
 void		R_ClearScene( void );
 void		R_AddEntityToScene( const entity_t *ent );
@@ -47,7 +53,11 @@ void		R_RenderScene( const refdef_t *fd );
 
 void		R_DrawStretchPic( int x, int y, int w, int h, float s1, float t1, float s2, float t2, 
 							 const float *color, const struct shader_s *shader );
-void		R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, int frame, qbyte *data );
+void		R_DrawRotatedStretchPic( int x, int y, int w, int h, float s1, float t1, float s2, float t2, 
+							 float angle, const vec4_t color, const struct shader_s *shader );
+void		R_DrawStretchRaw( int x, int y, int w, int h, int cols, int rows, qbyte *data );
+void		R_DrawStretchPoly( const poly_t *poly, float x_offset, float y_offset );
+void		R_SetScissorRegion( int x, int y, int w, int h );
 
 void		R_SetCustomColor( int num, int r, int g, int b );
 void		R_LightForOrigin( const vec3_t origin, vec3_t dir, vec4_t ambient, vec4_t diffuse, float radius );

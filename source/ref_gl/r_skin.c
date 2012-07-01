@@ -29,18 +29,18 @@ typedef struct
 typedef struct skinfile_s
 {
 	char				*name;
+	int					registration_sequence;
 
 	mesh_shader_pair_t	*pairs;
 	int					numpairs;
 } skinfile_t;
 
+static int r_numskinfiles;
 static skinfile_t r_skinfiles[MAX_SKINFILES];
 static mempool_t *r_skinsPool;
 
 /*
-================
-R_InitSkinFiles
-================
+* R_InitSkinFiles
 */
 void R_InitSkinFiles( void )
 {
@@ -50,9 +50,7 @@ void R_InitSkinFiles( void )
 }
 
 /*
-================
-SkinFile_CopyString
-================
+* SkinFile_CopyString
 */
 static char *SkinFile_CopyString( const char *in )
 {
@@ -65,27 +63,25 @@ static char *SkinFile_CopyString( const char *in )
 }
 
 /*
-================
-SkinFile_FreeSkinFile
-================
+* SkinFile_FreeSkinFile
 */
 static void SkinFile_FreeSkinFile( skinfile_t *skinfile )
 {
 	int i;
 
-	for( i = 0; i < skinfile->numpairs; i++ )
-		Mem_Free( skinfile->pairs[i].meshname );
+	if( skinfile->numpairs ) {
+		for( i = 0; i < skinfile->numpairs; i++ )
+			Mem_Free( skinfile->pairs[i].meshname );
+		Mem_Free( skinfile->pairs );
+	}
 
-	Mem_Free( skinfile->pairs );
 	Mem_Free( skinfile->name );
 
 	memset( skinfile, 0, sizeof( skinfile_t ) );
 }
 
 /*
-================
-R_FindShaderForSkinFile
-================
+* R_FindShaderForSkinFile
 */
 shader_t *R_FindShaderForSkinFile( const skinfile_t *skinfile, const char *meshname )
 {
@@ -105,9 +101,7 @@ shader_t *R_FindShaderForSkinFile( const skinfile_t *skinfile, const char *meshn
 }
 
 /*
-================
-SkinFile_ParseBuffer
-================
+* SkinFile_ParseBuffer
 */
 static int SkinFile_ParseBuffer( char *buffer, mesh_shader_pair_t *pairs )
 {
@@ -143,11 +137,9 @@ static int SkinFile_ParseBuffer( char *buffer, mesh_shader_pair_t *pairs )
 }
 
 /*
-================
-R_RegisterSkinFile
-================
+* R_SkinFileForName
 */
-skinfile_t *R_RegisterSkinFile( const char *name )
+static skinfile_t *R_SkinFileForName( const char *name )
 {
 	char filename[MAX_QPATH];
 	int i;
@@ -157,10 +149,10 @@ skinfile_t *R_RegisterSkinFile( const char *name )
 	Q_strncpyz( filename, name, sizeof( filename ) );
 	COM_DefaultExtension( filename, ".skin", sizeof( filename ) );
 
-	for( i = 0, skinfile = r_skinfiles; i < MAX_SKINFILES; i++, skinfile++ )
+	for( i = 0, skinfile = r_skinfiles; i < r_numskinfiles; i++, skinfile++ )
 	{
 		if( !skinfile->name )
-			break;
+			break; // free slot
 		if( !Q_stricmp( skinfile->name, filename ) )
 			return skinfile;
 	}
@@ -177,6 +169,7 @@ skinfile_t *R_RegisterSkinFile( const char *name )
 		return NULL;
 	}
 
+	r_numskinfiles++;
 	skinfile = &r_skinfiles[i];
 	skinfile->name = SkinFile_CopyString( filename );
 
@@ -197,9 +190,46 @@ skinfile_t *R_RegisterSkinFile( const char *name )
 }
 
 /*
-================
-R_ShutdownSkinFiles
-================
+* R_RegisterSkinFile
+*/
+skinfile_t *R_RegisterSkinFile( const char *name )
+{
+	skinfile_t *skinfile;
+
+	skinfile = R_SkinFileForName( name );
+	if( skinfile && skinfile->registration_sequence != r_front.registration_sequence ) {
+		int i;
+
+		skinfile->registration_sequence = r_front.registration_sequence;
+		for( i = 0; i < skinfile->numpairs; i++ ) {
+			R_TouchShader( skinfile->pairs[i].shader );
+		}
+	}
+	return skinfile;
+}
+
+/*
+* R_FreeUnusedSkinFiles
+*/
+void R_FreeUnusedSkinFiles( void )
+{
+	int i;
+	skinfile_t *skinfile;
+
+	if( !r_skinsPool )
+		return;
+
+	for( i = 0, skinfile = r_skinfiles; i < r_numskinfiles; i++, skinfile++ ) {
+		if( skinfile->registration_sequence == r_front.registration_sequence ) {
+			// we need this skin
+			continue;
+		}
+		SkinFile_FreeSkinFile( skinfile );
+	}
+}
+
+/*
+* R_ShutdownSkinFiles
 */
 void R_ShutdownSkinFiles( void )
 {
@@ -209,16 +239,13 @@ void R_ShutdownSkinFiles( void )
 	if( !r_skinsPool )
 		return;
 
-	for( i = 0, skinfile = r_skinfiles; i < MAX_SKINFILES; i++, skinfile++ )
-	{
-		if( !skinfile->name )
-			break;
-
-		if( skinfile->numpairs )
-			SkinFile_FreeSkinFile( skinfile );
-
-		Mem_Free( skinfile->name );
+	for( i = 0, skinfile = r_skinfiles; i < r_numskinfiles; i++, skinfile++ ) {
+		if( !skinfile->name ) {
+			continue;
+		}
+		SkinFile_FreeSkinFile( skinfile );
 	}
 
+	r_numskinfiles = 0;
 	Mem_FreePool( &r_skinsPool );
 }
