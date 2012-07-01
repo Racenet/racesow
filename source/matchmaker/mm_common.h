@@ -1,69 +1,54 @@
 /*
-   Copyright (C) 2007 Will Franklin.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
-#ifndef _MM_COMMON
-#define _MM_COMMON
+// mm_common.h -- matchmaker definitions for client and server exe's (not modules)
 
-#include "../qcommon/qcommon.h"
-#include "../qcommon/rsa.h"
+#ifndef __MM_COMMON_H
+#define __MM_COMMON_H
 
-#define SALT_LEN 15
-#define SIGNATURE_LEN 128
+#include "../qcommon/wswcurl.h"
+#include "../matchmaker/mm_query.h"
 
-#define MAX_MAXCLIENTS 24
-#define MAX_TIMELIMIT 20.0f
-#define MAX_SCORELIMIT 50
+// these are in milliseconds
+#define MM_HEARTBEAT_INTERVAL	3*60*1000
+#define MM_LOGOUT_TIMEOUT		3*1000
 
-#define MM_HEARTBEAT_SECONDS 300
+// for client only
+#define MM_LOGIN2_INTERVAL		3*1000	// milliseconds
+#define MM_LOGIN2_RETRIES		7
 
-//===============
-// mmserver cvar
-//===============
-#define MM_SERVER_IP "warsow.net:46002"
+extern cvar_t *mm_url;
 
-//===============
-// mm_packet_t
-//===============
-typedef struct mm_packet_s
-{
-	msg_t msg;
-	struct mm_packet_s *next;
-} mm_packet_t;
+void MM_PasswordWrite( const char *user, const char *password );
+// returns password as static string
+const char *MM_PasswordRead( const char *user );
 
-//===============
-// mm_type_t
-//===============
-typedef enum
-{
-	TYPE_ANY,
-	TYPE_DEPENDENT,
+char ** MM_ParseResponse( wswcurl_req *req, int *argc );
+void MM_FreeResponse( char **argv );
 
-	TYPE_TOTAL
-} mm_type_t;
+void MM_Init( void );
+void MM_Shutdown( void );
+void MM_Frame( const int realmsec );
 
-//===============
-// mm_common.c
-//===============
-#define CTXOFS( x ) (size_t)&( ( ( rsa_context * )0 )->x )
-
-const char *MM_LoadKeyError( void );
-qboolean MM_LoadKey( rsa_context *ctx, int mode, size_t keypart_offsets[], const char *filename );
+void StatQuery_Init( void );
+void StatQuery_Shutdown( void );
+stat_query_api_t *StatQuery_GetAPI( void );
 
 #endif
