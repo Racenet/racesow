@@ -1,3 +1,22 @@
+/*
+Copyright (C) 2008 German Garcia
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
 
 #include "qas_local.h"
 
@@ -36,6 +55,7 @@ void QAS_InitAngelExport( void )
 	angelExport.asSetArgObject = qasSetArgObject;
 	angelExport.asSetObject = qasSetObject;
 	angelExport.asGetReturnByte = qasGetReturnByte;
+	angelExport.asGetReturnBool = qasGetReturnBool;
 	angelExport.asGetReturnWord = qasGetReturnWord;
 	angelExport.asGetReturnDWord = qasGetReturnDWord;
 	angelExport.asGetReturnQWord = qasGetReturnQWord;
@@ -50,20 +70,42 @@ void QAS_InitAngelExport( void )
 	angelExport.asRegisterObjectBehaviour = qasRegisterObjectBehaviour;
 	angelExport.asRegisterGlobalProperty = qasRegisterGlobalProperty;
 	angelExport.asRegisterGlobalFunction = qasRegisterGlobalFunction;
-	angelExport.asRegisterGlobalBehaviour = qasRegisterGlobalBehaviour;
+	angelExport.asGetGlobalFunctionByDecl = qasGetGlobalFunctionByDecl;
 	angelExport.asRegisterEnum = qasRegisterEnum;
 	angelExport.asRegisterEnumValue = qasRegisterEnumValue;
 	angelExport.asRegisterStringFactory = qasRegisterStringFactory;
+	angelExport.asRegisterFuncdef = qasRegisterFuncdef;
 	angelExport.asGetExceptionFunction = qasGetExceptionFunction;
 	angelExport.asGetExceptionLineNumber = qasGetExceptionLineNumber;
 	angelExport.asGetExceptionString = qasGetExceptionString;
-	angelExport.asGetFunctionDeclaration = qasGetFunctionDeclaration;
-	angelExport.asGetFunctionSection = qasGetFunctionSection;
-	angelExport.asGetFunctionIDByDecl = qasGetFunctionIDByDecl;
 
-	angelExport.asIScriptGeneric_GetObject = qasIScriptGeneric_GetObject;
-	angelExport.asIScriptGeneric_GetArg = qasIScriptGeneric_GetArg;
-	angelExport.asIScriptGeneric_SetReturn = qasIScriptGeneric_SetReturn;
+	angelExport.asGetFunctionSection = qasGetFunctionSection;
+	angelExport.asGetFunctionByDecl = qasGetFunctionByDecl;
+	angelExport.asGetFunctionType = qasGetFunctionType;
+	angelExport.asGetFunctionName = qasGetFunctionName;
+	angelExport.asGetFunctionDeclaration = qasGetFunctionDeclaration;
+	angelExport.asGetFunctionParamCount = qasGetFunctionParamCount;
+	angelExport.asGetFunctionReturnTypeId = qasGetFunctionReturnTypeId;
+	angelExport.asAddFunctionReference = qasAddFunctionReference;
+	angelExport.asReleaseFunction = qasReleaseFunction;
+
+	angelExport.asStringFactoryBuffer = qasStringFactoryBuffer;
+	angelExport.asStringRelease = qasStringRelease;
+	angelExport.asStringAssignString = qasStringAssignString;
+
+	angelExport.asGetEngineCpp = qasGetEngineCpp;
+	angelExport.asGetContextCpp = qasGetContextCpp;
+
+	angelExport.asGetActiveContext = qasGetActiveContext;
+
+	angelExport.asCreateArrayCpp = qasCreateArrayCpp;
+	angelExport.asReleaseArrayCpp = qasReleaseArrayCpp;
+
+	angelExport.asCreateDictionaryCpp = qasCreateDictionaryCpp;
+	angelExport.asReleaseDictionaryCpp = qasReleaseDictionaryCpp;
+
+	angelExport.asCreateAnyCpp = qasCreateAnyCpp;
+	angelExport.asReleaseAnyCpp = qasReleaseAnyCpp;
 }
 
 int QAS_API( void )

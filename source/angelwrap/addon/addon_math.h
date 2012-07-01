@@ -18,40 +18,5 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include "qas_local.h"
-
-angelwrap_import_t ANGELWRAP_IMPORT;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-QF_DLL_EXPORT angelwrap_export_t *GetAngelwrapAPI( angelwrap_import_t *import )
-{
-	static angelwrap_export_t globals;
-
-	ANGELWRAP_IMPORT = *import;
-
-	globals.API = QAS_API;
-	globals.Init = QAS_Init;
-	globals.Shutdown = QAS_ShutDown;
-
-	globals.asGetAngelExport = QAS_GetAngelExport;
-
-	return &globals;
-}
-
-/*
-#if defined ( HAVE_DLLMAIN ) && !defined ( ANGELWRAP_HARD_LINKED )
-int _stdcall DLLMain( void *hinstDll, unsigned long dwReason, void *reserved )
-{
-	return 1;
-}
-#endif
-*/
-
-#ifdef __cplusplus
-}
-#endif
-
-
+void PreRegisterMathAddon( asIScriptEngine *engine );
+void RegisterMathAddon( asIScriptEngine *engine );

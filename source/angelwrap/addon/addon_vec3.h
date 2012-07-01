@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2008 German Garcia
+Copyright (C) 2011 Chasseur de bots
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,40 +19,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include "qas_local.h"
+#ifndef __ADDON_VEC3_H__
+#define __ADDON_VEC3_H__
 
-angelwrap_import_t ANGELWRAP_IMPORT;
+void PreRegisterVec3Addon( asIScriptEngine *engine );
+void RegisterVec3Addon( asIScriptEngine *engine );
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-QF_DLL_EXPORT angelwrap_export_t *GetAngelwrapAPI( angelwrap_import_t *import )
-{
-	static angelwrap_export_t globals;
-
-	ANGELWRAP_IMPORT = *import;
-
-	globals.API = QAS_API;
-	globals.Init = QAS_Init;
-	globals.Shutdown = QAS_ShutDown;
-
-	globals.asGetAngelExport = QAS_GetAngelExport;
-
-	return &globals;
-}
-
-/*
-#if defined ( HAVE_DLLMAIN ) && !defined ( ANGELWRAP_HARD_LINKED )
-int _stdcall DLLMain( void *hinstDll, unsigned long dwReason, void *reserved )
-{
-	return 1;
-}
-#endif
-*/
-
-#ifdef __cplusplus
-}
-#endif
-
-
+#endif // __ADDON_VEC3_H__
