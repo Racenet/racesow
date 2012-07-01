@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // snd_public.h -- sound dll information visible to engine
 
-#define	SOUND_API_VERSION   27
+#define	SOUND_API_VERSION   32
 
 #define	ATTN_NONE 0
 
@@ -55,6 +55,7 @@ typedef struct
 	void ( *Cmd_RemoveCommand )( const char *cmd_name );
 	void ( *Cmd_ExecuteText )( int exec_when, const char *text );
 	void ( *Cmd_Execute )( void );
+	void ( *Cmd_SetCompletionFunc )( const char *cmd_name, char **( *completion_func )( const char *partial ) );
 
 	// files will be memory mapped read only
 	// the returned buffer may be part of a larger pak file,
@@ -72,6 +73,7 @@ typedef struct
 	void ( *FS_FCloseFile )( int file );
 	qboolean ( *FS_RemoveFile )( const char *filename );
 	int ( *FS_GetFileList )( const char *dir, const char *extension, char *buf, size_t bufsize, int start, int end );
+	qboolean ( *FS_IsUrl )( const char *url );
 
 	unsigned int ( *Milliseconds )( void );
 	void ( *PageInMemory )( qbyte *buffer, int size );
@@ -90,7 +92,7 @@ typedef struct
 } sound_import_t;
 
 //
-// functions exported by the client game subsystem
+// functions exported by the sound subsystem
 //
 typedef struct
 {
@@ -101,8 +103,9 @@ typedef struct
 	qboolean ( *Init )( void *hwnd, int maxEntities, qboolean verbose );
 	void ( *Shutdown )( qboolean verbose );
 
-	void ( *SoundsInMemory )( void );
-	void ( *FreeSounds )( void );
+	void ( *BeginRegistration )( void );
+	void ( *EndRegistration )( void );
+
 	void ( *StopAllSounds )( void );
 
 	void ( *Clear )( void );
@@ -122,7 +125,8 @@ typedef struct
 	void ( *AddLoopSound )( struct sfx_s *sfx, int entnum, float fvol, float attenuation );
 
 	// cinema
-	void ( *RawSamples )( int samples, int rate, int width, int channels, const qbyte *data, qboolean music );
+	void ( *RawSamples )( unsigned int samples, unsigned int rate, unsigned short width, unsigned short channels, const qbyte *data, qboolean music );
+	unsigned int ( *GetRawSamplesTime )( void ); // Mixing position in milliseconds for A/V sync
 
 	// music
 	void ( *StartBackgroundTrack )( const char *intro, const char *loop );

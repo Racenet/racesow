@@ -30,9 +30,7 @@ static cvar_t *s_module_fallback = NULL;
 static void CL_SoundModule_SetAttenuationModel( void );
 
 /*
-===============
-CL_SetSoundExtension
-===============
+* CL_SetSoundExtension
 */
 static char *CL_SetSoundExtension( const char *name )
 {
@@ -66,9 +64,7 @@ static char *CL_SetSoundExtension( const char *name )
 }
 
 /*
-===============
-CL_SoundModule_Error
-===============
+* CL_SoundModule_Error
 */
 static void CL_SoundModule_Error( const char *msg )
 {
@@ -76,9 +72,7 @@ static void CL_SoundModule_Error( const char *msg )
 }
 
 /*
-===============
-CL_SoundModule_Print
-===============
+* CL_SoundModule_Print
 */
 static void CL_SoundModule_Print( const char *msg )
 {
@@ -86,9 +80,7 @@ static void CL_SoundModule_Print( const char *msg )
 }
 
 /*
-===============
-CL_SoundModule_MemAlloc
-===============
+* CL_SoundModule_MemAlloc
 */
 static void *CL_SoundModule_MemAlloc( mempool_t *pool, int size, const char *filename, int fileline )
 {
@@ -96,9 +88,7 @@ static void *CL_SoundModule_MemAlloc( mempool_t *pool, int size, const char *fil
 }
 
 /*
-===============
-CL_SoundModule_MemFree
-===============
+* CL_SoundModule_MemFree
 */
 static void CL_SoundModule_MemFree( void *data, const char *filename, int fileline )
 {
@@ -106,9 +96,7 @@ static void CL_SoundModule_MemFree( void *data, const char *filename, int fileli
 }
 
 /*
-===============
-CL_SoundModule_MemAllocPool
-===============
+* CL_SoundModule_MemAllocPool
 */
 static mempool_t *CL_SoundModule_MemAllocPool( const char *name, const char *filename, int fileline )
 {
@@ -116,9 +104,7 @@ static mempool_t *CL_SoundModule_MemAllocPool( const char *name, const char *fil
 }
 
 /*
-===============
-CL_SoundModule_MemFreePool
-===============
+* CL_SoundModule_MemFreePool
 */
 static void CL_SoundModule_MemFreePool( mempool_t **pool, const char *filename, int fileline )
 {
@@ -126,9 +112,7 @@ static void CL_SoundModule_MemFreePool( mempool_t **pool, const char *filename, 
 }
 
 /*
-===============
-CL_SoundModule_MemEmptyPool
-===============
+* CL_SoundModule_MemEmptyPool
 */
 static void CL_SoundModule_MemEmptyPool( mempool_t *pool, const char *filename, int fileline )
 {
@@ -136,11 +120,9 @@ static void CL_SoundModule_MemEmptyPool( mempool_t *pool, const char *filename, 
 }
 
 /*
-===============
-CL_SoundModule_Load
-
-Helper function to try loading sound module with certain name
-===============
+* CL_SoundModule_Load
+* 
+* Helper function to try loading sound module with certain name
 */
 static qboolean CL_SoundModule_Load( const char *name, sound_import_t *import, qboolean verbose )
 {
@@ -193,9 +175,7 @@ static qboolean CL_SoundModule_Load( const char *name, sound_import_t *import, q
 }
 
 /*
-===============
-CL_SoundModule_Init
-===============
+* CL_SoundModule_Init
 */
 void CL_SoundModule_Init( qboolean verbose )
 {
@@ -258,6 +238,7 @@ void CL_SoundModule_Init( qboolean verbose )
 	import.Cmd_RemoveCommand = Cmd_RemoveCommand;
 	import.Cmd_ExecuteText = Cbuf_ExecuteText;
 	import.Cmd_Execute = Cbuf_Execute;
+	import.Cmd_SetCompletionFunc = Cmd_SetCompletionFunc;
 
 	import.FS_FOpenFile = FS_FOpenFile;
 	import.FS_Read = FS_Read;
@@ -270,6 +251,7 @@ void CL_SoundModule_Init( qboolean verbose )
 	import.FS_FCloseFile = FS_FCloseFile;
 	import.FS_RemoveFile = FS_RemoveFile;
 	import.FS_GetFileList = FS_GetFileList;
+	import.FS_IsUrl = FS_IsUrl;
 
 	import.Milliseconds = Sys_Milliseconds;
 	import.PageInMemory = Com_PageInMemory;
@@ -311,9 +293,7 @@ void CL_SoundModule_Init( qboolean verbose )
 }
 
 /*
-===============
-CL_SoundModule_Shutdown
-===============
+* CL_SoundModule_Shutdown
 */
 void CL_SoundModule_Shutdown( qboolean verbose )
 {
@@ -328,31 +308,25 @@ void CL_SoundModule_Shutdown( qboolean verbose )
 }
 
 /*
-==============
-CL_SoundModule_SoundsInMemory
-==============
+* CL_SoundModule_BeginRegistration
 */
-void CL_SoundModule_SoundsInMemory( void )
+void CL_SoundModule_BeginRegistration( void )
 {
 	if( se )
-		se->SoundsInMemory();
+		se->BeginRegistration();
 }
 
 /*
-==============
-CL_SoundModule_FreeSounds
-==============
+* CL_SoundModule_EndRegistration
 */
-void CL_SoundModule_FreeSounds( void )
+void CL_SoundModule_EndRegistration( void )
 {
 	if( se )
-		se->FreeSounds();
+		se->EndRegistration();
 }
 
 /*
-==============
-CL_SoundModule_StopAllSounds
-==============
+* CL_SoundModule_StopAllSounds
 */
 void CL_SoundModule_StopAllSounds( void )
 {
@@ -361,9 +335,7 @@ void CL_SoundModule_StopAllSounds( void )
 }
 
 /*
-==============
-CL_SoundModule_Clear
-==============
+* CL_SoundModule_Clear
 */
 void CL_SoundModule_Clear( void )
 {
@@ -372,22 +344,18 @@ void CL_SoundModule_Clear( void )
 }
 
 /*
-==============
-CL_SoundModule_Update
-==============
+* CL_SoundModule_Update
 */
 void CL_SoundModule_Update( const vec3_t origin, const vec3_t velocity, const vec3_t v_forward, const vec3_t v_right,
-						   const vec3_t v_up, qboolean avidump )
+						   const vec3_t v_up, const char *identity, qboolean avidump )
 {
 	if( se )
 		se->Update( origin, velocity, v_forward, v_right, v_up, avidump );
-	CL_Mumble_Update( origin, v_forward, v_right, v_up );
+	CL_Mumble_Update( origin, v_forward, v_right, v_up, identity );
 }
 
 /*
-==============
-CL_SoundModule_Activate
-==============
+* CL_SoundModule_Activate
 */
 void CL_SoundModule_Activate( qboolean activate )
 {
@@ -396,9 +364,7 @@ void CL_SoundModule_Activate( qboolean activate )
 }
 
 /*
-==============
-CL_SoundModule_SetAttenuationModel
-==============
+* CL_SoundModule_SetAttenuationModel
 */
 static void CL_SoundModule_SetAttenuationModel( void )
 {
@@ -421,9 +387,7 @@ static void CL_SoundModule_SetAttenuationModel( void )
 }
 
 /*
-==============
-CL_SoundModule_RegisterSound
-==============
+* CL_SoundModule_RegisterSound
 */
 struct sfx_s *CL_SoundModule_RegisterSound( const char *name )
 {
@@ -447,9 +411,7 @@ struct sfx_s *CL_SoundModule_RegisterSound( const char *name )
 }
 
 /*
-==============
-CL_SoundModule_StartFixedSound
-==============
+* CL_SoundModule_StartFixedSound
 */
 void CL_SoundModule_StartFixedSound( struct sfx_s *sfx, const vec3_t origin, int channel, float fvol,
 									float attenuation )
@@ -459,9 +421,7 @@ void CL_SoundModule_StartFixedSound( struct sfx_s *sfx, const vec3_t origin, int
 }
 
 /*
-==============
-CL_SoundModule_StartRelativeSound
-==============
+* CL_SoundModule_StartRelativeSound
 */
 void CL_SoundModule_StartRelativeSound( struct sfx_s *sfx, int entnum, int channel, float fvol, float attenuation )
 {
@@ -470,9 +430,7 @@ void CL_SoundModule_StartRelativeSound( struct sfx_s *sfx, int entnum, int chann
 }
 
 /*
-==============
-CL_SoundModule_StartGlobalSound
-==============
+* CL_SoundModule_StartGlobalSound
 */
 void CL_SoundModule_StartGlobalSound( struct sfx_s *sfx, int channel, float fvol )
 {
@@ -481,9 +439,7 @@ void CL_SoundModule_StartGlobalSound( struct sfx_s *sfx, int channel, float fvol
 }
 
 /*
-==============
-CL_SoundModule_StartLocalSound
-==============
+* CL_SoundModule_StartLocalSound
 */
 void CL_SoundModule_StartLocalSound( const char *name )
 {
@@ -500,9 +456,7 @@ void CL_SoundModule_StartLocalSound( const char *name )
 }
 
 /*
-==============
-CL_SoundModule_AddLoopSound
-==============
+* CL_SoundModule_AddLoopSound
 */
 void CL_SoundModule_AddLoopSound( struct sfx_s *sfx, int entnum, float fvol, float attenuation )
 {
@@ -511,20 +465,28 @@ void CL_SoundModule_AddLoopSound( struct sfx_s *sfx, int entnum, float fvol, flo
 }
 
 /*
-==============
-CL_SoundModule_RawSamples
-==============
+* CL_SoundModule_RawSamples
 */
-void CL_SoundModule_RawSamples( int samples, int rate, int width, int channels, const qbyte *data, qboolean music )
+void CL_SoundModule_RawSamples( unsigned int samples, unsigned int rate, unsigned short width, unsigned short channels, const qbyte *data, qboolean music )
 {
 	if( se )
 		se->RawSamples( samples, rate, width, channels, data, music );
 }
 
 /*
-==============
-CL_SoundModule_StartBackgroundTrack
-==============
+* CL_SoundModule_GetRawSamplesTime
+*
+* Mixing position in milliseconds for A/V sync
+*/
+unsigned int CL_SoundModule_GetRawSamplesTime( void )
+{
+	if( se )
+		return se->GetRawSamplesTime();
+	return cls.realtime;
+}
+
+/*
+* CL_SoundModule_StartBackgroundTrack
 */
 void CL_SoundModule_StartBackgroundTrack( const char *intro, const char *loop )
 {
@@ -551,9 +513,7 @@ void CL_SoundModule_StartBackgroundTrack( const char *intro, const char *loop )
 }
 
 /*
-==============
-CL_SoundModule_StopBackgroundTrack
-==============
+* CL_SoundModule_StopBackgroundTrack
 */
 void CL_SoundModule_StopBackgroundTrack( void )
 {
@@ -562,9 +522,7 @@ void CL_SoundModule_StopBackgroundTrack( void )
 }
 
 /*
-==============
-CL_SoundModule_BeginAviDemo
-==============
+* CL_SoundModule_BeginAviDemo
 */
 void CL_SoundModule_BeginAviDemo( void )
 {
@@ -573,9 +531,7 @@ void CL_SoundModule_BeginAviDemo( void )
 }
 
 /*
-==============
-CL_SoundModule_StopAviDemo
-==============
+* CL_SoundModule_StopAviDemo
 */
 void CL_SoundModule_StopAviDemo( void )
 {
@@ -596,7 +552,6 @@ MUMBLE SUPPORT
 #include "libmumblelink.h"
 
 static cvar_t *cl_mumble;
-static cvar_t *cl_mumble_alltalk;
 static cvar_t *cl_mumble_scale;
 
 /*
@@ -605,7 +560,6 @@ static cvar_t *cl_mumble_scale;
 void CL_Mumble_Init( void )
 {
 	cl_mumble =         Cvar_Get( "cl_mumble", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	cl_mumble_alltalk = Cvar_Get( "cl_mumble_alltalk", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	cl_mumble_scale =   Cvar_Get( "cl_mumble_scale", "0.0254", CVAR_ARCHIVE );
 }
 
@@ -640,12 +594,14 @@ void CL_Mumble_Unlink( void )
 /*
 * CL_Mumble_Update
 */
-void CL_Mumble_Update( const vec3_t origin, const vec3_t forward, const vec3_t right, const vec3_t up )
+void CL_Mumble_Update( const vec3_t origin, const vec3_t forward, const vec3_t right, const vec3_t up, const char *identity )
 {
 	vec3_t mp, mf, mt;
 	char context[256];
 
 	if( !cl_mumble->integer )
+		return;
+	if( !identity )
 		return;
 
 	VectorScale( origin, cl_mumble_scale->value, mp );
@@ -657,15 +613,12 @@ void CL_Mumble_Update( const vec3_t origin, const vec3_t forward, const vec3_t r
 
 	mumble_update_coordinates( mp, mf, mt );
 
-	/*
 	// for Mumble 1.2+  http://mumble.sourceforge.net/Link
-	mumble_set_identity( playername ); // TODO: fetch playername from somewhere
-	if ( cl_mumble_alltalk->integer )
-		Q_strncpyz( context, va( "%s:%d", ip, port ), sizeof( context ) ); // TODO: fetch ip, port from somewhere
-	else
-		Q_strncpyz( context, va( "%s:%d/%s", ip, port, team ), sizeof( context ) ); // TODO: fetch ip, port, team from somewhere
-	mumble_set_context( context,  strlen( context ) + 1 );
-	*/
+	mumble_set_identity( identity );
+
+	// TODO: add team to context?
+	Q_strncpyz( context, NET_AddressToString( &cls.serveraddress ), sizeof( context ) );
+	mumble_set_context( ( const unsigned char * )context, strlen( context ) + 1 );
 }
 
 /*
@@ -701,7 +654,7 @@ void CL_Mumble_Unlink( void )
 /*
 * CL_Mumble_Update
 */
-void CL_Mumble_Update( vec3_t origin, vec3_t forward, vec3_t right, vec3_t up )
+void CL_Mumble_Update( vec3_t origin, vec3_t forward, vec3_t right, vec3_t up, const char *identity )
 {
 }
 

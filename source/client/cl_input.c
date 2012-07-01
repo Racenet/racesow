@@ -44,7 +44,11 @@ MOUSE
 extern cvar_t *in_grabinconsole;
 extern cvar_t *m_filter;
 extern cvar_t *m_filterStrength;
-extern cvar_t *m_accel, *m_accelStyle, *m_accelOffset;
+extern cvar_t *m_accel;
+extern cvar_t *m_accelStyle;
+extern cvar_t *m_accelOffset;
+extern cvar_t *m_accelPow;
+extern cvar_t *m_sensCap;
 
 #define M_FILTER_NONE		0
 #define M_FILTER_INTERPOLATE	1
@@ -200,6 +204,7 @@ void CL_MouseMove( usercmd_t *cmd, int mx, int my )
 	static float old_mouse_x = 0, old_mouse_y = 0;
 	float accelSensitivity;
 	float	rate;
+	float	accelOffset, accelPow;
 
 	old_mouse_time = mouse_time;
 	mouse_time = Sys_Milliseconds();
@@ -271,6 +276,25 @@ void CL_MouseMove( usercmd_t *cmd, int mx, int my )
 
 			mouse_x = (mouse_x + ((mouse_x < 0) ? -power[0] : power[0]) * m_accelOffset->value);
 			mouse_y = (mouse_y + ((mouse_y < 0) ? -power[1] : power[1]) * m_accelOffset->value);
+		}
+		else if( m_accelStyle->integer == 2 )
+		{
+			// ch : similar to normal acceleration with offset and variable pow mechanisms
+
+			// sanitize values
+			accelPow = m_accelPow->value > 1.0 ? m_accelPow->value : 2.0;
+			accelOffset = m_accelOffset->value >= 0.0 ? m_accelOffset->value : 0.0;
+
+			rate = sqrt( mouse_x * mouse_x + mouse_y * mouse_y ) / (float)mouse_frame_time;
+			rate -= accelOffset;
+			if( rate < 0 )
+				rate = 0.0;
+			// ch : TODO sens += pow( rate * m_accel->value, m_accelPow->value - 1.0 )
+			accelSensitivity += pow( rate * m_accel->value, accelPow - 1.0 );
+
+			// TODO : move this outside of this branch?
+			if( m_sensCap->value > 0 && accelSensitivity > m_sensCap->value )
+				accelSensitivity = m_sensCap->value;
 		}
 		else
 		{
@@ -935,14 +959,6 @@ void CL_NewUserCommand( int realmsec )
 	ucmd = &cl.cmds[cl.cmdNum & CMD_MASK];
 	ucmd->serverTimeStamp = cl.serverTime; // return the time stamp to the server
 	cl.cmd_time[cl.cmdNum & CMD_MASK] = cls.realtime;
-
-	// control cinematics by buttons
-	if( ucmd->buttons && SCR_GetCinematicTime() > 0 && cls.realtime > 1000 + SCR_GetCinematicTime() )
-	{
-		// skip the rest of the cinematic
-		SCR_FinishCinematic();
-		SCR_UpdateScreen();
-	}
 
 	// snap push fracs so client and server version match
 	ucmd->forwardfrac = ( (int)( UCMD_PUSHFRAC_SNAPSIZE * ucmd->forwardfrac ) ) / UCMD_PUSHFRAC_SNAPSIZE;

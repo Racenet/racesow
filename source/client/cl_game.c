@@ -63,6 +63,9 @@ static inline struct cmodel_s *CL_GameModule_CM_ModelForBBox( vec3_t mins, vec3_
 	return CM_ModelForBBox( cl.cms, mins, maxs );
 }
 
+static inline struct cmodel_s *CL_GameModule_CM_OctagonModelForBBox( vec3_t mins, vec3_t maxs ) {
+	return CM_OctagonModelForBBox( cl.cms, mins, maxs );
+}
 //======================================================================
 
 /*
@@ -151,7 +154,7 @@ static void CL_GameModule_RefreshMouseAngles( void )
 * CL_GameModule_R_RegisterWorldModel
 */
 static void CL_GameModule_R_RegisterWorldModel( const char *model ) {
-	R_RegisterWorldModel( model, cl.cms ? CM_PVSData( cl.cms ) : NULL, cl.cms ? CM_PHSData( cl.cms ) : NULL );
+	R_RegisterWorldModel( model, cl.cms ? CM_PVSData( cl.cms ) : NULL );
 }
 
 /*
@@ -172,129 +175,11 @@ static void CL_GameModule_MemFree( void *data, const char *filename, int filelin
 * CL_GameModule_SoundUpdate
 */
 static void CL_GameModule_SoundUpdate( const vec3_t origin, const vec3_t velocity,
-	const vec3_t v_forward, const vec3_t v_right, const vec3_t v_up ) {
-	CL_SoundModule_Update( origin, velocity, v_forward, v_right, v_up, CL_WriteAvi() && cls.demo.avi_audio );
+	const vec3_t v_forward, const vec3_t v_right, const vec3_t v_up, const char *identity ) {
+	CL_SoundModule_Update( origin, velocity, v_forward, v_right, v_up, identity, CL_WriteAvi() && cls.demo.avi_audio );
 }
 
 //==============================================
-
-/*
-===============
-CL_GameModule_InitImportStruct
-===============
-*/
-#define CL_GameModule_InitImportStruct( import ) \
-( \
-	import.Error = CL_GameModule_Error, \
-	import.Print = CL_GameModule_Print, \
-	import.PrintToLog = CL_GameModule_PrintToLog, \
-\
-	import.Dynvar_Create = Dynvar_Create, \
-	import.Dynvar_Destroy = Dynvar_Destroy, \
-	import.Dynvar_Lookup = Dynvar_Lookup, \
-	import.Dynvar_GetName = Dynvar_GetName, \
-	import.Dynvar_GetValue = Dynvar_GetValue, \
-	import.Dynvar_SetValue = Dynvar_SetValue, \
-	import.Dynvar_AddListener = Dynvar_AddListener, \
-	import.Dynvar_RemoveListener = Dynvar_RemoveListener, \
-\
-	import.Cvar_Get = Cvar_Get, \
-	import.Cvar_Set = Cvar_Set, \
-	import.Cvar_SetValue = Cvar_SetValue, \
-	import.Cvar_ForceSet = Cvar_ForceSet, \
-	import.Cvar_String = Cvar_String, \
-	import.Cvar_Value = Cvar_Value, \
-\
-	import.Cmd_TokenizeString = Cmd_TokenizeString, \
-	import.Cmd_Argc = Cmd_Argc, \
-	import.Cmd_Argv = Cmd_Argv, \
-	import.Cmd_Args = Cmd_Args, \
-\
-	import.Cmd_AddCommand = Cmd_AddCommand, \
-	import.Cmd_RemoveCommand = Cmd_RemoveCommand, \
-	import.Cmd_ExecuteText = Cbuf_ExecuteText, \
-	import.Cmd_Execute = Cbuf_Execute, \
-\
-	import.FS_FOpenFile = FS_FOpenFile, \
-	import.FS_Read = FS_Read, \
-	import.FS_Write = FS_Write, \
-\
-	import.FS_Print = FS_Print, \
-	import.FS_Tell = FS_Tell, \
-	import.FS_Seek = FS_Seek, \
-	import.FS_Eof = FS_Eof, \
-	import.FS_Flush = FS_Flush, \
-	import.FS_FCloseFile = FS_FCloseFile, \
-	import.FS_RemoveFile = FS_RemoveFile, \
-	import.FS_GetFileList = FS_GetFileList, \
-	import.FS_FirstExtension = FS_FirstExtension, \
-	import.FS_IsPureFile = FS_IsPureFile, \
-\
-	import.Key_GetBindingBuf = Key_GetBindingBuf, \
-	import.Key_KeynumToString = Key_KeynumToString, \
-\
-	import.GetConfigString = CL_GameModule_GetConfigString, \
-	import.Milliseconds = Sys_Milliseconds, \
-	import.DownloadRequest = CL_DownloadRequest, \
-\
-	import.NET_GetUserCmd = CL_GameModule_NET_GetUserCmd, \
-	import.NET_GetCurrentUserCmdNum = CL_GameModule_NET_GetCurrentUserCmdNum, \
-	import.NET_GetCurrentState = CL_GameModule_NET_GetCurrentState, \
-	import.RefreshMouseAngles = CL_GameModule_RefreshMouseAngles, \
-\
-	import.R_UpdateScreen = SCR_UpdateScreen, \
-	import.R_GetClippedFragments = R_GetClippedFragments, \
-	import.R_ClearScene = R_ClearScene, \
-	import.R_AddEntityToScene = R_AddEntityToScene, \
-	import.R_AddLightToScene = R_AddLightToScene, \
-	import.R_AddPolyToScene = R_AddPolyToScene, \
-	import.R_AddLightStyleToScene = R_AddLightStyleToScene, \
-	import.R_RenderScene = R_RenderScene, \
-	import.R_SpeedsMessage = R_SpeedsMessage, \
-	import.R_RegisterWorldModel = CL_GameModule_R_RegisterWorldModel, \
-	import.R_ModelBounds = R_ModelBounds, \
-	import.R_RegisterModel = R_RegisterModel, \
-	import.R_RegisterPic = R_RegisterPic, \
-	import.R_RegisterLevelshot = R_RegisterLevelshot, \
-	import.R_RegisterSkin = R_RegisterSkin, \
-	import.R_RegisterSkinFile = R_RegisterSkinFile, \
-	import.R_LerpTag = R_LerpTag, \
-	import.R_LightForOrigin = R_LightForOrigin, \
-	import.R_SetCustomColor = R_SetCustomColor, \
-	import.R_DrawStretchPic = R_DrawStretchPic, \
-	import.R_TransformVectorToScreen = R_TransformVectorToScreen, \
-	import.R_SkeletalGetNumBones = R_SkeletalGetNumBones, \
-	import.R_SkeletalGetBoneInfo = R_SkeletalGetBoneInfo, \
-	import.R_SkeletalGetBonePose = R_SkeletalGetBonePose, \
-\
-	import.CM_NumInlineModels = CL_GameModule_CM_NumInlineModels, \
-	import.CM_InlineModel = CL_GameModule_CM_InlineModel, \
-	import.CM_TransformedBoxTrace = CL_GameModule_CM_TransformedBoxTrace, \
-	import.CM_RoundUpToHullSize = CL_GameModule_CM_RoundUpToHullSize, \
-	import.CM_TransformedPointContents = CL_GameModule_CM_TransformedPointContents, \
-	import.CM_ModelForBBox = CL_GameModule_CM_ModelForBBox, \
-	import.CM_InlineModelBounds = CL_GameModule_CM_InlineModelBounds, \
-\
-	import.S_RegisterSound = CL_SoundModule_RegisterSound, \
-	import.S_StartFixedSound = CL_SoundModule_StartFixedSound, \
-	import.S_StartRelativeSound = CL_SoundModule_StartRelativeSound, \
-	import.S_StartGlobalSound = CL_SoundModule_StartGlobalSound, \
-	import.S_Update = CL_GameModule_SoundUpdate, \
-	import.S_AddLoopSound = CL_SoundModule_AddLoopSound, \
-	import.S_StartBackgroundTrack = CL_SoundModule_StartBackgroundTrack, \
-	import.S_StopBackgroundTrack = CL_SoundModule_StopBackgroundTrack, \
-\
-	import.SCR_RegisterFont = SCR_RegisterFont, \
-	import.SCR_DrawString = SCR_DrawString, \
-	import.SCR_DrawStringWidth = SCR_DrawStringWidth, \
-	import.SCR_DrawClampString = SCR_DrawClampString, \
-	import.SCR_strHeight = SCR_strHeight, \
-	import.SCR_strWidth = SCR_strWidth, \
-	import.SCR_StrlenForWidth = SCR_StrlenForWidth, \
-\
-	import.Mem_Alloc = CL_GameModule_MemAlloc, \
-	import.Mem_Free = CL_GameModule_MemFree \
-)
 
 /*
 * CL_GameModule_Init
@@ -309,7 +194,7 @@ void CL_GameModule_Init( void )
 	builtinAPIfunc = GetCGameAPI;
 #endif
 
-	// unload anything we have now
+	// stop all playing sounds
 	CL_SoundModule_StopAllSounds();
 
 	CL_GameModule_Shutdown();
@@ -319,7 +204,132 @@ void CL_GameModule_Init( void )
 
 	cl_gamemodulepool = _Mem_AllocPool( NULL, "Client Game Progs", MEMPOOL_CLIENTGAME, __FILE__, __LINE__ );
 
-	CL_GameModule_InitImportStruct( import );
+	import.Error = CL_GameModule_Error;
+	import.Print = CL_GameModule_Print;
+	import.PrintToLog = CL_GameModule_PrintToLog;
+
+	import.Dynvar_Create = Dynvar_Create;
+	import.Dynvar_Destroy = Dynvar_Destroy;
+	import.Dynvar_Lookup = Dynvar_Lookup;
+	import.Dynvar_GetName = Dynvar_GetName;
+	import.Dynvar_GetValue = Dynvar_GetValue;
+	import.Dynvar_SetValue = Dynvar_SetValue;
+	import.Dynvar_AddListener = Dynvar_AddListener;
+	import.Dynvar_RemoveListener = Dynvar_RemoveListener;
+
+	import.Cvar_Get = Cvar_Get;
+	import.Cvar_Set = Cvar_Set;
+	import.Cvar_SetValue = Cvar_SetValue;
+	import.Cvar_ForceSet = Cvar_ForceSet;
+	import.Cvar_String = Cvar_String;
+	import.Cvar_Value = Cvar_Value;
+
+	import.Cmd_TokenizeString = Cmd_TokenizeString;
+	import.Cmd_Argc = Cmd_Argc;
+	import.Cmd_Argv = Cmd_Argv;
+	import.Cmd_Args = Cmd_Args;
+
+	import.Cmd_AddCommand = Cmd_AddCommand;
+	import.Cmd_RemoveCommand = Cmd_RemoveCommand;
+	import.Cmd_ExecuteText = Cbuf_ExecuteText;
+	import.Cmd_Execute = Cbuf_Execute;
+	import.Cmd_SetCompletionFunc = Cmd_SetCompletionFunc;
+
+	import.FS_FOpenFile = FS_FOpenFile;
+	import.FS_Read = FS_Read;
+	import.FS_Write = FS_Write;
+
+	import.FS_Print = FS_Print;
+	import.FS_Tell = FS_Tell;
+	import.FS_Seek = FS_Seek;
+	import.FS_Eof = FS_Eof;
+	import.FS_Flush = FS_Flush;
+	import.FS_FCloseFile = FS_FCloseFile;
+	import.FS_RemoveFile = FS_RemoveFile;
+	import.FS_GetFileList = FS_GetFileList;
+	import.FS_FirstExtension = FS_FirstExtension;
+	import.FS_IsPureFile = FS_IsPureFile;
+	import.FS_MoveFile = FS_MoveFile;
+	import.FS_IsUrl = FS_IsUrl;
+	import.FS_FileMTime = FS_BaseFileMTime;
+	import.FS_RemoveDirectory = FS_RemoveDirectory;
+
+	import.Key_GetBindingBuf = Key_GetBindingBuf;
+	import.Key_KeynumToString = Key_KeynumToString;
+
+	import.GetConfigString = CL_GameModule_GetConfigString;
+	import.Milliseconds = Sys_Milliseconds;
+	import.DownloadRequest = CL_DownloadRequest;
+
+	import.Hash_BlockChecksum = Com_MD5Digest32;
+	import.Hash_SuperFastHash = Com_SuperFastHash;
+
+	import.NET_GetUserCmd = CL_GameModule_NET_GetUserCmd;
+	import.NET_GetCurrentUserCmdNum = CL_GameModule_NET_GetCurrentUserCmdNum;
+	import.NET_GetCurrentState = CL_GameModule_NET_GetCurrentState;
+	import.RefreshMouseAngles = CL_GameModule_RefreshMouseAngles;
+
+	import.R_UpdateScreen = SCR_UpdateScreen;
+	import.R_GetClippedFragments = R_GetClippedFragments;
+	import.R_ClearScene = R_ClearScene;
+	import.R_AddEntityToScene = R_AddEntityToScene;
+	import.R_AddLightToScene = R_AddLightToScene;
+	import.R_AddPolyToScene = R_AddPolyToScene;
+	import.R_AddLightStyleToScene = R_AddLightStyleToScene;
+	import.R_RenderScene = R_RenderScene;
+	import.R_SpeedsMessage = R_SpeedsMessage;
+	import.R_RegisterWorldModel = CL_GameModule_R_RegisterWorldModel;
+	import.R_ModelBounds = R_ModelBounds;
+	import.R_ModelFrameBounds = R_ModelFrameBounds;
+	import.R_RegisterModel = R_RegisterModel;
+	import.R_RegisterPic = R_RegisterPic;
+	import.R_RegisterRawPic = R_RegisterRawPic;
+	import.R_RegisterLevelshot = R_RegisterLevelshot;
+	import.R_RegisterSkin = R_RegisterSkin;
+	import.R_RegisterSkinFile = R_RegisterSkinFile;
+	import.R_LerpTag = R_LerpTag;
+	import.R_LightForOrigin = R_LightForOrigin;
+	import.R_SetCustomColor = R_SetCustomColor;
+	import.R_DrawStretchPic = R_DrawStretchPic;
+	import.R_DrawStretchPoly = R_DrawStretchPoly;
+	import.R_DrawRotatedStretchPic = R_DrawRotatedStretchPic;
+	import.R_SetScissorRegion = R_SetScissorRegion;
+	import.R_GetShaderDimensions = R_GetShaderDimensions;
+	import.R_TransformVectorToScreen = R_TransformVectorToScreen;
+	import.R_SkeletalGetNumBones = R_SkeletalGetNumBones;
+	import.R_SkeletalGetBoneInfo = R_SkeletalGetBoneInfo;
+	import.R_SkeletalGetBonePose = R_SkeletalGetBonePose;
+
+	import.VID_FlashWindow = VID_FlashWindow;
+
+	import.CM_NumInlineModels = CL_GameModule_CM_NumInlineModels;
+	import.CM_InlineModel = CL_GameModule_CM_InlineModel;
+	import.CM_TransformedBoxTrace = CL_GameModule_CM_TransformedBoxTrace;
+	import.CM_RoundUpToHullSize = CL_GameModule_CM_RoundUpToHullSize;
+	import.CM_TransformedPointContents = CL_GameModule_CM_TransformedPointContents;
+	import.CM_ModelForBBox = CL_GameModule_CM_ModelForBBox;
+	import.CM_OctagonModelForBBox = CL_GameModule_CM_OctagonModelForBBox;
+	import.CM_InlineModelBounds = CL_GameModule_CM_InlineModelBounds;
+
+	import.S_RegisterSound = CL_SoundModule_RegisterSound;
+	import.S_StartFixedSound = CL_SoundModule_StartFixedSound;
+	import.S_StartRelativeSound = CL_SoundModule_StartRelativeSound;
+	import.S_StartGlobalSound = CL_SoundModule_StartGlobalSound;
+	import.S_Update = CL_GameModule_SoundUpdate;
+	import.S_AddLoopSound = CL_SoundModule_AddLoopSound;
+	import.S_StartBackgroundTrack = CL_SoundModule_StartBackgroundTrack;
+	import.S_StopBackgroundTrack = CL_SoundModule_StopBackgroundTrack;
+
+	import.SCR_RegisterFont = SCR_RegisterFont;
+	import.SCR_DrawString = SCR_DrawString;
+	import.SCR_DrawStringWidth = SCR_DrawStringWidth;
+	import.SCR_DrawClampString = SCR_DrawClampString;
+	import.SCR_strHeight = SCR_strHeight;
+	import.SCR_strWidth = SCR_strWidth;
+	import.SCR_StrlenForWidth = SCR_StrlenForWidth;
+
+	import.Mem_Alloc = CL_GameModule_MemAlloc;
+	import.Mem_Free = CL_GameModule_MemFree;
 
 	cge = (cgame_export_t *)Com_LoadGameLibrary( "cgame", "GetCGameAPI", &module_handle, &import, builtinAPIfunc, cls.sv_pure, NULL );
 	if( !cge )
@@ -348,8 +358,6 @@ void CL_GameModule_Init( void )
 
 	// check memory integrity
 	Mem_CheckSentinelsGlobal();
-
-	CL_SoundModule_SoundsInMemory();
 
 	Sys_SendKeyEvents(); // pump message loop
 }
@@ -386,7 +394,7 @@ void CL_GameModule_EscapeKey( void )
 {
 	if( cge )
 		cge->EscapeKey();
-	else if( SCR_GetCinematicTime() )
+	else if( cls.state == CA_CINEMATIC )
 		SCR_FinishCinematic();
 }
 
@@ -402,7 +410,7 @@ void CL_GameModule_GetEntitySpatilization( int entNum, vec3_t origin, vec3_t vel
 /*
 * CL_GameModule_ConfigString
 */
-void CL_GameModule_ConfigString( int number, char *value )
+void CL_GameModule_ConfigString( int number, const char *value )
 {
 	if( cge )
 		cge->ConfigString( number, value );
