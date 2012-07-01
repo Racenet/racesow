@@ -1,3 +1,22 @@
+/*
+Copyright (C) 2008 Chasseur de bots
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
 #include "../qcommon/qcommon.h"
 #include "../irc/irc_interface.h"
 
@@ -26,6 +45,7 @@ extern int CL_GetKeyDest( void );
 extern connstate_t CL_GetClientState( void );
 extern struct shader_s *R_RegisterPic( const char *name );
 extern void R_DrawStretchPic( int x, int y, int w, int h, float s1, float t1, float s2, float t2, float *color, struct shader_s *shader );
+extern void R_DrawStretchPoly( const struct poly_s *poly, float x_offset, float y_offset );
 
 static void Irc_Print( const char *msg )
 {
@@ -105,7 +125,6 @@ static void Irc_MemEmptyPool( const char *filename, int fileline )
 
 static void Irc_LoadLibrary( void )
 {
-
 	static irc_import_t import;
 	dllfunc_t funcs[2];
 	GetIrcAPI_t GetIrcAPI_f;
@@ -126,6 +145,7 @@ static void Irc_LoadLibrary( void )
 	import.SCR_StrlenForWidth = SCR_StrlenForWidth;
 	import.R_RegisterPic = R_RegisterPic;
 	import.R_DrawStretchPic = R_DrawStretchPic;
+	import.R_DrawStretchPoly = R_DrawStretchPoly;
 	import.viddef = &viddef;
 	import.Milliseconds = Sys_Milliseconds;
 	import.Microseconds = Sys_Microseconds;
@@ -160,6 +180,7 @@ static void Irc_LoadLibrary( void )
 	import.Cmd_ExecuteString = Cmd_ExecuteString;
 	import.Com_BeginRedirect = Com_BeginRedirect;
 	import.Com_EndRedirect = Com_EndRedirect;
+	import.Cmd_SetCompletionFunc = Cmd_SetCompletionFunc;
 	import.Cbuf_AddText = Cbuf_AddText;
 	import.Trie_Create = Trie_Create;
 	import.Trie_Destroy = Trie_Destroy;
@@ -192,7 +213,7 @@ static void Irc_LoadLibrary( void )
 		api_version = irc_export->API();
 		if( api_version == IRC_API_VERSION )
 		{
-			if( !irc_export->Init() )
+			if( irc_export->Init() )
 			{
 				dynvar_t *const quit = Dynvar_Lookup( "quit" );
 				if( quit )

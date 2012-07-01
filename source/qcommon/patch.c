@@ -1,29 +1,27 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include "qcommon.h"
 
 /*
-   ===============
-   Patch_FlatnessTest
-   ===============
- */
+* Patch_FlatnessTest
+*/
 static int Patch_FlatnessTest( float maxflat2, const float *point0, const float *point1, const float *point2 )
 {
 	float d;
@@ -52,10 +50,8 @@ static int Patch_FlatnessTest( float maxflat2, const float *point0, const float 
 }
 
 /*
-   ===============
-   Patch_GetFlatness
-   ===============
- */
+* Patch_GetFlatness
+*/
 void Patch_GetFlatness( float maxflat, const float *points, int comp, const int *patch_cp, int *flat )
 {
 	int i, p, u, v;
@@ -86,10 +82,8 @@ void Patch_GetFlatness( float maxflat, const float *points, int comp, const int 
 }
 
 /*
-   ===============
-   Patch_Evaluate_QuadricBezier
-   ===============
- */
+* Patch_Evaluate_QuadricBezier
+*/
 static void Patch_Evaluate_QuadricBezier( float t, const vec_t *point0, const vec_t *point1, const vec_t *point2, vec_t *out, int comp )
 {
 	int i;
@@ -104,10 +98,8 @@ static void Patch_Evaluate_QuadricBezier( float t, const vec_t *point0, const ve
 }
 
 /*
-   ===============
-   Patch_Evaluate
-   ===============
- */
+* Patch_Evaluate
+*/
 void Patch_Evaluate( const vec_t *p, int *numcp, const int *tess, vec_t *dest, int comp )
 {
 	int num_patches[2], num_tess[2];

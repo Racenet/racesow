@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 //
 // qfiles.h: quake file formats
@@ -24,96 +24,16 @@
 //
 
 /*
-   ========================================================================
+========================================================================
 
-   .MD2 triangle model file format
+.MD3 model file format
 
-   ========================================================================
- */
+========================================================================
+*/
 
-#define IDMD2HEADER	    "IDP2"
-
-#define MD2_ALIAS_VERSION   8
-
-#define	MD2_MAX_TRIANGLES   4096
-#define MD2_MAX_VERTS	    4096
-#define MD2_MAX_FRAMES	    1024
-#define MD2_MAX_SKINS	    32
-#define	MD2_MAX_SKINNAME    64
-
-typedef struct
-{
-	short s;
-	short t;
-} dstvert_t;
-
-typedef struct
-{
-	short index_xyz[3];
-	short index_st[3];
-} dtriangle_t;
-
-typedef struct
-{
-	qbyte v[3];             // scaled byte to fit in frame mins/maxs
-	qbyte lightnormalindex;
-} dtrivertx_t;
-
-typedef struct
-{
-	float scale[3];         // multiply byte verts by this
-	float translate[3];     // then add this
-	char name[16];          // frame name from grabbing
-	dtrivertx_t verts[1];   // variable sized
-} daliasframe_t;
-
-// the glcmd format:
-// a positive integer starts a tristrip command, followed by that many
-// vertex structures.
-// a negative integer starts a trifan command, followed by -x vertexes
-// a zero indicates the end of the command list.
-// a vertex consists of a floating point s, a floating point t,
-// and an integer vertex index.
-
-
-typedef struct
-{
-	int ident;
-	int version;
-
-	int skinwidth;
-	int skinheight;
-	int framesize;          // byte size of each frame
-
-	int num_skins;
-	int num_xyz;
-	int num_st;             // greater than num_xyz for seams
-	int num_tris;
-	int num_glcmds;         // dwords in strip/fan command list
-	int num_frames;
-
-	int ofs_skins;          // each skin is a MAX_SKINNAME string
-	int ofs_st;             // byte offset from start for stverts
-	int ofs_tris;           // offset for dtriangles
-	int ofs_frames;         // offset for first frame
-	int ofs_glcmds;
-	int ofs_end;            // end of file
-
-} dmd2_t;
-
-
-/*
-   ========================================================================
-
-   .MD3 model file format
-
-   ========================================================================
- */
-
-#define IDMD3HEADER	    "IDP3"
+#define IDMD3HEADER			"IDP3"
 
 #define MD3_ALIAS_VERSION   15
-#define MD3_ALIAS_MAX_LODS  4
 
 #define	MD3_MAX_TRIANGLES   8192    // per mesh
 #define MD3_MAX_VERTS	    4096    // per mesh
@@ -201,155 +121,12 @@ typedef struct
 } dmd3header_t;
 
 /*
-   ========================================================================
+==============================================================================
 
-   .SKM and .SKP models file formats
+.BSP file format
 
-   ========================================================================
- */
-
-#define SKMHEADER		"SKM1"
-
-#define SKM_MAX_NAME		64
-#define SKM_MAX_MESHES		32
-#define SKM_MAX_FRAMES		65536
-#define SKM_MAX_TRIS		65536
-#define SKM_MAX_VERTS		( SKM_MAX_TRIS * 3 )
-#define SKM_MAX_BONES		256
-#define SKM_MAX_SHADERS		256
-#define SKM_MAX_FILESIZE	16777216
-#define SKM_MAX_ATTACHMENTS	SKM_MAX_BONES
-#define SKM_MAX_LODS		4
-
-// model format related flags
-#define SKM_BONEFLAG_ATTACH	1
-#define SKM_MODELTYPE		2   // (hierarchical skeletal pose)
-
-typedef struct
-{
-	char id[4];         // SKMHEADER
-	unsigned int type;
-	unsigned int filesize; // size of entire model file
-
-	unsigned int num_bones;
-	unsigned int num_meshes;
-
-	// this offset is relative to the file
-	unsigned int ofs_meshes;
-} dskmheader_t;
-
-// there may be more than one of these
-typedef struct
-{
-	// these offsets are relative to the file
-	char shadername[SKM_MAX_NAME];  // name of the shader to use
-	char meshname[SKM_MAX_NAME];
-
-	unsigned int num_verts;
-	unsigned int num_tris;
-	unsigned int num_references;
-	unsigned int ofs_verts;
-	unsigned int ofs_texcoords;
-	unsigned int ofs_indices;
-	unsigned int ofs_references;
-} dskmmesh_t;
-
-// one or more of these per vertex
-typedef struct
-{
-	float origin[3];    // vertex location (these blend)
-	float influence;    // influence fraction (these must add up to 1)
-	float normal[3];    // surface normal (these blend)
-	unsigned int bonenum; // number of the bone
-} dskmbonevert_t;
-
-// variable size, parsed sequentially
-typedef struct
-{
-	unsigned int numweights;
-	// immediately followed by 1 or more ddpmbonevert_t structures
-	dskmbonevert_t verts[1];
-} dskmvertex_t;
-
-typedef struct
-{
-	float st[2];
-} dskmcoord_t;
-
-typedef struct
-{
-	char id[4];         // SKMHEADER
-	unsigned int type;
-	unsigned int filesize; // size of entire model file
-
-	unsigned int num_bones;
-	unsigned int num_frames;
-
-	// these offsets are relative to the file
-	unsigned int ofs_bones;
-	unsigned int ofs_frames;
-} dskpheader_t;
-
-// one per bone
-typedef struct
-{
-	// name examples: upperleftarm leftfinger1 leftfinger2 hand, etc
-	char name[SKM_MAX_NAME];
-	signed int parent;  // parent bone number
-	unsigned int flags; // flags for the bone
-} dskpbone_t;
-
-typedef struct
-{
-	float quat[4];
-	float origin[3];
-} dskpbonepose_t;
-
-// immediately followed by bone positions for the frame
-typedef struct
-{
-	// name examples: idle_1 idle_2 idle_3 shoot_1 shoot_2 shoot_3, etc
-	char name[SKM_MAX_NAME];
-	unsigned int ofs_bonepositions;
-} dskpframe_t;
-
-/*
-   ========================================================================
-
-   .SP2 sprite file format
-
-   ========================================================================
- */
-
-#define IDSP2HEADER	    "IDS2"
-
-#define SPRITE_VERSION	    2
-
-#define SPRITE_MAX_NAME	    64
-#define SPRITE_MAX_FRAMES   32
-
-typedef struct
-{
-	int width, height;
-	int origin_x, origin_y;         // raster coordinates inside pic
-	char name[SPRITE_MAX_NAME];     // name of shader file
-} dsprframe_t;
-
-typedef struct
-{
-	int ident;
-	int version;
-	int numframes;
-	dsprframe_t frames[1];          // variable sized
-} dsprite_t;
-
-/*
-   ==============================================================================
-
-   .BSP file format
-
-   ==============================================================================
- */
+==============================================================================
+*/
 
 #define IDBSPHEADER	    "IBSP"
 #define RBSPHEADER	    "RBSP"

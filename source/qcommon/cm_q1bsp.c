@@ -95,7 +95,12 @@ static chull_t *CM_HullForBSP( cmodel_state_t *cms, cmodel_t *cmodel, const vec3
 
 	VectorSubtract( maxs, mins, size );
 
-	hullindex = (cmodel - cms->map_cmodels) * cms->nummaphulls;
+	hullindex = cmodel - cms->map_cmodels;
+	if( hullindex < 0 || hullindex >= cms->numcmodels ) {
+		Com_Error( ERR_DROP, "CM_HullForBSP: bad cmodel" );
+	}
+
+	hullindex *= cms->nummaphulls;
 	if( size[0] < 3 )
 		return &cms->map_hulls[hullindex+0];
 	if( size[0] <= 32 )
@@ -125,6 +130,8 @@ static int CM_HullPointContents( cmodel_state_t *cms, chull_t *hull, int num, ve
 	float		d;
 	cnode_t		*node;
 	cplane_t	*plane;
+
+	c_pointcontents++;
 
 	while( num >= 0 )
 	{
@@ -216,6 +223,8 @@ start:
 		contents = CMod_SurfaceContents( nodenum );
 		if( trace_contents & contents )
 		{
+			c_brush_traces++;
+
 			trace_trace->contents = contents;
 			trace_trace->surfFlags = CMod_SurfaceFlags( nodenum );
 			if( trace_trace->allsolid )
@@ -705,7 +714,7 @@ static void CMod_LoadPlanes( cmodel_state_t *cms, lump_t *l )
 /*
 * CMod_LoadVisibility
 * 
-* Decompresses PVS data, sets proper cluster values for leafs and calcs PHS
+* Decompresses PVS data, sets proper cluster values for leafs
 */
 static void CMod_LoadVisibility( cmodel_state_t *cms, lump_t *l, int numvisleafs )
 {
@@ -752,8 +761,6 @@ static void CMod_LoadVisibility( cmodel_state_t *cms, lump_t *l, int numvisleafs
 			leaf->cluster = -1;
 		}
 	}
-
-	CM_CalcPHS( cms );
 }
 
 /*

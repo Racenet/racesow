@@ -114,7 +114,7 @@ static void SNAP_ParsePlayerstate( msg_t *msg, player_state_t *oldstate, player_
 {
 	int flags;
 	int i, b;
-	int statbits;
+	int statbits[SNAP_STATS_LONGS];
 
 	// clear to old value before delta parsing
 	if( oldstate )
@@ -233,28 +233,27 @@ static void SNAP_ParsePlayerstate( msg_t *msg, player_state_t *oldstate, player_
 
 	if( flags & PS_PMOVESTATS )
 	{
-		statbits = MSG_ReadShort( msg );
+		int pmstatbits = MSG_ReadShort( msg );
 		for( i = 0; i < PM_STAT_SIZE; i++ )
 		{
-			if( statbits & ( 1<<i ) )
+			if( pmstatbits & ( 1<<i ) )
 				state->pmove.stats[i] = MSG_ReadShort( msg );
 		}
 	}
 
 	if( flags & PS_INVENTORY )
 	{
-		int ithalf = MAX_ITEMS / 2;
+		int invstatbits[SNAP_INVENTORY_LONGS];
 
 		// parse inventory
-		statbits = MSG_ReadLong( msg );
+		for( i = 0; i < SNAP_INVENTORY_LONGS; i++ ) {
+			invstatbits[i] = MSG_ReadLong( msg );
+		}
 
-		for( i = 0; i < ithalf; i++ )
+		for( i = 0; i < MAX_ITEMS; i++ )
 		{
-			if( statbits & ( 1<<i ) )
-			{
+			if( invstatbits[i>>5] & ( 1<<(i&31) ) )
 				state->inventory[i] = MSG_ReadByte( msg );
-				state->inventory[i+ithalf] = MSG_ReadByte( msg );
-			}
 		}
 	}
 
@@ -262,10 +261,13 @@ static void SNAP_ParsePlayerstate( msg_t *msg, player_state_t *oldstate, player_
 		state->plrkeys = MSG_ReadByte( msg );
 
 	// parse stats
-	statbits = MSG_ReadLong( msg );
+	for( i = 0; i < SNAP_STATS_LONGS; i++ ) {
+		statbits[i] = MSG_ReadLong( msg );
+	}
+
 	for( i = 0; i < PS_MAX_STATS; i++ )
 	{
-		if( statbits & ( 1<<i ) )
+		if( statbits[i>>5] & ( 1<<(i&31) ) )
 			state->stats[i] = MSG_ReadShort( msg );
 	}
 }

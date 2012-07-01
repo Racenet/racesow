@@ -1,3 +1,22 @@
+/*
+Copyright (C) 2008 Chasseur de bots
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
 #include "qcommon.h"
 #include "trie.h"
 
@@ -532,7 +551,9 @@ static trie_remove_result_t Trie_Remove_Rec(
 				struct trie_node_s *sibling = node->sibling->sibling;
 				Mem_ZoneFree( node->sibling );
 				node->sibling = sibling;
-				return ( node->child != NULL ) || ( node->data_is_set );
+				// ch : is this right?
+				// return ( node->child != NULL ) || ( node->data_is_set );
+				return ( node->child != NULL ) || ( node->data_is_set ) ? TRIE_REMOVE_CHILDREN_OR_DATA_LEFT : TRIE_REMOVE_NO_CHILDREN_OR_DATA_LEFT;
 			}
 			else
 				return status;
@@ -556,7 +577,9 @@ static trie_remove_result_t Trie_Remove_Rec(
 					struct trie_node_s *sibling = node->child->sibling;
 					Mem_ZoneFree( node->child );
 					node->child = sibling;
-					return ( node->child != NULL ) || ( node->data_is_set );
+					// ch : is this right?
+					// return ( node->child != NULL ) || ( node->data_is_set );
+					return ( node->child != NULL ) || ( node->data_is_set ) ? TRIE_REMOVE_CHILDREN_OR_DATA_LEFT : TRIE_REMOVE_NO_CHILDREN_OR_DATA_LEFT;
 				}
 				else
 					return status;
@@ -571,7 +594,9 @@ static trie_remove_result_t Trie_Remove_Rec(
 			*data = node->data;
 			node->data = NULL;
 			node->data_is_set = 0;
-			return ( node->child != 0 );
+			// ch : is this right?
+			// return ( node->child != 0 );
+			return ( node->child != 0 ) ? TRIE_REMOVE_CHILDREN_OR_DATA_LEFT : TRIE_REMOVE_NO_CHILDREN_OR_DATA_LEFT;
 		}
 	}
 	else

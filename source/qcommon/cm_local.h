@@ -25,6 +25,10 @@
 //#define TRACEVICFIX
 #define TRACE_NOAXIAL_SAFETY_OFFSET 0.1
 
+// keep 1/8 unit away to keep the position valid before network snapping
+// and to avoid various numeric issues
+#define	SURFACE_CLIP_EPSILON	(0.125)
+
 typedef struct
 {
 	char *name;
@@ -87,6 +91,12 @@ typedef struct cmodel_s
 
 	int nummarkbrushes;
 	cbrush_t **markbrushes;
+
+	vec3_t cyl_offset;
+	float cyl_halfheight;
+	float cyl_radius;
+
+	qboolean builtin;
 } cmodel_t;
 
 typedef struct
@@ -178,6 +188,12 @@ struct cmodel_state_s
 	cbrush_t *box_markbrushes[1];
 	cmodel_t box_cmodel[1];
 
+	cplane_t oct_planes[10];
+	cbrushside_t oct_brushsides[10];
+	cbrush_t oct_brush[1];
+	cbrush_t *oct_markbrushes[1];
+	cmodel_t oct_cmodel[1];
+
 	int leaf_count, leaf_maxcount;
 	int *leaf_list;
 	float *leaf_mins, *leaf_maxs;
@@ -192,8 +208,8 @@ struct cmodel_state_s
 //=======================================================================
 
 qbyte	*CM_DecompressVis( const qbyte *in, int rowsize, qbyte *decompressed );
-void	CM_CalcPHS( cmodel_state_t *cms );
 
 void	CM_InitBoxHull( cmodel_state_t *cms );
+void	CM_InitOctagonHull( cmodel_state_t *cms );
 
 void	CM_FloodAreaConnections( cmodel_state_t *cms );

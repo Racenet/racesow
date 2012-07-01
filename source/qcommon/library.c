@@ -232,12 +232,12 @@ void *Com_LoadGameLibrary( const char *basename, const char *apifuncname, void *
 		randomizer = brandom( 0, 9999 );
 	}
 
-	gamelib = Mem_ZoneMalloc( sizeof( gamelib_t ) );
+	gamelib = ( gamelib_t* )Mem_ZoneMalloc( sizeof( gamelib_t ) );
 	gamelib->lib = NULL;
 	gamelib->fullname = NULL;
 
 	libname_size = strlen( basename ) + 1 + strlen( ARCH ) + strlen( LIB_SUFFIX ) + 1;
-	libname = Mem_TempMalloc( libname_size );
+	libname = ( char* )Mem_TempMalloc( libname_size );
 	Q_snprintfz( libname, libname_size, "%s_" ARCH LIB_SUFFIX, basename );
 
 	// it exists?
@@ -260,7 +260,7 @@ void *Com_LoadGameLibrary( const char *basename, const char *apifuncname, void *
 
 	tempname_size = strlen( FS_WriteDirectory() ) + 1 + strlen( FS_GameDirectory() ) + strlen( "/tempmodules" ) +
 	                strlen( va( "%i", randomizer ) ) + 1 + strlen( libname ) + 1;
-	tempname = Mem_ZoneMalloc( tempname_size );
+	tempname = ( char* )Mem_ZoneMalloc( tempname_size );
 
 	// without gamedir for copy
 	Q_snprintfz( tempname, tempname_size, "tempmodules%i/%s", randomizer, libname );
@@ -290,16 +290,16 @@ void *Com_LoadGameLibrary( const char *basename, const char *apifuncname, void *
 	{
 		Com_Printf( "LoadLibrary (%s):(%s)\n", tempname, Sys_Library_ErrorString() );
 		Mem_TempFree( libname );
-		Com_UnloadGameLibrary( (void *)&gamelib );
+		Com_UnloadGameLibrary( (void **)&gamelib );
 		return NULL;
 	}
 
-	APIfunc = Sys_Library_ProcAddress( gamelib->lib, apifuncname );
+	APIfunc = ( void* ( * )( void* ) )Sys_Library_ProcAddress( gamelib->lib, apifuncname );
 	if( !APIfunc )
 	{
 		Com_Printf( "LoadLibrary (%s):(%s)\n", tempname, Sys_Library_ErrorString() );
 		Mem_TempFree( libname );
-		Com_UnloadGameLibrary( (void *)&gamelib );
+		Com_UnloadGameLibrary( (void **)&gamelib );
 		return NULL;
 	}
 
