@@ -37,7 +37,7 @@ qboolean Irc_If_Init(void) {
 	IRC_IMPORT.Dynvar_AddListener(irc_connected, Irc_Logic_Connected_f);
 	IRC_IMPORT.Dynvar_AddListener(irc_connected, Irc_Client_Connected_f);
 	IRC_IMPORT.Dynvar_AddListener(irc_connected, Irc_Rcon_Connected_f);
-	return qfalse;
+	return qtrue;
 }
 
 void Irc_If_Shutdown(void) {
