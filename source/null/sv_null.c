@@ -26,11 +26,11 @@ void SV_Init( void )
 {
 }
 
-void SV_Shutdown( char *finalmsg )
+void SV_Shutdown( const char *finalmsg )
 {
 }
 
-void SV_ShutdownGame( char *finalmsg, qboolean reconnect )
+void SV_ShutdownGame( const char *finalmsg, qboolean reconnect )
 {
 }
 
