@@ -29,7 +29,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="&quot;$(SolutionDir)win32\pre-svnrev.bat&quot; qcommon\ svnrev.h"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -52,7 +52,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\win32\include\msvc,..\win32\include,..\..\libsrcs\zlib,..\..\libsrcs\libcurl\include,..\..\libsrcs\libjpeg"
+				AdditionalIncludeDirectories="..\win32\include\msvc;..\win32\include;..\..\libsrcs\zlib;..\..\libsrcs\libcurl\include;..\..\libsrcs\libjpeg;..\..\libsrcs\libogg\include;..\..\libsrcs\libvorbis\include;..\..\libsrcs\libtheora\include;..\..\libsrcs\libpng"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CURL_STATICLIB;_CRT_SECURE_NO_DEPRECATE"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
@@ -84,7 +84,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="winmm.lib ws2_32.lib zlibstat.lib  libjpegstat.lib dxguid.lib libcurlstat.lib"
+				AdditionalDependencies="winmm.lib ws2_32.lib zlibstat.lib  libjpegstat.lib dxguid.lib libcurlstat.lib libpngstat.lib"
 				OutputFile="..\Debug\x86\warsow_x86.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -120,7 +120,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="&quot;$(SolutionDir)win32\post-svnrev.bat&quot; qcommon\ svnrev.h"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -135,7 +135,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="&quot;$(SolutionDir)win32\pre-svnrev.bat&quot; qcommon\ svnrev.h"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -162,7 +162,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="false"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\win32\include\msvc,..\win32\include,..\..\libsrcs\zlib,..\..\libsrcs\libcurl\include,..\..\libsrcs\libjpeg"
+				AdditionalIncludeDirectories="..\win32\include\msvc;..\win32\include;..\..\libsrcs\zlib;..\..\libsrcs\libcurl\include;..\..\libsrcs\libjpeg;..\..\libsrcs\libogg\include;..\..\libsrcs\libvorbis\include;..\..\libsrcs\libtheora\include;..\..\libsrcs\libpng\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CURL_STATICLIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -195,7 +195,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="winmm.lib ws2_32.lib zlibstat.lib libjpegstat.lib dxguid.lib libcurlstat.lib"
+				AdditionalDependencies="winmm.lib ws2_32.lib zlibstat.lib libjpegstat.lib dxguid.lib libcurlstat.lib libpngstat.lib"
 				OutputFile="..\Release\x86\warsow_x86.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -231,7 +231,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="&quot;$(SolutionDir)win32\post-svnrev.bat&quot; qcommon\ svnrev.h"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -268,7 +268,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\win32\include\msvc,..\win32\include,..\..\libsrcs\zlib,..\..\libsrcs\libcurl\include,..\..\libsrcs\libjpeg"
+				AdditionalIncludeDirectories="..\win32\include\msvc,..\win32\include,..\..\libsrcs\zlib,..\..\libsrcs\libcurl\include,..\..\libsrcs\libjpeg,..\..\libsrcs\libogg\include,..\..\libsrcs\libvorbis\include,..\..\libsrcs\libtheora\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;CURL_STATICLIB;_CRT_SECURE_NO_DEPRECATE"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
@@ -378,7 +378,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="false"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\win32\include\msvc,..\win32\include,..\..\libsrcs\zlib,..\..\libsrcs\libcurl\include,..\..\libsrcs\libjpeg"
+				AdditionalIncludeDirectories="..\win32\include\msvc,..\win32\include,..\..\libsrcs\zlib,..\..\libsrcs\libcurl\include,..\..\libsrcs\libjpeg,..\..\libsrcs\libogg\include,..\..\libsrcs\libvorbis\include,..\..\libsrcs\libtheora\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CURL_STATICLIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -870,11 +870,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\qcommon\bignum.c"
+				RelativePath="..\qcommon\asyncstream.c"
+				>
+			</File>
+			<File
+				RelativePath="..\qcommon\base64.c"
 				>
 			</File>
 			<File
 				RelativePath="..\client\cin.c"
+				>
+			</File>
+			<File
+				RelativePath="..\qcommon\cjson.c"
 				>
 			</File>
 			<File
@@ -1030,7 +1038,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\null\mm_null.c"
+				RelativePath="..\matchmaker\mm_query.c"
+				>
+			</File>
+			<File
+				RelativePath="..\matchmaker\mm_rating.c"
 				>
 			</File>
 			<File
@@ -1063,6 +1075,10 @@
 			</File>
 			<File
 				RelativePath="..\ref_gl\r_backend.c"
+				>
+			</File>
+			<File
+				RelativePath="..\ref_gl\r_backend_glsl.c"
 				>
 			</File>
 			<File
@@ -1150,11 +1166,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\qcommon\rsa.c"
-				>
-			</File>
-			<File
-				RelativePath="..\qcommon\sha1.c"
+				RelativePath="..\ref_gl\r_vbo.c"
 				>
 			</File>
 			<File
@@ -1427,15 +1439,23 @@
 				>
 			</File>
 			<File
-				RelativePath="..\qcommon\bignum.h"
+				RelativePath="..\qcommon\asyncstream.h"
 				>
 			</File>
 			<File
-				RelativePath="..\qcommon\bn_mul.h"
+				RelativePath="..\qcommon\base64.h"
+				>
+			</File>
+			<File
+				RelativePath="..\cgame\cg_public.h"
 				>
 			</File>
 			<File
 				RelativePath="..\client\cin.h"
+				>
+			</File>
+			<File
+				RelativePath="..\qcommon\cjson.h"
 				>
 			</File>
 			<File
@@ -1479,6 +1499,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\ref_gl\iqm.h"
+				>
+			</File>
+			<File
 				RelativePath="..\client\keys.h"
 				>
 			</File>
@@ -1492,6 +1516,14 @@
 			</File>
 			<File
 				RelativePath="..\matchmaker\mm_common.h"
+				>
+			</File>
+			<File
+				RelativePath="..\matchmaker\mm_query.h"
+				>
+			</File>
+			<File
+				RelativePath="..\matchmaker\mm_rating.h"
 				>
 			</File>
 			<File
@@ -1547,6 +1579,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\ref_gl\r_backend_local.h"
+				>
+			</File>
+			<File
 				RelativePath="..\ref_gl\r_glimp.h"
 				>
 			</File>
@@ -1579,10 +1615,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\qcommon\rcsid.h"
-				>
-			</File>
-			<File
 				RelativePath="..\cgame\ref.h"
 				>
 			</File>
@@ -1591,15 +1623,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\qcommon\rsa.h"
-				>
-			</File>
-			<File
 				RelativePath="..\server\server.h"
-				>
-			</File>
-			<File
-				RelativePath="..\qcommon\sha1.h"
 				>
 			</File>
 			<File
@@ -1632,6 +1656,10 @@
 			</File>
 			<File
 				RelativePath="..\qcommon\trie.h"
+				>
+			</File>
+			<File
+				RelativePath="..\ui\ui_public.h"
 				>
 			</File>
 			<File
