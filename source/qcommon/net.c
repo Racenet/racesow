@@ -22,12 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "sys_net.h"
 
-//racesow
-#if defined __FreeBSD__
-#include <sys/socket.h>
-#endif
-//!racesow
-
 #ifdef _WIN32
 #include "../win32/winquake.h"
 #else
