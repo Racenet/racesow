@@ -9,8 +9,8 @@ DEBUG_BUILD?=NO
 USE_MINGW?=NO
 
 # client and dedicated server binaries
-BUILD_CLIENT?=YES
-BUILD_SERVER?=NO
+BUILD_CLIENT?=NO
+BUILD_SERVER?=YES
 
 # engine modules
 BUILD_IRC?=YES
@@ -151,12 +151,12 @@ ifneq ($(DEBUG_BUILD),YES)
 LDFLAGS_COMMON+= -s
 endif
 
-LDFLAGS_CLIENT=-lcurlstat -lwsock32 -ljpegstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
-LDFLAGS_DED=-lcurlstat -lwsock32
+LDFLAGS_CLIENT=-lcurlstat -lws2_32 -lwsock32 -ljpegstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
+LDFLAGS_DED=-lcurlstat -lws2_32 -lwsock32
 LDFLAGS_MODULE=-shared
 
 LDFLAGS_CGAME=$(LDFLAGS_MODULE)
-LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lzstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
 LDFLAGS_UI=$(LDFLAGS_MODULE)
 
 LDFLAGS_TV_SERVER=
