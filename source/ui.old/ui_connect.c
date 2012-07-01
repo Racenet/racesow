@@ -100,9 +100,9 @@ static server_t *pingingServer = NULL;
 
 char ui_responseToken[MAX_TOKEN_CHARS];
 
-//==================
-//UI_GetResponseToken
-//==================
+/*
+* UI_GetResponseToken
+*/
 static char *UI_GetResponseToken( char **data_p )
 {
 	int c;
@@ -166,9 +166,9 @@ skipbackslash:
 	return ui_responseToken;
 }
 
-//==================
-//FreeServerlist
-//==================
+/*
+* FreeServerlist
+*/
 static void M_FreeServerlist( void )
 {
 	server_t *ptr;
@@ -276,9 +276,9 @@ void M_Browser_UpdateModsList( char *list )
 	mod_filternames[i] = NULL;
 }
 
-//==================
-//M_RegisterServerItem
-//==================
+/*
+* M_RegisterServerItem
+*/
 static server_t *M_RegisterServerItem( char *adr, char *info )
 {
 	server_t *newserv, *checkserv;
@@ -319,10 +319,10 @@ static server_t *M_RegisterServerItem( char *adr, char *info )
 	return newserv;
 }
 
-//==================
-//M_AddToServerList
-// The client sent us a new server adress for our list
-//==================
+/*
+* M_AddToServerList
+* The client sent us a new server adress for our list
+*/
 void M_AddToServerList( char *adr, char *info )
 {
 	server_t *newserv;
@@ -588,9 +588,9 @@ void M_AddToServerList( char *adr, char *info )
 #define SERVER_PINGING_MINRETRY 500
 #define SERVER_PINGING_MAXRETRYTIMEOUTS 1
 
-//==================
-//GetNextServerToPing - Get a non yet pinged server
-//==================
+/*
+* GetNextServerToPing - Get a non yet pinged server
+*/
 static server_t *GetNextServerToPing( void )
 {
 	int count, stop;
@@ -626,9 +626,9 @@ static server_t *GetNextServerToPing( void )
 	return NULL;
 }
 
-//==================
-//PingServers
-//==================
+/*
+* PingServers
+*/
 static void PingServers( void )
 {
 	if( !nextServerTime && !nextPingTime ) //User stopped the listing
@@ -672,9 +672,9 @@ static void PingServers( void )
 #endif
 }
 
-//==================
-//ResetAllServers
-//==================
+/*
+* ResetAllServers
+*/
 static void ResetAllServers( void )
 {
 	server_t *server;
@@ -702,9 +702,9 @@ static void ResetAllServers( void )
 	nextServerTime = uis.time;
 }
 
-//==================
-//SearchGames
-//==================
+/*
+* SearchGames
+*/
 static void SearchGames( char *s )
 {
 	char *master;
@@ -781,9 +781,9 @@ static void SearchGames( char *s )
 
 m_itemslisthead_t serversScrollList;
 
-//==================
-//GetBestNextPingServer
-//==================
+/*
+* GetBestNextPingServer
+*/
 static server_t *GetBestNextPingServer( server_t *server )
 {
 	server_t *ptr = servers, *best = NULL;
@@ -813,9 +813,9 @@ static server_t *GetBestNextPingServer( server_t *server )
 	return best;
 }
 
-//==================
-//GetWorstNextPingServer
-//==================
+/*
+* GetWorstNextPingServer
+*/
 static server_t *GetWorstNextPingServer( server_t *server )
 {
 	server_t *ptr = servers, *worst = NULL;
@@ -846,9 +846,9 @@ static server_t *GetWorstNextPingServer( server_t *server )
 	return worst;
 }
 
-//==================
-//GetMostPlayersServer
-//==================
+/*
+* GetMostPlayersServer
+*/
 static server_t *GetMostPlayersServer( server_t *server )
 {
 	server_t *ptr = servers, *most = NULL;
@@ -878,9 +878,9 @@ static server_t *GetMostPlayersServer( server_t *server )
 	return most;
 }
 
-//==================
-//GetLeastPlayersServer
-//==================
+/*
+* GetLeastPlayersServer
+*/
 static server_t *GetLeastPlayersServer( server_t *server )
 {
 	server_t *ptr = servers, *least = NULL;
@@ -910,9 +910,9 @@ static server_t *GetLeastPlayersServer( server_t *server )
 	return least;
 }
 
-//==================
-//GetFirstGametypeServer
-//==================
+/*
+* GetFirstGametypeServer
+*/
 static server_t *GetFirstGametypeServer( server_t *server )
 {
 	server_t *ptr = servers, *first = NULL;
@@ -947,9 +947,9 @@ static server_t *GetFirstGametypeServer( server_t *server )
 	return first;
 }
 
-//==================
-//GetLastGametypeServer
-//==================
+/*
+* GetLastGametypeServer
+*/
 static server_t *GetLastGametypeServer( server_t *server )
 {
 	server_t *ptr = servers, *last = NULL;
@@ -984,9 +984,9 @@ static server_t *GetLastGametypeServer( server_t *server )
 	return last;
 }
 
-//==================
-//GetFirstMapServer
-//==================
+/*
+* GetFirstMapServer
+*/
 static server_t *GetFirstMapServer( server_t *server )
 {
 	server_t *ptr = servers, *first = NULL;
@@ -1018,9 +1018,9 @@ static server_t *GetFirstMapServer( server_t *server )
 	return first;
 }
 
-//==================
-//GetLastMapServer
-//==================
+/*
+* GetLastMapServer
+*/
 static server_t *GetLastMapServer( server_t *server )
 {
 	server_t *ptr = servers, *last = NULL;
@@ -1052,9 +1052,9 @@ static server_t *GetLastMapServer( server_t *server )
 	return last;
 }
 
-//==================
-//GetFirstModServer
-//==================
+/*
+* GetFirstModServer
+*/
 static server_t *GetFirstModServer( server_t *server )
 {
 	server_t *ptr = servers, *first = NULL;
@@ -1089,9 +1089,9 @@ static server_t *GetFirstModServer( server_t *server )
 	return first;
 }
 
-//==================
-//GetLastModServer
-//==================
+/*
+* GetLastModServer
+*/
 static server_t *GetLastModServer( server_t *server )
 {
 	server_t *ptr = servers, *last = NULL;
@@ -1126,9 +1126,9 @@ static server_t *GetLastModServer( server_t *server )
 	return last;
 }
 
-//==================
-//GetFirstNameServer
-//==================
+/*
+* GetFirstNameServer
+*/
 static server_t *GetFirstNameServer( server_t *server )
 {
 	server_t *ptr = servers, *first = NULL;
@@ -1163,9 +1163,9 @@ static server_t *GetFirstNameServer( server_t *server )
 	return first;
 }
 
-//==================
-//GetLastNameServer
-//==================
+/*
+* GetLastNameServer
+*/
 static server_t *GetLastNameServer( server_t *server )
 {
 	server_t *ptr = servers, *last = NULL;
@@ -1200,9 +1200,9 @@ static server_t *GetLastNameServer( server_t *server )
 	return last;
 }
 
-//==================
-//SortServers
-//==================
+/*
+* SortServers
+*/
 static server_t *SortServers( server_t *server )
 {
 	server_t *answer = NULL;
@@ -1256,9 +1256,9 @@ static server_t *SortServers( server_t *server )
 	return answer;
 }
 
-//==================
-//M_RefreshScrollWindowList
-//==================
+/*
+* M_RefreshScrollWindowList
+*/
 static void M_RefreshScrollWindowList( void )
 {
 	server_t *ptr = NULL;
@@ -1384,9 +1384,9 @@ static int scrollbar_id = 0;
 #define NO_GAMETYPE_STRING "..."
 
 
-//==================
-//M_Connect_UpdateFiltersSettings
-//==================
+/*
+* M_Connect_UpdateFiltersSettings
+*/
 static void M_Connect_UpdateFiltersSettings( menucommon_t *menuitem )
 {
 	// remember filter options by using cvars
@@ -1404,9 +1404,9 @@ static void M_Connect_UpdateFiltersSettings( menucommon_t *menuitem )
 	M_RefreshScrollWindowList();
 }
 
-//==================
-//M_Connect_UpdateSortbar
-//==================
+/*
+* M_Connect_UpdateSortbar
+*/
 static void M_Connect_UpdateSortbar( menucommon_t *menuitem )
 {
 	trap_Cvar_SetValue( "ui_sortmethod", menuitem->sort_active );
@@ -1415,9 +1415,9 @@ static void M_Connect_UpdateSortbar( menucommon_t *menuitem )
 	M_RefreshScrollWindowList();
 }
 
-//==================
-//M_Connect_UpdateScrollbar
-//==================
+/*
+* M_Connect_UpdateScrollbar
+*/
 static void M_Connect_UpdateScrollbar( menucommon_t *menuitem )
 {
 	menuitem->maxvalue = max( 0, serversScrollList.numItems - MAX_MENU_SERVERS );
@@ -1427,17 +1427,17 @@ static void M_Connect_UpdateScrollbar( menucommon_t *menuitem )
 	scrollbar_curvalue = menuitem->curvalue;
 }
 
-//==================
-//M_StopSearch
-//==================
+/*
+* M_StopSearch
+*/
 void M_StopSearch( struct menucommon_s *unused )
 {
 	nextServerTime = nextPingTime = 0;
 }
 
-//==================
-//M_Connect_ChangeSearchType
-//==================
+/*
+* M_Connect_ChangeSearchType
+*/
 static void M_Connect_ChangeSearchType( menucommon_t *menuitem )
 {
 	int i;
@@ -1466,9 +1466,9 @@ static void M_Connect_ToggleAllowModules( menucommon_t *menuitem )
 	trap_Cvar_SetValue( ALLOW_DOWNLOAD_MODULES, menuitem->curvalue );
 }
 
-//==================
-//GetInforServerFunc
-//==================
+/*
+* GetInforServerFunc
+*/
 #if 0
 static void GetInforServerFunc( menucommon_t *menuitem )
 {
@@ -1488,9 +1488,9 @@ static void GetInforServerFunc( menucommon_t *menuitem )
 }
 #endif
 
-//==================
-//SearchGamesFunc
-//==================
+/*
+* SearchGamesFunc
+*/
 static void SearchGamesFunc( menucommon_t *menuitem )
 {
 	menucommon_t *typemenuitem = UI_MenuItemByName( "m_connect_search_type" );
@@ -1503,9 +1503,9 @@ static void SearchGamesFunc( menucommon_t *menuitem )
 	SearchGames( typemenuitem->itemnames[typemenuitem->curvalue] );
 }
 
-//==================
-//M_Connect_Joinserver
-//==================
+/*
+* M_Connect_Joinserver
+*/
 static void M_Connect_Joinserver( menucommon_t *menuitem )
 {
 	char buffer[128];
@@ -1523,9 +1523,9 @@ static void M_Connect_Joinserver( menucommon_t *menuitem )
 	}
 }
 
-//==================
-//M_AddToFavorites
-//==================
+/*
+* M_AddToFavorites
+*/
 void M_AddToFavorites( menucommon_t *menuitem )
 {
 	//	char	buffer[128];
@@ -1554,9 +1554,9 @@ void M_AddToFavorites( menucommon_t *menuitem )
 	}
 }
 
-//==================
-//M_RemoveFromFavorites
-//==================
+/*
+* M_RemoveFromFavorites
+*/
 void M_RemoveFromFavorites( menucommon_t *menuitem )
 {
 	//	char	buffer[128];
@@ -1595,9 +1595,9 @@ void M_RemoveFromFavorites( menucommon_t *menuitem )
 	}
 }
 
-//==================
-//M_UpdateSeverButton
-//==================
+/*
+* M_UpdateSeverButton
+*/
 static void M_UpdateSeverButton( menucommon_t *menuitem )
 {
 	server_t *server = NULL;
@@ -1627,9 +1627,9 @@ static void M_UpdateSeverButton( menucommon_t *menuitem )
 		Q_snprintfz( menuitem->title, MAX_STRING_CHARS, NO_SERVER_STRING );
 }
 
-//==================
-//M_DrawFiltersBox
-//==================
+/*
+* M_DrawFiltersBox
+*/
 static void M_DrawFiltersBox( menucommon_t *menuitem )
 {
 	int x, y;
@@ -1645,9 +1645,9 @@ static void M_DrawFiltersBox( menucommon_t *menuitem )
 	UI_DrawString( x + 24, y + 10, ALIGN_LEFT_TOP, "Filters", 0, menuitem->font, colorWhite );
 }
 
-//==================
-//JoinServer_MenuInit
-//==================
+/*
+* JoinServer_MenuInit
+*/
 static void JoinServer_MenuInit( void )
 {
 	menucommon_t *menuitem;

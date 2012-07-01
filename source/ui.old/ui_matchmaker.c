@@ -1,21 +1,21 @@
 /*
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
@@ -60,14 +60,14 @@ static char *anydependent[] = { "any", "dependent", 0 };
 
 static int buttonyoffset;
 
-//================
-// CALLBACK FUNCS
-//================
+/*
+* CALLBACK FUNCS
+*/
 
-//================
-// MatchMaker_Popped
-// Called when the matchmaker menu is popped
-//================
+/*
+* MatchMaker_Popped
+* Called when the matchmaker menu is popped
+*/
 static void MatchMaker_Popped( void )
 {
 	m_listitem_t *item, *next;
@@ -88,10 +88,10 @@ static void MatchMaker_Popped( void )
 	memset( &chatmsgs, 0, sizeof( chatmsgs ) );
 }
 
-//================
-// MatchMaker_AuthReply_Callback
-// This will tell us the result of the auth request
-//================
+/*
+* MatchMaker_AuthReply_Callback
+* This will tell us the result of the auth request
+*/
 #ifdef AUTH_CODE
 static void MatchMaker_AuthReply_Callback( auth_reply_t reply )
 {
@@ -99,10 +99,10 @@ static void MatchMaker_AuthReply_Callback( auth_reply_t reply )
 	MatchMaker_UpdateButtons();
 }
 
-//================
-// MatchMaker_Login_Callback
-// This will tell us the result of the login popup
-//================
+/*
+* MatchMaker_Login_Callback
+* This will tell us the result of the login popup
+*/
 static void MatchMaker_Login_Callback( qboolean status )
 {
 	// store whether or not we are logged in
@@ -111,9 +111,9 @@ static void MatchMaker_Login_Callback( qboolean status )
 }
 #endif
 
-//================
-// CONTROL HANDLERS
-//================
+/*
+* CONTROL HANDLERS
+*/
 static void MatchMaker_PingControl( menucommon_t *menuitem )
 {
 	if( mm_started )
@@ -268,7 +268,7 @@ static void MatchMaker_UpdateChatMsg( menucommon_t *menuitem )
 		// wait longer for the first character
 		if( !pos )
 			*time += 1000;
-	
+
 		// go to the position in the message, searching for colour characters as well
 		while( pos )
 		{
@@ -325,9 +325,9 @@ static void MatchMaker_SendChatMsg( menucommon_t *unused )
 	field->buffer[0] = 0;
 }
 
-//================
-// MatchMaker_MenuInit
-//================
+/*
+* MatchMaker_MenuInit
+*/
 static void MatchMaker_MenuInit( void )
 {
 	menucommon_t *menuitem;
@@ -394,7 +394,7 @@ static void MatchMaker_MenuInit( void )
 	Menu_AddItem( &s_matchmaker_menu, menuitem );
 	Q_strncpyz( menuitem->title, "m_matchmaker_chat_curvalue", sizeof( menuitem->title ) );
 	UI_SetupScrollbar( menuitem, CHATBOX_HEIGHT, 0, 0, 0 );
-	
+
 	for( i = 0 ; i < CHATBOX_HEIGHT ; i++ )
 	{
 		menuitem = UI_InitMenuItem( va( "m_matchmaker_chat_%d", i ), "", -CHATBOX_HALFWIDTH, yoffset, MTYPE_SEPARATOR, ALIGN_LEFT_TOP, uis.fontSystemSmall, NULL );
@@ -407,7 +407,7 @@ static void MatchMaker_MenuInit( void )
 		menuitem->width = 2 * CHATBOX_HALFWIDTH;
 
 		menuitem->pict.shader = uis.whiteShader;
-		
+
 		Vector4Copy( ( i & 1 ) ? colorDkGrey : colorMdGrey, menuitem->pict.color );
 		menuitem->pict.color[3] = menuitem->pict.colorHigh[3] = 0.65f;
 		menuitem->pict.yoffset = 0;
@@ -433,7 +433,7 @@ static void MatchMaker_MenuInit( void )
 	menuitem->disabled = qtrue;
 
 	yoffset += trap_SCR_strHeight( menuitem->font );
-	
+
 	menuitem = UI_InitMenuItem( "m_matchmaker_chat_send", "send", -CHATBOX_HALFWIDTH, yoffset, MTYPE_ACTION, ALIGN_LEFT_TOP, uis.fontSystemSmall, MatchMaker_SendChatMsg );
 	Menu_AddItem( &s_matchmaker_menu, menuitem );
 	menuitem->disabled = qtrue;
@@ -444,16 +444,15 @@ static void MatchMaker_MenuInit( void )
 	M_MatchMaker_UpdateStatus( "press start to begin matchmaking", qtrue );
 }
 
-//================
-// MatchMaker_MenuDraw
-// ================
+/*
+* MatchMaker_MenuDraw
+* ================
 static void MatchMaker_MenuDraw( void )
 {
 	Menu_AdjustCursor( &s_matchmaker_menu, 1 );
 	Menu_Draw( &s_matchmaker_menu );
 }
-
-//================
+*/
 // MatchMaker_MenuKey
 //================
 static const char *MatchMaker_MenuKey( int key )
@@ -466,17 +465,17 @@ static const char *MatchMaker_MenuKey( int key )
 	return Default_MenuKey( &s_matchmaker_menu, key );
 }
 
-//================
-// MatchMaker_MenuCharEvent
-//================
+/*
+* MatchMaker_MenuCharEvent
+*/
 static const char *MatchMaker_MenuCharEvent( qwchar key )
 {
 	return Default_MenuCharEvent( &s_matchmaker_menu, key );
 }
 
-//================
-// M_Menu_MatchMaker_f
-//================
+/*
+* M_Menu_MatchMaker_f
+*/
 void M_Menu_MatchMaker_f( void )
 {
 	MatchMaker_MenuInit();
@@ -494,10 +493,10 @@ void M_Menu_MatchMaker_f( void )
 //                  utility functions
 //=========================================================
 
-//================
-// M_MatchMaker_UpdateSlot
-// Update a particular slot with a playername
-//================
+/*
+* M_MatchMaker_UpdateSlot
+* Update a particular slot with a playername
+*/
 void M_MatchMaker_UpdateSlot( int slotno, const char *playername )
 {
 	menucommon_t *menuitem = UI_MenuItemByName( va( "m_matchmaker_slot%d", slotno ) );
@@ -507,10 +506,10 @@ void M_MatchMaker_UpdateSlot( int slotno, const char *playername )
 	Q_snprintfz( menuitem->title, sizeof( menuitem->title ), "%s%s", S_COLOR_WHITE, playername );
 }
 
-//================
-// M_MatchMaker_UpdateSlot
-// Update the status message
-//================
+/*
+* M_MatchMaker_UpdateSlot
+* Update the status message
+*/
 void M_MatchMaker_UpdateStatus( const char *status, qboolean showchat )
 {
 	static char *mmstatus = NULL;
@@ -559,10 +558,10 @@ void M_MatchMaker_Update( void )
 	UI_MenuItemByName( "m_matchmaker_chat_msg" )->disabled = !started;
 }
 
-//================
-// MatchMaker_UpdateButtons
-// Update which buttons should be showing and what they should say
-//================
+/*
+* MatchMaker_UpdateButtons
+* Update which buttons should be showing and what they should say
+*/
 typedef struct
 {
 	char *name;
@@ -593,7 +592,7 @@ static void MatchMaker_UpdateButtons( void )
 
 		// special case adjustments
 		//if( !strcmp( button->name, "login" ) )
-			//Q_strncpyz( menuitem->title, ( mm_loggedin ? "" : "login" ), sizeof( menuitem->title ) );
+		//Q_strncpyz( menuitem->title, ( mm_loggedin ? "" : "login" ), sizeof( menuitem->title ) );
 		if( !strcmp( button->name, "start" ) )
 			Q_strncpyz( menuitem->title, ( mm_started ? "stop" : "start" ), sizeof( menuitem->title ) );
 

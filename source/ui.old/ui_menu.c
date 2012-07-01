@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include <ctype.h>
 
 #include "ui_local.h"
@@ -28,7 +28,7 @@ char *menu_out_sound	= S_UI_MENU_OUT_SOUND;
 ui_local_t uis;
 
 qboolean m_entersound;       // play after drawing a frame, so caching
-                             // won't disrupt the sound
+// won't disrupt the sound
 static unsigned int m_pushcount;
 
 menuframework_s *m_active;
@@ -59,20 +59,16 @@ char *offon_names[] =
 //======================================================================
 
 /*
-   ============
-   UI_API
-   ============
- */
+* UI_API
+*/
 int UI_API( void )
 {
 	return UI_API_VERSION;
 }
 
 /*
-   ============
-   UI_Error
-   ============
- */
+* UI_Error
+*/
 void UI_Error( const char *format, ... )
 {
 	va_list	argptr;
@@ -86,10 +82,8 @@ void UI_Error( const char *format, ... )
 }
 
 /*
-   ============
-   UI_Printf
-   ============
- */
+* UI_Printf
+*/
 void UI_Printf( const char *format, ... )
 {
 	va_list	argptr;
@@ -124,9 +118,9 @@ int m_menudepth;
 static void UI_UpdateMousePosition( int dx, int dy );
 
 
-//=================
-//UI_RegisterFonts
-//=================
+/*
+* UI_RegisterFonts
+*/
 static void UI_RegisterFonts( void )
 {
 	cvar_t *con_fontSystemSmall = trap_Cvar_Get( "con_fontSystemSmall", DEFAULT_FONT_SMALL, CVAR_ARCHIVE );
@@ -534,10 +528,8 @@ float M_ClampCvar( float min, float max, float value )
 //=============================================================================
 
 /*
-   =================
-   UI_CopyString
-   =================
- */
+* UI_CopyString
+*/
 char *_UI_CopyString( const char *in, const char *filename, int fileline )
 {
 	char *out;
@@ -553,10 +545,8 @@ char *_UI_CopyString( const char *in, const char *filename, int fileline )
 /* User Interface Subsystem */
 
 /*
-   =================
-   UI_Force_f
-   =================
- */
+* UI_Force_f
+*/
 void UI_Force_f( void )
 {
 	if( trap_Cmd_Argc() != 2 )
@@ -567,10 +557,8 @@ void UI_Force_f( void )
 
 
 /*
-   =================
-   UI_Init
-   =================
- */
+* UI_Init
+*/
 void UI_Init( int vidWidth, int vidHeight, int protocol, int sharedSeed )
 {
 	m_active = NULL;
@@ -652,10 +640,8 @@ void UI_Init( int vidWidth, int vidHeight, int protocol, int sharedSeed )
 }
 
 /*
-   =================
-   UI_Shutdown
-   =================
- */
+* UI_Shutdown
+*/
 void UI_Shutdown( void )
 {
 	trap_S_StopBackgroundTrack();
@@ -696,10 +682,8 @@ void UI_Shutdown( void )
 }
 
 /*
-   =================
-   UI_UpdateMousePosition
-   =================
- */
+* UI_UpdateMousePosition
+*/
 static void UI_UpdateMousePosition( int dx, int dy )
 {
 	int i;
@@ -716,9 +700,9 @@ static void UI_UpdateMousePosition( int dx, int dy )
 	{
 		menuitem = m_active->items[i];
 		if( uis.cursorX > menuitem->maxs[0] ||
-		    uis.cursorY > menuitem->maxs[1] ||
-		    uis.cursorX < menuitem->mins[0] ||
-		    uis.cursorY < menuitem->mins[1] )
+			uis.cursorY > menuitem->maxs[1] ||
+			uis.cursorX < menuitem->mins[0] ||
+			uis.cursorY < menuitem->mins[1] )
 			continue;
 
 		m_cursoritem = m_active->items[i];
@@ -740,10 +724,8 @@ static void UI_UpdateMousePosition( int dx, int dy )
 }
 
 /*
-   =================
-   UI_MouseMove
-   =================
- */
+* UI_MouseMove
+*/
 void UI_MouseMove( int dx, int dy )
 {
 	if( uis.bind_grab )
@@ -1006,13 +988,13 @@ void UI_Refresh( unsigned int time, int clientState, int serverState, qboolean d
 	if( uis.backGround )
 	{
 		trap_R_DrawStretchPic( 0, 0, uis.vidWidth, uis.vidHeight,
-		                      0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_VIDEOBACK ) );
+			0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_VIDEOBACK ) );
 
 		trap_R_DrawStretchPic( 0, 0, uis.vidWidth, uis.vidHeight,
-		                      0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_FXBACK ) );
+			0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_FXBACK ) );
 
 		trap_R_DrawStretchPic( 0, 0, uis.vidWidth, uis.vidHeight,
-		                      0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_BIGLOGO ) );
+			0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_BIGLOGO ) );
 
 		if( !uis.backGroundTrackStarted )
 		{
@@ -1035,7 +1017,7 @@ void UI_Refresh( unsigned int time, int clientState, int serverState, qboolean d
 	// draw cursor
 	if( !uis.bind_grab )
 		trap_R_DrawStretchPic( uis.cursorX - 16, uis.cursorY - 16, 32, 32,
-		                      0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_CURSOR ) );
+		0, 0, 1, 1, colorWhite, trap_R_RegisterPic( UI_SHADER_CURSOR ) );
 
 	// delay playing the enter sound until after the
 	// menu has been drawn, to avoid delay while
@@ -1048,10 +1030,8 @@ void UI_Refresh( unsigned int time, int clientState, int serverState, qboolean d
 }
 
 /*
-   =================
-   UI_Keydown
-   =================
- */
+* UI_Keydown
+*/
 void UI_Keydown( int key )
 {
 	const char *s;
@@ -1064,20 +1044,16 @@ void UI_Keydown( int key )
 }
 
 /*
-   =================
-   UI_Keyup
-   =================
- */
+* UI_Keyup
+*/
 void UI_Keyup( int key )
 {
 	m_keypressed = 0;
 }
 
 /*
-   =================
-   UI_CharEvent
-   =================
- */
+* UI_CharEvent
+*/
 void UI_CharEvent( qwchar key )
 {
 	const char *s;

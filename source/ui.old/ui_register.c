@@ -1,21 +1,21 @@
 /*
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
@@ -24,9 +24,9 @@ static menuframework_s s_register_menu;
 static char pass[MAX_PASS_LENGTH+1];
 static char confirmpass[MAX_PASS_LENGTH+1];
 
-//================
-// Register_MenuInit
-// ================
+/*
+* Register_MenuInit
+* ================
 static void Register_MenuInit( void )
 {
 	menucommon_t *menuitem;
@@ -73,8 +73,7 @@ static void Register_MenuInit( void )
 	Menu_Center( &s_register_menu );
 	Menu_Init( &s_register_menu, qfalse );
 }
-
-//================
+*/
 // Register_MenuDraw
 // ================
 static void Register_MenuDraw( void )
@@ -83,25 +82,25 @@ static void Register_MenuDraw( void )
 	Menu_Draw( &s_register_menu );
 }
 
-//================
-// Register_MenuKey
-//================
+/*
+* Register_MenuKey
+*/
 static const char *Register_MenuKey( int key )
 {
 	return Default_MenuKey( &s_register_menu, key );
 }
 
-//================
-// Register_MenuCharEvent
-//================
+/*
+* Register_MenuCharEvent
+*/
 static const char *Register_MenuCharEvent( qwchar key )
 {
 	return Default_MenuCharEvent( &s_register_menu, key );
 }
 
-//================
-// M_Menu_Register_f
-//================
+/*
+* M_Menu_Register_f
+*/
 void M_Menu_Register_f( void )
 {
 	Register_MenuInit();
