@@ -2865,6 +2865,7 @@ static edict_t *asFunc_G_Spawn( asstring_t *classname )
 	if( !level.canSpawnEntities )
 	{
 
+
 		G_Printf( "* WARNING: Spawning entities is disallowed during initialization. Returning null object\n" );
 		return NULL;
 	}
@@ -3076,23 +3077,23 @@ static asstring_t *asFunc_G_Md5( asstring_t *in )
 	return angelExport->asStringFactoryBuffer(hex_output, strlen(hex_output));
 }
 
-static void asFunc_asGeneric_G_Md5( void *gen )
+/*static void asFunc_asGeneric_G_Md5( void *gen )
 {
 	G_asGeneric_SetReturnAddress( gen, asFunc_G_Md5( G_asGeneric_GetArgAddress( gen, 0 ) ) );
-}
+}*/
 
 // RS_MysqlMapFilter
 static qboolean asFunc_RS_MapFilter(int player_id,asstring_t *filter,unsigned int page )
 {
 	return RS_MapFilter( player_id, filter->buffer, page);
 }
-static void asFunc_asGeneric_RS_MapFilter( void *gen )
+/*static void asFunc_asGeneric_RS_MapFilter( void *gen )
 {
 	G_asGeneric_SetReturnBool( gen, asFunc_RS_MapFilter(
 			(int)G_asGeneric_GetArgInt(gen, 0),
 			(asstring_t *)G_asGeneric_GetArgAddress(gen, 1),
 			(unsigned int)G_asGeneric_GetArgInt(gen, 2)));
-}
+}*/
 
 // RS_UpdateMapList
 static qboolean asFunc_RS_UpdateMapList( int playerNum )
@@ -3100,12 +3101,12 @@ static qboolean asFunc_RS_UpdateMapList( int playerNum )
 	 return RS_UpdateMapList( playerNum );
 }
 
-static void asFunc_asGeneric_RS_UpdateMapList( void *gen )
+/*static void asFunc_asGeneric_RS_UpdateMapList( void *gen )
 {
 	G_asGeneric_SetReturnBool( gen, asFunc_RS_UpdateMapList(
 			(int)G_asGeneric_GetArgInt(gen, 0)
 	));
-}
+}*/
 
 // RS_LoadStats
 static qboolean asFunc_RS_LoadStats(int player_id, asstring_t *what, asstring_t *which)
@@ -3113,13 +3114,13 @@ static qboolean asFunc_RS_LoadStats(int player_id, asstring_t *what, asstring_t 
 	 return RS_LoadStats( player_id, what->buffer, which->buffer);
 }
 
-static void asFunc_asGeneric_RS_LoadStats( void *gen )
+/*static void asFunc_asGeneric_RS_LoadStats( void *gen )
 {
 	G_asGeneric_SetReturnBool( gen, asFunc_RS_LoadStats(
 			(int)G_asGeneric_GetArgInt(gen, 0),
 			(asstring_t *)G_asGeneric_GetArgAddress(gen, 1),
 			(asstring_t *)G_asGeneric_GetArgAddress(gen, 2)));
-}
+}*/
 
 // RS_MysqlMapFilterCallback
 static asstring_t *asFunc_RS_PrintQueryCallback(int player_id )
@@ -3132,11 +3133,11 @@ static asstring_t *asFunc_RS_PrintQueryCallback(int player_id )
 	return result_as;
 }
 
-static void asFunc_asGeneric_RS_PrintQueryCallback( void *gen )
+/*static void asFunc_asGeneric_RS_PrintQueryCallback( void *gen )
 {
 	G_asGeneric_SetReturnAddress( gen, asFunc_RS_PrintQueryCallback(
 			(unsigned int)G_asGeneric_GetArgInt(gen, 0)));
-}
+}*/
 
 // RS_Maplist
 static qboolean asFunc_RS_Maplist(int player_id, unsigned int page )
@@ -3144,12 +3145,12 @@ static qboolean asFunc_RS_Maplist(int player_id, unsigned int page )
 	 return RS_Maplist( player_id, page);
 }
 
-static void asFunc_asGeneric_RS_Maplist( void *gen )
+/*static void asFunc_asGeneric_RS_Maplist( void *gen )
 {
 	G_asGeneric_SetReturnBool( gen, asFunc_RS_Maplist(
 			(int)G_asGeneric_GetArgInt(gen, 0),
 			(unsigned int)G_asGeneric_GetArgInt(gen, 1)));
-}
+}*/
 
 // RS_NextMap
 static asstring_t *asFunc_RS_NextMap( )
@@ -3159,10 +3160,10 @@ static asstring_t *asFunc_RS_NextMap( )
 	return angelExport->asStringFactoryBuffer(result, strlen(result));
 }
 
-static void asFunc_asGeneric_RS_NextMap( void *gen )
+/*static void asFunc_asGeneric_RS_NextMap( void *gen )
 {
 	G_asGeneric_SetReturnAddress( gen, asFunc_RS_NextMap( ) );
-}
+}*/
 
 // RS_LastMap
 static asstring_t *asFunc_RS_LastMap( )
@@ -3172,10 +3173,10 @@ static asstring_t *asFunc_RS_LastMap( )
 	return angelExport->asStringFactoryBuffer(result, strlen(result));
 }
 
-static void asFunc_asGeneric_RS_LastMap( void *gen )
+/*static void asFunc_asGeneric_RS_LastMap( void *gen )
 {
 	G_asGeneric_SetReturnAddress( gen, asFunc_RS_LastMap( ) );
-}
+}*/
 
 // RS_LoadMapList
 static void asFunc_RS_LoadMapList( int is_freestyle )
@@ -3183,21 +3184,22 @@ static void asFunc_RS_LoadMapList( int is_freestyle )
 	RS_LoadMaplist( is_freestyle );
 }
 
-static void asFunc_asGeneric_RS_LoadMapList( void *gen )
+/*static void asFunc_asGeneric_RS_LoadMapList( void *gen )
 {
 	asFunc_RS_LoadMapList( (int)G_asGeneric_GetArgInt( gen, 0 ) );
-}
+}*/
 
 // RS_removeProjectiles
 static void asFunc_RS_removeProjectiles( edict_t *owner )
 {
 	RS_removeProjectiles( owner );
 }
-static void asFunc_asGeneric_RS_removeProjectiles( void *gen )
+
+/*static void asFunc_asGeneric_RS_removeProjectiles( void *gen )
 {
 	edict_t *owner = (edict_t *)G_asGeneric_GetArgAddress( gen, 0 );
 	RS_removeProjectiles( owner );
-}
+}*/
 
 // RS_QueryPjState
 static qboolean asFunc_RS_QueryPjState(int playerNum)
@@ -3205,11 +3207,11 @@ static qboolean asFunc_RS_QueryPjState(int playerNum)
 	 return RS_QueryPjState(playerNum);
 }
 
-static void asFunc_asGeneric_RS_QueryPjState( void *gen )
+/*static void asFunc_asGeneric_RS_QueryPjState( void *gen )
 {
 	G_asGeneric_SetReturnBool( gen, asFunc_RS_QueryPjState(
 			(int)G_asGeneric_GetArgInt(gen, 0)));
-}
+}*/
 
 // RS_ResetPjState
 static qboolean asFunc_RS_ResetPjState(int playerNum)
@@ -3218,11 +3220,11 @@ static qboolean asFunc_RS_ResetPjState(int playerNum)
 	return qtrue;
 }
 
-static void asFunc_asGeneric_RS_ResetPjState( void *gen )
+/*static void asFunc_asGeneric_RS_ResetPjState( void *gen )
 {
 	G_asGeneric_SetReturnBool( gen, asFunc_RS_ResetPjState(
 			(int)G_asGeneric_GetArgInt(gen, 0)));
-}
+}*/
 
 // RS_MysqlLoadMap
 static qboolean asFunc_RS_MysqlLoadMap()
@@ -3230,10 +3232,10 @@ static qboolean asFunc_RS_MysqlLoadMap()
 	return RS_MysqlLoadMap();
 }
 
-static void asFunc_asGeneric_RS_MysqlLoadMap( void *gen )
+/*static void asFunc_asGeneric_RS_MysqlLoadMap( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlLoadMap());
-}
+}*/
 
 // RS_MysqlInsertRace
 static qboolean asFunc_RS_MysqlInsertRace( int player_id, int nick_id, int map_id, int race_time, int playerNum, int tries, int duration, asstring_t *checkpoints, qboolean prejumped)
@@ -3241,7 +3243,7 @@ static qboolean asFunc_RS_MysqlInsertRace( int player_id, int nick_id, int map_i
 	return RS_MysqlInsertRace(player_id, nick_id, map_id, race_time, playerNum, tries, duration, checkpoints->buffer, prejumped );
 }
 
-static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
+/*static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlInsertRace(
 		(int)G_asGeneric_GetArgInt(gen, 0),
@@ -3253,7 +3255,7 @@ static void asFunc_asGeneric_RS_MysqlInsertRace( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 6),
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 7),
 		(qboolean)G_asGeneric_GetArgBool(gen, 8)));
-}
+}*/
 
 // RS_MysqlPlayerAppear
 static qboolean asFunc_RS_MysqlPlayerAppear( asstring_t *playerName, int playerNum, int player_id, int map_id, int is_authed, asstring_t *authName, asstring_t *authPass, asstring_t *authToken)
@@ -3261,7 +3263,7 @@ static qboolean asFunc_RS_MysqlPlayerAppear( asstring_t *playerName, int playerN
 	return RS_MysqlPlayerAppear(playerName->buffer, playerNum, player_id, map_id, is_authed, authName->buffer, authPass->buffer, authToken->buffer);
 }
 
-static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
+/*static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlPlayerAppear(
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 0),
@@ -3272,7 +3274,7 @@ static void asFunc_asGeneric_RS_MysqlPlayerAppear( void *gen )
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 5),
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 6),
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 7)));
-}
+}*/
 
 // RS_MysqlPlayerDisappear
 static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int playtime, int overall_tries, int racing_time, int player_id, int nick_id, int map_id, qboolean is_authed, qboolean is_threaded)
@@ -3280,7 +3282,7 @@ static qboolean asFunc_RS_MysqlPlayerDisappear( asstring_t *playerName, int play
 	return RS_MysqlPlayerDisappear(playerName->buffer, playtime, overall_tries, racing_time, player_id, nick_id, map_id, (int)(is_authed==qtrue), (int)(is_threaded==qtrue) );
 }
 
-static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
+/*static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlPlayerDisappear(
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 0),
@@ -3292,7 +3294,7 @@ static void asFunc_asGeneric_RS_MysqlPlayerDisappear( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 6),
 		(qboolean)G_asGeneric_GetArgBool(gen, 7),
 		(qboolean)G_asGeneric_GetArgBool(gen, 8)));
-}
+}*/
 
 // RS_GetPlayerNick
 static qboolean asFunc_RS_GetPlayerNick( int playerNum, int player_id )
@@ -3300,12 +3302,12 @@ static qboolean asFunc_RS_GetPlayerNick( int playerNum, int player_id )
 	return RS_GetPlayerNick(playerNum, player_id);
 }
 
-static void asFunc_asGeneric_RS_GetPlayerNick( void *gen )
+/*static void asFunc_asGeneric_RS_GetPlayerNick( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_GetPlayerNick(
 		(int)G_asGeneric_GetArgInt(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1)));
-}
+}*/
 
 // RS_UpdatePlayerNick
 static qboolean asFunc_RS_UpdatePlayerNick( asstring_t * name, int playerNum, int player_id )
@@ -3313,13 +3315,13 @@ static qboolean asFunc_RS_UpdatePlayerNick( asstring_t * name, int playerNum, in
 	return RS_UpdatePlayerNick(name->buffer, playerNum, player_id);
 }
 
-static void asFunc_asGeneric_RS_UpdatePlayerNick( void *gen )
+/*static void asFunc_asGeneric_RS_UpdatePlayerNick( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_UpdatePlayerNick(
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1),
 		(int)G_asGeneric_GetArgInt(gen, 2)));
-}
+}*/
 
 // RS_MysqlLoadHighScores
 static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int limit, int map_id, asstring_t *mapname, pjflag prejumped )
@@ -3327,7 +3329,7 @@ static qboolean asFunc_RS_MysqlLoadHighscores( int playerNum, int limit, int map
 	return RS_MysqlLoadHighscores(playerNum, limit, map_id, mapname->buffer, prejumped);
 }
 
-static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
+/*static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlLoadHighscores(
 		(int)G_asGeneric_GetArgInt(gen, 0),
@@ -3335,7 +3337,7 @@ static void asFunc_asGeneric_RS_MysqlLoadHighscores( void *gen )
 		(int)G_asGeneric_GetArgInt(gen, 2),
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 3),
 		(int)G_asGeneric_GetArgInt(gen, 4)));
-}
+}*/
 
 // RS_MysqlLoadRanking
 static qboolean asFunc_RS_MysqlLoadRanking( int playerNum, int page, asstring_t *order )
@@ -3343,13 +3345,13 @@ static qboolean asFunc_RS_MysqlLoadRanking( int playerNum, int page, asstring_t 
 	return RS_MysqlLoadRanking(playerNum, page, order->buffer);
 }
 
-static void asFunc_asGeneric_RS_MysqlLoadRanking( void *gen )
+/*static void asFunc_asGeneric_RS_MysqlLoadRanking( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlLoadRanking(
 		(int)G_asGeneric_GetArgInt(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1),
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 2)));
-}
+}*/
 
 // RS_MysqlSetOneliner
 static qboolean asFunc_RS_MysqlSetOneliner( int playerNum, int player_id, int map_id, asstring_t *oneliner)
@@ -3357,14 +3359,14 @@ static qboolean asFunc_RS_MysqlSetOneliner( int playerNum, int player_id, int ma
 	return RS_MysqlSetOneliner(playerNum, player_id, map_id, oneliner->buffer);
 }
 
-static void asFunc_asGeneric_RS_MysqlSetOneliner( void *gen )
+/*static void asFunc_asGeneric_RS_MysqlSetOneliner( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_MysqlSetOneliner(
 		(int)G_asGeneric_GetArgInt(gen, 0),
 		(int)G_asGeneric_GetArgInt(gen, 1),
 		(int)G_asGeneric_GetArgInt(gen, 2),
 		(asstring_t *)G_asGeneric_GetArgAddress(gen, 3)));
-}
+}*/
 
 
 // RS_PopCallbackQueue
@@ -3373,7 +3375,7 @@ static qboolean asFunc_RS_PopCallbackQueue( int *command, int *arg1, int *arg2, 
 	return RS_PopCallbackQueue(command, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
-static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
+/*static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
 {
 	G_asGeneric_SetReturnBool(gen, asFunc_RS_PopCallbackQueue(
 		(int *)G_asGeneric_GetArgAddress(gen, 0),
@@ -3384,7 +3386,7 @@ static void asFunc_asGeneric_RS_PopCallbackQueue( void *gen )
 		(int *)G_asGeneric_GetArgAddress(gen, 5),
 		(int *)G_asGeneric_GetArgAddress(gen, 6),
 		(int *)G_asGeneric_GetArgAddress(gen, 7)));
-}
+}*/
 // !racesow
 
 static int asFunc_FileLength( asstring_t *path )
@@ -3712,27 +3714,27 @@ static const asglobfuncs_t asGlobFuncs[] =
 {
 
 	// racesow
-	{ "cString @G_Md5( cString & )", asFunc_G_Md5, asFunc_asGeneric_G_Md5 },
-	{ "bool RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear, asFunc_asGeneric_RS_MysqlPlayerAppear },
-	{ "bool RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear, asFunc_asGeneric_RS_MysqlPlayerDisappear },
-	{ "bool RS_GetPlayerNick( int, int )", asFunc_RS_GetPlayerNick, asFunc_asGeneric_RS_GetPlayerNick },
-	{ "bool RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick, asFunc_asGeneric_RS_UpdatePlayerNick },
-	{ "bool RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap, asFunc_asGeneric_RS_MysqlLoadMap },
-	{ "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString &, bool )", asFunc_RS_MysqlInsertRace, asFunc_asGeneric_RS_MysqlInsertRace },
-	{ "bool RS_MysqlLoadHighscores( int, int, int, cString &, int)", asFunc_RS_MysqlLoadHighscores, asFunc_asGeneric_RS_MysqlLoadHighscores },
-	{ "bool RS_MysqlLoadRanking( int, int, cString & )", asFunc_RS_MysqlLoadRanking, asFunc_asGeneric_RS_MysqlLoadRanking },
-	{ "bool RS_MysqlSetOneliner( int, int, int, cString &)", asFunc_RS_MysqlSetOneliner, asFunc_asGeneric_RS_MysqlSetOneliner },
-	{ "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue, asFunc_asGeneric_RS_PopCallbackQueue },
-	{ "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter, asFunc_asGeneric_RS_MapFilter},
-	{ "bool RS_Maplist( int, int )", asFunc_RS_Maplist, asFunc_asGeneric_RS_Maplist},
-	{ "bool RS_UpdateMapList( int playerNum)", asFunc_RS_UpdateMapList, asFunc_asGeneric_RS_UpdateMapList},
-	{ "bool RS_LoadStats( int playerNum, cString &, cString & )", asFunc_RS_LoadStats, asFunc_asGeneric_RS_LoadStats},
-	{ "cString @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback, asFunc_asGeneric_RS_PrintQueryCallback },
-	{ "cString @RS_NextMap()", asFunc_RS_NextMap, asFunc_asGeneric_RS_NextMap },
-	{ "cString @RS_LastMap()", asFunc_RS_LastMap, asFunc_asGeneric_RS_LastMap },
-	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList, asFunc_asGeneric_RS_LoadMapList},
-	{ "bool RS_QueryPjState( int playerNum)", asFunc_RS_QueryPjState, asFunc_asGeneric_RS_QueryPjState},
-	{ "bool RS_ResetPjState( int playerNum)", asFunc_RS_ResetPjState, asFunc_asGeneric_RS_ResetPjState},
+	{ "cString @G_Md5( cString & )", asFunc_G_Md5/*, asFunc_asGeneric_G_Md5*/ },
+	{ "bool RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear/*, asFunc_asGeneric_RS_MysqlPlayerAppear*/ },
+	{ "bool RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear/*, asFunc_asGeneric_RS_MysqlPlayerDisappear*/ },
+	{ "bool RS_GetPlayerNick( int, int )", asFunc_RS_GetPlayerNick/*, asFunc_asGeneric_RS_GetPlayerNick*/ },
+	{ "bool RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick/*, asFunc_asGeneric_RS_UpdatePlayerNick*/ },
+	{ "bool RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap/*, asFunc_asGeneric_RS_MysqlLoadMap*/ },
+	{ "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString &, bool )", asFunc_RS_MysqlInsertRace/*, asFunc_asGeneric_RS_MysqlInsertRace*/ },
+	{ "bool RS_MysqlLoadHighscores( int, int, int, cString &, int)", asFunc_RS_MysqlLoadHighscores/*, asFunc_asGeneric_RS_MysqlLoadHighscores*/ },
+	{ "bool RS_MysqlLoadRanking( int, int, cString & )", asFunc_RS_MysqlLoadRanking/*, asFunc_asGeneric_RS_MysqlLoadRanking*/ },
+	{ "bool RS_MysqlSetOneliner( int, int, int, cString &)", asFunc_RS_MysqlSetOneliner/*, asFunc_asGeneric_RS_MysqlSetOneliner*/ },
+	{ "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue/*, asFunc_asGeneric_RS_PopCallbackQueue*/ },
+	{ "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter/*, asFunc_asGeneric_RS_MapFilter*/},
+	{ "bool RS_Maplist( int, int )", asFunc_RS_Maplist/*, asFunc_asGeneric_RS_Maplist*/},
+	{ "bool RS_UpdateMapList( int playerNum)", asFunc_RS_UpdateMapList/*, asFunc_asGeneric_RS_UpdateMapList*/},
+	{ "bool RS_LoadStats( int playerNum, cString &, cString & )", asFunc_RS_LoadStats/*, asFunc_asGeneric_RS_LoadStats*/},
+	{ "cString @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback/*, asFunc_asGeneric_RS_PrintQueryCallback*/ },
+	{ "cString @RS_NextMap()", asFunc_RS_NextMap/*, asFunc_asGeneric_RS_NextMap*/ },
+	{ "cString @RS_LastMap()", asFunc_RS_LastMap/*, asFunc_asGeneric_RS_LastMap*/ },
+	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList/*, asFunc_asGeneric_RS_LoadMapList*/},
+	{ "bool RS_QueryPjState( int playerNum)", asFunc_RS_QueryPjState/*, asFunc_asGeneric_RS_QueryPjState*/},
+	{ "bool RS_ResetPjState( int playerNum)", asFunc_RS_ResetPjState/*, asFunc_asGeneric_RS_ResetPjState*/},
 	// !racesow
 
 	{ "cEntity @G_SpawnEntity( const String &in )", asFunc_G_Spawn },
@@ -3750,7 +3752,7 @@ static const asglobfuncs_t asGlobFuncs[] =
 
 	// misc management utils
 	{ "void G_RemoveAllProjectiles()", asFunc_G_Match_RemoveAllProjectiles },
-	{ "void removeProjectiles( cEntity @ )", asFunc_RS_removeProjectiles, asFunc_asGeneric_RS_removeProjectiles }, //racesow
+	{ "void removeProjectiles( cEntity @ )", asFunc_RS_removeProjectiles/*, asFunc_asGeneric_RS_removeProjectiles*/ }, //racesow
 	{ "void G_RemoveDeadBodies()", asFunc_G_Match_FreeBodyQueue },
 	{ "void G_Items_RespawnByType( uint typeMask, int item_tag, float delay )", asFunc_G_Items_RespawnByType },
 
