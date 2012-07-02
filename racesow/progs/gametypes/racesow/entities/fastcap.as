@@ -29,7 +29,7 @@ class cFlagBase
         else if( this.owner.team == TEAM_BETA )
             @betaFlagBase = @this;
         
-        cVec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+        Vec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
 
         this.owner.type = ET_FLAG_BASE;
         this.owner.effects = EF_CARRIER|EF_FLAG_TRAIL;
@@ -46,19 +46,19 @@ class cFlagBase
 
         // drop to floor
         cTrace tr;
-        tr.doTrace( spawner.getOrigin(), vec3Origin, vec3Origin, spawner.getOrigin() - cVec3( 0.0f, 0.0f, 128.0f ), 0, MASK_DEADSOLID );
+        tr.doTrace( spawner.getOrigin(), vec3Origin, vec3Origin, spawner.getOrigin() - Vec3( 0.0f, 0.0f, 128.0f ), 0, MASK_DEADSOLID );
 
         cEntity @decal = @G_SpawnEntity( "flag_indicator_decal" );
         @this.decal = @decal;
         decal.type = ET_DECAL;
         decal.solid = SOLID_NOT;
-        decal.setOrigin( tr.getEndPos() + cVec3( 0.0f, 0.0f, 2.0f ) );
-        decal.setOrigin2( cVec3( 0.0f, 0.0f, 1.0f ) );
+        decal.setOrigin( tr.getEndPos() + Vec3( 0.0f, 0.0f, 2.0f ) );
+        decal.setOrigin2( Vec3( 0.0f, 0.0f, 1.0f ) );
         decal.modelindex = G_ImageIndex( "gfx/indicators/radar_decal" );
         decal.modelindex2 = 0; // rotation angle for ET_DECAL       
         decal.team = spawner.team;
         decal.frame = CTF_UNLOCK_RADIUS; // radius in case of ET_DECAL
-        decal.svflags = spawner.svflags | (SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2);
+        decal.svflags = spawner.svflags | (SVF_TRANSMITORIGIN2/*|SVF_NOCULLATORIGIN2 //FIXME: Removed in warsow 0.7*/);
         decal.linkEntity();
     }
 
@@ -142,10 +142,10 @@ class cFlagBase
         
         // find players around
         cTrace tr;
-        cVec3 center, mins, maxs;
+        Vec3 center, mins, maxs;
         cEntity @target = null;
         cEntity @stop = null;
-        cVec3 origin = this.owner.getOrigin();
+        Vec3 origin = this.owner.getOrigin();
 
         bool[] unlockTimeUpdated( maxClients );
         @target = G_GetEntity( 0 );
@@ -222,7 +222,7 @@ void ctf_flag_die( cEntity @ent, cEntity @inflicter, cEntity @attacker )
     ctf_flag_think( ent );
 }
 
-void ctf_flag_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void ctf_flag_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
     if ( @other.client == null )
         return;
@@ -246,14 +246,14 @@ void CTF_ResetFlags()
     betaFlagBase.resetFlag();
 }
 
-void team_CTF_betaflag_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void team_CTF_betaflag_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
     cFlagBase @flagBase = @betaFlagBase;
     if ( @flagBase != null )
         flagBase.touch( other );
 }
 
-void team_CTF_alphaflag_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void team_CTF_alphaflag_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
     cFlagBase @flagBase = @alphaFlagBase;
     if ( @flagBase != null )
@@ -283,7 +283,7 @@ void team_CTF_teamflag( cEntity @ent, int team )
 {
     ent.team = team;
 
-    cVec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+    Vec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
 
     // check for spawning inside solid, and try to avoid at least the case of shared leaf
     cTrace trace;
@@ -291,7 +291,7 @@ void team_CTF_teamflag( cEntity @ent, int team )
     if ( trace.startSolid || trace.allSolid )
     {
         // try to resolve the shared leaf case by moving it up by a little
-        cVec3 start = ent.getOrigin();
+        Vec3 start = ent.getOrigin();
         start.z += 16;
         trace.doTrace( start, mins, maxs, start, 0, MASK_DEADSOLID );
         if ( trace.startSolid || trace.allSolid )
@@ -324,7 +324,7 @@ void team_CTF_genericSpawnpoint( cEntity @ent, int team )
 
     // drop to floor
     cTrace tr;
-    cVec3 start, end, mins( -16.0f, -16.0f, -24.0f ), maxs( 16.0f, 16.0f, 40.0f );
+    Vec3 start, end, mins( -16.0f, -16.0f, -24.0f ), maxs( 16.0f, 16.0f, 40.0f );
 
     end = start = ent.getOrigin();
     end.z -= 1024;
@@ -375,8 +375,8 @@ cEntity @bestFastcapSpawnpoint()
     if( @bestFastcapSpawnPoint != null && !noBestFastcapPosition )
         return @bestFastcapSpawnPoint;
     cTrace tr;
-    cVec3 center, mins, maxs;
-    cVec3 flagOrigin = alphaFlagBase.owner.getOrigin();
+    Vec3 center, mins, maxs;
+    Vec3 flagOrigin = alphaFlagBase.owner.getOrigin();
 
     cEntity @closestSpawn = null;
     cEntity @currentSpawnpoint;
@@ -384,7 +384,7 @@ cEntity @bestFastcapSpawnpoint()
     
     for ( int i = 0; i < 3; i++ )
     {
-        cString classname;
+        String classname;
         switch( i )
         {
         case 0:
@@ -419,46 +419,46 @@ cEntity @bestFastcapSpawnpoint()
     
     if( @closestSpawn == null )
     {
-        cVec3 flagOrigin = alphaFlagBase.owner.getOrigin();
-        cVec3 center, mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+        Vec3 flagOrigin = alphaFlagBase.owner.getOrigin();
+        Vec3 center, mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
         center = flagOrigin + ( 0.5 * ( maxs + mins ) );
         for ( int i = 0; i < 8; i++ )
         {
-            cVec3 addVector, newOrigin;
+            Vec3 addVector, newOrigin;
             switch( i )
             {
             case 0:
-                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x , 0, 0);
+                addVector = Vec3( CTF_UNLOCK_RADIUS + 1 + maxs.x , 0, 0);
                 break;
             case 1:
-                addVector = cVec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x) , 0, 0);
+                addVector = Vec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x) , 0, 0);
                 break;
             case 2:
-                addVector = cVec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
+                addVector = Vec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
                 break;
             case 3:
-                addVector = cVec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
+                addVector = Vec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
                 break;
             case 4:
-                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
+                addVector = Vec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
                 break;
             case 5:
-                addVector = cVec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x), -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
+                addVector = Vec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x), -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
                 break;
             case 6:
-                addVector = cVec3( -( CTF_UNLOCK_RADIUS + 1 + maxs.x ), CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
+                addVector = Vec3( -( CTF_UNLOCK_RADIUS + 1 + maxs.x ), CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
                 break;
             case 7:
-                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
+                addVector = Vec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
                 break;
             }
             newOrigin = flagOrigin + addVector;
             if( !tr.doTrace( newOrigin, mins, maxs, center, alphaFlagBase.owner.entNum(), MASK_SOLID ) )
             {
                 @currentSpawnpoint = @G_SpawnEntity( "info_player_start" );
-                currentSpawnpoint.setOrigin( cVec3( newOrigin.x, newOrigin.y, newOrigin.z + 8 ));
+                currentSpawnpoint.setOrigin( Vec3( newOrigin.x, newOrigin.y, newOrigin.z + 8 ));
                 cTrace drop;
-                cVec3 start, end;
+                Vec3 start, end;
                 end = start = newOrigin;
                 start.z += 16;
                 end.z -= 1024;
@@ -482,9 +482,9 @@ cEntity @bestFastcapSpawnpoint()
     if( @bestFastcapSpawnPoint != null )
     {
         //look at flag
-        cVec3 angles;
-        cVec3 dir = flagOrigin - bestFastcapSpawnPoint.getOrigin();
-        dir.toAngles( angles );
+        Vec3 angles;
+        Vec3 dir = flagOrigin - bestFastcapSpawnPoint.getOrigin();
+        angles = dir.toAngles();
         bestFastcapSpawnPoint.setAngles( angles );
         bestFastcapSpawnPoint.linkEntity();
     }

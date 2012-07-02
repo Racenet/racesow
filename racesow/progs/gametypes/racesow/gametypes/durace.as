@@ -34,7 +34,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         gametype.enableDrowning = true;
 
         //store the timelimit because value in DURACE is not the same than in RACE
-        oldTimelimit = g_timelimit.getInteger();
+        oldTimelimit = g_timelimit.get_integer();
             
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );
@@ -52,7 +52,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         	cItem @Item = G_GetItem( tag );
         	if( @Item == null)
         		continue;
-        	cString itemClassname = Item.getClassname();
+        	String itemClassname = Item.getClassname();
         	@from = null;
         	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
         	if( @item == null )
@@ -208,7 +208,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
     }
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args )
+    void scoreEvent( cClient @client, String &score_event, String &args )
     {
         if ( score_event == "dmg" )
         {
@@ -235,10 +235,10 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         }
     }
     
-    cString @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( uint maxlen )
     {
-        cString scoreboardMessage = "";
-        cString entry;
+        String scoreboardMessage = "";
+        String entry;
         cTeam @team;
         cEntity @ent;
         int i, t, readyIcon;
@@ -292,7 +292,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         return false;
     }
     
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    bool Command( cClient @client, String @cmdString, String @argsString, int argc )
     {
         return false;
     }
@@ -350,7 +350,7 @@ void DURACE_InitGametype()
   // if the gametype doesn't have a config file, create it
   if ( !G_FileExists( "configs/server/gametypes/durace.cfg" ) )
   {
-      cString config;
+      String config;
 
       // the config file doesn't exist or it's empty, create it
       config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
@@ -384,7 +384,7 @@ void TRACE_InitGametype()
   // if the gametype doesn't have a config file, create it
   if ( !G_FileExists( "configs/server/gametypes/trace.cfg" ) )
   {
-      cString config;
+      String config;
 
       // the config file doesn't exist or it's empty, create it
       config = "// '" + gametype.getTitle() + "' gametype configuration file\n"

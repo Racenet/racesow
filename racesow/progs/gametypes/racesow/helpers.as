@@ -12,7 +12,7 @@
  * @param newTime The new time, the one you want to compare
  * @return The diff string between the two times
  */
-cString diffString( uint oldTime, uint newTime )
+String diffString( uint oldTime, uint newTime )
 {
     if ( oldTime == 0 )
     {
@@ -35,12 +35,12 @@ cString diffString( uint oldTime, uint newTime )
 /**
  * TimeToString
  * @param uint time
- * @return cString
+ * @return String
  */
-cString TimeToString( uint time )
+String TimeToString( uint time )
 {
     // convert times to printable form
-    cString minsString, secsString, millString;
+    String minsString, secsString, millString;
     uint min, sec, milli;
 
     milli = time;
@@ -78,13 +78,13 @@ cString TimeToString( uint time )
 /**
  * DateToString
  * @param uint64 dateuint64
- * @return cString
+ * @return String
  */
-cString DateToString( uint64 dateuint64 )
+String DateToString( uint64 dateuint64 )
 {
     // convert dates to printable form
-    cTime date = cTime(dateuint64);
-    cString daysString, monsString, yearsString, hoursString, minsString, secsString;
+    Time date = Time(dateuint64);
+    String daysString, monsString, yearsString, hoursString, minsString, secsString;
 
     if ( date.min == 0 )
         minsString = "00";
@@ -153,10 +153,10 @@ Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
 
 /**
  * Racesow_GetClientNumber
- * @param cString playerName
+ * @param String playerName
  * @return int
  */
-int Racesow_GetClientNumber( cString playerName )
+int Racesow_GetClientNumber( String playerName )
 {
     cClient @client;
 
@@ -175,10 +175,10 @@ int Racesow_GetClientNumber( cString playerName )
 //Jerm's Begin
 /**
  * Racesow_GetClientByString
- * @param cString playerString
+ * @param String playerString
  * @return cClient
  */
-cClient @Racesow_GetClientByString( cString playerString )
+cClient @Racesow_GetClientByString( String playerString )
 {
 
   cClient @client;
@@ -217,15 +217,15 @@ void RS_cancelvote()
 /**
  * Capitalize a string
  *
- * @param cString string
- * @return cString
+ * @param String string
+ * @return String
  */
-cString Capitalize( cString string )
+String Capitalize( String string )
 {
     return string.substr(0,1).toupper() + string.substr(1,string.len()-1);
 }
 
-void RS_ircSendMessage( cString message )
+void RS_ircSendMessage( String message )
 {
     if( ircConnected == 0 )
         return;
@@ -238,7 +238,7 @@ void RS_ircSendMessage( cString message )
  * @param name The name of the gametype you are looking for
  * @return int the modflag value, -1 if not found
  */
-int RS_GetModFlagByName(cString name)
+int RS_GetModFlagByName(String name)
 {
     if ( name == "race" )
         return MODFLAG_RACE;

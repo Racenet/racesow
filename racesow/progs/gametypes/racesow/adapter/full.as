@@ -75,7 +75,7 @@ class Racesow_Adapter_Full : Racesow_Adapter_Abstract
      * @param ...
 	 * @return void
 	 */
-    void playerDisappear(Racesow_Player @player, cString nickName, bool threaded)
+    void playerDisappear(Racesow_Player @player, String nickName, bool threaded)
     {
         // Call to a c-function which should result
         // in a callback to map.loadCallback()

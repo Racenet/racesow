@@ -6,9 +6,9 @@
  * @version 0.6.2
  */
 
-cString[] entStorage(maxEntities);
+String[] entStorage(maxEntities);
 
-void addToEntStorage( int id, cString string)
+void addToEntStorage( int id, String string)
 {
 	int i = entStorage.length();
 	if( i < id )
@@ -35,7 +35,7 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 
 void replacementItem( cEntity @oldItem )
 {
-  	cVec3 min, max;
+  	Vec3 min, max;
 	cEntity @ent = @G_SpawnEntity( oldItem.getClassname() );
 	cItem @item = @G_GetItem( oldItem.item.tag );
 	@ent.item = @item;
@@ -95,14 +95,14 @@ void trigger_push_velocity( cEntity @ent )
 {
 
 	//@ent.enemy = @ent.findTargetEntity( ent );
-	cString speed = G_SpawnTempValue("speed");
-	cString count = G_SpawnTempValue("count");
+	String speed = G_SpawnTempValue("speed");
+	String count = G_SpawnTempValue("count");
 	addToEntStorage( ent.entNum(), speed + " " + count );
 	ent.solid = SOLID_TRIGGER;
 	ent.moveType = MOVETYPE_NONE;
     ent.setupModel(ent.getModelString());
 	ent.svflags &= ~SVF_NOCLIENT;
-	ent.svflags |= SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+	ent.svflags |= SVF_TRANSMITORIGIN2/*|SVF_NOCULLATORIGIN2 Removed in Warsow 0.7*/;
 	ent.wait = 1;
 	ent.linkEntity();
 }
@@ -119,7 +119,7 @@ int BIDIRECTIONAL_XY = 5;//non-playerdir velocity pads will function in 2 direct
 int BIDIRECTIONAL_Z = 6;//non-playerdir velocity pads will function in 2 directions based on the target specified.  The chosen direction is based on the current direction of travel.  Applies to vertical direction.
 int CLAMP_NEGATIVE_ADDS = 7;//adds negative velocity will be clamped to 0, if the resultant velocity would bounce the player in the opposite direction.
 
-void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 /*
 	-------- KEYS --------
@@ -135,7 +135,7 @@ void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const cVec3 @pla
 	BIDIRECTIONAL_Z: if set, non-playerdir velocity pads will function in 2 directions based on the target specified.  The chosen direction is based on the current direction of travel.  Applies to vertical direction.
 	CLAMP_NEGATIVE_ADDS: if set, then a velocity pad that adds negative velocity will be clamped to 0, if the resultant velocity would bounce the player in the opposite direction.
 */
-	cVec3 dir, velocity;
+	Vec3 dir, velocity;
 	//if(( ent.spawnFlags & 1 ) == 0 )
 	velocity = other.getVelocity();
 	if( velocity.length() == 0 || other.type != ET_PLAYER || other.moveType != MOVETYPE_PLAYER )
@@ -200,42 +200,42 @@ void target_delay( cEntity @ent ) {
     }
 }
 
-cVar rs_plasmaweak_speed( "rs_plasmaweak_speed", "2400", CVAR_ARCHIVE );
-cVar rs_plasmaweak_knockback( "rs_plasmaweak_knockback", "14", CVAR_ARCHIVE );
-cVar rs_plasmaweak_splash( "rs_plasmaweak_splash", "45", CVAR_ARCHIVE );
-cVar rs_rocketweak_speed( "rs_rocketweak_speed", "1150", CVAR_ARCHIVE );
-cVar rs_rocketweak_knockback( "rs_rocketweak_knockback", "100", CVAR_ARCHIVE );
-cVar rs_rocketweak_splash( "rs_rocketweak_splash", "140", CVAR_ARCHIVE );
-cVar rs_grenadeweak_speed( "rs_grenadeweak_speed", "900", CVAR_ARCHIVE );
-cVar rs_grenadeweak_knockback( "rs_grenadeweak_knockback", "90", CVAR_ARCHIVE );
-cVar rs_grenadeweak_splash( "rs_grenadeweak_splash", "160", CVAR_ARCHIVE );
+Cvar rs_plasmaweak_speed( "rs_plasmaweak_speed", "2400", CVAR_ARCHIVE );
+Cvar rs_plasmaweak_knockback( "rs_plasmaweak_knockback", "14", CVAR_ARCHIVE );
+Cvar rs_plasmaweak_splash( "rs_plasmaweak_splash", "45", CVAR_ARCHIVE );
+Cvar rs_rocketweak_speed( "rs_rocketweak_speed", "1150", CVAR_ARCHIVE );
+Cvar rs_rocketweak_knockback( "rs_rocketweak_knockback", "100", CVAR_ARCHIVE );
+Cvar rs_rocketweak_splash( "rs_rocketweak_splash", "140", CVAR_ARCHIVE );
+Cvar rs_grenadeweak_speed( "rs_grenadeweak_speed", "900", CVAR_ARCHIVE );
+Cvar rs_grenadeweak_knockback( "rs_grenadeweak_knockback", "90", CVAR_ARCHIVE );
+Cvar rs_grenadeweak_splash( "rs_grenadeweak_splash", "160", CVAR_ARCHIVE );
 
 //==============
 //RS_UseShooter
 //==============
 void RS_UseShooter( cEntity @self, cEntity @other, cEntity @activator ) {
 
-	cVec3 dir;
-	cVec3 angles;
+	Vec3 dir;
+	Vec3 angles;
 
     if ( @self.enemy != null ) {
         dir = self.enemy.getOrigin() - self.getOrigin();
         dir.normalize();
     } else {
-        self.getMovedir( dir );
+        dir = self.getMovedir();
         dir.normalize();
     }
-    dir.toAngles(angles);
+    angles = dir.toAngles();
 	switch ( self.weapon )
 	{
         case WEAP_GRENADELAUNCHER:
-        	G_FireGrenade( self.getOrigin(), angles, rs_grenadeweak_speed.getInteger(), 0, 65, rs_grenadeweak_knockback.getInteger(), 0, @activator );
+        	G_FireGrenade( self.getOrigin(), angles, rs_grenadeweak_speed.get_integer(), 0, 65, rs_grenadeweak_knockback.get_integer(), 0, @activator );
             break;
         case WEAP_ROCKETLAUNCHER:
-        	G_FireRocket( self.getOrigin(), angles, rs_rocketweak_speed.getInteger(), rs_rocketweak_splash.getInteger(), 75, rs_rocketweak_knockback.getInteger(), 0, @activator );
+        	G_FireRocket( self.getOrigin(), angles, rs_rocketweak_speed.get_integer(), rs_rocketweak_splash.get_integer(), 75, rs_rocketweak_knockback.get_integer(), 0, @activator );
             break;
         case WEAP_PLASMAGUN:
-        	G_FirePlasma( self.getOrigin(), angles, rs_plasmaweak_speed.getInteger(), rs_plasmaweak_splash.getInteger(), 15, rs_plasmaweak_knockback.getInteger(), 0, @activator );
+        	G_FirePlasma( self.getOrigin(), angles, rs_plasmaweak_speed.get_integer(), rs_plasmaweak_splash.get_integer(), 15, rs_plasmaweak_knockback.get_integer(), 0, @activator );
             break;
     }
 
@@ -316,7 +316,7 @@ void shooter_grenade( cEntity @ent ) {
 
 void target_smallprint( cEntity @ent )
 {
-	cString message = G_SpawnTempValue("message");
+	String message = G_SpawnTempValue("message");
     if( message == "" )
     {
     	ent.freeEntity();
@@ -340,7 +340,7 @@ void target_kill( cEntity @ent )
 
 void target_kill_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
-	activator.takeDamage( @activator, null, cVec3(0,0,0), 9999, 0, 0, MOD_SUICIDE );
+	activator.sustainDamage( @activator, null, Vec3(0,0,0), 9999, 0, 0, MOD_SUICIDE );
 	activator.health = 0;
 }
 
@@ -437,137 +437,137 @@ void AS_weapon_electrobolt_think( cEntity @ent )
     replacementItem_think( @ent );
 }
 
-void AS_weapon_gunblade_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_gunblade_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_weapon_machinegun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_machinegun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_weapon_riotgun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_riotgun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_weapon_grenadelauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_grenadelauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_weapon_rocketlauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_rocketlauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_weapon_plasmagun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_plasmagun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_weapon_lasergun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_lasergun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_weapon_electrobolt_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_weapon_electrobolt_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_gunblade_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_gunblade_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_machinegun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_machinegun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_riotgun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_riotgun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_grenadelauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_grenadelauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_rocketlauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_rocketlauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_plasmagun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_plasmagun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_lasergun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_lasergun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_ammo_electrobolt_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_ammo_electrobolt_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_quad_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_quad_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_warshell_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_warshell_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_armor_ga_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_armor_ga_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_armor_ya_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_armor_ya_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_armor_ra_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_armor_ra_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_armor_shard_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_armor_shard_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	//we don't want to have them.
 }
 
-void AS_item_health_small_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_health_small_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	//we don't want to have them.
 }
 
-void AS_item_health_medium_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_health_medium_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_health_large_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_health_large_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_health_mega_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_health_mega_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }
 
-void AS_item_health_ultra_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void AS_item_health_ultra_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	replacementItem_touch( @ent, @other );
 }

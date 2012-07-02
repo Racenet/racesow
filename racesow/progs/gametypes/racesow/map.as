@@ -6,7 +6,7 @@
  */
 class Racesow_Map
 {
-	cString name;
+	String name;
 
 	bool inOvertime;
     
@@ -71,9 +71,9 @@ class Racesow_Map
 
 	void reset()
 	{
-		cVar mapName( "mapname", "", 0 );
+		Cvar mapName( "mapname", "", 0 );
         this.id = 0;
-		this.name = mapName.getString();
+		this.name = mapName.get_string();
 		this.inOvertime = false;
         this.overtimeFinished = false;
         this.firstAnnouncement = false;
@@ -133,7 +133,7 @@ class Racesow_Map
     void loadCallback(int id, int bestTime)
     {
         this.setId( id );
-        if ( rs_loadHighscores.getBool() )
+        if ( rs_loadHighscores.get_boolean() )
         {
             this.worldBest = bestTime; // save it for AS
         }

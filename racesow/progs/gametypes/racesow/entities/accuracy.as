@@ -28,22 +28,22 @@ void checkForAccuracyMap()
 
 	if( G_FileLength( "scripts/" + map.name + ".defi" ) > 0 )
 	{
-		cString defifile;
-        cString style;
+		String defifile;
+        String style;
 		defifile = G_LoadFile( "scripts/" + map.name + ".defi" );
 
         //Debug Print
 		//G_Print(defifile + "\n");
 
-        if( ( position = defifile.locate("style",0) ) > -1 )
+        if( ( position = defifile.locate("style",0) ) > -1 ) //FIXME: Locate was changed this needs to be fixed -K1ll
         {
             style = defifile.substr( position, defifile.len() );
-            if( ( position = style.locate("\n", 0 ) ) > -1 )
+            if( ( position = style.locate("\n", 0 ) ) > -1 ) //FIXME: Locate was changed this needs to be fixed -K1ll
             {
                 style = style.substr( 0, position );
                 //Debug Print
                 //G_Print(style + "\n");
-                if( style.locate("accuracy", 0) > -1 )
+                if( style.locate("accuracy", 0) > -1 ) //FIXME: Locate was changed this needs to be fixed -K1ll
 		        {
 			        isAccuracyMap = true;
 		        }
@@ -59,7 +59,7 @@ void target_fragsFilter_think( cEntity @ent )
     for( i = 0; i < maxClients; i++ )
     {
         if( @G_GetClient(i) != null )
-            ent.use( ent, G_GetClient(i).getEnt() );
+            ent.use( ent, ent, G_GetClient(i).getEnt() );
     }
     ent.nextThink = levelTime + 1;
 }
@@ -130,7 +130,7 @@ Defrag is limited to 10 independant target_fragsFilter.
 
 void target_fragsFilter( cEntity @ent )
 {
-    cString frags = G_SpawnTempValue("frags");
+    String frags = G_SpawnTempValue("frags");
 
 	addToEntStorage( ent.entNum(), frags );
 
@@ -154,7 +154,7 @@ fragsFilter_addScore
 Adds score to both the client and his team in the fragfilter
 ============
 */
-void fragsFilter_addScore( cEntity @ent, cVec3 @origin, int score ) {
+void fragsFilter_addScore( cEntity @ent, Vec3 origin, int score ) {
 	if(@ent == null || (ent.svflags & SVF_NOCLIENT) == 1 || @ent.client == null
 		|| @Racesow_GetPlayerByClient( ent.client ) == null)
         return;

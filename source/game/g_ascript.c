@@ -2864,8 +2864,6 @@ static edict_t *asFunc_G_Spawn( asstring_t *classname )
 
 	if( !level.canSpawnEntities )
 	{
-
-
 		G_Printf( "* WARNING: Spawning entities is disallowed during initialization. Returning null object\n" );
 		return NULL;
 	}
@@ -3714,24 +3712,24 @@ static const asglobfuncs_t asGlobFuncs[] =
 {
 
 	// racesow
-	{ "cString @G_Md5( cString & )", asFunc_G_Md5/*, asFunc_asGeneric_G_Md5*/ },
-	{ "bool RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & )", asFunc_RS_MysqlPlayerAppear/*, asFunc_asGeneric_RS_MysqlPlayerAppear*/ },
-	{ "bool RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear/*, asFunc_asGeneric_RS_MysqlPlayerDisappear*/ },
+	{ "String @G_Md5( String & )", asFunc_G_Md5/*, asFunc_asGeneric_G_Md5*/ },
+	{ "bool RS_MysqlPlayerAppear( String &, int, int, int, bool, String &, String &, String & )", asFunc_RS_MysqlPlayerAppear/*, asFunc_asGeneric_RS_MysqlPlayerAppear*/ },
+	{ "bool RS_MysqlPlayerDisappear( String &, int, int, int, int, int, int, bool, bool )", asFunc_RS_MysqlPlayerDisappear/*, asFunc_asGeneric_RS_MysqlPlayerDisappear*/ },
 	{ "bool RS_GetPlayerNick( int, int )", asFunc_RS_GetPlayerNick/*, asFunc_asGeneric_RS_GetPlayerNick*/ },
-	{ "bool RS_UpdatePlayerNick( cString &, int, int )", asFunc_RS_UpdatePlayerNick/*, asFunc_asGeneric_RS_UpdatePlayerNick*/ },
+	{ "bool RS_UpdatePlayerNick( String &, int, int )", asFunc_RS_UpdatePlayerNick/*, asFunc_asGeneric_RS_UpdatePlayerNick*/ },
 	{ "bool RS_MysqlLoadMap()", asFunc_RS_MysqlLoadMap/*, asFunc_asGeneric_RS_MysqlLoadMap*/ },
-	{ "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, cString &, bool )", asFunc_RS_MysqlInsertRace/*, asFunc_asGeneric_RS_MysqlInsertRace*/ },
-	{ "bool RS_MysqlLoadHighscores( int, int, int, cString &, int)", asFunc_RS_MysqlLoadHighscores/*, asFunc_asGeneric_RS_MysqlLoadHighscores*/ },
-	{ "bool RS_MysqlLoadRanking( int, int, cString & )", asFunc_RS_MysqlLoadRanking/*, asFunc_asGeneric_RS_MysqlLoadRanking*/ },
-	{ "bool RS_MysqlSetOneliner( int, int, int, cString &)", asFunc_RS_MysqlSetOneliner/*, asFunc_asGeneric_RS_MysqlSetOneliner*/ },
+	{ "bool RS_MysqlInsertRace( int, int, int, int, int, int, int, String &, bool )", asFunc_RS_MysqlInsertRace/*, asFunc_asGeneric_RS_MysqlInsertRace*/ },
+	{ "bool RS_MysqlLoadHighscores( int, int, int, String &, int)", asFunc_RS_MysqlLoadHighscores/*, asFunc_asGeneric_RS_MysqlLoadHighscores*/ },
+	{ "bool RS_MysqlLoadRanking( int, int, String & )", asFunc_RS_MysqlLoadRanking/*, asFunc_asGeneric_RS_MysqlLoadRanking*/ },
+	{ "bool RS_MysqlSetOneliner( int, int, int, String &)", asFunc_RS_MysqlSetOneliner/*, asFunc_asGeneric_RS_MysqlSetOneliner*/ },
 	{ "bool RS_PopCallbackQueue( int &out, int &out, int &out, int &out, int &out, int &out, int &out, int &out )", asFunc_RS_PopCallbackQueue/*, asFunc_asGeneric_RS_PopCallbackQueue*/ },
-	{ "bool RS_MapFilter( int, cString &, int )", asFunc_RS_MapFilter/*, asFunc_asGeneric_RS_MapFilter*/},
+	{ "bool RS_MapFilter( int, String &, int )", asFunc_RS_MapFilter/*, asFunc_asGeneric_RS_MapFilter*/},
 	{ "bool RS_Maplist( int, int )", asFunc_RS_Maplist/*, asFunc_asGeneric_RS_Maplist*/},
 	{ "bool RS_UpdateMapList( int playerNum)", asFunc_RS_UpdateMapList/*, asFunc_asGeneric_RS_UpdateMapList*/},
-	{ "bool RS_LoadStats( int playerNum, cString &, cString & )", asFunc_RS_LoadStats/*, asFunc_asGeneric_RS_LoadStats*/},
-	{ "cString @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback/*, asFunc_asGeneric_RS_PrintQueryCallback*/ },
-	{ "cString @RS_NextMap()", asFunc_RS_NextMap/*, asFunc_asGeneric_RS_NextMap*/ },
-	{ "cString @RS_LastMap()", asFunc_RS_LastMap/*, asFunc_asGeneric_RS_LastMap*/ },
+	{ "bool RS_LoadStats( int playerNum, String &, String & )", asFunc_RS_LoadStats/*, asFunc_asGeneric_RS_LoadStats*/},
+	{ "String @RS_PrintQueryCallback( int )", asFunc_RS_PrintQueryCallback/*, asFunc_asGeneric_RS_PrintQueryCallback*/ },
+	{ "String @RS_NextMap()", asFunc_RS_NextMap/*, asFunc_asGeneric_RS_NextMap*/ },
+	{ "String @RS_LastMap()", asFunc_RS_LastMap/*, asFunc_asGeneric_RS_LastMap*/ },
 	{ "void RS_LoadMapList( int )", asFunc_RS_LoadMapList/*, asFunc_asGeneric_RS_LoadMapList*/},
 	{ "bool RS_QueryPjState( int playerNum)", asFunc_RS_QueryPjState/*, asFunc_asGeneric_RS_QueryPjState*/},
 	{ "bool RS_ResetPjState( int playerNum)", asFunc_RS_ResetPjState/*, asFunc_asGeneric_RS_ResetPjState*/},

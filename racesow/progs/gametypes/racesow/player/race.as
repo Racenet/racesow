@@ -16,7 +16,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
     /**
      * The checkpoints of the race as a string
      */
-    cString checkPointsString;
+    String checkPointsString;
 
 	/**
 	 * serverTime when started race
@@ -141,11 +141,11 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
 	/**
 	 * Get all the checkpoint times as a token string
-	 * @return cString
+	 * @return String
 	 */
-	cString getCheckpoints()
+	String getCheckpoints()
 	{
-        cString checkpoints = "";
+        String checkpoints = "";
         for ( int i = 0; i < numCheckpoints; i++ )
         {
             checkpoints +=  this.checkPoints[i] + " ";
@@ -264,11 +264,11 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 
 	/**
 	 * Get race data as string
-	 * @return cString
+	 * @return String
 	 */
-	cString toString()
+	String toString()
 	{
-		cString raceString;
+		String raceString;
 		raceString += "\"" + this.getTime() + "\" \"" + this.player.getName() + "\" \"" + localTime + "\" ";
 		raceString += "\"" + this.checkPoints.length() + "\" ";
 		for ( uint i = 0; i < this.checkPoints.length(); i++ )
