@@ -1,27 +1,27 @@
 /*
-   Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
-   and German Garcia Fernandez ("Jal") for Chasseur de bots association.
+Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
+and German Garcia Fernandez ("Jal") for Chasseur de bots association.
 
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 /*
- * Warsow hud scripts
- */
+* Warsow hud scripts
+*/
 
 #include "cg_local.h"
 
@@ -365,7 +365,7 @@ static int CG_GetItemTimerTeam( void *parameter )
 	return max( cent->current.modelindex-1, 0 );
 }
 
-//racesow
+// ch : backport some of racesow hud elements
 /*********************************************************************************
 lm: edit for race mod,
 	adds bunch of vars to the hud.
@@ -374,6 +374,7 @@ lm: edit for race mod,
 
 //lm: for readability
 enum race_index {
+	//racesow
 	cp1,
 	cp2,
 	cp3,
@@ -389,6 +390,7 @@ enum race_index {
 	cp13,
 	cp14,
 	cp15,
+	//!racesow
 	mouse_x,
 	mouse_y,
 	jumpspeed,
@@ -398,6 +400,7 @@ enum race_index {
 	max_index
 };
 
+//racesow
 /*
 %mouse_x - display currently mouse x (-18000,18000)
 %mouse_y - display currently mouse y (-9000,9000)
@@ -413,7 +416,9 @@ enum race_index {
 */
 
 int race_jump = 0;
+//!racesow
 
+//racesow - the following functions have differences in calculations, because warsow backported from an old version. warsow huds SHOULD still work with racesow
 static int CG_GetRaceVars( void* parameter )
 {
 	int index = (qintptr)parameter;
@@ -621,21 +626,24 @@ static const reference_numeric_t cg_numeric_references[] =
 
 	{ "POWERUP_QUAD_TIME", CG_GetPowerupTime, (void *)POWERUP_QUAD },
 	{ "POWERUP_WARSHELL_TIME", CG_GetPowerupTime, (void *)POWERUP_SHELL },
+	{ "POWERUP_REGEN_TIME", CG_GetPowerupTime, (void *)POWERUP_REGEN },
 
 	{ "DAMAGE_INDICATOR_TOP", CG_GetDamageIndicatorDirValue, (void *)0 },
 	{ "DAMAGE_INDICATOR_RIGHT", CG_GetDamageIndicatorDirValue, (void *)1 },
 	{ "DAMAGE_INDICATOR_BOTTOM", CG_GetDamageIndicatorDirValue, (void *)2 },
 	{ "DAMAGE_INDICATOR_LEFT", CG_GetDamageIndicatorDirValue, (void *)3 },
 
-	//racesow - lm: race stuff 
+// ch : backport racesow hud elements
+//lm: race stuff
 	{ "MOUSE_X", CG_GetRaceVars, (void *)mouse_x },
 	{ "MOUSE_Y", CG_GetRaceVars, (void *)mouse_y },
 	{ "ACCELERATION", CG_GetAccel, NULL },
-	{ "ROCKETACCEL", CG_GetRocketAccel, NULL},
-	{ "JUMPSPEED", CG_GetRaceVars, (void *)jumpspeed },
+	{ "ROCKETACCEL", CG_GetRocketAccel, NULL}, // racesow
+	{ "JUMPSPEED", CG_GetRaceVars, (void *)jumpspeed }, // racesow
 	{ "MOVEANGLE", CG_GetRaceVars, (void *)move_an	},
 	{ "STRAFEANGLE", CG_GetRaceVars, (void *)strafe_an },
 	{ "DIFF_ANGLE", CG_GetRaceVars, (void *)diff_an	},
+    //racesow
 	{ "MAX_ACCEL", CG_GetMaxAccel, NULL },
 	{ "SHOW_ACCEL", CG_GetCvar, "cg_showAcceleration" },
 
@@ -732,9 +740,9 @@ typedef struct obituary_s
 static obituary_t cg_obituaries[MAX_OBITUARIES];
 static int cg_obituaries_current = -1;
 
-//==================
-//CG_SC_PrintObituary
-//==================
+/*
+* CG_SC_PrintObituary
+*/
 void CG_SC_PrintObituary( const char *format, ... )
 {
 	va_list	argptr;
@@ -749,9 +757,9 @@ void CG_SC_PrintObituary( const char *format, ... )
 	CG_StackChatString( &cg.chat, msg );
 }
 
-//==================
-//CG_SC_Obituary
-//==================
+/*
+* CG_SC_Obituary
+*/
 void CG_SC_Obituary( void )
 {
 	char message[128];
@@ -968,18 +976,20 @@ static void CG_DrawObituaries( int x, int y, int align, struct mufont_s *font, v
 		w += min( trap_SCR_strWidth( obr->victim, font, 0 ), ( width - icon_size * cgs.vidWidth/800 ) / 2 );
 
 		if( internal_align == 1 )
-		{                   // left
+		{
+			// left
 			xoffset = 0;
 		}
-		else if( internal_align == 1 )
-		{                          // center
+		else if( internal_align == 2 )
+		{
+			// center
 			xoffset = ( width - w ) / 2;
 		}
 		else
-		{ // right
+		{
+			// right
 			xoffset = width - w;
 		}
-
 
 		if( obr->type != OBITUARY_ACCIDENT )
 		{
@@ -1086,9 +1096,9 @@ static qboolean CG_IsWeaponSelected( int weapon )
 	return ( weapon == cg.predictedPlayerState.stats[STAT_PENDING_WEAPON] );
 }
 
-//================
-//CG_DrawWeaponIcons
-//================
+/*
+* CG_DrawWeaponIcons
+*/
 static void CG_DrawWeaponIcons( int x, int y, int offx, int offy, int iw, int ih, int align )
 {
 	int curx, cury, curw, curh;
@@ -1160,9 +1170,9 @@ static void CG_DrawWeaponIcons( int x, int y, int offx, int offy, int iw, int ih
 	}
 }
 
-//================
-//CG_DrawWeaponAmmos
-//================
+/*
+* CG_DrawWeaponAmmos
+*/
 static void CG_DrawWeaponAmmos( int x, int y, int offx, int offy, int fontsize, int ammotype, int align )
 {
 	int curx, cury, curwh;
@@ -1389,10 +1399,10 @@ static cg_layoutoperators_t cg_LayoutOperators[] =
 	},
 };
 
-//================
-//CG_OperatorFuncForArgument
-//================
-static void *CG_OperatorFuncForArgument( char *token )
+/*
+* CG_OperatorFuncForArgument
+*/
+static void *CG_OperatorFuncForArgument( const char *token )
 {
 	cg_layoutoperators_t *op;
 
@@ -1639,15 +1649,17 @@ static int CG_LFuncScale( struct cg_layoutnode_s *commandnode, struct cg_layoutn
 	return qtrue;
 }
 
-#define SCALE_X( f ) ( (layout_cursor_scale == NOSCALE) ? f : (layout_cursor_scale == SCALEBYHEIGHT) ? f*cgs.vidHeight/600.0f : f*cgs.vidWidth/800.0f )
-#define SCALE_Y( f ) ( (layout_cursor_scale == NOSCALE) ? f : (layout_cursor_scale == SCALEBYWIDTH) ? f*cgs.vidWidth/800.0f : f*cgs.vidHeight/600.0f )
+#define SCALE_X( n ) ( (layout_cursor_scale == NOSCALE) ? (n) : ((layout_cursor_scale == SCALEBYHEIGHT) ? (n)*cgs.vidHeight/600.0f : (n)*cgs.vidWidth/800.0f) )
+#define SCALE_Y( n ) ( (layout_cursor_scale == NOSCALE) ? (n) : ((layout_cursor_scale == SCALEBYWIDTH) ? (n)*cgs.vidWidth/800.0f : (n)*cgs.vidHeight/600.0f) )
 
 static int CG_LFuncCursor( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
 {
 	float x, y;
 
-	x = SCALE_X( CG_GetNumericArg( &argumentnode ) );
-	y = SCALE_Y( CG_GetNumericArg( &argumentnode ) );
+	x = CG_GetNumericArg( &argumentnode );
+	x = SCALE_X( x );
+	y = CG_GetNumericArg( &argumentnode );
+	y = SCALE_Y( y );
 
 	layout_cursor_x = Q_rint( x );
 	layout_cursor_y = Q_rint( y );
@@ -1658,8 +1670,10 @@ static int CG_LFuncMoveCursor( struct cg_layoutnode_s *commandnode, struct cg_la
 {
 	float x, y;
 
-	x = SCALE_X( CG_GetNumericArg( &argumentnode ) );
-	y = SCALE_Y( CG_GetNumericArg( &argumentnode ) );
+	x = CG_GetNumericArg( &argumentnode );
+	x = SCALE_X( x );
+	y = CG_GetNumericArg( &argumentnode );
+	y = SCALE_Y( y );
 
 	layout_cursor_x += Q_rint( x );
 	layout_cursor_y += Q_rint( y );
@@ -1670,8 +1684,10 @@ static int CG_LFuncSize( struct cg_layoutnode_s *commandnode, struct cg_layoutno
 {
 	float x, y;
 
-	x = SCALE_X( CG_GetNumericArg( &argumentnode ) );
-	y = SCALE_Y( CG_GetNumericArg( &argumentnode ) );
+	x = CG_GetNumericArg( &argumentnode );
+	x = SCALE_X( x );
+	y = CG_GetNumericArg( &argumentnode );
+	y = SCALE_Y( y );
 
 	layout_cursor_width = Q_rint( x );
 	layout_cursor_height = Q_rint( y );
@@ -1838,6 +1854,12 @@ static int CG_LFuncDrawHelpMessage( struct cg_layoutnode_s *commandnode, struct 
 			}
 		}
 	}
+	return qtrue;
+}
+
+static int CG_LFuncDrawTeamMates( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments )
+{
+	CG_DrawTeamMates();
 	return qtrue;
 }
 
@@ -2136,6 +2158,7 @@ typedef struct cg_layoutcommand_s
 	int ( *func )( struct cg_layoutnode_s *commandnode, struct cg_layoutnode_s *argumentnode, int numArguments );
 	int numparms;
 	char *help;
+	qboolean precache;
 } cg_layoutcommand_t;
 
 static cg_layoutcommand_t cg_LayoutCommands[] =
@@ -2144,133 +2167,160 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		"setScale",
 		CG_LFuncScale,
 		1,
-		"Sets the cursor scaling method."
+		"Sets the cursor scaling method.",
+		qfalse
 	},
 
 	{
 		"setCursor",
 		CG_LFuncCursor,
 		2,
-		"Sets the cursor position to x and y coordinates."
+		"Sets the cursor position to x and y coordinates.",
+		qfalse
 	},
 
 	{
 		"MoveCursor",
 		CG_LFuncMoveCursor,
 		2,
-		"Moves the cursor position by dx and dy."
+		"Moves the cursor position by dx and dy.",
+		qfalse
 	},
 
 	{
 		"setAlign",
 		CG_LFuncAlign,
 		2,
-		"Changes align setting. Parameters: horizontal alignment, vertical alignment"
+		"Changes align setting. Parameters: horizontal alignment, vertical alignment",
+		qfalse
 	},
 
 	{
 		"setSize",
 		CG_LFuncSize,
 		2,
-		"Sets width and height. Used for pictures and models."
+		"Sets width and height. Used for pictures and models.",
+		qfalse
 	},
 
 	{
 		"setFont",
 		CG_LFuncFont,
 		1,
-		"Sets font by font name. Accepts 'con_fontsystemsmall', 'con_fontsystemmedium' and 'con_fontsystembig' as shortcut to default game fonts."
+		"Sets font by font name. Accepts 'con_fontsystemsmall', 'con_fontsystemmedium' and 'con_fontsystembig' as shortcut to default game fonts.",
+		qfalse
 	},
 
 	{
 		"setColor",
 		CG_LFuncColor,
 		4,
-		"Sets color setting in RGBA mode. Used for text and pictures"
+		"Sets color setting in RGBA mode. Used for text and pictures",
+		qfalse
 	},
 
 	{
 		"setColorToTeamColor",
 		CG_LFuncColorToTeamColor,
 		1,
-		"Sets cursor color to the color of the team provided in the argument"
+		"Sets cursor color to the color of the team provided in the argument",
+		qfalse
 	},
 
 	{
 		"setColorAlpha",
 		CG_LFuncColorAlpha,
 		1,
-		"Changes the alpha value of the current color"
+		"Changes the alpha value of the current color",
+		qfalse
 	},
 
 	{
 		"setRotationSpeed",
 		CG_LFuncRotationSpeed,
 		3,
-		"Sets rotation speeds as vector. Used for models"
+		"Sets rotation speeds as vector. Used for models",
+		qfalse
 	},
 
 	{
 		"setCustomWeaponIcons",
 		CG_LFuncCustomWeaponIcons,
 		3,
-		"Sets a custom shader for weapon icons"
+		"Sets a custom shader for weapon icons",
+		qfalse
 	},
 
 	{
 		"setCustomWeaponSelect",
 		CG_LFuncCustomWeaponSelect,
 		1,
-		"Sets a custom shader for weapon icons"
+		"Sets a custom shader for weapon icons",
+		qfalse
 	},
 
 	{
 		"drawObituaries",
 		CG_LFuncDrawObituaries,
 		2,
-		"Draws graphical death messages"
+		"Draws graphical death messages",
+		qfalse
 	},
 
 	{
 		"drawAwards",
 		CG_LFuncDrawAwards,
 		0,
-		"Draws award messages"
+		"Draws award messages",
+		qfalse
 	},
 
 	{
 		"drawClock",
 		CG_LFuncDrawClock,
 		0,
-		"Draws clock"
+		"Draws clock",
+		qfalse
 	},
 
 	{
 		"drawHelpString",
 		CG_LFuncDrawHelpMessage,
 		0,
-		"Draws the help message"
+		"Draws the help message",
+		qfalse
 	},
 
 	{
 		"drawPlayername",
 		CG_LFuncDrawPlayername,
 		1,
-		"Draws the name of the player with id provided by the argument"
+		"Draws the name of the player with id provided by the argument",
+		qfalse
 	},
 
 	{
 		"drawPointing",
 		CG_LFuncDrawPointed,
 		0,
-		"Draws the name of the player in the crosshair"
+		"Draws the name of the player in the crosshair",
+		qfalse
 	},
 
+	{
+		"drawTeamMates",
+		CG_LFuncDrawTeamMates,
+		0,
+		"Draws indicators where team mates are",
+		qfalse
+	},
+	
 	{
 		"drawStatString",
 		CG_LFuncDrawConfigstring,
 		1,
-		"Draws configstring of argument id"
+		"Draws configstring of argument id",
+		qfalse
 	},
 
 	//racesow
@@ -2278,7 +2328,8 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		"drawCheckPoint",
 		CG_LFuncDrawCheckpoint,
 		1,
-		"Draws last checkpoint time of argument id"
+		"Draws last checkpoint time of argument id",
+		qfalse
 	},
 	//!racesow
 
@@ -2286,70 +2337,80 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		"drawItemName",
 		CG_LFuncDrawItemNameFromIndex,
 		1,
-		"Draws the name of the item with given item index"
+		"Draws the name of the item with given item index",
+		qfalse
 	},
 
 	{
 		"drawString",
 		CG_LFuncDrawString,
 		1,
-		"Draws the string in the argument"
+		"Draws the string in the argument",
+		qfalse
 	},
 
 	{
 		"drawStringNum",
 		CG_LFuncDrawNumeric2,
 		1,
-		"Draws numbers as text"
+		"Draws numbers as text",
+		qfalse
 	},
 
 	{
 		"drawNum",
 		CG_LFuncDrawNumeric,
 		1,
-		"Draws numbers of given character size"
+		"Draws numbers of given character size",
+		qfalse
 	},
 
 	{
 		"drawStretchNum",
 		CG_LFuncDrawStretchNum,
 		1,
-		"Draws numbers stretch inside a given size"
+		"Draws numbers stretch inside a given size",
+		qfalse
 	},
 
 	{
 		"drawBar",
 		CG_LFuncDrawBar,
 		2,
-		"Draws a bar of size setting, the bar is filled in proportion to the arguments"
+		"Draws a bar of size setting, the bar is filled in proportion to the arguments",
+		qfalse
 	},
 
 	{
 		"drawPicBar",
 		CG_LFuncDrawPicBar,
 		3,
-		"Draws a picture of size setting, is filled in proportion to the 2 arguments (value, maxvalue). 3rd argument is the picture path"
+		"Draws a picture of size setting, is filled in proportion to the 2 arguments (value, maxvalue). 3rd argument is the picture path",
+		qfalse
 	},
 
 	{
 		"drawCrosshair",
 		CG_LFuncDrawCrossHair,
 		0,
-		"Draws the game crosshair"
+		"Draws the game crosshair",
+		qfalse
 	},
 
 	{
 		"drawKeyState",
 		CG_LFuncDrawKeyState,
 		1,
-		"Draws icons showing if the argument key is pressed. Possible arg: forward, backward, left, right, fire, jump, crouch, special"
+		"Draws icons showing if the argument key is pressed. Possible arg: forward, backward, left, right, fire, jump, crouch, special",
+		qfalse
 	},
 
 	{
 		"drawNetIcon",
 		CG_LFuncDrawNet,
 		0,
-		"Draws the disconnection icon"
+		"Draws the disconnection icon",
+		qfalse
 	},
 
 	{
@@ -2357,130 +2418,149 @@ static cg_layoutcommand_t cg_LayoutCommands[] =
 		CG_LFuncDrawChat,
 		3,
 		"Draws the game chat messages",
+		qfalse
 	},
 
 	{
 		"drawPicByIndex",
 		CG_LFuncDrawPicByIndex,
 		1,
-		"Draws a pic with argument as imageIndex"
+		"Draws a pic with argument as imageIndex",
+		qtrue
 	},
 
 	{
 		"drawPicByItemIndex",
 		CG_LFuncDrawPicByItemIndex,
 		1,
-		"Draws a item icon pic with argument as itemIndex"
+		"Draws a item icon pic with argument as itemIndex",
+		qfalse
 	},
 
 	{
 		"drawPicByName",
 		CG_LFuncDrawPicByName,
 		1,
-		"Draws a pic with argument being the file path"
+		"Draws a pic with argument being the file path",
+		qtrue
 	},
 
 	{
 		"drawModelByIndex",
 		CG_LFuncDrawModelByIndex,
 		1,
-		"Draws a model with argument being the modelIndex"
+		"Draws a model with argument being the modelIndex",
+		qtrue
 	},
 
 	{
 		"drawModelByName",
 		CG_LFuncDrawModelByName,
 		2,
-		"Draws a model with argument being the path to the model file"
+		"Draws a model with argument being the path to the model file",
+		qtrue
 	},
 
 	{
 		"drawModelByItemIndex",
 		CG_LFuncDrawModelByItemIndex,
 		1,
-		"Draws a item model with argument being the item index"
+		"Draws a item model with argument being the item index",
+		qfalse
 	},
 
 	{
 		"drawWeaponIcons",
 		CG_LFuncDrawWeaponIcons,
 		4,
-		"Draws the icons of weapon/ammo owned by the player, arguments are offset x, offset y, size x, size y"
+		"Draws the icons of weapon/ammo owned by the player, arguments are offset x, offset y, size x, size y",
+		qfalse
 	},
 
 	{
 		"drawCaptureAreas",
 		CG_LFuncDrawCaptureAreas,
 		3,
-		"Draws the capture areas for iTDM"
+		"Draws the capture areas for iTDM",
+		qfalse
 	},
 
 	{
 		"drawMiniMap",
 		CG_LFuncDrawMiniMap,
 		2,
-		"Draws a minimap (radar). Arguments are : draw_playernames, draw_itemnames"
+		"Draws a minimap (radar). Arguments are : draw_playernames, draw_itemnames",
+		qfalse
 	},
 
 	{
 		"drawWeaponWeakAmmo",
 		CG_LFuncDrawWeaponWeakAmmo,
 		3,
-		"Draws the amount of weak ammo owned by the player, arguments are offset x, offset y, fontsize"
+		"Draws the amount of weak ammo owned by the player, arguments are offset x, offset y, fontsize",
+		qfalse
 	},
 	{
 		"drawWeaponStrongAmmo",
 		CG_LFuncDrawWeaponStrongAmmo,
 		3,
-		"Draws the amount of strong ammo owned by the player,  arguments are offset x, offset y, fontsize"
+		"Draws the amount of strong ammo owned by the player,  arguments are offset x, offset y, fontsize",
+		qfalse
 	},
 
 	{
 		"drawTeamInfo",
 		CG_LFuncDrawTeamInfo,
 		0,
-		"Draws the Team Info (locations) box"
+		"Draws the Team Info (locations) box",
+		qfalse
 	},
 
 	{
 		"if",
 		CG_LFuncIf,
 		1,
-		"Conditional expression. Argument accepts operations >, <, ==, >=, <=, etc"
+		"Conditional expression. Argument accepts operations >, <, ==, >=, <=, etc",
+		qfalse
 	},
 
 	{
 		"endif",
 		NULL,
 		0,
-		"End of conditional expression block"
+		"End of conditional expression block",
+		qfalse
 	},
 
 	{
 		"drawTimer",
 		CG_LFuncDrawTimer,
 		1,
-		"Draws a timer clock for the race gametype"
+		"Draws a timer clock for the race gametype",
+		qfalse
 	},
 	{
 		"drawPicVar",
 		CG_LFuncDrawPicVar,
 		6,
-		"Draws a picture from a sequence, depending on the value of a given parameter. Parameters: minval, maxval, value, firstimg, lastimg, imagename (replacing ## by the picture number, no leading zeros), starting at 0)"
+		"Draws a picture from a sequence, depending on the value of a given parameter. Parameters: minval, maxval, value, firstimg, lastimg, imagename (replacing ## by the picture number, no leading zeros), starting at 0)",
+		qfalse
 	},
 
 	{
 		"drawLocationName",
 		CG_LFuncDrawLocationName,
 		1,
-		"Draws the location name with argument being location tag/index"
+		"Draws the location name with argument being location tag/index",
+		qfalse
 	},
 
 	{
 		NULL,
 		NULL,
 		0,
-		NULL
+		NULL,
+		qfalse
 	}
 };
 
@@ -2550,11 +2630,12 @@ typedef struct cg_layoutnode_s
 	struct cg_layoutnode_s *parent;
 	struct cg_layoutnode_s *next;
 	struct cg_layoutnode_s *ifthread;
+	qboolean precache;
 } cg_layoutnode_t;
 
-//================
-//CG_GetStringArg
-//================
+/*
+* CG_GetStringArg
+*/
 static char *CG_GetStringArg( struct cg_layoutnode_s **argumentsnode )
 {
 	struct cg_layoutnode_s *anode = *argumentsnode;
@@ -2567,10 +2648,10 @@ static char *CG_GetStringArg( struct cg_layoutnode_s **argumentsnode )
 	return anode->string;
 }
 
-//================
-//CG_GetNumericArg
-//can use recursion for mathematical operations
-//================
+/*
+* CG_GetNumericArg
+* can use recursion for mathematical operations
+*/
 static float CG_GetNumericArg( struct cg_layoutnode_s **argumentsnode )
 {
 	struct cg_layoutnode_s *anode = *argumentsnode;
@@ -2601,13 +2682,12 @@ static float CG_GetNumericArg( struct cg_layoutnode_s **argumentsnode )
 	return value;
 }
 
-//================
-//CG_LayoutParseCommandNode
-//alloc a new node for a command
-//================
-static cg_layoutnode_t *CG_LayoutParseCommandNode( char *token )
+/*
+* CG_LayoutParseCommandNode
+* alloc a new node for a command
+*/
+static cg_layoutnode_t *CG_LayoutParseCommandNode( const char *token )
 {
-
 	int i = 0;
 	cg_layoutcommand_t *command = NULL;
 	cg_layoutnode_t *node;
@@ -2631,14 +2711,15 @@ static cg_layoutnode_t *CG_LayoutParseCommandNode( char *token )
 	node->string = CG_CopyString( command->name );
 	node->func = command->func;
 	node->ifthread = NULL;
+	node->precache = command->precache;
 
 	return node;
 }
 
-//================
-//CG_LayoutParseArgumentNode
-//alloc a new node for an argument
-//================
+/*
+* CG_LayoutParseArgumentNode
+* alloc a new node for an argument
+*/
 static cg_layoutnode_t *CG_LayoutParseArgumentNode( char *token )
 {
 	cg_layoutnode_t *node;
@@ -2757,14 +2838,15 @@ static cg_layoutnode_t *CG_LayoutParseArgumentNode( char *token )
 	node->string = CG_CopyString( token );
 	node->func = NULL;
 	node->ifthread = NULL;
+	node->precache = qfalse;
 
 	// return it
 	return node;
 }
 
-//================
-//CG_LayoutCathegorizeToken
-//================
+/*
+* CG_LayoutCathegorizeToken
+*/
 static int CG_LayoutCathegorizeToken( char *token )
 {
 	int i = 0;
@@ -2797,10 +2879,10 @@ static int CG_LayoutCathegorizeToken( char *token )
 	return LNODE_NUMERIC;
 }
 
-//================
-//CG_RecurseFreeLayoutThread
-//recursive for freeing "if" subtrees
-//================
+/*
+* CG_RecurseFreeLayoutThread
+* recursive for freeing "if" subtrees
+*/
 static void CG_RecurseFreeLayoutThread( cg_layoutnode_t *rootnode )
 {
 	cg_layoutnode_t *node;
@@ -2823,10 +2905,10 @@ static void CG_RecurseFreeLayoutThread( cg_layoutnode_t *rootnode )
 	}
 }
 
-//================
-//CG_LayoutFixCommasInToken
-//commas are accepted in the scripts. They actually do nothing, but are good for readability
-//================
+/*
+* CG_LayoutFixCommasInToken
+* commas are accepted in the scripts. They actually do nothing, but are good for readability
+*/
 static qboolean CG_LayoutFixCommasInToken( char **ptr, char **backptr )
 {
 	char *token;
@@ -2879,13 +2961,14 @@ static qboolean CG_LayoutFixCommasInToken( char **ptr, char **backptr )
 	return stepback;
 }
 
-//================
-//CG_RecurseParseLayoutScript
-//recursive for generating "if" subtrees
-//================
+/*
+* CG_RecurseParseLayoutScript
+* recursive for generating "if" subtrees
+*/
 static cg_layoutnode_t *CG_RecurseParseLayoutScript( char **ptr, int level )
 {
 	cg_layoutnode_t	*command = NULL;
+	cg_layoutnode_t	*argumentnode = NULL;
 	cg_layoutnode_t	*node = NULL;
 	cg_layoutnode_t	*rootnode = NULL;
 	int expecArgs = 0, numArgs = 0;
@@ -2936,7 +3019,8 @@ static cg_layoutnode_t *CG_RecurseParseLayoutScript( char **ptr, int level )
 		}
 
 		if( expecArgs > numArgs )
-		{                   // we are expecting an argument
+		{
+			// we are expecting an argument
 			switch( token_type )
 			{
 			case LNODE_NUMERIC:
@@ -2960,12 +3044,13 @@ static cg_layoutnode_t *CG_RecurseParseLayoutScript( char **ptr, int level )
 		else
 		{
 			if( token_type != LNODE_COMMAND )
-			{                       // we are expecting a command
+			{
+				// we are expecting a command
 				CG_Printf( "WARNING 'CG_RecurseParseLayoutScript'(level %i): unrecognized command \"%s\"\n", level, token );
 				continue;
 			}
 
-			//special case: endif commands interrupt the thread and are not saved
+			// special case: endif commands interrupt the thread and are not saved
 			if( !Q_stricmp( token, "endif" ) )
 			{
 				//finish the last command properly
@@ -2974,7 +3059,7 @@ static cg_layoutnode_t *CG_RecurseParseLayoutScript( char **ptr, int level )
 				return rootnode;
 			}
 
-			//special case: last command was "if", we create a new sub-thread and ignore the new command
+			// special case: last command was "if", we create a new sub-thread and ignore the new command
 			if( command && !Q_stricmp( command->string, "if" ) )
 			{
 				*ptr = s_tokenback; // step back one token
@@ -3014,6 +3099,7 @@ static cg_layoutnode_t *CG_RecurseParseLayoutScript( char **ptr, int level )
 
 			// move on into the new command
 			command = node;
+			argumentnode = NULL;
 			numArgs = 0;
 			expecArgs = command->integer;
 			add = qtrue;
@@ -3025,10 +3111,21 @@ static cg_layoutnode_t *CG_RecurseParseLayoutScript( char **ptr, int level )
 
 		if( add == qtrue )
 		{
+			if( command && command == rootnode ) {
+				if( !argumentnode )
+					argumentnode = node;
+			}
+
 			if( rootnode )
 				rootnode->next = node;
 			node->parent = rootnode;
 			rootnode = node;
+
+			// precache arguments by calling the function at load time
+			if( command && expecArgs == numArgs && command->func && command->precache ) {
+				Vector4Set( layout_cursor_color, 0, 0, 0, 0 );
+				command->func( command, argumentnode, numArgs );
+			}
 		}
 	}
 
@@ -3062,9 +3159,9 @@ static void CG_RecursePrintLayoutThread( cg_layoutnode_t *rootnode, int level )
 }
 #endif
 
-//================
-//CG_ParseLayoutScript
-//================
+/*
+* CG_ParseLayoutScript
+*/
 static void CG_ParseLayoutScript( char *string, cg_layoutnode_t *rootnode )
 {
 
@@ -3080,16 +3177,16 @@ static void CG_ParseLayoutScript( char *string, cg_layoutnode_t *rootnode )
 
 //=============================================================================
 
-//================
-//CG_RecurseExecuteLayoutThread
-// Execution works like this: First node (on backwards) is expected to be the command, followed by arguments nodes.
-// we keep a pointer to the command and run the tree counting arguments until we reach the next command,
-// then we call the command function sending the pointer to first argument and the pointer to the command.
-// At return we advance one node (we stopped at last argument node) so it starts again from the next command (if any).
-//
-// When finding an "if" command with a subtree, we execute the "if" command. In the case it
-// returns any value, we recurse execute the subtree
-//================
+/*
+* CG_RecurseExecuteLayoutThread
+* Execution works like this: First node (on backwards) is expected to be the command, followed by arguments nodes.
+* we keep a pointer to the command and run the tree counting arguments until we reach the next command,
+* then we call the command function sending the pointer to first argument and the pointer to the command.
+* At return we advance one node (we stopped at last argument node) so it starts again from the next command (if any).
+* 
+* When finding an "if" command with a subtree, we execute the "if" command. In the case it
+* returns any value, we recurse execute the subtree
+*/
 static void CG_RecurseExecuteLayoutThread( cg_layoutnode_t *rootnode )
 {
 	cg_layoutnode_t	*argumentnode = NULL;
@@ -3154,9 +3251,9 @@ static void CG_RecurseExecuteLayoutThread( cg_layoutnode_t *rootnode )
 	}
 }
 
-//================
-//CG_ExecuteLayoutProgram
-//================
+/*
+* CG_ExecuteLayoutProgram
+*/
 void CG_ExecuteLayoutProgram( struct cg_layoutnode_s *rootnode )
 {
 	CG_RecurseExecuteLayoutThread( rootnode );
@@ -3168,9 +3265,9 @@ void CG_ExecuteLayoutProgram( struct cg_layoutnode_s *rootnode )
 
 
 
-//================
-//CG_LoadHUDFile
-//================
+/*
+* CG_LoadHUDFile
+*/
 // Loads the HUD-file recursively. Recursive includes now supported
 // Also processes "preload" statements for graphics pre-loading
 #define HUD_MAX_LVL 16 // maximum levels of recursive file loading
@@ -3547,9 +3644,9 @@ static char *CG_LoadHUDFile( char *path )
    }
  */
 
-//================
-//CG_LoadStatusBarFile
-//================
+/*
+* CG_LoadStatusBarFile
+*/
 static void CG_LoadStatusBarFile( char *path )
 {
 	char *opt;
@@ -3581,9 +3678,9 @@ static void CG_LoadStatusBarFile( char *path )
 	customWeaponSelectPic = NULL;
 }
 
-//================
-//CG_LoadStatusBar
-//================
+/*
+* CG_LoadStatusBar
+*/
 void CG_LoadStatusBar( void )
 {
 	size_t filename_size;
