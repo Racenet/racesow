@@ -682,7 +682,6 @@ static void CG_RegisterVariables( void )
 	cg_showminimap = trap_Cvar_Get( "cg_showMiniMap", "1", CVAR_ARCHIVE );
 	cg_showitemtimers = trap_Cvar_Get( "cg_showItemTimers", "3", CVAR_ARCHIVE );
 	cg_placebo =  trap_Cvar_Get( "cg_placebo", "0", CVAR_ARCHIVE );
-//TODO: This was added in warsow 0.7. I'm not sure if this needs to be here. Joki please clarify -K1ll
 	cg_strafeHUD = trap_Cvar_Get( "cg_strafeHUD", "0", CVAR_ARCHIVE );
 
 	cg_demoname = trap_Cvar_Get( "demoname", "", 0 );

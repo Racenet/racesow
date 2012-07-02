@@ -35,7 +35,7 @@ extern cvar_t *cg_clientHUD;
 cvar_t *cg_showminimap;
 cvar_t *cg_showitemtimers;
 cvar_t *cg_placebo;
-//cvar_t *cg_strafeHUD; //racesow - moved to cg_screen.c
+cvar_t *cg_strafeHUD;
 
 //=============================================================================
 
