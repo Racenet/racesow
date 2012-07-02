@@ -63,7 +63,7 @@ extern "C" {
 #pragma warning( disable : 4702 )       // unreachable code
 #pragma warning( disable : 4306 )       // conversion from 'int' to 'void *' of greater size
 #pragma warning( disable : 4305 )       // truncation from 'void *' to 'int'
-
+#pragma warning( disable : 4055 )		// 'type cast' : from data pointer 'void *' to function pointer
 
 #if defined _M_AMD64
 #pragma warning( disable : 4267 )       // conversion from 'size_t' to whatever, possible loss of data
@@ -142,10 +142,11 @@ extern "C" {
 
 // wsw : aiwa : 64bit integers and integer-pointer types
 #include <basetsd.h>
-typedef INT64 qint64;
-typedef UINT64 quint64;
-typedef INT_PTR qintptr;
-typedef UINT_PTR quintptr;
+#include <stdint.h>
+typedef int64_t qint64;
+typedef uint64_t quint64;
+typedef intptr_t qintptr;
+typedef uintptr_t quintptr;
 
 
 typedef int socklen_t;
@@ -170,7 +171,6 @@ typedef UINT_PTR socket_handle_t;
 #define LIB_DIRECTORY "libs"
 #define LIB_SUFFIX ".so"
 
-//# define GL_FORCEFINISH
 #define GL_DRIVERNAME  "libGL.so.1"
 
 #define VORBISFILE_LIBNAME "libvorbisfile.so"
@@ -243,7 +243,6 @@ typedef int socket_handle_t;
 #define LIB_DIRECTORY "libs"
 #define LIB_SUFFIX ".dylib"
 
-//# define GL_FORCEFINISH
 #define GL_DRIVERNAME  "/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib"
 
 #define VORBISFILE_LIBNAME "libvorbisfile.dylib"
@@ -338,10 +337,6 @@ typedef int socket_handle_t;
 #define qcdecl
 #endif
 
-#ifdef ALIGN
-#undef ALIGN
-#endif
-
 #if defined ( __GNUC__ )
 #define ALIGN( x )   __attribute__( ( aligned( x ) ) )
 #define NOINLINE     __attribute__((noinline))
@@ -365,6 +360,23 @@ typedef int socket_handle_t;
 #define STR_TO_POINTER(str) (void *)strtoll(str,NULL,0)
 #else
 #define STR_TO_POINTER(str) (void *)strtol(str,NULL,0)
+#endif
+
+// Generic helper definitions for shared library support
+#if defined _WIN32 || defined __CYGWIN__
+# define QF_DLL_IMPORT __declspec(dllimport)
+# define QF_DLL_EXPORT __declspec(dllexport)
+# define QF_DLL_LOCAL
+#else
+# if __GNUC__ >= 4
+#  define QF_DLL_IMPORT __attribute__ ((visibility("default")))
+#  define QF_DLL_EXPORT __attribute__ ((visibility("default")))
+#  define QF_DLL_LOCAL  __attribute__ ((visibility("hidden")))
+# else
+#  define QF_DLL_IMPORT
+#  define QF_DLL_EXPORT
+#  define QF_DLL_LOCAL
+# endif
 #endif
 
 //==============================================

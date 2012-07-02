@@ -49,6 +49,7 @@ int playerbox_gib_viewheight = 8;
 #define PM_SPECIAL_CROUCH_INHIBIT 400
 #define PM_AIRCONTROL_BOUNCE_DELAY 200
 #define PM_OVERBOUNCE		1.01f
+#define PM_FORWARD_ACCEL_TIMEDELAY 0 // delay before the forward acceleration kicks in
 
 //===============================================================
 
@@ -157,8 +158,9 @@ static void PlayerTouchWall( int nbTestDir, float maxZnormal, vec3_t *normal )
 
 	for( i = 0; i < nbTestDir; i++ )
 	{
-		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[0]*pml.frametime );
-		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[1]*pml.frametime );
+		//FIXME: the 0.015f were pml.frametime in racesow 0.62. Was this an tracked racesow change? -K1ll
+		dir[0] = pml.origin[0] + ( pm->maxs[0]*cos( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[0] * 0.015f );
+		dir[1] = pml.origin[1] + ( pm->maxs[1]*sin( ( M_TWOPI/nbTestDir )*i ) + pml.velocity[1] * 0.015f );
 		dir[2] = pml.origin[2];
 
 		for( j = 0; j < 2; j++ )
@@ -201,12 +203,12 @@ static void PlayerTouchWall( int nbTestDir, float maxZnormal, vec3_t *normal )
 //  walking up a step should kill some velocity
 //
 
-//==================
-//PM_SlideMove
-//
-//Returns a new origin, velocity, and contact entity
-//Does not modify any world state?
-//==================
+/*
+* PM_SlideMove
+* 
+* Returns a new origin, velocity, and contact entity
+* Does not modify any world state?
+*/
 
 #define	MAX_CLIP_PLANES	5
 
@@ -366,12 +368,12 @@ static int PM_SlideMove( void )
 	return blockedmask;
 }
 
-//==================
-//PM_StepSlideMove
-//
-//Each intersection will try to step over the obstruction instead of
-//sliding along it.
-//==================
+/*
+* PM_StepSlideMove
+* 
+* Each intersection will try to step over the obstruction instead of
+* sliding along it.
+*/
 static void PM_StepSlideMove( void )
 {
 	vec3_t start_o, start_v;
@@ -439,11 +441,11 @@ static void PM_StepSlideMove( void )
 	pml.velocity[2] = down_v[2];
 }
 
-//==================
-//PM_Friction -- Modified for wsw
-//
-//Handles both ground friction and water friction
-//==================
+/*
+* PM_Friction -- Modified for wsw
+* 
+* Handles both ground friction and water friction
+*/
 static void PM_Friction( void )
 {
 	float *vel;
@@ -493,11 +495,11 @@ static void PM_Friction( void )
 	}
 }
 
-//==============
-//PM_Accelerate
-//
-//Handles user intended acceleration
-//==============
+/*
+* PM_Accelerate
+* 
+* Handles user intended acceleration
+*/
 static void PM_Accelerate( vec3_t wishdir, float wishspeed, float accel )
 {
 	int i;
@@ -525,7 +527,7 @@ static void PM_AirAccelerate( vec3_t wishdir, float wishspeed )
 	float bunnyaccel = 0.1586f; // (0.42 0.1593f) Default: 0.1585f how fast you accelerate after reaching pm_maxspeed
 	// (it gets harder as you near bunnytopspeed)
 	float bunnytopspeed = 900; // (0.42: 925) soft speed limit (can get faster with rjs and on ramps)
-	float turnaccel = 9.0f;    // (0.42: 9.0) Default: 7 max sharpness of turns
+	float turnaccel = 6.0f;    // (0.42: 9.0) Default: 7 max sharpness of turns //FIXME: This was changed from 9 to 6. again untracked racesow change? -K1ll
 	float backtosideratio = 0.9f; // (0.42: 0.8) Default: 0.8f lower values make it easier to change direction without
 	// losing speed; the drawback is "understeering" in sharp turns
 
@@ -630,9 +632,9 @@ static void PM_AirAccelerate( vec3_t wishdir, float wishspeed, float accel )
 #endif
 
 
-//=============
-//PM_AddCurrents
-//=============
+/*
+* PM_AddCurrents
+*/
 static void PM_AddCurrents( vec3_t wishvel )
 {
 	//
@@ -658,10 +660,10 @@ static void PM_AddCurrents( vec3_t wishvel )
 	}
 }
 
-//===================
-//PM_WaterMove
-//
-//===================
+/*
+* PM_WaterMove
+* 
+*/
 static void PM_WaterMove( void )
 {
 	int i;
@@ -695,10 +697,10 @@ static void PM_WaterMove( void )
 	PM_StepSlideMove();
 }
 
-//===================
-//PM_Move -- Kurim
-//
-//===================
+/*
+* PM_Move -- Kurim
+* 
+*/
 static void PM_Move( void )
 {
 	int i;
@@ -765,7 +767,7 @@ static void PM_Move( void )
 		PM_StepSlideMove();
 	}
 	else if( pm->groundentity != -1 )
-	{
+	{ 
 		// walking on ground
 		if( pml.velocity[2] > 0 )
 			pml.velocity[2] = 0; //!!! this is before the accel
@@ -795,20 +797,21 @@ static void PM_Move( void )
 		}
 		// !racesow
 	}
-	else if( ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_AIRCONTROL )
+	else if( ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_AIRCONTROL ) 
 		&& !( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_FWDBUNNY ) )
 	{
 		// Air Control
 		wishspeed2 = wishspeed;
-		if( DotProduct( pml.velocity, wishdir ) < 0
-			&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING )
+		if( DotProduct( pml.velocity, wishdir ) < 0 
+			&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) 
 			&& ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] <= 0 ) )
 			accel = pm_airdecelerate;
 		else
 			accel = pm_airaccelerate;
 
+		// ch : remove knockback test here
 		if( ( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING )
-			|| ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 ) )
+			/* || ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 ) */ )
 			accel = 0; // no stopmove while walljumping
 
 		if( ( smove > 0 || smove < 0 ) && !fmove && ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] <= 0 ) )
@@ -827,14 +830,14 @@ static void PM_Move( void )
 		pml.velocity[2] -= pm->playerState->pmove.gravity * pml.frametime;
 		PM_StepSlideMove();
 	}
-	else // air movement
+	else // air movement (old school)
 	{
 		qboolean inhibit = qfalse;
 		qboolean accelerating, decelerating;
 
 		accelerating = ( DotProduct( pml.velocity, wishdir ) > 0.0f );
 		decelerating = ( DotProduct( pml.velocity, wishdir ) < -0.0f );
-
+		
 		if( ( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) &&
 			( pm->playerState->pmove.stats[PM_STAT_WJTIME] >= ( PM_WALLJUMP_TIMEDELAY - PM_AIRCONTROL_BOUNCE_DELAY ) ) )
 			inhibit = qtrue;
@@ -843,11 +846,15 @@ static void PM_Move( void )
 			( pm->playerState->pmove.stats[PM_STAT_DASHTIME] >= ( PM_DASHJUMP_TIMEDELAY - PM_AIRCONTROL_BOUNCE_DELAY ) ) )
 			inhibit = qtrue;
 
-		if( !( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_FWDBUNNY ) )
+		if( !( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_FWDBUNNY ) ||
+			pm->playerState->pmove.stats[PM_STAT_FWDTIME] > 0 )
 			inhibit = qtrue;
 
+		// ch : remove this because of the knockback 'bug'?
+		/*
 		if( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 )
 			inhibit = qtrue;
+		*/
 
 		// (aka +fwdbunny) pressing forward or backward but not pressing strafe and not dashing
 		if( accelerating && !inhibit && !smove && fmove )
@@ -859,14 +866,15 @@ static void PM_Move( void )
 			qboolean aircontrol = qtrue;
 
 			wishspeed2 = wishspeed;
-			if( decelerating &&
+			if( decelerating && 
 				!( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) )
 				accel = pm_airdecelerate;
 			else
 				accel = pm_airaccelerate;
 
-			if( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING
-				|| ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 ) )
+			// ch : knockback out
+			if( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING 
+			/*	|| ( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 ) */ )
 			{
 				accel = 0; // no stop-move while wall-jumping
 				aircontrol = qfalse;
@@ -901,9 +909,9 @@ static void PM_Move( void )
 }
 
 
-//=============
-//PM_CategorizePosition
-//=============
+/*
+* PM_CategorizePosition
+*/
 static void PM_CategorizePosition( void )
 {
 	vec3_t point;
@@ -1007,13 +1015,13 @@ static void PM_ClearStun( void )
 	pm->playerState->pmove.stats[PM_STAT_STUN] = 0;
 }
 
-//=============
-//PM_CheckJump
-//=============
+/*
+* PM_CheckJump
+*/
 static void PM_CheckJump( void )
 {
 	if( pml.upPush < 10 )
-	{
+	{ 
 		// not holding jump
 		if( !( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_CONTINOUSJUMP ) )
 			pm->playerState->pmove.pm_flags &= ~PMF_JUMP_HELD;
@@ -1081,9 +1089,9 @@ static void PM_CheckJump( void )
 	PM_ClearWallJump();
 }
 
-//=============
-//PM_CheckDash -- by Kurim
-//=============
+/*
+* PM_CheckDash -- by Kurim
+*/
 static void PM_CheckDash( void )
 {
 	float actual_velocity;
@@ -1102,7 +1110,7 @@ static void PM_CheckDash( void )
 	if( pm->playerState->pmove.stats[PM_STAT_KNOCKBACK] > 0 ) // can not start a new dash during knockback time
 		return;
 
-	if( ( pm->cmd.buttons & BUTTON_SPECIAL ) && pm->groundentity != -1
+	if( ( pm->cmd.buttons & BUTTON_SPECIAL ) && pm->groundentity != -1 
 		&& ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_DASH ) )
 	{
 		if( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
@@ -1120,6 +1128,7 @@ static void PM_CheckDash( void )
 		else
 			upspeed = pm_dashupspeed + pml.velocity[2];
 
+		// ch : we should do explicit forwardPush here, and ignore sidePush ?
 		VectorMA( vec3_origin, pml.forwardPush, pml.flatforward, dashdir );
 		VectorMA( dashdir, pml.sidePush, pml.right, dashdir );
 		dashdir[2] = 0.0;
@@ -1161,7 +1170,7 @@ static void PM_CheckDash( void )
 			module_PredictedEvent( pm->playerState->POVnum, EV_DASH, 0 );
 		}
 
-        // racesow
+		// racesow
 		// increment count for prejump check
 		RS_IncrementDashes(pm->playerState->playerNum);
 		// !racesow
@@ -1170,9 +1179,9 @@ static void PM_CheckDash( void )
 		pm->playerState->pmove.pm_flags &= ~PMF_DASHING;
 }
 
-//=================
-//PM_CheckWallJump -- By Kurim
-//=================
+/*
+* PM_CheckWallJump -- By Kurim
+*/
 static void PM_CheckWallJump( void )
 {
 	vec3_t normal;
@@ -1197,25 +1206,40 @@ static void PM_CheckWallJump( void )
 		return;
 
 	// don't walljump in the first 100 milliseconds of a dash jump
-	if( pm->playerState->pmove.pm_flags & PMF_DASHING
+	if( pm->playerState->pmove.pm_flags & PMF_DASHING 
 		&& ( pm->playerState->pmove.stats[PM_STAT_DASHTIME] > ( PM_DASHJUMP_TIMEDELAY - 100 ) ) )
 		return;
 
-
+	
 	// markthis
 
-	if( pm->groundentity == -1 && ( pm->cmd.buttons & BUTTON_SPECIAL )
+	if( pm->groundentity == -1 && ( pm->cmd.buttons & BUTTON_SPECIAL ) 
 		&& ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_WALLJUMP ) &&
 		( !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPCOUNT ) )
 		&& pm->playerState->pmove.stats[PM_STAT_WJTIME] <= 0
 		)
 	{
+		trace_t trace;
+		vec3_t point;
+
+		point[0] = pml.origin[0];
+		point[1] = pml.origin[1];
+		point[2] = pml.origin[2] - STEPSIZE;
+
+		// don't walljump if our height is smaller than a step 
+		// unless the player is moving faster than dash speed and upwards
+		hspeed = VectorLengthFast( tv( pml.velocity[0], pml.velocity[1], 0 ) );
+		module_Trace( &trace, pml.origin, pm->mins, pm->maxs, point, pm->playerState->POVnum, pm->contentmask, 0 );
+		
+		if( ( hspeed > pm->playerState->pmove.stats[PM_STAT_DASHSPEED] && pml.velocity[2] > 8 ) 
+			|| ( trace.fraction == 1 ) || ( !ISWALKABLEPLANE( &trace.plane ) && !trace.startsolid ) )
+		{
 			VectorClear( normal );
 			PlayerTouchWall( 12, 0.3f, &normal );
 			if( !VectorLength( normal ) )
 				return;
 
-			if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD )
+			if( !( pm->playerState->pmove.pm_flags & PMF_SPECIAL_HELD ) 
 				&& !( pm->playerState->pmove.pm_flags & PMF_WALLJUMPING ) )
 			{
 				float oldupvelocity = pml.velocity[2];
@@ -1271,21 +1295,21 @@ static void PM_CheckWallJump( void )
 					// Create the event
 					module_PredictedEvent( pm->playerState->POVnum, EV_WALLJUMP, DirToByte( normal ) );
 
-                    // racesow
+					// racesow
 					// increment count for prejump check
 					RS_IncrementWallJumps(pm->playerState->playerNum);
 					// !racesow
 				}
+			}
 		}
-
 	}
 	else
 		pm->playerState->pmove.pm_flags &= ~PMF_WALLJUMPING;
 }
 
-//=============
-//PM_CheckSpecialMovement
-//=============
+/*
+* PM_CheckSpecialMovement
+*/
 static void PM_CheckSpecialMovement( void )
 {
 	vec3_t spot;
@@ -1325,9 +1349,9 @@ static void PM_CheckSpecialMovement( void )
 	pm->playerState->pmove.pm_time = 255;
 }
 
-//===============
-//PM_FlyMove
-//===============
+/*
+* PM_FlyMove
+*/
 static void PM_FlyMove( qboolean doclip )
 {
 	float speed, drop, friction, control, newspeed;
@@ -1446,11 +1470,11 @@ static void PM_CheckZoom( void )
 	}
 }
 
-//==============
-//PM_AdjustBBox
-//
-//Sets mins, maxs, and pm->viewheight
-//==============
+/*
+* PM_AdjustBBox
+* 
+* Sets mins, maxs, and pm->viewheight
+*/
 static void PM_AdjustBBox( void )
 {
 	float crouchFrac;
@@ -1478,7 +1502,7 @@ static void PM_AdjustBBox( void )
 		pm->playerState->viewheight = playerbox_stand_viewheight;
 	}
 
-	if( pml.upPush < 0 && ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_CROUCH ) &&
+	if( pml.upPush < 0 && ( pm->playerState->pmove.stats[PM_STAT_FEATURES] & PMFEAT_CROUCH ) && 
 		pm->playerState->pmove.stats[PM_STAT_WJTIME] < ( PM_WALLJUMP_TIMEDELAY - PM_SPECIAL_CROUCH_INHIBIT ) &&
 		pm->playerState->pmove.stats[PM_STAT_DASHTIME] < ( PM_DASHJUMP_TIMEDELAY - PM_SPECIAL_CROUCH_INHIBIT ) )
 	{
@@ -1548,9 +1572,9 @@ static void PM_AdjustBBox( void )
 	pm->playerState->viewheight = playerbox_stand_viewheight;
 }
 
-//==============
-//PM_AdjustViewheight
-//==============
+/*
+* PM_AdjustViewheight
+*/
 void PM_AdjustViewheight( void )
 {
 	float height;
@@ -1591,12 +1615,12 @@ static qboolean PM_GoodPosition( int snaptorigin[3] )
 	return !trace.allsolid;
 }
 
-//================
-//PM_SnapPosition
-//
-//On exit, the origin will have a value that is pre-quantized to the (1.0/16.0)
-//precision of the network channel and in a valid position.
-//================
+/*
+* PM_SnapPosition
+* 
+* On exit, the origin will have a value that is pre-quantized to the (1.0/16.0)
+* precision of the network channel and in a valid position.
+*/
 static void PM_SnapPosition( void )
 {
 	int sign[3];
@@ -1647,10 +1671,10 @@ static void PM_SnapPosition( void )
 }
 
 
-//================
-//PM_InitialSnapPosition
-//
-//================
+/*
+* PM_InitialSnapPosition
+* 
+*/
 static void PM_InitialSnapPosition( void )
 {
 	int x, y, z;
@@ -1694,10 +1718,10 @@ static void PM_UpdateDeltaAngles( void )
 		pm->playerState->pmove.delta_angles[i] = ANGLE2SHORT( pm->playerState->viewangles[i] ) - pm->cmd.angles[i];
 }
 
-//================
-//PM_ApplyMouseAnglesClamp
-//
-//================
+/*
+* PM_ApplyMouseAnglesClamp
+* 
+*/
 #if defined ( _WIN32 ) && ( _MSC_VER >= 1400 )
 #pragma warning( push )
 #pragma warning( disable : 4310 )   // cast truncates constant value
@@ -1738,11 +1762,11 @@ static void PM_ApplyMouseAnglesClamp( void )
 #pragma warning( pop )
 #endif
 
-//================
-//Pmove
-//
-//Can be called by either the server or the client
-//================
+/*
+* Pmove
+* 
+* Can be called by either the server or the client
+*/
 void Pmove( pmove_t *pmove )
 {
 	float fallvelocity, falldelta, damage;
@@ -1766,7 +1790,7 @@ void Pmove( pmove_t *pmove )
 	VectorCopy( pm->playerState->pmove.origin, pml.origin );
 	VectorCopy( pm->playerState->pmove.velocity, pml.velocity );
 
-	fallvelocity = ( ( pml.velocity[2] < 0.0f ) ? abs( pml.velocity[2] ) : 0.0f );
+	fallvelocity = ( ( pml.velocity[2] < 0.0f ) ? fabs( pml.velocity[2] ) : 0.0f );
 
 	// save old org in case we get stuck
 	VectorCopy( pm->playerState->pmove.origin, pml.previous_origin );
@@ -1877,6 +1901,11 @@ void Pmove( pmove_t *pmove )
 			pm->playerState->pmove.stats[PM_STAT_STUN] -= pm->cmd.msec;
 		else if( pm->playerState->pmove.stats[PM_STAT_STUN] < 0 )
 			pm->playerState->pmove.stats[PM_STAT_STUN] = 0;
+
+		if( pm->playerState->pmove.stats[PM_STAT_FWDTIME] > 0 )
+			pm->playerState->pmove.stats[PM_STAT_FWDTIME] -= pm->cmd.msec;
+		else if( pm->playerState->pmove.stats[PM_STAT_FWDTIME] < 0 )
+			pm->playerState->pmove.stats[PM_STAT_FWDTIME] = 0;
 	}
 
 	pml.forwardPush = pm->cmd.forwardfrac * SPEEDKEY;
@@ -1889,6 +1918,12 @@ void Pmove( pmove_t *pmove )
 		pml.sidePush = 0;
 		pml.upPush = 0;
 		pm->cmd.buttons = 0;
+	}
+
+	// in order the forward accelt to kick in, one has to keep +fwd pressed 
+	// for some time without strafing
+	if( pml.forwardPush <= 0 || pml.sidePush ) {
+		pm->playerState->pmove.stats[PM_STAT_FWDTIME] = PM_FORWARD_ACCEL_TIMEDELAY;
 	}
 
 	if( pm->snapinitial )
@@ -1922,7 +1957,7 @@ void Pmove( pmove_t *pmove )
 			pml.sidePush = 0;
 			pml.upPush = 0;
 		}
-
+		
 		PM_SnapPosition();
 		return;
 	}
@@ -2037,7 +2072,7 @@ void Pmove( pmove_t *pmove )
 
 	if( oldGroundEntity == -1 )
 	{
-		falldelta = fallvelocity - ( ( pml.velocity[2] < 0.0f ) ? abs( pml.velocity[2] ) : 0.0f );
+		falldelta = fallvelocity - ( ( pml.velocity[2] < 0.0f ) ? fabs( pml.velocity[2] ) : 0.0f );
 
 		// scale delta if in water
 		if( pm->waterlevel == 3 )

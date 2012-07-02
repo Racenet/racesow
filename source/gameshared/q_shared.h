@@ -146,20 +146,20 @@ qboolean COM_ValidateConfigstring( const char *string );
 #define Q_COLOR_ESCAPE	'^'
 #define S_COLOR_ESCAPE	"^"
 
-#define COLOR_BLACK	'0'
-#define COLOR_RED	'1'
-#define COLOR_GREEN	'2'
+#define COLOR_BLACK		'0'
+#define COLOR_RED		'1'
+#define COLOR_GREEN		'2'
 #define COLOR_YELLOW	'3'
-#define COLOR_BLUE	'4'
-#define COLOR_CYAN	'5'
+#define COLOR_BLUE		'4'
+#define COLOR_CYAN		'5'
 #define COLOR_MAGENTA	'6'
-#define COLOR_WHITE	'7'
+#define COLOR_WHITE		'7'
 #define COLOR_ORANGE	'8'
-#define COLOR_GREY	'9'
+#define COLOR_GREY		'9'
 #define ColorIndex( c )	  ( ( ( ( c )-'0' ) < MAX_S_COLORS ) && ( ( ( c )-'0' ) >= 0 ) ? ( ( c ) - '0' ) : 7 )
 
 #define S_COLOR_BLACK	"^0"
-#define S_COLOR_RED	"^1"
+#define S_COLOR_RED		"^1"
 #define S_COLOR_GREEN	"^2"
 #define S_COLOR_YELLOW	"^3"
 #define S_COLOR_BLUE	"^4"
@@ -193,6 +193,8 @@ qboolean Q_isdigit( const char *str );
 char *Q_trim( char *s );
 char *Q_chrreplace( char *s, const char subj, const char repl );
 
+void *Q_memset32( void *dest, int c, size_t dwords );
+
 // color string functions ("^1text" etc)
 #define GRABCHAR_END	0
 #define GRABCHAR_CHAR	1
@@ -201,7 +203,7 @@ int Q_GrabCharFromColorString( const char **pstr, char *c, int *colorindex );
 const char *COM_RemoveColorTokensExt( const char *str, qboolean draw );
 #define COM_RemoveColorTokens(in) COM_RemoveColorTokensExt(in,qfalse)
 int COM_SanitizeColorString (const char *str, char *buf, int bufsize, int maxprintablechars, int startcolor);
-char *Q_ColorStringTerminator( const char *str, int finalcolor );
+const char *Q_ColorStringTerminator( const char *str, int finalcolor );
 
 char *Q_WCharToUtf8( qwchar wc );
 qwchar Q_GrabWCharFromUtf8String (const char **pstr);
@@ -228,6 +230,12 @@ qboolean Info_Validate( const char *s );
 
 
 //============================================
+// HTTP
+//============================================
+#define HTTP_CODE_OK						200
+#define HTTP_CODE_PARTIAL_CONTENT			206
+
+//============================================
 // sound
 //============================================
 
@@ -246,6 +254,26 @@ extern const size_t NUM_SOUND_EXTENSIONS;
 extern const char *IMAGE_EXTENSIONS[];
 extern const size_t NUM_IMAGE_EXTENSIONS;
 
+//============================================
+// memory utilities
+//============================================
+
+typedef struct block_allocator_s block_allocator_t;
+typedef struct linear_allocator_s linear_allocator_t;
+
+typedef void *( *alloc_function_t )( size_t, const char*, int );
+typedef void ( *free_function_t )( void *ptr, const char*, int );
+
+// Block Allocator
+block_allocator_t * BlockAllocator( size_t elemSize, size_t blockSize, alloc_function_t alloc_function, free_function_t free_function );
+void BlockAllocator_Free( block_allocator_t *ba );
+void *BA_Alloc( block_allocator_t *ba );
+
+linear_allocator_t * LinearAllocator( size_t elemSize, size_t preAllocate, alloc_function_t alloc_function, free_function_t free_function );
+void LinearAllocator_Free( linear_allocator_t *la );
+void *LA_Alloc( linear_allocator_t *la );
+void *LA_Pointer( linear_allocator_t *la, size_t index );
+size_t LA_Size( linear_allocator_t *la );
 
 //==============================================================
 //
@@ -269,6 +297,8 @@ void Com_Printf( const char *msg, ... );
 #define FS_READ				0
 #define FS_WRITE			1
 #define FS_APPEND			2
+#define FS_NOSIZE			0x80	// FS_NOSIZE bit tells that we're not interested in real size of the file
+									// it is merely a hint a proper file size may still be returned by FS_Open
 
 #define FS_SEEK_CUR			0
 #define FS_SEEK_SET			1
@@ -303,6 +333,19 @@ typedef enum
 	key_menu,
 	key_delegate
 } keydest_t;
+
+
+typedef enum
+{
+	rserr_ok,
+
+	rserr_invalid_fullscreen,
+	rserr_invalid_mode,
+	rserr_invalid_driver,
+	rserr_restart_required,
+
+	rserr_unknown
+} rserr_t;
 
 #ifdef __cplusplus
 };

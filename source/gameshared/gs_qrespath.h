@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 //
 //
@@ -93,6 +93,7 @@
 // powerups
 #define PATH_QUAD_ICON		    "gfx/hud/icons/powerup/quad"
 #define PATH_SHELL_ICON		    "gfx/hud/icons/powerup/warshell"
+#define PATH_REGEN_ICON		    "gfx/hud/icons/powerup/regen"
 
 // flags
 #define PATH_ALPHAFLAG_ICON	    "gfx/hud/icons/flags/iconflag_alpha"
@@ -131,6 +132,7 @@
 #define PATH_HEALTH_ULTRA_SIMPLEITEM		"gfx/simpleitems/health/100ultra"
 #define PATH_QUAD_SIMPLEITEM			"gfx/simpleitems/powerup/quad"
 #define PATH_SHELL_SIMPLEITEM			"gfx/simpleitems/powerup/warshell"
+#define PATH_REGEN_SIMPLEITEM			"gfx/simpleitems/powerup/regen"
 
 #define PATH_KEYICON_FORWARD_ON			"gfx/hud/keys/key_forward_on"
 #define PATH_KEYICON_BACKWARD_ON		"gfx/hud/keys/key_back_on"
@@ -205,6 +207,7 @@
 #define	PATH_QUAD_LIGHT_MODEL	    "models/powerups/instant/quad_light.md3"
 #define	PATH_WARSHELL_BELT_MODEL    "models/powerups/instant/warshell_belt.md3"
 #define	PATH_WARSHELL_SPHERE_MODEL  "models/powerups/instant/warshell_sphere.md3"
+#define	PATH_REGEN_MODEL		    "models/powerups/instant/regen.md3"
 
 // misc
 
@@ -255,10 +258,12 @@
 
 #define S_PICKUP_QUAD		"sounds/items/quad_pickup"       // pickup Quad damage
 #define S_PICKUP_SHELL		"sounds/items/shell_pickup"      // pickup WarShell
+#define S_PICKUP_REGEN		"sounds/items/regen_pickup"      // pickup Regeneration
 
 #define S_ITEM_RESPAWN		"sounds/items/item_spawn"        // item respawn
 #define S_ITEM_QUAD_RESPAWN	"sounds/items/quad_spawn"        // Quad respawn
 #define S_ITEM_WARSHELL_RESPAWN	"sounds/items/shell_spawn"       // WarShell respawn
+#define S_ITEM_REGEN_RESPAWN	"sounds/items/regen_spawn"        // Regen respawn
 
 // misc sounds
 #define S_CHAT			"sounds/misc/chat"
@@ -444,14 +449,14 @@
 #define S_UI_MENU_MOVE_SOUND		"sounds/menu/mouseover"
 #define S_UI_MENU_OUT_SOUND			"sounds/menu/back"
 
-#define UI_SHADER_VIDEOBACK			"gfx/ui/videoback"
+#define UI_SHADER_VIDEOBACK			"gfx/ui/background"
 #define UI_SHADER_FXBACK			"gfx/ui/menubackfx"
 #define UI_SHADER_BIGLOGO			"gfx/ui/logo512"
 #define UI_SHADER_CURSOR			"gfx/ui/cursor"
 
 #define UI_SHADER_PROGRESSBAR		"gfx/ui/progressbar"
-#define UI_SHADER_BACKGROUND		"gfx/ui/loadingscreen%02i"
-#define UI_SHADER_MAX_BACKGROUNDS	5
+#define UI_SHADER_BACKGROUND		"gfx/ui/loadingscreen"
+#define UI_SHADER_BACKGROUND_LOADING "gfx/ui/loadingscreen%02i"
 
 // vsay icons
 #define PATH_VSAY_GENERIC_ICON	    "gfx/hud/icons/vsay/generic"

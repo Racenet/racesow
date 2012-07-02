@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 // gs_items.c	-	game shared items definitions
 
@@ -35,21 +35,22 @@ vec3_t item_box_maxs = { 16.0f, 16.0f, 40.0f };
 
 #define ARMOR_SHARD_PICKUP 5
 #define ARMOR_SHARD_MAX 200
-#define ARMOR_GA_PICKUP 75
-#define ARMOR_GA_MAX 95
-#define ARMOR_YA_PICKUP 100
+#define ARMOR_GA_PICKUP 50
+#define ARMOR_GA_MAX 100
+#define ARMOR_YA_PICKUP 75
 #define ARMOR_YA_MAX 125
-#define ARMOR_RA_PICKUP 150
-#define ARMOR_RA_MAX 175
+#define ARMOR_RA_PICKUP 100
+#define ARMOR_RA_MAX 150
 
 #define SHELL_TIME	30
 #define QUAD_TIME	30
+#define REGEN_TIME	30
 
-//===========================
-//
-//	ITEM DEFS
-//
-//===========================
+/*
+* 
+* ITEM DEFS
+* 
+*/
 
 gsitem_t	itemdefs[] =
 {
@@ -944,7 +945,7 @@ gsitem_t	itemdefs[] =
 		AMMO_NONE,
 		NULL,
 		NULL,
-		S_QUAD_FIRE,
+		S_QUAD_FIRE S_ITEM_QUAD_RESPAWN,
 		// S_QUAD_USE " " S_QUAD_FIRE,
 		NULL
 		,0 ,0
@@ -970,8 +971,33 @@ gsitem_t	itemdefs[] =
 		AMMO_NONE,
 		NULL,
 		NULL,
-		NULL,
+		S_ITEM_WARSHELL_RESPAWN,
 		//S_SHELL_USE,
+		NULL
+		,0 ,0
+	},
+
+	//QUAKED item_regen (.3 .3 1) (-16 -16 -16) (16 16 16)
+	{
+		"item_regen",
+		POWERUP_REGEN,
+		IT_POWERUP,
+		ITFLAG_PICKABLE|ITFLAG_DROPABLE,
+
+		{ PATH_REGEN_MODEL },
+		PATH_REGEN_ICON,
+		PATH_REGEN_SIMPLEITEM,
+		S_PICKUP_REGEN,
+		EF_OUTLINE|EF_ROTATE_AND_BOB,
+
+		"Regeneration", "Regen", NULL,
+		REGEN_TIME,
+		0,
+		AMMO_NONE,
+		AMMO_NONE,
+		NULL,
+		NULL,
+		S_ITEM_REGEN_RESPAWN,
 		NULL
 		,0 ,0
 	},
