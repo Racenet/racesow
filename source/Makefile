@@ -240,6 +240,7 @@ endif
 LDFLAGS_CLIENT=-ljpeg -lpng -lz -L$(X11BASE)/$(LIB) -lX11 -lXext -lXxf86dga -lXxf86vm -lXinerama -lXrandr -lrt $(shell curl-config --libs)
 LDFLAGS_DED=-lz $(shell curl-config --libs) -pthread
 LDFLAGS_MODULE=-shared #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
+LDFLAGS_GAME=-shared
 LDFLAGS_TV_SERVER=-lz $(shell curl-config --libs)
 
 # openal

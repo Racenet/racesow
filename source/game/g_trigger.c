@@ -501,7 +501,7 @@ void SP_target_push( edict_t *self ) {
 	if ( self->target ) {
 		VectorCopy( self->s.origin, self->r.absmin );
 		VectorCopy( self->s.origin, self->r.absmax );
-		self->r.svflags |= SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+		self->r.svflags |= SVF_TRANSMITORIGIN2; //|SVF_NOCULLATORIGIN2; //TODO: This was removed from warsow 0.7. I don't know what it did so i don't know if it's necessary either -K1ll
 		self->think = trigger_push_setup;
 		self->nextThink = level.time + 1;
 	}

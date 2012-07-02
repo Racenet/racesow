@@ -146,6 +146,10 @@ static void G_VoteMapExtraHelp( edict_t *ent )
 static qboolean G_VoteMapValidate( callvotedata_t *data, qboolean first )
 {
 	char mapname[MAX_CONFIGSTRING_CHARS];
+	// racesow
+	char *map;
+	int mapnumber;
+	// !racesow
 
 	if( !first )  // map can't become invalid while voting
 		return qtrue;

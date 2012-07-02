@@ -2864,6 +2864,7 @@ static edict_t *asFunc_G_Spawn( asstring_t *classname )
 
 	if( !level.canSpawnEntities )
 	{
+
 		G_Printf( "* WARNING: Spawning entities is disallowed during initialization. Returning null object\n" );
 		return NULL;
 	}
@@ -3072,7 +3073,7 @@ static asstring_t *asFunc_G_Md5( asstring_t *in )
 		md5_finish(&state, digest);
 		for (di = 0; di < 16; ++di)
 			sprintf(hex_output + di * 2, "%02x", digest[di]);
-	return objectString_FactoryBuffer(hex_output, strlen(hex_output));
+	return angelExport->asStringFactoryBuffer(hex_output, strlen(hex_output));
 }
 
 static void asFunc_asGeneric_G_Md5( void *gen )
@@ -3126,7 +3127,7 @@ static asstring_t *asFunc_RS_PrintQueryCallback(int player_id )
 	char *result;
 	asstring_t *result_as;
 	result = RS_PrintQueryCallback(player_id);
-	result_as=objectString_FactoryBuffer(result, strlen(result));
+	result_as=angelExport->asStringFactoryBuffer(result, strlen(result));
 	free(result);
 	return result_as;
 }
@@ -3155,7 +3156,7 @@ static asstring_t *asFunc_RS_NextMap( )
 {
 	char *result;
 	result = RS_ChooseNextMap( );
-	return objectString_FactoryBuffer(result, strlen(result));
+	return angelExport->asStringFactoryBuffer(result, strlen(result));
 }
 
 static void asFunc_asGeneric_RS_NextMap( void *gen )
@@ -3168,7 +3169,7 @@ static asstring_t *asFunc_RS_LastMap( )
 {
 	char *result;
 	result = previousMapName;
-	return objectString_FactoryBuffer(result, strlen(result));
+	return angelExport->asStringFactoryBuffer(result, strlen(result));
 }
 
 static void asFunc_asGeneric_RS_LastMap( void *gen )
@@ -4618,6 +4619,7 @@ qboolean G_asInitializeGametypeScript( const char *script, const char *gametypeN
 
 	if( sectionNum != numSections )
 	{
+
 		G_Printf( "* Couldn't load all script sections. Can't continue.\n" );
 		goto releaseAll;
 	}
