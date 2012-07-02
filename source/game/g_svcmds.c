@@ -1,37 +1,37 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
-//=================
-//Cmd_ConsoleSay_f
-//=================
+/*
+* Cmd_ConsoleSay_f
+*/
 static void Cmd_ConsoleSay_f( void )
 {
 	G_ChatMsg( NULL, NULL, qfalse, "%s", trap_Cmd_Args() );
 }
 
 
-//=================
-//Cmd_ConsoleKick_f
-//=================
+/*
+* Cmd_ConsoleKick_f
+*/
 static void Cmd_ConsoleKick_f( void )
 {
 	edict_t *ent;
@@ -53,9 +53,9 @@ static void Cmd_ConsoleKick_f( void )
 }
 
 
-//=================
-//Cmd_Match_f
-//=================
+/*
+* Cmd_Match_f
+*/
 static void Cmd_Match_f( void )
 {
 	char *cmd;
@@ -127,9 +127,9 @@ typedef struct
 static ipfilter_t ipfilters[MAX_IPFILTERS];
 static int numipfilters;
 
-//=================
-//StringToFilter
-//=================
+/*
+* StringToFilter
+*/
 static qboolean StringToFilter( char *s, ipfilter_t *f )
 {
 	char num[128];
@@ -172,9 +172,9 @@ static qboolean StringToFilter( char *s, ipfilter_t *f )
 	return qtrue;
 }
 
-//=================
-//SV_ResetPacketFiltersTimeouts
-//=================
+/*
+* SV_ResetPacketFiltersTimeouts
+*/
 void SV_ResetPacketFiltersTimeouts( void )
 {
 	int i;
@@ -183,9 +183,9 @@ void SV_ResetPacketFiltersTimeouts( void )
 		ipfilters[i].timeout = 0;
 }
 
-//=================
-//SV_FilterPacket
-//=================
+/*
+* SV_FilterPacket
+*/
 qboolean SV_FilterPacket( char *from )
 {
 	int i;
@@ -221,9 +221,9 @@ qboolean SV_FilterPacket( char *from )
 	return qfalse;
 }
 
-//=================
-//SV_ReadIPList
-//=================
+/*
+* SV_ReadIPList
+*/
 void SV_ReadIPList( void )
 {
 	SV_ResetPacketFiltersTimeouts ();
@@ -231,9 +231,9 @@ void SV_ReadIPList( void )
 	trap_Cmd_ExecuteText( EXEC_APPEND, "exec listip.cfg silent\n" );
 }
 
-//=================
-//SV_WriteIPList
-//=================
+/*
+* SV_WriteIPList
+*/
 void SV_WriteIPList( void )
 {
 	int file;
@@ -270,9 +270,9 @@ void SV_WriteIPList( void )
 	trap_FS_FCloseFile( file );
 }
 
-//=================
-//Cmd_AddIP_f
-//=================
+/*
+* Cmd_AddIP_f
+*/
 static void Cmd_AddIP_f( void )
 {
 	int i;
@@ -303,9 +303,9 @@ static void Cmd_AddIP_f( void )
 		ipfilters[i].timeout = game.serverTime + atof( trap_Cmd_Argv(2) )*60*1000;
 }
 
-//=================
-//Cmd_RemoveIP_f
-//=================
+/*
+* Cmd_RemoveIP_f
+*/
 static void Cmd_RemoveIP_f( void )
 {
 	ipfilter_t f;
@@ -322,7 +322,7 @@ static void Cmd_RemoveIP_f( void )
 
 	for( i = 0; i < numipfilters; i++ )
 		if( ipfilters[i].mask == f.mask
-		    && ipfilters[i].compare == f.compare )
+			&& ipfilters[i].compare == f.compare )
 		{
 			for( j = i+1; j < numipfilters; j++ )
 				ipfilters[j-1] = ipfilters[j];
@@ -330,12 +330,12 @@ static void Cmd_RemoveIP_f( void )
 			G_Printf( "Removed.\n" );
 			return;
 		}
-	G_Printf( "Didn't find %s.\n", trap_Cmd_Argv( 1 ) );
+		G_Printf( "Didn't find %s.\n", trap_Cmd_Argv( 1 ) );
 }
 
-//=================
-//Cmd_ListIP_f
-//=================
+/*
+* Cmd_ListIP_f
+*/
 static void Cmd_ListIP_f( void )
 {
 	int i;
@@ -347,15 +347,15 @@ static void Cmd_ListIP_f( void )
 		*(unsigned *)b = ipfilters[i].compare;
 		if( ipfilters[i].timeout && ipfilters[i].timeout > game.serverTime )
 			G_Printf( "%3i.%3i.%3i.%3i %.2f\n", b[0], b[1], b[2], b[3],
-				(float)(ipfilters[i].timeout-game.serverTime)/(60*1000.0f) );
+			(float)(ipfilters[i].timeout-game.serverTime)/(60*1000.0f) );
 		else if( !ipfilters[i].timeout )
 			G_Printf( "%3i.%3i.%3i.%3i\n", b[0], b[1], b[2], b[3] );
 	}
 }
 
-//=================
-//Cmd_WriteIP_f
-//=================
+/*
+* Cmd_WriteIP_f
+*/
 static void Cmd_WriteIP_f( void )
 {
 	SV_WriteIPList ();
@@ -363,9 +363,9 @@ static void Cmd_WriteIP_f( void )
 
 void G_ChecksumGametypes_f( void );
 
-//=================
-//G_AddCommands
-//=================
+/*
+* G_AddCommands
+*/
 void G_AddServerCommands( void )
 {
 	if( dedicated->integer )
@@ -396,11 +396,14 @@ void G_AddServerCommands( void )
 	trap_Cmd_AddCommand( "checksumGametypes", G_ChecksumGametypes_f );
 
 	trap_Cmd_AddCommand( "dumpASapi", G_asDumpAPI_f );
+
+	trap_Cmd_AddCommand( "listratings", G_ListRatings_f );
+	trap_Cmd_AddCommand( "listraces", G_ListRaces_f );
 }
 
-//=================
-//G_RemoveCommands
-//=================
+/*
+* G_RemoveCommands
+*/
 void G_RemoveCommands( void )
 {
 	if( dedicated->integer )
@@ -409,6 +412,7 @@ void G_RemoveCommands( void )
     //racesow
     trap_Cmd_RemoveCommand( "cancelvote" );
     //!racesow
+
 	// match controls
 	trap_Cmd_RemoveCommand( "match" );
 
@@ -430,4 +434,7 @@ void G_RemoveCommands( void )
 	trap_Cmd_RemoveCommand( "checksumGametypes" );
 
 	trap_Cmd_RemoveCommand( "dumpASapi" );
+
+	trap_Cmd_RemoveCommand( "listratings" );
+	trap_Cmd_RemoveCommand( "listraces" );
 }

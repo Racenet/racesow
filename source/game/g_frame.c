@@ -1,23 +1,23 @@
 /*
-   Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
-   and German Garcia Fernandez ("Jal") for Chasseur de bots association.
+Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
+and German Garcia Fernandez ("Jal") for Chasseur de bots association.
 
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 #include "g_local.h"
 
@@ -26,9 +26,9 @@ extern cvar_t *g_disable_vote_gametype;
 
 //===================================================================
 
-//================
-//G_Timeout_Reset
-//================
+/*
+* G_Timeout_Reset
+*/
 void G_Timeout_Reset( void )
 {
 	int i;
@@ -41,11 +41,11 @@ void G_Timeout_Reset( void )
 		level.timeout.used[i] = 0;
 }
 
-//================
-//G_Timeout_Update
-//
-//Updates the timeout struct and informs clients about the status of the pause
-//================
+/*
+* G_Timeout_Update
+* 
+* Updates the timeout struct and informs clients about the status of the pause
+*/
 static void G_Timeout_Update( unsigned int msec )
 {
 	static int timeout_printtime = 0;
@@ -74,7 +74,7 @@ static void G_Timeout_Update( unsigned int msec )
 		timeout_last_endtime = -1;
 
 		G_AnnouncerSound( NULL, trap_SoundIndex( va( S_ANNOUNCER_TIMEOUT_MATCH_RESUMED_1_to_2, ( rand()&1 )+1 ) ),
-		                  GS_MAX_TEAMS, qtrue, NULL );
+			GS_MAX_TEAMS, qtrue, NULL );
 		G_CenterPrintMsg( NULL, "Match resumed" );
 		G_PrintMsg( NULL, "Match resumed\n" );
 	}
@@ -87,13 +87,13 @@ static void G_Timeout_Update( unsigned int msec )
 			if( seconds_left == ( TIMEIN_TIME * 2 ) / 1000 )
 			{
 				G_AnnouncerSound( NULL, trap_SoundIndex( va( S_ANNOUNCER_COUNTDOWN_READY_1_to_2, ( rand()&1 )+1 ) ),
-				                  GS_MAX_TEAMS, qfalse, NULL );
+					GS_MAX_TEAMS, qfalse, NULL );
 				countdown_set = ( rand()&1 )+1;
 			}
 			else if( seconds_left >= 1 && seconds_left <= 3 )
 			{
 				G_AnnouncerSound( NULL, trap_SoundIndex( va( S_ANNOUNCER_COUNTDOWN_COUNT_1_to_3_SET_1_to_2, seconds_left,
-				                                             countdown_set ) ), GS_MAX_TEAMS, qfalse, NULL );
+					countdown_set ) ), GS_MAX_TEAMS, qfalse, NULL );
 			}
 
 			if( seconds_left > 1 )
@@ -110,10 +110,10 @@ static void G_Timeout_Update( unsigned int msec )
 	}
 }
 
-//================
-//G_UpdateServerInfo
-// update the cvars which show the match state at server browsers
-//================
+/*
+* G_UpdateServerInfo
+* update the cvars which show the match state at server browsers
+*/
 static void G_UpdateServerInfo( void )
 {
 	// g_match_time
@@ -249,10 +249,10 @@ static void G_UpdateServerInfo( void )
 	}
 }
 
-//================
-//G_CheckCvars
-// Check for cvars that have been modified and need the game to be updated
-//================
+/*
+* G_CheckCvars
+* Check for cvars that have been modified and need the game to be updated
+*/
 void G_CheckCvars( void )
 {
 	if( g_antilag_maxtimedelta->modified )
@@ -333,8 +333,11 @@ void G_CheckCvars( void )
 	GS_GamestatSetFlag( GAMESTAT_FLAG_CANSHOWMINIMAP, level.gametype.canShowMinimap );
 	GS_GamestatSetFlag( GAMESTAT_FLAG_TEAMONLYMINIMAP, level.gametype.teamOnlyMinimap );
 
+	GS_GamestatSetFlag( GAMESTAT_FLAG_MMCOMPATIBLE, level.gametype.mmCompatible );
+
 	gs.gameState.stats[GAMESTAT_MAXPLAYERSINTEAM] = level.gametype.maxPlayersPerTeam;
 	clamp( gs.gameState.stats[GAMESTAT_MAXPLAYERSINTEAM], 0, 255 );
+
 }
 
 //===================================================================
@@ -343,9 +346,9 @@ void G_CheckCvars( void )
 
 static qboolean g_snapStarted = qfalse;
 
-//=================
-//G_SnapClients
-//=================
+/*
+* G_SnapClients
+*/
 void G_SnapClients( void )
 {
 	int i;
@@ -366,10 +369,10 @@ void G_SnapClients( void )
 	G_EndServerFrames_UpdateChaseCam();
 }
 
-//=============
-// G_EdictsAddSnapEffects
-// add effects based on accumulated info along the server frame
-//=============
+/*
+* G_EdictsAddSnapEffects
+* add effects based on accumulated info along the server frame
+*/
 static void G_SnapEntities( void )
 {
 	edict_t *ent;
@@ -446,7 +449,6 @@ static void G_SnapEntities( void )
 				{
 					event = G_SpawnEvent( EV_BLOOD, DirToByte( dir ), origin );
 					event->s.damage = HEALTH_TO_INT( damage );
-					event->r.svflags = SVF_NOORIGIN2;
 					event->s.ownerNum = i; // set owner
 
 					// ET_PLAYERS can also spawn sound events
@@ -485,17 +487,16 @@ static void G_SnapEntities( void )
 				{
 					event = G_SpawnEvent( EV_SPARKS, DirToByte( dir ), origin );
 					event->s.damage = HEALTH_TO_INT( damage );
-					event->r.svflags = SVF_NOORIGIN2;
 				}
 			}
 		}
 	}
 }
 
-//================
-//G_StartFrameSnap
-// a snap was just sent, set up for new one
-//================
+/*
+* G_StartFrameSnap
+* a snap was just sent, set up for new one
+*/
 static void G_StartFrameSnap( void )
 {
 	g_snapStarted = qtrue;
@@ -504,11 +505,11 @@ static void G_StartFrameSnap( void )
 // backup entitiy sounds in timeout
 static int entity_sound_backup[MAX_EDICTS];
 
-//================
-//G_ClearSnap
-// We just run G_SnapFrame, the server just sent the snap to the clients,
-// it's now time to clean up snap specific data to start the next snap from clean.
-//================
+/*
+* G_ClearSnap
+* We just run G_SnapFrame, the server just sent the snap to the clients,
+* it's now time to clean up snap specific data to start the next snap from clean.
+*/
 void G_ClearSnap( void )
 {
 	edict_t	*ent;
@@ -546,7 +547,7 @@ void G_ClearSnap( void )
 			// copy origin to old origin ( this old_origin is for snaps )
 			if( !( ent->r.svflags & SVF_TRANSMITORIGIN2 ) )
 				VectorCopy( ent->s.origin, ent->s.old_origin );
-			
+
 			G_CheckClientRespawnClick( ent );
 		}
 
@@ -571,10 +572,10 @@ void G_ClearSnap( void )
 	g_snapStarted = qfalse;
 }
 
-//================
-//G_SnapFrame
-// It's time to send a new snap, so set the world up for sending
-//================
+/*
+* G_SnapFrame
+* It's time to send a new snap, so set the world up for sending
+*/
 void G_SnapFrame( void )
 {
 	edict_t	*ent;
@@ -646,9 +647,9 @@ void G_SnapFrame( void )
 //		WORLD FRAMES
 //===================================================================
 
-//================
-//G_UpdateFrameTime
-//================
+/*
+* G_UpdateFrameTime
+*/
 static void G_UpdateFrameTime( unsigned int msec )
 {
 	game.frametime = msec;
@@ -656,11 +657,11 @@ static void G_UpdateFrameTime( unsigned int msec )
 	game.realtime = trap_Milliseconds(); // level.time etc. might not be real time
 }
 
-//================
-//G_RunEntities
-// treat each object in turn
-// even the world and clients get a chance to think
-//================
+/*
+* G_RunEntities
+* treat each object in turn
+* even the world and clients get a chance to think
+*/
 static void G_RunEntities( void )
 {
 	edict_t	*ent;
@@ -693,9 +694,9 @@ static void G_RunEntities( void )
 	}
 }
 
-//================
-//G_RunClients
-//================
+/*
+* G_RunClients
+*/
 static void G_RunClients( void )
 {
 	int i, step;
@@ -717,7 +718,7 @@ static void G_RunClients( void )
 		ent = game.edicts + 1 + i;
 		if( !ent->r.inuse )
 			continue;
-			
+
 		G_ClientThink( ent );
 
 		if( ent->takedamage )
@@ -727,10 +728,10 @@ static void G_RunClients( void )
 	}
 }
 
-//================
-//G_RunFrame
-//Advances the world
-//================
+/*
+* G_RunFrame
+* Advances the world
+*/
 void G_RunFrame( unsigned int msec, unsigned int serverTime )
 {
 	G_CheckCvars();

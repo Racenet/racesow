@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
@@ -350,14 +350,14 @@ static void plat_blocked( edict_t *self, edict_t *other )
 	if( !other->r.client )
 	{
 		// give it a chance to go away on its own terms (like gibs)
-		G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
+		G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
 		// if it's still there, nuke it
 		if( other )
 			BecomeExplosion1( other );
 		return;
 	}
 
-	G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
+	G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
 
 	if( self->moveinfo.state == STATE_UP )
 		plat_go_down( self );
@@ -800,14 +800,14 @@ static void door_blocked( edict_t *self, edict_t *other )
 	if( !other->r.client )
 	{
 		// give it a chance to go away on its own terms (like gibs)
-		G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
+		G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
 		// if it's still there, nuke it
 		if( other )
 			BecomeExplosion1( other );
 		return;
 	}
 
-	G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
+	G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
 
 	if( self->spawnflags & DOOR_CRUSHER )
 		return;
@@ -834,17 +834,19 @@ static void door_killed( edict_t *self, edict_t *inflictor, edict_t *attacker, i
 {
 	edict_t	*ent;
 
+	// racesow
 	if( GS_RaceGametype() ) //racesow: defrag support: do not trigger if the door got killed
 	{
 	    self->deadflag = DEAD_NO;
 		G_UseTargets( self, inflictor ); //racesow: Fix for "doorbuttons" trigger targets without opening
 		return;
 	}
+	//! racesow
 
 	for( ent = self->teammaster; ent; ent = ent->teamchain )
 	{
 		ent->health = ent->max_health;
-	    self->deadflag = DEAD_NO;
+		self->deadflag = DEAD_NO; //racesow IIRC this is a fix that should be in warsow too but still isn't. -K1ll
 		if( ent->spawnflags & DOOR_DIE_ONCE )
 			ent->takedamage = DAMAGE_NO;
 	}
@@ -1280,13 +1282,13 @@ static void Think_RotateDecel( edict_t *self )
 
 static void rotating_blocked( edict_t *self, edict_t *other )
 {
-	G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
+	G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
 }
 
 static void rotating_touch( edict_t *self, edict_t *other, cplane_t *plane, int surfFlags )
 {
 	if( self->avelocity[0] || self->avelocity[1] || self->avelocity[2] )
-		G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
+		G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
 }
 
 static void rotating_use( edict_t *self, edict_t *other, edict_t *activator )
@@ -1434,7 +1436,7 @@ static void button_return( edict_t *self )
 
 	if( self->health )
 	{
-	    self->deadflag = DEAD_NO;
+		self->deadflag = DEAD_NO;
 		self->takedamage = DAMAGE_YES;
 	}
 }
@@ -1445,11 +1447,13 @@ static void button_wait( edict_t *self )
 
 	G_UseTargets( self, self->activator );
 	self->s.frame = 1;
+	// racesow
 	if( self->moveinfo.wait == -1 )
 	{
 		self->nextThink = level.time + 1; // racesow: if -1 change back immediately
 		self->think = button_return;
 	}
+	// !racesow
 	else if( self->moveinfo.wait >= 0 )
 	{
 		self->nextThink = level.time + ( self->moveinfo.wait * 1000 );
@@ -1589,7 +1593,7 @@ static void train_blocked( edict_t *self, edict_t *other )
 	if( !other->r.client )
 	{
 		// give it a chance to go away on its own terms (like gibs)
-		G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
+		G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
 		// if it's still there, nuke it
 		if( other )
 			BecomeExplosion1( other );
@@ -1602,7 +1606,7 @@ static void train_blocked( edict_t *self, edict_t *other )
 	if( !self->dmg )
 		return;
 	self->timeStamp = level.time;
-	G_TakeDamage( other, self, world, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
+	G_Damage( other, self, world, vec3_origin, vec3_origin, other->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
 }
 
 static void train_wait( edict_t *self )
@@ -1984,17 +1988,17 @@ void SP_func_killbox( edict_t *ent )
 //In order for the sound to be emitted from the entity, it is recommended to include a brush with an origin shader at its center, otherwise the sound will not follow the entity as it moves. Setting the origin key is simply an alternate method to using an origin brush. When using the model2 key, the origin point of the model will correspond to the origin point defined by either the origin brush or the origin coordinate value.
 //Start and stop sounds will only be played if the entity is set to be triggered
 
-//================
-//func_bobbing_blocked
-//================
+/*
+* func_bobbing_blocked
+*/
 static void func_bobbing_blocked( edict_t *self, edict_t *other )
 {
-	G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
+	G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
 }
 
-//================
-//func_bobbing_use
-//================
+/*
+* func_bobbing_use
+*/
 static void func_bobbing_use( edict_t *self, edict_t *other, edict_t *activator )
 {
 	if( self->flags & FL_TEAMSLAVE )
@@ -2007,9 +2011,9 @@ static void func_bobbing_use( edict_t *self, edict_t *other, edict_t *activator 
 	G_UseTargets( self, self->activator );
 }
 
-//================
-//func_bobbing_think
-//================
+/*
+* func_bobbing_think
+*/
 static void func_bobbing_think( edict_t *ent )
 {
 	float delta;
@@ -2025,9 +2029,9 @@ static void func_bobbing_think( edict_t *ent )
 	ent->nextThink = level.time + 1;
 }
 
-//================
-//SP_func_bobbing
-//================
+/*
+* SP_func_bobbing
+*/
 void SP_func_bobbing( edict_t *ent )
 {
 	G_InitMover( ent );
@@ -2071,17 +2075,17 @@ void SP_func_bobbing( edict_t *ent )
 //===============================================================================
 
 
-//================
-//func_pendulum_blocked
-//================
+/*
+* func_pendulum_blocked
+*/
 static void func_pendulum_blocked( edict_t *self, edict_t *other )
 {
-	G_TakeDamage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
+	G_Damage( other, self, self, vec3_origin, vec3_origin, other->s.origin, 100000, 1, 0, 0, MOD_CRUSH );
 }
 
-//================
-//func_pendulum_use
-//================
+/*
+* func_pendulum_use
+*/
 static void func_pendulum_use( edict_t *self, edict_t *other, edict_t *activator )
 {
 	if( self->flags & FL_TEAMSLAVE )
@@ -2094,9 +2098,9 @@ static void func_pendulum_use( edict_t *self, edict_t *other, edict_t *activator
 	G_UseTargets( self, self->activator );
 }
 
-//================
-//func_pendulum_think
-//================
+/*
+* func_pendulum_think
+*/
 static void func_pendulum_think( edict_t *ent )
 {
 	float delta;

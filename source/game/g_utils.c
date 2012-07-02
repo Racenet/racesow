@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // g_utils.c -- misc utility functions for game module
 
 #include "g_local.h"
@@ -24,7 +24,7 @@
 /*
 ==============================================================================
 
-						ZONE MEMORY ALLOCATION
+ZONE MEMORY ALLOCATION
 
 There is never any space between memblocks, and there will never be two
 contiguous free memblocks.
@@ -65,7 +65,7 @@ static memzone_t *levelzone;
 static void G_Z_ClearZone( memzone_t *zone, int size )
 {
 	memblock_t	*block;
-	
+
 	// set the entire zone to one free block
 	zone->blocklist.next = zone->blocklist.prev = block =
 		(memblock_t *)( (qbyte *)zone + sizeof(memzone_t) );
@@ -204,7 +204,7 @@ static void *G_Z_TagMalloc( int size, int tag, const char *filename, int filelin
 static void *G_Z_Malloc( int size, const char *filename, int fileline )
 {
 	void	*buf;
-	
+
 	buf = G_Z_TagMalloc( size, TAG_LEVEL, filename, fileline );
 	if( !buf )
 		G_Error( "G_Z_Malloc: failed on allocation of %i bytes", size );
@@ -427,7 +427,7 @@ char *G_ListNameForPosition( const char *namesList, int position, const char sep
 					*b = 0;
 					break;
 				}
-				
+
 				*b = *t;
 				t++;
 				b++;
@@ -553,16 +553,16 @@ void G_ProjectSource( vec3_t point, vec3_t distance, vec3_t forward, vec3_t righ
 }
 
 
-//=============
-//G_Find
-//
-//Searches all active entities for the next one that holds
-//the matching string at fieldofs (use the FOFS() macro) in the structure.
-//
-//Searches beginning at the edict after from, or the beginning if NULL
-//NULL will be returned if the end of the list is reached.
-//
-//=============
+/*
+* G_Find
+* 
+* Searches all active entities for the next one that holds
+* the matching string at fieldofs (use the FOFS() macro) in the structure.
+* 
+* Searches beginning at the edict after from, or the beginning if NULL
+* NULL will be returned if the end of the list is reached.
+* 
+*/
 edict_t *G_Find( edict_t *from, size_t fieldofs, char *match )
 {
 	char *s;
@@ -586,13 +586,13 @@ edict_t *G_Find( edict_t *from, size_t fieldofs, char *match )
 	return NULL;
 }
 
-//=================
-//findradius
-//
-//Returns entities that have origins within a spherical area
-//
-//findradius (origin, radius)
-//=================
+/*
+* findradius
+* 
+* Returns entities that have origins within a spherical area
+* 
+* findradius (origin, radius)
+*/
 edict_t *findradius( edict_t *from, edict_t *to, vec3_t org, float rad )
 {
 	vec3_t eorg;
@@ -621,10 +621,10 @@ edict_t *findradius( edict_t *from, edict_t *to, vec3_t org, float rad )
 	return NULL;
 }
 
-//=================
-//G_FindBoxInRadius
-//Returns entities that have their boxes within a spherical area
-//=================
+/*
+* G_FindBoxInRadius
+* Returns entities that have their boxes within a spherical area
+*/
 edict_t *G_FindBoxInRadius( edict_t *from, edict_t *to, vec3_t org, float rad )
 {
 	int j;
@@ -658,16 +658,16 @@ edict_t *G_FindBoxInRadius( edict_t *from, edict_t *to, vec3_t org, float rad )
 	return NULL;
 }
 
-//=============
-//G_PickTarget
-//
-//Searches all active entities for the next one that holds
-//the matching string at fieldofs (use the FOFS() macro) in the structure.
-//
-//Searches beginning at the edict after from, or the beginning if NULL
-//NULL will be returned if the end of the list is reached.
-//
-//=============
+/*
+* G_PickTarget
+* 
+* Searches all active entities for the next one that holds
+* the matching string at fieldofs (use the FOFS() macro) in the structure.
+* 
+* Searches beginning at the edict after from, or the beginning if NULL
+* NULL will be returned if the end of the list is reached.
+* 
+*/
 #define MAXCHOICES  8
 
 edict_t *G_PickTarget( char *targetname )
@@ -709,20 +709,20 @@ static void Think_Delay( edict_t *ent )
 	G_FreeEdict( ent );
 }
 
-//==============================
-//G_UseTargets
-//
-//the global "activator" should be set to the entity that initiated the firing.
-//
-//If self.delay is set, a DelayedUse entity will be created that will actually
-//do the SUB_UseTargets after that many seconds have passed.
-//
-//Centerprints any self.message to the activator.
-//
-//Search for (string)targetname in all entities that
-//match (string)self.target and call their .use function
-//
-//==============================
+/*
+* G_UseTargets
+* 
+* the global "activator" should be set to the entity that initiated the firing.
+* 
+* If self.delay is set, a DelayedUse entity will be created that will actually
+* do the SUB_UseTargets after that many seconds have passed.
+* 
+* Centerprints any self.message to the activator.
+* 
+* Search for (string)targetname in all entities that
+* match (string)self.target and call their .use function
+* 
+*/
 void G_UseTargets( edict_t *ent, edict_t *activator )
 {
 	edict_t	*t;
@@ -861,11 +861,11 @@ char *_G_CopyString( const char *in, const char *filename, int fileline )
 	return out;
 }
 
-//=================
-//G_FreeEdict
-//
-//Marks the edict as free
-//=================
+/*
+* G_FreeEdict
+* 
+* Marks the edict as free
+*/
 void G_FreeEdict( edict_t *ed )
 {
 	qboolean evt = ISEVENTENTITY( &ed->s );
@@ -875,20 +875,21 @@ void G_FreeEdict( edict_t *ed )
 	AI_RemoveGoalEntity( ed );
 	G_FreeAI( ed );
 
+	G_asReleaseEntityBehavoirs( ed );
+
 	memset( ed, 0, sizeof( *ed ) );
 	ed->r.inuse = qfalse;
 	ed->s.number = ENTNUM( ed );
 	ed->r.svflags = SVF_NOCLIENT;
 	ed->scriptSpawned = qfalse;
-	ed->asSpawnFuncID = ed->asThinkFuncID = ed->asTouchFuncID = ed->asUseFuncID = ed->asPainFuncID = ed->asDieFuncID = ed->asStopFuncID = -1;
 
 	if( !evt && ( level.spawnedTimeStamp != game.realtime ) )
 		ed->freetime = game.realtime; // ET_EVENT or ET_SOUND don't need to wait to be reused
 }
 
-//=================
-//G_InitEdict
-//=================
+/*
+* G_InitEdict
+*/
 void G_InitEdict( edict_t *e )
 {
 	e->r.inuse = qtrue;
@@ -903,7 +904,8 @@ void G_InitEdict( edict_t *e )
 	e->timeStamp = 0;
 	e->s.linearProjectile = qfalse;
 	e->scriptSpawned = qfalse;
-	e->asSpawnFuncID = e->asThinkFuncID = e->asTouchFuncID = e->asUseFuncID = e->asPainFuncID = e->asDieFuncID = e->asStopFuncID = -1;
+
+	G_asResetEntityBehavoirs( e );
 
 	//mark all entities to not be sent by default
 	if( e->r.svflags & SVF_FAKECLIENT )
@@ -919,15 +921,15 @@ void G_InitEdict( edict_t *e )
 	memset( e->invpak, 0, sizeof( e->invpak ) );
 }
 
-//=================
-//G_Spawn
-//
-//Either finds a free edict, or allocates a new one.
-//Try to avoid reusing an entity that was recently freed, because it
-//can cause the client to think the entity morphed into something else
-//instead of being removed and recreated, which can cause interpolated
-//angles and bad trails.
-//=================
+/*
+* G_Spawn
+* 
+* Either finds a free edict, or allocates a new one.
+* Try to avoid reusing an entity that was recently freed, because it
+* can cause the client to think the entity morphed into something else
+* instead of being removed and recreated, which can cause interpolated
+* angles and bad trails.
+*/
 edict_t *G_Spawn( void )
 {
 	int i;
@@ -973,10 +975,9 @@ edict_t *G_Spawn( void )
 	return e;
 }
 
-//============
-//G_AddEvent
-//
-//============
+/*
+* G_AddEvent
+*/
 void G_AddEvent( edict_t *ent, int event, int parm, qboolean highPriority )
 {
 	if( !ent || ent == world || !ent->r.inuse )
@@ -1012,10 +1013,9 @@ void G_AddEvent( edict_t *ent, int event, int parm, qboolean highPriority )
 	ent->numEvents++;
 }
 
-//============
-//G_SpawnEvent
-//
-//============
+/*
+* G_SpawnEvent
+*/
 edict_t *G_SpawnEvent( int event, int parm, vec3_t origin )
 {
 	edict_t *ent;
@@ -1033,9 +1033,9 @@ edict_t *G_SpawnEvent( int event, int parm, vec3_t origin )
 	return ent;
 }
 
-//============
-//G_TurnEntityIntoEvent
-//============
+/*
+* G_TurnEntityIntoEvent
+*/
 void G_TurnEntityIntoEvent( edict_t *ent, int event, int parm )
 {
 	ent->s.type = ET_EVENT;
@@ -1047,10 +1047,9 @@ void G_TurnEntityIntoEvent( edict_t *ent, int event, int parm )
 	GClip_LinkEntity( ent );
 }
 
-//============
-//G_InitMover
-//
-//============
+/*
+* G_InitMover
+*/
 void G_InitMover( edict_t *ent )
 {
 	ent->r.solid = SOLID_YES;
@@ -1103,47 +1102,92 @@ void G_InitMover( edict_t *ent )
 	}
 }
 
+/*
+* G_CallThink
+*/
+void G_CallThink( edict_t *ent )
+{
+	if( ent->think )
+		ent->think( ent );
+	else if( ent->scriptSpawned && ent->asThinkFunc )
+		G_asCallMapEntityThink( ent );
+	else if( developer->integer )
+		G_Printf( "NULL ent->think in %s\n", ent->classname ? ent->classname : va( "'no classname. Entity type is %i", ent->s.type ) );
+}
+
+/*
+* G_CallTouch
+*/
 void G_CallTouch( edict_t *self, edict_t *other, cplane_t *plane, int surfFlags )
 {
 	if( self->touch )
 		self->touch( self, other, plane, surfFlags );
-	else if( self->scriptSpawned && self->asTouchFuncID >= 0 )
+	else if( self->scriptSpawned && self->asTouchFunc )
 		G_asCallMapEntityTouch( self, other, plane, surfFlags );
 
 	if( other->ai.type )
 		AI_TouchedEntity( other, self );
 }
 
+/*
+* G_CallUse
+*/
 void G_CallUse( edict_t *self, edict_t *other, edict_t *activator )
 {
 	if( self->use )
 		self->use( self, other, activator );
-	else if( self->scriptSpawned && self->asUseFuncID >= 0 )
+	else if( self->scriptSpawned && self->asUseFunc )
 		G_asCallMapEntityUse( self, other, activator );
 }
 
+/*
+* G_CallStop
+*/
 void G_CallStop( edict_t *self )
 {
 	if( self->stop )
 		self->stop( self );
-	else if( self->scriptSpawned && self->asStopFuncID >= 0 )
+	else if( self->scriptSpawned && self->asStopFunc )
 		G_asCallMapEntityStop( self );
 }
 
-//============
-//G_PlayerGender
-//server doesn't know the model gender, so all are neutrals in console prints.
-//============
+/*
+* G_CallPain
+*/
+void G_CallPain( edict_t *ent, edict_t *attacker, float kick, float damage )
+{
+	if( ent->pain )
+		ent->pain( ent, attacker, kick, damage );
+	else if( ent->scriptSpawned && ent->asPainFunc )
+		G_asCallMapEntityPain( ent, attacker, kick, damage );
+}
+
+/*
+* G_CallDie
+*/
+void G_CallDie( edict_t *ent, edict_t *inflictor, edict_t *attacker, int damage, const vec3_t point )
+{
+	if( ent->die )
+		ent->die( ent, inflictor, attacker, damage, point );
+	else if( ent->scriptSpawned && ent->asDieFunc )
+		G_asCallMapEntityDie( ent, inflictor, attacker, damage, point );
+}
+
+
+/*
+* G_PlayerGender
+* server doesn't know the model gender, so all are neutrals in console prints.
+*/
 int G_PlayerGender( edict_t *player )
 {
 	return GENDER_NEUTRAL;
 }
 
-//============
-//G_PrintMsg
-//
-//NULL sends to all the message to all clients
-//============
+/*
+* G_PrintMsg
+* 
+* NULL sends to all the message to all clients
+*/
 void G_PrintMsg( edict_t *ent, const char *format, ... )
 {
 	char msg[MAX_STRING_CHARS];
@@ -1195,11 +1239,11 @@ void G_PrintChasersf( edict_t *self, const char *format, ... )
 	}
 }
 
-//============
-//G_ChatMsg
-//
-//NULL sends the message to all clients
-//============
+/*
+* G_ChatMsg
+* 
+* NULL sends the message to all clients
+*/
 void G_ChatMsg( edict_t *ent, edict_t *who, qboolean teamonly, const char *format, ... )
 {
 	char msg[1024];
@@ -1228,7 +1272,7 @@ void G_ChatMsg( edict_t *ent, edict_t *who, qboolean teamonly, const char *forma
 				;	// wtf?
 			else if( teamonly )
 				G_Printf( S_COLOR_YELLOW "[%s]" S_COLOR_WHITE "%s:" S_COLOR_YELLOW " %s\n", 
-					who->r.client->ps.stats[STAT_TEAM] == TEAM_SPECTATOR ? "SPEC" : "TEAM", who->r.client->netname, msg );
+				who->r.client->ps.stats[STAT_TEAM] == TEAM_SPECTATOR ? "SPEC" : "TEAM", who->r.client->netname, msg );
 			else
 				G_Printf( "%s" S_COLOR_GREEN ": %s\n", who->r.client->netname, msg );
 		}
@@ -1263,11 +1307,11 @@ void G_ChatMsg( edict_t *ent, edict_t *who, qboolean teamonly, const char *forma
 	}
 }
 
-//============
-//G_CenterPrintMsg
-//
-//NULL sends to all the message to all clients
-//============
+/*
+* G_CenterPrintMsg
+* 
+* NULL sends to all the message to all clients
+*/
 void G_CenterPrintMsg( edict_t *ent, const char *format, ... )
 {
 	char msg[1024];
@@ -1286,23 +1330,23 @@ void G_CenterPrintMsg( edict_t *ent, const char *format, ... )
 	trap_GameCmd( ent, va( "cp \"%s\"", msg ) );
 }
 
-//============
-//G_Obituary
-//
-//Prints death message to all clients
-//============
+/*
+* G_Obituary
+* 
+* Prints death message to all clients
+*/
 void G_Obituary( edict_t *victim, edict_t *attacker, int mod )
 {
 	if( victim && attacker )
 		trap_GameCmd( NULL, va( "obry %i %i %i", victim - game.edicts, attacker - game.edicts, mod ) );
 }
 
-//============
-//G_UpdatePlayerMatchMsg
-//
-//Sends correct match msg to one client
-//Must be called whenever client's team, ready status or chase mode changes
-//============
+/*
+* G_UpdatePlayerMatchMsg
+* 
+* Sends correct match msg to one client
+* Must be called whenever client's team, ready status or chase mode changes
+*/
 void G_UpdatePlayerMatchMsg( edict_t *ent )
 {
 	matchmessage_t newmm = ent->r.client->level.matchmessage;
@@ -1337,12 +1381,12 @@ void G_UpdatePlayerMatchMsg( edict_t *ent )
 	}
 }
 
-//============
-//G_UpdatePlayerMatchMsg
-//
-//Sends correct match msg to every client
-//Must be called whenever match state changes
-//============
+/*
+* G_UpdatePlayerMatchMsg
+* 
+* Sends correct match msg to every client
+* Must be called whenever match state changes
+*/
 void G_UpdatePlayersMatchMsgs( void )
 {
 	int i;
@@ -1396,7 +1440,7 @@ void G_Sound( edict_t *owner, int channel, int soundindex, float attenuation )
 		attenuation = ATTN_NONE;
 	else if( ISEVENTENTITY( &owner->s ) )
 		return; // event entities can't be owner of sound entities
-	
+
 	ent = _G_SpawnSound( channel, soundindex, attenuation );
 	if( ent->s.attenuation != ATTN_NONE )
 	{
@@ -1453,12 +1497,12 @@ void G_GlobalSound( int channel, int soundindex )
 //
 //==============================================================================
 
-//=================
-//KillBox
-//
-//Kills all entities that would touch the proposed new positioning
-//of ent.  Ent should be unlinked before calling this!
-//=================
+/*
+* KillBox
+* 
+* Kills all entities that would touch the proposed new positioning
+* of ent.  Ent should be unlinked before calling this!
+*/
 qboolean KillBox( edict_t *ent )
 {
 	trace_t	tr;
@@ -1474,7 +1518,7 @@ qboolean KillBox( edict_t *ent )
 			return telefragged; // found the world (but a player could be in there too). suicide?
 
 		// nail it
-		G_TakeDamage( &game.edicts[tr.ent], ent, ent, vec3_origin, vec3_origin, ent->s.origin, 100000, 0, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG );
+		G_Damage( &game.edicts[tr.ent], ent, ent, vec3_origin, vec3_origin, ent->s.origin, 100000, 0, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG );
 		telefragged = qtrue;
 
 		// if we didn't kill it, fail
@@ -1485,10 +1529,10 @@ qboolean KillBox( edict_t *ent )
 	return telefragged; // all clear
 }
 
-//==================
-//LookAtKillerYAW
-// returns the YAW angle to look at our killer
-//==================
+/*
+* LookAtKillerYAW
+* returns the YAW angle to look at our killer
+*/
 float LookAtKillerYAW( edict_t *self, edict_t *inflictor, edict_t *attacker )
 {
 	vec3_t dir;
@@ -1532,9 +1576,9 @@ float LookAtKillerYAW( edict_t *self, edict_t *inflictor, edict_t *attacker )
 //
 //==============================================================================
 
-//=================
-//G_SpawnTeleportEffect
-//=================
+/*
+* G_SpawnTeleportEffect
+*/
 static void G_SpawnTeleportEffect( edict_t *ent, qboolean respawn, qboolean in )
 {
 	edict_t *event;
@@ -1547,7 +1591,6 @@ static void G_SpawnTeleportEffect( edict_t *ent, qboolean respawn, qboolean in )
 
 	// add a teleportation effect
 	event = G_SpawnEvent( respawn ? EV_PLAYER_RESPAWN : (in ? EV_PLAYER_TELEPORT_IN : EV_PLAYER_TELEPORT_OUT), 0, ent->s.origin );
-	event->r.svflags |= SVF_NOORIGIN2;
 	event->s.ownerNum = ENTNUM( ent );
 }
 
@@ -1559,10 +1602,10 @@ void G_RespawnEffect( edict_t *ent ) {
 	G_SpawnTeleportEffect( ent, qtrue, qfalse );
 }
 
-//=============
-//visible
-//returns 1 if the entity is visible to self, even if not infront ()
-//=============
+/*
+* visible
+* returns 1 if the entity is visible to self, even if not infront ()
+*/
 qboolean G_Visible( edict_t *self, edict_t *other )
 {
 	vec3_t spot1;
@@ -1581,10 +1624,10 @@ qboolean G_Visible( edict_t *self, edict_t *other )
 	return qfalse;
 }
 
-//=============
-//infront
-//returns 1 if the entity is in front (in sight) of self
-//=============
+/*
+* infront
+* returns 1 if the entity is in front (in sight) of self
+*/
 qboolean G_InFront( edict_t *self, edict_t *other )
 {
 	vec3_t vec;
@@ -1630,25 +1673,27 @@ qboolean G_EntNotBlocked( edict_t *viewer, edict_t *targ )
 	return qfalse;
 }
 
-//=================
-//G_SolidMaskForEnt
-//=================
+/*
+* G_SolidMaskForEnt
+*/
 int G_SolidMaskForEnt( edict_t *ent )
 {
 	int solidmask;
 	if( ent->ai.type == AI_ISMONSTER )
 		solidmask = MASK_MONSTERSOLID;
+	// racesow
 	else if( ent->r.client )
 		solidmask = MASK_PLAYERSOLID;
+	// !racesow
 	else
 		solidmask = ent->r.clipmask ? ent->r.clipmask : MASK_SOLID;
 
 	return solidmask;
 }
 
-//=================
-//G_CheckEntGround
-//=================
+/*
+* G_CheckEntGround
+*/
 void G_CheckGround( edict_t *ent )
 {
 	vec3_t point;
@@ -1700,9 +1745,9 @@ void G_CheckGround( edict_t *ent )
 	}
 }
 
-//=================
-//G_CategorizePosition
-//=================
+/*
+* G_CategorizePosition
+*/
 void G_CategorizePosition( edict_t *ent )
 {
 	vec3_t point;
@@ -1737,9 +1782,9 @@ void G_CategorizePosition( edict_t *ent )
 		ent->waterlevel = 3;
 }
 
-//=================
-//G_DropToFloor
-//=================
+/*
+* G_DropToFloor
+*/
 void G_DropToFloor( edict_t *ent )
 {
 	vec3_t end;
@@ -1761,9 +1806,9 @@ void G_DropToFloor( edict_t *ent )
 	G_CategorizePosition( ent );
 }
 
-//=============
-//G_DropSpawnpointToFloor
-//=============
+/*
+* G_DropSpawnpointToFloor
+*/
 void G_DropSpawnpointToFloor( edict_t *ent )
 {
 	vec3_t start, end;
@@ -1791,13 +1836,13 @@ void G_DropSpawnpointToFloor( edict_t *ent )
 	}
 }
 
-//=============
-//G_CheckBottom
-//
-//Returns false if any part of the bottom of the entity is off an edge that
-//is not a staircase.
-//
-//=============
+/*
+* G_CheckBottom
+* 
+* Returns false if any part of the bottom of the entity is off an edge that
+* is not a staircase.
+* 
+*/
 int c_yes, c_no;
 qboolean G_CheckBottom( edict_t *ent )
 {
@@ -1822,50 +1867,70 @@ qboolean G_CheckBottom( edict_t *ent )
 				goto realcheck;
 		}
 
-	c_yes++;
-	return qtrue;   // we got out easy
+		c_yes++;
+		return qtrue;   // we got out easy
 
 realcheck:
-	c_no++;
-	//
-	// check it for real...
-	//
-	start[2] = mins[2];
+		c_no++;
+		//
+		// check it for real...
+		//
+		start[2] = mins[2];
 
-	// the midpoint must be within 16 of the bottom
-	start[0] = stop[0] = ( mins[0] + maxs[0] )*0.5;
-	start[1] = stop[1] = ( mins[1] + maxs[1] )*0.5;
-	stop[2] = start[2] - 2*STEPSIZE;
-	G_Trace( &trace, start, vec3_origin, vec3_origin, stop, ent, G_SolidMaskForEnt( ent ) );
+		// the midpoint must be within 16 of the bottom
+		start[0] = stop[0] = ( mins[0] + maxs[0] )*0.5;
+		start[1] = stop[1] = ( mins[1] + maxs[1] )*0.5;
+		stop[2] = start[2] - 2*STEPSIZE;
+		G_Trace( &trace, start, vec3_origin, vec3_origin, stop, ent, G_SolidMaskForEnt( ent ) );
 
-	if( trace.fraction == 1.0 )
-		return qfalse;
-	mid = bottom = trace.endpos[2];
+		if( trace.fraction == 1.0 )
+			return qfalse;
+		mid = bottom = trace.endpos[2];
 
-	// the corners must be within 16 of the midpoint
-	for( x = 0; x <= 1; x++ )
-	{
-		for( y = 0; y <= 1; y++ )
+		// the corners must be within 16 of the midpoint
+		for( x = 0; x <= 1; x++ )
 		{
-			start[0] = stop[0] = x ? maxs[0] : mins[0];
-			start[1] = stop[1] = y ? maxs[1] : mins[1];
+			for( y = 0; y <= 1; y++ )
+			{
+				start[0] = stop[0] = x ? maxs[0] : mins[0];
+				start[1] = stop[1] = y ? maxs[1] : mins[1];
 
-			G_Trace( &trace, start, vec3_origin, vec3_origin, stop, ent, G_SolidMaskForEnt( ent ) );
+				G_Trace( &trace, start, vec3_origin, vec3_origin, stop, ent, G_SolidMaskForEnt( ent ) );
 
-			if( trace.fraction != 1.0 && trace.endpos[2] > bottom )
-				bottom = trace.endpos[2];
-			if( trace.fraction == 1.0 || mid - trace.endpos[2] > STEPSIZE )
-				return qfalse;
+				if( trace.fraction != 1.0 && trace.endpos[2] > bottom )
+					bottom = trace.endpos[2];
+				if( trace.fraction == 1.0 || mid - trace.endpos[2] > STEPSIZE )
+					return qfalse;
+			}
 		}
-	}
 
-	c_yes++;
-	return qtrue;
+		c_yes++;
+		return qtrue;
 }
 
-//===============
-//G_ReleaseClientPSEvent
-//===============
+/*
+* G_SetBoundsForSpanEntity
+*
+* Set origin and origin2 and then call this before linkEntity 
+* for laser entities for proper clipping against world leafs/clusters.
+*/
+void G_SetBoundsForSpanEntity( edict_t *ent, vec_t size )
+{
+	vec3_t sizeVec;
+
+	VectorSet( sizeVec, size, size, size );
+	ClearBounds( ent->r.absmin, ent->r.absmax );
+	AddPointToBounds( ent->s.origin, ent->r.absmin, ent->r.absmax );
+	AddPointToBounds( ent->s.origin2, ent->r.absmin, ent->r.absmax );
+	VectorSubtract( ent->r.absmin, sizeVec, ent->r.absmin );
+	VectorAdd( ent->r.absmax, sizeVec, ent->r.absmax );
+	VectorSubtract( ent->r.absmin, ent->s.origin, ent->r.mins );
+	VectorSubtract( ent->r.absmax, ent->s.origin, ent->r.maxs );
+}
+
+/*
+* G_ReleaseClientPSEvent
+*/
 void G_ReleaseClientPSEvent( gclient_t *client )
 {
 	int i;
@@ -1889,10 +1954,10 @@ void G_ReleaseClientPSEvent( gclient_t *client )
 	}
 }
 
-//============
-//G_AddPlayerStateEvent
-//This event is only sent to this client inside its player_state_t.
-//============
+/*
+* G_AddPlayerStateEvent
+* This event is only sent to this client inside its player_state_t.
+*/
 void G_AddPlayerStateEvent( gclient_t *client, int event, int parm )
 {
 	int eventdata;
@@ -1909,9 +1974,9 @@ void G_AddPlayerStateEvent( gclient_t *client, int event, int parm )
 	}
 }
 
-//=================
-//G_ClearPlayerStateEvents
-//=================
+/*
+* G_ClearPlayerStateEvents
+*/
 void G_ClearPlayerStateEvents( gclient_t *client )
 {
 	if( client )
@@ -1921,10 +1986,10 @@ void G_ClearPlayerStateEvents( gclient_t *client )
 	}
 }
 
-//=================
-//G_PlayerForText
-// Returns player matching given text. It can be either number of the player or player's name.
-//=================
+/*
+* G_PlayerForText
+* Returns player matching given text. It can be either number of the player or player's name.
+*/
 edict_t *G_PlayerForText( const char *text )
 {
 	if( !text || !text[0] )
@@ -1957,9 +2022,9 @@ edict_t *G_PlayerForText( const char *text )
 	}
 }
 
-//=================
-//G_AnnouncerSound - sends inmediatly. queue client side (excepting at player's ps events queue)
-//=================
+/*
+* G_AnnouncerSound - sends inmediatly. queue client side (excepting at player's ps events queue)
+*/
 void G_AnnouncerSound( edict_t *targ, int soundindex, int team, qboolean queued, edict_t *ignore )
 {
 	int psev = queued ? PSEV_ANNOUNCER_QUEUED : PSEV_ANNOUNCER;
@@ -2008,9 +2073,9 @@ void G_AnnouncerSound( edict_t *targ, int soundindex, int team, qboolean queued,
 	}
 }
 
-//=================
-//G_PureSound
-//=================
+/*
+* G_PureSound
+*/
 void G_PureSound( const char *sound )
 {
 	assert( sound && sound[0] && strlen( sound ) < MAX_CONFIGSTRING_CHARS );
@@ -2028,9 +2093,9 @@ void G_PureSound( const char *sound )
 	}
 }
 
-//=================
-//G_PureModel
-//=================
+/*
+* G_PureModel
+*/
 void G_PureModel( const char *model )
 {
 	assert( model && model[0] && strlen( model ) < MAX_CONFIGSTRING_CHARS );
@@ -2244,25 +2309,30 @@ void G_MapLocations_Init( void )
 	G_RegisterMapLocationName( "someplace" ); // location zero is unknown
 }
 
-void G_RegisterMapLocationName( char *name )
+int G_RegisterMapLocationName( const char *name )
 {
+	int tag;
 	char temp[MAX_CONFIGSTRING_CHARS];
 
+	tag = 0;
 	if( !name )
-		return;
+		return 0;
 
 	Q_strncpyz( temp, name, sizeof( temp ) );
 
-	if( G_LocationTAG( temp ) > 0 )
-		return;
+	tag = G_MapLocationTAGForName( temp );
+	if( tag > 0 )
+		return tag;
 	if( level.numLocations == MAX_LOCATIONS )
-		return;
+		return 0;
 
-	trap_ConfigString( CS_LOCATIONS + level.numLocations, temp );
-	level.numLocations++;
+	tag = level.numLocations++;
+	trap_ConfigString( CS_LOCATIONS + tag, temp );
+
+	return tag;
 }
 
-int G_LocationTAG( char *name )
+int G_MapLocationTAGForName( const char *name )
 {
 	int i;
 	char temp[MAX_CONFIGSTRING_CHARS];
@@ -2281,14 +2351,7 @@ int G_LocationTAG( char *name )
 	return 0;
 }
 
-void G_LocationForTAG( int tag, char *buf, size_t buflen )
-{
-	if( tag < 0 || tag >= level.numLocations )
-		tag = 0;
-	Q_strncpyz( buf, trap_GetConfigString( CS_LOCATIONS + tag ), buflen );
-}
-
-void G_LocationName( vec3_t origin, char *buf, size_t buflen )
+int G_MapLocationTAGForOrigin( const vec3_t origin )
 {
 	edict_t *what = NULL;
 	edict_t *hot = NULL;
@@ -2312,9 +2375,13 @@ void G_LocationName( vec3_t origin, char *buf, size_t buflen )
 	}
 
 	if( !hot || !hot->message )
-		Q_snprintfz( buf, buflen, "someplace" );
-	else if( hot->count > 0 && hot->count < 10 )
-		Q_snprintfz( buf, buflen, "%c%c%s", Q_COLOR_ESCAPE, hot->count + '0', hot->message );
-	else
-		Q_snprintfz( buf, buflen, "%s", hot->message );
+		return 0;
+	return hot->style;
+}
+
+void G_MapLocationNameForTAG( int tag, char *buf, size_t buflen )
+{
+	if( tag < 0 || tag >= level.numLocations )
+		tag = 0;
+	Q_strncpyz( buf, trap_GetConfigString( CS_LOCATIONS + tag ), buflen );
 }

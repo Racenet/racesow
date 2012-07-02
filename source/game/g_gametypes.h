@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #ifndef __G_GAMETYPE_H__
 #define __G_GAMETYPE_H__
@@ -37,6 +37,30 @@ extern cvar_t *g_gametypes_list;
 
 #define MAX_RACE_CHECKPOINTS	32
 
+typedef struct gameaward_s
+{
+	// ch : size of this?
+	char *name;
+	int count;
+	// struct gameaward_s *next;
+} gameaward_t;
+
+typedef struct
+{
+	int mm_attacker;	// session-id
+	int mm_victim;		// session-id
+	int weapon;			// weapon used
+	unsigned int time;	// server timestamp
+} loggedFrag_t;
+
+typedef struct
+{
+	int owner;		// session-id
+	unsigned int timestamp;	// milliseconds
+	int numSectors;
+	unsigned int *times;	// unsigned int * numSectors+1, where last is final time
+} raceRun_t;
+
 typedef struct
 {
 	int score;
@@ -44,6 +68,7 @@ typedef struct
 	int frags;
 	int suicides;
 	int teamfrags;
+	int numrounds;
 	int awards;
 
 	int accuracy_shots[AMMO_TOTAL-AMMO_GUNBLADE];
@@ -51,19 +76,42 @@ typedef struct
 	int accuracy_hits_direct[AMMO_TOTAL-AMMO_GUNBLADE];
 	int accuracy_hits_air[AMMO_TOTAL-AMMO_GUNBLADE];
 	int accuracy_damage[AMMO_TOTAL-AMMO_GUNBLADE];
+	int accuracy_frags[AMMO_TOTAL-AMMO_GUNBLADE];
 	int total_damage_given;
 	int total_damage_received;
 	int total_teamdamage_given;
 	int total_teamdamage_received;
 	int health_taken;
 	int armor_taken;
+	// item counts for mm
+	int ga_taken;
+	int ya_taken;
+	int ra_taken;
+	int mh_taken;
+	int uh_taken;
+	int quads_taken;
+	int shells_taken;
+	int regens_taken;
+	int bombs_planted;
+	int bombs_defused;
+	int flags_capped;
+
+	// loggedFrag_t
+	linear_allocator_t *fragAllocator;
+
+	// gameaward_t
+	linear_allocator_t *awardAllocator;
+	// gameaward_t *gameawards;
+
+	raceRun_t currentRun;
+	raceRun_t raceRecords;
 
 	int asFactored;
 	int asRefCount;
 } score_stats_t;
 
 // this is only really used to create the script objects
-typedef struct  
+typedef struct
 {
 	qboolean dummy;
 }match_t;
@@ -74,19 +122,20 @@ typedef struct
 
 	int asEngineHandle;
 	qboolean asEngineIsGeneric;
-	int initFuncID;
-	int spawnFuncID;
-	int matchStateStartedFuncID;
-	int matchStateFinishedFuncID;
-	int thinkRulesFuncID;
-	int playerRespawnFuncID;
-	int scoreEventFuncID;
-	int scoreboardMessageFuncID;
-	int selectSpawnPointFuncID;
-	int clientCommandFuncID;
-	int botStatusFuncID;
-	int shutdownFuncID;
-	int RS_MysqlAuthenticate_CallbackID;
+
+	void *initFunc;
+	void *spawnFunc;
+	void *matchStateStartedFunc;
+	void *matchStateFinishedFunc;
+	void *thinkRulesFunc;
+	void *playerRespawnFunc;
+	void *scoreEventFunc;
+	void *scoreboardMessageFunc;
+	void *selectSpawnPointFunc;
+	void *clientCommandFunc;
+	void *botStatusFunc;
+	void *shutdownFunc;
+	int RS_MysqlAuthenticate_Callback; //racesow
 
 	int spawnableItemsMask;
 	int respawnableItemsMask;
@@ -120,6 +169,8 @@ typedef struct
 	qboolean customDeadBodyCam;
 
 	int spawnpoint_radius;
+
+	qboolean mmCompatible;
 
 	//racesow
 	qboolean autoInactivityRemove;

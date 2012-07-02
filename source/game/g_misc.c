@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // g_misc.c
 
 #include "g_local.h"
@@ -53,7 +53,7 @@ void ThrowSmallPileOfGibs( edict_t *self, int damage )
 		origin[i] = self->s.origin[i] + ( 0.5f * ( self->r.maxs[i] + self->r.mins[i] ) ) + 24;
 
 	event = G_SpawnEvent( EV_SPOG, damage, origin );
-	event->r.svflags |= SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+	event->r.svflags |= SVF_TRANSMITORIGIN2;
 	VectorCopy( self->velocity, event->s.origin2 );
 }
 
@@ -86,9 +86,9 @@ void ThrowClientHead( edict_t *self, int damage )
 	GClip_LinkEntity( self );
 }
 
-//=================
-//debris
-//=================
+/*
+* debris
+*/
 static void debris_die( edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, const vec3_t point )
 {
 	G_FreeEdict( self );
@@ -146,7 +146,7 @@ void BecomeExplosion1( edict_t *self )
 		G_TurnEntityIntoEvent( self, EV_EXPLOSION1, radius );
 	}
 
-	self->r.svflags = (self->r.svflags & ~SVF_NOCLIENT) | SVF_NOORIGIN2;
+	self->r.svflags &= ~SVF_NOCLIENT;
 }
 
 
@@ -376,7 +376,7 @@ void SP_func_wall( edict_t *self )
 	// it must be TRIGGER_SPAWN
 	if( !( self->spawnflags & 1 ) )
 	{
-//		G_Printf ("func_wall missing TRIGGER_SPAWN\n");
+		//		G_Printf ("func_wall missing TRIGGER_SPAWN\n");
 		self->spawnflags |= 1;
 	}
 
@@ -460,7 +460,7 @@ static void func_object_touch( edict_t *self, edict_t *other, cplane_t *plane, i
 	if( other->takedamage == DAMAGE_NO )
 		return;
 
-	G_TakeDamage( other, self, self, vec3_origin, vec3_origin, self->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
+	G_Damage( other, self, self, vec3_origin, vec3_origin, self->s.origin, self->dmg, 1, 0, 0, MOD_CRUSH );
 }
 
 static void func_object_release( edict_t *self )
@@ -559,7 +559,7 @@ static void func_explosive_explode( edict_t *self, edict_t *inflictor, edict_t *
 	VectorCopy( origin, self->s.origin );
 
 	if( self->projectileInfo.maxDamage )
-		G_TakeRadiusDamage( self, attacker, NULL, NULL, MOD_EXPLOSIVE );
+		G_RadiusDamage( self, attacker, NULL, NULL, MOD_EXPLOSIVE );
 
 	VectorSubtract( self->s.origin, inflictor->s.origin, self->velocity );
 	VectorNormalize( self->velocity );
@@ -839,7 +839,7 @@ void SP_misc_portal_surface( edict_t *ent )
 
 	ent->s.type = ET_PORTALSURFACE;
 	ent->s.modelindex = 1;
-	ent->r.svflags = SVF_PORTAL|SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+	ent->r.svflags = SVF_PORTAL|SVF_TRANSMITORIGIN2;
 
 	// mirror
 	if( !ent->target )
@@ -896,8 +896,8 @@ void SP_misc_portal_camera( edict_t *ent )
 void SP_skyportal( edict_t *ent )
 {
 	// default to client's FOV
-//	if (!st.fov)
-//		st.fov = 90;
+	//	if (!st.fov)
+	//		st.fov = 90;
 	ent->r.svflags = SVF_NOCLIENT;
 
 	trap_ConfigString( CS_SKYBOX, va( "%.3f %.3f %.3f %.1f %.1f %d %.1f %.1f %.1f", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2],
@@ -1007,6 +1007,7 @@ void SP_misc_particles( edict_t *ent )
 
 	ent->think = SP_misc_particles_finish;
 	ent->nextThink = level.time + 1;
+	ent->use = SP_misc_particles_use;
 
 	GClip_LinkEntity( ent );
 }

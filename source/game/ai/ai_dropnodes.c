@@ -1,27 +1,27 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-   --------------------------------------------------------------
-   The ACE Bot is a product of Steve Yeager, and is available from
-   the ACE Bot homepage, at http://www.axionfx.com/ace.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+--------------------------------------------------------------
+The ACE Bot is a product of Steve Yeager, and is available from
+the ACE Bot homepage, at http://www.axionfx.com/ace.
 
-   This program is a modification of the ACE Bot, and is therefore
-   in NO WAY supported by Steve Yeager.
- */
+This program is a modification of the ACE Bot, and is therefore
+in NO WAY supported by Steve Yeager.
+*/
 
 #include "../g_local.h"
 #include "ai_local.h"
@@ -171,7 +171,7 @@ static void AI_DropLadderNodes( edict_t *self )
 	//trace = gi.trace( borigin, tv(-15,-15,-24), tv(15,15,0), tv(borigin[0], borigin[1], borigin[2] - 2048), self, MASK_NODESOLID );
 	G_Trace( &trace, borigin, playerbox_crouch_mins, tv( playerbox_crouch_maxs[0], playerbox_crouch_maxs[1], 0 ), tv( borigin[0], borigin[1], borigin[2] - 2048 ), self, MASK_NODESOLID );
 	if( !trace.startsolid && trace.fraction < 1.0
-	   && AI_IsLadder( trace.endpos, self->r.client->ps.viewangles, self->r.mins, self->r.maxs, self ) )
+		&& AI_IsLadder( trace.endpos, self->r.client->ps.viewangles, self->r.mins, self->r.maxs, self ) )
 	{
 		VectorCopy( trace.endpos, borigin );
 
@@ -183,7 +183,7 @@ static void AI_DropLadderNodes( edict_t *self )
 		//trace = gi.trace( borigin, tv(-15,-15,-25), tv(15,15,0), borigin, self, MASK_NODESOLID );
 		G_Trace( &trace, borigin, tv( playerbox_crouch_mins[0], playerbox_crouch_mins[1], playerbox_crouch_mins[2]-1 ), tv( playerbox_crouch_maxs[0], playerbox_crouch_maxs[1], 0 ), borigin, self, MASK_NODESOLID );
 		while( AI_IsLadder( borigin, self->r.client->ps.viewangles, self->r.mins, self->r.maxs, self )
-		       && !trace.startsolid )
+			&& !trace.startsolid )
 		{
 			borigin[2]--;
 			//trace = gi.trace( borigin, tv(-15,-15,-25), tv(15,15,0), borigin, self, MASK_NODESOLID );
@@ -256,11 +256,11 @@ static void AI_WaterJumpNode( void )
 		if( player.ent->groundentity->classname )
 		{
 			if( !strcmp( player.ent->groundentity->classname, "func_plat" )
-			   || !strcmp( player.ent->groundentity->classname, "trigger_push" )
-			   || !strcmp( player.ent->groundentity->classname, "func_train" )
-			   || !strcmp( player.ent->groundentity->classname, "func_rotate" )
-			   || !strcmp( player.ent->groundentity->classname, "func_bob" )
-			   || !strcmp( player.ent->groundentity->classname, "func_door" ) )
+				|| !strcmp( player.ent->groundentity->classname, "trigger_push" )
+				|| !strcmp( player.ent->groundentity->classname, "func_train" )
+				|| !strcmp( player.ent->groundentity->classname, "func_rotate" )
+				|| !strcmp( player.ent->groundentity->classname, "func_bob" )
+				|| !strcmp( player.ent->groundentity->classname, "func_door" ) )
 				return;
 		}
 	}
@@ -274,12 +274,12 @@ static void AI_WaterJumpNode( void )
 	{
 		//reverse
 		G_Trace( &trace, waterorigin,
-		         //trace = gi.trace( waterorigin,
-		         vec3_origin,
-		         vec3_origin,
-		         tv( waterorigin[0], waterorigin[1], waterorigin[2] + NODE_DENSITY*2 ),
-		         player.ent,
-		         MASK_ALL );
+			//trace = gi.trace( waterorigin,
+			vec3_origin,
+			vec3_origin,
+			tv( waterorigin[0], waterorigin[1], waterorigin[2] + NODE_DENSITY*2 ),
+			player.ent,
+			MASK_ALL );
 
 		VectorCopy( trace.endpos, waterorigin );
 		if( trace.contents & MASK_WATER )
@@ -288,12 +288,12 @@ static void AI_WaterJumpNode( void )
 
 	//find water limit
 	G_Trace( &trace, waterorigin,
-	         //trace = gi.trace( waterorigin,
-	         vec3_origin,
-	         vec3_origin,
-	         tv( waterorigin[0], waterorigin[1], waterorigin[2] - NODE_DENSITY*2 ),
-	         player.ent,
-	         MASK_WATER );
+		//trace = gi.trace( waterorigin,
+		vec3_origin,
+		vec3_origin,
+		tv( waterorigin[0], waterorigin[1], waterorigin[2] - NODE_DENSITY*2 ),
+		player.ent,
+		MASK_WATER );
 
 	if( trace.fraction == 1.0 )
 		return;
@@ -349,7 +349,7 @@ static void AI_PathMap( void )
 
 	//DROP WATER JUMP NODE (not limited by delayed updates)
 	if( !player.ent->is_swim && player.last_node != -1
-	    && player.ent->is_swim != player.ent->was_swim )
+		&& player.ent->is_swim != player.ent->was_swim )
 	{
 		AI_WaterJumpNode();
 		last_update = level.time + NODE_UPDATE_DELAY; // slow down updates a bit
@@ -367,11 +367,11 @@ static void AI_PathMap( void )
 		if( player.ent->groundentity->classname )
 		{
 			if( !strcmp( player.ent->groundentity->classname, "func_plat" )
-			   || !strcmp( player.ent->groundentity->classname, "trigger_push" )
-			   || !strcmp( player.ent->groundentity->classname, "func_train" )
-			   || !strcmp( player.ent->groundentity->classname, "func_rotate" )
-			   || !strcmp( player.ent->groundentity->classname, "func_bob" )
-			   || !strcmp( player.ent->groundentity->classname, "func_door" ) )
+				|| !strcmp( player.ent->groundentity->classname, "trigger_push" )
+				|| !strcmp( player.ent->groundentity->classname, "func_train" )
+				|| !strcmp( player.ent->groundentity->classname, "func_rotate" )
+				|| !strcmp( player.ent->groundentity->classname, "func_bob" )
+				|| !strcmp( player.ent->groundentity->classname, "func_door" ) )
 				return;
 		}
 	}
@@ -455,21 +455,21 @@ static void AI_PathMap( void )
 //==========================================
 void AITools_AddBotRoamNode_Cmd( void )
 {
-//	int node;
+	//	int node;
 
 	if( !nav.editmode || nav.loaded )
 	{
 		Com_Printf( "       : Can't Create bot roam nodes when not in editing mode.\n" );
 		return;
 	}
-/*
+	/*
 	node = AI_AddNode( player.ent->s.origin, ( AI_FlagsForNode( player.ent->s.origin, player.ent ) | NODEFLAGS_BOTROAM ) );
 
 	nodes[node].flags |= NODEFLAGS_BOTROAM;
 	nav.broams[nav.num_broams].weight = 0.3f;
 	nav.broams[nav.num_broams].node = node;
 	nav.num_broams++;
-*/
+	*/
 }
 
 //==========================================
