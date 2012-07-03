@@ -132,7 +132,7 @@ void target_fragsFilter( cEntity @ent )
 {
     String frags = G_SpawnTempValue("frags");
 
-    @ent.think = target_fragsFilter_tink;
+    @ent.think = target_fragsFilter_think;
     @ent.use = target_fragsFilter_use;
 	addToEntStorage( ent.entNum(), frags );
 
