@@ -158,7 +158,7 @@ endif
 
 CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../libsrcs/libpng -I../dxsdk/include -DCURL_STATICLIB
 CFLAGS_DED=-DDEDICATED_ONLY -DCURL_STATICLIB
-CFLAGS_MODULE=-DPIC
+CFLAGS_MODULE=-DPIC -Iwin32/include/mysql -Dlibmosquitto_EXPORTS -DPTW32_STATIC_LIB
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DTV_MODULE_HARD_LINKED -DCURL_STATICLIB
 
 RESFLAGS_COMMON=-I. -Iwin32/include
@@ -181,11 +181,7 @@ endif
 LDFLAGS_CLIENT=-lcurlstat -lws2_32 -lwsock32 -ljpegstat -lpngstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
 LDFLAGS_DED=-lcurlstat -lws2_32 -lwsock32
 LDFLAGS_MODULE=-shared
-
-LDFLAGS_CGAME=$(LDFLAGS_MODULE)
 LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lzstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
-LDFLAGS_UI=$(LDFLAGS_MODULE)
-
 LDFLAGS_TV_SERVER=-lcurlstat -lws2_32 -lwsock32
 
 # openal
@@ -251,12 +247,9 @@ endif
 
 LDFLAGS_CLIENT=-ljpeg -lpng -lz -L$(X11BASE)/$(LIB) -lX11 -lXext -lXxf86dga -lXxf86vm -lXinerama -lXrandr -lrt $(shell curl-config --libs)
 LDFLAGS_DED=-lz $(shell curl-config --libs) -pthread
-LDFLAGS_MODULE=-shared #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
+LDFLAGS_MODULE=-shared
+LDFLAGS_GAME=-shared #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
 LDFLAGS_TV_SERVER=-lz $(shell curl-config --libs)
-
-LDFLAGS_CGAME=$(LDFLAGS_MODULE)
-LDFLAGS_GAME=$(LDFLAGS_MODULE) #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
-LDFLAGS_UI=$(LDFLAGS_MODULE)
 
 # openal
 ifeq ($(BUILD_SND_OPENAL),YES)
@@ -775,7 +768,7 @@ $(BINDIR)/libs/snd_qf_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_QF)
 ########
 $(BINDIR)/racesow/cgame_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_CGAME)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_CGAME)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE)
 
 $(BINDIR)/racesow/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_GAME)
 	@echo "  > Linking $@" && \
@@ -783,7 +776,7 @@ $(BINDIR)/racesow/game_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_GAME)
 
 $(BINDIR)/racesow/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_UI_ROCKET)
 	@echo "  > Linking $@" && \
-	$(LXX) -o $@ $^ $(LXXFLAGS_COMMON) $(LDFLAGS_UI) $(LDFLAGS_ROCKET)
+	$(LXX) -o $@ $^ $(LXXFLAGS_COMMON) $(LDFLAGS_MODULE) $(LDFLAGS_ROCKET)
 
 $(BINDIR)/libs/irc_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_IRC)
 	@echo "  > Linking $@" && \

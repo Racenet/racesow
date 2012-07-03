@@ -150,7 +150,7 @@ endif
 
 CFLAGS_CLIENT=-I../libsrcs/libjpeg -I../libsrcs/libpng -I../dxsdk/include -DCURL_STATICLIB
 CFLAGS_DED=-DDEDICATED_ONLY -DCURL_STATICLIB
-CFLAGS_MODULE=-DPIC
+CFLAGS_MODULE=-DPIC -Iwin32/include/mysql -Dlibmosquitto_EXPORTS -DPTW32_STATIC_LIB
 CFLAGS_TV_SERVER=-DDEDICATED_ONLY -DTV_SERVER_ONLY -DTV_MODULE_HARD_LINKED -DCURL_STATICLIB
 
 RESFLAGS_COMMON=-I. -Iwin32/include
@@ -170,11 +170,11 @@ LDFLAGS_COMMON+= -s
 LXXFLAGS_COMMON+= -s
 endif
 
-LDFLAGS_CLIENT=-lcurlstat -lwsock32 -ljpegstat -lpngstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
-LDFLAGS_DED=-lcurlstat -lwsock32
+LDFLAGS_CLIENT=-lcurlstat -lws2_32 -lwsock32 -ljpegstat -lpngstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
+LDFLAGS_DED=-lcurlstat -lws2_32 -lwsock32
 LDFLAGS_MODULE=-shared
 LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lzstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
-LDFLAGS_TV_SERVER=-lcurlstat -lwsock32
+LDFLAGS_TV_SERVER=-lcurlstat -lws2_32 -lwsock32
 
 # openal
 ifeq ($(BUILD_SND_OPENAL),YES)
@@ -239,8 +239,8 @@ endif
 
 LDFLAGS_CLIENT=-ljpeg -lpng -lz -L$(X11BASE)/$(LIB) -lX11 -lXext -lXxf86dga -lXxf86vm -lXinerama -lXrandr -lrt $(shell curl-config --libs)
 LDFLAGS_DED=-lz $(shell curl-config --libs) -pthread
-LDFLAGS_MODULE=-shared #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
-LDFLAGS_GAME=-shared
+LDFLAGS_MODULE=-shared
+LDFLAGS_GAME=-shared #`mysql_config --libs` <-- Replaced by Dynamic loading (dlopen)
 LDFLAGS_TV_SERVER=-lz $(shell curl-config --libs)
 
 # openal
