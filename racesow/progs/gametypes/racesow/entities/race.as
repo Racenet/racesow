@@ -36,13 +36,11 @@ void practice_respawner_think( cEntity @practiceRespawner )
 void race_respawner( cEntity @self )
 {
     @self.think = race_respawner_think;
-    self.nextThink = levelTime + 1;
 }
 
 void practice_respawner( cEntity @self )
 {
     @self.think = practice_respawner_think;
-    self.nextThink = levelTime + 1;
 }
 
 /**

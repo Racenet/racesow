@@ -770,7 +770,7 @@ class Command_Noclip : Racesow_Command
             player.sendErrorMessage("Noclip is not available in your current state");
             return false;
         }
-        if ( gametypeFlag == MODFLAG_RACE && !player.practicing )
+        if ( gametypeFlag == MODFLAG_RACE && !player.practicing && !sv_cheats.get_boolean() )
 			return false;
 
         return true;

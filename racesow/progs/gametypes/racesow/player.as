@@ -637,6 +637,7 @@ class Racesow_Player
 			this.completedInPracticemode = true;
 			// set up for respawning the player with a delay
 			cEntity @practiceRespawner = G_SpawnEntity( "practice_respawner" );
+			@practiceRespawner.think = practice_respawner_think; //FIXME: Workaround because the practice_respawner function isn't called
 			practiceRespawner.nextThink = levelTime + 3000;
 			practiceRespawner.count = client.playerNum();
 		}
@@ -702,6 +703,7 @@ class Racesow_Player
 
     // set up for respawning the player with a delay
     cEntity @respawner = G_SpawnEntity( "race_respawner" );
+    @respawner.think = race_respawner_think; //FIXME: Workaround because the race_respawner function isn't called
     respawner.nextThink = levelTime + 3000;
     respawner.count = client.playerNum();
     }
