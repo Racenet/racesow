@@ -162,13 +162,22 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		return this.startTime;
 	}
 
+    /**
+     * Get the server time compensated for the client's ping
+     * @return uint
+     */
+    uint getClientTime()
+    {
+        return serverTime - this.player.getClient().ping;
+    }
+
 	/**
 	 * getCurrentTime
 	 * @return uint
 	 */
 	uint getCurrentTime()
 	{
-		return serverTime - this.startTime;
+		return this.getClientTime() - this.startTime;
 	}
 
 	/**
@@ -179,15 +188,6 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	{
 		return this.timeStamp;
 	}
-
-    /**
-     * Get the server time compensated for the client's ping
-     * @return uint
-     */
-    uint getClientTime()
-    {
-        return serverTime - this.player.getClient().ping;
-    }
 
 	/**
 	 * Save a checkpoint in the race
