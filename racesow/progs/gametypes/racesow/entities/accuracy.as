@@ -16,7 +16,7 @@ int RESET = 8;
 
 void checkForAccuracyMap()
 {
-    int position;
+    uint position;
     isAccuracyMap = false;
 
 	if( @map == null )
@@ -35,15 +35,15 @@ void checkForAccuracyMap()
         //Debug Print
 		//G_Print(defifile + "\n");
 
-        if( ( position = defifile.locate("style",0) ) > -1 ) //FIXME: Locate was changed this needs to be fixed -K1ll
+        if( ( position = defifile.locate("style",0) ) < defifile.length() )
         {
             style = defifile.substr( position, defifile.len() );
-            if( ( position = style.locate("\n", 0 ) ) > -1 ) //FIXME: Locate was changed this needs to be fixed -K1ll
+            if( ( position = style.locate("\n", 0 ) ) < style.length() )
             {
                 style = style.substr( 0, position );
                 //Debug Print
                 //G_Print(style + "\n");
-                if( style.locate("accuracy", 0) > -1 ) //FIXME: Locate was changed this needs to be fixed -K1ll
+                if( style.locate("accuracy", 0) < style.length() )
 		        {
 			        isAccuracyMap = true;
 		        }
@@ -132,6 +132,8 @@ void target_fragsFilter( cEntity @ent )
 {
     String frags = G_SpawnTempValue("frags");
 
+    @ent.think = target_fragsFilter_tink;
+    @ent.use = target_fragsFilter_use;
 	addToEntStorage( ent.entNum(), frags );
 
 	if( @ent.findTargetingEntity( null ) == null )
@@ -184,6 +186,8 @@ void fragsFilter_addScore( cEntity @ent, Vec3 origin, int score ) {
 
 void target_score( cEntity @ent )
 {
+    @ent.use = target_score_use;
+
     if ( ent.count <= 0 )
     {
 	    ent.count = 1;

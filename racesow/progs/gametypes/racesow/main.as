@@ -859,8 +859,9 @@ void GT_InitGametype()
     // weapondef not needed anymore, we're not testing weapons
     //G_RegisterCommand( "weapondef" );
 
-    G_RegisterCommand( "ammoswitch" );
-    G_RegisterCommand( "whoisgod" );
+    //FIXME: I've commented these out for now so we don't exceed the command limit -K1ll
+    //G_RegisterCommand( "ammoswitch" );
+    //G_RegisterCommand( "whoisgod" );
 
     //add callvotes
     G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );

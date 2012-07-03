@@ -66,6 +66,9 @@ void replacementItem( cEntity @oldItem )
         ent.skinNum = oldItem.skinNum;
         oldItem.freeEntity();
 	}
+	@ent.think = replacementItem_think;
+	@ent.touch = replacementItem_touch;
+	@ent.use = replacementItem_use;
 	ent.linkEntity();
 }
 
@@ -74,6 +77,9 @@ void replacementItem_think( cEntity @ent )
     ent.respawnEffect();
 }
 
+/*
+ * Soundfix
+ */
 void replacementItem_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
     if( ent.wait > 0 )
@@ -93,6 +99,7 @@ void replacementItem_use( cEntity @ent, cEntity @other, cEntity @activator )
  */
 void trigger_push_velocity( cEntity @ent )
 {
+	@ent.think = trigger_push_velocity_think;
 
 	//@ent.enemy = @ent.findTargetEntity( ent );
 	String speed = G_SpawnTempValue("speed");
@@ -161,6 +168,8 @@ void target_teleporter_think( cEntity @ent )
 
 void target_teleporter( cEntity @ent )
 {
+	@ent.think = target_teleporter_think;
+	@ent.use = target_teleporter_use;
 	ent.nextThink = levelTime + 1; //set up the targets
 	ent.wait = 1;
 }
@@ -194,6 +203,8 @@ void target_delay_use( cEntity @self, cEntity @other, cEntity @activator )
 
 void target_delay( cEntity @ent ) {
 
+    @ent.think = target_delay_think;
+    @ent.use = target_delay_use;
     if ( ent.wait == 0 )
     {
         ent.wait = 1;
@@ -297,6 +308,8 @@ void shooter_grenade_use( cEntity @self, cEntity @other, cEntity @activator )
 //RS_shooter_rocket
 //===============
 void shooter_rocket( cEntity @ent ) {
+    @ent.think = RS_InitShooter_Finish;
+    @ent.use = RS_UseShooter;
     RS_InitShooter( @ent, WEAP_ROCKETLAUNCHER );
 }
 
@@ -316,6 +329,7 @@ void shooter_grenade( cEntity @ent ) {
 
 void target_smallprint( cEntity @ent )
 {
+    @ent.use = target_smallprint_use;
 	String message = G_SpawnTempValue("message");
     if( message == "" )
     {
@@ -335,6 +349,7 @@ void target_smallprint_use( cEntity @ent, cEntity @other, cEntity @activator )
 
 void target_kill( cEntity @ent )
 {
+    @ent.use = target_kill_use;
 	//the rest does the use code
 }
 
@@ -351,228 +366,13 @@ void target_relay_use( cEntity @ent, cEntity @other, cEntity @activator )
 
 void target_relay( cEntity @ent )
 {
+    @ent.use = target_relay_use;
 	//the rest does the use code
 }
 
-/*
- * Soundfix
- */
-void AS_weapon_gunblade_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_machinegun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_riotgun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_grenadelauncher_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_rocketlauncher_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_plasmagun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_lasergun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_electrobolt_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_gunblade__think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_machinegun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_riotgun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_grenadelauncher_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_rocketlauncher_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_plasmagun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_lasergun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_electrobolt_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_gunblade_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_machinegun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_riotgun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_grenadelauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_rocketlauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_plasmagun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_lasergun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_electrobolt_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_gunblade_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_machinegun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_riotgun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_grenadelauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_rocketlauncher_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_plasmagun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_lasergun_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_electrobolt_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_quad_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_warshell_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_ga_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_ya_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_ra_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_shard_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	//we don't want to have them.
-}
-
-void AS_item_health_small_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	//we don't want to have them.
-}
-
-void AS_item_health_medium_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_health_large_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_health_mega_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_health_ultra_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void replacementItem_touch( cEntity @ent, cEntity @other )
+//FIXME: The touch functions for armor shards and small health explicitly weren't called before.
+//Do we still want that behaviour? If yes please add it here -K1ll
+void replacementItem_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	if( @other.client == null || other.moveType != MOVETYPE_PLAYER )
 		return;

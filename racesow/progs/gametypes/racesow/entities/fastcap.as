@@ -1,6 +1,7 @@
 /*
  * Fastcap
  */
+//FIXME: Due to the change in the entitiy event behaviour most of this doesn't work right now. We should be good by just porting the warsow ctf changes though.
 float CTF_UNLOCK_TIME = 2.0f;
 float CTF_UNLOCK_RADIUS = 128.0f;
 float CTF_CAPTURE_RADIUS = 40.0f;
