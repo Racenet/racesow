@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "cg_local.h"
+#include "../qcommon/version.h" // racesow - need this for demo file extension
 
 /*
 ==========================================================================
@@ -365,26 +366,22 @@ static const char *CG_SC_AutoRecordName( void )
 /*
 * CG_SC_RaceDemoRename
 */
-/* enable this, when trap_FS_MoveFile works! (tested)
 static qboolean CG_SC_RaceDemoRename( const char *src, const char *dst )
 {
 	char *baseDirectory = "demos"; //hardcoded string
-	char *ext = "wd"; //hardcoded string
-	int protocol = cgs.gameProtocol;
 	int file;
 
-	if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s.%s%d", baseDirectory, dst, ext, protocol ) ) )
+	if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s%s", baseDirectory, dst, APP_DEMO_EXTENSION_STR ) ) )
 	{
 		//workaround to create the path
-		trap_FS_FOpenFile( va( "%s/%s.%s%d", baseDirectory, dst, ext, protocol ), &file, FS_WRITE );
+		trap_FS_FOpenFile( va( "%s/%s%s", baseDirectory, dst, APP_DEMO_EXTENSION_STR ), &file, FS_WRITE );
 		trap_FS_FCloseFile( file );
 
-		if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s.%s%d", baseDirectory, dst, ext, protocol ) ) )
+		if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s%s", baseDirectory, dst, APP_DEMO_EXTENSION_STR ) ) )
 			return qfalse;
 	}
 	return qtrue;
 }
-*/
 
 /*
 * CG_SC_RaceDemoName
@@ -431,8 +428,7 @@ enum {
 */
 static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 {
-	//enable this, when trap_FS_MoveFile works!
-//	char *demoname = "currentrace.rec";
+	char *demoname = "currentrace.rec";
 
 	char *directory = "autorecord";
 	const char *realname;
@@ -448,18 +444,10 @@ static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 	case RS_RACEDEMO_START:
 		if( rs_autoRaceDemo->integer )
 		{
-			//delete "cancel", when trap_FS_MoveFile works!
-			trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
+			trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
 
-			//delete this, when trap_FS_MoveFile works!
-			realname = CG_SC_AutoRecordName();
-			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s/%s silent",
-				directory, gs.gametypeName, realname ) );
-
-			//enable this, when trap_FS_MoveFile works!
-//			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
-//					directory, demoname ) );
-
+			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
+					directory, demoname ) );
 		}
 		autorecording = qtrue;
 		break;
@@ -475,10 +463,9 @@ static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 				trap_Cmd_ExecuteText( EXEC_NOW, va( "screenshot %s/%s silent",
 						directory, realname ) );
 
-			//enable this, when trap_FS_MoveFile works!
-//			if ( rs_autoRaceDemo->integer )
-//				CG_SC_RaceDemoRename( va( "%s/%s", directory, demoname ),
-//						va( "%s/%s", directory, realname ) );
+			if( rs_autoRaceDemo->integer )
+				CG_SC_RaceDemoRename( va( "%s/%s", directory, demoname ),
+						va( "%s/%s", directory, realname ) );
 		}
 		autorecording = qfalse;
 		break;
