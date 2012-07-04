@@ -367,7 +367,7 @@ cEntity @GT_SelectSpawnPoint( cEntity @self )
  * @param int maxlen
  * @return String
  */
-String @GT_ScoreboardMessage( int maxlen )
+String @GT_ScoreboardMessage( uint maxlen )
 {
     String @scoreboardMessage = @racesowGametype.ScoreboardMessage( maxlen );
 
