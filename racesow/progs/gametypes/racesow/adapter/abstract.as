@@ -14,7 +14,8 @@ enum Racesow_Adapter_Enum
     RACESOW_ADAPTER_MAPFILTER,
     RACESOW_ADAPTER_MAPLIST,
     RACESOW_ADAPTER_PLAYERNICK,
-    RACESOW_ADAPTER_ONELINER
+    RACESOW_ADAPTER_ONELINER,
+    RACESOW_ADAPTER_RANKING
 }
 
 class Racesow_Adapter_Abstract
@@ -131,6 +132,7 @@ class Racesow_Adapter_Abstract
                 case RACESOW_ADAPTER_MAPFILTER:
                 case RACESOW_ADAPTER_MAPLIST:
                 case RACESOW_ADAPTER_ONELINER:
+				case RACESOW_ADAPTER_RANKING:
                     result = RS_PrintQueryCallback(playerNum);
                     player.sendLongMessage(result);
                     player.isWaitingForCommand = false;

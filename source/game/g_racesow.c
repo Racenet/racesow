@@ -8,6 +8,7 @@
 #if !defined(_WIN32) && !defined(_WIN64)
 #include "g_dynamicmysql.h"
 #endif
+#define MOSQUITTO
 
 qboolean mysqlclient_present=qfalse;
 
@@ -27,10 +28,10 @@ cvar_t *rs_mysqlDb;
 
 cvar_t *rs_queryGetPlayerAuth;
 cvar_t *rs_queryGetPlayerAuthByToken;
-cvar_t *rs_queryGetPlayerAuthBySession;
+//cvar_t *rs_queryGetPlayerAuthBySession;
 cvar_t *rs_queryGetPlayerByToken;
 cvar_t *rs_querySetTokenForPlayer;
-cvar_t *rs_querySetSessionForPlayer;
+//cvar_t *rs_querySetSessionForPlayer;
 cvar_t *rs_queryGetPlayer;
 cvar_t *rs_queryAddPlayer;
 cvar_t *rs_queryGetPlayerStats;
@@ -42,6 +43,7 @@ cvar_t *rs_queryUpdateServerData;
 cvar_t *rs_queryGetPlayerPoints;
 cvar_t *rs_queryRegisterPlayer;
 cvar_t *rs_queryGetPlayerNick;
+cvar_t *rs_queryGetPlayerSimplified;
 cvar_t *rs_queryUpdatePlayerNick;
 cvar_t *rs_queryUpdatePlayerPlaytime;
 cvar_t *rs_queryUpdatePlayerRaces;
@@ -72,6 +74,8 @@ cvar_t *rs_queryMapFilter;
 cvar_t *rs_queryMapFilterCount;
 cvar_t *rs_queryUpdateCheckpoint;
 cvar_t *rs_queryGetPlayerMapCheckpoints;
+cvar_t *rs_queryLoadRanking;
+cvar_t *rs_queryGetUserIdByPlayerId;
 
 
 cvar_t *rs_authField_Name;
@@ -86,6 +90,22 @@ cvar_t *rs_historyDays;
 cvar_t *rs_IRCstream;
 dynvar_t *irc_connected;
 int ircConnected = 0;
+
+cvar_t *rs_mqttEnabled;
+cvar_t *rs_mqttClientId;
+cvar_t *rs_mqttHost;
+cvar_t *rs_mqttPort;
+char err[1024];
+char publish_message[1024];
+char publish_topic[32];
+#ifdef MOSQUITTO
+struct mosquitto *mosq = NULL;
+#endif
+int rc;
+int keepalive = 0;
+int retain = 0;
+static uint16_t mid_sent = 0;
+static int qos = 0;
 
 /**
  * Store the result of different requests from players.
@@ -110,6 +130,7 @@ const unsigned int RACESOW_CALLBACK_MAPFILTER = 6;
 const unsigned int RACESOW_CALLBACK_MAPLIST = 7;
 const unsigned int RACESOW_CALLBACK_PLAYERNICK = 8;
 const unsigned int RACESOW_CALLBACK_ONELINER = 9;
+const unsigned int RACESOW_CALLBACK_RANKING = 10;
 
 /**
  * MySQL Socket
@@ -172,6 +193,11 @@ void RS_Init()
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
+	rs_mqttEnabled = trap_Cvar_Get( "rs_mqttEnabled", "0", CVAR_ARCHIVE );
+	rs_mqttClientId = trap_Cvar_Get( "rs_mqttClientId", "racesow", CVAR_ARCHIVE );
+	rs_mqttHost = trap_Cvar_Get( "rs_mqttHost", "127.0.0.1", CVAR_ARCHIVE );
+	rs_mqttPort = trap_Cvar_Get( "rs_mqttPort", "1883", CVAR_ARCHIVE );
+	
     rs_mysqlEnabled = trap_Cvar_Get( "rs_mysqlEnabled", "0", CVAR_ARCHIVE|CVAR_NOSET);
     rs_IRCstream = trap_Cvar_Get( "rs_IRCstream","0", CVAR_ARCHIVE|CVAR_NOSET );
     rs_loadHighscores = trap_Cvar_Get( "rs_loadHighscores", "0", CVAR_ARCHIVE);
@@ -216,6 +242,15 @@ void RS_Init()
     irc_connected = trap_Dynvar_Lookup( "irc_connected" );
     trap_Dynvar_AddListener( irc_connected, RS_Irc_ConnectedListener_f );
 
+	#ifdef MOSQUITTO
+	if (rs_mqttEnabled->integer) {
+		mosquitto_lib_init();
+		mosq = mosquitto_new(rs_mqttClientId->string, NULL);
+		if(!mosq){
+			G_Printf("QMTT Error: Out of memory.\n");
+		}
+	}
+	#endif
 }
 
 /**
@@ -252,15 +287,16 @@ qboolean RS_LoadCvars( void )
 
     rs_queryGetPlayerAuth			= trap_Cvar_Get( "rs_queryGetPlayerAuth",			"SELECT `id`, `auth_mask`, `auth_token` FROM `player` WHERE `auth_name` = '%s' AND `auth_pass` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
     rs_queryGetPlayerAuthByToken    = trap_Cvar_Get( "rs_queryGetPlayerAuthByToken",	"SELECT `id`, `auth_mask` FROM `player` WHERE `auth_token` = MD5('%s%s') LIMIT 1;", CVAR_ARCHIVE );
-    rs_queryGetPlayerAuthBySession  = trap_Cvar_Get( "rs_queryGetPlayerAuthBySession",	"SELECT `id`, `auth_mask` FROM `player` WHERE `session_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
+    //rs_queryGetPlayerAuthBySession  = trap_Cvar_Get( "rs_queryGetPlayerAuthBySession",	"SELECT `id`, `auth_mask` FROM `player` WHERE `session_token` = '%s' LIMIT 1;", CVAR_ARCHIVE );
     rs_querySetTokenForPlayer       = trap_Cvar_Get( "rs_querySetTokenForPlayer",	    "UPDATE `player` SET `auth_token` = MD5('%s%s') WHERE `id` = %d;", CVAR_ARCHIVE );
-    rs_querySetSessionForPlayer     = trap_Cvar_Get( "rs_querySetSessionForPlayer",	    "UPDATE `player` SET `session_token` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
+    //rs_querySetSessionForPlayer     = trap_Cvar_Get( "rs_querySetSessionForPlayer",	    "UPDATE `player` SET `session_token` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryGetPlayer				= trap_Cvar_Get( "rs_queryGetPlayer",			    "SELECT `id`, `auth_mask` FROM `player` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryAddPlayer				= trap_Cvar_Get( "rs_queryAddPlayer",				"INSERT INTO `player` (`name`, `simplified`, `created`) VALUES ('%s', '%s', NOW());", CVAR_ARCHIVE );
 	rs_queryGetPlayerStats  		= trap_Cvar_Get( "rs_queryGetPlayerStats",			"SELECT `points`, `diff_points`, `races`, (SELECT SUM(`overall_tries`) FROM `player_map` WHERE `player_id` = `p`.`id` LIMIT 1) `race_tries`, `maps`, `playtime`, (SELECT SUM(`racing_time`) FROM `player_map` WHERE `player_id` = `p`.`id` LIMIT 1) `racing_time`, DATE_FORMAT(`created`, '%%Y-%%m-%%d') `first_seen`, (SELECT `date` FROM `player_history` WHERE `player_id` = `p`.`id` ORDER BY `date` DESC LIMIT 1) `last_seen` FROM `player` `p` WHERE `simplified` = '%s' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryGetPlayerPoints			= trap_Cvar_Get( "rs_queryGetPlayerPoints",		    "SELECT `points` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryRegisterPlayer			= trap_Cvar_Get( "rs_queryRegisterPlayer",			"UPDATE `player` SET `auth_name` = '%s', `auth_email` = '%s', `auth_pass` = MD5('%s%s'), `auth_mask` = 1, `auth_token` = MD5('%s%s') WHERE `simplified` = '%s' AND (`auth_mask` = 0 OR `auth_mask` IS NULL);", CVAR_ARCHIVE );
 	rs_queryGetPlayerNick			= trap_Cvar_Get( "rs_queryGetPlayerNick",			"SELECT `name` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
+	rs_queryGetPlayerSimplified		= trap_Cvar_Get( "rs_queryGetPlayerSimplified",		"SELECT `simplified` FROM `player` WHERE `id` = '%d' LIMIT 1;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerNick		= trap_Cvar_Get( "rs_queryUpdatePlayerNick",		"UPDATE `player` SET `name` = '%s', `simplified` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerPlaytime	= trap_Cvar_Get( "rs_queryUpdatePlayerPlaytime",	"UPDATE `player` SET `playtime` = `playtime` + %d WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_queryUpdatePlayerRaces		= trap_Cvar_Get( "rs_queryUpdatePlayerRaces",		"UPDATE `player` SET `races` = races + 1 WHERE `id` = %d;", CVAR_ARCHIVE );
@@ -296,7 +332,9 @@ qboolean RS_LoadCvars( void )
 	rs_queryLoadMapHighscores		= trap_Cvar_Get( "rs_queryLoadMapHighscores",		"SELECT pm.time, p.name, pm.created, pm.prejumped FROM player_map AS pm LEFT JOIN player AS p ON p.id = pm.player_id LEFT JOIN map AS m ON m.id = pm.map_id WHERE pm.time IS NOT NULL AND pm.time > 0 AND m.id = %d AND pm.prejumped in (%s) ORDER BY time ASC LIMIT %d", CVAR_ARCHIVE );
 	rs_queryLoadMapOneliners		= trap_Cvar_Get( "rs_queryLoadMapOneliners",		"SELECT `oneliner`, `pj_oneliner` FROM `map` WHERE `id` = %d;", CVAR_ARCHIVE );
 	rs_querySetMapOneliner			= trap_Cvar_Get( "rs_querySetMapOneliner",			"UPDATE `map` SET `%s` = '%s' WHERE `id` = %d;", CVAR_ARCHIVE );
-    
+    rs_queryLoadRanking				= trap_Cvar_Get( "rs_queryLoadRanking",				"SELECT `name`, `points`, `diff_points`, `races`, `maps`, `playtime` FROM player ORDER BY `%s` %s LIMIT %d, %d;", CVAR_ARCHIVE );
+	rs_queryGetUserIdByPlayerId		= trap_Cvar_Get( "rs_queryGetUserIdByPlayerId",		"SELECT %d AS user_id;", CVAR_ARCHIVE );
+	
     return qtrue;
 }
 
@@ -492,6 +530,14 @@ void RS_Shutdown()
 	RS_RemoveServerCommands();
     if( irc_connected )
 	    trap_Dynvar_RemoveListener( irc_connected, RS_Irc_ConnectedListener_f );
+	
+	#ifdef MOSQUITTO
+	if (rs_mqttEnabled->integer) {
+	
+		mosquitto_destroy(mosq);
+		mosquitto_lib_cleanup();
+	}
+	#endif
 }
 
 
@@ -707,7 +753,7 @@ void *RS_MysqlInsertRace_Thread(void *in)
     char query[MYSQL_QUERY_LENGTH];
     char affectedPlayerIds[1000];
 	unsigned int maxPositions, newPoints, currentPosition, currentCleanPosition, realPosition, offset, cleanOffset, lastRaceTime, lastCleanRaceTime, bestTime, oldTime, oldPoints, oldBestTime, oldOtherBestTime, oldBestPlayerId, oldOtherBestPlayerId, allPoints, newPosition, server_id;
-	int points, oldpoints;
+	int points, oldpoints, diffPoints;
 	struct raceDataStruct *raceData;
     MYSQL_ROW  row;
     MYSQL_RES  *mysql_res;
@@ -878,7 +924,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
             mysql_real_query(&mysql, query, strlen(query));
             RS_CheckMysqlThreadError(query);
             mysql_res = mysql_store_result(&mysql);
-            RS_CheckMysqlThreadError(query);
             while ((row = mysql_fetch_row(mysql_res)) != NULL)
             {
                 points = 0;
@@ -959,8 +1004,47 @@ void *RS_MysqlInsertRace_Thread(void *in)
                             Q_strncatz( affectedPlayerIds, ",", sizeof(affectedPlayerIds));
 
                         Q_strncatz( affectedPlayerIds, row[0], sizeof(affectedPlayerIds));
-                    }
+						
+						// notify the user! about his lost points
+						diffPoints = oldpoints - points;
+						if (rs_mqttEnabled->integer && diffPoints > 0) {
+	
+							sprintf(query, rs_queryGetUserIdByPlayerId->string, playerId);
+							mysql_real_query(&mysql, query, strlen(query));
+							RS_CheckMysqlThreadError(query);
+							mysql_res = mysql_store_result(&mysql);
+							if ((row = mysql_fetch_row(mysql_res)) != NULL)
+							{
+								if (row[0] != NULL)
+								{
+									unsigned int userId;
+									userId = atoi(row[0]);
+									
+									sprintf(query, rs_queryGetPlayerSimplified->string, raceData->player_id);
+									mysql_real_query(&mysql, query, strlen(query));
+									RS_CheckMysqlThreadError(query);
+									mysql_res = mysql_store_result(&mysql);
+									if ((row = mysql_fetch_row(mysql_res)) != NULL)
+									{
+										if (row[0] != NULL)
+										{
+										#ifdef MOSQUITTO
+											rc = mosquitto_connect(mosq, rs_mqttHost->string, rs_mqttPort->integer, 0, true);
+											if(!rc){
+											
+												sprintf(publish_topic, "user_%d", userId);
+												sprintf(publish_message, "<?xml version=\"1.0\"?><record><player><![CDATA[%s]]></player><map><![CDATA[%s]]></map><time><![CDATA[%d]]></time><oldpoints><![CDATA[%d]]></oldpoints><newpoints><![CDATA[%d]]></newpoints></record>", row[0], level.mapname, raceData->race_time, oldpoints, points);
+												rc =  mosquitto_publish(mosq, &mid_sent, publish_topic, strlen(publish_message), (uint8_t *)publish_message, qos, retain);
+											}
 
+											mosquitto_disconnect(mosq);
+										#endif
+										}
+									}
+								}
+							}
+						}
+                    }
                 }
             }
 
@@ -974,7 +1058,6 @@ void *RS_MysqlInsertRace_Thread(void *in)
                 mysql_real_query(&mysql, query, strlen(query));
                 RS_CheckMysqlThreadError(query);
             }
-
         }
 
         //get the global number of points
@@ -1072,9 +1155,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     overall_tries = 0;
     playerData = (struct playerDataStruct*)in;
 
-    //ent = &game.edicts[ playerData->playerNum + 1 ];
-
-    /*
+	/*
+    ent = &game.edicts[ playerData->playerNum + 1 ];
     if( ent->r.client )
     {
         char *existingSession = Info_ValueForKey( ent->r.client->userinfo, "racesow_session" );
@@ -1082,7 +1164,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
             Q_strncpyz(sessionToken, existingSession, sizeof(sessionToken));
         }
     }
-    */
+	*/
 
     // escape strings
     Q_strncpyz ( simplified, COM_RemoveColorTokens(playerData->name), sizeof(simplified) );
@@ -1100,7 +1182,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
     Q_strncpyz ( authToken, playerData->authToken, sizeof(authToken) );
 	RS_EscapeString(authToken);
 
-    /*
+	/*
     // try to authenticate by session
     if (Q_stricmp( sessionToken, "" ))
     {
@@ -1121,8 +1203,8 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
         mysql_free_result(mysql_res);
     }
-    */
-
+	*/
+	
     // try to authenticate by token
     if (player_id == 0 && Q_stricmp( authToken, "" ))
     {
@@ -1170,19 +1252,19 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         mysql_free_result(mysql_res);
     }
 
+	/*
     if (!Q_stricmp( authToken, "" ) && player_id != 0)
     {
         char *newToken = RS_GenerateNewToken(player_id);
         Q_strncpyz ( authToken, newToken, sizeof(authToken) );
         free(newToken);
-        /*
         if( ent->r.inuse && ent->r.client )
         {
             G_PrintMsg(ent, "%san AUTHENTICATION TOKEN  has been generated for you: '%s' keep it secure!\n", S_COLOR_BLUE, authToken);
         }
-        */
     }
-
+	*/
+	
     // try to get information about the player the nickname belongs to
     sprintf(query, rs_queryGetPlayer->string, simplified);
     mysql_real_query(&mysql, query, strlen(query));
@@ -1263,7 +1345,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
         Q_strncpyz( players_query[playerData->playerNum], checkpoints, size);
 	}
 
-    /*
+	/*
     if (player_id != 0 && ent->r.inuse && ent->r.client)
     {
         if (!Q_stricmp(sessionToken, "")) {
@@ -1277,11 +1359,11 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 
         // always set him his session token... (may be lost when client changes his userinfo, so better set it immediately before changing a map etc.)
         // also maybe better do this outside the thread?
-        //Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
-        //ClientUserinfoChanged( ent, ent->r.client->userinfo );
+        Info_SetValueForKey( ent->r.client->userinfo, "racesow_session", sessionToken );
+        ClientUserinfoChanged( ent, ent->r.client->userinfo );
     }
-    */
-
+	*/
+	
     RS_PushCallbackQueue(RACESOW_CALLBACK_APPEAR, playerData->playerNum, player_id, auth_mask, player_id_for_nick, auth_mask_for_nick, personalBest, overall_tries);
 
 	free(playerData->name);
@@ -1295,6 +1377,7 @@ void *RS_MysqlPlayerAppear_Thread(void *in)
 }
 
 
+/*
 // should return a new UNIQUE token for the playerId
 char *RS_GenerateNewToken(int playerId)
 {
@@ -1350,7 +1433,9 @@ char *RS_GenerateNewToken(int playerId)
 
     return NULL;
 }
+*/
 
+/*
 // should return a new UNIQUE token for the playerId
 char *RS_StartPlayerSession(int playerId)
 {
@@ -1406,6 +1491,7 @@ char *RS_StartPlayerSession(int playerId)
 
     return NULL;
 }
+*/
 
 /**
  * Calls the player disappear thread
@@ -2452,6 +2538,130 @@ void *RS_MysqlLoadHighscores_Thread( void* in ) {
 		free(highscoresData->mapname);
 		free(mapname);
 		free(highscoresData);
+		RS_EndMysqlThread();
+		return NULL;
+}
+
+/**
+ * Calls the ranking thread
+ *
+ * @param edict_t *ent
+ * @param int page
+ * @return qboolean
+ */
+qboolean RS_MysqlLoadRanking( int playerNum, int  page, char *order )
+{
+	pthread_t thread;
+	int returnCode;
+
+	struct rankingDataStruct *rankingData=malloc(sizeof(struct rankingDataStruct));
+
+	rankingData->playerNum = playerNum;
+    rankingData->page = page;
+	rankingData->order = strdup(order);
+
+	returnCode = pthread_create(&thread, &threadAttr, RS_MysqlLoadRanking_Thread, (void *)rankingData);
+	if (returnCode) {
+
+		G_Printf("THREAD ERROR: return code from pthread_create() is %d\n", returnCode);
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/**
+ * Load the ranking
+ * @return void
+ */
+void *RS_MysqlLoadRanking_Thread( void* in ) {
+
+		MYSQL_ROW  row;
+        MYSQL_RES  *mysql_res;
+        char query[MYSQL_QUERY_LENGTH];
+		int playerNum;
+		int limit;
+		int offset;
+		int page;
+		char ranking[10000];
+		char *order;
+		struct rankingDataStruct *rankingData;
+
+		rankingData = (struct rankingData *)in;
+		playerNum = rankingData->playerNum;
+		page = rankingData->page;
+		order = strdup(rankingData->order);
+		
+		RS_StartMysqlThread();
+
+        // get top players on map
+		limit = 20;
+		offset = (page - 1) * limit;
+		sprintf(query, rs_queryLoadRanking->string, order, "DESC", offset, limit);
+        mysql_real_query(&mysql, query, strlen(query));
+        RS_CheckMysqlThreadError(query);
+        mysql_res = mysql_store_result(&mysql);
+        RS_CheckMysqlThreadError(query);
+
+		ranking[0]='\0';
+
+        if( (unsigned long)mysql_num_rows( mysql_res ) == 0 )
+		{
+            Q_strncatz(ranking, va( "%sNo ranking found!\n", S_COLOR_RED ), sizeof(ranking));
+		}
+        else
+		{
+            unsigned int position = offset;
+
+            Q_strncatz(ranking, va( "%sServer ranking, page %d\n", S_COLOR_ORANGE, page ), sizeof(ranking));
+            if ( !Q_stricmp(order, "points") || !Q_stricmp(order, "diff_points") )
+				Q_strncatz(ranking, va( "%sPlayer      points (diff)\n", S_COLOR_WHITE ), sizeof(ranking));
+			else
+				Q_strncatz(ranking, va( "%sPlayer      %s\n", S_COLOR_WHITE, order ), sizeof(ranking));
+
+            while( ( row = mysql_fetch_row( mysql_res ) ) != NULL )
+			{
+				position++;
+				
+				if ( !Q_stricmp(order, "points") || !Q_stricmp(order, "diff_points") )
+					Q_strncatz( ranking, va( "%s%d. %s      %s%d (%d)\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[1]), atoi(row[2]) ), sizeof(ranking) );
+				else if ( !Q_stricmp(order, "races") )
+					Q_strncatz( ranking, va( "%s%d. %s      %s%d\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[3]) ), sizeof(ranking) );
+				else if ( !Q_stricmp(order, "maps") )
+					Q_strncatz( ranking, va( "%s%d. %s      %s%d\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, atoi(row[4]) ), sizeof(ranking) );
+				else if ( !Q_stricmp(order, "playtime") )
+				{
+					unsigned long int playtimeMillis, playtimeSeconds, playtimeMinutes, playtimeHours, playtimeDays, playtimeMonths, playtimeYears;
+					
+					playtimeMillis = strtoul(row[5], NULL, 10);
+					playtimeYears = playtimeMillis / 31104000000;
+					playtimeMillis -= playtimeYears * 31104000000;
+					playtimeMonths = playtimeMillis / 2592000000;
+					playtimeMillis -= playtimeMonths * 2592000000;
+					playtimeDays = playtimeMillis / 86400000;
+					playtimeMillis -= playtimeDays * 86400000;
+					playtimeHours = playtimeMillis / 3600000;
+					playtimeMillis -= playtimeHours * 3600000;
+					playtimeMinutes = playtimeMillis / 60000;
+					playtimeMillis -= playtimeMinutes * 60000;
+					playtimeSeconds = playtimeMillis / 1000;
+					
+					Q_strncatz( ranking, va( "%s%d. %s      %s%uY %uM %uD %uh %um %us\n", S_COLOR_WHITE, position, row[0], S_COLOR_WHITE, playtimeYears, playtimeMonths, playtimeDays, playtimeHours, playtimeMinutes, playtimeSeconds ), sizeof(ranking) );
+				}
+			}
+        }
+
+        mysql_free_result(mysql_res);
+
+        players_query[playerNum]=malloc(strlen(ranking)+1);
+        players_query[playerNum][0]='\0';
+        Q_strncpyz( players_query[playerNum],ranking, strlen(ranking) + 1);
+
+		RS_PushCallbackQueue(RACESOW_CALLBACK_RANKING, playerNum, 0, 0, 0, 0, 0, 0);
+
+		free(rankingData->order);
+		free(rankingData);
+		free(order);
 		RS_EndMysqlThread();
 		return NULL;
 }

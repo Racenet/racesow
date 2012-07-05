@@ -538,8 +538,9 @@ class Racesow_Player
 
 	    if ( this.demo.isStopping() )
 	    	this.demo.stopNow();
+	    else if ( this.demo.isRecording() )
+	    	this.demo.cancel();
 
-	    // client should automatically cancel if already recording
 	    this.demo.start();
 	}
 
@@ -715,8 +716,8 @@ class Racesow_Player
 
   		} else if ( this.isRacing() )
   		{
-  			this.racingTime += levelTime - this.race.getStartTime();
-  			this.racingTimeSinceLastRace += levelTime - this.race.getStartTime();
+  			this.racingTime += this.race.getCurrentTime();
+  			this.racingTimeSinceLastRace += this.race.getCurrentTime();
   			this.sendMessage( this.race.checkPointsString );
   		}
 

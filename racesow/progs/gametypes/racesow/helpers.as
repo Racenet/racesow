@@ -271,7 +271,7 @@ void insertDefaultCommands( RC_Map @commandMap ) {
     @commandMap["protectednick"] = @Command_ProtectedNick();
     @commandMap["register"] = @Command_Register();
     @commandMap["stats"] = @Command_Stats();
-    @commandMap["token"] = @Command_Token();
+//    @commandMap["token"] = @Command_Token();
     @commandMap["whoisgod"] = @Command_WhoIsGod();
     @commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermission();
     @commandMap["callvotevalidate"] = @Command_CallvoteValidate();*/

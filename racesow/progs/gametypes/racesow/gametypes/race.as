@@ -162,7 +162,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
 
             if ( player.isRacing() )
             {
-                client.setHUDStat( STAT_TIME_SELF, (levelTime - player.race.getStartTime()) / 100 );
+                client.setHUDStat( STAT_TIME_SELF, player.race.getCurrentTime() / 100 );
                 if ( player.highestSpeed < player.getSpeed() )
                     player.highestSpeed = player.getSpeed(); // updating the heighestSpeed attribute.
             }

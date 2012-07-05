@@ -209,7 +209,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     
             // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
             if ( Racesow_GetPlayerByClient( client ).isRacing() )
-                client.setHUDStat( STAT_TIME_SELF, (levelTime - Racesow_GetPlayerByClient( client ).race.startTime) / 100 );
+                client.setHUDStat( STAT_TIME_SELF, Racesow_GetPlayerByClient( client ).race.getCurrentTime() / 100 );
     
             client.setHUDStat( STAT_TIME_BEST, Racesow_GetPlayerByClient( client ).bestRaceTime / 100 );
             client.setHUDStat( STAT_TIME_RECORD, map.getHighScore().getTime() / 100 );

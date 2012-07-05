@@ -761,6 +761,7 @@ class Command_PositionSet : Racesow_PositionCommand
 		player.sendErrorMessage( "Wrong parameters" );
 		player.sendMessage( S_COLOR_WHITE + this.getUsage() );
 		return false;
+
 	}
     bool execute(Racesow_Player @player, cString &args, int argc)
     {
@@ -1041,6 +1042,70 @@ class Command_RaceRestart : Racesow_Command
         player.restartRace();
 		return true;
     }
+}
+
+class Command_Ranking : Racesow_Command
+{
+    int page;
+	cString order;
+
+    Command_Ranking() {
+        super( "Needs description", "" ); //FIXME: <-
+    }
+	
+    bool validate(Racesow_Player @player, cString &args, int argc)
+    {
+        this.page = 1;
+		this.order = "points";
+		
+        if ( mysqlConnected == 0 )
+        {
+            player.sendMessage("This server doesn't store the best times, this command is useless\n" );
+            return false;
+        }
+
+        if (player.isWaitingForCommand)
+        {
+            player.sendErrorMessage( "Flood protection. Slow down cowboy, wait for the "
+                    +"results of your previous command");
+            return false;
+        }
+
+        if ( argc > 0 )
+        {
+            cString firstToken = args.getToken(0);
+            if ( firstToken.isNumerical() )
+            {
+                this.page = firstToken.toInt();
+            }
+        }
+		
+		if ( argc > 1 )
+		{
+			cString secondToken = args.getToken(1);
+			if ( secondToken == "points" || secondToken == "diff_points" ||
+				secondToken == "maps" || secondToken == "races" ||
+				secondToken == "playtime" ) {
+			
+				this.order = secondToken;
+				
+			} else if ( secondToken != "" ) {
+			
+				player.sendErrorMessage("invalid order given");
+				return false;
+			}
+		}
+		
+        return true;
+    }
+
+    bool execute(Racesow_Player @player, cString &args, int argc)
+    {
+        player.isWaitingForCommand = true;
+        RS_MysqlLoadRanking(player.getClient().playerNum(), this.page, this.order);
+        return true;
+    }
+
 }
 
 class Command_Register : Racesow_Command
