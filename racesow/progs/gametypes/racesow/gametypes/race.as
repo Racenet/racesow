@@ -1,16 +1,16 @@
 //debug...
-//class Command_SetAuth : Racesow_Command
-//{
-//    Command_SetAuth()
-//    {
-//        super( "set authmask (debug) 127 = superadmin", "<mask>" );
-//    }
-//    bool execute(Racesow_Player @player, String &args, int argc)
-//    {
-//    	player.getAuth().authorizationsMask = args.getToken( 0 ).toInt();
-//        return true;
-//    }
-//}
+class Command_SetAuth : Racesow_Command
+{
+    Command_SetAuth()
+    {
+        super( "set authmask (debug) 127 = superadmin", "<mask>" );
+    }
+    bool execute(Racesow_Player @player, String &args, int argc)
+    {
+    	player.getAuth().authorizationsMask = args.getToken( 0 ).toInt();
+        return true;
+    }
+}
 
 class Racesow_Gametype_Race : Racesow_Gametype
 {
@@ -20,38 +20,26 @@ class Racesow_Gametype_Race : Racesow_Gametype
 
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player();
-        //FIXME: These will hopefully be useable with the new angelscript version
-        /*@this.commandMap["join"] = @Command_Join();
+
+        @this.commandMap["join"] = @Command_Join();
         @this.commandMap["spec"] = @Command_Spec();
         @this.commandMap["chase"] = @Command_Spec();
         @this.commandMap["racerestart"] = @Command_RaceRestart();
-        @this.commandMap["kill"] = @Command_Kill();
+        @this.commandMap["kill"] = @Command_RaceRestart();
         @this.commandMap["oneliner"] = @Command_Oneliner();
-        @this.commandMap["position"] = @Command_Position();
-        @this.commandMap["noclip"] = @Command_Noclip();
+        @this.commandMap["position"] = @Command_Position_Race();
+        @this.commandMap["noclip"] = @Command_Noclip_Race();
         @this.commandMap["machinegun"] = @Command_Machinegun();
         @this.commandMap["timeleft"] = @Command_Timeleft();
         @this.commandMap["top"] = @Command_Top();
-        @this.commandMap["practicemode"] = @Command_Practicemode();*/
-        this.commandMap.set_opIndex( "join", @Command_Join() );
-        this.commandMap.set_opIndex( "spec", @Command_Spec() );
-        this.commandMap.set_opIndex( "chase", @Command_Spec() );
-        this.commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
-        this.commandMap.set_opIndex( "kill", @Command_RaceRestart() );
-        this.commandMap.set_opIndex( "oneliner", @Command_Oneliner() );
-        this.commandMap.set_opIndex( "position", @Command_Position_Race() );
-        this.commandMap.set_opIndex( "noclip", @Command_Noclip_Race() );
-        this.commandMap.set_opIndex( "machinegun", @Command_Machinegun() );
-        this.commandMap.set_opIndex( "timeleft", @Command_Timeleft() );
-        this.commandMap.set_opIndex( "top", @Command_Top() );
-        this.commandMap.set_opIndex( "practicemode", @Command_Practicemode() );
-//        this.commandMap.set_opIndex( "setauth", @Command_SetAuth() );
+        @this.commandMap["practicemode"] = @Command_Practicemode();
+//        @this.commandMap["setauth"] = @Command_SetAuth();
 
-        this.voteMap.set_opIndex( "joinlock", @Command_CallvoteJoinlock() );
-        this.voteMap.set_opIndex( "joinunlock", @Command_CallvoteJoinunlock() );
-        this.voteMap.set_opIndex( "extend_time", @Command_CallvoteExtend_time() );
-        this.voteMap.set_opIndex( "timelimit", @Command_CallvoteTimelimit() );
-        this.voteMap.set_opIndex( "spec", @Command_CallvoteSpec() );
+        @this.voteMap["joinlock"] = @Command_CallvoteJoinlock();
+        @this.voteMap["joinunlock"] = @Command_CallvoteJoinunlock();
+        @this.voteMap["extend_time"] = @Command_CallvoteExtend_time();
+        @this.voteMap["timelimit"] = @Command_CallvoteTimelimit();
+        @this.voteMap["spec"] = @Command_CallvoteSpec();
     }
     
     void InitGametype()

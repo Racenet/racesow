@@ -5,15 +5,11 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Durace();
-        //FIXME: These will hopefully be useable with the new angelscript version
-        /*@this.commandMap["racerestart"] = @Command_RaceRestart();
+
+        @this.commandMap["racerestart"] = @Command_RaceRestart();
         @this.commandMap["kill"] = @Command_Kill();
         @this.commandMap["top"] = @Command_Top();
-        @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
-        this.commandMap.set_opIndex( "racerestart", @Command_RaceRestart() );
-        this.commandMap.set_opIndex( "kill", @Command_RaceRestart() );
-        this.commandMap.set_opIndex( "top", @Command_Top() );
-        this.commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod( "Jerm's" ) );
+        @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");
     }
     
     void InitGametype()

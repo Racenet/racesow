@@ -544,29 +544,20 @@ class Racesow_Gametype_Drace : Racesow_Gametype
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Drace();
-        //FIXME: These will hopefully be useable with the new angelscript version
-        /*@this.commandMap["callvotevalidate"] = @Command_CallvoteValidateDrace();
+
+        //@this.commandMap["callvotevalidate"] = @Command_CallvoteValidateDrace();
         //@this.commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermissionDrace();
-        @this.commandMap["callvotepassed"] = @Command_CallvotePassed();
+        //@this.commandMap["callvotepassed"] = @Command_CallvotePassed();
         @this.commandMap["join"] = @Command_Join();
         @this.commandMap["spec"] = @Command_Spec();
         @this.commandMap["chase"] = @Command_Spec();
-        @this.commandMap["racerestart"] = @Command_RaceRestart();
+        @this.commandMap["racerestart"] = @Command_RaceRestart_Drace();
         @this.commandMap["resetcam"] = @Command_ResetCam();
         @this.commandMap["top"] = @Command_Top();
-        @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");*/
-//        this.commandMap.set_opIndex( "callvotevalidate",@Command_CallvoteValidate() );
-        //this.commandMap.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermissionDrace() );
-//        this.commandMap.set_opIndex( "callvotepassed", @Command_CallvotePassed() );
-        this.commandMap.set_opIndex( "join", @Command_Join() );
-        this.commandMap.set_opIndex( "spec", @Command_Spec() );
-        this.commandMap.set_opIndex( "racerestart", @Command_RaceRestart_Drace() );
-        this.commandMap.set_opIndex( "resetcam", @Command_ResetCam() );
-        this.commandMap.set_opIndex( "top", @Command_Top() );
-        this.commandMap.set_opIndex( "whoisgod", @Command_WhoIsGod( "Jerm's" ) );
+        @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");
 
-        this.voteMap.set_opIndex( "draw", @Command_CallvoteDraw() );
-        this.voteMap.set_opIndex( "max_victories", @Command_CallvoteMaxVictories() );
+        @this.commandMap["draw"] = @Command_CallvoteDraw();
+        @this.commandMap["max_victories"] = @Command_CallvoteMaxVictories();
     }
     
     void InitGametype()

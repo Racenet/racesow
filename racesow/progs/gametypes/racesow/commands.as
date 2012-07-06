@@ -158,7 +158,7 @@ class Racesow_BaseCommand : Racesow_Command
             return false;
         }
 
-        Racesow_Command @subCommand = this.commandMap.get_opIndex( args.getToken( 0 ) );
+        Racesow_Command @subCommand = this.commandMap[args.getToken( 0 )];
         if ( @subCommand == null )
         {
             player.sendErrorMessage( this.commandNotFound( args.getToken( 0 ) ) );
@@ -170,7 +170,7 @@ class Racesow_BaseCommand : Racesow_Command
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Command @subCommand = this.commandMap.get_opIndex( args.getToken( 0 ) );
+        Racesow_Command @subCommand = this.commandMap[args.getToken( 0 )];
         String newArgs = shiftArguments( args );
         return subCommand.execute( player, newArgs, argc > 0 ? argc - 1 : 0 );
     }
@@ -225,30 +225,30 @@ class Command_Admin : Racesow_BaseCommand
         super( "Execute an admin command", "<subcommand> [args...]" );
 
         @this.commandMap = @RC_Map( 17 );
-        this.commandMap.set_opIndex( "map", @Command_AdminMap( @this ) );
-        this.commandMap.set_opIndex( "restart", @Command_AdminRestart( @this ) );
-        this.commandMap.set_opIndex( "extend_time", @Command_AdminExtendtime( @this ) );
-        this.commandMap.set_opIndex( "remove", @Command_AdminRemove( @this ) );
-        this.commandMap.set_opIndex( "kick", @Command_AdminKick( @this ) );
-        this.commandMap.set_opIndex( "kickban", @Command_AdminKickban( @this ) );
-        this.commandMap.set_opIndex( "mute", @Command_AdminMute( @this ) );
-        this.commandMap.set_opIndex( "unmute", @Command_AdminUnmute( @this ) );
-        this.commandMap.set_opIndex( "vmute", @Command_AdminVmute( @this ) );
-        this.commandMap.set_opIndex( "vunmute", @Command_AdminVunmute( @this ) );
-        this.commandMap.set_opIndex( "votemute", @Command_AdminVotemute( @this ) );
-        this.commandMap.set_opIndex( "unvotemute", @Command_AdminUnvotemute( @this ) );
-        this.commandMap.set_opIndex( "joinlock", @Command_AdminJoinlock( @this ) );
-        this.commandMap.set_opIndex( "joinunlock", @Command_AdminJoinunlock( @this ) );
-        this.commandMap.set_opIndex( "cancelvote", @Command_AdminCancelvote( @this ) );
-        this.commandMap.set_opIndex( "updateml", @Command_AdminUpdateml( @this ) );
-        this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
+        @this.commandMap["map"] = @Command_AdminMap( @this );
+        @this.commandMap["restart"] = @Command_AdminRestart( @this );
+        @this.commandMap["extend_time"] = @Command_AdminExtendtime( @this );
+        @this.commandMap["remove"] = @Command_AdminRemove( @this );
+        @this.commandMap["kick"] = @Command_AdminKick( @this );
+        @this.commandMap["kickban"] = @Command_AdminKickban( @this );
+        @this.commandMap["mute"] = @Command_AdminMute( @this );
+        @this.commandMap["unmute"] = @Command_AdminUnmute( @this );
+        @this.commandMap["vmute"] = @Command_AdminVmute( @this );
+        @this.commandMap["vunmute"] = @Command_AdminVunmute( @this );
+        @this.commandMap["votemute"] = @Command_AdminVotemute( @this );
+        @this.commandMap["unvotemute"] = @Command_AdminUnvotemute( @this );
+        @this.commandMap["joinlock"] = @Command_AdminJoinlock( @this );
+        @this.commandMap["joinunlock"] = @Command_AdminJoinunlock( @this );
+        @this.commandMap["cancelvote"] = @Command_AdminCancelvote( @this );
+        @this.commandMap["updateml"] = @Command_AdminUpdateml( @this );
+        @this.commandMap["help"] = @Command_Help( @this, @this.commandMap );
     }
 
     bool validate(Racesow_Player @player, String &args, int argc)
     {
         if( !Racesow_BaseCommand::validate( player, args, argc ) )
             return false;
-        Racesow_Command @subCommand = this.commandMap.get_opIndex( args.getToken( 0 ) );
+        Racesow_Command @subCommand = this.commandMap[args.getToken( 0 )];
         if( !player.auth.allow( subCommand.permissionMask ) )
         {
 //           G_PrintMsg( null, S_COLOR_WHITE + player.getName() + S_COLOR_RED
@@ -412,12 +412,12 @@ class Command_Help : Racesow_Command
     	if ( argc >= 1 )
         {
     		String helpItemName = args.getToken( 0 );
-            @command = @this.targetCommandMap.get_opIndex( helpItemName );
+            @command = @this.targetCommandMap[helpItemName];
             if( @command != null )
             {
             	Racesow_Command @subHelp = null;
             	if( @command.commandMap != null ) //call specific help, if target command has subcommands
-            		@subHelp = @command.commandMap.get_opIndex( this.name );
+            		@subHelp = @command.commandMap[this.name];
             		@subHelp = null;
         		if( @subHelp != null )
         		{
@@ -701,13 +701,13 @@ class Command_Position : Racesow_BaseCommand
         super( "Commands to store and load position", "<subcommand> [args...]" );
 
         @this.commandMap = @RC_Map( 7 );
-        this.commandMap.set_opIndex( "save", @Command_PositionSave( @this ) );
-        this.commandMap.set_opIndex( "load", @Command_PositionLoad( @this ) );
-        this.commandMap.set_opIndex( "set", @Command_PositionSet( @this ) );
-        this.commandMap.set_opIndex( "store", @Command_PositionStore( @this ) );
-        this.commandMap.set_opIndex( "restore", @Command_PositionRestore( @this ) );
-        this.commandMap.set_opIndex( "storedlist", @Command_PositionStoredlist( @this ) );
-        this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
+        @this.commandMap["save"] = @Command_PositionSave( @this );
+        @this.commandMap["load"] = @Command_PositionLoad( @this );
+        @this.commandMap["set"] = @Command_PositionSet( @this );
+        @this.commandMap["store"] = @Command_PositionStore( @this );
+        @this.commandMap["restore"] = @Command_PositionRestore( @this );
+        @this.commandMap["storedlist"] = @Command_PositionStoredlist( @this );
+        @this.commandMap["help"] = @Command_Help( @this, @this.commandMap );
     }
 }
 
@@ -1150,9 +1150,9 @@ class Command_Stats : Racesow_BaseCommand
         super( "Show statistics", "[subcommand] [args...]" );
 
         @this.commandMap = @RC_Map( 3 );
-        this.commandMap.set_opIndex( "player", @Command_StatsPlayer( @this ) );
-        this.commandMap.set_opIndex( "map", @Command_StatsMap( @this ) );
-        this.commandMap.set_opIndex( "help", @Command_Help( @this, @this.commandMap ) );
+        @this.commandMap["player"] = @Command_StatsPlayer( @this );
+        @this.commandMap["map"] = @Command_StatsMap( @this );
+        @this.commandMap["help"] = @Command_Help( @this, @this.commandMap );
     }
     bool validate(Racesow_Player @player, String &args, int argc)
     {

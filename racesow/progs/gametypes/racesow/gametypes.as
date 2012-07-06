@@ -27,9 +27,9 @@ class Racesow_Gametype
 
         @this.commandMapInternal = @RC_Map( 3 );
         @this.voteMap = @RC_Map();
-        commandMapInternal.set_opIndex( "callvotecheckpermission", @Command_CallvoteCheckPermission() );
-        commandMapInternal.set_opIndex( "callvotevalidate", @Command_CallvoteValidate( @this.voteMap ) );
-        commandMapInternal.set_opIndex( "callvotepassed", @Command_CallvotePassed( @this.voteMap ) );
+        @commandMapInternal["callvotecheckpermission" ] = @Command_CallvoteCheckPermission();
+        @commandMapInternal["callvotevalidate" ] = @Command_CallvoteValidate( @this.voteMap );
+        @commandMapInternal["callvotepassed"] = @Command_CallvotePassed( @this.voteMap );
 
         @this.commandMap = @RC_Map();
         insertDefaultCommands(this.commandMap);
@@ -99,7 +99,7 @@ class Racesow_Gametype
 
 
         // check if it was an internal command
-        @command = @this.commandMapInternal.get_opIndex( cmdString );
+        @command = @this.commandMapInternal[cmdString];
         if( @command != null )
         {
             if( command.validate( player, argsString, argc ) )
@@ -107,7 +107,7 @@ class Racesow_Gametype
             return false;
         }
 
-        @command = @this.commandMap.get_opIndex(cmdString);
+        @command = @this.commandMap[cmdString];
         if( @command != null ) {
 	        if(command.validate(player, argsString, argc))
 	        {

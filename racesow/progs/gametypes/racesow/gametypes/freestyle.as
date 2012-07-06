@@ -4,31 +4,23 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     {
         for( int i= 0; i < maxClients; i++ )
             @this.players[i] = @Racesow_Player_Freestyle();
+
         this.ammoSwitch = true;
         this.timelimited = false;
-        //FIXME: These will hopefully be useable with the new angelscript version
-        /*@this.commandMap["chrono"] = @Command_Chrono();
+        @this.commandMap["chrono"] = @Command_Chrono();
         @this.commandMap["join"] = @Command_Join();
         @this.commandMap["spec"] = @Command_Spec();
         @this.commandMap["chase"] = @Command_Spec();
-        @this.commandMap["kill"] = @Command_Kill();
+        @this.commandMap["kill"] = @Command_RaceRestart();
         @this.commandMap["position"] = @Command_Position();
         @this.commandMap["quad"] = @Command_Quad();
-        @this.commandMap["noclip"] = @Command_Noclip();*/
-        this.commandMap.set_opIndex( "chrono", @Command_Chrono() );
-        this.commandMap.set_opIndex( "join", @Command_Join() );
-        this.commandMap.set_opIndex( "spec", @Command_Spec() );
-        this.commandMap.set_opIndex( "chase", @Command_Spec() );
-        this.commandMap.set_opIndex( "kill", @Command_RaceRestart() );
-        this.commandMap.set_opIndex( "position", @Command_Position() );
-        this.commandMap.set_opIndex( "quad", @Command_Quad() );
-        this.commandMap.set_opIndex( "noclip", @Command_Noclip() );
+        @this.commandMap["noclip"] = @Command_Noclip();
 
-        this.voteMap.set_opIndex( "joinlock", @Command_CallvoteJoinlock() );
-        this.voteMap.set_opIndex( "joinunlock", @Command_CallvoteJoinunlock() );
-        this.voteMap.set_opIndex( "extend_time", @Command_CallvoteExtend_time() );
-        this.voteMap.set_opIndex( "timelimit", @Command_CallvoteTimelimit() );
-        this.voteMap.set_opIndex( "spec", @Command_CallvoteSpec() ); // is this useful for freestyle?
+        @this.voteMap["joinlock"] = @Command_CallvoteJoinlock();
+        @this.voteMap["joinunlock"] = @Command_CallvoteJoinunlock();
+        @this.voteMap["extend_time"] = @Command_CallvoteExtend_time();
+        @this.voteMap["timelimit"] = @Command_CallvoteTimelimit();
+        @this.voteMap["spec"] = @Command_CallvoteSpec(); // is this useful for freestyle?
     }
     
     void InitGametype()
