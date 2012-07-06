@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "stdvector.h"
 #include "utils.h"
 
@@ -5,7 +7,7 @@
 namespace TestStdVector
 {
 
-#define TESTNAME "TestStdVector"
+static const char * const TESTNAME = "TestStdVector";
 
 
 static void print(std::string &str)
@@ -131,21 +133,23 @@ bool Test()
 		return false;
 	}
 
+	CBufferedOutStream bout;
 	bool fail = false;
 	int r;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-
+	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
+	RegisterScriptArray(engine, true);
 	RegisterStdString(engine);
 	RegisterVector<char>("int8[]", "int8", engine);
 	RegisterVector<int>("int[]", "int", engine);
-#ifdef __GNUC__
+#if defined(__GNUC__) || _MSC_VER >= 1500 || defined(__BORLANDC__)
 	RegisterVector<string>("string[]", "string", engine);
 	RegisterVector< std::vector<int> >("int[][]", "int[]", engine);
 #else
 	// There is something going wrong when registering the following.
 	// It looks like it is a linker problem, but I can't be sure.
-	printf("%s: MSVC can't register vector< vector<int> >\n", TESTNAME);
+	printf("%s: MSVC6 can't register vector< vector<int> >\n", TESTNAME);
 
 	// It seems that MSVC isn't able to differ between the template instances,
 	// when registering the different array overloads, all function pointers 
@@ -158,28 +162,55 @@ bool Test()
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 
 	r = engine->RegisterObjectType("MyStruct", sizeof(MyStruct), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("MyStruct", "int v", asOFFSET(MyStruct, v)); assert( r >= 0 );
 
 	RegisterVector<MyStruct>("MyStruct[]", "MyStruct", engine);
 
 	r = engine->RegisterObjectType("MyClass", sizeof(MyClass), asOBJ_VALUE | asOBJ_APP_CLASS_CD); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("MyClass", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(MyClass_Construct), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("MyClass", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(MyClass_Destruct), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("MyClass", "MyStruct[] myVec", offsetof(MyClass,myVec)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("MyClass", "MyStruct[] myVec", asOFFSET(MyClass,myVec)); assert( r >= 0 );
  
+	{
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		const char *script = 
+		"MyStruct[] TestInt() \n"
+		"{ \n"
+		"  MyStruct[] a; \n"
+		"  MyStruct m; m.v=10; \n"
+		"  a.push_back(m); \n"
+		"  return a; \n"
+		"} \n";
+		mod->AddScriptSection("s", script);
+		int r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
 
-	COutStream out;
+		// The object that was returned by value, must not be freed too early
+		r = ExecuteString(engine, "Assert(TestInt()[0].v == 10)", mod);
+		if( r != asEXECUTION_FINISHED )
+		{
+			TEST_FAILED;
+		}
+
+		if( bout.buffer != "" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
-	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	asIScriptContext *ctx = 0;
-	r = engine->ExecuteString(0, "Test()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "Test()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("%s: Failed to execute script\n", TESTNAME);
@@ -187,7 +218,7 @@ bool Test()
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 		
-		fail = true;
+		TEST_FAILED;
 	}
 	
 	if( ctx ) ctx->Release();
@@ -197,11 +228,12 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "Test()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "Test()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("%s: Failed to execute script\n", TESTNAME);
@@ -209,7 +241,7 @@ bool Test()
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 		
-		fail = true;
+		TEST_FAILED;
 	}
 	
 	if( ctx ) ctx->Release();
@@ -219,24 +251,24 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
 	ctx = engine->CreateContext();
 	r = ctx->Prepare(mod->GetFunctionIdByDecl("void Test(string[] v)"));
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 	vector<string> local;
 	local.push_back(string("test"));
 	r = ctx->SetArgObject(0, &local);
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
 	r = ctx->Execute();
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	ctx->Release();

@@ -2,13 +2,13 @@
 // This test shows how to register the std::string to be used in the scripts.
 // It also used to verify that objects are always constructed before destructed.
 //
-// Author: Andreas Jönsson
+// Author: Andreas Jonsson
 //
 
 #include "utils.h"
 using namespace std;
 
-#define TESTNAME "TestStdString"
+static const char * const TESTNAME = "TestStdString";
 
 static string printOutput;
 
@@ -128,6 +128,7 @@ bool TestStdString()
 	RegisterStdString(engine);
 	engine->RegisterGlobalFunction("void print(string &in)", asFUNCTION(PrintString), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void printVal(string)", asFUNCTION(PrintStringVal), asCALL_CDECL);
+	engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 
 	engine->RegisterObjectType("obj", 4, asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE);
 	engine->RegisterObjectBehaviour("obj", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Construct1), asCALL_CDECL_OBJLAST);
@@ -142,15 +143,14 @@ bool TestStdString()
 	engine->RegisterGlobalProperty("StringConsumer consumerObject", &consumerObject);
 	//<-- new: object method string argument test
 
-
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("string", script);
 	mod->Build();
 
-	int r = engine->ExecuteString(0, "blah1(); blah2();");
+	int r = ExecuteString(engine, "blah1(); blah2();", mod);
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: ExecuteString() failed\n", TESTNAME);
 	}
 
@@ -158,78 +158,204 @@ bool TestStdString()
 	mod->AddScriptSection(TESTNAME, script2);
 	mod->Build();
 
-	engine->ExecuteString(0, "testString()");
+	ExecuteString(engine, "testString()", mod);
 
 	if( printOutput != "hello Ida" )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to print the correct string\n", TESTNAME);
 	}
 
-	engine->ExecuteString(0, "string s = \"test\\\\test\\\\\"");
+	ExecuteString(engine, "string s = \"test\\\\test\\\\\"", mod);
 
 	// Verify that it is possible to use the string in constructor parameters
-	engine->ExecuteString(0, "obj a; a = obj(\"test\")");
-	engine->ExecuteString(0, "obj a(\"test\")");
+	ExecuteString(engine, "obj a; a = obj(\"test\")");
+	ExecuteString(engine, "obj a(\"test\")");
 
 	// Verify that it is possible to pass strings by value
 	printOutput = "";
-	engine->ExecuteString(0, "testString2()");
+	ExecuteString(engine, "testString2()", mod);
 	if( printOutput != "Hello World!" )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to print the correct string\n", TESTNAME);
 	}
 
 	printOutput = "";
-	engine->ExecuteString(0, "string a; a = 1; print(a);");
-	if( printOutput != "1" ) fail = true;
+	ExecuteString(engine, "string a; a = 1; print(a);");
+	if( printOutput != "1" ) TEST_FAILED;
 
 	printOutput = "";
-	engine->ExecuteString(0, "string a; a += 1; print(a);");
-	if( printOutput != "1" ) fail = true;
+	ExecuteString(engine, "string a; a += 1; print(a);");
+	if( printOutput != "1" ) TEST_FAILED;
 
 	printOutput = "";
-	engine->ExecuteString(0, "string a = \"a\" + 1; print(a);");
-	if( printOutput != "a1" ) fail = true;
+	ExecuteString(engine, "string a = \"a\" + 1; print(a);");
+	if( printOutput != "a1" ) TEST_FAILED;
 
 	printOutput = "";
-	engine->ExecuteString(0, "string a = 1 + \"a\"; print(a);");
-	if( printOutput != "1a" ) fail = true;
+	ExecuteString(engine, "string a = 1 + \"a\"; print(a);");
+	if( printOutput != "1a" ) TEST_FAILED;
 
 	printOutput = "";
-	engine->ExecuteString(0, "string a = 1; print(a);");
-	if( printOutput != "1" ) fail = true;
+	ExecuteString(engine, "string a = 1; print(a);");
+	if( printOutput != "1" ) TEST_FAILED;
 
 	printOutput = "";
-	engine->ExecuteString(0, "print(\"a\" + 1.2)");
-	if( printOutput != "a1.2") fail = true;
+	ExecuteString(engine, "print(\"a\" + 1.2)");
+	if( printOutput != "a1.2") TEST_FAILED;
 
 	printOutput = "";
-	engine->ExecuteString(0, "print(1.2 + \"a\")");
-	if( printOutput != "1.2a") fail = true;
+	ExecuteString(engine, "print(1.2 + \"a\")");
+	if( printOutput != "1.2a") TEST_FAILED;
 
-	engine->ExecuteString(0, "StringByVal(\"test\", \"test\")");
+	ExecuteString(engine, "StringByVal(\"test\", \"test\")");
 
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script3);
 	if( mod->Build() < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	//--> new: object method string argument test
 	printOutput = "";
-	engine->ExecuteString(0, "consumerObject.Consume(\"This is my string\")");
-	if( printOutput != "This is my string") fail = true;
+	ExecuteString(engine, "consumerObject.Consume(\"This is my string\")");
+	if( printOutput != "This is my string") TEST_FAILED;
 	//<-- new: object method string argument test
 
 	engine->RegisterObjectType("Http", sizeof(Http), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
 	engine->RegisterObjectMethod("Http","bool get(const string &in,string &out)", asMETHOD(Http,Get),asCALL_THISCALL);
-	engine->ExecuteString(0, "Http h; string str; h.get(\"string\", str);");
-	engine->ExecuteString(0, "Http h; string str; string a = \"a\"; h.get(\"string\"+a, str);");
+	ExecuteString(engine, "Http h; string str; h.get(\"string\", str);");
+	ExecuteString(engine, "Http h; string str; string a = \"a\"; h.get(\"string\"+a, str);");
+
+
+	// Make sure the return value is kept intact, even though there are objects that needs to be cleaned up
+	mod->AddScriptSection("mod", 
+		"void func() \n"
+		"{ \n"
+		"  assert( test() == 42 ); \n"
+		"} \n"
+		"int test() \n"
+		"{ \n"
+		"  int a = 42; \n"
+		"  string s = 'test'; \n"
+		"  return a; \n"
+		"} \n");
+	if( mod->Build() < 0 )
+		TEST_FAILED;
+	r = ExecuteString(engine, "func()", mod);
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
+
+	// Make sure the return value is kept intact, even though there are objects that needs to be cleaned up
+	mod->AddScriptSection("mod", 
+		"void func() \n"
+		"{ \n"
+		"  string s = 'test'; \n"
+		"  assert( test(s) == 42 ); \n"
+		"} \n"
+		"int test(string s) \n"
+		"{ \n"
+		"  int a = 42; \n"
+		"  return a; \n"
+		"} \n");
+	if( mod->Build() < 0 )
+		TEST_FAILED;
+	r = ExecuteString(engine, "func()", mod);
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
 
 	engine->Release();
+
+	// Test string comparison
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+
+		RegisterStdString(engine);
+
+		mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("mod", 
+			"void func(string &in s) \n"
+			"{ \n"
+			"  if( s == 'test' ) \n"
+			"  { \n"
+			"  } \n"
+			"} \n");
+		if( mod->Build() < 0 )
+			TEST_FAILED;
+
+		engine->Release();
+	}
+
+	// Test calling function that takes in-reference with a global const value
+	// Test this for a value type
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+
+		RegisterStdString(engine);
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+		mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("mod", 
+			"const string options_key = 'key'; \n"
+			"string string_encrypt(string &in key) \n"
+			"{ \n"
+			"  return key; \n"
+			"} \n"
+			"void save_settings() \n"
+			"{ \n"
+			"  string settings = string_encrypt(options_key); \n"
+			"  assert( settings == 'key' ); \n"
+			"} \n");
+		if( mod->Build() < 0 )
+			TEST_FAILED; 
+
+		asIScriptContext *ctx = engine->CreateContext();
+		r = ExecuteString(engine, "save_settings();", mod, ctx);
+		if( r == asEXECUTION_EXCEPTION )
+			PrintException(ctx);
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+		ctx->Release();
+
+		engine->Release();
+	} 
+
+	// Test string methods
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+
+		RegisterStdString(engine);
+		RegisterScriptArray(engine, false);
+		RegisterStdStringUtils(engine);
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+		r = ExecuteString(engine, 
+			"  string str = 'hello world'; \n"
+			"  assert( str.substr(6, 5) == 'world' ); \n"
+			"  assert( str.findFirst('o') == 4 ); \n"
+			"  assert( str.findLast('o') == 7 ); \n"
+			"  array<string> @arr = 'A|B||D'.split('|'); \n"
+			"  assert( arr.length() == 4 && \n"
+			"      arr[0] == 'A' && \n"
+			"      arr[1] == 'B' && \n"
+			"      arr[2] == ''  && \n"
+			"      arr[3] == 'D' ); \n"
+			"  assert( join(arr, ';') == 'A;B;;D' ); \n"
+			"  assert( formatInt(123456789012345, 'l', 20).length() == 20 ); \n"
+			"  assert( formatFloat(123.456, '', 20, 10).length() == 20 ); \n"
+		    "  assert( parseInt('1234') == 1234 ); \n"
+			"  assert( parseFloat('123.456') == 123.456 ); \n"
+			"  assert( '12345'.length == 5 ); \n");
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+
+		engine->Release();
+	}
 
 	return fail;
 }
@@ -271,21 +397,21 @@ void stringDecontructor(_String &s)
 	s.~_String();
 }
 
-_String operation_StringAdd(_String &a, _String &b)
+_String operation_StringAdd(const _String &a, const _String &b)
 {
 	_String r;
 	r.buffer = a.buffer + b.buffer;
 	return r;
 }
 
-_String operation_StringStringAdd(_String &a, std::string &b)
+_String operation_StringStringAdd(const _String &a, const std::string &b)
 {
 	_String r;
 	r.buffer = a.buffer + b;
 	return r;
 }
 
-_String operationString_StringAdd(std::string &a, _String &b)
+_String operationString_StringAdd(const std::string &a, const _String &b)
 {
 	_String r;
 	r.buffer = a + b.buffer;
@@ -309,11 +435,11 @@ bool TestTwoStringTypes()
 	engine->RegisterObjectBehaviour("_String", asBEHAVE_CONSTRUCT, "void f(const string &in)", asFUNCTION(stringStringConstructor), asCALL_CDECL_OBJLAST);
 	engine->RegisterObjectBehaviour("_String", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(stringDecontructor), asCALL_CDECL_OBJLAST);
 	// =
-	engine->RegisterObjectBehaviour("_String", asBEHAVE_ASSIGNMENT,	"_String &f(const string &in )", asMETHODPR(_String, operator=, (const string &), _String& ), asCALL_THISCALL);
-	engine->RegisterObjectBehaviour("_String", asBEHAVE_ASSIGNMENT,	"_String &f(const _String &in )", asMETHODPR(_String, operator=, (const _String &), _String& ), asCALL_THISCALL);
+	engine->RegisterObjectMethod("_String", "_String &opAssign(const string &in )", asMETHODPR(_String, operator=, (const string &), _String& ), asCALL_THISCALL);
+	engine->RegisterObjectMethod("_String", "_String &opAssign(const _String &in )", asMETHODPR(_String, operator=, (const _String &), _String& ), asCALL_THISCALL);
 	// +=
-	engine->RegisterObjectBehaviour("_String", asBEHAVE_ADD_ASSIGN , "_String &f(const string &in )", asMETHODPR(_String, operator+=, (const string &), _String& ), asCALL_THISCALL);
-	engine->RegisterObjectBehaviour("_String", asBEHAVE_ADD_ASSIGN , "_String &f(const _String &in )", asMETHODPR(_String, operator+=, (const _String &), _String& ), asCALL_THISCALL);
+	engine->RegisterObjectMethod("_String", "_String &opAddAssign(const string &in )", asMETHODPR(_String, operator+=, (const string &), _String& ), asCALL_THISCALL);
+	engine->RegisterObjectMethod("_String", "_String &opAddAssign(const _String &in )", asMETHODPR(_String, operator+=, (const _String &), _String& ), asCALL_THISCALL);
 	// comparison
 /*	engine->RegisterGlobalBehaviour(asBEHAVE_EQUAL, "bool f(const _String &in, const _String &in)", asFUNCTION(compare_StringEqual), asCALL_CDECL);
 	engine->RegisterGlobalBehaviour(asBEHAVE_EQUAL, "bool f(const _String &in, const string &in)", asFUNCTION(compare_StringStringEqual), asCALL_CDECL);
@@ -323,21 +449,21 @@ bool TestTwoStringTypes()
 	engine->RegisterGlobalBehaviour(asBEHAVE_NOTEQUAL , "bool f(const _String &in, const string &in)", asFUNCTION(compare_StringStringNotEqual), asCALL_CDECL);
 	engine->RegisterGlobalBehaviour(asBEHAVE_NOTEQUAL , "bool f(const string &in, const _String &in)", asFUNCTION(compareString_StringNotEqual), asCALL_CDECL);
 */	// +
-	r = engine->RegisterGlobalBehaviour(asBEHAVE_ADD , "_String f(const _String &in, const _String &in)", asFUNCTION(operation_StringAdd), asCALL_CDECL); assert( r >= 0 );
-	r = engine->RegisterGlobalBehaviour(asBEHAVE_ADD , "_String f(const _String &in, const string &in)", asFUNCTION(operation_StringStringAdd), asCALL_CDECL); assert( r >= 0 );
-	r = engine->RegisterGlobalBehaviour(asBEHAVE_ADD , "_String f(const string &in, const _String &in)", asFUNCTION(operationString_StringAdd), asCALL_CDECL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("_String" , "_String opAdd(const _String &in) const", asFUNCTION(operation_StringAdd), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("_String" , "_String opAdd(const string &in) const", asFUNCTION(operation_StringStringAdd), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("_String" , "_String opAdd_r(const string &in) const", asFUNCTION(operationString_StringAdd), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 
-	r = engine->ExecuteString(0, "_String('ab') + 'a'");
+	r = ExecuteString(engine, "_String('ab') + 'a'");
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->ExecuteString(0, "_String a; a+= 'a' + 'b' ; _String b = 'c'; a += b + 'c';");
+	r = ExecuteString(engine, "_String a; a+= 'a' + 'b' ; _String b = 'c'; a += b + 'c';");
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->ExecuteString(0, "string a; a+= 'a' + 'b' ; string b = 'c'; a += b + 'c';");
+	r = ExecuteString(engine, "string a; a+= 'a' + 'b' ; string b = 'c'; a += b + 'c';");
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 

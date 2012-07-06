@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2007 Andreas Jonsson
+   Copyright (c) 2003-2012 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -39,6 +39,10 @@
 #ifndef AS_VARIABLESCOPE_H
 #define AS_VARIABLESCOPE_H
 
+#include "as_config.h"
+
+#ifndef AS_NO_COMPILER
+
 #include "as_array.h"
 #include "as_string.h"
 #include "as_datatype.h"
@@ -47,12 +51,13 @@ BEGIN_AS_NAMESPACE
 
 struct sVariable
 {
-	asCString name;
+	asCString   name;
 	asCDataType type;
-	int stackOffset;
-	bool isInitialized;
-	bool isPureConstant;
-	asQWORD constantValue;
+	int         stackOffset;
+	bool        isInitialized;
+	bool        isPureConstant;
+	asQWORD     constantValue;
+	bool        onHeap;
 };
 
 class asCVariableScope
@@ -63,7 +68,7 @@ public:
 
 	void Reset();
 
-	int DeclareVariable(const char *name, const asCDataType &type, int stackOffset);
+	int DeclareVariable(const char *name, const asCDataType &type, int stackOffset, bool isObjectOnHeap);
 	sVariable *GetVariable(const char *name);
 	sVariable *GetVariableByOffset(int offset);
 
@@ -76,5 +81,7 @@ public:
 };
 
 END_AS_NAMESPACE
+
+#endif // AS_NO_COMPILER
 
 #endif

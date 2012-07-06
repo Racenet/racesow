@@ -33,7 +33,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #else
 #include <winsock2.h>
+#ifndef __MINGW64__
 typedef int ssize_t;
+#endif
 #endif
 
 #include "mosquitto_internal.h"

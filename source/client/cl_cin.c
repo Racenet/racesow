@@ -1,25 +1,28 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "client.h"
 #include "cin.h"
+
+#define SCR_CinematicTime() CL_SoundModule_GetRawSamplesTime()
+
 
 /*
 =================================================================
@@ -34,27 +37,11 @@ ROQ PLAYING
 */
 void SCR_StopCinematic( void )
 {
-	cinematics_t *cin = cl.cin;
-
-	if( !cin || !cin->file )
+	if( !cl.cin.h )
 		return;
 
-	cl.cin = NULL;
-	cin->time = 0; // done
-	cin->pic = NULL;
-	cin->pic_pending = NULL;
-
-	FS_FCloseFile( cin->file );
-	cin->file = 0;
-
-	Mem_Free( cin->name );
-	cin->name = NULL;
-
-	if( cin->vid_buffer )
-	{
-		Mem_Free( cin->vid_buffer );
-		cin->vid_buffer = NULL;
-	}
+	CIN_Close( cl.cin.h );
+	memset( &cl.cin, 0, sizeof( cl.cin ) );
 }
 
 /*
@@ -70,61 +57,22 @@ void SCR_FinishCinematic( void )
 //==========================================================================
 
 /*
-* SCR_InitCinematic
-*/
-void SCR_InitCinematic( void )
-{
-	RoQ_Init();
-}
-
-/*
-* SCR_ValidCinematic
-*/
-qboolean SCR_ValidCinematic( void )
-{
-	return cl.cin != NULL;
-}
-
-/*
 * SCR_ReadNextCinematicFrame
 */
-static qbyte *SCR_ReadNextCinematicFrame( void )
+static void SCR_ReadNextCinematicFrame( void )
 {
-	cinematics_t *cin = cl.cin;
-	roq_chunk_t *chunk = &cin->chunk;
-
-	while( !FS_Eof( cin->file ) )
-	{
-		RoQ_ReadChunk( cin );
-
-		if( FS_Eof( cin->file ) )
-			return NULL;
-		if( chunk->size <= 0 )
-			continue;
-
-		if( chunk->id == RoQ_INFO )
-			RoQ_ReadInfo( cin );
-		else if( chunk->id == RoQ_SOUND_MONO || chunk->id == RoQ_SOUND_STEREO )
-			RoQ_ReadAudio( cin );
-		else if( chunk->id == RoQ_QUAD_VQ )
-			return RoQ_ReadVideo( cin );
-		else if( chunk->id == RoQ_QUAD_CODEBOOK )
-			RoQ_ReadCodebook( cin );
-		else
-			RoQ_SkipChunk( cin );
-	}
-
-	return NULL;
+	cl.cin.pic = CIN_ReadNextFrame( cl.cin.h, 
+		&cl.cin.width, &cl.cin.height, 
+		&cl.cin.aspect_numerator, &cl.cin.aspect_denominator,
+		&cl.cin.redraw );
 }
 
 /*
-* SCR_GetCinematicTime
+* SCR_AllowCinematicConsole
 */
-unsigned int SCR_GetCinematicTime( void )
+qboolean SCR_AllowCinematicConsole( void )
 {
-	if( !SCR_ValidCinematic() )
-		return 0;
-	return (( cinematics_t * )cl.cin)->time;
+	return cl.cin.allowConsole;
 }
 
 /*
@@ -132,40 +80,35 @@ unsigned int SCR_GetCinematicTime( void )
 */
 void SCR_RunCinematic( void )
 {
-	unsigned int realtime;
-	unsigned int frame;
-	cinematics_t *cin;
-
-	if( !SCR_GetCinematicTime() )
+	if( cls.state != CA_CINEMATIC ) {
 		return;
+	}
 
-	if( cls.key_dest != key_game )
-	{
+	if( ( cls.key_dest != key_game && cls.key_dest != key_console )
+		|| (cls.key_dest == key_console && !SCR_AllowCinematicConsole()) ) {
 		// stop if menu or console is up
 		SCR_FinishCinematic();
 		return;
 	}
 
-	cin = ( cinematics_t * )cl.cin;
-	realtime = cls.realtime;
-	if( realtime <= cin->time )
-		return;
+	cl.cin.absPrevTime = cl.cin.absCurrentTime;
+	cl.cin.absCurrentTime = SCR_CinematicTime();
 
-	frame = ( realtime - cin->time ) * (float)( RoQ_FRAMERATE ) / 1000;
-	if( frame <= cin->frame )
+	if( cl.cin.paused ) {
 		return;
-
-	if( frame > cin->frame + 1 )
-	{
-		Com_Printf( "Dropped frame: %i > %i\n", frame, cin->frame + 1 );
-		cin->time = realtime - cin->frame * 1000 / RoQ_FRAMERATE;
 	}
 
-	cin->pic = cin->pic_pending;
-	cin->pic_pending = SCR_ReadNextCinematicFrame();
+	cl.cin.currentTime += cl.cin.absCurrentTime - cl.cin.absPrevTime;
 
-	if( !cin->pic_pending )
-	{
+	if( !CIN_NeedNextFrame( cl.cin.h, cl.cin.currentTime ) ) {
+		cl.cin.redraw = qfalse;
+		return;
+	}
+
+	// read next frame
+	SCR_ReadNextCinematicFrame();
+	if( !cl.cin.pic ) {
+		// end of cinematic
 		SCR_FinishCinematic();
 		return;
 	}
@@ -178,82 +121,164 @@ void SCR_RunCinematic( void )
 */
 qboolean SCR_DrawCinematic( void )
 {
-	cinematics_t *cin;
+	int x, y;
+	int w, h;
+	qboolean keepRatio;
 
-	if( !SCR_ValidCinematic() )
+	if( cls.state != CA_CINEMATIC )
 		return qfalse;
 
-	cin = ( cinematics_t * )cl.cin;
-	if( !cin->pic )
+	if( !cl.cin.pic )
 		return qtrue;
 
-	R_DrawStretchRaw( 0, 0, viddef.width, viddef.height, cin->width, cin->height, cin->frame, cin->pic );
+	keepRatio = cl.cin.keepRatio && cl.cin.aspect_numerator!=0 && cl.cin.aspect_denominator!=0;
 
+	// check whether we should keep video aspect ratio upon user's request
+	// and make sure that video's aspect ration is really different from that of the screen
+	// a/b == c/d => a * d == c * b
+	if( keepRatio && (viddef.width * cl.cin.aspect_numerator != viddef.height * cl.cin.aspect_denominator) )
+	{
+		float aspect;
+
+		// apply the aspect ratio
+		aspect = ((float)cl.cin.aspect_numerator * cl.cin.width) / ((float)cl.cin.aspect_denominator * cl.cin.height);
+
+		// shrink either of the dimensions, also keeping it even
+		if( aspect > 1 )
+		{
+			w = viddef.width;
+			h = ((int)( (float)viddef.width / aspect ) + 1) & ~1;
+
+			clamp( h, 0, (int)viddef.height );
+
+			x = 0;
+			y = Q_rint( (viddef.height - h) * 0.5 );
+		}
+		else
+		{
+			// this branch is untested but hopefully works
+
+			w = ((int)( (float)viddef.height * aspect ) + 1) & ~1;
+			h = viddef.height;
+
+			clamp( w, 0, (int)viddef.width );
+
+			x = Q_rint( (viddef.width  - w) * 0.5 );
+			y = 0;
+		}
+	}
+	else
+	{
+		// fullscreen (stretches video in case of non-matching aspect ratios)
+		w = viddef.width;
+		h = viddef.height;
+		x = 0;
+		y = 0;
+	}
+
+	R_DrawStretchRaw( x, y, w, h, cl.cin.width, cl.cin.height, cl.cin.pic );
+
+	cl.cin.redraw = qfalse;
 	return qtrue;
 }
 
 /*
 * SCR_PlayCinematic
 */
-static void SCR_PlayCinematic( char *arg )
+static void SCR_PlayCinematic( const char *arg, int flags )
 {
-	int len;
-	size_t name_size;
-	static cinematics_t clientCin;
-	cinematics_t *cin = cl.cin = &clientCin;
-	roq_chunk_t *chunk = &cin->chunk;
+	struct cinematics_s *cin;
 
-	name_size = strlen( "video/" ) + strlen( arg ) + strlen( ".roq" ) + 1;
-	cin->name = Mem_ZoneMalloc( name_size );
-	Q_snprintfz( cin->name, name_size, "video/%s", arg );
-	COM_DefaultExtension( cin->name, ".roq", name_size );
+	CL_SoundModule_Clear();
 
-	// nasty hack
-	cin->s_rate = 22050;
-	cin->s_width = 2;
-	cin->width = cin->height = 0;
-
-	cin->frame = 0;
-	len = FS_FOpenFile( cin->name, &cin->file, FS_READ );
-	if( !cin->file || len < 1 )
+	cin = CIN_Open( arg, 0, 0 );
+	if( !cin )
 	{
-		Com_Printf( "Couldn't find %s\n", cin->name );
-		SCR_StopCinematic();
+		Com_Printf( "SCR_PlayCinematic: couldn't find %s\n", arg );
 		return;
 	}
 
-	// read header
-	RoQ_ReadChunk( cin );
+	CL_Disconnect( NULL );
 
-	if( chunk->id != RoQ_HEADER1 || chunk->size != RoQ_HEADER2 || chunk->argument != RoQ_HEADER3 )
-	{
-		Com_Printf( "Invalid video file %s\n", cin->name );
-		SCR_StopCinematic();
-		return;
-	}
+	cl.cin.h = cin;
+	cl.cin.keepRatio = (flags & 1) ? qfalse : qtrue;
+	cl.cin.allowConsole = (flags & 2) ? qfalse : qtrue;
+	cl.cin.paused = qfalse;
+	cl.cin.absStartTime = cl.cin.absCurrentTime = cl.cin.absPrevTime = SCR_CinematicTime();
+	cl.cin.currentTime = 0;
+
+	CL_SetClientState( CA_CINEMATIC );
+
+	CL_SoundModule_StopAllSounds();
 
 	SCR_EndLoadingPlaque();
 
-	cin->headerlen = FS_Tell( cin->file );
-	cin->frame = 0;
-	cin->pic = cin->pic_pending = SCR_ReadNextCinematicFrame();
-	cin->time = cls.realtime + 1; // add 1 msec so SCR_GetCinematicTime is also valid for early commands
-
-	CL_SetClientState( CA_ACTIVE );
-
-	CL_SoundModule_StopAllSounds();
+	SCR_ReadNextCinematicFrame();
 }
+
+/*
+* SCR_PauseCinematic
+*/
+void SCR_PauseCinematic( void )
+{
+	if( cls.state != CA_CINEMATIC ) {
+		return;
+	}
+
+	cl.cin.paused = !cl.cin.paused;
+	if( cl.cin.paused ) {
+		CL_SoundModule_Clear();
+	}
+}
+
+// =======================================================================
 
 /*
 * CL_PlayCinematic_f
 */
 void CL_PlayCinematic_f( void )
 {
-	if( Cmd_Argc() != 2 )
+	if( Cmd_Argc() < 1 )
 	{
-		Com_Printf( "USAGE: cinematic <name>\n" );
+		Com_Printf( "Usage: %s <name> [flags]\n", Cmd_Argv( 0 ) );
 		return;
 	}
 
-	SCR_PlayCinematic( Cmd_Argv( 1 ) );
+	SCR_PlayCinematic( Cmd_Argv( 1 ), atoi( Cmd_Argv( 2 ) ) );
+}
+
+/*
+* CL_PauseCinematic_f
+*/
+void CL_PauseCinematic_f( void )
+{
+	if( cls.state != CA_CINEMATIC )
+	{
+		Com_Printf( "Usage: %s\n", Cmd_Argv( 0 ) );
+		return;
+	}
+
+	SCR_PauseCinematic();
+}
+
+/*
+* CL_InitCinematics
+*/
+void CL_InitCinematics( void )
+{
+	CIN_LoadLibrary( qtrue );
+
+	Cmd_AddCommand( "cinematic", CL_PlayCinematic_f );
+	Cmd_AddCommand( "cinepause", CL_PauseCinematic_f );
+}
+
+/*
+* CL_ShutdownCinematics
+*/
+void CL_ShutdownCinematics( void )
+{
+	Cmd_RemoveCommand( "cinematic" );
+	Cmd_RemoveCommand( "cinepause" );
+
+	CIN_UnloadLibrary( qtrue );
 }

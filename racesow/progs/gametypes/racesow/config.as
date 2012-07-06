@@ -1,4 +1,4 @@
-cString config_general =
+String config_general =
 "//*\n" +
 "//* Racesow General settings\n" +
 "//* This file defines racesow general seetings\n" +
@@ -44,7 +44,7 @@ cString config_general =
 "echo racesow.cfg executed\n"
 ;
 
-cString config_database =
+String config_database =
 "//*\n" +
 "//* Database settings\n" +
 "//*\n" +
@@ -85,7 +85,7 @@ cString config_database =
 "echo database.cfg executed\n"
 ;
 
-cString config_weapondef =
+String config_weapondef =
 "//*\n" +
 "//* Weapondefs\n" +
 "//*\n" +

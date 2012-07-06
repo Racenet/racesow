@@ -12,39 +12,36 @@ cannot be passed by value to application registered functions, a value type
 doesn't support handles and can be passed by value to application registered
 functions.
 
- - \subpage doc_register_ref_type
+\todo Expand this page to better describe the difference between reference types and value types
+
+ - \subpage doc_reg_basicref
  - \subpage doc_register_val_type
  - \subpage doc_reg_opbeh
  - \subpage doc_reg_objmeth
  - \subpage doc_reg_objprop
 
 
-\page doc_register_ref_type Registering a reference type
 
- - \ref doc_reg_basicref
- - \ref doc_reg_noinst
- - \ref doc_reg_single
- - \ref doc_reg_scoped
 
-\see \ref doc_gc_object, \ref doc_adv_class_hierarchy
 
-\section doc_reg_basicref Registering a basic reference type
+
+
+\page doc_reg_basicref Registering a reference type
 
 The basic reference type should be registered with the following behaviours:
-asBEHAVE_FACTORY, asBEHAVE_ADDREF, and asBEHAVE_RELEASE. If it is desired that
-assignments should be allowed for the type the asBEHAVE_ASSIGNMENT behaviour
-must be registered as well. Other behaviours, such as math operators,
-comparisons, etc may be registered as needed.
+\ref asBEHAVE_FACTORY, \ref asBEHAVE_ADDREF, and \ref asBEHAVE_RELEASE. 
 
 \code
 // Registering the reference type
 r = engine->RegisterObjectType("ref", 0, asOBJ_REF); assert( r >= 0 );
 \endcode
 
-\see The \ref doc_addon_string "string" add-on for an example of a reference type
+\see The \ref doc_addon_any "any" add-on for an example of a reference type.
+
+\see \ref doc_gc_object, \ref doc_adv_class_hierarchy, \ref doc_adv_scoped_type, and \ref doc_adv_single_ref_type for more advanced types.
 
 
-\subsection doc_reg_basicref_1 Factory function
+\section doc_reg_basicref_1 Factory function
 
 The factory function is the one that AngelScript will use to instanciate
 objects of this type when a variable is declared. It is responsible for
@@ -79,7 +76,7 @@ The factory function must be registered as a global function, but can be
 implemented as a static class method, common global function, or a global
 function following the generic calling convention.
 
-\subsection doc_reg_basicref_2 Addref and release behaviours
+\section doc_reg_basicref_2 Addref and release behaviours
 
 \code
 void CRef::Addref()
@@ -99,28 +96,6 @@ void CRef::Release()
 r = engine->RegisterObjectBehaviour("ref", asBEHAVE_ADDREF, "void f()", asMETHOD(CRef,AddRef), asCALL_THISCALL); assert( r >= 0 );
 r = engine->RegisterObjectBehaviour("ref", asBEHAVE_RELEASE, "void f()", asMETHOD(CRef,Release), asCALL_THISCALL); assert( r >= 0 );
 \endcode
-
-\subsection doc_reg_basicref_3 Assignment behaviour
-
-\code
-CRef &CRef::operator =(const CRef &other)
-{
-    // Copy everything from the other class, except the reference counter
-}
-
-// Registering the assignment behaviour
-r = engine->RegisterObjectBehaviour("ref", asBEHAVE_ASSIGNMENT, "ref &f(const &in)", asMETHOD(CRef,operator=), asCALL_THISCALL); assert( r >= 0 );
-\endcode
-
-The assignment behaviour can be overloaded with other types if that is
-desired, that way the script writer doesn't have to manually convert the
-expressions before assigning the values to the type.
-
-
-
-
-
-
 
 
 
@@ -142,70 +117,6 @@ pooled objects.
 
 
 
-\section doc_reg_single Registering a single-reference type
-
-A variant of the uninstanciable reference types is the single-reference
-type. This is a type that have only 1 reference accessing it, i.e. the script
-cannot store any extra references to the object during execution. The script
-is forced to use the reference it receives from the application at the moment
-the application passes it on to the script.
-
-The reference can be passed to the script through a property, either global
-or a class member, or it can be returned from an application registered
-function or class method.
-
-\code
-// Registering the type so that it cannot be instanciated
-// by the script, nor allow scripts to store references to the type
-r = engine->RegisterObjectType("single", 0, asOBJ_REF | asOBJ_NOHANDLE); assert( r >= 0 );
-\endcode
-
-This sort of type is most useful when you want to have complete control over
-references to an object, for example so that the application can destroy and
-recreate objects of the type without having to worry about potential references
-held by scripts. This allows the application to control when a script has access
-to an object and it's members.
-
-
-
-
-\section doc_reg_scoped Registering a scoped type
-
-Some C++ value types have special requirements for the memory where they
-are located, e.g. specific alignment needs, or memory pooling. Since
-AngelScript doesn't provide that much control over where and how value types
-are allocated, they must be registered as reference types. In this case you'd
-register the type as a scoped reference type.
-
-A scoped reference type will have the life time controlled by the scope of
-the variable that instanciate it, i.e. as soon as the variable goes out of
-scope the instance is destroyed. This means that the type doesn't permit
-handles to be taken for the type.
-
-A scoped reference type requires two behaviours to be registered, the
-factory and the release behaviour. The addref behaviour is not permitted.
-
-Since no handles can be taken for the object type, there is no need to keep
-track of the number of references held to the object. This means that the
-release behaviour should simply destroy and deallocate the object as soon as
-it's called.
-
-\code
-scoped *Scoped_Factory()
-{
-  return new scoped;
-}
-
-void Scoped_Release(scoped *s)
-{
-  if( s ) delete s;
-}
-
-// Registering a scoped reference type
-r = engine->RegisterObjectType("scoped", 0, asOBJ_REF | asOBJ_SCOPED); assert( r >= 0 );
-r = engine->RegisterObjectBehaviour("scoped", asBEHAVE_FACTORY, "scoped @f()", asFUNCTION(Scoped_Factory), asCALL_CDECL); assert( r >= 0 );
-r = engine->RegisterObjectBehaviour("scoped", asBEHAVE_RELEASE, "void f()", asFUNCTION(Scoped_Release), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-\endcode
 
 
 
@@ -216,47 +127,26 @@ r = engine->RegisterObjectBehaviour("scoped", asBEHAVE_RELEASE, "void f()", asFU
 
 When registering a value type, the size of the type must be given so that AngelScript knows how much space is needed for it.
 If the type doesn't require any special treatment, i.e. doesn't contain any pointers or other resource references that must be
-maintained, then the type can be registered with the flag asOBJ_POD. In this case AngelScript doesn't require the default
+maintained, then the type can be registered with the flag \ref asOBJ_POD. In this case AngelScript doesn't require the default
 constructor, assignment behaviour, or destructor as it will be able to automatically handle these cases the same way it handles
 built-in primitives.
 
-If the type will be passed to and from the application by value using native calling conventions, it is important to inform
-AngelScript of its real type in C++, otherwise AngelScript won't be able to determine exactly how C++ is treating the type in
-a parameter or return value. 
-
-There are a few different flags for this:
-
-<table border=0 cellspacing=0 cellpadding=0>
-<tr><td>\ref asOBJ_APP_CLASS             &nbsp; </td><td>The C++ type is a class, struct, or union</td></tr>
-<tr><td>\ref asOBJ_APP_CLASS_CONSTRUCTOR &nbsp; </td><td>The C++ type has a defined constructor</td></tr>
-<tr><td>\ref asOBJ_APP_CLASS_DESTRUCTOR  &nbsp; </td><td>The C++ type has a defined destructor</td></tr>
-<tr><td>\ref asOBJ_APP_CLASS_ASSIGNMENT  &nbsp; </td><td>The C++ type has a defined assignment operator</td></tr>
-<tr><td>\ref asOBJ_APP_PRIMITIVE         &nbsp; </td><td>The C++ type is a C++ primitive, but not a float or double</td></tr>
-<tr><td>\ref asOBJ_APP_FLOAT             &nbsp; </td><td>The C++ type is a float or double</td></tr>
-</table>
-
-Note that these don't represent how the type will behave in the script language, only what the real type is in the host 
-application. So if you want to register a C++ class that you want to behave as a primitive type in the script language
-you should still use the flag asOBJ_APP_CLASS. The same thing for the flags to identify that the class has a constructor, 
-destructor, or assignment. These flags tell AngelScript that the class has the respective function, but not that the type
-in the script language should have these behaviours.
-
-For class types there are also a shorter form of the flags for each combination of the 4 flags. They are of the form asOBJ_APP_CLASS_CDA, 
-where the existance of the last letters determine if the constructor, destructor, and/or assignment behaviour are available. For example
-asOBJ_APP_CLASS_CDA is defined as asOBJ_APP_CLASS | asOBJ_APP_CLASS_CONSTRUCTOR | asOBJ_APP_CLASS_DESTRUCTOR | asOBJ_APP_CLASS_ASSIGNMENT.
-
+If you plan on passing or returning the type by value to registered functions that uses native calling convention, you also
+need to inform \ref doc_reg_val_2 "how the type is implemented in the application", but if you only plan on using generic
+calling conventions, or don't pass these types by value then you don't need to worry about that.
 
 
 
 \code
 // Register a primitive type, that doesn't need any special management of the content
-r = engine->RegisterObjectType("pod", sizeof(pod), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r >= 0 );
+r = engine->RegisterObjectType("pod", sizeof(pod), asOBJ_VALUE | asOBJ_POD); assert( r >= 0 );
 
 // Register a class that must be properly initialized and uninitialized
-r = engine->RegisterObjectType("val", sizeof(val), asOBJ_VALUE | asOBJ_APP_CLASS_CDA); assert( r >= 0 );
+r = engine->RegisterObjectType("val", sizeof(val), asOBJ_VALUE); assert( r >= 0 );
 \endcode
 
-\see The \ref doc_addon_std_string or \ref doc_addon_math3d "vector3" add-on for examples of value types
+\see The \ref doc_addon_std_string or the \ref doc_addon_math "complex type in the math add-on" for examples of value types
+\see \ref doc_adv_generic_handle for a more specific example of a value type
 
 
 \section doc_reg_val_1 Constructor and destructor
@@ -282,42 +172,120 @@ r = engine->RegisterObjectBehaviour("val", asBEHAVE_CONSTRUCT, "void f()", asFUN
 r = engine->RegisterObjectBehaviour("val", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Destructor), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 \endcode
 
-The assignment behaviour is registered the same way as for reference types.
+Note that you may need to include the &lt;new&gt; header to declare the placement new operator that is used to initialize a preallocated memory block.
 
+
+
+
+\section doc_reg_val_2 Value types and native calling conventions
+
+If the type will be passed to and from the application by value using native calling conventions, it is important to inform
+AngelScript of its real type in C++, otherwise AngelScript won't be able to determine exactly how C++ is treating the type in
+a parameter or return value. 
+
+There are a few different flags for this:
+
+<table border=0 cellspacing=0 cellpadding=0>
+<tr><td>\ref asOBJ_APP_CLASS                  &nbsp; </td><td>The C++ type is a class, struct, or union</td></tr>
+<tr><td>\ref asOBJ_APP_CLASS_CONSTRUCTOR      &nbsp; </td><td>The C++ type has a defined constructor</td></tr>
+<tr><td>\ref asOBJ_APP_CLASS_DESTRUCTOR       &nbsp; </td><td>The C++ type has a defined destructor</td></tr>
+<tr><td>\ref asOBJ_APP_CLASS_ASSIGNMENT       &nbsp; </td><td>The C++ type has a defined assignment operator</td></tr>
+<tr><td>\ref asOBJ_APP_CLASS_COPY_CONSTRUCTOR &nbsp; </td><td>The C++ type has a defined copy constructor</td></tr>
+<tr><td>\ref asOBJ_APP_PRIMITIVE              &nbsp; </td><td>The C++ type is a C++ primitive, but not a float or double</td></tr>
+<tr><td>\ref asOBJ_APP_FLOAT                  &nbsp; </td><td>The C++ type is a float or double</td></tr>
+</table>
+
+Note that these don't represent how the type will behave in the script language, only what the real type is in the host 
+application. So if you want to register a C++ class that you want to behave as a primitive type in the script language
+you should still use the flag \ref asOBJ_APP_CLASS. The same thing for the flags to identify that the class has a constructor, 
+destructor, assignment operator, or copy constructor. These flags tell AngelScript that the class has the respective function, 
+but not that the type in the script language should have these behaviours.
+
+For class types there is also a shorter form of the flags for each combination of the 5 flags. They are of the form \ref asOBJ_APP_CLASS_CDAK, 
+where the existance of the last letters determine if the constructor, destructor, and/or assignment behaviour are available. For example
+\ref asOBJ_APP_CLASS_CDAK is defined as \ref asOBJ_APP_CLASS | \ref asOBJ_APP_CLASS_CONSTRUCTOR | \ref asOBJ_APP_CLASS_DESTRUCTOR | \ref asOBJ_APP_CLASS_ASSIGNMENT | \ref asOBJ_APP_CLASS_COPY_CONSTRUCTOR.
+
+\code
+// Register a complex type that will be passed by value to the application
+r = engine->RegisterObjectType("complex", sizeof(complex), asOBJ_VALUE | asOBJ_APP_CLASS_CDAK); assert( r >= 0 );
+\endcode
+
+Make sure you inform these flags correctly, because if you do not you may get various errors when executing the scripts. 
+Common problems are stack corruptions and invalid memory accesses. In some cases you may face more silent errors that
+may be difficult to detect, e.g. the function is not returning the expected values.
+
+On some platforms the native calling convention may require further knowledge about the class members in order to work 
+properly; most notable are the Linux 64bit and Mac OSX 64bit systems with the GNUC compiler. On these systems small classes 
+that do not have a destructor or a copy constructor will have different behaviours depending on the type of their members.
+
+AngelScript lets the application inform the two most common variants, i.e. the class should be treated as if all members are integers, 
+or it should be treated as if all members are floats. 
+
+<table border=0 cellspacing=0 cellpadding=0>
+<tr><td>\ref asOBJ_APP_CLASS_ALLINTS   &nbsp; </td><td>The C++ class members can be treated as if all integers</td></tr>
+<tr><td>\ref asOBJ_APP_CLASS_ALLFLOATS &nbsp; </td><td>The C++ class members can be treated as if all floats or doubles</td></tr>
+</table>
+
+It is difficult to explain when one or the other should be used as it requires indepth knowledge of the ABI for the 
+respective system, so if you find that you really need to use these flags, make sure you perform adequate testing 
+to guarantee that your functions are called correctly by the script engine. If neither of these flags work, and you're 
+not able to change the class to work without them, then the only other option is to use the generic calling convention,
+preferably with the \ref doc_addon_autowrap "auto wrappers".
 
 
 
 
 \page doc_reg_opbeh Registering operator behaviours
 
-You can register operator behaviours for your types as well. By doing this
-you'll allow the script to work with the types in expressions, just like the
-built-in types.
+In order for AngelScript to know how to work with the application registered types, it is 
+necessary to register some behaviours, for example for memory management.
 
-There two forms of operator behaviours, either object behaviours or global
-behaviours. An object behaviour is implemented as a class method, and a global
-behaviour is implemented as a global function.
+The memory management behaviours are described with the registeration of registering 
+\ref doc_reg_basicref "reference types" and \ref doc_register_val_type "value types".
+
+Other advanced behaviours are described with the \ref doc_advanced_api "advanced types".
+
+Only a few operators have special behaviours for them, the other operators are registered as 
+ordinary \ref doc_script_class_ops "class methods with predefined names".
+
+\section doc_reg_opbeh_2 Value cast operators
+
+The value cast operators are used to allow the scripts to convert an object type to another 
+type by constructing a new value. This is different from a \ref doc_adv_class_hierarchy "reference cast",
+that do not construct new values, but rather changes the way it is perceived.
+
+By registering the behaviour either as \ref asBEHAVE_VALUE_CAST or \ref asBEHAVE_IMPLICIT_VALUE_CAST you
+let AngelScript know whether the behaviour may be used to implicitly cast the type or not.
 
 \code
-// Registering an object behaviour
-int &MyClass::operator[] (int index)
+// Convert a string to an int
+int ConvStringToInt(const std::string &s)
 {
-  return internal_array[index];
+  return atoi(s.c_str());
 }
 
-r = engine->RegisterObjectBehaviour("mytype", asBEHAVE_INDEX, "int &f(int)", asMETHOD(MyClass,operator[]), asCALL_THISCALL); assert( r >= 0 );
-
-// Registering a global behaviour
-MyClass operator+(const MyClass &a, const MyClass &b)
-{
-  MyClass res = a + b;
-  return res;
-}
-
-r = engine->RegisterGlobalBehaviour(asBEHAVE_ADD, "mytype f(const mytype &in, const mytype &in)", asFUNCTIONPR(operator+, (const MyClass &, const MyClass &), MyClass), asCALL_CDECL); assert( r >= 0 );
+// Register the behaviour
+r = engine->RegisterObjectBehaviour("string", asBEHAVE_VALUE_CAST, "int f() const", asFUNCTION(ConvStringToInt), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 \endcode
 
-You can find a complete list of behaviours \ref doc_api_behaviours "here".
+The return type for the cast behaviour can be any type except bool and void. The value cast is meant to create a new value, so if the function
+returns a reference or an object handle make sure it points to a new value and not the original one.
+
+The object constructors and factories also serve as alternative explicit value cast operators, so if a constructor or factory is already available
+then there is no need to register the explicit value cast operator. 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \page doc_reg_objmeth Registering object methods
 
@@ -360,11 +328,43 @@ struct MyStruct
   int a;
 };
 
-r = engine->RegisterObjectProperty("mytype", "int a", offsetof(MyStruct,a)); assert( r >= 0 );
+r = engine->RegisterObjectProperty("mytype", "int a", asOFFSET(MyStruct,a)); assert( r >= 0 );
 \endcode
 
-offsetof() is a macro declared in stddef.h header file.
+It is also possible to expose properties through \ref doc_script_class_prop "property accessors", 
+which are a pair of class methods with prefixes get_ and set_ for getting and setting the property value. 
+These methods should be registered with \ref doc_register_func "RegisterObjectMethod". This is especially
+useful when the offset of the property cannot be determined, or if the type of the property is 
+not registered in the script and some translation must occur, i.e. from <tt>char*</tt> to <tt>string</tt>.
 
+If the application class contains a C++ array as a member, it may be advantageous to expose the array
+through \ref doc_script_class_prop "indexed property accessors" rather than attempting to matching the
+C++ array type to a registered type in AngelScript. To do this you can create a couple of simple proxy functions
+that will translate to the array access.
+
+\code
+struct MyStruct
+{
+  int array[16];
+};
+
+// Write a couple of proxy 
+int MyStruct_get_array(unsigned int idx, MyStruct *o)
+{
+  if( idx >= 16 ) return 0;
+  return o->array[idx];
+}
+
+void MyStruct_set_array(unsigned int idx, int value, MyStruct *o)
+{
+  if( idx >= 16 ) return;
+  o->array[idx] = value;
+}
+
+// Register the proxy functions as member methods
+r = engine->RegisterObjectMethod("mytype", "int get_array(uint)", asFUNCTION(MyStruct_get_array), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+r = engine->RegisterObjectMethod("mytype", "void set_array(uint, int)", asFUNCTION(MyStruct_set_array), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+\endcode
 
 
 

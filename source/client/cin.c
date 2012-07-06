@@ -1,433 +1,252 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2012 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "client.h"
 #include "cin.h"
 
-static short snd_sqr_arr[256];
+static cin_export_t *cin_export;
+static void *cin_libhandle = NULL;
+static mempool_t *cin_mempool;
 
 /*
-   ==================
-   RoQ_Init
-   ==================
- */
-void RoQ_Init( void )
+* CL_CinModule_Error
+*/
+static void CL_CinModule_Error( const char *msg )
 {
-	int i;
+	Com_Error( ERR_FATAL, "%s", msg );
+}
 
-	for( i = 0; i < 128; i++ )
-	{
-		snd_sqr_arr[i] = i * i;
-		snd_sqr_arr[i + 128] = -( i * i );
+/*
+* CL_CinModule_Print
+*/
+static void CL_CinModule_Print( const char *msg )
+{
+	Com_Printf( "%s", msg );
+}
+
+/*
+* CL_CinModule_MemAlloc
+*/
+static void *CL_CinModule_MemAlloc( mempool_t *pool, int size, const char *filename, int fileline )
+{
+	return _Mem_Alloc( pool, size, MEMPOOL_CINMODULE, 0, filename, fileline );
+}
+
+/*
+* CL_CinModule_MemFree
+*/
+static void CL_CinModule_MemFree( void *data, const char *filename, int fileline )
+{
+	_Mem_Free( data, MEMPOOL_CINMODULE, 0, filename, fileline );
+}
+
+/*
+* CL_CinModule_MemAllocPool
+*/
+static mempool_t *CL_CinModule_MemAllocPool( const char *name, const char *filename, int fileline )
+{
+	return _Mem_AllocPool( cin_mempool, name, MEMPOOL_CINMODULE, filename, fileline );
+}
+
+/*
+* CL_CinModule_MemFreePool
+*/
+static void CL_CinModule_MemFreePool( mempool_t **pool, const char *filename, int fileline )
+{
+	_Mem_FreePool( pool, MEMPOOL_CINMODULE, 0, filename, fileline );
+}
+
+/*
+* CL_CinModule_MemEmptyPool
+*/
+static void CL_CinModule_MemEmptyPool( mempool_t *pool, const char *filename, int fileline )
+{
+	_Mem_EmptyPool( pool, MEMPOOL_CINMODULE, 0, filename, fileline );
+}
+
+/*
+* CIN_LoadLibrary
+*/
+void CIN_LoadLibrary( qboolean verbose )
+{
+	static cin_import_t import;
+	dllfunc_t funcs[2];
+	void *( *GetCinematicsAPI )(void *);
+
+	assert( !cin_libhandle );
+
+	import.Print = &CL_CinModule_Print;
+	import.Error = &CL_CinModule_Error;
+
+	import.Cvar_Get = &Cvar_Get;
+	import.Cvar_Set = &Cvar_Set;
+	import.Cvar_SetValue = &Cvar_SetValue;
+	import.Cvar_ForceSet = &Cvar_ForceSet;
+	import.Cvar_String = &Cvar_String;
+	import.Cvar_Value = &Cvar_Value;
+
+	import.Cmd_Argc = &Cmd_Argc;
+	import.Cmd_Argv = &Cmd_Argv;
+	import.Cmd_Args = &Cmd_Args;
+
+	import.Cmd_AddCommand = &Cmd_AddCommand;
+	import.Cmd_RemoveCommand = &Cmd_RemoveCommand;
+	import.Cmd_ExecuteText = &Cbuf_ExecuteText;
+	import.Cmd_Execute = &Cbuf_Execute;
+	import.Cmd_SetCompletionFunc = &Cmd_SetCompletionFunc;
+
+	import.FS_FOpenFile = &FS_FOpenFile;
+	import.FS_Read = &FS_Read;
+	import.FS_Write = &FS_Write;
+	import.FS_Print = &FS_Print;
+	import.FS_Tell = &FS_Tell;
+	import.FS_Seek = &FS_Seek;
+	import.FS_Eof = &FS_Eof;
+	import.FS_Flush = &FS_Flush;
+	import.FS_FCloseFile = &FS_FCloseFile;
+	import.FS_RemoveFile = &FS_RemoveFile;
+	import.FS_GetFileList = &FS_GetFileList;
+	import.FS_IsUrl = &FS_IsUrl;
+
+	import.Milliseconds = &Sys_Milliseconds;
+	import.Microseconds = &Sys_Microseconds;
+
+	import.Mem_AllocPool = &CL_CinModule_MemAllocPool;
+	import.Mem_Alloc = &CL_CinModule_MemAlloc;
+	import.Mem_Free = &CL_CinModule_MemFree;
+	import.Mem_FreePool = &CL_CinModule_MemFreePool;
+	import.Mem_EmptyPool = &CL_CinModule_MemEmptyPool;
+
+	import.S_Clear = &CL_SoundModule_Clear;
+	import.S_RawSamples = &CL_SoundModule_RawSamples;
+	import.S_GetRawSamplesTime = &CL_SoundModule_GetRawSamplesTime;
+
+	// load dynamic library
+	cin_export = NULL;
+	if( verbose ) {
+		Com_Printf( "Loading CIN module... " );
 	}
-}
 
-/*
-   ==================
-   RoQ_ReadChunk
-   ==================
- */
-void RoQ_ReadChunk( cinematics_t *cin )
-{
-	roq_chunk_t *chunk = &cin->chunk;
+	funcs[0].name = "GetCinematicsAPI";
+	funcs[0].funcPointer = ( void ** ) &GetCinematicsAPI;
+	funcs[1].name = NULL;
+	cin_libhandle = Com_LoadLibrary( LIB_DIRECTORY "/cin_" ARCH LIB_SUFFIX, funcs );
 
-	FS_Read( &chunk->id, sizeof( short ), cin->file );
-	FS_Read( &chunk->size, sizeof( int ), cin->file );
-	FS_Read( &chunk->argument, sizeof( short ), cin->file );
-
-	chunk->id = LittleShort( chunk->id );
-	chunk->size = LittleLong( chunk->size );
-	chunk->argument = LittleShort( chunk->argument );
-}
-
-/*
-   ==================
-   RoQ_SkipBlock
-   ==================
- */
-static inline void RoQ_SkipBlock( cinematics_t *cin, int size )
-{
-	FS_Seek( cin->file, size, FS_SEEK_CUR );
-}
-
-/*
-   ==================
-   RoQ_SkipChunk
-   ==================
- */
-void RoQ_SkipChunk( cinematics_t *cin )
-{
-	RoQ_SkipBlock( cin, cin->chunk.size );
-}
-
-/*
-   ==================
-   RoQ_ReadInfo
-   ==================
- */
-void RoQ_ReadInfo( cinematics_t *cin )
-{
-	short t[4];
-
-	FS_Read( t, sizeof( short ) * 4, cin->file );
-
-	if( cin->width != LittleShort( t[0] ) || cin->height != LittleShort( t[1] ) )
+	if( cin_libhandle )
 	{
-		cin->width = LittleShort( t[0] );
-		cin->height = LittleShort( t[1] );
+		// load succeeded
+		int api_version;
 
-		if( cin->vid_buffer )
-			Mem_Free( cin->vid_buffer );
+		cin_export = GetCinematicsAPI( &import );
+		cin_mempool = Mem_AllocPool( NULL, "CIN Module" );
 
-		// default to 255 for alpha
-		if( cin->mempool )
-			cin->vid_buffer = Mem_AllocExt( cin->mempool, cin->width * cin->height * 4 * 2, 0 );
-		else
-			cin->vid_buffer = Mem_ZoneMallocExt( cin->width * cin->height * 4 * 2, 0 );
-		memset( cin->vid_buffer, 0xFF, cin->width * cin->height * 4 * 2 );
+		api_version = cin_export->API();
 
-		cin->vid_pic[0] = cin->vid_buffer;
-		cin->vid_pic[1] = cin->vid_buffer + cin->width * cin->height * 4;
-	}
-}
-
-/*
-   ==================
-   RoQ_ReadCodebook
-   ==================
- */
-void RoQ_ReadCodebook( cinematics_t *cin )
-{
-	unsigned int nv1, nv2;
-	roq_chunk_t *chunk = &cin->chunk;
-
-	nv1 = ( chunk->argument >> 8 ) & 0xFF;
-	if( !nv1 )
-		nv1 = 256;
-
-	nv2 = chunk->argument & 0xFF;
-	if( !nv2 && ( nv1 * 6 < chunk->size ) )
-		nv2 = 256;
-
-	FS_Read( cin->cells, sizeof( roq_cell_t )*nv1, cin->file );
-	FS_Read( cin->qcells, sizeof( roq_qcell_t )*nv2, cin->file );
-}
-
-/*
-   ==================
-   RoQ_ApplyVector2x2
-   ==================
- */
-static void RoQ_DecodeBlock( qbyte *dst0, qbyte *dst1, const qbyte *src0, const qbyte *src1, float u, float v )
-{
-	int c[3];
-
-	// convert YCbCr to RGB
-	VectorSet( c, 1.402f * v, -0.34414f * u - 0.71414f * v, 1.772f * u );
-
-	// 1st pixel
-	dst0[0] = bound( 0, c[0] + src0[0], 255 );
-	dst0[1] = bound( 0, c[1] + src0[0], 255 );
-	dst0[2] = bound( 0, c[2] + src0[0], 255 );
-
-	// 2nd pixel
-	dst0[4] = bound( 0, c[0] + src0[1], 255 );
-	dst0[5] = bound( 0, c[1] + src0[1], 255 );
-	dst0[6] = bound( 0, c[2] + src0[1], 255 );
-
-	// 3rd pixel
-	dst1[0] = bound( 0, c[0] + src1[0], 255 );
-	dst1[1] = bound( 0, c[1] + src1[0], 255 );
-	dst1[2] = bound( 0, c[2] + src1[0], 255 );
-
-	// 4th pixel
-	dst1[4] = bound( 0, c[0] + src1[1], 255 );
-	dst1[5] = bound( 0, c[1] + src1[1], 255 );
-	dst1[6] = bound( 0, c[2] + src1[1], 255 );
-}
-
-/*
-   ==================
-   RoQ_ApplyVector2x2
-   ==================
- */
-static void RoQ_ApplyVector2x2( cinematics_t *cin, int x, int y, const roq_cell_t *cell )
-{
-	qbyte *dst0, *dst1;
-
-	dst0 = cin->vid_pic[0] + ( y * cin->width + x ) * 4;
-	dst1 = dst0 + cin->width * 4;
-
-	RoQ_DecodeBlock( dst0, dst1, cell->y, cell->y+2, (float)( (int)cell->u-128 ), (float)( (int)cell->v-128 ) );
-}
-
-/*
-   ==================
-   RoQ_ApplyVector4x4
-   ==================
- */
-static void RoQ_ApplyVector4x4( cinematics_t *cin, int x, int y, const roq_cell_t *cell )
-{
-	qbyte *dst0, *dst1;
-	qbyte p[4];
-	float u, v;
-
-	u = (float)( (int)cell->u - 128 );
-	v = (float)( (int)cell->v - 128 );
-
-	p[0] = p[1] = cell->y[0];
-	p[2] = p[3] = cell->y[1];
-	dst0 = cin->vid_pic[0] + ( y * cin->width + x ) * 4; dst1 = dst0 + cin->width * 4;
-	RoQ_DecodeBlock( dst0, dst0+8, p, p+2, u, v );
-	RoQ_DecodeBlock( dst1, dst1+8, p, p+2, u, v );
-
-	p[0] = p[1] = cell->y[2];
-	p[2] = p[3] = cell->y[3];
-	dst0 += cin->width * 4 * 2; dst1 += cin->width * 4 * 2;
-	RoQ_DecodeBlock( dst0, dst0+8, p, p+2, u, v );
-	RoQ_DecodeBlock( dst1, dst1+8, p, p+2, u, v );
-}
-
-/*
-   ==================
-   RoQ_ApplyMotion4x4
-   ==================
- */
-static void RoQ_ApplyMotion4x4( cinematics_t *cin, int x, int y, qbyte mv, char mean_x, char mean_y )
-{
-	int x0, y0;
-	qbyte *src, *dst;
-
-	// calc source coords
-	x0 = x + 8 - ( mv >> 4 ) - mean_x;
-	y0 = y + 8 - ( mv & 0xF ) - mean_y;
-
-	src = cin->vid_pic[1] + ( y0 * cin->width + x0 ) * 4;
-	dst = cin->vid_pic[0] + ( y * cin->width + x ) * 4;
-
-	for( y = 0; y < 4; y++, src += cin->width * 4, dst += cin->width * 4 )
-		memcpy( dst, src, 4 * 4 );
-}
-
-/*
-   ==================
-   RoQ_ApplyMotion8x8
-   ==================
- */
-static void RoQ_ApplyMotion8x8( cinematics_t *cin, int x, int y, qbyte mv, char mean_x, char mean_y )
-{
-	int x0, y0;
-	qbyte *src, *dst;
-
-	// calc source coords
-	x0 = x + 8 - ( mv >> 4 ) - mean_x;
-	y0 = y + 8 - ( mv & 0xF ) - mean_y;
-
-	src = cin->vid_pic[1] + ( y0 * cin->width + x0 ) * 4;
-	dst = cin->vid_pic[0] + ( y * cin->width + x ) * 4;
-
-	for( y = 0; y < 8; y++, src += cin->width * 4, dst += cin->width * 4 )
-		memcpy( dst, src, 8 * 4 );
-}
-
-/*
-   ==================
-   RoQ_ReadVideo
-   ==================
- */
-#define RoQ_READ_BLOCK	0x4000
-qbyte *RoQ_ReadVideo( cinematics_t *cin )
-{
-	roq_chunk_t *chunk = &cin->chunk;
-	int i, vqflg, vqflg_pos, vqid;
-	int xpos, ypos, x, y, xp, yp;
-	qbyte c, *tp;
-	roq_qcell_t *qcell;
-	qbyte raw[RoQ_READ_BLOCK];
-	unsigned remaining, bpos, read;
-
-	vqflg = 0;
-	vqflg_pos = -1;
-	xpos = ypos = 0;
-
-#define RoQ_ReadRaw() read = min( sizeof( raw ), remaining ); remaining -= read; FS_Read( raw, read, cin->file );
-#define RoQ_ReadByte( x ) if( bpos >= read ) { RoQ_ReadRaw(); bpos = 0; } ( x ) = raw[bpos++];
-#define RoQ_ReadShort( x ) if( bpos+1 == read ) { c = raw[bpos]; RoQ_ReadRaw(); ( x ) = ( raw[0] << 8 )|c; bpos = 1; } \
-	else { if( bpos+1 > read ) { RoQ_ReadRaw(); bpos = 0; } ( x ) = ( raw[bpos+1] << 8 )|raw[bpos]; bpos += 2; }
-#define RoQ_ReadFlag() if( vqflg_pos < 0 ) { RoQ_ReadShort( vqflg ); vqflg_pos = 7; } \
-	vqid = ( vqflg >> ( vqflg_pos * 2 ) ) & 0x3; vqflg_pos--;
-
-	for( bpos = read = 0, remaining = chunk->size; bpos < read || remaining; )
-	{
-		for( yp = ypos; yp < ypos + 16; yp += 8 )
-			for( xp = xpos; xp < xpos + 16; xp += 8 )
+		if( api_version == CIN_API_VERSION )
+		{
+			if( cin_export->Init( verbose ) )
 			{
-				RoQ_ReadFlag();
-
-				switch( vqid )
-				{
-				case RoQ_ID_MOT:
-					break;
-
-				case RoQ_ID_FCC:
-					RoQ_ReadByte( c );
-					RoQ_ApplyMotion8x8( cin, xp, yp, c, ( char )( ( chunk->argument >> 8 ) & 0xff ), (char)( chunk->argument & 0xff ) );
-					break;
-
-				case RoQ_ID_SLD:
-					RoQ_ReadByte( c );
-					qcell = cin->qcells + c;
-					RoQ_ApplyVector4x4( cin, xp, yp, cin->cells + qcell->idx[0] );
-					RoQ_ApplyVector4x4( cin, xp+4, yp, cin->cells + qcell->idx[1] );
-					RoQ_ApplyVector4x4( cin, xp, yp+4, cin->cells + qcell->idx[2] );
-					RoQ_ApplyVector4x4( cin, xp+4, yp+4, cin->cells + qcell->idx[3] );
-					break;
-
-				case RoQ_ID_CCC:
-					for( i = 0; i < 4; i++ )
-					{
-						x = xp; if( i & 0x01 ) x += 4;
-						y = yp; if( i & 0x02 ) y += 4;
-
-						RoQ_ReadFlag();
-
-						switch( vqid )
-						{
-						case RoQ_ID_MOT:
-							break;
-
-						case RoQ_ID_FCC:
-							RoQ_ReadByte( c );
-							RoQ_ApplyMotion4x4( cin, x, y, c, ( char )( ( chunk->argument >> 8 ) & 0xff ), (char)( chunk->argument & 0xff ) );
-							break;
-
-						case RoQ_ID_SLD:
-							RoQ_ReadByte( c );
-							qcell = cin->qcells + c;
-							RoQ_ApplyVector2x2( cin, x, y, cin->cells + qcell->idx[0] );
-							RoQ_ApplyVector2x2( cin, x+2, y, cin->cells + qcell->idx[1] );
-							RoQ_ApplyVector2x2( cin, x, y+2, cin->cells + qcell->idx[2] );
-							RoQ_ApplyVector2x2( cin, x+2, y+2, cin->cells + qcell->idx[3] );
-							break;
-
-						case RoQ_ID_CCC:
-							RoQ_ReadByte( c ); RoQ_ApplyVector2x2( cin, x, y, cin->cells + c );
-							RoQ_ReadByte( c ); RoQ_ApplyVector2x2( cin, x+2, y, cin->cells + c );
-							RoQ_ReadByte( c ); RoQ_ApplyVector2x2( cin, x, y+2, cin->cells + c );
-							RoQ_ReadByte( c ); RoQ_ApplyVector2x2( cin, x+2, y+2, cin->cells + c );
-							break;
-
-						default:
-							Com_DPrintf( "Unknown vq code: %d\n", vqid );
-							break;
-						}
-					}
-					break;
-
-				default:
-					Com_DPrintf( "Unknown vq code: %d\n", vqid );
-					break;
+				if( verbose ) {
+					Com_Printf( "Success.\n" );
 				}
 			}
-
-		xpos += 16;
-		if( xpos >= cin->width )
-		{
-			xpos -= cin->width;
-
-			ypos += 16;
-			if( ypos >= cin->height )
+			else
 			{
-				RoQ_SkipBlock( cin, remaining ); // ignore remaining trash
-				break;
+				// initialization failed
+				Mem_FreePool( &cin_mempool );
+				if( verbose ) {
+					Com_Printf( "Initialization failed.\n" );
+				}
+				CIN_UnloadLibrary( verbose );
 			}
+		}
+		else
+		{
+			// wrong version
+			Mem_FreePool( &cin_mempool );
+			Com_Printf( "CIN_LoadLibrary: wrong version: %i, not %i.\n", api_version, CIN_API_VERSION );
+			CIN_UnloadLibrary( verbose );
+		}
+	}
+	else
+	{
+		if( verbose ) {
+			Com_Printf( "Not found.\n" );
 		}
 	}
 
-	if( cin->frame++ == 0 )
-	{                           // copy initial values to back buffer for motion
-		memcpy( cin->vid_pic[1], cin->vid_pic[0], cin->width * cin->height * 4 );
-	}
-	else
-	{       // swap buffers
-		tp = cin->vid_pic[0]; cin->vid_pic[0] = cin->vid_pic[1]; cin->vid_pic[1] = tp;
-	}
-
-	return cin->vid_pic[1];
+	Mem_CheckSentinelsGlobal();
 }
 
 /*
-   ==================
-   RoQ_ReadAudio
-   ==================
- */
-void RoQ_ReadAudio( cinematics_t *cin )
+* CIN_UnloadLibrary
+*/
+void CIN_UnloadLibrary( qboolean verbose )
 {
-	unsigned int i;
-	int snd_left, snd_right;
-	qbyte raw[RoQ_READ_BLOCK];
-	short samples[RoQ_READ_BLOCK];
-	roq_chunk_t *chunk = &cin->chunk;
-	unsigned int remaining, read;
-
-	if( chunk->id == RoQ_SOUND_MONO )
-	{
-		snd_left = chunk->argument;
-		snd_right = 0;
-	}
-	else
-	{
-		snd_left = chunk->argument & 0xff00;
-		snd_right = ( chunk->argument & 0xff ) << 8;
+	if( cin_export != NULL ) {
+		cin_export->Shutdown( verbose );
+		cin_export = NULL;
 	}
 
-	for( remaining = chunk->size; remaining > 0; remaining -= read )
-	{
-		read = min( sizeof( raw ), remaining );
-		FS_Read( raw, read, cin->file );
+	if( !cin_libhandle ) {
+		return;
+	}
 
-		if( chunk->id == RoQ_SOUND_MONO )
-		{
-			for( i = 0; i < read; i++ )
-			{
-				snd_left += snd_sqr_arr[raw[i]];
-				samples[i] = (short)snd_left;
-				snd_left = (short)snd_left;
-			}
+	assert( cin_libhandle != NULL );
 
-			CL_SoundModule_RawSamples( read, cin->s_rate, 2, 1, (qbyte *)samples, qfalse );
-		}
-		else if( chunk->id == RoQ_SOUND_STEREO )
-		{
-			for( i = 0; i < read; i += 2 )
-			{
-				snd_left += snd_sqr_arr[raw[i]];
-				samples[i+0] = (short)snd_left;
-				snd_left = (short)snd_left;
+	Com_UnloadLibrary( &cin_libhandle );
 
-				snd_right += snd_sqr_arr[raw[i+1]];
-				samples[i+1] = (short)snd_right;
-				snd_right = (short)snd_right;
-			}
+	assert( !cin_libhandle );
 
-			CL_SoundModule_RawSamples( read / 2, cin->s_rate, 2, 2, (qbyte *)samples, qfalse );
-		}
+	if( verbose ) {
+		Com_Printf( "CIN module unloaded.\n" );
+	}
+}
+
+struct cinematics_s *CIN_Open( const char *name, unsigned int start_time, int flags )
+{
+	if( cin_export ) {
+		return cin_export->Open( name, start_time, flags );
+	}
+	return NULL;
+}
+
+qboolean CIN_NeedNextFrame( struct cinematics_s *cin, unsigned int curtime )
+{
+	if( cin_export ) {
+		return cin_export->NeedNextFrame( cin, curtime );
+	}
+	return qfalse;
+}
+
+qbyte *CIN_ReadNextFrame( struct cinematics_s *cin, int *width, int *height, int *aspect_numerator, int *aspect_denominator, qboolean *redraw )
+{
+	if( cin_export ) {
+		return cin_export->ReadNextFrame( cin, width, height, aspect_numerator, aspect_denominator, redraw );
+	}
+	return NULL;
+}
+
+void CIN_Close( struct cinematics_s *cin )
+{
+	if( cin_export ) {
+		cin_export->Close( cin );
 	}
 }

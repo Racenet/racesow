@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include "cg_local.h"
 
 #define MAX_DECALS		256
@@ -47,10 +47,8 @@ static vec2_t cg_decal_stcoords[MAX_DECALS][MAX_DECAL_VERTS];
 static byte_vec4_t cg_decal_colors[MAX_DECALS][MAX_DECAL_VERTS];
 
 /*
-   =================
-   CG_ClearDecals
-   =================
- */
+* CG_ClearDecals
+*/
 void CG_ClearDecals( void )
 {
 	int i;
@@ -74,23 +72,23 @@ void CG_ClearDecals( void )
 }
 
 /*
-   =================
-   CG_AllocDecal
-
-   Returns either a free decal or the oldest one
-   =================
- */
+* CG_AllocDecal
+* 
+* Returns either a free decal or the oldest one
+*/
 static cdecal_t *CG_AllocDecal( void )
 {
 	cdecal_t *dl;
 
 	if( cg_free_decals )
-	{                   // take a free decal if possible
+	{
+		// take a free decal if possible
 		dl = cg_free_decals;
 		cg_free_decals = dl->next;
 	}
 	else
-	{                   // grab the oldest one otherwise
+	{
+		// grab the oldest one otherwise
 		dl = cg_decals_headnode.prev;
 		dl->prev->next = dl->next;
 		dl->next->prev = dl->prev;
@@ -106,10 +104,8 @@ static cdecal_t *CG_AllocDecal( void )
 }
 
 /*
-   =================
-   CG_FreeDecal
-   =================
- */
+* CG_FreeDecal
+*/
 static void CG_FreeDecal( cdecal_t *dl )
 {
 	// remove from linked active list
@@ -122,12 +118,10 @@ static void CG_FreeDecal( cdecal_t *dl )
 }
 
 /*
-   =================
-   CG_SpawnDecal
-   =================
- */
+* CG_SpawnDecal
+*/
 void CG_SpawnDecal( vec3_t origin, vec3_t dir, float orient, float radius,
-                    float r, float g, float b, float a, float die, float fadetime, qboolean fadealpha, struct shader_s *shader )
+				   float r, float g, float b, float a, float die, float fadetime, qboolean fadealpha, struct shader_s *shader )
 {
 	int i, j;
 	cdecal_t *dl;
@@ -158,7 +152,7 @@ void CG_SpawnDecal( vec3_t origin, vec3_t dir, float orient, float radius,
 	CrossProduct( axis[0], axis[2], axis[1] );
 
 	numfragments = trap_R_GetClippedFragments( origin, radius, axis, // clip it
-	                                           MAX_DECAL_VERTS, verts, MAX_DECAL_FRAGMENTS, fragments );
+		MAX_DECAL_VERTS, verts, MAX_DECAL_FRAGMENTS, fragments );
 
 	// no valid fragments
 	if( !numfragments )
@@ -222,10 +216,8 @@ void CG_SpawnDecal( vec3_t origin, vec3_t dir, float orient, float radius,
 }
 
 /*
-   =================
-   CG_AddDecals
-   =================
- */
+* CG_AddDecals
+*/
 void CG_AddDecals( void )
 {
 	int i;

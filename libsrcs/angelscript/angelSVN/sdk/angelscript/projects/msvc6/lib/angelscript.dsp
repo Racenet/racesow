@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /O2 /Oy- /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "ANGELSCRIPT_EXPORT" /YX /FD /opt:nowin98 /c
+# ADD CPP /nologo /MT /W3 /O2 /Oy- /Ob2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "ANGELSCRIPT_EXPORT" /YX /FD /opt:nowin98 /c
 # ADD BASE RSC /l 0x416 /d "NDEBUG"
 # ADD RSC /l 0x416 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -88,7 +88,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug_with_stats"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /ZI /Od /D "AS_DEBUG" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "ANGELSCRIPT_EXPORT" /YX /FD /opt:nowin98 /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /D "AS_DEBUG" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "ANGELSCRIPT_EXPORT" /YX /FD /opt:nowin98 /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /D "AS_DEBUG_STATS" /D "AS_USE_NAMESPACE" /D "AS_DEBUG" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "ANGELSCRIPT_EXPORT" /FR /YX /FD /opt:nowin98 /GZ /c
 # ADD BASE RSC /l 0x416 /d "_DEBUG"
 # ADD RSC /l 0x416 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -110,10 +110,6 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\..\source\as_arrayobject.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\source\as_atomic.cpp
 # End Source File
 # Begin Source File
@@ -127,6 +123,10 @@ SOURCE=..\..\..\source\as_bytecode.cpp
 # Begin Source File
 
 SOURCE=..\..\..\source\as_callfunc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\source\as_callfunc_arm.cpp
 # End Source File
 # Begin Source File
 
@@ -147,6 +147,10 @@ SOURCE=..\..\..\source\as_callfunc_sh4.cpp
 # Begin Source File
 
 SOURCE=..\..\..\source\as_callfunc_x64_gcc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\source\as_callfunc_x64_msvc.cpp
 # End Source File
 # Begin Source File
 
@@ -179,6 +183,10 @@ SOURCE=..\..\..\source\as_gc.cpp
 # Begin Source File
 
 SOURCE=..\..\..\source\as_generic.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\source\as_globalproperty.cpp
 # End Source File
 # Begin Source File
 
@@ -222,7 +230,7 @@ SOURCE=..\..\..\source\as_scriptnode.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\source\as_scriptstruct.cpp
+SOURCE=..\..\..\source\as_scriptobject.cpp
 # End Source File
 # Begin Source File
 
@@ -258,10 +266,6 @@ SOURCE=..\..\..\source\as_array.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\source\as_arrayobject.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\source\as_atomic.h
 # End Source File
 # Begin Source File
@@ -271,10 +275,6 @@ SOURCE=..\..\..\source\as_builder.h
 # Begin Source File
 
 SOURCE=..\..\..\source\as_bytecode.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\source\as_bytecodedef.h
 # End Source File
 # Begin Source File
 
@@ -366,7 +366,7 @@ SOURCE=..\..\..\source\as_scriptnode.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\source\as_scriptstruct.h
+SOURCE=..\..\..\source\as_scriptobject.h
 # End Source File
 # Begin Source File
 

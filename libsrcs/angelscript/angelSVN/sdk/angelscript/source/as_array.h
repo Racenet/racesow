@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2009 Andreas Jonsson
+   Copyright (c) 2003-2012 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -51,12 +51,14 @@ public:
 	~asCArray();
 
 	void   Allocate(size_t numElements, bool keepData);
+	void   AllocateNoConstruct(size_t numElements, bool keepData);
 	size_t GetCapacity() const;
 
 	void PushLast(const T &element);
 	T    PopLast();
 
 	void   SetLength(size_t numElements);
+	void   SetLengthNoConstruct(size_t numElements);
 	size_t GetLength() const;
 
 	void Copy(const T*, size_t count);
@@ -67,10 +69,11 @@ public:
 	T *AddressOf();
 
 	void Concatenate(const asCArray<T> &);
+	void Concatenate(T*, unsigned int count);
 
-	bool Exists(const T &element);
-	int  IndexOf(const T &element);
-	void RemoveIndex(size_t index);
+	bool Exists(T &element) const;
+	int  IndexOf(T &element) const;
+	void RemoveIndex(size_t index);     // Removes the entry without reordering the array
 	void RemoveValue(const T &element);
 
 	bool operator==(const asCArray<T> &) const;
@@ -248,6 +251,59 @@ void asCArray<T>::Allocate(size_t numElements, bool keepData)
 }
 
 template <class T>
+void asCArray<T>::AllocateNoConstruct(size_t numElements, bool keepData)
+{
+	// We have 4 situations
+	// 1. The previous array is 8 bytes or smaller and the new array is also 8 bytes or smaller
+	// 2. The previous array is 8 bytes or smaller and the new array is larger than 8 bytes
+	// 3. The previous array is larger than 8 bytes and the new array is 8 bytes or smaller
+	// 4. The previous array is larger than 8 bytes and the new array is also larger than 8 bytes
+
+	T *tmp = 0;
+	if( numElements )
+	{
+		if( sizeof(T)*numElements <= 8 )
+			// Use the internal buffer
+			tmp = (T*)buf;
+		else
+			// Allocate the array and construct each of the elements
+			tmp = asNEWARRAY(T,numElements);
+	}
+
+	if( array )
+	{
+		if( array == tmp )
+		{
+			if( keepData )
+			{
+				if( length > numElements )
+					length = numElements;
+			}
+			else
+				length = 0;
+		}
+		else
+		{
+			if( keepData )
+			{
+				if( length > numElements )
+					length = numElements;
+
+				memcpy(tmp, array, sizeof(T)*length);
+			}
+			else
+				length = 0;
+
+			if( array != (T*)buf )
+				asDELETEARRAY(array);
+		}
+	}
+
+	array = tmp;
+	maxLength = numElements;
+}
+
+template <class T>
 size_t asCArray<T>::GetCapacity() const
 {
 	return maxLength;
@@ -258,6 +314,15 @@ void asCArray<T>::SetLength(size_t numElements)
 {
 	if( numElements > maxLength )
 		Allocate(numElements, true);
+
+	length = numElements;
+}
+
+template <class T>
+void asCArray<T>::SetLengthNoConstruct(size_t numElements)
+{
+	if( numElements > maxLength )
+		AllocateNoConstruct(numElements, true);
 
 	length = numElements;
 }
@@ -313,13 +378,20 @@ void asCArray<T>::Concatenate(const asCArray<T> &other)
 }
 
 template <class T>
-bool asCArray<T>::Exists(const T &e)
+void asCArray<T>::Concatenate(T* array, unsigned int count)
+{
+	for( unsigned int c = 0; c < count; c++ )
+		PushLast(array[c]);
+}
+
+template <class T>
+bool asCArray<T>::Exists(T &e) const
 {
 	return IndexOf(e) == -1 ? false : true;
 }
 
 template <class T>
-int asCArray<T>::IndexOf(const T &e)
+int asCArray<T>::IndexOf(T &e) const
 {
 	for( size_t n = 0; n < length; n++ )
 		if( array[n] == e ) return (int)n;

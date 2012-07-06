@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestStack"
+static const char * const TESTNAME = "TestStack";
 
 
 static const char *script =
@@ -30,7 +30,7 @@ bool TestStack()
 	if( r < 0 )
 	{
 		printf("%s: Failed to build script\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	asIScriptContext *ctx = engine->CreateContext();
@@ -41,7 +41,7 @@ bool TestStack()
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Execution didn't throw an exception as was expected\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	ctx->Release();

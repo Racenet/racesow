@@ -9,7 +9,7 @@
 namespace TestImport2
 {
 
-#define TESTNAME "TestImport2"
+static const char * const TESTNAME = "TestImport2";
 
 
 
@@ -35,9 +35,7 @@ void CheckFunc(asIScriptGeneric *)
 	asIScriptContext *ctx = asGetActiveContext();
 	if( ctx )
 	{
-		asIScriptEngine *engine = ctx->GetEngine();
-		int funcID = ctx->GetCurrentFunction();
-		const asIScriptFunction *func = engine->GetFunctionDescriptorById(funcID);
+		const asIScriptFunction *func = ctx->GetFunction();
 		if( strcmp(func->GetModuleName(), "DynamicModule") != 0 )
 			failed = true;
 
@@ -60,23 +58,23 @@ bool Test()
 
 	COutStream out;
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME ":1", script1, strlen(script1), 0);
+	mod->AddScriptSection(":1", script1, strlen(script1), 0);
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	mod->Build();
 
 	mod = engine->GetModule("DynamicModule", asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME ":2", script2, strlen(script2), 0);
+	mod->AddScriptSection(":2", script2, strlen(script2), 0);
 	mod->Build();
 
 	// Bind all functions that the module imports
 	engine->GetModule(0)->BindAllImportedFunctions();
 
-	asIScriptContext *ctx;
-	int r = engine->ExecuteString(0, "Run()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	int r = ExecuteString(engine, "Run()", engine->GetModule(0), ctx);
 	if( r == asEXECUTION_EXCEPTION )
 	{
 		int funcID = ctx->GetExceptionFunction();
-		const asIScriptFunction *func = engine->GetFunctionDescriptorById(funcID);
+		const asIScriptFunction *func = engine->GetFunctionById(funcID);
 		if( strcmp(func->GetModuleName(), "DynamicModule") != 0 )
 			failed = true;
 
@@ -88,7 +86,7 @@ bool Test()
 
 	if( failed )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: failed\n", TESTNAME);
 	}
 	

@@ -22,23 +22,23 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
  {
     /**
 	 * Racesow account name
-	 * @var cString
+	 * @var String
 	 */
-	cString authenticationName;
-    cString lastAuthenticationName;
+	String authenticationName;
+    String lastAuthenticationName;
     /**
 	 * Racesow account pass
-	 * @var cString
+	 * @var String
 	 */
-	cString authenticationPass; 
-    cString lastAuthenticationPass;
+	String authenticationPass; 
+    String lastAuthenticationPass;
     
     /**
 	 * Racesow account token
-	 * @var cString
+	 * @var String
 	 */
-	cString authenticationToken;
-    cString lastAuthenticationToken;
+	String authenticationToken;
+    String lastAuthenticationToken;
 
 	/**
 	 * The Player's unique ID
@@ -132,19 +132,19 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
         this.authorizationsMask = 0;
     }
 
-    Racesow_Player_Auth @setName(cString name)
+    Racesow_Player_Auth @setName(String name)
     {
         this.authenticationName = name;
         return @this;
     }
     
-    Racesow_Player_Auth @setPass(cString pass)
+    Racesow_Player_Auth @setPass(String pass)
     {
         this.authenticationPass = pass;
         return @this;
     }
     
-    Racesow_Player_Auth @setToken(cString token)
+    Racesow_Player_Auth @setToken(String token)
     {
         this.authenticationToken = token;
         return @this;
@@ -153,13 +153,13 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
     /**
 	 * Convert a string to an allowed filename
 	 */
-	cString toFileName(cString fileName)
+	String toFileName(String fileName)
 	{
-		cString outName="";
-		int position = 0;
+		String outName="";
+		uint position = 0;
 		for (position = 0; position < fileName.len(); position++)
 		{
-			cString character;
+			String character;
 			character=fileName.substr(position,1);
 			if (character=='|' || character=='<' || character=='>' || character=='?' ||  character=='!' || character=='\\' || character=='/' || character=='%' || character==':' || character=='*')
 				outName+="_";
@@ -177,17 +177,17 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
 	 * cross-type duplicates, means you cannot for example register
 	 * an auth-name which has already been taken as nickname or email.
 	 *
-	 * @param cString &authName
-	 * @param cString &authEmail
-	 * @param cString &password
-	 * @param cString &confirmation
+	 * @param String &authName
+	 * @param String &authEmail
+	 * @param String &password
+	 * @param String &confirmation
 	 * @return bool
 	 */
-	bool signUp(cString &authName, cString &authEmail, cString &password, cString &confirmation)
+	bool signUp(String &authName, String &authEmail, String &password, String &confirmation)
 	{
-        if (rs_registrationDisabled.getBool()) {
+        if (rs_registrationDisabled.get_boolean()) {
         
-            this.player.sendMessage( S_COLOR_RED + rs_registrationInfo.getString() );
+            this.player.sendMessage( S_COLOR_RED + rs_registrationInfo.get_string() );
             return false;
         }
     
@@ -207,12 +207,12 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
     
 	/**
 	 * Authenticate server account
-	 * @param cString &authName
-	 * @param cString &password
+	 * @param String &authName
+	 * @param String &password
      * @param bool silent
 	 * @return bool
 	 */
-	bool authenticate( cString &authName, cString &authPass, bool silent )
+	bool authenticate( String &authName, String &authPass, bool silent )
 	{
 		if ( authName == "" || authName == "" && authPass == "" )
 		{
@@ -300,7 +300,7 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
 	 * Check for a nickname change event
 	 * @return void
 	 */
-	void refresh( cString &oldNick)
+	void refresh( String &oldNick)
 	{
 		if ( @this.player == null || @this.player.getClient() == null )
 			return;
@@ -346,9 +346,9 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
 		return 2;
 	}
 
-	cString getViolateCountDown()
+	String getViolateCountDown()
 	{
-		cString color;
+		String color;
 		int seconds = localTime - this.violateNickProtectionSince;
 		if ( seconds > 6 )
 			color = S_COLOR_RED;
@@ -412,9 +412,9 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
     {
         bool hasToken = this.authenticationToken != "";
         bool hasLogin = this.authenticationName != "" || this.authenticationPass != "";
-        cString msg;
+        String msg;
     
-        if ( rs_loadHighscores.getBool() )
+        if ( rs_loadHighscores.get_boolean() )
 		{
 		    this.player.bestRaceTime = personalBest;
             if( racesowGametype.racescore )//FIXME: This is just a temporary fix and needs to be refactored
@@ -426,9 +426,9 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
 		    this.player.overallTries = overallTries;
 		}
 
-        if ( rs_loadPlayerCheckpoints.getBool() )
+        if ( rs_loadPlayerCheckpoints.get_boolean() )
         {
-            cString checkpoints = RS_PrintQueryCallback(this.player.getClient().playerNum());
+            String checkpoints = RS_PrintQueryCallback(this.player.getClient().playerNum());
 
             for ( int i = 0; i < numCheckpoints; i++ )
             {
@@ -498,7 +498,7 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
         }
     }
 	
-	void nickCallback(int success_state, cString &nick)
+	void nickCallback(int success_state, String &nick)
 	{
 		if ( success_state == 0 )
 		{

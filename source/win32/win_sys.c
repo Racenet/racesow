@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // sys_win.h
 
 #include "../qcommon/qcommon.h"
@@ -68,12 +68,12 @@ static dynvar_set_status_t Sys_SetHwTimer_f( void *val );
 static void Sys_SynchronizeTimers_f( void *val );
 
 /*
-   ===============================================================================
+===============================================================================
 
-   SYSTEM IO
+SYSTEM IO
 
-   ===============================================================================
- */
+===============================================================================
+*/
 
 void Sys_Error( const char *format, ... )
 {
@@ -119,10 +119,8 @@ void Sys_Quit( void )
 //================================================================
 
 /*
-   ================
-   Sys_Milliseconds
-   ================
- */
+* Sys_Milliseconds
+*/
 // wsw: pb adapted High Res Performance Counter code from ezquake
 static qint64 freq;
 
@@ -202,27 +200,23 @@ void Sys_Sleep( unsigned int millis )
 }
 
 /*
-   =================
-   Sys_GetSymbol
-   =================
- */
+* Sys_GetSymbol
+*/
 #ifdef SYS_SYMBOL
 void *Sys_GetSymbol( const char *moduleName, const char *symbolName )
 {
 	HMODULE module = GetModuleHandle( moduleName );
 	return module
-	       ? (void *) GetProcAddress( module, symbolName )
-	       : NULL;
+		? (void *) GetProcAddress( module, symbolName )
+		: NULL;
 }
 #endif // SYS_SYMBOL
 
 //===============================================================================
 
 /*
-   ================
-   Sys_Init
-   ================
- */
+* Sys_Init
+*/
 void Sys_Init( void )
 {
 	OSVERSIONINFO vinfo;
@@ -257,10 +251,8 @@ void Sys_Init( void )
 }
 
 /*
-   ================
-   Sys_InitDynvars
-   ================
- */
+* Sys_InitDynvars
+*/
 void Sys_InitDynvars( void )
 {
 	char *dummyStr;
@@ -311,10 +303,8 @@ static char *utf8_to_OEM( const char *utf8str )
 }
 
 /*
-   ================
-   Sys_ConsoleInput
-   ================
- */
+* Sys_ConsoleInput
+*/
 char *Sys_ConsoleInput( void )
 {
 	INPUT_RECORD rec;
@@ -427,12 +417,10 @@ static void PrintColoredText( const char *s )
 }
 
 /*
-   ================
-   Sys_ConsoleOutput
-
-   Print text to the dedicated console
-   ================
- */
+* Sys_ConsoleOutput
+* 
+* Print text to the dedicated console
+*/
 void Sys_ConsoleOutput( char *string )
 {
 	DWORD dummy;
@@ -464,11 +452,9 @@ void Sys_ConsoleOutput( char *string )
 
 
 /*
-   ================
-   myTranslateMessage
-   A wrapper around TranslateMessage to avoid garbage if the toggleconsole
-   key happens to be a dead key (like in the German layout)
-   ================
+* myTranslateMessage
+* A wrapper around TranslateMessage to avoid garbage if the toggleconsole
+* key happens to be a dead key (like in the German layout)
 */
 #ifdef DEDICATED_ONLY
 #define myTranslateMessage(msg) TranslateMessage(msg)
@@ -488,12 +474,10 @@ static BOOL myTranslateMessage (MSG *msg)
 #endif
 
 /*
-   ================
-   Sys_SendKeyEvents
-
-   Send Key_Event calls
-   ================
- */
+* Sys_SendKeyEvents
+* 
+* Send Key_Event calls
+*/
 void Sys_SendKeyEvents( void )
 {
 	MSG msg;
@@ -514,10 +498,8 @@ void Sys_SendKeyEvents( void )
 
 
 /*
-   ================
-   Sys_GetClipboardData
-   ================
- */
+* Sys_GetClipboardData
+*/
 char *Sys_GetClipboardData( qboolean primary )
 {
 	char *utf8text = NULL;
@@ -555,10 +537,10 @@ qboolean Sys_SetClipboardData( char *data )
 	LPWSTR lptstrCopy;
 
 	// open the clipboard, and empty it
-    if( !OpenClipboard( NULL ) ) 
-        return qfalse;
+	if( !OpenClipboard( NULL ) ) 
+		return qfalse;
 
-    EmptyClipboard();
+	EmptyClipboard();
 
 	size = MultiByteToWideChar( CP_UTF8, 0, cliptext, -1, NULL, 0 );
 
@@ -578,7 +560,7 @@ qboolean Sys_SetClipboardData( char *data )
 	lptstrCopy[size] = 0;
 
 	GlobalUnlock( hglbCopy ); 
- 
+
 	// place the handle on the clipboard
 	SetClipboardData( uFormat, hglbCopy );
 
@@ -589,28 +571,32 @@ qboolean Sys_SetClipboardData( char *data )
 }
 
 /*
-   ================
-   Sys_FreeClipboardData
-   ================
- */
+* Sys_FreeClipboardData
+*/
 void Sys_FreeClipboardData( char *data )
 {
 	Q_free( data );
 }
 
 /*
-   ==============================================================================
-
-   WINDOWS CRAP
-
-   ==============================================================================
- */
+* Sys_OpenURLInBrowser
+*/
+void Sys_OpenURLInBrowser( const char *url )
+{
+	ShellExecute( NULL, "open", url, NULL, NULL, SW_SHOWNORMAL );
+}
 
 /*
-   =================
-   Sys_AppActivate
-   =================
- */
+==============================================================================
+
+WINDOWS CRAP
+
+==============================================================================
+*/
+
+/*
+* Sys_AppActivate
+*/
 void Sys_AppActivate( void )
 {
 #ifndef DEDICATED_ONLY
@@ -622,10 +608,8 @@ void Sys_AppActivate( void )
 //========================================================================
 
 /*
-   ==================
-   ParseCommandLine
-   ==================
- */
+* ParseCommandLine
+*/
 static void ParseCommandLine( LPSTR lpCmdLine )
 {
 	argc = 1;
@@ -750,7 +734,7 @@ static dynvar_set_status_t Sys_SetAffinity_f( void *affinity )
 
 		SetProcessAffinityMask( proc, procAffinity );
 		//if (len > 1)
-			//SetPriorityClass(proc, HIGH_PRIORITY_CLASS);
+		//SetPriorityClass(proc, HIGH_PRIORITY_CLASS);
 	}
 
 abort:
@@ -821,11 +805,8 @@ static void Sys_SynchronizeTimers_f( void *val )
 }
 
 /*
-   ==================
-   WinMain
-
-   ==================
- */
+* WinMain
+*/
 HINSTANCE global_hInstance;
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {

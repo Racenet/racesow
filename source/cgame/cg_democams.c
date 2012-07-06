@@ -697,10 +697,10 @@ static void CG_DrawEntityNumbers( void )
 				return;
 
 			trap_SCR_DrawString( coords[0]+xoffset+1,
-				( cgs.vidHeight - coords[1] )+yoffset+1,
+				coords[1]+yoffset+1,
 				ALIGN_LEFT_MIDDLE, va( "%i", cent->current.number ), cgs.fontSystemSmall, colorBlack );
 			trap_SCR_DrawString( coords[0]+xoffset,
-				( cgs.vidHeight - coords[1] )+yoffset,
+				coords[1]+yoffset,
 				ALIGN_LEFT_MIDDLE, va( "%i", cent->current.number ), cgs.fontSystemSmall, colorWhite );
 		}
 	}

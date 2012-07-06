@@ -1,12 +1,24 @@
-/*****************************************************************************
+/***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
  *                             / __| | | | |_) | |
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- */
-
+ * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at http://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/
 #include "test.h"
 
 #ifdef HAVE_LOCALE_H
@@ -38,31 +50,47 @@ char *libtest_arg3=NULL;
 int test_argc;
 char **test_argv;
 
+#ifdef UNITTESTS
+int unitfail; /* for unittests */
+#endif
+
+#ifdef CURLDEBUG
+static void memory_tracking_init(void)
+{
+  char *env;
+  /* if CURL_MEMDEBUG is set, this starts memory tracking message logging */
+  env = curl_getenv("CURL_MEMDEBUG");
+  if(env) {
+    /* use the value as file name */
+    char fname[CURL_MT_LOGFNAME_BUFSIZE];
+    if(strlen(env) >= CURL_MT_LOGFNAME_BUFSIZE)
+      env[CURL_MT_LOGFNAME_BUFSIZE-1] = '\0';
+    strcpy(fname, env);
+    curl_free(env);
+    curl_memdebug(fname);
+    /* this weird stuff here is to make curl_free() get called
+       before curl_memdebug() as otherwise memory tracking will
+       log a free() without an alloc! */
+  }
+  /* if CURL_MEMLIMIT is set, this enables fail-on-alloc-number-N feature */
+  env = curl_getenv("CURL_MEMLIMIT");
+  if(env) {
+    char *endptr;
+    long num = strtol(env, &endptr, 10);
+    if((endptr != env) && (endptr == env + strlen(env)) && (num > 0))
+      curl_memlimit(num);
+    curl_free(env);
+  }
+}
+#else
+#  define memory_tracking_init() Curl_nop_stmt
+#endif
 
 int main(int argc, char **argv)
 {
   char *URL;
 
-#ifdef CURLDEBUG
-  /* this sends all memory debug messages to a logfile named memdump */
-  char *env = curl_getenv("CURL_MEMDEBUG");
-  if(env) {
-    /* use the value as file name */
-    char *s = strdup(env);
-    curl_free(env);
-    curl_memdebug(s);
-    free(s);
-    /* this weird strdup() and stuff here is to make the curl_free() get
-       called before the memdebug() as otherwise the memdebug tracing will
-       with tracing a free() without an alloc! */
-  }
-  /* this enables the fail-on-alloc-number-N functionality */
-  env = curl_getenv("CURL_MEMLIMIT");
-  if(env) {
-    curl_memlimit(atoi(env));
-    curl_free(env);
-  }
-#endif
+  memory_tracking_init();
 
   /*
    * Setup proper locale from environment. This is needed to enable locale-

@@ -22,9 +22,9 @@ class Racesow_Player
 
 	/**
 	 * What state is the player in: racing, practicing, prerace?
-	 * @var cString
+	 * @var String
 	 */
-	cString state;
+	String state;
 
 	/**
 	 * Is the player still racing in the overtime?
@@ -130,7 +130,7 @@ class Racesow_Player
     /**
      * Old Position
      */
-    cVec3 oldPosition;
+    Vec3 oldPosition;
 
 	/**
 	 * Local time of the last top command (flood protection)
@@ -203,17 +203,17 @@ class Racesow_Player
 
 	/**
      * Stores all spectators of the player in a list ((int)id (int)ping)
-     * @var cString
+     * @var String
      */
-	cString challengerList;
+	String challengerList;
 
 	/**
 	 * Variables for the position function
 	 */
 	uint positionLastcmd; //flood protection
 	bool positionSaved; //is a position saved?
-	cVec3 positionOrigin; //stored origin
-	cVec3 positionAngles; //stored angles
+	Vec3 positionOrigin; //stored origin
+	Vec3 positionAngles; //stored angles
 	int positionWeapon; //stored weapon
 
     /**
@@ -302,7 +302,7 @@ class Racesow_Player
         racesowAdapter.playerAppear(@this);
     }
 
-	void disappear(cString nickName, bool threaded)
+	void disappear(String nickName, bool threaded)
     {
         racesowAdapter.playerDisappear(@this, nickName, threaded);
     }
@@ -339,7 +339,7 @@ class Racesow_Player
                     + S_COLOR_ORANGE + " Distance: " + S_COLOR_WHITE + ((this.lastRace.stopDistance - this.lastRace.startDistance)/1000) // racing distance
                     + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
                     + S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
-                    + S_COLOR_ORANGE + "/" + Capitalize(rs_networkName.getString()) + ": " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
+                    + S_COLOR_ORANGE + "/" + Capitalize(rs_networkName.get_string()) + ": " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
                     + "\n");
 		}
 
@@ -349,7 +349,7 @@ class Racesow_Player
         earnedPoints = newPoints - oldPoints;
         if (earnedPoints > 0)
         {
-            cString pointsAward =  S_COLOR_BLUE + "You earned "+ earnedPoints
+            String pointsAward =  S_COLOR_BLUE + "You earned "+ earnedPoints
                                    + ((earnedPoints > 1)? " points!" : " point!")
                                    + "\n";
             this.sendAward( pointsAward );
@@ -381,10 +381,10 @@ class Racesow_Player
         //world record
         if ( ( oldBestTime == 0 || newTime < oldBestTime ) and ( newTime < oldTime ) )
         {
-            this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.getString() + " record!" );
+            this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.get_string() + " record!" );
             G_PrintMsg(null, this.getName() + " "
                              + S_COLOR_YELLOW + "made a new "
-                             + S_COLOR_GREEN  + rs_networkName.getString()
+                             + S_COLOR_GREEN  + rs_networkName.get_string()
                              + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
 
             if ( mysqlConnected == 1)
@@ -479,9 +479,9 @@ class Racesow_Player
 
 	/**
 	 * getName
-	 * @return cString
+	 * @return String
 	 */
-	cString getName()
+	String getName()
 	{
 		if (@this.client != null)
         {
@@ -493,7 +493,7 @@ class Racesow_Player
 
 	/**
 	 * getAuth
-	 * @return cString
+	 * @return String
 	 */
 	Racesow_Player_Auth @getAuth()
 	{
@@ -570,16 +570,16 @@ class Racesow_Player
 	 */
 	int getSpeed()
 	{
-	    cVec3 globalSpeed = this.getClient().getEnt().getVelocity();
-	    cVec3 horizontalSpeed = cVec3(globalSpeed.x, globalSpeed.y, 0);
+	    Vec3 globalSpeed = this.getClient().getEnt().getVelocity();
+	    Vec3 horizontalSpeed = Vec3(globalSpeed.x, globalSpeed.y, 0);
 	    return horizontalSpeed.length();
 	}
 
 	/**
 	 * Get the state of the player;
-	 * @return cString
+	 * @return String
 	 */
-	cString getState()
+	String getState()
 	{
 		if ( this.practicing )
 			this.state = "^5practicing";
@@ -658,6 +658,7 @@ class Racesow_Player
 			this.completedInPracticemode = true;
 			// set up for respawning the player with a delay
 			cEntity @practiceRespawner = G_SpawnEntity( "practice_respawner" );
+			@practiceRespawner.think = practice_respawner_think; //FIXME: Workaround because the practice_respawner function isn't called
 			practiceRespawner.nextThink = levelTime + 3000;
 			practiceRespawner.count = client.playerNum();
 		}
@@ -681,6 +682,7 @@ class Racesow_Player
 
     // set up for respawning the player with a delay
     cEntity @respawner = G_SpawnEntity( "race_respawner" );
+    @respawner.think = race_respawner_think; //FIXME: Workaround because the race_respawner function isn't called
     respawner.nextThink = levelTime + 3000;
     respawner.count = client.playerNum();
     }
@@ -802,7 +804,7 @@ class Racesow_Player
 	 */
 	void advanceDistance()
 	{
-        cVec3 position = this.getClient().getEnt().getOrigin();
+        Vec3 position = this.getClient().getEnt().getOrigin();
         position.z = 0;
         this.distance += ( position.distance( this.oldPosition ) * 1000 );
         this.oldPosition = position;
@@ -864,7 +866,7 @@ class Racesow_Player
 	    cEntity@ ent = this.client.getEnt();
 		if( ent.moveType == MOVETYPE_NOCLIP )
 		{
-		    cVec3 mins, maxs;
+		    Vec3 mins, maxs;
 		    client.getEnt().getSize( mins, maxs );
 		    cTrace tr;
             if( tr.doTrace( this.client.getEnt().getOrigin(), mins, maxs,
@@ -911,14 +913,14 @@ class Racesow_Player
 	 * teleport the player
 	 * @return bool
 	 */
-	bool teleport( cVec3 origin, cVec3 angles, bool keepVelocity, bool kill )
+	bool teleport( Vec3 origin, Vec3 angles, bool keepVelocity, bool kill )
 	{
 		cEntity@ ent = @this.client.getEnt();
 		if( @ent == null )
 			return false;
 		if( ent.team != TEAM_SPECTATOR )
 		{
-			cVec3 mins, maxs;
+			Vec3 mins, maxs;
 			ent.getSize(mins, maxs);
 			cTrace tr;
 			if(	this.isBlocking() && tr.doTrace( origin, mins, maxs, origin, 0, MASK_PLAYERSOLID ))
@@ -934,11 +936,11 @@ class Racesow_Player
 				{
 					if(@other != null && other.type == ET_PLAYER )
 					{
-						other.takeDamage( @other, null, cVec3(0,0,0), 9999, 0, 0, MOD_TELEFRAG );
+						other.sustainDamage( @other, null, Vec3(0,0,0), 9999, 0, 0, MOD_TELEFRAG );
 						//spawn a gravestone to store the postition
 						cEntity @gravestone = @G_SpawnEntity( "gravestone" );
 						// copy client position
-						gravestone.setOrigin( other.getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ) );
+						gravestone.setOrigin( other.getOrigin() + Vec3( 0.0f, 0.0f, 50.0f ) );
 						Racesow_GetPlayerByClient( other.client ).setupTelekilled( @gravestone );
 					}
 
@@ -948,7 +950,7 @@ class Racesow_Player
 		if( ent.team != TEAM_SPECTATOR )
             ent.teleportEffect( true );
 		if(!keepVelocity)
-			ent.setVelocity( cVec3(0,0,0) );
+			ent.setVelocity( Vec3(0,0,0) );
 		ent.setOrigin( origin );
 		ent.setAngles( angles );
 		if( ent.team != TEAM_SPECTATOR )
@@ -988,16 +990,16 @@ class Racesow_Player
 		return true;
 	}
 
-	bool positionSet( cVec3 origin, cVec3 angles )
+	bool positionSet( Vec3 origin, Vec3 angles )
 	{
 		this.positionLastcmd = realTime;
 		return this.teleport( origin, angles, false, false );
 	}
 
-	bool positionStore( int id, cString name )
+	bool positionStore( int id, String name )
 	{
-		cVec3 position = client.getEnt().getOrigin();
-		cVec3 angles = client.getEnt().getAngles();
+		Vec3 position = client.getEnt().getOrigin();
+		Vec3 angles = client.getEnt().getAngles();
 		//position set <x> <y> <z> <pitch> <yaw>
 		this.client.execGameCommand("cmd seta storedposition_" + id
 				+ " \"" + name + " "
@@ -1035,13 +1037,13 @@ class Racesow_Player
 //	 * position Command
 //	 * @return bool
 //	 */
-//	bool position( cString argsString )
+//	bool position( String argsString )
 //	{
 //		if( this.positionLastcmd + 500 > realTime )
 //			return false;
 //		this.positionLastcmd = realTime;
 //
-//		cString action = argsString.getToken( 0 );
+//		String action = argsString.getToken( 0 );
 //
 //		if( action == "save" )
 //		{
@@ -1066,7 +1068,7 @@ class Racesow_Player
 //		}
 //		else if( action == "set" && argsString.getToken( 5 ) != "" )
 //		{
-//			cVec3 origin, angles;
+//			Vec3 origin, angles;
 //
 //			origin.x = argsString.getToken( 1 ).toFloat();
 //			origin.y = argsString.getToken( 2 ).toFloat();
@@ -1078,8 +1080,8 @@ class Racesow_Player
 //		}
 //		else if( action == "store" && argsString.getToken( 2 ) != "" )
 //		{
-//			cVec3 position = client.getEnt().getOrigin();
-//			cVec3 angles = client.getEnt().getAngles();
+//			Vec3 position = client.getEnt().getOrigin();
+//			Vec3 angles = client.getEnt().getAngles();
 //			//position set <x> <y> <z> <pitch> <yaw>
 //			this.client.execGameCommand("cmd seta storedposition_" + argsString.getToken(1)
 //					+ " \"" +  argsString.getToken(2) + " "
@@ -1111,7 +1113,7 @@ class Racesow_Player
 //			cEntity@ ent = @this.client.getEnt();
 //			if( @ent == null )
 //				return false;
-//			cString msg;
+//			String msg;
 //			msg = "Usage:\nposition save - Save current position\n";
 //			msg += "position load - Teleport to saved position\n";
 //			msg += "position set <x> <y> <z> <pitch> <yaw> - Teleport to specified position\n";
@@ -1128,10 +1130,10 @@ class Racesow_Player
 
 	/**
 	 * Send a message to console of the player
-	 * @param cString message
+	 * @param String message
 	 * @return void
 	 */
-	void sendMessage( cString message )
+	void sendMessage( String message )
 	{
 		if (@this.client == null)
             return;
@@ -1144,10 +1146,10 @@ class Racesow_Player
 
    /**
      * Send an unlogged award to the player
-     * @param cString message
+     * @param String message
      * @return void
      */
-    void sendAward( cString message )
+    void sendAward( String message )
     {
         if (@this.client == null)
             return;
@@ -1172,21 +1174,21 @@ class Racesow_Player
      * Send a message to console of the player
      * when the message is too long, split it in several parts
      * to avoid print buffer overflow
-     * @param cString message
+     * @param String message
      * @return void
      */
-    void sendLongMessage( cString message )
+    void sendLongMessage( String message )
     {
         if (@this.client == null)
             return;
 
-        const int maxsize = 1000;
-        int partsNumber = message.length()/maxsize;
+        const uint maxsize = 1000;
+        uint partsNumber = message.length()/maxsize;
 
         if ( partsNumber*maxsize < message.length() )//compute the ceil instead of floor
             partsNumber++;
 
-        for ( int i = 0; i < partsNumber; i++ )
+        for ( uint i = 0; i < partsNumber; i++ )
         {
             G_PrintMsg( this.client.getEnt(), message.substr(i*maxsize,maxsize) );
         }
@@ -1196,10 +1198,10 @@ class Racesow_Player
 
     /**
      * Send an error message with red warning.
-     * @param cString message
+     * @param String message
      * @return void
      */
-    void sendErrorMessage( cString message )
+    void sendErrorMessage( String message )
     {
         if (@this.client == null)
             return;
@@ -1211,10 +1213,10 @@ class Racesow_Player
     // joki: make this a global function and move to helpers.as, IF THIS FUNCTION IS USED AT ALL
 	/**
 	* Send a message to another player's console
-	* @param cString message, cClient @client
+	* @param String message, cClient @client
 	* @return void
 	*/
-	void sendMessage( cString message, cClient @client )
+	void sendMessage( String message, cClient @client )
 	{
 		G_PrintMsg( client.getEnt(), message );
 	}
@@ -1223,10 +1225,10 @@ class Racesow_Player
 	// joki: is this used???
 	/**
 	 * Send a message to another player
-	 * @param cString argString, cClient @client
+	 * @param String argString, cClient @client
 	 * @return bool
 	 */
-	bool privSay( cString message, cClient @target )
+	bool privSay( String message, cClient @target )
 	{
 	    this.sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.getName()
 	            + S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n");
@@ -1237,10 +1239,10 @@ class Racesow_Player
 
 	/**
 	 * Kick the player and leave a message for everyone
-	 * @param cString message
+	 * @param String message
 	 * @return void
 	 */
-	void kick( cString message )
+	void kick( String message )
 	{
         int playerNum = this.client.playerNum();
         if( message.length() > 0)
@@ -1251,10 +1253,10 @@ class Racesow_Player
 
 	/**
 	 * Remove the player and leave a message for everyone
-	 * @param cString message
+	 * @param String message
 	 * @return void
 	 */
-	void remove( cString message )
+	void remove( String message )
 	{
 		if( message.length() > 0)
 			G_PrintMsg( null, S_COLOR_RED + message + "\n" );
@@ -1264,22 +1266,22 @@ class Racesow_Player
 
    /**
      * Ban the player
-     * @param cString message
+     * @param String message
      * @return void
      */
-    void kickban( cString message )
+    void kickban( String message )
     {
-        cString ip = this.client.getUserInfoKey( "ip" );
+        String ip = this.client.getUserInfoKey( "ip" );
         this.reset();
         G_CmdExecute( "addip " + ip + " 15;kick " + this.client.playerNum() );
     }
 
     /**
      * Move the player to spec and leave a message to him
-     * @param cString message
+     * @param String message
      * @return void
      */
-    void moveToSpec( cString message )
+    void moveToSpec( String message )
     {
         this.client.team = TEAM_SPECTATOR;
         this.client.respawn( true ); // true means ghost
@@ -1294,7 +1296,7 @@ class Racesow_Player
 	 */
 	bool ammoSwitch(  )
 	{
-		if ( racesowGametype.ammoSwitchAllowed() || g_allowammoswitch.getBool() )
+		if ( racesowGametype.ammoSwitchAllowed() || g_allowammoswitch.get_boolean() )
 		{
 			if ( @this.client.getEnt() == null )
 			{
@@ -1340,13 +1342,13 @@ class Racesow_Player
 //
 //    /**
 //     * Execute an admin command
-//     * @param cString &cmdString
+//     * @param String &cmdString
 //     * @return bool
 //     */
-//    bool adminCommand( cString &cmdString )
+//    bool adminCommand( String &cmdString )
 //    {
 //        bool showNotification = false;
-//        cString command = cmdString.getToken( 0 );
+//        String command = cmdString.getToken( 0 );
 //
 //        //Commented out for release - Per server admin/authmasks will be finished when the new http DB-Interaction is done
 //        // add command - adds a new admin (sets all permissions except RACESOW_AUTH_SETPERMISSION)
@@ -1447,7 +1449,7 @@ class Racesow_Player
 //                return false;
 //            }
 //
-//            cString mapName = cmdString.getToken( 1 );
+//            String mapName = cmdString.getToken( 1 );
 //            if ( mapName == "" )
 //            {
 //                this.sendErrorMessage( "No map name given" );

@@ -9,7 +9,7 @@
 namespace TestMultiAssign
 {
 
-#define TESTNAME "TestMultiAssign"
+static const char * const TESTNAME = "TestMultiAssign";
 
 
 
@@ -44,9 +44,9 @@ bool Test()
 
 	engine->RegisterObjectType("CLR", sizeof(asDWORD), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE);
 	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
-		engine->RegisterObjectBehaviour("CLR", asBEHAVE_ASSIGNMENT, "CLR &f(CLR &in)", asFUNCTION(Assign_gen), asCALL_GENERIC);
+		engine->RegisterObjectMethod("CLR", "CLR &opAssign(CLR &in)", asFUNCTION(Assign_gen), asCALL_GENERIC);
 	else
-		engine->RegisterObjectBehaviour("CLR", asBEHAVE_ASSIGNMENT, "CLR &f(CLR &in)", asFUNCTION(Assign), asCALL_CDECL_OBJLAST);
+		engine->RegisterObjectMethod("CLR", "CLR &opAssign(CLR &in)", asFUNCTION(Assign), asCALL_CDECL_OBJLAST);
 
 
 	engine->RegisterGlobalProperty("CLR a", &a);
@@ -64,17 +64,17 @@ bool Test()
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	mod->Build();
 
-	engine->ExecuteString(0, "Init();");
+	ExecuteString(engine, "Init();", mod);
 
 	if( a != 0x12345678 || b != 0x12345678 || c != 0x12345678 || d != 0x12345678 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to assign all objects equally\n", TESTNAME);
 	}
 
 	if( clr != 0x12345678 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Src object changed during operation\n", TESTNAME);
 	}
 

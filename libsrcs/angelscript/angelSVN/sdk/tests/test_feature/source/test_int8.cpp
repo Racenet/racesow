@@ -3,7 +3,7 @@
 namespace TestInt8
 {
 
-#define TESTNAME "TestInt8"
+static const char * const TESTNAME = "TestInt8";
 
 char RetInt8(char in)
 {
@@ -66,7 +66,7 @@ bool Test()
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-
+	RegisterScriptArray(engine, true);
 	RegisterScriptString(engine);
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 
@@ -78,14 +78,14 @@ bool Test()
 	char var = 0;
 	engine->RegisterGlobalProperty("int8 gvar", &var);
 
-	engine->ExecuteString(0, "gvar = RetInt8(1)");
+	ExecuteString(engine, "gvar = RetInt8(1)");
 	if( var != 1 )
 	{
 		printf("failed to return value correctly\n");
-		fail = true;
+		TEST_FAILED;
 	}
 	
-	engine->ExecuteString(0, "Assert(RetInt8(1) == 1)");
+	ExecuteString(engine, "Assert(RetInt8(1) == 1)");
 
 	
 	// Test to make sure bools can be passed to member functions properly
@@ -94,33 +94,33 @@ bool Test()
 	engine->RegisterObjectMethod("Int8Tester", "void Test0(int8)", asMETHOD(TestInt8Class, Test0), asCALL_THISCALL);	
 	TestInt8Class testInt8;
 	r = engine->RegisterGlobalProperty("Int8Tester TestInt8Class", &testInt8 );
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", script3, strlen(script3));
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	else
 	{
-		r = engine->ExecuteString(0, "TestInt8ToMember();");
-		if( r != asEXECUTION_FINISHED ) fail = true;
+		r = ExecuteString(engine, "TestInt8ToMember();", mod);
+		if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
-		if( testInt8.m_fail ) fail = true;
+		if( testInt8.m_fail ) TEST_FAILED;
 	}
-	
+
 	// Shift operations with int8 should result in int32
-	r = engine->ExecuteString(0, "uint8[] buf={1,2,3,4,5,6}; "
-                                 "uint32 version; "
-                                 "version = buf[0]<<24; "
-                                 "version |= buf[1]<<16; "
-                                 "version |= buf[2]<<8; "
-                                 "version |= buf[3]; "
-								 "Assert(version == 0x01020304);");
+	r = ExecuteString(engine, "uint8[] buf={1,2,3,4,5,6}; "
+                                 "uint32 ver; "
+                                 "ver = buf[0]; "
+                                 "ver |= buf[1]<<8; "
+                                 "ver |= buf[2]<<16; "
+                                 "ver |= buf[3]<<24; "
+								 "Assert(ver == 0x04030201);"); // If this is changed to 0x01020304 Avira accuses the compiled obj file as virus
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 

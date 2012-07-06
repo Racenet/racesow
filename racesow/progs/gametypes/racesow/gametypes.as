@@ -23,7 +23,7 @@ class Racesow_Gametype
 
     Racesow_Gametype()
     {
-        this.players = Racesow_Player@[](maxClients);
+        this.players.resize(maxClients); //Racesow_Player@[](maxClients);
 
         @this.commandMapInternal = @RC_Map( 3 );
         @this.voteMap = @RC_Map();
@@ -64,11 +64,11 @@ class Racesow_Gametype
     
     void playerRespawn( cEntity @ent, int old_team, int new_team ) { }
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args ) { }
+    void scoreEvent( cClient @client, String &score_event, String &args ) { }
     
-    cString @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( uint maxlen )
     {
-        assert( false, "You have to overwrite 'cString @ScoreboardMessage( int maxlen )' in your Racesow_Gametype." );
+        assert( false, "You have to overwrite 'String @ScoreboardMessage( int maxlen )' in your Racesow_Gametype." );
         return "This needs to be overwritten!\n";
     }
     
@@ -92,7 +92,7 @@ class Racesow_Gametype
 	 * @param argc Number of arguments
 	 * @return Success boolean
 	 */
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    bool Command( cClient @client, String @cmdString, String @argsString, int argc )
     {
         Racesow_Command @command;
         Racesow_Player @player = Racesow_GetPlayerByClient( client );

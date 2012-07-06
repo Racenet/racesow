@@ -22,7 +22,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         // if the gametype doesn't have a config file, create it
         if ( !G_FileExists( "configs/server/gametypes/durace.cfg" ) )
         {
-            cString config;
+            String config;
 
             // the config file doesn't exist or it's empty, create it
             config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
@@ -76,7 +76,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         	cItem @Item = G_GetItem( tag );
         	if( @Item == null)
         		continue;
-        	cString itemClassname = Item.getClassname();
+        	String itemClassname = Item.getClassname();
         	@from = null;
         	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
         	if( @item == null )
@@ -232,7 +232,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
     }
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args )
+    void scoreEvent( cClient @client, String &score_event, String &args )
     {
         if ( score_event == "dmg" )
         {
@@ -259,10 +259,10 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         }
     }
     
-    cString @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( int maxlen )
     {
-        cString scoreboardMessage = "";
-        cString entry;
+        String scoreboardMessage = "";
+        String entry;
         cTeam @team;
         cEntity @ent;
         int i, t, readyIcon;

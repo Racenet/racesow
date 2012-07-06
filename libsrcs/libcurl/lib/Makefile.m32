@@ -1,10 +1,10 @@
 #########################################################################
 #
 ## Makefile for building libcurl.a with MingW32 (GCC-3.2 or later)
-## and optionally OpenSSL (0.9.8), libssh2 (1.2), zlib (1.2.5)
+## and optionally OpenSSL (0.9.8), libssh2 (1.2), zlib (1.2.5), librtmp (2.3)
 ##
-## Usage:
-## mingw32-make -f Makefile.m32 [SSL=1] [SSH2=1] [ZLIB=1] [IDN=1] [SSPI=1] [IPV6=1] [LDAPS=1] [DYN=1]
+## Usage:   mingw32-make -f Makefile.m32 CFG=-feature1[-feature2][-feature3][...]
+## Example: mingw32-make -f Makefile.m32 CFG=-zlib-ssl-sspi-winidn
 ##
 ## Hint: you can also set environment vars to control the build, f.e.:
 ## set ZLIB_PATH=c:/zlib-1.2.5
@@ -20,15 +20,25 @@ ZLIB_PATH = ../../zlib-1.2.5
 endif
 # Edit the path below to point to the base of your OpenSSL package.
 ifndef OPENSSL_PATH
-OPENSSL_PATH = ../../openssl-0.9.8o
+OPENSSL_PATH = ../../openssl-0.9.8r
 endif
 # Edit the path below to point to the base of your LibSSH2 package.
 ifndef LIBSSH2_PATH
-LIBSSH2_PATH = ../../libssh2-1.2.6
+LIBSSH2_PATH = ../../libssh2-1.3.0
+endif
+# Edit the path below to point to the base of your librtmp package.
+ifndef LIBRTMP_PATH
+LIBRTMP_PATH = ../../librtmp-2.3
 endif
 # Edit the path below to point to the base of your libidn package.
 ifndef LIBIDN_PATH
 LIBIDN_PATH = ../../libidn-1.18
+endif
+# Edit the path below to point to the base of your MS idndlpackage. 
+# Microsoft Internationalized Domain Names (IDN) Mitigation APIs 1.1
+# http://www.microsoft.com/downloads/en/details.aspx?FamilyID=ad6158d7-ddba-416a-9109-07607425a815
+ifndef WINIDN_PATH
+WINIDN_PATH = ../../Microsoft IDN Mitigation APIs
 endif
 # Edit the path below to point to the base of your Novell LDAP NDK.
 ifndef LDAP_SDK
@@ -40,26 +50,81 @@ ifndef LIBCARES_PATH
 LIBCARES_PATH = ../ares
 endif
 
+# Edit the var below to set to your architecture or set environment var.
+ifndef ARCH
+ARCH = w32
+endif
+
 CC = gcc
-AR = ar
+CFLAGS = -g -O2 -Wall
+ifeq ($(ARCH),w64)
+CFLAGS += -D_AMD64_
+endif
 # comment LDFLAGS below to keep debug info
 LDFLAGS = -s
+AR = ar
 RANLIB = ranlib
 RC = windres
 RCFLAGS = --include-dir=../include -DDEBUGBUILD=0 -O COFF -i
-RM = del /q /f > NUL 2>&1
+RM = del /q /f 2>NUL
 STRIP = strip -g
 
 ########################################################
 ## Nothing more to do below this line!
 
+ifeq ($(findstring -dyn,$(CFG)),-dyn)
+DYN = 1
+endif
+ifeq ($(findstring -ares,$(CFG)),-ares)
+ARES = 1
+endif
+ifeq ($(findstring -rtmp,$(CFG)),-rtmp)
+RTMP = 1
+SSL = 1
+ZLIB = 1
+endif
+ifeq ($(findstring -ssh2,$(CFG)),-ssh2)
+SSH2 = 1
+SSL = 1
+ZLIB = 1
+endif
+ifeq ($(findstring -ssl,$(CFG)),-ssl)
+SSL = 1
+endif
+ifeq ($(findstring -zlib,$(CFG)),-zlib)
+ZLIB = 1
+endif
+ifeq ($(findstring -idn,$(CFG)),-idn)
+IDN = 1
+endif
+ifeq ($(findstring -winidn,$(CFG)),-winidn)
+WINIDN = 1
+endif
+ifeq ($(findstring -sspi,$(CFG)),-sspi)
+SSPI = 1
+endif
+ifeq ($(findstring -spnego,$(CFG)),-spnego)
+SPNEGO = 1
+endif
+ifeq ($(findstring -ldaps,$(CFG)),-ldaps)
+LDAPS = 1
+endif
+ifeq ($(findstring -ipv6,$(CFG)),-ipv6)
+IPV6 = 1
+endif
+
 INCLUDES = -I. -I../include
-CFLAGS = -g -O2 -DBUILDING_LIBCURL
+CFLAGS += -DBUILDING_LIBCURL
 ifdef ARES
   INCLUDES += -I$(LIBCARES_PATH)
   CFLAGS += -DUSE_ARES
   DLL_LIBS += -L$(LIBCARES_PATH) -lcares
   libcurl_dll_DEPENDENCIES = $(LIBCARES_PATH)/libcares.a
+endif
+ifdef RTMP
+  INCLUDES += -I"$(LIBRTMP_PATH)"
+  CFLAGS += -DUSE_LIBRTMP
+  DLL_LIBS += -L"$(LIBRTMP_PATH)/librtmp" -lrtmp -lwinmm
 endif
 ifdef SSH2
   INCLUDES += -I"$(LIBSSH2_PATH)/include" -I"$(LIBSSH2_PATH)/win32"
@@ -82,9 +147,18 @@ ifdef IDN
   INCLUDES += -I"$(LIBIDN_PATH)/include"
   CFLAGS += -DUSE_LIBIDN
   DLL_LIBS += -L$(LIBIDN_PATH)/lib -lidn
+else
+ifdef WINIDN
+  CFLAGS += -DUSE_WIN32_IDN
+  CFLAGS += -DWANT_IDN_PROTOTYPES
+  DLL_LIBS += -L"$(WINIDN_PATH)" -lnormaliz
+endif
 endif
 ifdef SSPI
   CFLAGS += -DUSE_WINDOWS_SSPI
+endif
+ifdef SPNEGO
+  CFLAGS += -DHAVE_SPNEGO
 endif
 ifdef IPV6
   CFLAGS += -DENABLE_IPV6
@@ -148,12 +222,11 @@ $(libcurl_dll_LIBRARY): $(libcurl_a_OBJECTS) $(RESOURCE) $(libcurl_dll_DEPENDENC
 clean:
 	-$(RM) $(libcurl_a_OBJECTS) $(RESOURCE)
 
-distrib: clean
+distclean vclean: clean
 	-$(RM) $(libcurl_a_LIBRARY) $(libcurl_dll_LIBRARY) $(libcurl_dll_a_LIBRARY)
 
 FORCE: ;
 
 $(LIBCARES_PATH)/libcares.a:
 	$(MAKE) -C $(LIBCARES_PATH) -f Makefile.m32
-
 

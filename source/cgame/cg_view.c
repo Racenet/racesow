@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2002-2003 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "cg_local.h"
 
@@ -169,6 +169,51 @@ static void CG_AddLocalSounds( void )
 		//cgs.media.sfxTimerBipBip
 		//cgs.media.sfxTimerPloink
 	}
+}
+
+/*
+* CG_FlashGameWindow
+*
+* Flashes game window in case of important events (match state changes, etc) for user to notice
+*/
+static void CG_FlashGameWindow( void )
+{
+	static int oldState = -1;
+	int newState;
+	qboolean flash = qfalse;
+	static int oldAlphaScore, oldBetaScore;
+	static qboolean scoresSet = qfalse;
+
+	// notify player of important match states
+	newState = GS_MatchState();
+	if( oldState != newState )
+	{
+		switch( newState )
+		{
+		case MATCH_STATE_COUNTDOWN:
+		case MATCH_STATE_PLAYTIME:
+		case MATCH_STATE_POSTMATCH:
+			flash = qtrue;
+			break;
+		default:
+			break;
+		}
+
+		oldState = newState;
+	}
+
+	// notify player of teams scoring in team-based gametypes
+	if( !scoresSet || 
+		( oldAlphaScore != cg.predictedPlayerState.stats[STAT_TEAM_ALPHA_SCORE] || oldBetaScore != cg.predictedPlayerState.stats[STAT_TEAM_BETA_SCORE] ) )  {
+		oldAlphaScore = cg.predictedPlayerState.stats[STAT_TEAM_ALPHA_SCORE];
+		oldBetaScore = cg.predictedPlayerState.stats[STAT_TEAM_BETA_SCORE];
+
+		flash = scoresSet && GS_TeamBasedGametype() && !GS_InvidualGameType();
+		scoresSet = qtrue;
+	}
+
+	if( flash )
+		trap_VID_FlashWindow( cg_flashWindowCount->integer );
 }
 
 /*
@@ -944,12 +989,19 @@ void CG_RenderView( float frameTime, float realFrameTime, int realTime, unsigned
 
 	if( !cgs.configStrings[CS_WORLDMODEL][0] )
 	{
+		CG_AddLocalSounds();
+
 		trap_R_DrawStretchPic( 0, 0, cgs.vidWidth, cgs.vidHeight, 0, 0, 1, 1, colorBlack, cgs.shaderWhite );
+
+		trap_S_Update( vec3_origin, vec3_origin, vec3_origin, vec3_origin, vec3_origin, cgs.clientInfo[cgs.playerNum].name );
+
 		return;
 	}
 
 	if( !cg.viewFrameCount )
 		cg.firstViewRealTime = cg.realTime;
+
+	CG_FlashGameWindow(); // notify player of important game events
 
 	CG_CalcVrect(); // find sizes of the 3d drawing screen
 	CG_TileClear(); // clear any dirty part of the background
@@ -1019,7 +1071,7 @@ void CG_RenderView( float frameTime, float realFrameTime, int realTime, unsigned
 
 	cg.oldAreabits = qtrue;
 
-	trap_S_Update( cg.view.origin, cg.view.velocity, cg.view.axis[FORWARD], cg.view.axis[RIGHT], cg.view.axis[UP] );
+	trap_S_Update( cg.view.origin, cg.view.velocity, cg.view.axis[FORWARD], cg.view.axis[RIGHT], cg.view.axis[UP], cgs.clientInfo[cgs.playerNum].name );
 
 	CG_Draw2D();
 

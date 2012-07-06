@@ -90,9 +90,7 @@ static float sampleText_tcw;
 static float sampleText_tch;
 
 /*
-=================
-R_Bloom_InitBackUpTexture
-=================
+* R_Bloom_InitBackUpTexture
 */
 static void R_Bloom_InitBackUpTexture( int width, int height )
 {
@@ -110,9 +108,7 @@ static void R_Bloom_InitBackUpTexture( int width, int height )
 }
 
 /*
-=================
-R_Bloom_InitEffectTexture
-=================
+* R_Bloom_InitEffectTexture
 */
 static void R_Bloom_InitEffectTexture( void )
 {
@@ -142,9 +138,7 @@ static void R_Bloom_InitEffectTexture( void )
 }
 
 /*
-=================
-R_Bloom_InitTextures
-=================
+* R_Bloom_InitTextures
 */
 static void R_Bloom_InitTextures( void )
 {
@@ -203,22 +197,28 @@ static void R_Bloom_InitTextures( void )
 }
 
 /*
-=================
-R_InitBloomTextures
-=================
+* R_InitBloomTextures
 */
 void R_InitBloomTextures( void )
 {
 	BLOOM_SIZE = 0;
-	if( !r_bloom->integer )
-		return;
 	R_Bloom_InitTextures();
 }
 
 /*
-=================
-R_Bloom_SamplePass
-=================
+* R_TouchBloomTextures
+*/
+void R_TouchBloomTextures( void )
+{
+	r_bloomscreentexture->registration_sequence = 
+	r_bloomeffecttexture->registration_sequence = 
+	r_bloombackuptexture->registration_sequence = 
+	r_bloomdownsamplingtexture->registration_sequence = 
+		r_front.registration_sequence;
+}
+
+/*
+* R_Bloom_SamplePass
 */
 static inline void R_Bloom_SamplePass( int xpos, int ypos )
 {
@@ -235,9 +235,7 @@ static inline void R_Bloom_SamplePass( int xpos, int ypos )
 }
 
 /*
-=================
-R_Bloom_Quad
-=================
+* R_Bloom_Quad
 */
 static inline void R_Bloom_Quad( int x, int y, int w, int h, float texwidth, float texheight )
 {
@@ -254,9 +252,7 @@ static inline void R_Bloom_Quad( int x, int y, int w, int h, float texwidth, flo
 }
 
 /*
-=================
-R_Bloom_DrawEffect
-=================
+* R_Bloom_DrawEffect
 */
 static void R_Bloom_DrawEffect( void )
 {
@@ -278,9 +274,7 @@ static void R_Bloom_DrawEffect( void )
 }
 
 /*
-=================
-R_Bloom_GeneratexDiamonds
-=================
+* R_Bloom_GeneratexDiamonds
 */
 static void R_Bloom_GeneratexDiamonds( void )
 {
@@ -288,8 +282,8 @@ static void R_Bloom_GeneratexDiamonds( void )
 	float intensity, scale, *diamond;
 
 	// set up sample size workspace
-	qglScissor( 0, 0, sample_width, sample_height );
-	qglViewport( 0, 0, sample_width, sample_height );
+	GL_Scissor( 0, glState.height - sample_height, sample_width, sample_height );
+	GL_Viewport( 0, glState.height - sample_height, sample_width, sample_height );
 	qglMatrixMode( GL_PROJECTION );
 	qglLoadIdentity();
 	qglOrtho( 0, sample_width, sample_height, 0, -10, 100 );
@@ -369,8 +363,8 @@ static void R_Bloom_GeneratexDiamonds( void )
 	qglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, sample_width, sample_height );
 
 	// restore full screen workspace
-	qglScissor( 0, 0, glState.width, glState.height );
-	qglViewport( 0, 0, glState.width, glState.height );
+	GL_Scissor( 0, 0, glState.width, glState.height );
+	GL_Viewport( 0, 0, glState.width, glState.height );
 	qglMatrixMode( GL_PROJECTION );
 	qglLoadIdentity();
 	qglOrtho( 0, glState.width, glState.height, 0, -10, 100 );
@@ -379,9 +373,7 @@ static void R_Bloom_GeneratexDiamonds( void )
 }
 
 /*
-=================
-R_Bloom_DownsampleView
-=================
+* R_Bloom_DownsampleView
 */
 static void R_Bloom_DownsampleView( void )
 {
@@ -423,9 +415,7 @@ static void R_Bloom_DownsampleView( void )
 }
 
 /*
-=================
-R_BloomBlend
-=================
+* R_BloomBlend
 */
 void R_BloomBlend( const refdef_t *fd )
 {
@@ -439,8 +429,8 @@ void R_BloomBlend( const refdef_t *fd )
 		return;
 
 	// set up full screen workspace
-	qglScissor( 0, 0, glState.width, glState.height );
-	qglViewport( 0, 0, glState.width, glState.height );
+	GL_Scissor( 0, 0, glState.width, glState.height );
+	GL_Viewport( 0, 0, glState.width, glState.height );
 	qglMatrixMode( GL_PROJECTION );
 	qglLoadIdentity();
 	qglOrtho( 0, glState.width, glState.height, 0, -10, 100 );
@@ -490,9 +480,9 @@ void R_BloomBlend( const refdef_t *fd )
 
 	R_Bloom_Quad( 0, 0, r_screenbackuptexture_width, r_screenbackuptexture_height, 1.0f, 1.0f );
 
-	qglScissor( ri.scissor[0], ri.scissor[1], ri.scissor[2], ri.scissor[3] );
+	GL_Scissor( ri.scissor[0], ri.scissor[1], ri.scissor[2], ri.scissor[3] );
 
 	R_Bloom_DrawEffect();
 
-	qglViewport( ri.viewport[0], ri.viewport[1], ri.viewport[2], ri.viewport[3] );
+	GL_Viewport( ri.viewport[0], ri.viewport[1], ri.viewport[2], ri.viewport[3] );
 }

@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
@@ -48,10 +48,10 @@ void UI_ColorBlueCallback( menucommon_t *menuitem )
 	playerColor[2] = menuitem->curvalue;
 }
 
-//==============================
-// UI_FindIndexForModelAndSkin
-// if it fails returns 0 which will be the first indexed one
-//==============================
+/*
+* UI_FindIndexForModelAndSkin
+* if it fails returns 0 which will be the first indexed one
+*/
 void UI_FindIndexForModelAndSkin( const char *model, const char *skin, int *modelindex, int *skinindex )
 {
 	m_listitem_t *item;
@@ -94,9 +94,9 @@ void UI_FindIndexForModelAndSkin( const char *model, const char *skin, int *mode
 }
 
 
-//==============================
-//	ui_PModel_ValidModel - skelmod
-//==============================
+/*
+* ui_PModel_ValidModel - skelmod
+*/
 static qboolean ui_PModel_ValidModel( char *model_name )
 {
 	qboolean found = qfalse;
@@ -121,9 +121,9 @@ static qboolean ui_PModel_ValidModel( char *model_name )
 	return qtrue;
 }
 
-//=================
-//UI_Playermodels_ScanDirectory
-//=================
+/*
+* UI_Playermodels_ScanDirectory
+*/
 static char **UI_Playermodels_ScanDirectory( char *model, int *numSkins )
 {
 	int i, j, k;
@@ -177,9 +177,9 @@ static char **UI_Playermodels_ScanDirectory( char *model, int *numSkins )
 	return skinnames;
 }
 
-//=================
-//UI_Playermodels_ScanDirectories
-//=================
+/*
+* UI_Playermodels_ScanDirectories
+*/
 static void UI_Playermodels_CreateItemList( m_itemslisthead_t *itemlist )
 {
 	int i, j, k;
@@ -239,9 +239,9 @@ static void UI_Playermodels_CreateItemList( m_itemslisthead_t *itemlist )
 	while( i < ndirs );
 }
 
-//===============
-// UI_Playermodel_Init
-//===============
+/*
+* UI_Playermodel_Init
+*/
 void UI_Playermodel_Init( void )
 {
 	UI_Playermodels_CreateItemList( &playermodelsItemsList );
@@ -251,9 +251,9 @@ void UI_Playermodel_Init( void )
 	ui_playermodel_fps = trap_Cvar_Get( "ui_playermodel_fps", "30", CVAR_DEVELOPER );
 }
 
-//===============
-// UI_PlayerModelNextFrameTime
-//===============
+/*
+* UI_PlayerModelNextFrameTime
+*/
 qboolean UI_PlayerModelNextFrameTime( void )
 {
 	static unsigned int lastModelFrameTime = 0;
@@ -272,9 +272,9 @@ qboolean UI_PlayerModelNextFrameTime( void )
 
 //------------------------------------------------------------------------
 
-//===============
-// UI_SkelposeBounds
-//===============
+/*
+* UI_SkelposeBounds
+*/
 static void UI_SkelposeBounds( cgs_skeleton_t *skel, bonepose_t *boneposes, vec3_t mins, vec3_t maxs )
 {
 	int j, i;
@@ -333,9 +333,9 @@ void UI_PlayerModelBounds( struct model_s *model, vec3_t mins, vec3_t maxs, bone
 	AddPointToBounds( tmaxs, mins, maxs );
 }
 
-//===============
-// UI_DrawPlayerModel
-//===============
+/*
+* UI_DrawPlayerModel
+*/
 void UI_DrawPlayerModel( char *model, char *skin, byte_vec4_t color, int xpos, int ypos, int width, int height, int frame, int oldframe )
 {
 	refdef_t refdef;

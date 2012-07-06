@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "server.h"
 
@@ -42,6 +42,7 @@ cvar_t *rcon_password;         // password for remote server commands
 cvar_t *sv_uploads;
 cvar_t *sv_uploads_from_server;
 cvar_t *sv_uploads_baseurl;
+cvar_t *sv_uploads_demos_baseurl;
 
 cvar_t *sv_pure;
 cvar_t *sv_pure_forcemodulepk3;
@@ -86,11 +87,11 @@ cvar_t *sv_demodir;
 
 //============================================================================
 
-//===================
-//SV_CalcPings
-//
-//Updates the cl->ping variables
-//===================
+/*
+* SV_CalcPings
+* 
+* Updates the cl->ping variables
+*/
 static void SV_CalcPings( void )
 {
 	unsigned int i, j;
@@ -134,9 +135,9 @@ static void SV_CalcPings( void )
 	}
 }
 
-//=================
-// SV_ProcessPacket
-//=================
+/*
+* SV_ProcessPacket
+*/
 static qboolean SV_ProcessPacket( netchan_t *netchan, msg_t *msg )
 {
 	int zerror;
@@ -163,9 +164,9 @@ static qboolean SV_ProcessPacket( netchan_t *netchan, msg_t *msg )
 	return qtrue;
 }
 
-//=================
-//SV_ReadPackets
-//=================
+/*
+* SV_ReadPackets
+*/
 static void SV_ReadPackets( void )
 {
 	int i, socketind, ret;
@@ -191,7 +192,7 @@ static void SV_ReadPackets( void )
 #ifdef TCP_SUPPORT
 
 	if( SV_MM_Initialized() ) 
-	    SV_MM_NetAddress( &mmserver );
+		SV_MM_NetAddress( &mmserver );
 
 	if( svs.socket_tcp.open )
 	{
@@ -340,7 +341,7 @@ static void SV_ReadPackets( void )
 			if( ret == -1 )
 			{
 				Com_Printf( "Error receiving packet from %s: %s\n", NET_AddressToString( &cl->netchan.remoteAddress ),
-				           NET_ErrorString() );
+					NET_ErrorString() );
 				if( cl->reliable )
 					SV_DropClient( cl, DROP_TYPE_GENERAL, "Error receiving packet: %s", NET_ErrorString() );
 			}
@@ -357,17 +358,17 @@ static void SV_ReadPackets( void )
 	}
 }
 
-//==================
-//SV_CheckTimeouts
-//
-//If a packet has not been received from a client for timeout->value
-//seconds, drop the conneciton.  Server frames are used instead of
-//realtime to avoid dropping the local client while debugging.
-//
-//When a client is normally dropped, the client_t goes into a zombie state
-//for a few seconds to make sure any final reliable message gets resent
-//if necessary
-//==================
+/*
+* SV_CheckTimeouts
+* 
+* If a packet has not been received from a client for timeout->value
+* seconds, drop the conneciton.  Server frames are used instead of
+* realtime to avoid dropping the local client while debugging.
+* 
+* When a client is normally dropped, the client_t goes into a zombie state
+* for a few seconds to make sure any final reliable message gets resent
+* if necessary
+*/
 static void SV_CheckTimeouts( void )
 {
 	client_t *cl;
@@ -406,7 +407,7 @@ static void SV_CheckTimeouts( void )
 		}
 
 		if( ( cl->state != CS_FREE && cl->state != CS_ZOMBIE ) &&
-		   ( cl->lastPacketReceivedTime + 1000 * sv_timeout->value < svs.realtime ) )
+			( cl->lastPacketReceivedTime + 1000 * sv_timeout->value < svs.realtime ) )
 		{
 			SV_DropClient( cl, DROP_TYPE_GENERAL, "Error: Connection timed out" );
 			cl->state = CS_FREE; // don't bother with zombie state
@@ -416,7 +417,7 @@ static void SV_CheckTimeouts( void )
 
 		// timeout downloads left open
 		if( ( cl->state != CS_FREE && cl->state != CS_ZOMBIE ) &&
-		   ( cl->download.name && cl->download.timeout < svs.realtime ) )
+			( cl->download.name && cl->download.timeout < svs.realtime ) )
 		{
 			Com_Printf( "Download of %s to %s%s timed out\n", cl->download.name, cl->name, S_COLOR_WHITE );
 
@@ -438,9 +439,9 @@ static void SV_CheckTimeouts( void )
 //#define WORLDFRAMETIME 25 // 40fps
 //#define WORLDFRAMETIME 20 // 50fps
 #define WORLDFRAMETIME 16 // 62.5fps
-//=================
-//SV_RunGameFrame
-//=================
+/*
+* SV_RunGameFrame
+*/
 static qboolean SV_RunGameFrame( int msec )
 {
 	static unsigned int accTime = 0;
@@ -549,72 +550,72 @@ static qboolean SV_RunGameFrame( int msec )
 /*
 static qboolean SV_RunGameFrame( int msec )
 {
-	int extraTime = 0;
-	static unsigned int accTime = 0;
+int extraTime = 0;
+static unsigned int accTime = 0;
 
-	accTime += msec;
+accTime += msec;
 
-	// move autonomous things around if enough time has passed
-	if( svs.gametime < sv.nextSnapTime )
-	{
-		if( svs.gametime + svc.snapFrameTime < sv.nextSnapTime )
-		{
-			if( sv_showclamp->integer )
-				Com_Printf( "sv lowclamp\n" );
-			sv.nextSnapTime = svs.gametime + svc.snapFrameTime;
-			return qfalse;
-		}
+// move autonomous things around if enough time has passed
+if( svs.gametime < sv.nextSnapTime )
+{
+if( svs.gametime + svc.snapFrameTime < sv.nextSnapTime )
+{
+if( sv_showclamp->integer )
+Com_Printf( "sv lowclamp\n" );
+sv.nextSnapTime = svs.gametime + svc.snapFrameTime;
+return qfalse;
+}
 
-		// see if it's time to advance the world
-		if( accTime >= WORLDFRAMETIME )
-		{
-			if( host_speeds->integer )
-				time_before_game = Sys_Milliseconds();
+// see if it's time to advance the world
+if( accTime >= WORLDFRAMETIME )
+{
+if( host_speeds->integer )
+time_before_game = Sys_Milliseconds();
 
-			ge->RunFrame( WORLDFRAMETIME, svs.gametime );
+ge->RunFrame( WORLDFRAMETIME, svs.gametime );
 
-			if( host_speeds->integer )
-				time_after_game = Sys_Milliseconds();
+if( host_speeds->integer )
+time_after_game = Sys_Milliseconds();
 
-			accTime = accTime - WORLDFRAMETIME;
-		}
+accTime = accTime - WORLDFRAMETIME;
+}
 
-		if( !SV_SendClientsFragments() )
-		{
-			// FIXME: gametime might slower/faster than real time
-			if( dedicated->integer )
-			{
-				socket_t *sockets[] = { &svs.socket_udp, NULL };
-				NET_Sleep( min( WORLDFRAMETIME - accTime, sv.nextSnapTime - svs.gametime ), sockets );
-			}
-		}
+if( !SV_SendClientsFragments() )
+{
+// FIXME: gametime might slower/faster than real time
+if( dedicated->integer )
+{
+socket_t *sockets[] = { &svs.socket_udp, NULL };
+NET_Sleep( min( WORLDFRAMETIME - accTime, sv.nextSnapTime - svs.gametime ), sockets );
+}
+}
 
-		return qfalse;
-	}
+return qfalse;
+}
 
-	if( sv.nextSnapTime <= svs.gametime )
-	{
-		extraTime = (int)( svs.gametime - sv.nextSnapTime );
-	}
-	if( extraTime >= msec )
-		extraTime = msec - 1;
+if( sv.nextSnapTime <= svs.gametime )
+{
+extraTime = (int)( svs.gametime - sv.nextSnapTime );
+}
+if( extraTime >= msec )
+extraTime = msec - 1;
 
-	sv.nextSnapTime = ( svs.gametime + svc.snapFrameTime ) - extraTime;
+sv.nextSnapTime = ( svs.gametime + svc.snapFrameTime ) - extraTime;
 
-	// Execute all clients pending move commands
-	if( accTime )
-	{
-		ge->RunFrame( accTime, svs.gametime );
-		accTime = 0;
-	}
+// Execute all clients pending move commands
+if( accTime )
+{
+ge->RunFrame( accTime, svs.gametime );
+accTime = 0;
+}
 
-	// update ping based on the last known frame from all clients
-	SV_CalcPings();
+// update ping based on the last known frame from all clients
+SV_CalcPings();
 
-	sv.framenum++;
-	ge->SnapFrame();
+sv.framenum++;
+ge->SnapFrame();
 
-	return qtrue;
+return qtrue;
 }
 */
 static void SV_CheckDefaultMap( void )
@@ -661,14 +662,37 @@ static void SV_CheckAutoUpdate( void )
 
 	days = (unsigned int)sv_lastAutoUpdate->integer;
 
-	// less that 2 days since last check?
-	if( days + 1 < Com_DaysSince1900() )
+	// daily check
+	if( days < Com_DaysSince1900() )
 		SV_AutoUpdateFromWeb( qfalse );
 }
 
-//==================
-//SV_Frame
-//==================
+/*
+* SV_CheckMatchUUID_Callback
+*/
+static void SV_CheckMatchUUID_Callback( const char *uuid )
+{
+	Q_strncpyz( sv.configstrings[CS_MATCHUUID], uuid, sizeof( sv.configstrings[0] ) );
+}
+
+/*
+* SV_CheckMatchUUID
+*
+* See if the game module or the server itself have reset the 
+* match UUID configstring. If so, and we're connected to the 
+* matchmaker, fetch a new UUID.
+*/
+static void SV_CheckMatchUUID( void )
+{
+	if( sv.configstrings[CS_MATCHUUID][0] != '\0' ) {
+		return;
+	}
+	SV_MM_GetMatchUUID( &SV_CheckMatchUUID_Callback );
+}
+
+/*
+* SV_Frame
+*/
 void SV_Frame( int realmsec, int gamemsec )
 {
 	const unsigned int wrappingPoint = 0x70000000;
@@ -708,14 +732,13 @@ void SV_Frame( int realmsec, int gamemsec )
 		// write snap to server demo file
 		SV_Demo_WriteSnap();
 
-		// check matchmaker stuff
+		// run matchmaker stuff
+		SV_CheckMatchUUID();
+
 		SV_MM_Frame();
 
 		// send a heartbeat to the master if needed
 		SV_MasterHeartbeat();
-
-		// send a heartbeat to the matchmaker if needed
-		SV_MMHeartbeat();
 
 		// clear teleport flags, etc for next frame
 		ge->ClearSnap();
@@ -726,15 +749,16 @@ void SV_Frame( int realmsec, int gamemsec )
 
 //============================================================================
 
-//=================
-//SV_UserinfoChanged
-//
-//Pull specific info from a newly changed userinfo string
-//into a more C friendly form.
-//=================
+/*
+* SV_UserinfoChanged
+* 
+* Pull specific info from a newly changed userinfo string
+* into a more C friendly form.
+*/
 void SV_UserinfoChanged( client_t *client )
 {
 	char *val;
+	int ival;
 
 	assert( client );
 	assert( Info_Validate( client->userinfo ) );
@@ -772,6 +796,14 @@ void SV_UserinfoChanged( client_t *client )
 	}
 	Q_strncpyz( client->name, val, sizeof( client->name ) );
 
+	// mm session
+	ival = 0;
+	val = Info_ValueForKey( client->userinfo, "cl_mm_session" );
+	if( val )
+		ival = atoi( val );
+	if( !val || ival != client->mm_session )
+		Info_SetValueForKey( client->userinfo, "cl_mm_session", va("%d", client->mm_session ) );
+
 #ifndef RATEKILLED
 	// rate command
 	if( NET_IsLANAddress( &client->netchan.remoteAddress ) )
@@ -807,11 +839,11 @@ void SV_UserinfoChanged( client_t *client )
 
 //============================================================================
 
-//===============
-//SV_Init
-//
-//Only called at plat.exe startup, not for each game
-//===============
+/*
+* SV_Init
+* 
+* Only called at plat.exe startup, not for each game
+*/
 void SV_Init( void )
 {
 	cvar_t *sv_pps;
@@ -848,6 +880,7 @@ void SV_Init( void )
 	sv_highchars =			Cvar_Get( "sv_highchars", "1", 0 );
 
 	sv_uploads_baseurl =	    Cvar_Get( "sv_uploads_baseurl", "", CVAR_ARCHIVE );
+	sv_uploads_demos_baseurl =	Cvar_Get( "sv_uploads_demos_baseurl", "", CVAR_ARCHIVE );
 	if( dedicated->integer )
 	{
 		sv_uploads =		    Cvar_Get( "sv_uploads", "1", CVAR_READONLY );
@@ -953,22 +986,25 @@ void SV_Init( void )
 	//init the master servers list
 	SV_InitMaster();
 
+	SV_MM_Init();
+
 	ML_Init();
 
 	sv_initialized = qtrue;
 }
 
-//================
-//SV_Shutdown
-//
-//Called once when the program is shutting down
-//================
-void SV_Shutdown( char *finalmsg )
+/*
+* SV_Shutdown
+* 
+* Called once when the program is shutting down
+*/
+void SV_Shutdown( const char *finalmsg )
 {
 	if( !sv_initialized )
 		return;
 
 	ML_Shutdown();
+	SV_MM_Shutdown( qtrue );
 	SV_ShutdownGame( finalmsg, qfalse );
 
 	SV_ShutdownOperatorCommands();

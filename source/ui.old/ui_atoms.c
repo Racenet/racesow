@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include <string.h>
 #include <ctype.h>
 
@@ -45,24 +45,24 @@ vec4_t colorWarsowPurpleBright = { 0.66f, 0.66f, 1.0f, 1.0f };
 vec4_t colorWarsowPurple = { 0.3843f, 0.2902f, 0.5843f, 1.0f };
 
 /*
-   ===============================================================================
+===============================================================================
 
-   STRINGS DRAWING
+STRINGS DRAWING
 
-   ===============================================================================
- */
+===============================================================================
+*/
 
-//=============
-//UI_FillRect
-//=============
+/*
+* UI_FillRect
+*/
 void UI_FillRect( int x, int y, int w, int h, vec4_t color )
 {
 	trap_R_DrawStretchPic( x, y, w, h, 0, 0, 1, 1, color, uis.whiteShader );
 }
 
-//=============
-//UI_StringWidth
-//=============
+/*
+* UI_StringWidth
+*/
 int UI_StringWidth( char *s, struct mufont_s *font )
 {
 	if( !font )
@@ -70,9 +70,9 @@ int UI_StringWidth( char *s, struct mufont_s *font )
 	return trap_SCR_strWidth( s, font, 0 );
 }
 
-//=============
-//UI_StringHeight
-//=============
+/*
+* UI_StringHeight
+*/
 int UI_StringHeight( struct mufont_s *font )
 {
 	if( !font )
@@ -80,9 +80,9 @@ int UI_StringHeight( struct mufont_s *font )
 	return trap_SCR_strHeight( font );
 }
 
-//=============
-//UISCR_HorizontalAlignOffset
-//=============
+/*
+* UISCR_HorizontalAlignOffset
+*/
 int UISCR_HorizontalAlignOffset( int align, int width )
 {
 	int nx = 0;
@@ -97,9 +97,9 @@ int UISCR_HorizontalAlignOffset( int align, int width )
 	return nx;
 }
 
-//=============
-//UISCR_VerticalAlignOffset
-//=============
+/*
+* UISCR_VerticalAlignOffset
+*/
 int UISCR_VerticalAlignOffset( int align, int height )
 {
 	int ny = 0;
@@ -172,7 +172,7 @@ static void UI_DrawBoxLayer( int x, int y, int width, int height, vec4_t color, 
 			trap_R_DrawStretchPic( x, y + yoffset, UI_BOX_IMAGE_SIZE, extraHeight, 0, 0, 1, fracHeight, color, uis.gfxBoxBorderLeft );
 		else
 			trap_R_DrawStretchPic( x, y + yoffset, UI_BOX_IMAGE_SIZE, extraHeight, 0, 0, 1, fracHeight, color, uis.gfxBoxLeft );
-	
+
 		yoffset += extraHeight;
 	}
 
@@ -190,12 +190,12 @@ static void UI_DrawBoxLayer( int x, int y, int width, int height, vec4_t color, 
 			trap_R_DrawStretchPic( x + xoffset, y, UI_BOX_IMAGE_SIZE, UI_BOX_IMAGE_SIZE, 0, 0, 1, 1, color, uis.gfxBoxBorderUp );
 		else
 			trap_R_DrawStretchPic( x + xoffset, y, UI_BOX_IMAGE_SIZE, UI_BOX_IMAGE_SIZE, 0, 0, 1, 1, color, uis.gfxBoxUp );
-	
+
 		if( border )
 			trap_R_DrawStretchPic( x + xoffset, y + ( height - UI_BOX_IMAGE_SIZE ), UI_BOX_IMAGE_SIZE, UI_BOX_IMAGE_SIZE, 0, 0, 1, 1, color, uis.gfxBoxBorderBottom );
 		else
 			trap_R_DrawStretchPic( x + xoffset, y + ( height - UI_BOX_IMAGE_SIZE ), UI_BOX_IMAGE_SIZE, UI_BOX_IMAGE_SIZE, 0, 0, 1, 1, color, uis.gfxBoxBottom );
-	
+
 	}
 
 	if( extraWidth )
@@ -320,10 +320,10 @@ void UI_DrawBar( int x, int y, int width, int height, int align, float percent, 
 	UI_DrawPicBar( x, y, width, height, align, percent, uis.whiteShader, backColor, color );
 }
 
-//=============
-//UI_DrawStringHigh
-//This string is highlighted by the mouse
-//=============
+/*
+* UI_DrawStringHigh
+* This string is highlighted by the mouse
+*/
 void UI_DrawStringHigh( int x, int y, int align, const char *str, int maxwidth, struct mufont_s *font, vec4_t color )
 {
 	int shadowoffset = 1;
@@ -348,9 +348,9 @@ void UI_DrawStringHigh( int x, int y, int align, const char *str, int maxwidth, 
 	}
 }
 
-//=============
-//UI_DrawString
-//=============
+/*
+* UI_DrawString
+*/
 void UI_DrawString( int x, int y, int align, const char *str, int maxwidth, struct mufont_s *font, vec4_t color )
 {
 	if( !font )
@@ -367,11 +367,11 @@ void UI_DrawString( int x, int y, int align, const char *str, int maxwidth, stru
 		trap_SCR_DrawString( x, y, align, str, font, color );
 }
 
-//=============
-//UI_DrawStringRow_
-//=============
+/*
+* UI_DrawStringRow_
+*/
 static void UI_DrawStringRow_( int x, int y, int align, const char *str, int maxwidth, struct mufont_s *font, vec4_t color, 
-	void ( *draw )( int, int, int, const char *, int, struct mufont_s *, vec4_t ) )
+							  void ( *draw )( int, int, int, const char *, int, struct mufont_s *, vec4_t ) )
 {
 	int curwidth, width, totalwidth;
 	static char stritem[MAX_STRING_CHARS];
@@ -405,17 +405,17 @@ static void UI_DrawStringRow_( int x, int y, int align, const char *str, int max
 		draw( x + totalwidth, y, align, stritem + (lastpos - str), max( maxwidth - totalwidth, 0 ), font, color );
 }
 
-//=============
-//UI_DrawStringRow
-//=============
+/*
+* UI_DrawStringRow
+*/
 static void UI_DrawStringRow( int x, int y, int align, const char *str, int maxwidth, struct mufont_s *font, vec4_t color )
 {
 	UI_DrawStringRow_( x, y, align, str, maxwidth, font, color, UI_DrawString );
 }
 
-//=============
-//UI_DrawStringRowHigh
-//=============
+/*
+* UI_DrawStringRowHigh
+*/
 static void UI_DrawStringRowHigh( int x, int y, int align, const char *str, int maxwidth, struct mufont_s *font, vec4_t color )
 {
 	UI_DrawStringRow_( x, y, align, str, maxwidth, font, color, UI_DrawStringHigh );
@@ -493,7 +493,7 @@ void Action_Draw( menucommon_t *menuitem )
 
 	x = menuitem->x + menuitem->parent->x;
 	y = menuitem->y + menuitem->parent->y;
-	
+
 	height = menuitem->height;
 	width = menuitem->width;
 
@@ -701,7 +701,7 @@ qboolean Field_Key( menucommon_t *f, int key )
 	** support pasting from the clipboard
 	*/
 	if( ( toupper( key ) == 'V' && trap_Key_IsDown( K_CTRL ) ) ||
-	   ( ( ( key == K_INS ) || ( key == KP_INS ) ) && trap_Key_IsDown( K_SHIFT ) ) )
+		( ( ( key == K_INS ) || ( key == KP_INS ) ) && trap_Key_IsDown( K_SHIFT ) ) )
 	{
 		char *cbd, *p;
 
@@ -736,11 +736,11 @@ qboolean Field_Key( menucommon_t *f, int key )
 
 	case KP_DEL:
 	case K_DEL:
-	{
-		memmove( &itemlocal->buffer[itemlocal->cursor], &itemlocal->buffer[itemlocal->cursor+1], strlen( &itemlocal->buffer[itemlocal->cursor+1] ) + 1 );
-		Field_ResetCursor( f );
-		//Field_DoEnter( f ); // exec callback
-	}
+		{
+			memmove( &itemlocal->buffer[itemlocal->cursor], &itemlocal->buffer[itemlocal->cursor+1], strlen( &itemlocal->buffer[itemlocal->cursor+1] ) + 1 );
+			Field_ResetCursor( f );
+			//Field_DoEnter( f ); // exec callback
+		}
 		return qtrue;
 
 	case KP_HOME:
@@ -863,14 +863,14 @@ void Slider_Draw( menucommon_t *s )
 		Vector4Copy( colorWhite, color );
 
 	trap_R_DrawStretchPic( x, y, SCROLLBAR_PIC_SIZE, SCROLLBAR_PIC_SIZE, 0, 0, 1, 1,
-	                      color, uis.gfxSlidebar_1 );
+		color, uis.gfxSlidebar_1 );
 
 	for( i = 1; i < s->width-1; i++ )
 		trap_R_DrawStretchPic( x + i*SCROLLBAR_PIC_SIZE, y, SCROLLBAR_PIC_SIZE, SCROLLBAR_PIC_SIZE, 0, 0, 1, 1,
-		                      color, uis.gfxSlidebar_2 );
+		color, uis.gfxSlidebar_2 );
 
 	trap_R_DrawStretchPic( x + s->width*SCROLLBAR_PIC_SIZE - SCROLLBAR_PIC_SIZE, y, SCROLLBAR_PIC_SIZE, SCROLLBAR_PIC_SIZE, 0, 0, 1, 1,
-	                      color, uis.gfxSlidebar_3 );
+		color, uis.gfxSlidebar_3 );
 
 	if( s->disabled )
 		Vector4Copy( colorMdGrey, buttoncolor );
@@ -880,10 +880,10 @@ void Slider_Draw( menucommon_t *s )
 		Vector4Copy( colorWhite, buttoncolor );
 
 	cursorxpos = x + SCROLLBAR_PIC_SIZE // start with offset for the button
-	             + ( ( s->width-3 ) * SCROLLBAR_PIC_SIZE * s->range );
+		+ ( ( s->width-3 ) * SCROLLBAR_PIC_SIZE * s->range );
 
 	trap_R_DrawStretchPic( cursorxpos, y, SCROLLBAR_PIC_SIZE, SCROLLBAR_PIC_SIZE, 0, 0, 1, 1,
-	                      buttoncolor, uis.gfxSlidebar_4 );
+		buttoncolor, uis.gfxSlidebar_4 );
 }
 
 void Slider_DoSlide( menucommon_t *s, int dir )
@@ -968,7 +968,7 @@ static void Scrollbar_DoSlide( menucommon_t *s, int dir, qboolean drag )
 	y_size = s->vspacing ? s->vspacing : trap_SCR_strHeight( s->font ); //y_size is used to stretch the graphic to the current font size's height
 	active_scroll = s->maxvalue < 1 ? ( s->height - 2 ) * y_size : ( ( s->height - 2 ) * y_size ) * ( (float)( s->height - 2 ) / (float)( s->height - 2 + s->maxvalue ) );
 	cv_pos = s->y + s->parent->y + y_size // start with offset for the button
-	         + s->range * ( ( s->height - 2 ) * y_size - active_scroll ); //limit the range to the space that "active area" isn't using
+		+ s->range * ( ( s->height - 2 ) * y_size - active_scroll ); //limit the range to the space that "active area" isn't using
 
 	//empty or erroneous
 	if( s->height <= 0 )
@@ -988,7 +988,7 @@ static void Scrollbar_DoSlide( menucommon_t *s, int dir, qboolean drag )
 		//else
 		//	drag = qfalse;
 	}
-	
+
 	if( !drag )
 	{
 		if( dir < 3 && dir > -3 && Menu_ItemAtCursor( s->parent ) == s && ( uis.cursorY > min && uis.cursorY < max ) )
@@ -1039,14 +1039,14 @@ void Scrollbar_Draw( menucommon_t *s )
 		s->range = 0;
 
 	trap_R_DrawStretchPic( x, y, SCROLLBAR_PIC_SIZE, y_size, 0, 0, 1, 1,
-	                      colorWhite, uis.gfxScrollbar_1 );
+		colorWhite, uis.gfxScrollbar_1 );
 
 	for( i = 1; i < s->height-1; i += 1 )
 		trap_R_DrawStretchPic( x, y + i*y_size, SCROLLBAR_PIC_SIZE, y_size, 0, 0, 1, 1,
-		                      colorWhite, uis.gfxScrollbar_2 );
+		colorWhite, uis.gfxScrollbar_2 );
 
 	trap_R_DrawStretchPic( x, y + s->height*y_size - y_size, SCROLLBAR_PIC_SIZE, y_size, 0, 0, 1, 1,
-	                      colorWhite, uis.gfxScrollbar_3 );
+		colorWhite, uis.gfxScrollbar_3 );
 
 	if( Menu_ItemAtCursor( s->parent ) == s )
 	{
@@ -1060,10 +1060,10 @@ void Scrollbar_Draw( menucommon_t *s )
 	//This is pretty ugly, but it is all correct, modify with caution
 	active_scroll = s->maxvalue < 1 ? ( s->height - 2 ) * y_size : ( ( s->height - 2 ) * y_size ) * ( (float)( s->height - 2 ) / (float)( s->height - 2 + s->maxvalue ) );
 	cv_pos = s->y + s->parent->y + y_size // start with offset for the button
-	         + s->range * ( ( s->height - 2 ) * y_size - active_scroll ); //limit the range to the space that "active area" isn't using
+		+ s->range * ( ( s->height - 2 ) * y_size - active_scroll ); //limit the range to the space that "active area" isn't using
 
 	trap_R_DrawStretchPic( x, cv_pos, SCROLLBAR_PIC_SIZE, active_scroll, 0, 0, 1, 1,
-	                      buttoncolor, uis.gfxScrollbar_4 );
+		buttoncolor, uis.gfxScrollbar_4 );
 
 	if( s->callback )
 		s->callback( s );
@@ -1148,16 +1148,16 @@ static void SpinControl_Init( menucommon_t *s )
 }
 
 /*
-   void SpinControl_DoEnter( menulist_s *s )
-   {
-   s->curvalue++;
-   if ( s->itemnames[s->curvalue] == 0 )
-   s->curvalue = 0;
+void SpinControl_DoEnter( menulist_s *s )
+{
+s->curvalue++;
+if ( s->itemnames[s->curvalue] == 0 )
+s->curvalue = 0;
 
-   if ( s->generic.callback )
-   s->generic.callback( s );
-   }
- */
+if ( s->generic.callback )
+s->generic.callback( s );
+}
+*/
 
 void SpinControl_DoSlide( menucommon_t *s, int dir )
 {
@@ -1274,7 +1274,7 @@ static void MenuItem_DrawPict( menucommon_t *menuitem )
 		if( menuitem->pict.shaderHigh )
 		{
 			trap_R_DrawStretchPic( x, y, menuitem->pict.width, menuitem->pict.height, 0, 0, 1, 1,
-			                       menuitem->pict.colorHigh, menuitem->pict.shaderHigh );
+				menuitem->pict.colorHigh, menuitem->pict.shaderHigh );
 
 			return;
 		}
@@ -1283,7 +1283,7 @@ static void MenuItem_DrawPict( menucommon_t *menuitem )
 	if( menuitem->pict.shader )
 	{
 		trap_R_DrawStretchPic( x, y, menuitem->pict.width, menuitem->pict.height, 0, 0, 1, 1,
-		                       menuitem->pict.color, menuitem->pict.shader );
+			menuitem->pict.color, menuitem->pict.shader );
 	}
 }
 
@@ -1319,7 +1319,7 @@ static void Menu_DrawWindowedBackground( menuframework_s *menu )
 	//	0, 0, 1, 1, colorWhite, trap_R_RegisterPic( "gfx/ui/novideoback") );
 
 	trap_R_DrawStretchPic( 0, mins[1], uis.vidWidth, maxs[1]-mins[1],
-	                       0, 0, 1, 1, colorback, uis.whiteShader );
+		0, 0, 1, 1, colorback, uis.whiteShader );
 }
 
 //=================================================================
@@ -1725,7 +1725,7 @@ char *UI_ListNameForPosition( const char *namesList, int position, const char se
 					*b = 0;
 					break;
 				}
-				
+
 				*b = *t;
 				t++;
 				b++;
@@ -1899,9 +1899,9 @@ qboolean UI_NamesListCvarAddName( const cvar_t *cvar, const char *name, const ch
 // scroll lists management
 //=======================================================
 
-//==================
-//UI_FreeScrollItemList
-//==================
+/*
+* UI_FreeScrollItemList
+*/
 void UI_FreeScrollItemList( m_itemslisthead_t *itemlist )
 {
 	m_listitem_t *ptr;
@@ -1917,9 +1917,9 @@ void UI_FreeScrollItemList( m_itemslisthead_t *itemlist )
 	itemlist->numItems = 0;
 }
 
-//==================
-//UI_FindItemInScrollListWithId
-//==================
+/*
+* UI_FindItemInScrollListWithId
+*/
 m_listitem_t *UI_FindItemInScrollListWithId( m_itemslisthead_t *itemlist, int itemid )
 {
 	m_listitem_t *item;
@@ -1938,9 +1938,9 @@ m_listitem_t *UI_FindItemInScrollListWithId( m_itemslisthead_t *itemlist, int it
 	return NULL;
 }
 
-//==================
-//UI_AddItemToScrollList
-//==================
+/*
+* UI_AddItemToScrollList
+*/
 void UI_AddItemToScrollList( m_itemslisthead_t *itemlist, const char *name, void *data )
 {
 	m_listitem_t *newitem, *checkitem;
@@ -2105,7 +2105,7 @@ int UI_SetupButton( menucommon_t *menuitem, qboolean box )
 		menuitem->width = minwidth;
 		menuitem->height = minheight;
 	}
-	
+
 	return menuitem->height;
 }
 

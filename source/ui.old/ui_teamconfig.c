@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
@@ -59,9 +59,9 @@ static void UpdateTeamCvars( void )
 	}
 }
 
-//=================
-//M_TeamConfig_ApplyChanges
-//=================
+/*
+* M_TeamConfig_ApplyChanges
+*/
 static void M_TeamConfig_ApplyChanges( struct menucommon_s *unused )
 {
 	menucommon_t *modelitem = UI_MenuItemByName( "m_TeamConfig_model" );
@@ -223,9 +223,9 @@ static void TeamModelCallback( menucommon_t *menuitem )
 	M_TeamConfig_ApplyChanges( NULL );
 }
 
-//=================
-//TeamConfig_MenuInit
-//=================
+/*
+* TeamConfig_MenuInit
+*/
 static qboolean TeamConfig_MenuInit( void )
 {
 	menucommon_t *menuitem;
@@ -362,9 +362,9 @@ static qboolean TeamConfig_MenuInit( void )
 	return qtrue;
 }
 
-//=================
-//TeamConfig_MenuDraw - skelmod
-//=================
+/*
+* TeamConfig_MenuDraw - skelmod
+*/
 static void TeamConfig_MenuDraw( void )
 {
 	menucommon_t *playerbox;
@@ -444,7 +444,7 @@ static const char *TeamConfig_MenuKey( int key )
 	item = Menu_ItemAtCursor( &s_team_config_menu );
 
 	if( key == K_ESCAPE || ( ( key == K_MOUSE2 ) && ( item->type != MTYPE_SPINCONTROL ) &&
-	                        ( item->type != MTYPE_SLIDER ) ) )
+		( item->type != MTYPE_SLIDER ) ) )
 	{
 		M_TeamConfig_SaveAndClose( NULL );
 		return menu_out_sound;

@@ -1,7 +1,11 @@
 #ifndef SCRIPTANY_H
 #define SCRIPTANY_H
 
+#ifndef ANGELSCRIPT_H 
+// Avoid having to inform include path if header is already include before
 #include <angelscript.h>
+#endif
+
 
 BEGIN_AS_NAMESPACE
 
@@ -13,8 +17,8 @@ public:
 	CScriptAny(void *ref, int refTypeId, asIScriptEngine *engine);
 
 	// Memory management
-	int AddRef();
-	int Release();
+	int AddRef() const;
+	int Release() const;
 
 	// Copy the stored value from another any object
 	CScriptAny &operator=(const CScriptAny&);
@@ -44,7 +48,7 @@ protected:
 	virtual ~CScriptAny();
 	void FreeObject();
 
-	int refCount;
+	mutable int refCount;
 	asIScriptEngine *engine;
 
 	// The structure for holding the values

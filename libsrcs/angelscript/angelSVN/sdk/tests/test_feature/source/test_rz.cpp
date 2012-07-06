@@ -5,8 +5,6 @@
 namespace TestRZ
 {
 
-#define TESTNAME "TestRZ"
-
 const char *script1 = "\n"
 "MyGame @global;       \n"
 "class MyGame          \n"
@@ -37,6 +35,7 @@ bool Test1()
 
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+	RegisterScriptArray(engine, true);
 	RegisterScriptAny(engine);
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
@@ -44,7 +43,7 @@ bool Test1()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Calling the garbage collector mustn't free the object types, even though they are not used yet
@@ -55,7 +54,7 @@ bool Test1()
 	if( tid1 != tid2 )
 	{
 		printf("Object type was released incorrectly by GC\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Make sure ref count is properly updated
@@ -65,7 +64,7 @@ bool Test1()
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("execution failed\n");
-		fail = true;
+		TEST_FAILED;
 	}
 	else
 	{
@@ -74,7 +73,7 @@ bool Test1()
 		if( !(typeId & asTYPEID_OBJHANDLE) )
 		{
 			printf("not a handle\n");
-			fail = true;
+			TEST_FAILED;
 		}
 
 		// Retrieve will increment the reference count for us
@@ -88,7 +87,7 @@ bool Test1()
 		if( refCount != 4 )
 		{
 			printf("ref count is wrong\n");
-			fail = true;
+			TEST_FAILED;
 		}
 
 		// Clear the reference that the any object holds (this is not necessary)
@@ -103,7 +102,7 @@ bool Test1()
 		if( refCount != 3 )
 		{
 			printf("ref count is wrong\n");
-			fail = true;
+			TEST_FAILED;
 		}
 	}
 
@@ -118,7 +117,7 @@ bool Test1()
 	if( refCount != 3 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Release the context
@@ -133,7 +132,7 @@ bool Test1()
 	if( refCount != 3 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Call garbage collection
@@ -147,7 +146,7 @@ bool Test1()
 	if( refCount != 3 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Discard the module, freeing the global variable
@@ -161,7 +160,7 @@ bool Test1()
 	if( refCount != 2 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Release the game object
@@ -171,7 +170,7 @@ bool Test1()
 	if( refCount != 1 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Release engine
@@ -216,7 +215,7 @@ bool Test2()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Make sure ref count is properly updated
@@ -226,7 +225,7 @@ bool Test2()
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("execution failed\n");
-		fail = true;
+		TEST_FAILED;
 	}
 	else
 	{
@@ -235,7 +234,7 @@ bool Test2()
 		if( !(typeId & asTYPEID_OBJHANDLE) )
 		{
 			printf("not a handle\n");
-			fail = true;
+			TEST_FAILED;
 		}
 
 		// Retrieve will increment the reference count for us
@@ -249,7 +248,7 @@ bool Test2()
 		if( refCount != 3 )
 		{
 			printf("ref count is wrong\n");
-			fail = true;
+			TEST_FAILED;
 		}
 
 		// Clear the reference that the any object holds (this is not necessary)
@@ -264,7 +263,7 @@ bool Test2()
 		if( refCount != 2 )
 		{
 			printf("ref count is wrong\n");
-			fail = true;
+			TEST_FAILED;
 		}
 	}
 
@@ -279,7 +278,7 @@ bool Test2()
 	if( refCount != 2 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Release the context
@@ -294,7 +293,7 @@ bool Test2()
 	if( refCount != 2 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Call garbage collection
@@ -308,7 +307,7 @@ bool Test2()
 	if( refCount != 2 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Discard the module, freeing the global variable
@@ -322,7 +321,7 @@ bool Test2()
 	if( refCount != 1 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Release the game object
@@ -332,7 +331,7 @@ bool Test2()
 	if( refCount != 0 )
 	{
 		printf("ref count is wrong\n");
-		fail = true;
+		TEST_FAILED;
 	}
 
 	// Release engine
@@ -343,11 +342,171 @@ bool Test2()
  	return fail;
 }
 
+static int g_printCount = 0;
+void Print()
+{
+	g_printCount++;
+}
+
+void GetClassInstance(asIScriptEngine *engine, int funcId, asIScriptObject* &retObj, int& retTypeId)
+{
+	int r;
+	asIScriptContext* ctxt = engine->CreateContext();	
+	r = ctxt->Prepare( funcId );
+	r = ctxt->Execute();
+	
+	CScriptAny *anyResult = *(CScriptAny **)ctxt->GetAddressOfReturnValue();
+	retTypeId = anyResult->GetTypeId();		
+
+	retObj = NULL;
+	r = anyResult->Retrieve( (void*)&retObj, retTypeId );
+
+	// replace it in the any to clear it out
+	asINT64 dummy = 0;
+	anyResult->Store( dummy );
+	
+	// and clean out the return object (just as a precaution)
+	ctxt->Abort();
+	ctxt->Release();
+}
+
+bool Test3()
+{
+	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
+	{
+		printf("%s: Skipped due to AS_MAX_PORTABILITY\n", "TestRZ");
+		return false;
+	}
+
+	bool fail = false;
+	int r;
+	COutStream out;
+
+	const char *script =
+		"interface IMyInterface { void SomeFunc(); } \n"
+		"class MyBaseClass : IMyInterface { ~MyBaseClass(){ Print(); } void SomeFunc(){} } \n"
+		"class MyDerivedClass : MyBaseClass \n"
+		"{ \n"
+		"   IMyInterface@ m_obj; \n"
+		"	MyDerivedClass(){} \n"
+		"	void SetObj( IMyInterface@ obj ) { @m_obj = obj; } \n"
+		"	void ClearObj(){ @m_obj = null; } \n"
+		"} \n"
+		"void SomeOtherFunction(){}\n"
+		"any@ GetClass(){ \n"
+		"  MyDerivedClass x; \n"
+		"  any a( @x ); \n"
+		"  return a;\n"
+		"} \n";
+
+	const char *script2 = 
+		"class AClass { void Blah(){} void Blah2(){} void Blah3(){} void Blah4(){} void Blah5(){} }\n"
+		"void SomeBlahFunc(){ }\n";
+
+	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+	RegisterStdString(engine);
+	RegisterScriptAny(engine);
+
+	engine->RegisterGlobalFunction( "void Print()", asFUNCTION(Print), asCALL_CDECL );
+
+	asIScriptModule *mod = engine->GetModule( "test", asGM_ALWAYS_CREATE );
+	mod->AddScriptSection("script", script);
+	r = mod->Build();
+
+	// create two instances of our classes
+	int funcId = mod->GetFunctionIdByDecl( "any@ GetClass()" );
+	
+	asIScriptObject* objA;
+	int objATypeId;
+	GetClassInstance( engine, funcId, objA, objATypeId );
+
+	asIScriptObject* objB;
+	int objBTypeId;
+	GetClassInstance( engine, funcId, objB, objBTypeId );
+
+	// resolve method functions we want to call
+	asIObjectType* typeA = engine->GetObjectTypeById( objATypeId );
+	int setFuncId = typeA->GetMethodIdByDecl( "void SetObj( IMyInterface@ obj )" );
+	int clearFuncId = typeA->GetMethodIdByDecl( "void ClearObj()" );
+
+	// set our objB into objA
+	{
+		asIScriptContext* ctxt = engine->CreateContext();
+		r = ctxt->Prepare( setFuncId );
+		r = ctxt->SetObject( objA );
+		r = ctxt->SetArgObject( 0, objB );
+		r = ctxt->Execute();
+		ctxt->Release();
+	}
+
+	// release objB...
+	objB->Release();
+	objB = NULL;
+	objBTypeId = 0;
+
+	// clear objB from objA
+	{
+		asIScriptContext* ctxt = engine->CreateContext();
+		r = ctxt->Prepare( clearFuncId );
+		r = ctxt->SetObject( objA );
+		r = ctxt->Execute();
+		ctxt->Release();
+	}
+
+	// release objA
+	objA->Release();
+	objA = NULL;
+	objATypeId = 0;
+
+	// There are still objects held alive in the GC
+	unsigned int gcCount;
+	engine->GetGCStatistics(&gcCount);
+	assert( gcCount != 0 ); // The script class types and functions are also in the gc
+
+	// discard the module - no longer in use
+	// The module will be discarded, but the functions that the live objects use will remain
+	r = engine->DiscardModule("test");	
+	if( r < 0 )
+		TEST_FAILED;
+
+	// Do a couple of more builds, so that the memory freed by DiscardModule is reused otherwise 
+	// the problem may not occur, as the memory is still there, even though it was freed
+
+	// create a module
+	mod = engine->GetModule( "test2", asGM_ALWAYS_CREATE );
+	mod->AddScriptSection( "script", script2 );
+	r = mod->Build();
+
+	// recreate the module
+	mod = engine->GetModule( "test", asGM_ALWAYS_CREATE );
+	mod->AddScriptSection("script", script);
+	r = mod->Build();
+
+	// run the garbage collector to 'clean things up'
+	r = engine->GarbageCollect(asGC_FULL_CYCLE);
+
+	// Print is called by each script class' destructor, even though the module has already been discarded
+	if( g_printCount != 2 )
+		TEST_FAILED;
+
+	// we're done
+	engine->Release();
+		
+
+	return fail;
+}
+
 bool Test()
 {
 	if( Test1() ) return true;
 
 	if( Test2() ) return true;
+
+	// This problem was reported by Jeff Slutter. Apparently the garbage collector is trying  
+	// to execute the destructor of an object whose module has already been discarded.
+	if( Test3() ) return true;
 
 	return false;
 }

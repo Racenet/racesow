@@ -27,9 +27,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 typedef struct r_cinhandle_s
 {
 	unsigned int	id;
+	int				registration_sequence;
 	char			*name;
-	cinematics_t	*cin;
+	char			*uploadName;
+	struct cinematics_s	*cin;
 	image_t			*image;
+	int				width, height;
+	qbyte			*pic;
+	qboolean		new_frame;
 	struct r_cinhandle_s *prev, *next;
 } r_cinhandle_t;
 
@@ -42,168 +47,50 @@ static r_cinhandle_t r_cinematics_headnode, *r_free_cinematics;
 #define Cin_Free(data) Mem_Free(data)
 
 /*
-==================
-R_ReadNextRoQFrame
-==================
+* R_RunCin
 */
-static qbyte *R_ReadNextRoQFrame( cinematics_t *cin )
+static qboolean R_RunCin( r_cinhandle_t *h )
 {
-	roq_chunk_t *chunk = &cin->chunk;
+	qboolean redraw;
 
-	while( !FS_Eof( cin->file ) )
-	{
-		RoQ_ReadChunk( cin );
+	if( !CIN_NeedNextFrame( h->cin, Sys_Milliseconds() ) )
+		return qfalse;
 
-		if( FS_Eof( cin->file ) )
-			return NULL;
-		if( chunk->size <= 0 )
-			continue;
-
-		if( chunk->id == RoQ_INFO )
-			RoQ_ReadInfo( cin );
-		else if( chunk->id == RoQ_QUAD_VQ )
-			return RoQ_ReadVideo( cin );
-		else if( chunk->id == RoQ_QUAD_CODEBOOK )
-			RoQ_ReadCodebook( cin );
-		else
-			RoQ_SkipChunk( cin );
-	}
-
-	return NULL;
+	h->pic = CIN_ReadNextFrame( h->cin, &h->width, &h->height, NULL, NULL, &redraw );
+	return redraw;
 }
 
 /*
-==================
-R_RunRoQ
-==================
-*/
-static void R_RunRoQ( cinematics_t *cin )
-{
-	unsigned int frame;
-
-	frame = (Sys_Milliseconds () - cin->time) * (float)(RoQ_FRAMERATE) / 1000;
-	if( frame <= cin->frame )
-		return;
-	if( frame > cin->frame + 1 )
-		cin->time = Sys_Milliseconds () - cin->frame * 1000 / RoQ_FRAMERATE;
-
-	cin->pic = cin->pic_pending;
-	cin->pic_pending = R_ReadNextRoQFrame( cin );
-
-	if( !cin->pic_pending )
-	{
-		FS_Seek( cin->file, cin->headerlen, FS_SEEK_SET );
-		cin->frame = 0;
-		cin->pic_pending = R_ReadNextRoQFrame( cin );
-		cin->time = Sys_Milliseconds ();
-	}
-
-	cin->new_frame = qtrue;
-}
-
-/*
-==================
-R_StopRoQ
-==================
-*/
-static void R_StopRoQ( cinematics_t *cin )
-{
-	cin->frame = 0;
-	cin->time = 0;	// done
-	cin->pic = NULL;
-	cin->pic_pending = NULL;
-
-	if( cin->file )
-	{
-		FS_FCloseFile( cin->file );
-		cin->file = 0;
-	}
-	if( cin->name )
-	{
-		Mem_Free( cin->name );
-		cin->name = NULL;
-	}
-	if( cin->vid_buffer )
-	{
-		Mem_Free( cin->vid_buffer );
-		cin->vid_buffer = NULL;
-	}
-}
-
-/*
-==================
-R_OpenCinematics
-==================
-*/
-static cinematics_t *R_OpenCinematics( char *filename )
-{
-	int file = 0;
-	cinematics_t *cin = NULL;
-	roq_chunk_t *chunk = &cin->chunk;
-
-	if( FS_FOpenFile( filename, &file, FS_READ ) == -1 )
-		return NULL;
-
-	cin = Cin_Malloc( sizeof( cinematics_t ) );
-	memset( cin, 0, sizeof( cinematics_t ) );
-	cin->name = filename;
-	cin->file = file;
-	cin->mempool = r_cinMemPool;
-
-	// read header
-	RoQ_ReadChunk( cin );
-
-	chunk = &cin->chunk;
-	if( chunk->id != RoQ_HEADER1 || chunk->size != RoQ_HEADER2 || chunk->argument != RoQ_HEADER3 )
-	{
-		R_StopRoQ( cin );
-		Cin_Free( cin );
-		return NULL;
-	}
-
-	cin->headerlen = FS_Tell( cin->file );
-	cin->frame = 0;
-	cin->pic = cin->pic_pending = R_ReadNextRoQFrame( cin );
-	cin->time = Sys_Milliseconds ();
-	cin->new_frame = qtrue;
-
-	return cin;
-}
-
-/*
-==================
-R_ResampleCinematicFrame
-==================
+* R_ResampleCinematicFrame
 */
 static image_t *R_ResampleCinematicFrame( r_cinhandle_t *handle )
 {
 	image_t			*image;
-	cinematics_t	*cin = handle->cin;
 
-	if( !cin->pic )
+	if( !handle->pic )
 		return NULL;
 
 	if( !handle->image )
 	{
-		handle->image = R_LoadPic( handle->name, &cin->pic, cin->width, cin->height, IT_CINEMATIC, 3 );
-		cin->new_frame = qfalse;
+		handle->image = R_LoadPic( handle->name, &handle->pic, handle->width, handle->height, IT_CINEMATIC, 4 );
+		handle->new_frame = qfalse;
 	}
 
-	if( !cin->new_frame )
+	if( !handle->new_frame )
 		return handle->image;
 
-	cin->new_frame = qfalse;
+	handle->new_frame = qfalse;
 
 	image = handle->image;
 	GL_Bind( 0, image );
-	if( image->width != cin->width || image->height != cin->height )
-		R_Upload32( &cin->pic, image->width, image->height, IT_CINEMATIC, 
-		&(image->upload_width), &(image->upload_height), &(image->samples), qfalse );
+	if( image->width != handle->width || image->height != handle->height )
+		R_Upload32( &handle->pic, image->width, image->height, IT_CINEMATIC, 
+		&(image->upload_width), &(image->upload_height), &(image->samples), image->samples, qfalse );
 	else
-		R_Upload32( &cin->pic, image->width, image->height, IT_CINEMATIC, 
-		&(image->upload_width), &(image->upload_height), &(image->samples), qtrue );
-	image->width = cin->width;
-	image->height = cin->height;
+		R_Upload32( &handle->pic, image->width, image->height, IT_CINEMATIC, 
+		&(image->upload_width), &(image->upload_height), &(image->samples), image->samples, qtrue );
+	image->width = handle->width;
+	image->height = handle->height;
 
 	return image;
 }
@@ -211,13 +98,10 @@ static image_t *R_ResampleCinematicFrame( r_cinhandle_t *handle )
 //==================================================================================
 
 /*
-==================
-R_CinList_f
-==================
+* R_CinList_f
 */
 void R_CinList_f( void )
 {
-	cinematics_t *cin;
 	image_t *image;
 	r_cinhandle_t *handle, *hnode;
 
@@ -232,23 +116,20 @@ void R_CinList_f( void )
 
 	Com_Printf( "\n" );
 	do {
-		cin = handle->cin;
-		image = handle->image;
-		assert( cin );
+		assert( handle->cin );
 
-		if( image && (cin->width != image->upload_width || cin->height != image->upload_height) )
-			Com_Printf( "%s %i(%i)x%i(%i) f:%i\n", cin->name, cin->width, image->upload_width, cin->height, image->upload_height, cin->frame );
+		image = handle->image;
+		if( image && (handle->width != image->upload_width || handle->height != image->upload_height) )
+			Com_Printf( "%s %i(%i)x%i(%i)\n", handle->name, handle->width, image->upload_width, handle->height, image->upload_height );
 		else
-			Com_Printf( "%s %ix%i f:%i\n", cin->name, cin->width, cin->height, cin->frame );
+			Com_Printf( "%s %ix%i\n", handle->name, handle->width, handle->height );
 
 		handle = handle->next;
 	} while( handle != hnode );
 }
 
 /*
-==================
-R_InitCinematics
-==================
+* R_InitCinematics
 */
 void R_InitCinematics( void )
 {
@@ -275,9 +156,7 @@ void R_InitCinematics( void )
 }
 
 /*
-==================
-R_RunAllCinematics
-==================
+* R_RunAllCinematic
 */
 void R_RunAllCinematics( void )
 {
@@ -287,37 +166,31 @@ void R_RunAllCinematics( void )
 	for( handle = hnode->prev; handle != hnode; handle = next )
 	{
 		next = handle->prev;
-		R_RunRoQ( handle->cin );
+		handle->new_frame = R_RunCin( handle );
 	}
 }
 
 /*
-==================
-R_UploadCinematics
-==================
+* R_UploadCinematic
 */
-image_t *R_UploadCinematics( unsigned int id )
+image_t *R_UploadCinematic( unsigned int id )
 {
 	assert( id > 0 && id <= MAX_CINEMATICS );
+	if( id == 0 || id > MAX_CINEMATICS ) {
+		return NULL;
+	}
 	return R_ResampleCinematicFrame( r_cinematics + id - 1 );
 }
 
 /*
-==================
-R_StartCinematic
-==================
+* R_StartCinematic
 */
-unsigned int R_StartCinematics( const char *arg )
+unsigned int R_StartCinematic( const char *arg )
 {
-	char *name = NULL, uploadName[128];
+	char uploadName[128];
 	size_t name_size;
-	cinematics_t *cin = NULL;
 	r_cinhandle_t *handle, *hnode, *next;
-
-	name_size = strlen( "video/" ) + strlen( arg ) + strlen( ".roq" ) + 1;
-	name = Cin_Malloc( name_size );
-	Q_snprintfz( name, name_size, "video/%s", arg );
-	COM_DefaultExtension( name, ".roq", name_size );
+	struct cinematics_s *cin;
 
 	// find cinematics with the same name
 	hnode = &r_cinematics_headnode;
@@ -327,31 +200,34 @@ unsigned int R_StartCinematics( const char *arg )
 		assert( handle->cin );
 
 		// reuse
-		if( !Q_stricmp( handle->cin->name, name ) )
-		{
-			Cin_Free( name );
+		if( !Q_stricmp( handle->name, arg ) )
 			return handle->id;
-		}
 	}
 
 	// open the file, read header, etc
-	cin = R_OpenCinematics( name );
+	cin = CIN_Open( arg, Sys_Milliseconds(), CIN_LOOP|CIN_NOAUDIO );
 
 	// take a free cinematic handle if possible
 	if( !r_free_cinematics || !cin )
-	{
-		Cin_Free( name );
 		return 0;
-	}
 
 	handle = r_free_cinematics;
 	r_free_cinematics = handle->next;
 
+	// copy name
+	name_size = strlen( arg ) + 1;
+	handle->name = Cin_Malloc( name_size );
+	memcpy( handle->name, arg, name_size );
+
+	// copy upload name
 	Q_snprintfz( uploadName, sizeof( uploadName ), "***r_cinematic%i***", handle->id-1 );
 	name_size = strlen( uploadName ) + 1;
-	handle->name = Cin_Malloc( name_size );
-	memcpy( handle->name, uploadName, name_size );
+	handle->uploadName = Cin_Malloc( name_size );
+	memcpy( handle->uploadName, uploadName, name_size );
+
 	handle->cin = cin;
+	handle->new_frame = qtrue;
+	handle->registration_sequence = r_front.registration_sequence;
 
 	// put handle at the start of the list
 	handle->prev = &r_cinematics_headnode;
@@ -363,11 +239,37 @@ unsigned int R_StartCinematics( const char *arg )
 }
 
 /*
-=================
-R_FreeCinematics
-=================
+* R_TouchCinematic
 */
-void R_FreeCinematics( unsigned int id )
+void R_TouchCinematic( unsigned int id )
+{
+	assert( id > 0 && id <= MAX_CINEMATICS );
+	if( id == 0 || id > MAX_CINEMATICS ) {
+		return;
+	}
+	r_cinematics[id - 1].registration_sequence = r_front.registration_sequence;
+}
+
+/*
+* R_FreeUnusedCinematics
+*/
+void R_FreeUnusedCinematics( void )
+{
+	r_cinhandle_t *handle, *hnode, *next;
+
+	hnode = &r_cinematics_headnode;
+	for( handle = hnode->prev; handle != hnode; handle = next ) {
+		next = handle->prev;
+		if( handle->registration_sequence != r_front.registration_sequence ) {
+			R_FreeCinematic( handle->id );
+		}
+	}
+}
+
+/*
+* R_FreeCinematic
+*/
+void R_FreeCinematic( unsigned int id )
 {
 	r_cinhandle_t *handle;
 
@@ -375,13 +277,16 @@ void R_FreeCinematics( unsigned int id )
 	if( !handle->cin )
 		return;
 
-	R_StopRoQ( handle->cin );
-	Cin_Free( handle->cin );
+	CIN_Close( handle->cin );
 	handle->cin = NULL;
 
 	assert( handle->name );
 	Cin_Free( handle->name );
 	handle->name = NULL;
+
+	assert( handle->uploadName );
+	Cin_Free( handle->uploadName );
+	handle->uploadName = NULL;
 
 	// remove from linked active list
 	handle->prev->next = handle->next;
@@ -393,9 +298,7 @@ void R_FreeCinematics( unsigned int id )
 }
 
 /*
-==================
-R_ShutdownCinematics
-==================
+* R_ShutdownCinematics
 */
 void R_ShutdownCinematics( void )
 {
@@ -408,7 +311,7 @@ void R_ShutdownCinematics( void )
 	for( handle = hnode->prev; handle != hnode; handle = next )
 	{
 		next = handle->prev;
-		R_FreeCinematics( handle->id );
+		R_FreeCinematic( handle->id );
 	}
 
 	Cin_Free( r_cinematics );

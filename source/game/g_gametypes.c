@@ -148,7 +148,7 @@ void G_Gametype_GENERIC_SetUpEndMatch( void )
 
 static qboolean G_Gametype_GENERIC_MatchStateFinished( int incomingMatchState )
 {
-	if( GS_MatchState() <= MATCH_STATE_WARMUP && incomingMatchState > MATCH_STATE_WARMUP 
+	if( GS_MatchState() <= MATCH_STATE_WARMUP && incomingMatchState > MATCH_STATE_WARMUP
 		&& incomingMatchState < MATCH_STATE_POSTMATCH )
 		G_Match_Autorecord_Start();
 
@@ -218,6 +218,8 @@ char *G_Gametype_GENERIC_ScoreboardMessage( void )
 			carrierIcon = trap_ImageIndex( PATH_QUAD_ICON );
 		else if( e->s.effects & EF_SHELL )
 			carrierIcon = trap_ImageIndex( PATH_SHELL_ICON );
+		else if( e->s.effects & EF_REGEN )
+			carrierIcon = trap_ImageIndex( PATH_REGEN_ICON );
 		else
 			carrierIcon = 0;
 
@@ -417,6 +419,8 @@ static void G_Gametype_GENERIC_Init( void )
 	level.gametype.canShowMinimap = qfalse;
 	level.gametype.teamOnlyMinimap = qtrue;
 
+	level.gametype.mmCompatible = qfalse;
+
 	if( GS_Instagib() )
 		level.gametype.spawnpoint_radius *= 2;
 
@@ -437,6 +441,8 @@ cvar_t *g_scorelimit;
 cvar_t *g_timelimit;
 cvar_t *g_gametype;
 cvar_t *g_gametypes_list;
+
+void G_MatchSendReport( void );
 
 //==========================================================
 //					Matches
@@ -647,7 +653,7 @@ void G_Match_Autorecord_Stop( void )
 	if( g_autorecord->integer )
 	{
 		// stop it
-		trap_Cmd_ExecuteText( EXEC_APPEND, "serverrecordstop\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, "serverrecordstop 1\n" );
 
 		// check if we wanna delete some
 		if( g_autorecord_maxdemos->integer > 0 )
@@ -663,7 +669,7 @@ void G_Match_Autorecord_Cancel( void )
 	G_Match_SetAutorecordState( "cancel" );
 
 	if( g_autorecord->integer )
-		trap_Cmd_ExecuteText( EXEC_APPEND, "serverrecordcancel\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, "serverrecordcancel 1\n" );
 }
 
 /*
@@ -715,8 +721,10 @@ static void G_Match_CheckStateAbort( void )
 	}
 	else if( GS_MatchState() == MATCH_STATE_COUNTDOWN && !enough )
 	{
-		G_PrintMsg( NULL, "Not enough players left. Countdown aborted.\n" );
-		G_CenterPrintMsg( NULL, "COUNTDOWN ABORTED\n" );
+		if( any ) {
+			G_PrintMsg( NULL, "Not enough players left. Countdown aborted.\n" );
+			G_CenterPrintMsg( NULL, "COUNTDOWN ABORTED\n" );
+		}
 		G_Match_Autorecord_Cancel();
 		G_Match_LaunchState( MATCH_STATE_WARMUP );
 		GS_GamestatSetFlag( GAMESTAT_FLAG_WAITING, qtrue );
@@ -725,8 +733,10 @@ static void G_Match_CheckStateAbort( void )
 	// match running, but not enough players left
 	else if( GS_MatchState() == MATCH_STATE_PLAYTIME && !enough )
 	{
-		G_PrintMsg( NULL, "Not enough players left. Match aborted.\n" );
-		G_CenterPrintMsg( NULL, "MATCH ABORTED\n" );
+		if( any ) {
+			G_PrintMsg( NULL, "Not enough players left. Match aborted.\n" );
+			G_CenterPrintMsg( NULL, "MATCH ABORTED\n" );
+		}
 		G_EndMatch();
 	}
 }
@@ -766,6 +776,10 @@ void G_Match_LaunchState( int matchState )
 			gs.gameState.longstats[GAMELONG_MATCHDURATION] = (unsigned int)( fabs( g_warmup_timelimit->value * 60 ) * 1000 );
 			gs.gameState.longstats[GAMELONG_MATCHSTART] = game.serverTime;
 
+			// race has playtime in warmup too, so flag the matchmaker about this
+			if( GS_RaceGametype() )
+				trap_MM_GameState( qtrue );
+
 			break;
 		}
 
@@ -782,18 +796,36 @@ void G_Match_LaunchState( int matchState )
 
 	case MATCH_STATE_PLAYTIME:
 		{
+			// ch : should clear some statcollection memory from warmup?
+
 			advance_queue = qtrue; // shouldn't be needed here
 			level.forceStart = qfalse;
 
 			gs.gameState.stats[GAMESTAT_MATCHSTATE] = MATCH_STATE_PLAYTIME;
 			gs.gameState.longstats[GAMELONG_MATCHDURATION] = (unsigned int)( fabs( 60 * g_timelimit->value )*1000 );
 			gs.gameState.longstats[GAMELONG_MATCHSTART] = game.serverTime;
+
+			// request a new match UUID
+			trap_ConfigString( CS_MATCHUUID, "" );
+
+			// tell matchmaker that the game is on, so if
+			// client disconnects before SendReport, it is flagged
+			// as 'purgable' on MM side
+			trap_MM_GameState( qtrue );
 		}
 		break;
 
 	case MATCH_STATE_POSTMATCH:
 		{
+			short lastState = gs.gameState.stats[GAMESTAT_MATCHSTATE];
 			gs.gameState.stats[GAMESTAT_MATCHSTATE] = MATCH_STATE_POSTMATCH;
+
+			if( lastState == MATCH_STATE_PLAYTIME || GS_RaceGametype() )
+			{
+				G_Match_SendReport();
+				trap_MM_GameState( qfalse );
+			}
+
 			gs.gameState.longstats[GAMELONG_MATCHDURATION] = (unsigned int)fabs( g_postmatch_timelimit->value * 1000 ); // postmatch time in seconds
 			gs.gameState.longstats[GAMELONG_MATCHSTART] = game.serverTime;
 
@@ -1374,6 +1406,7 @@ void G_Match_FreeBodyQueue( void )
 	level.body_que = 0;
 }
 
+
 //======================================================
 //		Game types
 //======================================================
@@ -1901,6 +1934,8 @@ void G_Gametype_SetDefaults( void )
 
     level.gametype.spawnpoint_radius = 64;
 
+    level.gametype.mmCompatible = qfalse;
+
     //racesow
     level.gametype.autoInactivityRemove = qtrue;
     level.gametype.playerInteraction = qfalse;
@@ -1959,7 +1994,7 @@ void G_Gametype_Init( void )
 			trap_Cvar_ForceSet( "g_gametype", va( "%s", g_gametype->string ) );
 		}
 	}
-	
+
 	if( !G_Gametype_Exists( g_gametype->string ) )
 	{
 		G_Printf( "G_Gametype: Wrong value: '%s'. Setting up with default (dm)\n", g_gametype->string );
@@ -1976,7 +2011,7 @@ void G_Gametype_Init( void )
 
 		G_InitChallengersQueue();
 
-		// print a hint for admins so they know there's a chance to execute a 
+		// print a hint for admins so they know there's a chance to execute a
 		// config here, but don't show it as an error, because it isn't
 		G_Printf( "loading %s%s.cfg\n", configs_path, g_gametype->string );
 		trap_Cmd_ExecuteText( EXEC_NOW, va( "exec %s%s.cfg silent\n", configs_path, g_gametype->string ) );
@@ -2001,4 +2036,9 @@ void G_Gametype_Init( void )
 	trap_ConfigString( CS_GAMETYPENAME, gs.gametypeName );
 
 	G_CheckCvars(); // update GS_Instagib, GS_FallDamage, etc
+
+	// ch : if new gametype has been initialized, transfer the
+	// client-specific ratings to gametype-specific list
+	if( changed )
+		G_TransferRatings();
 }

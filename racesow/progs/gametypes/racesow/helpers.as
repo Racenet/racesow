@@ -8,11 +8,11 @@
  * @param test The Test or Condition which will be used
  * @param msg The Message which is printed when the test fails
  */
-void assert( const bool test, const cString msg )
+void assert( const bool test, const String msg )
 {
 	if ( !test )
 	{
-        cString@ assertstring;
+        String@ assertstring;
 		G_Print( S_COLOR_RED + "assert failed [" + gametype.getName() + " " + gametype.getVersion() + "]: " + "\n" );
         G_Print( S_COLOR_RED + msg + "\n");
         assertstring.length();
@@ -29,7 +29,7 @@ void assert( const bool test, const cString msg )
  * @param newTime The new time, the one you want to compare
  * @return The diff string between the two times
  */
-cString diffString( uint oldTime, uint newTime )
+String diffString( uint oldTime, uint newTime )
 {
     if ( oldTime == 0 )
     {
@@ -52,12 +52,12 @@ cString diffString( uint oldTime, uint newTime )
 /**
  * TimeToString
  * @param uint time
- * @return cString
+ * @return String
  */
-cString TimeToString( uint time )
+String TimeToString( uint time )
 {
     // convert times to printable form
-    cString minsString, secsString, millString;
+    String minsString, secsString, millString;
     uint min, sec, milli;
 
     milli = time;
@@ -95,13 +95,13 @@ cString TimeToString( uint time )
 /**
  * DateToString
  * @param uint64 dateuint64
- * @return cString
+ * @return String
  */
-cString DateToString( uint64 dateuint64 )
+String DateToString( uint64 dateuint64 )
 {
     // convert dates to printable form
-    cTime date = cTime(dateuint64);
-    cString daysString, monsString, yearsString, hoursString, minsString, secsString;
+    Time date = Time(dateuint64);
+    String daysString, monsString, yearsString, hoursString, minsString, secsString;
 
     if ( date.min == 0 )
         minsString = "00";
@@ -170,10 +170,10 @@ Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
 
 /**
  * Racesow_GetClientNumber
- * @param cString playerName
+ * @param String playerName
  * @return int
  */
-int Racesow_GetClientNumber( cString playerName )
+int Racesow_GetClientNumber( String playerName )
 {
     cClient @client;
 
@@ -192,15 +192,15 @@ int Racesow_GetClientNumber( cString playerName )
 //Jerm's Begin
 /**
  * Racesow_GetClientByString
- * @param cString playerString
+ * @param String playerString
  * @return cClient
  */
-cClient @Racesow_GetClientByString( cString playerString )
+cClient @Racesow_GetClientByString( String playerString )
 {
 
   cClient @client;
   
-  if ( playerString.isNumerical() && playerString.toInt() < maxClients ) // !!!!!!!! cString.isNumerical() returns true for empty strings (wsw0.62) !!!!!!!!
+  if ( playerString.isNumerical() && playerString.toInt() < maxClients ) // !!!!!!!! String.isNumerical() returns true for empty strings (wsw0.62) !!!!!!!!
   {
     @client = @G_GetClient( playerString.toInt() );
     
@@ -234,15 +234,15 @@ void RS_cancelvote()
 /**
  * Capitalize a string
  *
- * @param cString string
- * @return cString
+ * @param String string
+ * @return String
  */
-cString Capitalize( cString string )
+String Capitalize( String string )
 {
     return string.substr(0,1).toupper() + string.substr(1,string.len()-1);
 }
 
-void RS_ircSendMessage( cString message )
+void RS_ircSendMessage( String message )
 {
     if( ircConnected == 0 )
         return;
@@ -262,7 +262,7 @@ void insertDefaultCommands( RC_Map @commandMap ) {
     @commandMap["lastmap"] = @Command_LastMap();
     @commandMap["mapfilter"] = @Command_Mapfilter();
     @commandMap["maplist"] = @Command_Maplist();
-    if (dedicated.getBool())
+    if (dedicated.get_bool())
     {
         @commandMap["mapname"] = @Command_Mapname();
         @commandMap["nextmap"] = @Command_NextMap();
@@ -288,15 +288,15 @@ void insertDefaultCommands( RC_Map @commandMap ) {
  * remove first token from a string
  * expects the string to be trimmed (no leading or trailing whitespaces)
  */
-cString shiftArguments( cString args )
+String shiftArguments( String args )
 {
     if( args.length() < 2 )
         return "";
 
     //args = args.trim(); // it's already trimmed
 
-    int pos;
-    cString arg = args.getToken( 0 );
+    uint pos;
+    String arg = args.getToken( 0 );
     if( arg == "" )
     { // we have to shift out an empty string. we assume empty string looks like this: ""
         for( pos = 0; pos < args.length(); pos++ )

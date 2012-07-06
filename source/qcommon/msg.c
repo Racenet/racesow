@@ -1,33 +1,33 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // msg.c -- Message IO functions
 #include "qcommon.h"
 
 /*
-   ==============================================================================
+==============================================================================
 
-   	    MESSAGE IO FUNCTIONS
+MESSAGE IO FUNCTIONS
 
-   Handles byte ordering and avoids alignment errors
-   ==============================================================================
- */
+Handles byte ordering and avoids alignment errors
+==============================================================================
+*/
 #define MAX_MSG_STRING_CHARS	2048
 
 void MSG_Init( msg_t *msg, qbyte *data, size_t length )
@@ -81,13 +81,13 @@ void MSG_CopyData( msg_t *buf, const void *data, size_t length )
 
 void MSG_WriteChar( msg_t *msg, int c )
 {
-	qbyte *buf = MSG_GetSpace( msg, 1 );
+	qbyte *buf = ( qbyte* )MSG_GetSpace( msg, 1 );
 	buf[0] = ( char )c;
 }
 
 void MSG_WriteByte( msg_t *msg, int c )
 {
-	qbyte *buf = MSG_GetSpace( msg, 1 );
+	qbyte *buf = ( qbyte* )MSG_GetSpace( msg, 1 );
 	buf[0] = ( qbyte )( c&0xff );
 }
 
@@ -99,7 +99,7 @@ void MSG_WriteShort( msg_t *msg, int c )
 
 void MSG_WriteInt3( msg_t *msg, int c )
 {
-	qbyte *buf = MSG_GetSpace( msg, 3 );
+	qbyte *buf = ( qbyte* )MSG_GetSpace( msg, 3 );
 	buf[0] = ( qbyte )( c&0xff );
 	buf[1] = ( qbyte )( ( c>>8 )&0xff );
 	buf[2] = ( qbyte )( ( c>>16 )&0xff );
@@ -186,9 +186,9 @@ int MSG_ReadShort( msg_t *msg )
 int MSG_ReadInt3( msg_t *msg )
 {
 	int i = msg->data[msg->readcount]
-	        | ( msg->data[msg->readcount+1]<<8 )
-	        | ( msg->data[msg->readcount+2]<<16 )
-	        | ( ( msg->data[msg->readcount+2] & 0x80 ) ? ~0xFFFFFF : 0 );
+	| ( msg->data[msg->readcount+1]<<8 )
+		| ( msg->data[msg->readcount+2]<<16 )
+		| ( ( msg->data[msg->readcount+2] & 0x80 ) ? ~0xFFFFFF : 0 );
 	msg->readcount += 3;
 	if( msg->readcount > msg->cursize )
 		i = -1;
@@ -259,7 +259,7 @@ static char *MSG_ReadString2( msg_t *msg, qboolean linebreak )
 		string[l] = c;
 		l++;
 	}
-	while( l < sizeof( string )-1 );
+	while( (unsigned int)l < sizeof( string )-1 );
 
 	string[l] = 0;
 
@@ -280,12 +280,12 @@ char *MSG_ReadStringLine( msg_t *msg )
 // SPECIAL CASES
 //==================================================
 
-//==================
-//MSG_WriteDeltaEntity
-//
-//Writes part of a packetentities message.
-//Can delta from either a baseline or a previous packet_entity
-//==================
+/*
+* MSG_WriteDeltaEntity
+* 
+* Writes part of a packetentities message.
+* Can delta from either a baseline or a previous packet_entity
+*/
 void MSG_WriteDeltaEntity( entity_state_t *from, entity_state_t *to, msg_t *msg, qboolean force, qboolean updateOtherOrigin )
 {
 	int bits;
@@ -399,22 +399,22 @@ void MSG_WriteDeltaEntity( entity_state_t *from, entity_state_t *to, msg_t *msg,
 	// small check for testing delta compression on linear projectiles
 	if( to->linearProjectile ) 
 	{
-	    if( bits & (U_ORIGIN1|U_ORIGIN2|U_ORIGIN3|U_OTHERORIGIN|U_WEAPON|U_LIGHT) )
-	   		Com_Printf( "LINEAR PROJECTILE Delta compression test\n" );
+	if( bits & (U_ORIGIN1|U_ORIGIN2|U_ORIGIN3|U_OTHERORIGIN|U_WEAPON|U_LIGHT) )
+	Com_Printf( "LINEAR PROJECTILE Delta compression test\n" );
 	}
 
 	if( bits & (U_OTHERORIGIN) )
 	{
-		if( to->type == 0 )
-			Com_Printf( "ET_GENERIC: U_OTHERORIGIN: updated\n" );
-		if( to->type == 1 )
-			Com_Printf( "ET_PLAYER: U_OTHERORIGIN: updated\n" );
-		if( to->type == 2 )
-			Com_Printf( "ET_CORPSE: U_OTHERORIGIN: updated\n" );
-		if( to->type == 6 )
-			Com_Printf( "ET_PUSH_TRIGGER: U_OTHERORIGIN: updated\n" );
-		if( to->type == 14 )
-			Com_Printf( "ET_ITEM: U_OTHERORIGIN: updated\n" );
+	if( to->type == 0 )
+	Com_Printf( "ET_GENERIC: U_OTHERORIGIN: updated\n" );
+	if( to->type == 1 )
+	Com_Printf( "ET_PLAYER: U_OTHERORIGIN: updated\n" );
+	if( to->type == 2 )
+	Com_Printf( "ET_CORPSE: U_OTHERORIGIN: updated\n" );
+	if( to->type == 6 )
+	Com_Printf( "ET_PUSH_TRIGGER: U_OTHERORIGIN: updated\n" );
+	if( to->type == 14 )
+	Com_Printf( "ET_ITEM: U_OTHERORIGIN: updated\n" );
 	}
 	*/
 
@@ -589,11 +589,9 @@ void MSG_WriteDeltaEntity( entity_state_t *from, entity_state_t *to, msg_t *msg,
 }
 
 /*
-=================
-MSG_ReadEntityBits
-
-Returns the entity number and the header bits
-=================
+* MSG_ReadEntityBits
+* 
+* Returns the entity number and the header bits
 */
 int MSG_ReadEntityBits( msg_t *msg, unsigned *bits )
 {
@@ -628,11 +626,9 @@ int MSG_ReadEntityBits( msg_t *msg, unsigned *bits )
 }
 
 /*
-==================
-MSG_ReadDeltaEntity
-
-Can go from either a baseline or a previous packet_entity
-==================
+* MSG_ReadDeltaEntity
+* 
+* Can go from either a baseline or a previous packet_entity
 */
 void MSG_ReadDeltaEntity( msg_t *msg, entity_state_t *from, entity_state_t *to, int number, unsigned bits )
 {
@@ -646,7 +642,7 @@ void MSG_ReadDeltaEntity( msg_t *msg, entity_state_t *from, entity_state_t *to, 
 		qbyte ttype;
 		ttype = (qbyte)MSG_ReadByte( msg );
 		to->type = ttype & ~ET_INVERSE;
-		to->linearProjectile = ( ttype & ET_INVERSE );
+		to->linearProjectile = ( ttype & ET_INVERSE ) ? qtrue : qfalse;
 	}
 
 	if( bits & U_SOLID )
@@ -751,7 +747,7 @@ void MSG_ReadDeltaEntity( msg_t *msg, entity_state_t *from, entity_state_t *to, 
 		qbyte tweapon;
 		tweapon = (qbyte)MSG_ReadByte( msg );
 		to->weapon = tweapon & ~ET_INVERSE;
-		to->teleported = ( tweapon & ET_INVERSE );
+		to->teleported = ( tweapon & ET_INVERSE ) ? qtrue : qfalse;
 	}
 
 	if( bits & U_SVFLAGS )

@@ -36,13 +36,15 @@ enum
 	SHADER_BSP_FLARE,
 	SHADER_MD3,
 	SHADER_2D,
+	SHADER_2D_RAW,
 	SHADER_FARBOX,
 	SHADER_NEARBOX,
 	SHADER_PLANAR_SHADOW,
-	SHADER_OPAQUE_OCCLUDER
+	SHADER_OPAQUE_OCCLUDER,
 #ifdef HARDWARE_OUTLINES
-	,SHADER_OUTLINE
+	SHADER_OUTLINE,
 #endif
+	SHADER_VIDEO
 };
 
 // shader flags
@@ -64,7 +66,8 @@ enum
 	SHADER_PORTAL_CAPTURE			= 1 << 13,
 	SHADER_PORTAL_CAPTURE2			= 1 << 14,
 	SHADER_NO_TEX_FILTERING			= 1 << 15,
-	SHADER_ALLDETAIL				= 1 << 16
+	SHADER_ALLDETAIL				= 1 << 16,
+	SHADER_NODRAWFLAT				= 1 << 17
 };
 
 // sorting
@@ -106,15 +109,17 @@ enum
 // transform functions
 enum
 {
-	SHADER_FUNC_NONE				= 0,
-	SHADER_FUNC_SIN					= 1,
-	SHADER_FUNC_TRIANGLE			= 2,
-	SHADER_FUNC_SQUARE				= 3,
-	SHADER_FUNC_SAWTOOTH			= 4,
-	SHADER_FUNC_INVERSESAWTOOTH		= 5,
-	SHADER_FUNC_NOISE				= 6,
-	SHADER_FUNC_CONSTANT			= 7,
-	SHADER_FUNC_RAMP				= 8
+	SHADER_FUNC_NONE,
+	SHADER_FUNC_SIN,
+	SHADER_FUNC_TRIANGLE,
+	SHADER_FUNC_SQUARE,
+	SHADER_FUNC_SAWTOOTH,
+	SHADER_FUNC_INVERSESAWTOOTH,
+	SHADER_FUNC_NOISE,
+	SHADER_FUNC_CONSTANT,
+	SHADER_FUNC_RAMP,
+
+	MAX_SHADER_FUNCS
 };
 
 // RGB colors generation
@@ -154,10 +159,11 @@ enum
 	ALPHA_GEN_SPECULAR,
 	ALPHA_GEN_WAVE,
 	ALPHA_GEN_DOT,
-	ALPHA_GEN_ONE_MINUS_DOT
+	ALPHA_GEN_ONE_MINUS_DOT,
 #ifdef HARDWARE_OUTLINES
-	,ALPHA_GEN_OUTLINE
+	ALPHA_GEN_OUTLINE,
 #endif
+	ALPHA_GEN_PLANAR_SHADOW
 };
 
 // texture coordinates generation
@@ -173,7 +179,8 @@ enum
 	TC_GEN_REFLECTION_CELLSHADE,
 	TC_GEN_SVECTORS,
 	TC_GEN_PROJECTION,
-	TC_GEN_PROJECTION_SHADOW
+	TC_GEN_PROJECTION_SHADOW,
+	TC_GEN_DRAWFLAT
 };
 
 // tcmod functions
@@ -259,6 +266,7 @@ typedef struct
 typedef struct shader_s
 {
 	char				*name;
+	int					registration_sequence;
 
 	unsigned int		flags;
 	unsigned int		features;
@@ -279,7 +287,7 @@ typedef struct shader_s
 	float				gloss_exponent;
 	float				offsetmapping_scale;
 
-	struct shader_s		*hash_next;
+	struct shader_s		*prev, *next;
 } shader_t;
 
 // memory management
@@ -302,14 +310,17 @@ void		R_ShutdownShaders( void );
 
 void		R_UploadCinematicShader( const shader_t *shader );
 
-void		R_DeformvBBoxForShader( const shader_t *shader, vec3_t ebbox );
-
 shader_t	*R_LoadShader( const char *name, int type, qboolean forceDefault, int addFlags, int ignoreType, const char *text );
 
 shader_t	*R_RegisterPic( const char *name );
+shader_t	*R_RegisterRawPic( const char *name, int width, int height, qbyte *data );
 shader_t	*R_RegisterLevelshot( const char *name, shader_t *defaultShader, qboolean *matchesDefault );
 shader_t	*R_RegisterShader( const char *name );
 shader_t	*R_RegisterSkin( const char *name );
+shader_t	*R_RegisterVideo( const char *name );
+
+void		R_TouchShader( shader_t *s );
+void		R_FreeUnusedShaders( void );
 
 void		R_RemapShader( const char *from, const char *to, int timeOffset );
 

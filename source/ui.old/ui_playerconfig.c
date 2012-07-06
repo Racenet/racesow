@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
@@ -138,9 +138,9 @@ static void UpdateWeaponlistFunc( menucommon_t *menuitem )
 	trap_Cvar_SetValue( "cg_weaponlist", menuitem->curvalue );
 }
 
-//=================
-//M_PlayerConfig_ApplyChanges
-//=================
+/*
+* M_PlayerConfig_ApplyChanges
+*/
 static void M_PlayerConfig_ApplyChanges( void )
 {
 	char cleanClanName[MAX_CLANNAME_BYTES];
@@ -235,9 +235,9 @@ static void M_GetPlayerColor( void )
 }
 
 
-//==================
-//M_Demos_CreateDemosList
-//==================
+/*
+* M_Demos_CreateDemosList
+*/
 char **HUDnames = NULL;
 static void M_PlayerConfig_CreateHUDsList( void )
 {
@@ -287,9 +287,9 @@ static void M_PlayerConfig_CreateHUDsList( void )
 	HUDnames[count] = NULL;
 }
 
-//=================
-//PlayerConfig_MenuInit
-//=================
+/*
+* PlayerConfig_MenuInit
+*/
 static qboolean PlayerConfig_MenuInit( void )
 {
 	menucommon_t *menuitem;
@@ -498,9 +498,9 @@ static qboolean PlayerConfig_MenuInit( void )
 	return qtrue;
 }
 
-//=================
-//PlayerConfig_MenuDraw - skelmod
-//=================
+/*
+* PlayerConfig_MenuDraw - skelmod
+*/
 static void PlayerConfig_MenuDraw( void )
 {
 	menucommon_t *playerbox, *skinbox;
@@ -516,8 +516,8 @@ static void PlayerConfig_MenuDraw( void )
 		if( crosshairbox )
 		{
 			trap_R_DrawStretchPic( s_player_config_menu.x + crosshairbox->x + 32,
-			                       s_player_config_menu.y + crosshairbox->y - 8, 32, 32,
-			                       0, 0, 1, 1, colorWhite, (struct shader_s *)s_crosshair_pic );
+				s_player_config_menu.y + crosshairbox->y - 8, 32, 32,
+				0, 0, 1, 1, colorWhite, (struct shader_s *)s_crosshair_pic );
 		}
 	}
 
@@ -528,8 +528,8 @@ static void PlayerConfig_MenuDraw( void )
 		if( crosshairbox )
 		{
 			trap_R_DrawStretchPic( s_player_config_menu.x + crosshairbox->x + 32,
-			                       s_player_config_menu.y + crosshairbox->y - 8, 32, 32,
-			                       0, 0, 1, 1, colorWhite, (struct shader_s *)s_crosshair_strong_pic );
+				s_player_config_menu.y + crosshairbox->y - 8, 32, 32,
+				0, 0, 1, 1, colorWhite, (struct shader_s *)s_crosshair_strong_pic );
 		}
 	}
 
@@ -584,7 +584,7 @@ static const char *PlayerConfig_MenuKey( int key )
 	item = Menu_ItemAtCursor( &s_player_config_menu );
 
 	if( key == K_ESCAPE || ( ( key == K_MOUSE2 ) && ( item->type != MTYPE_SPINCONTROL ) &&
-	                        ( item->type != MTYPE_SLIDER ) ) )
+		( item->type != MTYPE_SLIDER ) ) )
 	{
 		M_PlayerConfig_SaveAndClose( NULL );
 		return menu_out_sound;

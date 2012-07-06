@@ -7,7 +7,7 @@
 #include "../qcommon/cvar.h"
 #include "../qcommon/trie.h"
 
-#define IRC_API_VERSION 1
+#define IRC_API_VERSION 2
 
 // numeric commands as specified by RFC 1459 - Internet Relay Chat Protocol
 typedef enum irc_numeric_e {
@@ -180,6 +180,7 @@ typedef void (*irc_listener_f)(irc_command_t cmd, const char *prefix, const char
 
 struct mufont_s;
 struct shader_s;
+struct poly_s;
 
 typedef struct
 {
@@ -201,6 +202,7 @@ typedef struct
 	size_t			(*SCR_StrlenForWidth)(const char *str, struct mufont_s *font, size_t maxwidth);
 	struct shader_s*(*R_RegisterPic)(const char *name);
 	void			(*R_DrawStretchPic)(int x, int y, int w, int h, float s1, float t1, float s2, float t2, float *color, struct shader_s *shader);
+	void			(*R_DrawStretchPoly)(const struct poly_s *poly, float x_offset, float y_offset);
 	viddef_t		*viddef;
 	// clock
 	unsigned int	(*Milliseconds)(void);
@@ -238,8 +240,10 @@ typedef struct
 	void		(*Cmd_AddCommand)(const char *cmd_name, xcommand_t function);
 	void		(*Cmd_RemoveCommand)(const char *cmd_name);
 	void		(*Cmd_ExecuteString)(const char *text);
+	void		(*Cmd_SetCompletionFunc)(const char *cmd_name,  xcompletionf_t completion_func);
+
 	// console
-	void		(*Com_BeginRedirect)(int target, char *buffer, int buffersize, void (*flush), const void *extra);
+	void		(*Com_BeginRedirect)(int target, char *buffer, int buffersize, void (*flush)(int, char*, const void*), const void *extra);
 	void		(*Com_EndRedirect)(void);
 	void		(*Cbuf_AddText)(const char *text);
 	// tries
@@ -272,7 +276,7 @@ typedef struct irc_export_s {
 
 // the one and only function this shared library exports
 typedef irc_export_t *(*GetIrcAPI_t)(const irc_import_t *imports);
-irc_export_t *GetIrcAPI(const irc_import_t *imports);
+QF_DLL_EXPORT irc_export_t *GetIrcAPI(const irc_import_t *imports);
 
 // the functions in irc_export_t
 int Irc_If_API(void);

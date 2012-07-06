@@ -3,7 +3,7 @@
 namespace TestPointer
 {
 
-#define TESTNAME "TestPointer"
+static const char * const TESTNAME = "TestPointer";
 
 class ObjectInstance
 {
@@ -68,9 +68,9 @@ bool Test()
 
 	int r;
 	r = engine->RegisterObjectType("ObjectInstance", sizeof(ObjectInstance), asOBJ_VALUE | asOBJ_APP_CLASS); assert(r>=0);
-	r = engine->RegisterObjectProperty("ObjectInstance", "int val", offsetof(ObjectInstance, val)); assert(r>=0);
-	r = engine->RegisterObjectProperty("ObjectInstance", "int val2", offsetof(ObjectInstance, val)); assert(r>=0);
-	r = engine->RegisterObjectProperty("ObjectInstance", "int val3", offsetof(ObjectInstance, val)); assert(r>=0);
+	r = engine->RegisterObjectProperty("ObjectInstance", "int val", asOFFSET(ObjectInstance, val)); assert(r>=0);
+	r = engine->RegisterObjectProperty("ObjectInstance", "int val2", asOFFSET(ObjectInstance, val)); assert(r>=0);
+	r = engine->RegisterObjectProperty("ObjectInstance", "int val3", asOFFSET(ObjectInstance, val)); assert(r>=0);
 	r = engine->RegisterObjectMethod("ObjectInstance", "void function()", asFUNCTION(ObjectFunction), asCALL_CDECL_OBJFIRST); assert(r>=0);
 	r = engine->RegisterObjectMethod("ObjectInstance", "void Method()", asMETHOD(ObjectInstance,Method), asCALL_THISCALL); assert(r>=0);
 
@@ -93,28 +93,28 @@ bool Test()
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 
 	// Function call executed fine when using an object.
-	r = engine->ExecuteString(0, "obj.function(); obj.val = 23;");
+	r = ExecuteString(engine, "obj.function(); obj.val = 23;");
 	if( r < 0 )
 	{
 		printf("%s: ExecuteString() failed %d\n", TESTNAME, r);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( obj.val != 23 )
 	{
 		printf("%s: failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
-	r = engine->ExecuteString(0, "ptr->function(); ptr->val = 13;");
+	r = ExecuteString(engine, "ptr->function(); ptr->val = 13;");
 	if( r < 0 )
 	{
 		printf("%s: ExecuteString() failed %d\n", TESTNAME, r);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( obj.val != 13 )
 	{
 		printf("%s: failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
@@ -123,14 +123,14 @@ bool Test()
 	if( r < 0 )
 	{
 		printf("%s: failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
-	r = engine->ExecuteString(0, "Test()");
+	r = ExecuteString(engine, "Test()", mod);
 	if( r < 0 )
 	{
 		printf("%s: failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

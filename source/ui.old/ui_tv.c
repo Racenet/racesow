@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
@@ -36,7 +36,7 @@ static menuframework_s s_tv_menu;
 
 static void M_TV_RefreshFunc( menucommon_t *menuitem )
 {
-static unsigned int lastRefresh = 0;
+	static unsigned int lastRefresh = 0;
 
 	if( lastRefresh >= uis.time )
 		return;
@@ -78,9 +78,9 @@ m_itemslisthead_t channelsScrollList;
 static int scrollbar_curvalue = 0;
 static int max_menu_channels = 0;
 
-//==================
-//M_TV_JoinChannel
-//==================
+/*
+* M_TV_JoinChannel
+*/
 static void M_TV_JoinChannel( menucommon_t *menuitem )
 {
 	char buffer[128];
@@ -98,9 +98,9 @@ static void M_TV_JoinChannel( menucommon_t *menuitem )
 	}
 }
 
-//==================
-//M_RefreshScrollWindowList
-//==================
+/*
+* M_RefreshScrollWindowList
+*/
 static void M_RefreshScrollWindowList( void )
 {
 	int addedItems;
@@ -117,9 +117,9 @@ static void M_RefreshScrollWindowList( void )
 	}
 }
 
-//==================
-//M_TV_UpdateScrollbar
-//==================
+/*
+* M_TV_UpdateScrollbar
+*/
 static void M_TV_UpdateScrollbar( menucommon_t *menuitem )
 {
 	menuitem->maxvalue = max( 0, channelsScrollList.numItems - max_menu_channels );
@@ -138,9 +138,9 @@ static void M_TV_UpdateScrollbar( menucommon_t *menuitem )
 
 #define ROW_PATTERN		"\\w:%i\\%s\\w:%i\\%s%s\\w:%i\\%s%s\\w:%i\\%s%s\\w:%i\\%s%s\\w:%i\\%s%s"
 
-//==================
-//M_UpdateChannelButton
-//==================
+/*
+* M_UpdateChannelButton
+*/
 static void M_UpdateChannelButton( menucommon_t *menuitem )
 {
 	tv_channel_t *channel = NULL;
@@ -159,13 +159,13 @@ static void M_UpdateChannelButton( menucommon_t *menuitem )
 		Q_snprintfz( str[1], sizeof( str[0] ), " %i/%i", channel->numplayers, channel->numspecs );
 
 		Q_snprintfz( menuitem->title, MAX_STRING_CHARS, ROW_PATTERN,
-					 COLUMN_WIDTH_NO, str[0], 
-					 COLUMN_WIDTH_NAME, S_COLOR_WHITE, channel->realname[0] ? channel->realname : channel->name,
-					 COLUMN_WIDTH_PLAYERS, S_COLOR_WHITE, str[1],
-					 COLUMN_WIDTH_GAMETYPE, S_COLOR_WHITE, channel->gametype,
-					 COLUMN_WIDTH_MAPNAME, S_COLOR_WHITE, channel->mapname,
-					 COLUMN_WIDTH_MATCHNAME, S_COLOR_WHITE, channel->matchname
-					 );
+			COLUMN_WIDTH_NO, str[0], 
+			COLUMN_WIDTH_NAME, S_COLOR_WHITE, channel->realname[0] ? channel->realname : channel->name,
+			COLUMN_WIDTH_PLAYERS, S_COLOR_WHITE, str[1],
+			COLUMN_WIDTH_GAMETYPE, S_COLOR_WHITE, channel->gametype,
+			COLUMN_WIDTH_MAPNAME, S_COLOR_WHITE, channel->mapname,
+			COLUMN_WIDTH_MATCHNAME, S_COLOR_WHITE, channel->matchname
+			);
 		menuitem->statusbar = "press ENTER to watch";
 	}
 	else
@@ -317,14 +317,14 @@ static void M_TV_Init( void )
 
 	menuitem = UI_InitMenuItem( "m_tv_titlerow", NULL, -xoffset, yoffset, MTYPE_SEPARATOR, ALIGN_LEFT_TOP, uis.fontSystemSmall, NULL );
 	Q_snprintfz( menuitem->title, MAX_STRING_CHARS, 
-			ROW_PATTERN,
-			COLUMN_WIDTH_NO, "No", 
-			COLUMN_WIDTH_NAME, "", "Server",
-			COLUMN_WIDTH_PLAYERS, "", " Pl/Sp",
-			COLUMN_WIDTH_GAMETYPE, "", "Gametype",
-			COLUMN_WIDTH_MAPNAME, "", "Map",
-			COLUMN_WIDTH_MATCHNAME, "", "Match"
-	);
+		ROW_PATTERN,
+		COLUMN_WIDTH_NO, "No", 
+		COLUMN_WIDTH_NAME, "", "Server",
+		COLUMN_WIDTH_PLAYERS, "", " Pl/Sp",
+		COLUMN_WIDTH_GAMETYPE, "", "Gametype",
+		COLUMN_WIDTH_MAPNAME, "", "Map",
+		COLUMN_WIDTH_MATCHNAME, "", "Match"
+		);
 	Menu_AddItem( &s_tv_menu, menuitem );
 	yoffset += trap_SCR_strHeight( menuitem->font );
 
@@ -340,7 +340,7 @@ static void M_TV_Init( void )
 	for( i = 0; i < max_menu_channels; i++ )
 	{
 		menuitem = UI_InitMenuItem( va( "m_tv_button_%i", i ), NO_CHANNEL_STRING, -xoffset, yoffset, MTYPE_ACTION,
-		                            ALIGN_LEFT_TOP, uis.fontSystemSmall, NULL );
+			ALIGN_LEFT_TOP, uis.fontSystemSmall, NULL );
 		menuitem->callback_doubleclick = M_TV_JoinChannel;
 		menuitem->scrollbar_id = scrollbar_id; //id of the scrollbar so that mwheelup/down can scroll from the list
 		menuitem->height = vspacing;

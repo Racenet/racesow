@@ -3,7 +3,7 @@
 namespace TestObjHandle
 {
 
-#define TESTNAME "TestObjHandle"
+static const char * const TESTNAME = "TestObjHandle";
 
 
 
@@ -27,11 +27,11 @@ static const char *script1 =
 // Now an assignment to g is possible
 "   g = b;                              \n"
 // Compare with null
-"   if( @g != null );                   \n"
-"   if( null != @g );                   \n"
+"   if( @g != null ) {}                  \n"
+"   if( null != @g ) {}                   \n"
 // Compare with another object
-"   if( @g == @b );                       \n"
-"   if( @b == @g );                     \n"
+"   if( @g == @b ) {}                       \n"
+"   if( @b == @g ) {}                     \n"
 // Value comparison
 //"   if( g == b );                       \n"
 //"   if( b == g );                       \n"
@@ -170,9 +170,9 @@ bool Test()
 	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_FACTORY, "refclass@ f()", asFUNCTION(Factory), asCALL_CDECL); assert(r >= 0);
 	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_ADDREF, "void f()", asMETHOD(CRefClass, AddRef), asCALL_THISCALL); assert(r >= 0);
 	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_RELEASE, "void f()", asMETHOD(CRefClass, Release), asCALL_THISCALL); assert(r >= 0);
-	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_ASSIGNMENT, "refclass &f(refclass &in)", asMETHOD(CRefClass, operator=), asCALL_THISCALL); assert(r >= 0);
+	r = engine->RegisterObjectMethod("refclass", "refclass &opAssign(refclass &in)", asMETHOD(CRefClass, operator=), asCALL_THISCALL); assert(r >= 0);
 	r = engine->RegisterObjectMethod("refclass", "refclass &Do()", asMETHOD(CRefClass,Do), asCALL_THISCALL); assert(r >= 0);
-	r = engine->RegisterGlobalBehaviour(asBEHAVE_ADD, "refclass &f(refclass &in, refclass &in)", asFUNCTION(CRefClass::Add), asCALL_CDECL); assert(r >= 0);
+	r = engine->RegisterObjectMethod("refclass", "refclass &opAdd(refclass &in)", asFUNCTION(CRefClass::Add), asCALL_CDECL_OBJFIRST); assert(r >= 0);
 
 	r = engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC); assert( r >= 0 );
 
@@ -182,17 +182,18 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "TestObjHandle()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestObjHandle()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Execution failed\n", TESTNAME);
 	}
 	if( ctx ) ctx->Release();
@@ -210,12 +211,12 @@ bool Test()
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Execution failed\n", TESTNAME);
 	}
 	if( refclass->refCount != 2 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Ref count is wrong\n", TESTNAME);
 	}
 
@@ -226,12 +227,12 @@ bool Test()
 	r = engine->GarbageCollect();
 	asUINT gcCurrentSize;
 	engine->GetGCStatistics(&gcCurrentSize, 0, 0);
-	assert( gcCurrentSize == 0 );
+	assert( gcCurrentSize == 10 ); // The script class types and functions are also in the gc
 
-	r = engine->ExecuteString(0, "refclass ref; ref.Do()");
+	r = ExecuteString(engine, "refclass ref; ref.Do()");
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
@@ -239,13 +240,14 @@ bool Test()
 	//--------------------
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+	RegisterScriptArray(engine, true);
 	r = engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC); assert( r >= 0 );
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script5, strlen(script5), 0);
 	r = mod->Build();
-	if( r < 0 ) fail = true;
-	r = engine->ExecuteString(0, "Test()");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	if( r < 0 ) TEST_FAILED;
+	r = ExecuteString(engine, "Test()", mod);
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 	engine->Release();
 
 	//----------------------
@@ -256,7 +258,7 @@ bool Test()
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", scriptC, strlen(scriptC));
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 	engine->Release();
 
 	//---------------------
@@ -269,104 +271,104 @@ bool Test()
 	r = engine->RegisterObjectBehaviour("A", asBEHAVE_FACTORY, "A@ f()", asFUNCTION(Factory), asCALL_CDECL); assert(r >= 0);
 	r = engine->RegisterObjectBehaviour("A", asBEHAVE_ADDREF, "void f()", asMETHOD(CRefClass, AddRef), asCALL_THISCALL); assert(r >= 0);
 	r = engine->RegisterObjectBehaviour("A", asBEHAVE_RELEASE, "void f()", asMETHOD(CRefClass, Release), asCALL_THISCALL); assert(r >= 0);
-	r = engine->RegisterObjectBehaviour("A", asBEHAVE_ASSIGNMENT, "A &f(const A &in)", asMETHOD(CRefClass, operator=), asCALL_THISCALL); assert(r >= 0);
+	r = engine->RegisterObjectMethod("A", "A &opAssign(const A &in)", asMETHOD(CRefClass, operator=), asCALL_THISCALL); assert(r >= 0);
 
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; a == null;");    // Should give warning
+	r = ExecuteString(engine, "A a; a == null;");    // Should give warning
 	if( r < 0 || bout.buffer == "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; null == a;");    // Should give warning
+	r = ExecuteString(engine, "A a; null == a;");    // Should give warning
 	if( r < 0 || bout.buffer == "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; @a == null;");   // OK
+	r = ExecuteString(engine, "A a; @a == null;");   // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; null == @a;");   // OK
+	r = ExecuteString(engine, "A a; null == @a;");   // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; @a == a;");      // Should give warning
+	r = ExecuteString(engine, "A a; @a == a;");      // Should give warning
 	if( r < 0 || bout.buffer == "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; a == @a;");      // Should give warning
+	r = ExecuteString(engine, "A a; a == @a;");      // Should give warning
 	if( r < 0 || bout.buffer == "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; @a == @a;");     // OK
+	r = ExecuteString(engine, "A a; @a == @a;");     // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A @a = null;");       // OK
+	r = ExecuteString(engine, "A @a = null;");       // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; A @b = a;");     // OK
+	r = ExecuteString(engine, "A a; A @b = a;");     // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; A @b = @a;");    // OK
+	r = ExecuteString(engine, "A a; A @b = @a;");    // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; A b = @b;");     // Should give error
+	r = ExecuteString(engine, "A a; A b = @b;");     // Should give error
 	if( r >= 0 || bout.buffer == "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A @a, b; @a = @b;");  // OK
+	r = ExecuteString(engine, "A @a, b; @a = @b;");  // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A @a, b; @a = b;");   // OK
+	r = ExecuteString(engine, "A @a, b; @a = b;");   // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A @a, b; a = @b;");   // Should give error
+	r = ExecuteString(engine, "A @a, b; a = @b;");   // Should give error
 	if( r >= 0 || bout.buffer == "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; null is a;");    // OK
+	r = ExecuteString(engine, "A a; null is a;");    // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "A a; a !is null;");    // OK
+	r = ExecuteString(engine, "A a; a !is null;");    // OK
 	if( r < 0 || bout.buffer != "" )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

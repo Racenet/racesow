@@ -7,7 +7,7 @@ using std::string;
 namespace TestStack2
 {
 
-#define TESTNAME "TestStack2"
+static const char * const TESTNAME = "TestStack2";
 
 static const char *script1 =
 "void testargs()                   \n"
@@ -51,15 +51,15 @@ static const char *script4 =
 "}                      \n";
 
 static const char *script5 = 
-"void testoutparm()        \n"
-"{                         \n"
-"  string a, b;            \n"
-"  complex3(complex(a));   \n"
-"  complex(a) = b;         \n"
-"  complex2() = b;         \n"
-"  if( complex(a) == b );  \n"
-"  if( complex3(a) == 2 ); \n"
-"}                         \n";
+"void testoutparm()          \n"
+"{                           \n"
+"  string a, b;              \n"
+"  complex3(complex(a));     \n"
+"  complex(a) = b;           \n"
+"  complex2() = b;           \n"
+"  if( complex(a) == b ) {}  \n"
+"  if( complex3(a) == 2 ) {} \n"
+"}                           \n";
 
 string output;
 int a_int()
@@ -147,7 +147,7 @@ bool Test()
 	bool fail = false;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-
+	RegisterScriptArray(engine, true);
 	RegisterStdString(engine);
 
 	engine->RegisterGlobalFunction("int a_int()", asFUNCTION(a_int), asCALL_CDECL);
@@ -185,42 +185,87 @@ bool Test()
 	
 	// Verify order of calculations
  	output = "";
-	engine->ExecuteString(0, "a_str() + b_str()");
-	if( output != "ab" ) fail = true;
+	ExecuteString(engine, "a_str() + b_str()", mod);
+	if( output != "ba" ) TEST_FAILED;
 
 	output = "";
-	engine->ExecuteString(0, "b_strref() = a_str()");
-	if( output != "ab" ) fail = true;
+	ExecuteString(engine, "b_strref() = a_str()", mod);
+	if( output != "ab" ) TEST_FAILED;
 
 	output = "";
-	engine->ExecuteString(0, "b_strref() += a_str()");
-	if( output != "ab" ) fail = true;
+	ExecuteString(engine, "b_strref() += a_str()", mod);
+	if( output != "ab" ) TEST_FAILED;
 
 	output = "";
-	engine->ExecuteString(0, "a_int() + b_int()");
-	if( output != "ab" ) fail = true;
+	ExecuteString(engine, "a_int() + b_int()", mod);
+	if( output != "ab" ) TEST_FAILED;
 
 	output = "";
-	engine->ExecuteString(0, "b_intref() = a_int()");
-	if( output != "ab" ) fail = true;
+	ExecuteString(engine, "b_intref() = a_int()", mod);
+	if( output != "ab" ) TEST_FAILED;
 
 	output = "";
-	engine->ExecuteString(0, "b_intref() += a_int()");
-	if( output != "ab" ) fail = true;
+	ExecuteString(engine, "b_intref() += a_int()", mod);
+	if( output != "ab" ) TEST_FAILED;
 
 	// Nested output parameters with a returned reference
 	ci = 0; cs = ""; str = "";
-	engine->ExecuteString(0, "complex3(complex(str)) = 1");
-	if( ci != 1 ) fail = true;
-	if( cs != "outparm3" ) fail = true;
-	if( str != "outparm" ) fail = true;
+	ExecuteString(engine, "complex3(complex(str)) = 1", mod);
+	if( ci != 1 ) TEST_FAILED;
+	if( cs != "outparm3" ) TEST_FAILED;
+	if( str != "outparm" ) TEST_FAILED;
 
 	str = "";
- 	engine->ExecuteString(0, "GetProp(\"test\").Get(str);");
-	if( str != "PropOut" ) fail = true;
+ 	ExecuteString(engine, "GetProp(\"test\").Get(str);", mod);
+	if( str != "PropOut" ) TEST_FAILED;
 
  	engine->Release();
 
+
+
+	// This test verifies two things, first that the object pointer is copied when 
+	// a new stack block is allocated to call a class method, second that when the 
+	// stack max size has been reached the stack is correctly cleaned up.
+	{
+		asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetEngineProperty(asEP_MAX_STACK_SIZE, 10000);
+
+		const char *script = 
+			"class testclass \n"
+			"{ \n"
+			"	testclass() \n"
+			"	{ \n"
+			"		myCompare(1,3); \n"
+			"	} \n"
+			"} \n"
+			"void main() \n"
+			"{ \n"
+			"	testclass test; \n"
+			"} \n"
+			"bool myCompare(int a, int b) \n"
+			"{ \n"
+			"	testclass @testc = @testclass(); \n"
+			"	return a < b; \n"
+			"} \n";
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+		int r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+		asIScriptContext *ctx = engine->CreateContext();
+		r = ExecuteString(engine, "main()", mod, ctx);
+		if( r != asEXECUTION_EXCEPTION )
+			TEST_FAILED;
+		if( string(ctx->GetExceptionString()) != "Stack overflow" )
+			TEST_FAILED;
+		// On 32bit targets the exception happens in testclass, but on 64bit targets the exception happens in myCompare
+		if( sizeof(void*) == 4 && string(engine->GetFunctionById(ctx->GetExceptionFunction())->GetName()) != "testclass" ||
+			sizeof(void*) == 8 && string(engine->GetFunctionById(ctx->GetExceptionFunction())->GetName()) != "myCompare" )
+			TEST_FAILED;
+		ctx->Release();
+		
+		engine->Release();
+	}
 
 	if( fail )
 		printf("%s: fail\n", TESTNAME);

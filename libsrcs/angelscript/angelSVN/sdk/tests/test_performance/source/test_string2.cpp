@@ -3,7 +3,7 @@
 //
 
 #include "utils.h"
-#include "../../add_on/scriptstring/scriptstring.h"
+#include "scriptstring.h"
 
 namespace TestString2
 {
@@ -35,8 +35,12 @@ void Test()
 {
 	printf("---------------------------------------------\n");
 	printf("%s\n\n", TESTNAME);
-	printf("AngelScript 2.15.0             : 1.669 secs\n");
-	printf("AngelScript 2.15.1 WIP         : 1.608 secs\n");
+	printf("AngelScript 2.15.0             : 1.67 secs\n");
+	printf("AngelScript 2.18.0             : 1.71 secs\n");
+	printf("AngelScript 2.18.1 WIP         : 1.66 secs\n");
+	printf("AngelScript 2.19.1 WIP         : 1.68 secs\n");
+	printf("AS 2.20.0 (home)               : 1.97 secs\n");
+	printf("AS 2.20.3 (home)               : .873 secs\n");
 
 	printf("\nBuilding...\n");
 

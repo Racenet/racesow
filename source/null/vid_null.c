@@ -118,7 +118,7 @@ void VID_CheckChanges( void )
 			vid_ref_active = qfalse;
 		}
 
-		if( R_Init( NULL, NULL ) == -1 )
+		if( R_Init( NULL, NULL, NULL, 0, 0, 0, 0, qfalse ) == -1 )
 			Com_Error( ERR_FATAL, "Couldn't start refresh" );
 
 		vid_ref_active = qtrue;

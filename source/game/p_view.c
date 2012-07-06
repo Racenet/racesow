@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
@@ -26,9 +26,9 @@ float xyspeed;
 // DEAD VIEW
 //====================================================================
 
-//==================
-//G_ProjectThirdPersonView
-//==================
+/*
+* G_ProjectThirdPersonView
+*/
 static void G_ProjectThirdPersonView( vec3_t vieworg, vec3_t viewangles, edict_t *passent )
 {
 	float thirdPersonRange = 60;
@@ -79,9 +79,9 @@ static void G_ProjectThirdPersonView( vec3_t vieworg, vec3_t viewangles, edict_t
 	VectorCopy( chase_dest, vieworg );
 }
 
-//=============
-//G_Client_DeadView
-//=============
+/*
+* G_Client_DeadView
+*/
 static void G_Client_DeadView( edict_t *ent )
 {
 	edict_t	*body;
@@ -166,7 +166,7 @@ void G_ClientAddDamageIndicatorImpact( gclient_t *client, int damage, const vec3
 	{
 		VectorNormalize2( basedir, dir );
 
-//#define ACCENT_SCALE 2.0f
+		//#define ACCENT_SCALE 2.0f
 #ifdef ACCENT_SCALE
 		// accent the vertical or horizontal aspect of the direction
 		if( VectorLengthFast( tv( dir[0], dir[1], 0 ) ) > dir[2] )
@@ -187,11 +187,11 @@ void G_ClientAddDamageIndicatorImpact( gclient_t *client, int damage, const vec3
 	client->resp.snap.damageTaken += damage;
 }
 
-//===============
-//G_ClientDamageFeedback
-//
-//Adds color blends, hitsounds, etc
-//===============
+/*
+* G_ClientDamageFeedback
+* 
+* Adds color blends, hitsounds, etc
+*/
 void G_ClientDamageFeedback( edict_t *ent )
 {
 	if( ent->r.client->resp.snap.damageTaken )
@@ -215,7 +215,7 @@ void G_ClientDamageFeedback( edict_t *ent )
 		// we can't make team damage hit sound at the same time as we do damage hit sound
 		// let's determine what's more relevant
 		if( ent->snap.teamkill || ent->snap.damageteam_given > 50 ||
-		   ( ent->snap.damageteam_given > 2 * ent->snap.damage_given && !ent->snap.kill ) )
+			( ent->snap.damageteam_given > 2 * ent->snap.damage_given && !ent->snap.kill ) )
 		{
 			G_AddPlayerStateEvent( ent->r.client, PSEV_HIT, 5 );
 		}
@@ -235,9 +235,9 @@ void G_ClientDamageFeedback( edict_t *ent )
 	}
 }
 
-//=============
-//G_PlayerWorldEffects
-//=============
+/*
+* G_PlayerWorldEffects
+*/
 static void G_PlayerWorldEffects( edict_t *ent )
 {
 	int waterlevel, old_waterlevel;
@@ -328,7 +328,7 @@ static void G_PlayerWorldEffects( edict_t *ent )
 					G_AddEvent( ent, EV_SEXEDSOUND, 1, qtrue );
 				ent->pain_debounce_time = level.time;
 
-				G_TakeDamage( ent, world, world, vec3_origin, vec3_origin, ent->s.origin, ent->r.client->resp.drowningDamage, 0, 0, DAMAGE_NO_ARMOR, MOD_WATER );
+				G_Damage( ent, world, world, vec3_origin, vec3_origin, ent->s.origin, ent->r.client->resp.drowningDamage, 0, 0, DAMAGE_NO_ARMOR, MOD_WATER );
 			}
 		}
 	}
@@ -351,21 +351,21 @@ static void G_PlayerWorldEffects( edict_t *ent )
 			//	G_Sound( ent, CHAN_BODY, trap_SoundIndex(va(S_PLAYER_BURN_1_to_2, (rand()&1)+1)), 1, ATTN_NORM );
 			//	ent->pain_debounce_time = level.time + 1000;
 			//}
-			G_TakeDamage( ent, world, world, vec3_origin, vec3_origin, ent->s.origin,
-			          ( 30 * waterlevel ) * game.snapFrameTime / 1000.0f, 0, 0, 0, MOD_LAVA );
+			G_Damage( ent, world, world, vec3_origin, vec3_origin, ent->s.origin,
+				( 30 * waterlevel ) * game.snapFrameTime / 1000.0f, 0, 0, 0, MOD_LAVA );
 		}
 
 		if( ent->watertype & CONTENTS_SLIME )
 		{
-			G_TakeDamage( ent, world, world, vec3_origin, vec3_origin, ent->s.origin,
-			          ( 10 * waterlevel ) * game.snapFrameTime / 1000.0f, 0, 0, 0, MOD_SLIME );
+			G_Damage( ent, world, world, vec3_origin, vec3_origin, ent->s.origin,
+				( 10 * waterlevel ) * game.snapFrameTime / 1000.0f, 0, 0, 0, MOD_SLIME );
 		}
 	}
 }
 
-//===============
-//G_SetClientEffects
-//===============
+/*
+* G_SetClientEffects
+*/
 static void G_SetClientEffects( edict_t *ent )
 {
 	gclient_t *client = ent->r.client;
@@ -385,6 +385,13 @@ static void G_SetClientEffects( edict_t *ent )
 		ent->s.effects |= EF_SHELL;
 		if( client->ps.inventory[POWERUP_SHELL] < 6 )
 			ent->s.effects |= EF_EXPIRING_SHELL;			
+	}
+
+	if( client->ps.inventory[POWERUP_REGEN] > 0 )
+	{
+		ent->s.effects |= EF_REGEN;
+		if( client->ps.inventory[POWERUP_REGEN] < 6 )
+			ent->s.effects |= EF_EXPIRING_REGEN;			
 	}
 
 	if( ent->s.weapon )
@@ -408,9 +415,9 @@ static void G_SetClientEffects( edict_t *ent )
 		ent->s.effects |= EF_BUSYICON;
 }
 
-//===============
-//G_SetClientSound
-//===============
+/*
+* G_SetClientSound
+*/
 static void G_SetClientSound( edict_t *ent )
 {
 	if( ent->waterlevel == 3 )
@@ -426,9 +433,9 @@ static void G_SetClientSound( edict_t *ent )
 		ent->s.sound = 0;
 }
 
-//=================
-//G_SetClientFrame
-//=================
+/*
+* G_SetClientFrame
+*/
 void G_SetClientFrame( edict_t *ent )
 {
 	if( ent->s.type != ET_PLAYER )
@@ -437,12 +444,12 @@ void G_SetClientFrame( edict_t *ent )
 	ent->s.frame = 0;
 }
 
-//=================
-//G_ClientEndSnapFrame
-//
-//Called for each player at the end of the server frame
-//and right after spawning
-//=================
+/*
+* G_ClientEndSnapFrame
+* 
+* Called for each player at the end of the server frame
+* and right after spawning
+*/
 void G_ClientEndSnapFrame( edict_t *ent )
 {
 	gclient_t *client;

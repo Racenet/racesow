@@ -5,7 +5,7 @@
 namespace TestDebug
 {
 
-#define TESTNAME "TestDebug"
+static const char * const TESTNAME = "TestDebug";
 
 
 
@@ -15,14 +15,14 @@ static const char *script1 =
 "void main()                            \n"
 "{                                      \n"
 "  int a = 1;                           \n"
-"  string s = \"text\";                 \n"
-"  c _c; _c.Test1();                    \n" // 5
-"  Test2();                             \n" // 6
+"  string s = \"text\";                 \n" // 5
+"  c _c; _c.Test1();                    \n" // 6
+"  Test2();                             \n"
 "}                                      \n"
-"class c                                \n"
-"{                                      \n" 
-"  void Test1()                         \n"
-"  {                                    \n" // 11
+"class c                                \n" 
+"{                                      \n"
+"  void Test1()                         \n" // 11
+"  {                                    \n"
 "    int d = 4;                         \n"
 "  }                                    \n"
 "}                                      \n";
@@ -72,31 +72,31 @@ static const char *correct =
 "  Module2:void Test3():10,3\n"
 //" int c = 3\n"
 "--- exception ---\n"
-"desc: Out of range\n"
+"desc: Index out of bounds\n"
 "func: void Test3()\n"
 "modl: Module2\n"
-"sect: TestDebug:2\n"
+"sect: :2\n"
 "line: 10,3\n"
 " int c = 3\n"
 "--- call stack ---\n"
-"Module1:void main():8,2\n"
-" int a = 1\n"
-" string s = 'text'\n"
 "Module2:void Test2():5,2\n"
 " int b = 2\n"
-"--- exception ---\n"
-"desc: Out of range\n"
-"func: void Test3()\n"
-"modl: Module2\n"
-"sect: TestDebug:2\n"
-"line: 10,3\n"
-" int c = 3\n"
-"--- call stack ---\n"
 "Module1:void main():8,2\n"
 " int a = 1\n"
 " string s = 'text'\n"
+"--- exception ---\n"
+"desc: Index out of bounds\n"
+"func: void Test3()\n"
+"modl: Module2\n"
+"sect: :2\n"
+"line: 10,3\n"
+" int c = 3\n"
+"--- call stack ---\n"
 "Module2:void Test2():5,2\n"
-" int b = 2\n";
+" int b = 2\n"
+"Module1:void main():8,2\n"
+" int a = 1\n"
+" string s = 'text'\n";
 
 void print(const char *format, ...)
 {
@@ -109,26 +109,24 @@ void print(const char *format, ...)
 	printBuffer += buf;
 }
 
-void PrintVariables(asIScriptContext *ctx, int stackLevel);
+void PrintVariables(asIScriptContext *ctx, asUINT stackLevel);
 
 void LineCallback(asIScriptContext *ctx, void *param)
 {
-	asIScriptEngine *engine = ctx->GetEngine();
-	int funcID = ctx->GetCurrentFunction();
 	int col;
-	int line = ctx->GetCurrentLineNumber(&col);
+	int line = ctx->GetLineNumber(0, &col);
 	int indent = ctx->GetCallstackSize();
-	for( int n = 0; n < indent; n++ )
+	for( int n = 1; n < indent; n++ )
 		print(" ");
-	const asIScriptFunction *function = engine->GetFunctionDescriptorById(funcID);
+	const asIScriptFunction *function = ctx->GetFunction();
 	print("%s:%s:%d,%d\n", function->GetModuleName(),
 	                    function->GetDeclaration(),
 	                    line, col);
 
-//	PrintVariables(ctx, -1);
+//	PrintVariables(ctx, 0);
 }
 
-void PrintVariables(asIScriptContext *ctx, int stackLevel)
+void PrintVariables(asIScriptContext *ctx, asUINT stackLevel)
 {
 	asIScriptEngine *engine = ctx->GetEngine();
 
@@ -163,7 +161,7 @@ void ExceptionCallback(asIScriptContext *ctx, void *param)
 {
 	asIScriptEngine *engine = ctx->GetEngine();
 	int funcID = ctx->GetExceptionFunction();
-	const asIScriptFunction *function = engine->GetFunctionDescriptorById(funcID);
+	const asIScriptFunction *function = engine->GetFunctionById(funcID);
 	print("--- exception ---\n");
 	print("desc: %s\n", ctx->GetExceptionString());
 	print("func: %s\n", function->GetDeclaration());
@@ -173,15 +171,14 @@ void ExceptionCallback(asIScriptContext *ctx, void *param)
 	print("line: %d,%d\n", line, col);
 
 	// Print the variables in the current function
-	PrintVariables(ctx, -1);
+	PrintVariables(ctx, 0);
 
 	// Show the call stack with the variables
 	print("--- call stack ---\n");
-	for( int n = 0; n < ctx->GetCallstackSize(); n++ )
+	for( asUINT n = 1; n < ctx->GetCallstackSize(); n++ )
 	{
-		funcID = ctx->GetCallstackFunction(n);
-		const asIScriptFunction *func = engine->GetFunctionDescriptorById(funcID);
-		line = ctx->GetCallstackLineNumber(n,&col);
+		const asIScriptFunction *func = ctx->GetFunction(n);
+		line = ctx->GetLineNumber(n,&col);
 		print("%s:%s:%d,%d\n", func->GetModuleName(),
 		                       func->GetDeclaration(),
 							   line, col);
@@ -189,24 +186,27 @@ void ExceptionCallback(asIScriptContext *ctx, void *param)
 	}
 }
 
+bool Test2();
+
 bool Test()
 {
-	bool fail = false;
+	bool fail = Test2();
 
 	int number = 0;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 	RegisterScriptString_Generic(engine);
 
 	// Test GetTypeIdByDecl
 	if( engine->GetTypeIdByDecl("int") != engine->GetTypeIdByDecl("const int") )
-		fail = true;
+		TEST_FAILED;
 	if( engine->GetTypeIdByDecl("string") != engine->GetTypeIdByDecl("const string") )
-		fail = true;
+		TEST_FAILED;
 
 	// A handle to a const is different from a handle to a non-const
 	if( engine->GetTypeIdByDecl("string@") == engine->GetTypeIdByDecl("const string@") )
-		fail = true;
+		TEST_FAILED;
 
 	// Test debugging
 	engine->RegisterGlobalProperty("int number", &number);
@@ -214,11 +214,11 @@ bool Test()
 	COutStream out;
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	asIScriptModule *mod = engine->GetModule("Module1", asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME ":1", script1, strlen(script1), 0);
+	mod->AddScriptSection(":1", script1, strlen(script1), 0);
 	mod->Build();
 
 	mod = engine->GetModule("Module2", asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME ":2", script2, strlen(script2), 0);
+	mod->AddScriptSection(":2", script2, strlen(script2), 0);
 	mod->Build();
 
 	// Bind all functions that the module imports
@@ -240,12 +240,69 @@ bool Test()
 
 	if( printBuffer != correct )
 	{
-		fail = true;
-		printf(printBuffer.c_str());
-		printf("%s: failed\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s", printBuffer.c_str());
 	}
 
 	// Success
+	return fail;
+}
+
+//----------------------------------------------
+
+// In this test we'll use the debug functions to update a script parameter directly on the stack
+
+void DebugCall()
+{
+	asIScriptContext *ctx = asGetActiveContext();
+
+	// Get the address of the output parameter
+	void *varPointer = ctx->GetAddressOfVar(0, 0);
+
+	// We got the address to the reference to the handle
+	CScriptString **str = *(CScriptString***)varPointer;
+
+	// Set the handle to point to a new string
+	*str = new CScriptString("test");
+}
+
+bool Test2()
+{
+	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
+		return false;
+
+	bool fail = false;
+	COutStream out;
+	int r;
+
+	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+	RegisterScriptString(engine);
+	engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+	engine->RegisterGlobalFunction("void debugCall()", asFUNCTION(DebugCall), asCALL_CDECL);
+
+	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+
+	const char *script = 
+		"void func(string@ &out output) \n"
+		"{ \n"
+		"  debugCall(); \n"
+		"  assert( output == 'test' ); \n"
+		"} \n";
+
+	mod->AddScriptSection("script", script);
+	r = mod->Build();
+	if( r < 0 )
+		TEST_FAILED;
+
+	r = ExecuteString(engine, "string @o; func(o); assert( o == 'test' );", mod);
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
+
+	engine->Release();
+
 	return fail;
 }
 

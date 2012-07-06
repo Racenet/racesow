@@ -52,8 +52,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\win32\include\msvc;..\..\libsrcs\angelscript\angelSVN\sdk\angelscript\include;..\win32\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\win32\include\msvc;..\..\libsrcs\angelscript\angelSVN\sdk\angelscript\include;..\..\libsrcs\angelscript\angelSVN\sdk\add_on\scriptarray;..\win32\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_SECURE_SCL=0"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -82,14 +82,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="angelscriptd.lib"
+				AdditionalDependencies="angelscript.lib"
 				OutputFile="..\Debug\x86\libs\angelwrap_x86.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\win32\x86\lib\debug"
 				ManifestFile=".\Debug\x86\$(TargetFileName).intermediate.manifest"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile=".\angelwrap.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug\x86\angelwrap_x86.pdb"
 				GenerateMapFile="true"
@@ -158,7 +158,7 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\win32\include\msvc;..\..\libsrcs\angelscript\angelSVN\sdk\angelscript\include;..\win32\include"
+				AdditionalIncludeDirectories="..\win32\include\msvc;..\..\libsrcs\angelscript\angelSVN\sdk\angelscript\include;..\..\libsrcs\angelscript\angelSVN\sdk\add_on\scriptarray;..\win32\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				ExceptionHandling="1"
@@ -196,7 +196,7 @@
 				AdditionalLibraryDirectories="..\win32\x86\lib\release"
 				ManifestFile=".\Release\x86\$(TargetFileName).intermediate.manifest"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile=".\angelwrap.def"
+				ModuleDefinitionFile=""
 				ProgramDatabaseFile=".\Release\x86\angelwrap_x86.pdb"
 				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
@@ -436,6 +436,10 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath="..\gameshared\q_math.c"
+				>
+			</File>
+			<File
 				RelativePath="..\gameshared\q_shared.c"
 				>
 			</File>
@@ -451,6 +455,46 @@
 				RelativePath=".\qas_syscalls.cpp"
 				>
 			</File>
+			<Filter
+				Name="addon"
+				>
+				<File
+					RelativePath=".\addon\addon_any.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_cvar.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_dictionary.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_math.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_scriptarray.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_string.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_stringutils.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_time.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_vec3.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -458,6 +502,14 @@
 			>
 			<File
 				RelativePath="..\..\libsrcs\angelscript\angelSVN\sdk\angelscript\include\angelscript.h"
+				>
+			</File>
+			<File
+				RelativePath="..\gameshared\q_angeliface.h"
+				>
+			</File>
+			<File
+				RelativePath="..\gameshared\q_math.h"
 				>
 			</File>
 			<File
@@ -476,15 +528,51 @@
 				RelativePath=".\qas_syscalls.h"
 				>
 			</File>
+			<Filter
+				Name="addon"
+				>
+				<File
+					RelativePath=".\addon\addon_any.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_cvar.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_dictionary.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_math.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_scriptarray.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_string.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_stringutils.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_time.h"
+					>
+				</File>
+				<File
+					RelativePath=".\addon\addon_vec3.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
-			<File
-				RelativePath="angelwrap.def"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

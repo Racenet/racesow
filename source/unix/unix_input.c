@@ -1,30 +1,41 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 //#define KEYBINDINGS_HARDCODED
 //#define PRINT_HARDCODING_TABLES
 //#define MAX_HARDCODED_KEYS 118 // also in x11_hardcoded.h
+#ifdef __linux__
+#define WSW_EVDEV
+#endif
 
 #include "../client/client.h"
 #include "x11.h"
 #ifdef KEYBINDINGS_HARDCODED
 #include "x11_hardcoded.h"
+#endif
+
+#ifdef WSW_EVDEV
+#include <linux/input.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #endif
 
 // TODO: add in_mouse?
@@ -41,12 +52,193 @@ static qboolean mouse_active = qfalse;
 static qboolean input_active = qfalse;
 static qboolean dgamouse = qfalse;
 
+#ifdef WSW_EVDEV
+static cvar_t *m_raw;
+static int *m_evdev_fds = 0;
+static int m_evdev_num = 0;
+#endif
+
 static int mx, my;
 
 static qboolean ignore_one = qfalse;
 static qboolean go_fullscreen_on_focus = qfalse;
 
 int Sys_XTimeToSysTime( unsigned long xtime );
+int Sys_EvdevTimeToSysTime( struct timeval *time );
+
+//============================================
+
+// EVDEV STUFF
+#ifdef WSW_EVDEV
+
+// make sure this has a trailing slash
+#define EVDEV_DIR	"/dev/input/"
+
+// thx to xf86-input-event
+#define LONG_BITS (sizeof(long) * 8)
+#define NLONGS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
+#define test_bit(bit, array) ((array[(bit) / LONG_BITS]) & (1L << ((bit) % LONG_BITS)))
+
+#define show_bit(bit, array) Com_Printf("\t%s: %d\n", #bit , test_bit( bit, array ) );
+
+qboolean evdev_ismouse( int fd )
+{
+	long event_bits[NLONGS(EV_CNT)];
+
+	memset( event_bits, 0, sizeof( event_bits ) );
+	if( ioctl( fd, EVIOCGBIT(0, EV_MAX), event_bits) < 0 )
+		return qfalse;	// jag vet inte
+
+	//show_bit( EV_REL, event_bits );
+	//show_bit( EV_KEY, event_bits );
+	//show_bit( EV_ABS, event_bits );
+
+	if( !test_bit( EV_REL, event_bits ) )
+		return qfalse;
+
+	if( !test_bit( EV_KEY, event_bits ) )
+		return qfalse;
+
+	return qtrue;
+}
+
+// callback for scandir
+int evdev_filter( const struct dirent *de )
+{
+	char *filename;
+	int fd;
+
+	// check that we have character file
+	if( de->d_type != DT_CHR )
+		return 0;
+
+	filename = Mem_TempMalloc( strlen( EVDEV_DIR ) + strlen( de->d_name ) + 1 );
+	strcpy( filename, EVDEV_DIR );
+	strcat( filename, de->d_name );
+
+	// open the file and see if we have a mouse
+	fd = open( filename, O_RDONLY );
+	Mem_TempFree( filename );
+	if( fd != -1 )
+	{
+		if( evdev_ismouse( fd ) )
+		{
+			close( fd );
+			return 1;
+		}
+
+		close( fd );
+	}
+
+	return 0;
+}
+
+int evdev_scandevices( void )
+{
+	struct dirent **de;	// list of pointers
+	char *filename;
+	char deviceName[256];
+	int n;
+
+	if( m_evdev_fds )
+	{
+		free( m_evdev_fds );
+		m_evdev_fds = 0;
+	}
+	m_evdev_num = 0;
+
+	n = scandir( EVDEV_DIR, &de, evdev_filter, NULL );
+	if( n > 0 )
+	{
+		m_evdev_fds = calloc( n, sizeof( *m_evdev_fds ) );
+		m_evdev_num = n;
+
+		while( n-- )
+		{
+			filename = Mem_TempMalloc( strlen( EVDEV_DIR ) + strlen( de[n]->d_name ) + 1 );
+			strcpy( filename, EVDEV_DIR );
+			strcat( filename, de[n]->d_name );
+
+			m_evdev_fds[n] = open( filename, O_RDONLY | O_NONBLOCK );
+
+			// some nice information about the device
+			if( ioctl( m_evdev_fds[n], EVIOCGNAME(sizeof(deviceName)-1), deviceName) < 0 )
+				deviceName[0] = '\0';
+
+			Com_Printf( "Evdev: Found %s (%s)\n", deviceName, filename );
+
+			Mem_TempFree( filename );
+			free( de[n] );
+		}
+
+		free( de );
+	}
+
+	return m_evdev_num;
+}
+
+void evdev_closedevices( void )
+{
+	while( m_evdev_num-- > 0 )
+		close( m_evdev_fds[m_evdev_num] );
+
+	free( m_evdev_fds );
+	m_evdev_fds = 0;
+}
+
+void evdev_read( void )
+{
+	struct input_event evs[16], *ev;
+	int i, j, numevs, time;
+	size_t bytes;
+
+	// FIXME: select
+
+	for( i = 0; i < m_evdev_num; i++ )
+	{
+		do
+		{
+			bytes = read( m_evdev_fds[i], evs, sizeof( evs ) );
+			if( !bytes )
+				break;
+
+			numevs = bytes / sizeof( evs[0] );
+
+			for( j = 0, ev = evs; j < numevs; j++, ev++ )
+			{
+				switch( ev->type )
+				{
+				case EV_REL:
+					if( ev->code == REL_Y )
+						my += ev->value;
+					else if( ev->code == REL_X )
+						mx += ev->value;
+					else if( ev->code == REL_WHEEL )
+					{
+						time = Sys_EvdevTimeToSysTime( &ev->time );
+						Key_Event( ev->value < 0 ? K_MWHEELDOWN : K_MWHEELUP, 1, time );
+						Key_Event( ev->value < 0 ? K_MWHEELDOWN : K_MWHEELUP, 0, time );
+					}
+
+					break;
+
+				case EV_KEY:
+					time = Sys_EvdevTimeToSysTime( &ev->time );
+					if( ev->code >= BTN_LEFT && ev->code <= BTN_TASK  )
+						Key_MouseEvent( K_MOUSE1 + ( ev->code - BTN_LEFT ), ev->value, time );
+
+					break;
+				default:
+					break;
+				}
+			}
+		} while( bytes == sizeof( evs ) );
+	}
+}
+
+#endif
+
+//============================================
 
 static Cursor CreateNullCursor( Display *display, Window root )
 {
@@ -76,18 +268,19 @@ static Cursor CreateNullCursor( Display *display, Window root )
 static void install_grabs( void )
 {
 	int res;
+	int fevent;
 
 	assert( x11display.dpy && x11display.win );
 
- 	if( !x11display.features.wmStateFullscreen )
-  	{
-  		res = XGrabKeyboard( x11display.dpy, x11display.win, False, GrabModeAsync, GrabModeAsync, CurrentTime );
- 		if( res != GrabSuccess )
- 		{
- 			Com_Printf( "Warning: XGrabKeyboard failed\n" );
- 			return;
- 		}
- 	}
+	if( !x11display.features.wmStateFullscreen )
+	{
+		res = XGrabKeyboard( x11display.dpy, x11display.win, False, GrabModeAsync, GrabModeAsync, CurrentTime );
+		if( res != GrabSuccess )
+		{
+			Com_Printf( "Warning: XGrabKeyboard failed\n" );
+			return;
+		}
+	}
 
 	XDefineCursor( x11display.dpy, x11display.win, CreateNullCursor( x11display.dpy, x11display.win ) );
 
@@ -110,7 +303,7 @@ static void install_grabs( void )
 		{
 			XF86DGADirectVideo( x11display.dpy, x11display.scr, XF86DGADirectMouse );
 			XWarpPointer( x11display.dpy, None, x11display.win, 0, 0, 0, 0,
-		              x11display.win_width/2, x11display.win_height/2 );
+				x11display.win_width/2, x11display.win_height/2 );
 			dgamouse = qtrue;
 		}
 		else
@@ -124,7 +317,7 @@ static void install_grabs( void )
 	else
 	{
 		XWarpPointer( x11display.dpy, None, x11display.win, 0, 0, 0, 0,
-		              x11display.win_width/2, x11display.win_height/2 );
+			x11display.win_width/2, x11display.win_height/2 );
 	}
 
 	ignore_one = qtrue; // first mouse update after install_grabs is ignored
@@ -134,6 +327,18 @@ static void install_grabs( void )
 	in_dgamouse->modified = qfalse;
 
 	input_active = qtrue;
+
+	// init X Input method, needed by Xutf8LookupString
+	x11display.im = XOpenIM( x11display.dpy, NULL, NULL, NULL );
+	x11display.ic = XCreateIC( x11display.im,
+		XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+		XNClientWindow, x11display.win,
+		NULL );
+	if ( x11display.ic )
+	{
+		XGetICValues( x11display.ic, XNFilterEvents, &fevent, NULL );
+		XSelectInput( x11display.dpy, x11display.win, fevent | x11display.wa.event_mask );
+	}
 }
 
 static void uninstall_grabs( void )
@@ -362,8 +567,20 @@ static char *XLateKey( XKeyEvent *ev, int *key )
 #endif
 
 	*key = 0;
+	memset( buf, 0, sizeof buf ); // XLookupString doesn't zero-terminate the buffer
 
-	XLookupRet = XLookupString( ev, buf, sizeof buf, &keysym, 0 );
+	XLookupRet = 0;
+#ifdef X_HAVE_UTF8_STRING
+	if ( x11display.ic )
+		XLookupRet = Xutf8LookupString( x11display.ic, ev, buf, sizeof buf, &keysym, 0 );
+#endif
+	if ( !XLookupRet )
+		XLookupRet = XLookupString( ev, buf, sizeof buf, &keysym, 0 );
+
+	// get keysym without modifiers, so that movement works when e.g. a cyrillic layout is selected
+	ev->state = 0;
+	keysym = XLookupKeysym (ev, 0);
+
 #ifdef KBD_DBG
 	ri.Printf( "XLookupString ret: %d buf: %s keysym: %x\n", XLookupRet, buf, keysym );
 #endif
@@ -499,28 +716,8 @@ static char *XLateKey( XKeyEvent *ev, int *key )
 	case XK_Scroll_Lock: *key = K_SCROLLLOCK; break;
 
 	default:
-		if( XLookupRet == 0 )
-		{
-			/*
-			   if (com_developer->value)
-			   {
-			    ri.Printf(PRINT_ALL, "Warning: XLookupString failed on KeySym %d\n", keysym);
-			   }
-			 */
-			return NULL;
-		}
-		else
-		{
-			// XK_* tests failed, but XLookupString got a buffer, so let's try it
-			*key = *(unsigned char *)buf;
-			if( *key >= 'A' && *key <= 'Z' )
-				*key = *key - 'A' + 'a';
-			// if ctrl is pressed, the keys are not between 'A' and 'Z', for instance ctrl-z == 26 ^Z ^C etc.
-			// see https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=19
-			else if( *key >= 1 && *key <= 26 )
-				*key = *key + 'a' - 1;
-		}
-		break;
+		if (keysym >= 32 && keysym <= 126)
+			*key = keysym;
 	}
 
 	return buf;
@@ -529,12 +726,12 @@ static char *XLateKey( XKeyEvent *ev, int *key )
 #endif // KEYBINDINGS_HARDCODED
 
 /**
- * XPending() actually performs a blocking read if no events available. From Fakk2, by way of
- * Heretic2, by way of SDL, original idea GGI project. The benefit of this approach over the quite
- * badly behaved XAutoRepeatOn/Off is that you get focus handling for free, which is a major win
- * with debug and windowed mode. It rests on the assumption that the X server will use the same
- * timestamp on press/release event pairs for key repeats.
- */
+* XPending() actually performs a blocking read if no events available. From Fakk2, by way of
+* Heretic2, by way of SDL, original idea GGI project. The benefit of this approach over the quite
+* badly behaved XAutoRepeatOn/Off is that you get focus handling for free, which is a major win
+* with debug and windowed mode. It rests on the assumption that the X server will use the same
+* timestamp on press/release event pairs for key repeats.
+*/
 static qboolean X11_PendingInput( void )
 {
 	assert( x11display.dpy );
@@ -572,8 +769,8 @@ static qboolean repeated_press( XEvent *event )
 		XPeekEvent( x11display.dpy, &peekevent );
 
 		if( ( peekevent.type == KeyPress ) &&
-		   ( peekevent.xkey.keycode == event->xkey.keycode ) &&
-		   ( peekevent.xkey.time == event->xkey.time ) )
+			( peekevent.xkey.keycode == event->xkey.keycode ) &&
+			( peekevent.xkey.time == event->xkey.time ) )
 		{
 			repeated = qtrue;
 			// we only skip the KeyRelease event, so we send many key down events, but no releases, while repeating
@@ -629,193 +826,211 @@ static void HandleEvents( void )
 	qboolean dowarp = qfalse, was_focused = focus;
 	int mwx = x11display.win_width / 2;
 	int mwy = x11display.win_height / 2;
-	unsigned char *p;
+	char *p;
 	int key = 0;
 	int time = 0;
 
 	assert( x11display.dpy && x11display.win );
 
-	if( mouse_active && !dgamouse )
+#ifdef WSW_EVDEV
+	if( mouse_active && m_evdev_num )
 	{
-		int root_x, root_y, win_x, win_y;
-		unsigned int mask;
-		Window root, child;
-
-		if( XQueryPointer( x11display.dpy, x11display.win, &root, &child,
-		                   &root_x, &root_y, &win_x, &win_y, &mask ) )
-		{
-			mx += ( (int)win_x - mwx );
-			my += ( (int)win_y - mwy );
-			mwx = win_x;
-			mwy = win_y;
-
-			if( mx || my )
-				dowarp = qtrue;
-
-			if( ignore_one )
-			{
-				mx = my = 0;
-				ignore_one = qfalse;
-			}
-		}
+		evdev_read();
 	}
-
-
-	while( XPending( x11display.dpy ) )
-	{
-		XNextEvent( x11display.dpy, &event );
-
-		switch( event.type )
+	else
+#endif
+		if( mouse_active && !dgamouse )
 		{
-		case KeyPress:
-			time = Sys_XTimeToSysTime(event.xkey.time);
-			p = (unsigned char *)XLateKey( &event.xkey, &key );
-			if( key >= 0 && key <= 256 )
-				Key_Event( key, qtrue, time );
-			if( p )
+			int root_x, root_y, win_x, win_y;
+			unsigned int mask;
+			Window root, child;
+
+			if( XQueryPointer( x11display.dpy, x11display.win, &root, &child,
+				&root_x, &root_y, &win_x, &win_y, &mask ) )
 			{
-				while( *p )
-				{
-					// the delete character is an ASCII code 127 (HACK!)
-					if( *p != 127 )
-						Key_CharEvent( key, *p );
-					p++;
-				}
-			}
-			break;
+				mx += ( (int)win_x - mwx );
+				my += ( (int)win_y - mwy );
+				mwx = win_x;
+				mwy = win_y;
 
-		case KeyRelease:
-			if( repeated_press( &event ) )
-				break; // don't send release events when repeating
+				if( mx || my )
+					dowarp = qtrue;
 
-			time = Sys_XTimeToSysTime(event.xkey.time);
-			XLateKey( &event.xkey, &key );
-			Key_Event( key, event.type == KeyPress, time );
-			break;
-
-		case MotionNotify:
-			if( mouse_active && dgamouse )
-			{
-				mx += event.xmotion.x_root;
-				my += event.xmotion.y_root;
 				if( ignore_one )
 				{
 					mx = my = 0;
 					ignore_one = qfalse;
 				}
 			}
-			break;
+		}
 
-		case ButtonPress:
-			if( ( cls.key_dest == key_console ) && !in_grabinconsole->integer )
-				break;
-			time = Sys_XTimeToSysTime(event.xkey.time);
-			if( event.xbutton.button == 1 ) Key_MouseEvent( K_MOUSE1, 1, time );
-			else if( event.xbutton.button == 2 ) Key_MouseEvent( K_MOUSE3, 1, time );
-			else if( event.xbutton.button == 3 ) Key_MouseEvent( K_MOUSE2, 1, time );
-			else if( event.xbutton.button == 4 ) Key_Event( K_MWHEELUP, 1, time );
-			else if( event.xbutton.button == 5 ) Key_Event( K_MWHEELDOWN, 1, time );
-			else if( event.xbutton.button >= 6 && event.xbutton.button <= 10 ) Key_MouseEvent( K_MOUSE4+event.xbutton.button-6, 1, time );
-			break;
 
-		case ButtonRelease:
-			if( ( cls.key_dest == key_console ) && !in_grabinconsole->integer )
-				break;
-			time = Sys_XTimeToSysTime(event.xkey.time);
-			if( event.xbutton.button == 1 ) Key_MouseEvent( K_MOUSE1, 0, time );
-			else if( event.xbutton.button == 2 ) Key_MouseEvent( K_MOUSE3, 0, time );
-			else if( event.xbutton.button == 3 ) Key_MouseEvent( K_MOUSE2, 0, time );
-			else if( event.xbutton.button == 4 ) Key_Event( K_MWHEELUP, 0, time );
-			else if( event.xbutton.button == 5 ) Key_Event( K_MWHEELDOWN, 0, time );
-			else if( event.xbutton.button >= 6 && event.xbutton.button <= 10 ) Key_MouseEvent( K_MOUSE4+event.xbutton.button-6, 0, time );
-			break;
+		while( XPending( x11display.dpy ) )
+		{
+			XNextEvent( x11display.dpy, &event );
 
-		case FocusIn:
-			if( !focus )
+			switch( event.type )
 			{
-				focus = qtrue;
-			}
-			break;
-
-		case FocusOut:
-			if( focus )
-			{
-				Key_ClearStates();
-				focus = qfalse;
-			}
-			break;
-
-		case ClientMessage:
-			if( event.xclient.data.l[0] == x11display.wmDeleteWindow )
-				Cbuf_ExecuteText( EXEC_NOW, "quit" );
-			break;
-
-		case MapNotify:
-			mapped = qtrue;
-			if( x11display.modeset )
-			{
-				if ( x11display.dpy && x11display.win )
+			case KeyPress:
+				time = Sys_XTimeToSysTime(event.xkey.time);
+				p = XLateKey( &event.xkey, &key );
+				if( key )
+					Key_Event( key, qtrue, time );
+				while ( p && *p )
 				{
-					XSetInputFocus( x11display.dpy, x11display.win, RevertToPointerRoot, CurrentTime );
-					x11display.modeset = qfalse;
+					qwchar wc = Q_GrabWCharFromUtf8String( (const char **)&p );
+					Key_CharEvent( key, wc );
 				}
-			}
-			if( input_active )
-			{
-				uninstall_grabs();
-				install_grabs();
-			}
-			break;
+				break;
 
-		case ConfigureNotify:
-			_NETWM_CHECK_FULLSCREEN();
-			break;
+			case KeyRelease:
+				if( repeated_press( &event ) )
+					break; // don't send release events when repeating
 
-		case PropertyNotify:
-			if( event.xproperty.window == x11display.win )
-			{
-				if ( event.xproperty.atom == x11display.wmState )
+				time = Sys_XTimeToSysTime(event.xkey.time);
+				XLateKey( &event.xkey, &key );
+				Key_Event( key, event.type == KeyPress, time );
+				break;
+
+			case MotionNotify:
+#ifdef WSW_EVDEV
+				if( mouse_active && dgamouse && !m_evdev_num )
+#else
+				if( mouse_active && dgamouse )
+#endif
 				{
-					qboolean was_minimized = minimized;
-
-					_X11_CheckWMSTATE();
-
-					if( minimized != was_minimized )
+					mx += event.xmotion.x_root;
+					my += event.xmotion.y_root;
+					if( ignore_one )
 					{
-						// FIXME: find a better place for this?..
-						CL_SoundModule_Activate( !minimized );
+						mx = my = 0;
+						ignore_one = qfalse;
 					}
 				}
+				break;
+
+			case ButtonPress:
+				if( ( cls.key_dest == key_console ) && !in_grabinconsole->integer )
+					break;
+#ifdef WSW_EVDEV
+				if( m_evdev_num )
+					break;
+#endif
+				time = Sys_XTimeToSysTime(event.xkey.time);
+				if( event.xbutton.button == 1 ) Key_MouseEvent( K_MOUSE1, 1, time );
+				else if( event.xbutton.button == 2 ) Key_MouseEvent( K_MOUSE3, 1, time );
+				else if( event.xbutton.button == 3 ) Key_MouseEvent( K_MOUSE2, 1, time );
+				else if( event.xbutton.button == 4 ) Key_Event( K_MWHEELUP, 1, time );
+				else if( event.xbutton.button == 5 ) Key_Event( K_MWHEELDOWN, 1, time );
+				else if( event.xbutton.button >= 6 && event.xbutton.button <= 10 ) Key_MouseEvent( K_MOUSE4+event.xbutton.button-6, 1, time );
+				break;
+
+			case ButtonRelease:
+				if( ( cls.key_dest == key_console ) && !in_grabinconsole->integer )
+					break;
+#ifdef WSW_EVDEV
+				if( m_evdev_num )
+					break;
+#endif
+				time = Sys_XTimeToSysTime(event.xkey.time);
+				if( event.xbutton.button == 1 ) Key_MouseEvent( K_MOUSE1, 0, time );
+				else if( event.xbutton.button == 2 ) Key_MouseEvent( K_MOUSE3, 0, time );
+				else if( event.xbutton.button == 3 ) Key_MouseEvent( K_MOUSE2, 0, time );
+				else if( event.xbutton.button == 4 ) Key_Event( K_MWHEELUP, 0, time );
+				else if( event.xbutton.button == 5 ) Key_Event( K_MWHEELDOWN, 0, time );
+				else if( event.xbutton.button >= 6 && event.xbutton.button <= 10 ) Key_MouseEvent( K_MOUSE4+event.xbutton.button-6, 0, time );
+				break;
+
+			case FocusIn:
+				if( x11display.ic )
+					XSetICFocus(x11display.ic);
+				if( !focus )
+				{
+					focus = qtrue;
+				}
+				break;
+
+			case FocusOut:
+				if( x11display.ic )
+					XUnsetICFocus(x11display.ic);
+				if( focus )
+				{
+					Key_ClearStates();
+					focus = qfalse;
+				}
+				break;
+
+			case ClientMessage:
+				if( event.xclient.data.l[0] == x11display.wmDeleteWindow )
+					Cbuf_ExecuteText( EXEC_NOW, "quit" );
+				break;
+
+			case MapNotify:
+				mapped = qtrue;
+				if( x11display.modeset )
+				{
+					if ( x11display.dpy && x11display.win )
+					{
+						XSetInputFocus( x11display.dpy, x11display.win, RevertToPointerRoot, CurrentTime );
+						x11display.modeset = qfalse;
+					}
+				}
+				if( input_active )
+				{
+					uninstall_grabs();
+					install_grabs();
+				}
+				break;
+
+			case ConfigureNotify:
+				_NETWM_CHECK_FULLSCREEN();
+				break;
+
+			case PropertyNotify:
+				if( event.xproperty.window == x11display.win )
+				{
+					if ( event.xproperty.atom == x11display.wmState )
+					{
+						qboolean was_minimized = minimized;
+
+						_X11_CheckWMSTATE();
+
+						if( minimized != was_minimized )
+						{
+							// FIXME: find a better place for this?..
+							CL_SoundModule_Activate( !minimized );
+						}
+					}
+				}
+				break;
 			}
-			break;
 		}
-	}
 
-	if( dowarp )
-	{
-		XWarpPointer( x11display.dpy, None, x11display.win, 0, 0, 0, 0,
-		              x11display.win_width/2, x11display.win_height/2 );
-	}
-
-	// set fullscreen or windowed mode upon focus in/out events if:
-	//  a) lost focus in fullscreen -> windowed
-	//  b) received focus -> fullscreen if a)
-	if( ( focus != was_focused ) )
-	{
-		if( x11display.features.wmStateFullscreen )
+		if( dowarp )
 		{
-			if( !focus && Cvar_Value( "vid_fullscreen" ) )
+			XWarpPointer( x11display.dpy, None, x11display.win, 0, 0, 0, 0,
+				x11display.win_width/2, x11display.win_height/2 );
+		}
+
+		// set fullscreen or windowed mode upon focus in/out events if:
+		//  a) lost focus in fullscreen -> windowed
+		//  b) received focus -> fullscreen if a)
+		if( ( focus != was_focused ) )
+		{
+			if( x11display.features.wmStateFullscreen )
 			{
-				go_fullscreen_on_focus = qtrue;
-				_NETWM_SET_FULLSCREEN( qfalse );
-			}
-			else if( focus && go_fullscreen_on_focus )
-			{
-				go_fullscreen_on_focus = qfalse;
-				_NETWM_SET_FULLSCREEN( qtrue );
+				if( !focus && Cvar_Value( "vid_fullscreen" ) )
+				{
+					go_fullscreen_on_focus = qtrue;
+					_NETWM_SET_FULLSCREEN( qfalse );
+				}
+				else if( focus && go_fullscreen_on_focus )
+				{
+					go_fullscreen_on_focus = qfalse;
+					_NETWM_SET_FULLSCREEN( qtrue );
+				}
 			}
 		}
-	}
 }
 
 /*****************************************************************************/
@@ -863,6 +1078,15 @@ void IN_Init( void )
 	in_dgamouse = Cvar_Get( "in_dgamouse", "1", CVAR_ARCHIVE );
 	in_grabinconsole = Cvar_Get( "in_grabinconsole", "0", CVAR_ARCHIVE );
 
+#ifdef WSW_EVDEV
+	m_raw = Cvar_Get( "m_raw", "0", CVAR_ARCHIVE );
+	if( m_raw->integer )
+	{
+		if( evdev_scandevices() )
+			Com_Printf( "IN_Init: Using evdev mouse\n" );
+	}
+#endif
+
 	input_inited = qtrue;
 	input_active = qfalse; // will be activated by IN_Frame if necessary
 	mapped = qfalse;
@@ -874,6 +1098,11 @@ void IN_Shutdown( void )
 		return;
 
 	uninstall_grabs();
+
+#ifdef WSW_EVDEV
+	evdev_closedevices();
+#endif
+
 	input_inited = qfalse;
 }
 

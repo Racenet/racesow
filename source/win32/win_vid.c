@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // Main windowed and fullscreen graphics interface module. This module
 // is used for both the software and OpenGL rendering versions of the
 // Quake refresh engine.
@@ -114,10 +114,8 @@ LRESULT CALLBACK LLWinKeyHook( int Code, WPARAM wParam, LPARAM lParam )
 }
 
 /*
-   ====================
-   VID_EnableAltTab
-   ====================
- */
+* VID_EnableAltTab
+*/
 void VID_EnableAltTab( qboolean enable )
 {
 	if( enable )
@@ -157,10 +155,8 @@ void VID_EnableAltTab( qboolean enable )
 }
 
 /*
-   ====================
-   VID_EnableWinKeys
-   ====================
- */
+* VID_EnableWinKeys
+*/
 void VID_EnableWinKeys( qboolean enable )
 {
 	if( s_win95 )
@@ -187,12 +183,12 @@ void VID_EnableWinKeys( qboolean enable )
 }
 
 /*
-   ==========================================================================
+==========================================================================
 
-   DLL GLUE
+DLL GLUE
 
-   ==========================================================================
- */
+==========================================================================
+*/
 
 // wsw : pb :  start of paste from Q3
 static byte s_scantokey[128] =
@@ -218,12 +214,10 @@ static byte s_scantokey[128] =
 };
 
 /*
-   =======
-   IN_MapKey
-
-   Map from windows to quake keynums
-   =======
- */
+* IN_MapKey
+* 
+* Map from windows to quake keynums
+*/
 int IN_MapKey( int key )
 {
 	int result;
@@ -321,17 +315,15 @@ static void AppActivate( BOOL fActive, BOOL minimize, BOOL destroy )
 }
 
 /*
-   ====================
-   MainWndProc
-
-   main window procedure
-   ====================
- */
+* MainWndProc
+* 
+* main window procedure
+*/
 LONG WINAPI MainWndProc(
-        HWND hWnd,
-        UINT uMsg,
-        WPARAM wParam,
-        LPARAM lParam )
+						HWND hWnd,
+						UINT uMsg,
+						WPARAM wParam,
+						LPARAM lParam )
 {
 	if( uMsg == MSH_MOUSEWHEEL )
 	{
@@ -400,55 +392,55 @@ LONG WINAPI MainWndProc(
 		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 
 	case WM_ACTIVATE:
-	{
-		int fActive, fMinimized;
-
-		// KJB: Watch this for problems in fullscreen modes with Alt-tabbing.
-		fActive = LOWORD( wParam );
-		fMinimized = (BOOL) HIWORD( wParam );
-
-		AppActivate( fActive != WA_INACTIVE, fMinimized, FALSE );
-
-		if( fActive != WA_INACTIVE )
 		{
-			SetForegroundWindow( cl_hwnd );
-			ShowWindow( cl_hwnd, SW_RESTORE );
+			int fActive, fMinimized;
+
+			// KJB: Watch this for problems in fullscreen modes with Alt-tabbing.
+			fActive = LOWORD( wParam );
+			fMinimized = (BOOL) HIWORD( wParam );
+
+			AppActivate( fActive != WA_INACTIVE, fMinimized, FALSE );
+
+			if( fActive != WA_INACTIVE )
+			{
+				SetForegroundWindow( cl_hwnd );
+				ShowWindow( cl_hwnd, SW_RESTORE );
+			}
+			else
+			{
+				if( vid_fullscreen->integer )
+					ShowWindow( cl_hwnd, SW_MINIMIZE );
+			}
 		}
-		else
-		{
-			if( vid_fullscreen->integer )
-				ShowWindow( cl_hwnd, SW_MINIMIZE );
-		}
-	}
 		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 
 	case WM_MOVE:
-	{
-		int xPos, yPos;
-		RECT r;
-		int style;
-
-		if( !vid_fullscreen->integer )
 		{
-			xPos = (short) LOWORD( lParam ); // horizontal position
-			yPos = (short) HIWORD( lParam ); // vertical position
+			int xPos, yPos;
+			RECT r;
+			int style;
 
-			r.left   = 0;
-			r.top    = 0;
-			r.right  = 1;
-			r.bottom = 1;
+			if( !vid_fullscreen->integer )
+			{
+				xPos = (short) LOWORD( lParam ); // horizontal position
+				yPos = (short) HIWORD( lParam ); // vertical position
 
-			style = GetWindowLong( hWnd, GWL_STYLE );
-			AdjustWindowRect( &r, style, FALSE );
+				r.left   = 0;
+				r.top    = 0;
+				r.right  = 1;
+				r.bottom = 1;
 
-			Cvar_SetValue( "vid_xpos", xPos + r.left );
-			Cvar_SetValue( "vid_ypos", yPos + r.top );
-			vid_xpos->modified = qfalse;
-			vid_ypos->modified = qfalse;
-			if( ActiveApp )
-				IN_Activate( qtrue );
+				style = GetWindowLong( hWnd, GWL_STYLE );
+				AdjustWindowRect( &r, style, FALSE );
+
+				Cvar_SetValue( "vid_xpos", xPos + r.left );
+				Cvar_SetValue( "vid_ypos", yPos + r.top );
+				vid_xpos->modified = qfalse;
+				vid_ypos->modified = qfalse;
+				if( ActiveApp )
+					IN_Activate( qtrue );
+			}
 		}
-	}
 		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 
 		// this is complicated because Win32 seems to pack multiple mouse events into
@@ -462,17 +454,17 @@ LONG WINAPI MainWndProc(
 	case WM_MOUSEMOVE:
 	case WM_XBUTTONUP:
 	case WM_XBUTTONDOWN:
-	{
-		int i, temp = 0;
-		int mbuttons[] = { MK_LBUTTON, MK_RBUTTON, MK_MBUTTON,
-			           MK_XBUTTON1, MK_XBUTTON2, MK_XBUTTON3, MK_XBUTTON4, MK_XBUTTON5 };
+		{
+			int i, temp = 0;
+			int mbuttons[] = { MK_LBUTTON, MK_RBUTTON, MK_MBUTTON,
+				MK_XBUTTON1, MK_XBUTTON2, MK_XBUTTON3, MK_XBUTTON4, MK_XBUTTON5 };
 
-		for( i = 0; i < mouse_buttons; i++ )
-			if( wParam & mbuttons[i] )
-				temp |= ( 1<<i );
+			for( i = 0; i < mouse_buttons; i++ )
+				if( wParam & mbuttons[i] )
+					temp |= ( 1<<i );
 
-		IN_MouseEvent( temp );
-	}
+			IN_MouseEvent( temp );
+		}
 		break;
 
 	case WM_SYSCOMMAND:
@@ -480,13 +472,8 @@ LONG WINAPI MainWndProc(
 			return 0;
 		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 	case WM_SYSKEYDOWN:
-		if( wParam == VK_RETURN )
-		{
-			if( vid_fullscreen )
-			{
-				Cvar_SetValue( "vid_fullscreen", !vid_fullscreen->integer );
-				Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
-			}
+		if( wParam == VK_RETURN ) {
+			Cbuf_ExecuteText( EXEC_APPEND, "toggle vid_fullscreen\n" );
 			return 0;
 		}
 		if( wParam == VK_F10)
@@ -531,6 +518,10 @@ LONG WINAPI MainWndProc(
 		}
 		break;
 
+	case WM_ENTERSIZEMOVE:
+		CL_SoundModule_Clear();
+		break;
+
 	default: // pass all unhandled messages to DefWindowProc
 		return DefWindowProcW( hWnd, uMsg, wParam, lParam );
 	}
@@ -550,10 +541,11 @@ void *VID_GetWindowHandle( void )
 /*
 ** VID_Sys_Init
 */
-int VID_Sys_Init( qboolean verbose )
+rserr_t VID_Sys_Init( int x, int y, int width, int height, qboolean fullScreen, qboolean wideScreen, qboolean verbose )
 {
 	extern cvar_t *vid_parentwid;
-	return R_Init( global_hInstance, MainWndProc, STR_TO_POINTER( vid_parentwid->string ), verbose );
+	return R_Init( global_hInstance, MainWndProc, STR_TO_POINTER( vid_parentwid->string ), 
+		x, y, width, height, fullScreen, wideScreen, verbose );
 }
 
 /*
@@ -586,4 +578,47 @@ void VID_Front_f( void )
 {
 	SetWindowLong( cl_hwnd, GWL_EXSTYLE, WS_EX_TOPMOST );
 	SetForegroundWindow( cl_hwnd );
+}
+
+/*
+** VID_GetScreenSize
+*/
+qboolean VID_GetScreenSize( int *width, int *height )
+{
+	DEVMODE dm;
+		
+	memset( &dm, 0, sizeof( dm ) );
+	dm.dmSize = sizeof( dm );
+
+	EnumDisplaySettings( NULL, ENUM_CURRENT_SETTINGS, &dm );
+
+	*width = dm.dmPelsWidth;
+	*height = dm.dmPelsHeight;
+
+	return qtrue;
+}
+
+/*
+** VID_FlashWindow
+*
+* Sends a flash message to inactive window
+*/
+void VID_FlashWindow( int count )
+{
+	FLASHWINFO fwi;
+
+	if( ActiveApp )
+		return;
+	if( !count )
+		return;
+
+	ZeroMemory(&fwi, sizeof(fwi));
+
+	fwi.cbSize = sizeof(fwi);
+	fwi.dwFlags = FLASHW_ALL;
+	fwi.dwTimeout = 0;
+	fwi.hwnd = cl_hwnd;
+	fwi.uCount = count;
+
+	FlashWindowEx(&fwi);
 }

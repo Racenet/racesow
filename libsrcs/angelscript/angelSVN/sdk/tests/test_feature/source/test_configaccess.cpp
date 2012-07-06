@@ -11,8 +11,8 @@ static void Func(asIScriptGeneric *)
 
 static void TypeAdd(asIScriptGeneric *gen)
 {
-	int *a = (int*)gen->GetArgAddress(0);
-	int *b = (int*)gen->GetArgAddress(1);
+	int *a = (int*)gen->GetObject();
+	int *b = (int*)gen->GetArgAddress(0);
 
 	gen->SetReturnDWord(*a + *b);
 }
@@ -23,6 +23,7 @@ bool Test()
 	int r;
 	CBufferedOutStream bout;
 	COutStream out;
+	asIScriptModule *mod;
 
 	float val;
 
@@ -36,30 +37,30 @@ bool Test()
 	r = engine->EndConfigGroup(); assert( r >= 0 );
 
 	// Make sure the default access is granted
-	r = engine->ExecuteString(0, "val = 1.3f"); 
+	r = ExecuteString(engine, "val = 1.3f"); 
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	// Make sure the default access can be turned off
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
-	r = engine->SetConfigGroupModuleAccess("group", asALL_MODULES, false); assert( r >= 0 );
+	
+	mod = engine->GetModule("ExecuteString", asGM_ALWAYS_CREATE);
+	mod->SetAccessMask(2); 
 
-	r = engine->ExecuteString(0, "val = 1.0f");
+	r = ExecuteString(engine, "val = 1.0f", mod);
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 
-	if( bout.buffer != "ExecuteString (1, 1) : Error   : 'val' is not declared\n"
-/*		               "ExecuteString (1, 5) : Error   : Reference is read-only\n"
-		               "ExecuteString (1, 5) : Error   : Not a valid lvalue\n"*/)
-		fail = true;
+	if( bout.buffer != "ExecuteString (1, 1) : Error   : 'val' is not declared\n")
+		TEST_FAILED;
 
 	// Make sure the default access can be overridden
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-	r = engine->SetConfigGroupModuleAccess("group", 0, true); assert( r >= 0 );
+	mod->SetAccessMask(1); 
 
-	r = engine->ExecuteString(0, "val = 1.0f");
+	r = ExecuteString(engine, "val = 1.0f", mod);
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 
@@ -67,28 +68,30 @@ bool Test()
 	// Test global functions
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+	engine->SetDefaultAccessMask(2);
 
 	r = engine->BeginConfigGroup("group"); assert( r >= 0 );
 	r = engine->RegisterGlobalFunction("void Func()", asFUNCTION(Func), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->EndConfigGroup(); assert( r >= 0 );
 
-	r = engine->SetConfigGroupModuleAccess("group", "m", false); assert( r >= 0 );
+	mod = engine->GetModule("ExecuteString", asGM_ALWAYS_CREATE);
+	mod->SetAccessMask(1); 
 
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
 	bout.buffer = "";
-	r = engine->ExecuteString("m", "Func()");
+	r = ExecuteString(engine, "Func()", mod);
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 
 	if( bout.buffer != "ExecuteString (1, 1) : Error   : No matching signatures to 'Func()'\n" )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->SetConfigGroupModuleAccess("group", "m", true); assert( r >= 0 );
+	mod->SetAccessMask(2);
 
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-	r = engine->ExecuteString("m", "Func()");
+	r = ExecuteString(engine, "Func()", mod);
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 
@@ -101,40 +104,48 @@ bool Test()
 	r = engine->RegisterObjectType("mytype", sizeof(int), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r >= 0 );
 	r = engine->EndConfigGroup(); assert( r >= 0 );
 
-	r = engine->SetConfigGroupModuleAccess("group", 0, false); assert( r >= 0 );
+	mod = engine->GetModule("ExecuteString", asGM_ALWAYS_CREATE);
+	mod->SetAccessMask(2); 
 
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "mytype a");
+	r = ExecuteString(engine, "mytype a", mod);
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 
 	if( bout.buffer != "ExecuteString (1, 1) : Error   : Type 'mytype' is not available for this module\n")
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 
 	//------------
-	// Test global operators
+	// Test class members in different config groups
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 
 	r = engine->RegisterObjectType("mytype", sizeof(int), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r >= 0 );
 
-	r = engine->BeginConfigGroup("group"); assert( r >= 0 );
-	r = engine->RegisterGlobalBehaviour(asBEHAVE_ADD, "mytype f(mytype &in, mytype &in)", asFUNCTION(TypeAdd), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->EndConfigGroup(); assert( r >= 0 );
-
-	r = engine->SetConfigGroupModuleAccess("group", 0, false); assert( r >= 0 );
+	r = engine->SetDefaultAccessMask(2);
+	r = engine->RegisterObjectMethod("mytype", "mytype opAdd(mytype &in)", asFUNCTION(TypeAdd), asCALL_GENERIC); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("mytype", "int val", 0); assert( r >= 0 );
+	
+	mod = engine->GetModule("ExecuteString", asGM_ALWAYS_CREATE);
+	mod->SetAccessMask(1); 
 
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "mytype a; a + a;");
-	if( r >= 0 )
-		fail = true;
+	r = ExecuteString(engine, "mytype a; a + a; a.val + a.val;", mod);
 
-	if( bout.buffer != "ExecuteString (1, 13) : Error   : No matching operator that takes the types 'mytype&' and 'mytype&' found\n")
-		fail = true;
+	// It should be possible to disallow individual class methods
+	if( r >= 0 )
+		TEST_FAILED;
+
+	if( bout.buffer != "ExecuteString (1, 13) : Error   : No matching operator that takes the types 'mytype' and 'mytype' found\n"
+		               "ExecuteString (1, 19) : Error   : 'val' is not a member of 'mytype'\n" )
+	{
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
+	}
 
 	engine->Release();
 

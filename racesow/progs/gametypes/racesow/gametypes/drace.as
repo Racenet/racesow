@@ -1,4 +1,4 @@
-cVar g_drace_max_victories( "g_drace_max_victories", "0", CVAR_ARCHIVE );
+Cvar g_drace_max_victories( "g_drace_max_victories", "0", CVAR_ARCHIVE );
 
 const int DRACE_ROUNDSTATE_NONE = 0;
 const int DRACE_ROUNDSTATE_PREROUND = 1;
@@ -138,7 +138,7 @@ class cDRACERound
         }
     }
 
-    void roundAnnouncementPrint( cString &string )
+    void roundAnnouncementPrint( String &string )
     {
         if ( string.len() <= 0 )
             return;
@@ -210,8 +210,8 @@ class cDRACERound
 
         if ( @this.roundWinner != null )
         {
-            cVar scoreLimit( "g_scorelimit", "", 0 );
-            if ( this.roundWinner.stats.score == scoreLimit.getInteger() )
+            Cvar scoreLimit( "g_scorelimit", "", 0 );
+            if ( this.roundWinner.stats.score == scoreLimit.get_integer() )
             {
                 this.roundAnnouncementPrint( S_COLOR_WHITE + this.roundWinner.getName() + S_COLOR_GREEN + " wins the game!" );
             }
@@ -491,7 +491,7 @@ class cDRACERound
         if ( @attacker == null || @attacker.client == null )
             return;
 
-        target.client.printMessage( "You were killed by " + attacker.client.getName() + " (health: " + rint( attacker.health ) + ", armor: " + rint( attacker.client.armor ) + ")\n" );
+        target.client.printMessage( "You were killed by " + attacker.client.getName() + " (health: " + int( attacker.health ) + ", armor: " + int( attacker.client.armor ) + ")\n" );
 
         for ( int i = 0; i < maxClients; i++ )
         {
@@ -511,7 +511,7 @@ class cDRACERound
     bool checkMaxVictories( cClient @client )
     {
         //we only check the max victories if the CVAR is set to 1 or more
-        if ( g_drace_max_victories.getValue() > 0 )
+        if ( g_drace_max_victories.get_value() > 0 )
         {
           //if not the same player, nbVictories set to 0, and last winner to current player
           if ( @client != @lastWinner )
@@ -523,7 +523,7 @@ class cDRACERound
           // number of victories incremented, and compared to the max autorized
           this.nbVictories++;
           
-          if ( this.nbVictories >= g_drace_max_victories.getInteger() )
+          if ( this.nbVictories >= g_drace_max_victories.get_integer() )
           {
             //reset
             @this.lastWinner = null;
@@ -577,7 +577,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         // if the gametype doesn't have a config file, create it
         if ( !G_FileExists( "configs/server/gametypes/drace.cfg" ) )
         {
-            cString config;
+            String config;
     
             // the config file doesn't exist or it's empty, create it
             config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
@@ -633,7 +633,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         	cItem @Item = G_GetItem( tag );
         	if( @Item == null)
         		continue;
-        	cString itemClassname = Item.getClassname();
+        	String itemClassname = Item.getClassname();
         	@from = null;
         	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
         	if( @item == null )
@@ -789,7 +789,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
     }
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args )
+    void scoreEvent( cClient @client, String &score_event, String &args )
     {
       if ( score_event == "dmg" )
       {
@@ -817,10 +817,10 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       }
     }
     
-    cString @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( uint maxlen )
     {
-      cString scoreboardMessage = "";
-      cString entry;
+      String scoreboardMessage = "";
+      String entry;
       cTeam @team;
       cClient @client;
       cEntity @ent;
@@ -935,7 +935,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         return false;
     }
     
-    /*bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    /*bool Command( cClient @client, String @cmdString, String @argsString, int argc )
     {
         if (cmdString == "resetcam")
         {
@@ -950,12 +950,12 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         }
         else if (cmdString == "max_victories")
         {
-          G_PrintMsg( client.getEnt(), "Current: " + g_drace_max_victories.getString() + "\n" );      
+          G_PrintMsg( client.getEnt(), "Current: " + g_drace_max_victories.get_string() + "\n" );      
           return true;
         }
       	else if ( cmdString == "callvotevalidate" )
       	{
-          cString vote = argsString.getToken( 0 );
+          String vote = argsString.getToken( 0 );
            
           if ( vote == "draw" )
           {
@@ -985,7 +985,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       	}
       	else if ( cmdString == "callvotepassed" )
       	{
-            cString vote = argsString.getToken( 0 );
+            String vote = argsString.getToken( 0 );
       
 
 
@@ -1044,22 +1044,22 @@ void DRACE_SetUpCountdown()
     G_RemoveAllProjectiles();
 
     // lock teams
-    bool any = false;
+    bool any_bool = false; //FIXME: any is now a keyword. i've changed it to any_bool but it really should get a more clarifying name from someone who knows what it's for -K1ll
     if ( gametype.isTeamBased )
     {
         for ( int team = TEAM_ALPHA; team < GS_MAX_TEAMS; team++ )
         {
             if ( G_GetTeam( team ).lock() )
-                any = true;
+                any_bool = true;
         }
     }
     else
     {
         if ( G_GetTeam( TEAM_PLAYERS ).lock() )
-            any = true;
+            any_bool = true;
     }
 
-    if ( any )
+    if ( any_bool )
         G_PrintMsg( null, "Teams locked.\n" );
 
     // Countdowns should be made entirely client side, because we now can
@@ -1134,7 +1134,7 @@ class Racesow_Player_Drace : Racesow_Player
  */
 class Command_RaceRestart_Drace : Command_RaceRestart
 {
-    bool validate(Racesow_Player @player, cString &args, int argc)
+    bool validate(Racesow_Player @player, String &args, int argc)
     {
         if( !Command_RaceRestart::validate( player, args, argc ) )
             return false;
@@ -1153,7 +1153,7 @@ class Command_ResetCam : Racesow_Command
         super( "Reset the Camera", "" ); //FIXME: Dunno if everything is right here
     }
 
-    bool execute(Racesow_Player @player, cString &args, int argc)
+    bool execute(Racesow_Player @player, String &args, int argc)
     {
           if ( @player.getClient() == @DRACERound.roundWinner || @player.getClient() == @DRACERound.roundChallenger )
           {
@@ -1173,7 +1173,7 @@ class Command_MaxVictories : Racesow_Command
         super( "", "" ); //FIXME: Description needed
     }
 
-    bool execute(Racesow_Player @player, cString &args, int argc)
+    bool execute(Racesow_Player @player, String &args, int argc)
     {
           G_PrintMsg( player.getClient().getEnt(), "Current: " + g_drace_max_victories.getString() + "\n" ); // why not player.sendMessage() ?
           return true;
@@ -1187,7 +1187,7 @@ class Command_CallvoteDraw : Racesow_Command
         super( "Declares the current round Draw.", "" );
     }
 
-    bool validate( Racesow_Player @player, cString &args, int argc )
+    bool validate( Racesow_Player @player, String &args, int argc )
     {
         if( match.getState() == MATCH_STATE_WARMUP )
         {
@@ -1202,7 +1202,7 @@ class Command_CallvoteDraw : Racesow_Command
         return true;
     }
 
-    bool execute( Racesow_Player @player, cString &args, int argc )
+    bool execute( Racesow_Player @player, String &args, int argc )
     {
         if( @DRACERound.roundWinner != null )
             DRACERound.roundWinner.getEnt().health = -1;
@@ -1221,7 +1221,7 @@ class Command_CallvoteMaxVictories : Racesow_Command
         super( "Maximum successive victories.", "<number>" );
     }
 
-    bool execute( Racesow_Player @player, cString &args, int argc )
+    bool execute( Racesow_Player @player, String &args, int argc )
     {
         G_CmdExecute( "g_drace_max_victories " + args.getToken( 1 ).toInt() + "\n" );
         return true;
@@ -1231,8 +1231,8 @@ class Command_CallvoteMaxVictories : Racesow_Command
 //FIXME: K1ll - I don't know if this should extend or replace the original object
 //class Command_CallvoteValidateDrace : Command_CallvoteValidate
 //{
-//    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
-//        cString vote = args.getToken( 0 );
+//    bool gametypeVotes( Racesow_Player @player, String &args, int argc ) {
+//        String vote = args.getToken( 0 );
 //
 //          if ( vote == "draw" )
 //          {
@@ -1267,8 +1267,8 @@ class Command_CallvoteMaxVictories : Racesow_Command
 /*class Command_CallvoteCheckPermissionDrace : Command_CallvoteCheckPermission
 {
 
-    bool gametypeVotes( Racesow_Player @player, cString &args, int argc ) {
-            cString vote = argsString.getToken( 0 );
+    bool gametypeVotes( Racesow_Player @player, String &args, int argc ) {
+            String vote = argsString.getToken( 0 );
 
             if ( vote == "draw" )
             {
@@ -1304,9 +1304,9 @@ class Command_CallvoteMaxVictories : Racesow_Command
 //        super("callvotepassed", "", ""); //FIXME: Description needed
 //    }
 //
-//    bool execute(Racesow_Player @player, cString &args, int argc)
+//    bool execute(Racesow_Player @player, String &args, int argc)
 //    {
-//            cString vote = args.getToken( 0 );
+//            String vote = args.getToken( 0 );
 //
 //            if ( vote == "draw" )
 //            {

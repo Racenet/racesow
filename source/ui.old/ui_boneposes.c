@@ -1,32 +1,30 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2002-2003 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
 cgs_skeleton_t *skel_headnode;
 
 /*
-   =================
-   UI_SkeletonForModel
-   =================
- */
+* UI_SkeletonForModel
+*/
 cgs_skeleton_t *UI_SkeletonForModel( struct model_s *model )
 {
 	int i, j;
@@ -51,7 +49,7 @@ cgs_skeleton_t *UI_SkeletonForModel( struct model_s *model )
 
 	// allocate one huge array to hold our data
 	buffer = (qbyte *)UI_Malloc( sizeof( cgs_skeleton_t ) + numBones * sizeof( cgs_bone_t ) +
-	                            numFrames * ( sizeof( bonepose_t * ) + numBones * sizeof( bonepose_t ) ) );
+		numFrames * ( sizeof( bonepose_t * ) + numBones * sizeof( bonepose_t ) ) );
 
 	skel = ( cgs_skeleton_t * )buffer; buffer += sizeof( cgs_skeleton_t );
 	skel->bones = ( cgs_bone_t * )buffer; buffer += numBones * sizeof( cgs_bone_t );
@@ -85,10 +83,10 @@ cgs_skeleton_t *UI_SkeletonForModel( struct model_s *model )
 //========================================================================
 
 
-//===============
-// UI_TransformBoneposes
-// place bones in it's final position in the skeleton
-//===============
+/*
+* UI_TransformBoneposes
+* place bones in it's final position in the skeleton
+*/
 void UI_TransformBoneposes( cgs_skeleton_t *skel, bonepose_t *boneposes, bonepose_t *sourceboneposes )
 {
 	int j;
@@ -107,9 +105,9 @@ void UI_TransformBoneposes( cgs_skeleton_t *skel, bonepose_t *boneposes, bonepos
 	}
 }
 
-//==============================
-// UI_RotateBonePose
-//==============================
+/*
+* UI_RotateBonePose
+*/
 void UI_RotateBonePose( vec3_t angles, bonepose_t *bonepose )
 {
 	vec3_t axis_rotator[3];
@@ -129,10 +127,10 @@ void UI_RotateBonePose( vec3_t angles, bonepose_t *bonepose )
 }
 
 
-//==============================
-// UI_SkeletalPoseLerpAttachment
-// Get the interpolated bone from TRANSFORMED bonepose and oldbonepose
-//==============================
+/*
+* UI_SkeletalPoseLerpAttachment
+* Get the interpolated bone from TRANSFORMED bonepose and oldbonepose
+*/
 qboolean UI_SkeletalPoseLerpAttachment( orientation_t *orient, cgs_skeleton_t *skel, bonepose_t *boneposes, bonepose_t *oldboneposes, float backlerp, char *bonename )
 {
 	int i;
@@ -177,11 +175,11 @@ qboolean UI_SkeletalPoseLerpAttachment( orientation_t *orient, cgs_skeleton_t *s
 }
 
 
-//==============================
-// UI_SkeletalUntransformedPoseLerpAttachment
-// Build both old and new frame poses to get the tag bone
-// slow: use UI_SkeletalPoseLerpAttachment if possible
-//==============================
+/*
+* UI_SkeletalUntransformedPoseLerpAttachment
+* Build both old and new frame poses to get the tag bone
+* slow: use UI_SkeletalPoseLerpAttachment if possible
+*/
 qboolean UI_SkeletalUntransformedPoseLerpAttachment( orientation_t *orient, cgs_skeleton_t *skel, bonepose_t *boneposes, bonepose_t *oldboneposes, float backlerp, char *bonename )
 {
 	int i;
@@ -260,10 +258,10 @@ bonepose_t *TBC;        //Temporary Boneposes Cache
 static int TBC_Count;
 
 
-//===============
-// UI_InitTemporaryBoneposesCache
-// allocate space for temporary boneposes
-//===============
+/*
+* UI_InitTemporaryBoneposesCache
+* allocate space for temporary boneposes
+*/
 void UI_InitTemporaryBoneposesCache( void )
 {
 	TBC_Size = TBC_Block_Size;
@@ -271,10 +269,10 @@ void UI_InitTemporaryBoneposesCache( void )
 	TBC_Count = 0;
 }
 
-//===============
-// UI_ExpandTemporaryBoneposesCache
-// allocate more space for temporary boneposes
-//===============
+/*
+* UI_ExpandTemporaryBoneposesCache
+* allocate more space for temporary boneposes
+*/
 static void UI_ExpandTemporaryBoneposesCache( void )
 {
 	bonepose_t *temp;
@@ -288,20 +286,20 @@ static void UI_ExpandTemporaryBoneposesCache( void )
 	UI_Free( temp );
 }
 
-//===============
-// UI_ResetTemporaryBoneposesCache
-// These boneposes are REMOVED EACH FRAME after drawing.
-//===============
+/*
+* UI_ResetTemporaryBoneposesCache
+* These boneposes are REMOVED EACH FRAME after drawing.
+*/
 void UI_ResetTemporaryBoneposesCache( void )
 {
 	TBC_Count = 0;
 }
 
-//===============
-//	UI_RegisterTemporaryExternalBoneposes
-// These boneposes are REMOVED EACH FRAME after drawing. Register
-// here only in the case you create an entity which is not UI_entity.
-//===============
+/*
+* UI_RegisterTemporaryExternalBoneposes
+* These boneposes are REMOVED EACH FRAME after drawing. Register
+* here only in the case you create an entity which is not UI_entity.
+*/
 static bonepose_t *UI_RegisterTemporaryExternalBoneposes( cgs_skeleton_t *skel, bonepose_t *poses )
 {
 	bonepose_t *boneposes;
@@ -314,12 +312,12 @@ static bonepose_t *UI_RegisterTemporaryExternalBoneposes( cgs_skeleton_t *skel, 
 	return boneposes;
 }
 
-//===============
-// UI_SetBoneposesForTemporaryEntity
-//	Sets up skeleton with inline boneposes based on frame/oldframe values
-//	These boneposes will be REMOVED EACH FRAME. Use only for temporary entities,
-//	UI_entities have a persistant registration method available.
-//===============
+/*
+* UI_SetBoneposesForTemporaryEntity
+* Sets up skeleton with inline boneposes based on frame/oldframe values
+* These boneposes will be REMOVED EACH FRAME. Use only for temporary entities,
+* UI_entities have a persistant registration method available.
+*/
 cgs_skeleton_t *UI_SetBoneposesForTemporaryEntity( entity_t *ent )
 {
 	cgs_skeleton_t *skel;

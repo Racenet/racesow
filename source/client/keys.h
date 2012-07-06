@@ -28,13 +28,13 @@ void Key_MouseEvent( int key, qboolean down, unsigned time );
 void Key_Init( void );
 void Key_Shutdown( void );
 void Key_WriteBindings( int file );
-void Key_SetBinding( int keynum, char *binding );
+void Key_SetBinding( int keynum, const char *binding );
 void Key_ClearStates( void );
 const char *Key_GetBindingBuf( int binding );
 
 const char *Key_KeynumToString( int keynum );
 
-int Key_StringToKeynum( char *str );
+int Key_StringToKeynum( const char *str );
 qboolean Key_IsDown( int keynum );
 
 // wsw : aiwa : delegate pattern to forward key strokes to arbitrary code

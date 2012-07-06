@@ -319,6 +319,8 @@ void player_die( edict_t *ent, edict_t *inflictor, edict_t *attacker, int damage
 
 	ent->r.solid = SOLID_NOT;
 
+	ent->r.client->teamstate.last_killer = attacker;
+
 	// player death
 	ent->s.angles[YAW] = ent->r.client->ps.viewangles[YAW] = LookAtKillerYAW( ent, inflictor, attacker );
 	ClientObituary( ent, inflictor, attacker );
@@ -356,8 +358,10 @@ void G_Client_InactivityRemove( gclient_t *client )
 	if( !client )
 		return;
 
-	if( !level.gametype.autoInactivityRemove )//racesow
-	    return;
+	// racesow
+	if( !level.gametype.autoInactivityRemove )
+		return;
+	// !racesow
 
 	if( trap_GetClientState( client - game.clients ) < CS_SPAWNED )
 		return;
@@ -387,11 +391,11 @@ void G_Client_InactivityRemove( gclient_t *client )
 
 			// move to spectators and reset the queue time, effectively removing from the challengers queue
 			G_Teams_SetTeam( ent, TEAM_SPECTATOR );
-            // racesow
-            // set player in free-view, don't make it spectate some random player
+			// racesow
+			// set player in free-view, don't make it spectate some random player
 			G_SpawnQueue_RemoveClient(ent);
-            // !racesow
-            client->queueTimeStamp = 0;
+			// !racesow
+			client->queueTimeStamp = 0;
 
 			G_PrintMsg( NULL, "%s"S_COLOR_YELLOW" has been moved to spectator after %.1f seconds of inactivity\n", client->netname, g_inactivity_maxtime->value );
 		}
@@ -406,7 +410,7 @@ static void G_Client_AssignTeamSkin( edict_t *ent, char *userinfo )
 	// index skin file
 	userskin = GS_TeamSkinName( ent->s.team ); // is it a team skin?
 	if( !userskin ) // NULL indicates *user defined*
-	{
+	{   
 		userskin = Info_ValueForKey( userinfo, "skin" );
 		if( !userskin || !userskin[0] || !COM_ValidateRelativeFilename( userskin ) ||
 			strchr( userskin, '/' ) || strstr( userskin, "invisibility" ) )
@@ -609,7 +613,7 @@ void G_ClientRespawn( edict_t *self, qboolean ghost )
 
 	// set angles
 	self->s.angles[PITCH] = 0;
-	self->s.angles[YAW] = spawn_angles[YAW];
+	self->s.angles[YAW] = anglemod( spawn_angles[YAW] );
 	self->s.angles[ROLL] = 0;
 	VectorCopy( self->s.angles, client->ps.viewangles );
 
@@ -664,6 +668,7 @@ void G_ClientRespawn( edict_t *self, qboolean ghost )
 */
 void ClientBegin( edict_t *ent )
 {
+	memset( &ent->r.client->ucmd, 0, sizeof( ent->r.client->ucmd ) );
 	memset( &ent->r.client->level, 0, sizeof( ent->r.client->level ) );
 	ent->r.client->level.timeStamp = level.time;
 	G_Client_UpdateActivity( ent->r.client ); // activity detected
@@ -945,7 +950,7 @@ static void G_UpdatePlayerInfoString( int playerNum )
 /*
 * ClientUserinfoChanged
 * called whenever the player updates a userinfo variable.
-*
+* 
 * The game can override any of the settings in place
 * (forcing skins or names, etc) before copying it off.
 */
@@ -1027,6 +1032,23 @@ void ClientUserinfoChanged( edict_t *ent, char *userinfo )
 	else
 		cl->hand = bound( atoi( s ), 0, 2 );
 
+	// handicap
+	s = Info_ValueForKey( userinfo, "handicap" );
+	if( s )
+	{
+		i = atoi( s );
+
+		if( i > 90 || i < 0 )
+		{
+			G_PrintMsg( ent, "Handicap must be defined in the [0-90] range.\n" );
+			cl->handicap = 0;
+		}
+		else
+		{
+			cl->handicap = i;
+		}
+	}
+
 	s = Info_ValueForKey( userinfo, "cg_oldMovement" );
 	if( s )
 	{
@@ -1078,23 +1100,23 @@ void ClientUserinfoChanged( edict_t *ent, char *userinfo )
 	s = Info_ValueForKey( userinfo, "fov" );
 	if( !s )
 	{
-		cl->fov = 110;
+		cl->fov = DEFAULT_FOV;
 	}
 	else
 	{
 		cl->fov = atoi( s );
-		clamp( cl->fov, 60, 160 );
+		clamp( cl->fov, MIN_FOV, MAX_FOV );
 	}
 
 	s = Info_ValueForKey( userinfo, "zoomfov" );
 	if( !s )
 	{
-		cl->zoomfov = 30;
+		cl->zoomfov = DEFAULT_ZOOMFOV;
 	}
 	else
 	{
 		cl->zoomfov = atoi( s );
-		clamp( cl->zoomfov, 1, 60 );
+		clamp( cl->zoomfov, MIN_ZOOMFOV, MAX_ZOOMFOV );
 	}
 
 #ifdef UCMDTIMENUDGE
@@ -1109,6 +1131,11 @@ void ClientUserinfoChanged( edict_t *ent, char *userinfo )
 		clamp( cl->ucmdTimeNudge, -MAX_UCMD_TIMENUDGE, MAX_UCMD_TIMENUDGE );
 	}
 #endif
+
+	// mm session
+	// TODO: remove the key after storing it to gclient_t !
+	s = Info_ValueForKey( userinfo, "cl_mm_session" );
+	cl->mm_session = ( s == NULL ) ? 0 : atoi( s );
 
 	if( !G_ISGHOSTING( ent ) && trap_GetClientState( PLAYERNUM( ent ) ) >= CS_SPAWNED )
 		G_Client_AssignTeamSkin( ent, userinfo );
@@ -1236,6 +1263,10 @@ void ClientDisconnect( edict_t *ent, const char *reason )
 	if( !ent->r.client || !ent->r.inuse )
 		return;
 
+	// always report in RACE mode
+	if( GS_RaceGametype() || ( ent->r.client->team != TEAM_SPECTATOR && GS_MatchState() == MATCH_STATE_PLAYTIME ) )
+		G_AddPlayerReport( ent, qfalse );
+
 	for( team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
 		G_Teams_UnInvitePlayer( team, ent );
 
@@ -1291,7 +1322,7 @@ void G_PredictedEvent( int entNum, int ev, int parm )
 			damage = parm;
 
 			if( damage )
-				G_TakeDamage( ent, world, world, vec3_origin, upDir, ent->s.origin, damage, 0, 0, dflags, MOD_FALLING );
+				G_Damage( ent, world, world, vec3_origin, upDir, ent->s.origin, damage, 0, 0, dflags, MOD_FALLING );
 
 			G_AddEvent( ent, ev, damage, qtrue );
 		}
@@ -1442,7 +1473,7 @@ void ClientThink( edict_t *ent, usercmd_t *ucmd, int timeDelta )
 
 	client->ps.pmove.gravity = g_gravity->value;
 
-	if( GS_MatchState() >= MATCH_STATE_POSTMATCH || GS_MatchPaused()
+	if( GS_MatchState() >= MATCH_STATE_POSTMATCH || GS_MatchPaused() 
 		|| ( ent->movetype != MOVETYPE_PLAYER && ent->movetype != MOVETYPE_NOCLIP ) )
 		client->ps.pmove.pm_type = PM_FREEZE;
 	else if( ent->s.type == ET_GIB )
@@ -1487,10 +1518,20 @@ void ClientThink( edict_t *ent, usercmd_t *ucmd, int timeDelta )
 		ent->groundentity = &game.edicts[pm.groundentity];
 		ent->groundentity_linkcount = ent->groundentity->r.linkcount;
 	}
-
+	
 	GClip_LinkEntity( ent );
 
 	GS_AddLaserbeamPoint( &ent->r.client->resp.trail, &ent->r.client->ps, ucmd->serverTimeStamp );
+
+	// Regeneration
+	if( ent->r.client->ps.inventory[POWERUP_REGEN] > 0 && ent->health < 200)
+	{
+		ent->health += ( game.frametime * 0.001f ) * 10.0f;
+
+		// Regen expires if health reaches 200
+		if ( ent->health >= 199.0f )
+			ent->r.client->ps.inventory[POWERUP_REGEN]--;
+	}
 
 	// fire touch functions
 	if( ent->movetype != MOVETYPE_NOCLIP )
@@ -1537,13 +1578,13 @@ void ClientThink( edict_t *ent, usercmd_t *ucmd, int timeDelta )
 	if( GS_Instagib() && g_instashield->integer )
 	{
 		if( client->ps.pmove.pm_type == PM_NORMAL && pm.cmd.upmove < 0 &&
-			client->resp.instashieldCharge == INSTA_SHIELD_MAX &&
+			client->resp.instashieldCharge == INSTA_SHIELD_MAX && 
 			client->ps.inventory[POWERUP_SHELL] == 0 )
 		{
 			client->ps.inventory[POWERUP_SHELL] = client->resp.instashieldCharge;
 			G_Sound( ent, CHAN_AUTO, trap_SoundIndex( GS_FindItemByTag( POWERUP_SHELL )->pickup_sound ), ATTN_NORM );
 		}
-	}
+	}	
 
 	// generating plrkeys (optimized for net communication)
 	ClientMakePlrkeys( client, ucmd );
@@ -1618,7 +1659,7 @@ void G_CheckClientRespawnClick( edict_t *ent )
 			// hold system must wait for at least 1000 msecs (to see the death properly)
 			if( G_SpawnQueue_GetSystem( ent->s.team ) == SPAWNSYSTEM_HOLD )
 				minDelay = ( g_respawn_delay_min->integer < 1300 ) ? 1300 : g_respawn_delay_min->integer;
-
+				
 			if( level.time >= ent->deathTimeStamp + minDelay )
 				G_SpawnQueue_AddClient( ent );
 		}

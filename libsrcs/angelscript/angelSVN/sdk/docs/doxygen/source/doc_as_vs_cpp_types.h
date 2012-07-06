@@ -30,16 +30,25 @@ Primitives in AngelScript have direct matches in C++.
 %**) On 32 bit PowerPC platforms the bool type commonly have the size of 32 bit,
    when compiled on such platforms AngelScript also uses 32 bits for the bool type
 
+\section doc_as_vs_cpp_types_5 Strings
+
+AngelScript expects the application to register its own \ref doc_strings "string type",
+so the string types should match perfectly. 
+
+The char* string type that is so convenient in C++ is however very difficult to use
+in a scripted environment where you do not have full control over how it is used. For that
+reason it is recommended that you wrap any functions that use the char* string type so
+that the string is properly converted to an object that can be safely handled by both
+the application and the script engine, e.g. std::string or another class of your preference.
+
 \section doc_as_vs_cpp_types_2 Arrays
 
-The AngelScript arrays are not directly matched by C++ arrays. The arrays
-are stored in an special object, accessed through the \ref asIScriptArray interface. 
-Thus you can normally not directly exchange a script with a C++ function expecting 
-a C++ array, or vice versa. Nor can the application register C++ arrays as properties 
-and expect AngelScript to be able to understand them.
+AngelScript also expects the application to register the type that should be used for 
+\ref doc_arrays "dynamic arrays". Normally this is done by registering the \ref doc_addon_array add-on, but 
+the application is free to do it differently.
 
-It is however possible to override AngelScript's built-in array objects
-with application specified objects, on a per array type basis.
+It is also possible to have different object types for different array types, so the 
+application can match the array type exactly with the types used in C++.
 
 \section doc_as_vs_cpp_types_3 Object handles
 
@@ -61,6 +70,21 @@ this an object handle can be safely passed to a C++ function that expects a
 normal pointer, but don't release it afterwards.
 
 \see \ref doc_obj_handle
+
+\section doc_as_vc_cpp_types_5 Script classes and interfaces
+
+All script classes and interfaces are seen as the \ref asIScriptObject type by
+the application. The \ref asIScriptObject interface has methods to determine
+the actual type of the script class or interface, as well as to interact with the
+actual object instance.
+
+\see \ref doc_use_script_class
+
+\section doc_as_vc_cpp_types_6 Function pointers
+
+All script function pointers are seen as the \ref asIScriptFunction type by 
+the application. The \ref asIScriptFunction type has methods to obtain the name
+of the function and the parameter and return types, etc. 
 
 \section doc_as_vs_cpp_types_4 Parameter references
 

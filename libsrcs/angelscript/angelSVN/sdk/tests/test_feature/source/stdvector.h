@@ -44,6 +44,8 @@
 
 #include <angelscript.h>
 
+BEGIN_AS_NAMESPACE
+
 template <typename T>
 class vectorRegisterHelper
 {
@@ -166,23 +168,20 @@ void RegisterVector(const std::string V_AS,  //The typename of the vector inside
 		asCALL_CDECL_OBJLAST);
 	assert(error_code >= 0 && "Failed to register construct(size)");
 
-	error_code = engine->RegisterObjectBehaviour(V_AS.c_str(),
-		asBEHAVE_INDEX,
-		(T_AS+"& f(int)").c_str(),
+	error_code = engine->RegisterObjectMethod(V_AS.c_str(),
+		(T_AS+"& opIndex(int)").c_str(),
 		asFUNCTION(vectorRegisterHelper<T>::Index),
 		asCALL_CDECL_OBJLAST);
 	assert(error_code >= 0 && "Failed to register operator[]");
 
-	error_code = engine->RegisterObjectBehaviour(V_AS.c_str(),
-		asBEHAVE_INDEX,
-		("const "+T_AS+"& f(int) const").c_str(),
+	error_code = engine->RegisterObjectMethod(V_AS.c_str(),
+		("const "+T_AS+"& opIndex(int) const").c_str(),
 		asFUNCTION(vectorRegisterHelper<T>::Index),
 		asCALL_CDECL_OBJLAST);
 	assert(error_code >= 0 && "Failed to register operator[]");
 	
-	error_code = engine->RegisterObjectBehaviour(V_AS.c_str(),
-		asBEHAVE_ASSIGNMENT,
-		(V_AS+"& f(const "+V_AS+"&in)").c_str(),
+	error_code = engine->RegisterObjectMethod(V_AS.c_str(),
+		(V_AS+"& opAssign(const "+V_AS+"&in)").c_str(),
 		asFUNCTION(vectorRegisterHelper<T>::Assign),
 		asCALL_CDECL_OBJLAST);
 	assert(error_code >= 0 && "Failed to register operator=");
@@ -224,6 +223,8 @@ void RegisterVector(const std::string V_AS,  //The typename of the vector inside
 	assert(error_code >= 0 && "Failed to register insert");
 */
 }
+
+END_AS_NAMESPACE
 
 #endif
 

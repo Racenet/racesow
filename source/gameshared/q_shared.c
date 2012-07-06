@@ -27,19 +27,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 const char *SOUND_EXTENSIONS[] = { ".ogg", ".wav" };
 const size_t NUM_SOUND_EXTENSIONS = sizeof( SOUND_EXTENSIONS ) / sizeof( SOUND_EXTENSIONS[0] );
 
-const char *IMAGE_EXTENSIONS[] = { ".jpg", ".tga", ".pcx", ".wal" };
+const char *IMAGE_EXTENSIONS[] = { ".jpg", ".tga", ".png", ".pcx", ".wal" };
 const size_t NUM_IMAGE_EXTENSIONS = sizeof( IMAGE_EXTENSIONS ) / sizeof( IMAGE_EXTENSIONS[0] );
 
 //============================================================================
 
 /*
-================
-COM_SanitizeFilePath
-
-Changes \ character to / characters in the string
-Does NOT validate the string at all
-Must be used before other functions are aplied to the string (or those functions might function improperly)
-================
+* COM_SanitizeFilePath
+* 
+* Changes \ character to / characters in the string
+* Does NOT validate the string at all
+* Must be used before other functions are aplied to the string (or those functions might function improperly)
 */
 char *COM_SanitizeFilePath( char *path )
 {
@@ -58,9 +56,7 @@ char *COM_SanitizeFilePath( char *path )
 }
 
 /*
-================
-COM_ValidateFilename
-================
+* COM_ValidateFilename
 */
 qboolean COM_ValidateFilename( const char *filename )
 {
@@ -77,9 +73,7 @@ qboolean COM_ValidateFilename( const char *filename )
 }
 
 /*
-================
-COM_ValidateRelativeFilename
-================
+* COM_ValidateRelativeFilename
 */
 qboolean COM_ValidateRelativeFilename( const char *filename )
 {
@@ -95,9 +89,9 @@ qboolean COM_ValidateRelativeFilename( const char *filename )
 	return qtrue;
 }
 
-//============
-//COM_StripExtension
-//============
+/*
+* COM_StripExtension
+*/
 void COM_StripExtension( char *filename )
 {
 	char *src, *last = NULL;
@@ -108,9 +102,9 @@ void COM_StripExtension( char *filename )
 		*src = 0;
 }
 
-//============
-//COM_FileExtension
-//============
+/*
+* COM_FileExtension
+*/
 const char *COM_FileExtension( const char *filename )
 {
 	const char *src, *last;
@@ -126,11 +120,11 @@ const char *COM_FileExtension( const char *filename )
 	return NULL;
 }
 
-//==================
-//COM_DefaultExtension
-//If path doesn't have extension, appends one to it
-//If there is no room for it overwrites the end of the path
-//==================
+/*
+* COM_DefaultExtension
+* If path doesn't have extension, appends one to it
+* If there is no room for it overwrites the end of the path
+*/
 void COM_DefaultExtension( char *path, const char *extension, size_t size )
 {
 	const char *src, *last;
@@ -152,11 +146,11 @@ void COM_DefaultExtension( char *path, const char *extension, size_t size )
 	Q_strncatz( path, extension, size );
 }
 
-//==================
-//COM_ReplaceExtension
-//Replaces current extension, if there is none appends one
-//If there is no room for it overwrites the end of the path
-//==================
+/*
+* COM_ReplaceExtension
+* Replaces current extension, if there is none appends one
+* If there is no room for it overwrites the end of the path
+*/
 void COM_ReplaceExtension( char *path, const char *extension, size_t size )
 {
 	assert( path );
@@ -171,9 +165,9 @@ void COM_ReplaceExtension( char *path, const char *extension, size_t size )
 		Q_strncatz( path, extension, size );
 }
 
-//============
-//COM_FileBase
-//============
+/*
+* COM_FileBase
+*/
 const char *COM_FileBase( const char *in )
 {
 	const char *s;
@@ -185,11 +179,11 @@ const char *COM_FileBase( const char *in )
 	return in;
 }
 
-//============
-//COM_StripFilename
-//
-//Cuts the string of, at the last / or erases the whole string if not found
-//============
+/*
+* COM_StripFilename
+* 
+* Cuts the string of, at the last / or erases the whole string if not found
+*/
 void COM_StripFilename( char *filename )
 {
 	char *p;
@@ -201,11 +195,11 @@ void COM_StripFilename( char *filename )
 	*p = 0;
 }
 
-//============
-//COM_FilePathLength
-//
-//Returns the length from start of string to the character before last /
-//============
+/*
+* COM_FilePathLength
+* 
+* Returns the length from start of string to the character before last /
+*/
 int COM_FilePathLength( const char *in )
 {
 	const char *s;
@@ -293,9 +287,9 @@ static float FloatNoSwap( float f )
 #endif
 
 
-//================
-//Swap_Init
-//================
+/*
+* Swap_Init
+*/
 void Swap_Init( void )
 {
 #if !defined ( ENDIAN_LITTLE ) && !defined ( ENDIAN_BIG )
@@ -324,12 +318,12 @@ void Swap_Init( void )
 }
 
 
-//=============
-//TempVector
-//
-//This is just a convenience function
-//for making temporary vectors for function calls
-//=============
+/*
+* TempVector
+* 
+* This is just a convenience function
+* for making temporary vectors for function calls
+*/
 float *tv( float x, float y, float z )
 {
 	static int index;
@@ -348,11 +342,11 @@ float *tv( float x, float y, float z )
 	return v;
 }
 
-//=============
-//VectorToString
-//
-//This is just a convenience function for printing vectors
-//=============
+/*
+* VectorToString
+* 
+* This is just a convenience function for printing vectors
+*/
 char *vtos( float v[3] )
 {
 	static int index;
@@ -368,12 +362,12 @@ char *vtos( float v[3] )
 	return s;
 }
 
-//============
-//va
-//
-//does a varargs printf into a temp buffer, so I don't need to have
-//varargs versions of all text functions.
-//============
+/*
+* va
+* 
+* does a varargs printf into a temp buffer, so I don't need to have
+* varargs versions of all text functions.
+*/
 char *va( const char *format, ... )
 {
 	va_list	argptr;
@@ -388,11 +382,11 @@ char *va( const char *format, ... )
 	return string[str_index];
 }
 
-//==============
-//COM_Compress
-//
-//Parse a token out of a string
-//==============
+/*
+* COM_Compress
+* 
+* Parse a token out of a string
+*/
 int COM_Compress( char *data_p )
 {
 	char *in, *out;
@@ -487,11 +481,11 @@ int COM_Compress( char *data_p )
 
 static char com_token[MAX_TOKEN_CHARS];
 
-//==============
-//COM_ParseExt
-//
-//Parse a token out of a string
-//==============
+/*
+* COM_ParseExt
+* 
+* Parse a token out of a string
+*/
 char *COM_ParseExt2( const char **data_p, qboolean nl, qboolean sq )
 {
 	int c;
@@ -506,7 +500,7 @@ char *COM_ParseExt2( const char **data_p, qboolean nl, qboolean sq )
 	if( !data )
 	{
 		*data_p = NULL;
-		return "";
+		return com_token;
 	}
 
 	// skip whitespace
@@ -516,7 +510,7 @@ skipwhite:
 		if( c == 0 )
 		{
 			*data_p = NULL;
-			return "";
+			return com_token;
 		}
 		if( c == '\n' )
 			newlines = qtrue;
@@ -621,17 +615,15 @@ skipwhite:
 }
 
 /*
-=========================
-Q_GrabCharFromColorString
-
-Parses a char or color escape sequence and advances (*pstr)
-"c" receives the character
-"colorindex", if not NULL, receives color indexes (0..10)
-Return values:
-GRABCHAR_END - end of string reached; *c will be '\0';  *colorindex is undefined
-GRABCHAR_CHAR - printable char parsed and saved to *c;  *colorindex is undefined
-GRABCHAR_COLOR - color escape parsed and saved to *colorindex;  *c is undefined
-=========================
+* Q_GrabCharFromColorString
+* 
+* Parses a char or color escape sequence and advances (*pstr)
+* "c" receives the character
+* "colorindex", if not NULL, receives color indexes (0..10)
+* Return values:
+* GRABCHAR_END - end of string reached; *c will be '\0';  *colorindex is undefined
+* GRABCHAR_CHAR - printable char parsed and saved to *c;  *colorindex is undefined
+* GRABCHAR_COLOR - color escape parsed and saved to *colorindex;  *c is undefined
 */
 int Q_GrabCharFromColorString( const char **pstr, char *c, int *colorindex)
 {
@@ -702,14 +694,14 @@ qwchar Q_GrabWCharFromColorString( const char **pstr, qwchar *wc, int *colorinde
 }
 
 
-//==============
-//COM_RemoveColorTokensExt
-//
-//Remove color tokens from a string
-// If "draw" is set, all printable ^^ and ^ will be become ^^ (e.g. ^a --> ^^a),
-// so the result string may end up up to 1.5 times longer
-// (only a final ^ really needs duplicating, it's just easier to do it for all)
-//==============
+/*
+* COM_RemoveColorTokensExt
+* 
+* Remove color tokens from a string
+* If "draw" is set, all printable ^^ and ^ will be become ^^ (e.g. ^a --> ^^a),
+* so the result string may end up up to 1.5 times longer
+* (only a final ^ really needs duplicating, it's just easier to do it for all)
+*/
 const char *COM_RemoveColorTokensExt( const char *str, qboolean draw )
 {
 	static char cleanString[MAX_STRING_CHARS];
@@ -748,25 +740,23 @@ const char *COM_RemoveColorTokensExt( const char *str, qboolean draw )
 
 
 /*
-=======================
-COM_SanitizeColorString
-
-Redundant color codes are removed: "^1^2text" ==> "^2text", "a^7" --> "a"
-Color codes preceding whitespace are moved to before the first non-whitespace
-char: "^1  a" ==> "  ^1a" (makes trimming spaces from the resulting string easier)
-A trailing ^ is duplicated: "a^" --> "a^^", to make sure we can easily append ^7
-(so the output may need 1 byte more than input)
-----------------------------
-"bufsize" is size of output buffer including trailing zero, so strlen() of output
-string will be bufsize-1 at max
-"maxprintablechars" is how many printable (non-color-escape) characters
-to write at most. Use -1 for no limit.
-"startcolor" is the assumed color of the string if there are no color escapes
-E.g. if startcolor is 7, leading ^7 sequences will be dropped;
-if "startcolor" is -1, initial color is undefined, so "^7foo" will be written as is.
-----------------------------
-Returns number of printable chars written
-=======================
+* COM_SanitizeColorString
+* 
+* Redundant color codes are removed: "^1^2text" ==> "^2text", "a^7" --> "a"
+* Color codes preceding whitespace are moved to before the first non-whitespace
+* char: "^1  a" ==> "  ^1a" (makes trimming spaces from the resulting string easier)
+* A trailing ^ is duplicated: "a^" --> "a^^", to make sure we can easily append ^7
+* (so the output may need 1 byte more than input)
+* ----------------------------
+* "bufsize" is size of output buffer including trailing zero, so strlen() of output
+* string will be bufsize-1 at max
+* "maxprintablechars" is how many printable (non-color-escape) characters
+* to write at most. Use -1 for no limit.
+* "startcolor" is the assumed color of the string if there are no color escapes
+* E.g. if startcolor is 7, leading ^7 sequences will be dropped;
+* if "startcolor" is -1, initial color is undefined, so "^7foo" will be written as is.
+* ----------------------------
+* Returns number of printable chars written
 */
 int COM_SanitizeColorString( const char *str, char *buf, int bufsize, int maxprintablechars, int startcolor )
 {
@@ -822,20 +812,18 @@ int COM_SanitizeColorString( const char *str, char *buf, int bufsize, int maxpri
 }
 
 /*
-=======================
-Q_ColorStringTerminator
-
-Returns a color sequence to append to input string so that subsequent
-characters have desired color (we can't just append ^7 because the string
-may end in a ^, that would make the ^7 printable chars and color would stay)
-Initial color is assumed to be white
-Possible return values (assuming finalcolor is 7):
-"" if no color needs to be appended,
-"^7" or
-"^^7" if the string ends in an unterminated ^
-=======================
+* Q_ColorStringTerminator
+* 
+* Returns a color sequence to append to input string so that subsequent
+* characters have desired color (we can't just append ^7 because the string
+* may end in a ^, that would make the ^7 printable chars and color would stay)
+* Initial color is assumed to be white
+* Possible return values (assuming finalcolor is 7):
+* "" if no color needs to be appended,
+* "^7" or
+* "^^7" if the string ends in an unterminated ^
 */
-char *Q_ColorStringTerminator( const char *str, int finalcolor )
+const char *Q_ColorStringTerminator( const char *str, int finalcolor )
 {
 	char c;
 	int lastcolor = ColorIndex(COLOR_WHITE), colorindex;
@@ -881,11 +869,11 @@ char *Q_ColorStringTerminator( const char *str, int finalcolor )
 }
 
 
-//==============
-//COM_RemoveJunkChars
-//
-//Remove junk chars from a string (created for autoaction filenames)
-//==============
+/*
+* COM_RemoveJunkChars
+* 
+* Remove junk chars from a string (created for autoaction filenames)
+*/
 const char *COM_RemoveJunkChars( const char *in )
 {
 	static char cleanString[MAX_STRING_CHARS];
@@ -933,15 +921,15 @@ const char *COM_RemoveJunkChars( const char *in )
 	return cleanString;
 }
 
-//==============
-//COM_ReadColorRGBString
-//==============
+/*
+* COM_ReadColorRGBString
+*/
 int COM_ReadColorRGBString( const char *in )
 {
 	static int playerColor[3];
 	if( in && in[0] )
 	{
-		if( sscanf( in, "%i %i %i", &playerColor[0], &playerColor[1], &playerColor[2] ) == 3 )
+		if( sscanf( in, "%3i %3i %3i", &playerColor[0], &playerColor[1], &playerColor[2] ) == 3 )
 			return COLOR_RGB( playerColor[0], playerColor[1], playerColor[2] );
 	}
 	return -1;
@@ -974,9 +962,42 @@ int COM_ValidatePlayerColor( int rgbcolor )
 //
 //============================================================================
 
-//==============
-//Q_strncpyz
-//==============
+/*
+* Q_memset32
+*/
+void *Q_memset32( void *dest, int c, size_t dwords )
+{
+	assert( ( (size_t)dest & 0x03 ) == 0 );
+
+#if defined ( __GNUC__ ) && defined ( id386 )
+	asm (	"cld\n"
+			"rep; stosl\n"
+			:	// nada
+			: "c"(dwords), "D"(dest), "a"(c)
+		);
+#elif defined ( _WIN32 ) && defined ( id386 )
+	__asm {
+		cld
+		mov edi, dest
+		mov eax, c
+		mov ecx, dwords
+		repne stosd
+	}
+#else
+	{
+		size_t i;
+		int *idest = (int *)dest;
+		for( i = 0; i < dwords; i++ )
+			*idest++ = c;
+	}
+#endif
+
+	return dest;
+}
+
+/*
+* Q_strncpyz
+*/
 void Q_strncpyz( char *dest, const char *src, size_t size )
 {
 #ifdef HAVE_STRLCPY
@@ -990,9 +1011,9 @@ void Q_strncpyz( char *dest, const char *src, size_t size )
 #endif
 }
 
-//==============
-//Q_strncatz
-//==============
+/*
+* Q_strncatz
+*/
 void Q_strncatz( char *dest, const char *src, size_t size )
 {
 #ifdef HAVE_STRLCAT
@@ -1011,9 +1032,9 @@ void Q_strncatz( char *dest, const char *src, size_t size )
 #endif
 }
 
-//==============
-//Q_vsnprintfz
-//==============
+/*
+* Q_vsnprintfz
+*/
 int Q_vsnprintfz( char *dest, size_t size, const char *format, va_list argptr )
 {
 	int len;
@@ -1027,9 +1048,9 @@ int Q_vsnprintfz( char *dest, size_t size, const char *format, va_list argptr )
 	return len;
 }
 
-//==============
-//Q_snprintfz
-//==============
+/*
+* Q_snprintfz
+*/
 void Q_snprintfz( char *dest, size_t size, const char *format, ... )
 {
 	va_list	argptr;
@@ -1039,9 +1060,9 @@ void Q_snprintfz( char *dest, size_t size, const char *format, ... )
 	va_end( argptr );
 }
 
-//==============
-//Q_strupr
-//==============
+/*
+* Q_strupr
+*/
 char *Q_strupr( char *s )
 {
 	char *p;
@@ -1056,9 +1077,9 @@ char *Q_strupr( char *s )
 	return NULL;
 }
 
-//==============
-//Q_strlwr
-//==============
+/*
+* Q_strlwr
+*/
 char *Q_strlwr( char *s )
 {
 	char *p;
@@ -1073,9 +1094,9 @@ char *Q_strlwr( char *s )
 	return NULL;
 }
 
-//==============
-//Q_strlocate
-//==============
+/*
+* Q_strlocate
+*/
 const char *Q_strlocate( const char *s, const char *substr, int skip )
 {
 	int i;
@@ -1098,9 +1119,9 @@ const char *Q_strlocate( const char *s, const char *substr, int skip )
 	return p;
 }
 
-//==============
-//Q_strcount
-//==============
+/*
+* Q_strcount
+*/
 size_t Q_strcount( const char *s, const char *substr )
 {
 	size_t cnt;
@@ -1124,9 +1145,9 @@ size_t Q_strcount( const char *s, const char *substr )
 	return cnt;
 }
 
-//==============
-//Q_strrstr
-//==============
+/*
+* Q_strrstr
+*/
 const char *Q_strrstr( const char *s, const char *substr )
 {
 	const char *p;
@@ -1141,9 +1162,9 @@ const char *Q_strrstr( const char *s, const char *substr )
 	return p;
 }
 
-//==============
-//Q_trim
-//==============
+/*
+* Q_trim
+*/
 #define IS_TRIMMED_CHAR(s) ((s) == ' ' || (s) == '\t' || (s) == '\r' || (s) == '\n')
 char *Q_trim( char *s )
 {
@@ -1193,19 +1214,17 @@ char *Q_WCharToUtf8( qwchar wc )
 }
 
 /*
-==============================
-Q_Utf8SyncPos
-
-For line editing: if we're in the middle of a UTF-8 sequence,
-skip left or right to the start of a UTF-8 sequence (or end of string)
-'dir' should be UTF8SYNC_LEFT or UTF8SYNC_RIGHT
-Returns new position
-------------------------------
-(To be pedantic, I must note that we may skip too many continuation chars
-in a malformed UTF-8 string.  But malformed UTF-8 isn't supposed to get
-into the console input line, and even if it does, we'll only be happy
-to delete it all with one BACKSPACE stroke)
-==============================
+* Q_Utf8SyncPos
+* 
+* For line editing: if we're in the middle of a UTF-8 sequence,
+* skip left or right to the start of a UTF-8 sequence (or end of string)
+* 'dir' should be UTF8SYNC_LEFT or UTF8SYNC_RIGHT
+* Returns new position
+* ------------------------------
+* (To be pedantic, I must note that we may skip too many continuation chars
+* in a malformed UTF-8 string.  But malformed UTF-8 isn't supposed to get
+* into the console input line, and even if it does, we'll only be happy
+* to delete it all with one BACKSPACE stroke)
 */
 int Q_Utf8SyncPos( const char *str, int pos, int dir )
 {
@@ -1288,9 +1307,7 @@ qwchar Q_GrabWCharFromUtf8String (const char **pstr)
 }
 
 /*
-==============
-Q_isdigit
-==============
+* Q_isdigit
 */
 qboolean Q_isdigit( const char *str )
 {
@@ -1304,9 +1321,7 @@ qboolean Q_isdigit( const char *str )
 }
 
 /*
-==============
-Q_chrreplace
-==============
+* Q_chrreplace
 */
 char *Q_chrreplace( char *s, const char subj, const char repl )
 {
@@ -1324,9 +1339,7 @@ char *Q_chrreplace( char *s, const char subj, const char repl )
 
 
 /*
-==================
-COM_ValidateConfigstring
-==================
+* COM_ValidateConfigstring
 */
 qboolean COM_ValidateConfigstring( const char *string )
 {
@@ -1362,9 +1375,9 @@ qboolean COM_ValidateConfigstring( const char *string )
 	return qtrue;
 }
 
-//==================
-//Info_ValidateValue
-//==================
+/*
+* Info_ValidateValue
+*/
 static qboolean Info_ValidateValue( const char *value )
 {
 	assert( value );
@@ -1387,9 +1400,9 @@ static qboolean Info_ValidateValue( const char *value )
 	return qtrue;
 }
 
-//==================
-//Info_ValidateKey
-//==================
+/*
+* Info_ValidateKey
+*/
 static qboolean Info_ValidateKey( const char *key )
 {
 	assert( key );
@@ -1415,12 +1428,12 @@ static qboolean Info_ValidateKey( const char *key )
 	return qtrue;
 }
 
-//==================
-//Info_Validate
-//
-//Some characters are illegal in info strings because they
-//can mess up the server's parsing
-//==================
+/*
+* Info_Validate
+* 
+* Some characters are illegal in info strings because they
+* can mess up the server's parsing
+*/
 qboolean Info_Validate( const char *info )
 {
 	const char *p, *start;
@@ -1467,12 +1480,12 @@ qboolean Info_Validate( const char *info )
 	return qtrue;
 }
 
-//==================
-//Info_FindKey
-//
-//Returns the pointer to the \ character if key is found
-//Otherwise returns NULL
-//==================
+/*
+* Info_FindKey
+* 
+* Returns the pointer to the \ character if key is found
+* Otherwise returns NULL
+*/
 static char *Info_FindKey( const char *info, const char *key )
 {
 	const char *p, *start;
@@ -1504,12 +1517,12 @@ static char *Info_FindKey( const char *info, const char *key )
 	return NULL;
 }
 
-//===============
-//Info_ValueForKey
-//
-//Searches the string for the given
-//key and returns the associated value, or NULL
-//===============
+/*
+* Info_ValueForKey
+* 
+* Searches the string for the given
+* key and returns the associated value, or NULL
+*/
 char *Info_ValueForKey( const char *info, const char *key )
 {
 	static char value[2][MAX_INFO_VALUE]; // use two buffers so compares work without stomping on each other
@@ -1557,9 +1570,9 @@ char *Info_ValueForKey( const char *info, const char *key )
 	return value[valueindex];
 }
 
-//==================
-//Info_RemoveKey
-//==================
+/*
+* Info_RemoveKey
+*/
 void Info_RemoveKey( char *info, const char *key )
 {
 	char *start, *p;
@@ -1595,9 +1608,9 @@ void Info_RemoveKey( char *info, const char *key )
 	}
 }
 
-//==================
-//Info_SetValueForKey
-//==================
+/*
+* Info_SetValueForKey
+*/
 qboolean Info_SetValueForKey( char *info, const char *key, const char *value )
 {
 	char pair[MAX_INFO_KEY + MAX_INFO_VALUE + 1];
@@ -1638,27 +1651,27 @@ float Q_GainForAttenuation( int model, float maxdistance, float refdistance, flo
 	switch( model )
 	{
 	case 0:
-		//gain = (1 – AL_ROLLOFF_FACTOR * (distance – AL_REFERENCE_DISTANCE) / (AL_MAX_DISTANCE – AL_REFERENCE_DISTANCE))
+		//gain = (1 - AL_ROLLOFF_FACTOR * (distance * AL_REFERENCE_DISTANCE) / (AL_MAX_DISTANCE - AL_REFERENCE_DISTANCE))
 		//AL_LINEAR_DISTANCE
 		dist = min( dist, maxdistance );
 		gain = ( 1 - attenuation * ( dist - refdistance ) / ( maxdistance - refdistance ) );
 		break;
 	case 1:
 	default:
-		//gain = (1 – AL_ROLLOFF_FACTOR * (distance – AL_REFERENCE_DISTANCE) / (AL_MAX_DISTANCE – AL_REFERENCE_DISTANCE))
+		//gain = (1 - AL_ROLLOFF_FACTOR * (distance - AL_REFERENCE_DISTANCE) / (AL_MAX_DISTANCE - AL_REFERENCE_DISTANCE))
 		//AL_LINEAR_DISTANCE_CLAMPED
 		dist = max( dist, refdistance );
 		dist = min( dist, maxdistance );
 		gain = ( 1 - attenuation * ( dist - refdistance ) / ( maxdistance - refdistance ) );
 		break;
 	case 2:
-		//gain = AL_REFERENCE_DISTANCE / (AL_REFERENCE_DISTANCE + AL_ROLLOFF_FACTOR * (distance – AL_REFERENCE_DISTANCE));
+		//gain = AL_REFERENCE_DISTANCE / (AL_REFERENCE_DISTANCE + AL_ROLLOFF_FACTOR * (distance - AL_REFERENCE_DISTANCE));
 		//AL_INVERSE_DISTANCE
 		gain = refdistance / ( refdistance + attenuation * ( dist - refdistance ) );
 		break;
 	case 3:
 		//AL_INVERSE_DISTANCE_CLAMPED
-		//gain = AL_REFERENCE_DISTANCE / (AL_REFERENCE_DISTANCE + AL_ROLLOFF_FACTOR * (distance – AL_REFERENCE_DISTANCE));
+		//gain = AL_REFERENCE_DISTANCE / (AL_REFERENCE_DISTANCE + AL_ROLLOFF_FACTOR * (distance - AL_REFERENCE_DISTANCE));
 		dist = max( dist, refdistance );
 		dist = min( dist, maxdistance );
 		gain = refdistance / ( refdistance + attenuation * ( dist - refdistance ) );
@@ -1684,4 +1697,243 @@ float Q_GainForAttenuation( int model, float maxdistance, float refdistance, flo
 	}
 
 	return gain;
+}
+
+//==========================================
+
+/*
+	ch : rewrite the creator functions so that they take
+	these functions as callback parameters and store these
+	to the allocator objects
+
+		void *Alloc( size_t size, const char *filename, int fileline );
+		void Free( void *data, const char *filename, int fileline );
+
+	and then forget the pool. this is so that we can generalize these utilities
+	to be used in all modules, like Game Sound etc..
+*/
+
+/*
+	BLOCK ALLOCATOR
+
+	cant implicitly free elements.
+	memory is not linear nor in order, no random access supported.
+
+	create new block allocator
+		BlockAllocator( pool, elemSize, blockSize, alloc, free )
+
+	allocate element with the allocator
+		BA_Alloc( block_allocator )
+
+	release the memory of the allocator
+		BlockAllocator_Free( block_allocator )
+
+	TODO: Sys_Error instead of return 0?
+*/
+
+#define BA_DEFAULT_BLOCKSIZE	32
+
+// typedef void *( *alloc_function_t )( size_t, const char*, int );
+// typedef void ( *free_function_t )( void *ptr );
+
+typedef struct block_alloc_block_s
+{
+	void *base;					// base memory
+	size_t numAllocs;			// number of allocations on this block
+	struct block_alloc_block_s *prev;	// umm, we dont really need prev?
+	struct block_alloc_block_s *next;
+} block_alloc_block_t;
+
+struct block_allocator_s
+{
+	size_t blockSize;	// number of elements in block
+	size_t elemSize;	// number of bytes in elements
+	block_alloc_block_t *blocks;
+
+	alloc_function_t alloc;
+	free_function_t free;
+};
+
+block_allocator_t * BlockAllocator( size_t elemSize, size_t blockSize, alloc_function_t alloc_function, free_function_t free_function )
+{
+	block_allocator_t *ba;
+
+	if( !elemSize )
+		return 0;
+
+	if( !blockSize )
+		blockSize = BA_DEFAULT_BLOCKSIZE;
+
+	ba = (block_allocator_t*)alloc_function( sizeof( *ba ), __FILE__, __LINE__ );
+	if( !ba )
+		Sys_Error( "BlockAllocator: Failed to create allocator\n" );
+
+	memset( ba, 0, sizeof( *ba ) );
+	ba->blockSize = blockSize;
+	ba->elemSize = elemSize;
+
+	ba->alloc = alloc_function;
+	ba->free = free_function;
+
+	return ba;
+}
+
+void *BA_Alloc( block_allocator_t *ba )
+{
+	block_alloc_block_t *b;
+
+	// find a free block
+	for( b = ba->blocks; b ; b = b->next )
+	{
+		if( b->numAllocs < ba->blockSize )
+		{
+			b->numAllocs++;
+			return ((unsigned char*)b->base) + ( (b->numAllocs-1) * ba->elemSize );
+		}
+	}
+
+	// lets allocate new block
+	b = (block_alloc_block_t*)ba->alloc( sizeof( *b ) + ba->blockSize * ba->elemSize, __FILE__, __LINE__ );
+	if( !b )
+		Sys_Error( "BlockAllocator: Failed to allocate element\n" );
+
+	memset( b, 0, sizeof( *b ) );
+	b->base = (void*)( &b[1] );
+
+	// since no linearity nor ordering is required,
+	// just drop this to the start of the list
+	b->next = ba->blocks;
+	b->prev = 0;
+	if( ba->blocks )
+		ba->blocks->prev = b;
+	ba->blocks = b;
+
+	b->numAllocs++;
+	return b->base;
+}
+
+void BlockAllocator_Free( block_allocator_t *ba )
+{
+	block_alloc_block_t *b, *next;
+
+	// release all memory
+	for( b = ba->blocks; b; )
+	{
+		next = b->next;
+		ba->free( b, __FILE__, __LINE__ );
+		b = next;
+	}
+
+	ba->free( ba, __FILE__, __LINE__ );
+}
+
+//============================================
+
+/*
+	Linear Alloator
+
+	cant implicitly free elements.
+	memory is linear and does support random access.
+
+	create new linear allocator  (preAllocate is num of elements)
+		LinearAllocator( pool, elemSize, preAllocate)
+
+	allocate element with the allocator (on "top" of the block)
+		LA_Alloc( linear_allocator )
+
+	get pointer to an element
+		LA_Pointer( linear_allocator, size_t index )
+
+	release the memory of the allocator
+		LinearAllocator_Free(linear_allocator )
+
+	TODO: resize?
+	TODO: Sys_Error instead of return 0?
+*/
+
+// minimum number of preallocated elems, also in reallocation
+#define LA_MIN_PREALLOCATE	16
+
+struct linear_allocator_s
+{
+	void *base;
+	size_t elemSize;
+	size_t allocatedElems;	// number of elements allocated and in-use
+	size_t allocatedActual;	// number of actual elements allocated
+
+	alloc_function_t alloc;
+	free_function_t free;
+};
+
+linear_allocator_t * LinearAllocator( size_t elemSize, size_t preAllocate, alloc_function_t alloc_function, free_function_t free_function )
+{
+	linear_allocator_t *la;
+	size_t size;
+
+	if( !elemSize )
+		return 0;
+
+	if( preAllocate < LA_MIN_PREALLOCATE )
+		preAllocate = LA_MIN_PREALLOCATE;
+
+	size = preAllocate * elemSize + sizeof( *la );
+
+	la = (linear_allocator_t*)alloc_function( size, __FILE__, __LINE__ );
+	if( !la )
+		Sys_Error( "LinearAllocator: failed to create allocator\n" );
+	memset( la, 0, sizeof( *la ) );
+	la->base = (void*)( &la[1] );
+	la->elemSize = elemSize;
+	la->allocatedElems = 0;
+	la->allocatedActual = preAllocate;
+
+	la->alloc = alloc_function;
+	la->free = free_function;
+
+	return la;
+}
+
+void *LA_Alloc( linear_allocator_t *la )
+{
+	size_t currSize, newSize;
+
+	if( la->allocatedElems < la->allocatedActual)
+	{
+		la->allocatedElems++;
+		return ((unsigned char*)la->base) + (la->allocatedElems-1) * la->elemSize;
+	}
+
+	currSize = sizeof( *la ) + la->allocatedActual * la->elemSize;
+	newSize = currSize + LA_MIN_PREALLOCATE * la->elemSize;
+
+	la = (linear_allocator_t*)la->alloc( newSize, __FILE__, __LINE__ );
+	if( !la )
+		Sys_Error( "LinearAllocator: Failed to allocate element\n" );
+
+	// fix the base pointer
+	la->base = (void*)( &la[1] );
+
+	// and the size
+	la->allocatedActual += LA_MIN_PREALLOCATE;
+	la->allocatedElems++;
+	return ((unsigned char*)la->base) + (la->allocatedElems-1) * la->elemSize;
+}
+
+void *LA_Pointer( linear_allocator_t *la, size_t index )
+{
+	// Sys_Error?
+	if( index >= la->allocatedElems )
+		Sys_Error( "LinearAllocator: Incorrect index in LA_Pointer\n" );
+
+	return ((unsigned char*)la->base) + index * la->elemSize;
+}
+
+size_t LA_Size( linear_allocator_t *la )
+{
+	return la->allocatedElems;
+}
+
+void LinearAllocator_Free( linear_allocator_t *la )
+{
+	la->free( la, __FILE__, __LINE__ );
 }

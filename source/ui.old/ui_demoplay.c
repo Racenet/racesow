@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 
 #include "ui_local.h"
@@ -90,7 +90,7 @@ static void M_demoplayInit( void )
 static void M_Demoplay_Draw( void )
 {
 	menucommon_t *menuitem;
-	
+
 	menuitem = UI_MenuItemByName( "m_demoplay_slider" );
 	if( menuitem )
 		menuitem->curvalue = trap_Cvar_Value( "demotime" );
@@ -116,7 +116,7 @@ static void M_Demoplay_Draw( void )
 	menuitem = UI_MenuItemByName( "m_demoplay_pause" );
 	if( menuitem )
 		Q_strncpyz( menuitem->title, (trap_Cvar_Value( "demopaused" ) ? "resume demo" : "pause demo"), sizeof( menuitem->title ) );
-	
+
 	Menu_AdjustCursor( &s_demoplay_menu, 1 );
 	Menu_Draw( &s_demoplay_menu );
 }

@@ -1,31 +1,31 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 /*
-   =============================================================================
+=============================================================================
 
-   START SERVER MENU
+START SERVER MENU
 
-   =============================================================================
- */
+=============================================================================
+*/
 static menuframework_s s_startserver_menu;
 
 static void *s_levelshot;
@@ -207,7 +207,7 @@ static void MapsList_UpdateButton( menucommon_t *menuitem )
 	{
 		if( menuitem->localdata[1] == mapList_cur_idx )
 			Q_snprintfz( menuitem->title, MAX_STRING_CHARS, "%s%s",
-			             S_COLOR_RED, item->name );
+			S_COLOR_RED, item->name );
 		else
 			Q_snprintfz( menuitem->title, MAX_STRING_CHARS, item->name );
 	}
@@ -262,11 +262,11 @@ static void MapsList_ChooseMap( menucommon_t *menuitem )
 
 #ifdef SUGGEST_MAP_GAMETYPE
 		mapList_suggested_gametype = SuggestGameType( mapname );
-//		if( m_gametypes_item )
-//		{
-//			m_gametypes_item->curvalue = mapList_suggested_gametype;
-//			M_GametypeFunc( m_gametypes_item );
-//		}
+		//		if( m_gametypes_item )
+		//		{
+		//			m_gametypes_item->curvalue = mapList_suggested_gametype;
+		//			M_GametypeFunc( m_gametypes_item );
+		//		}
 #endif
 
 		Q_snprintfz( path, sizeof( path ), "levelshots/%s.jpg", mapname );
@@ -282,13 +282,13 @@ static int MapsList_CreateScrollbox( int parent_width, int yoffset )
 	menucommon_t *menuitem;
 	int width, scrollbar_id;
 	const int lineheight = trap_SCR_strHeight( uis.fontSystemSmall );
-	
+
 	width = parent_width / 2 - 8;
 	mapList_viewable_items = MAPPIC_HEIGHT / lineheight - 1;
 
 	menuitem = UI_InitMenuItem( "m_mapList_scrollbar", NULL, 0, yoffset,
-	                            MTYPE_SCROLLBAR, ALIGN_RIGHT_TOP,
-	                            uis.fontSystemSmall, MapsList_UpdateScrollbar );
+		MTYPE_SCROLLBAR, ALIGN_RIGHT_TOP,
+		uis.fontSystemSmall, MapsList_UpdateScrollbar );
 	menuitem->scrollbar_id = scrollbar_id = s_startserver_menu.nitems;
 	Q_strncpyz( menuitem->title, va( "m_mapList_scrollbar%i_curvalue", scrollbar_id ), sizeof( menuitem->title ) );
 	UI_SetupScrollbar( menuitem, mapList_viewable_items, trap_Cvar_Value( menuitem->title ), 0, 0 );
@@ -297,9 +297,9 @@ static int MapsList_CreateScrollbox( int parent_width, int yoffset )
 	for( i = 0; i < mapList_viewable_items; i++ )
 	{
 		menuitem = UI_InitMenuItem( va( "m_maps_button_%i", i ), "",
-		                            -width, yoffset,
-		                            MTYPE_ACTION, ALIGN_LEFT_TOP,
-		                            uis.fontSystemSmall, MapsList_ChooseMap );
+			-width, yoffset,
+			MTYPE_ACTION, ALIGN_LEFT_TOP,
+			uis.fontSystemSmall, MapsList_ChooseMap );
 		menuitem->callback_doubleclick = StartServerActionFunc;
 		menuitem->ownerdraw = MapsList_UpdateButton;
 		menuitem->scrollbar_id = scrollbar_id;
@@ -451,9 +451,9 @@ void M_StartServer_MakeGametypesNames( char *list )
 	startserver_gametype_names[i] = NULL;
 }
 
-//==================
-//M_StartServer_DrawSettingsBox
-//==================
+/*
+* M_StartServer_DrawSettingsBox
+*/
 static void M_StartServer_DrawSettingsBox( menucommon_t *menuitem )
 {
 	int x, y;
@@ -665,7 +665,7 @@ static void StartServer_MenuDraw( void )
 	Menu_Draw( &s_startserver_menu );
 
 	trap_R_DrawStretchPic( x, y, MAPPIC_WIDTH, MAPPIC_HEIGHT,
-	                       0, 0, 1, 1, colorWhite, (struct shader_s *)s_levelshot );
+		0, 0, 1, 1, colorWhite, (struct shader_s *)s_levelshot );
 }
 
 static const char *StartServer_MenuKey( int key )
@@ -675,7 +675,7 @@ static const char *StartServer_MenuKey( int key )
 	item = Menu_ItemAtCursor( &s_startserver_menu );
 
 	if( key == K_ESCAPE || ( ( key == K_MOUSE2 ) && ( item->type != MTYPE_SPINCONTROL ) &&
-	                        ( item->type != MTYPE_SLIDER ) ) )
+		( item->type != MTYPE_SLIDER ) ) )
 	{
 		UI_FreeScrollItemList( &mapList );
 	}

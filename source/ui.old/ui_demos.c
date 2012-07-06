@@ -1,33 +1,33 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include <string.h>
 #include "ui_local.h"
 
 /*
-   =============================================================================
+=============================================================================
 
-   DEMOS MENU
+DEMOS MENU
 
-   =============================================================================
- */
+=============================================================================
+*/
 static void Demos_MenuInit( void );
 
 static menuframework_s s_demos_menu;
@@ -68,9 +68,9 @@ static void M_Demos_PreviousFolder( void )
 		Demos_MenuInit();
 	}
 }
-//==================
-//M_Demos_CreateFolderList
-//==================
+/*
+* M_Demos_CreateFolderList
+*/
 static void M_Demos_CreateFolderList( void )
 {
 	char *s;
@@ -113,9 +113,9 @@ static void M_Demos_CreateFolderList( void )
 	while( i < numfolders );
 }
 
-//==================
-//M_Demos_CreateDemosList
-//==================
+/*
+* M_Demos_CreateDemosList
+*/
 static void M_Demos_CreateDemosList( void )
 {
 	char *s;
@@ -150,9 +150,9 @@ static void M_Demos_CreateDemosList( void )
 	while( i < numdemos );
 }
 
-//==================
-//M_Demos_CreateItemList
-//==================
+/*
+* M_Demos_CreateItemList
+*/
 static void M_Demos_CreateItemList( void )
 {
 	// first free the current list
@@ -173,9 +173,9 @@ static void M_Demos_CreateItemList( void )
 static int scrollbar_curvalue = 0;
 static int scrollbar_id = 0;
 
-//==================
-//M_Connect_UpdateScrollbar
-//==================
+/*
+* M_Connect_UpdateScrollbar
+*/
 static void M_Demos_UpdateScrollbar( menucommon_t *menuitem )
 {
 	menuitem->maxvalue = max( 0, demosItemsList.numItems - MAX_MENU_LIST_ITEMS );
@@ -185,9 +185,9 @@ static void M_Demos_UpdateScrollbar( menucommon_t *menuitem )
 	scrollbar_curvalue = menuitem->curvalue;
 }
 
-//==================
-//M_Demo_Playdemo
-//==================
+/*
+* M_Demo_Playdemo
+*/
 static void M_Demo_Playdemo( menucommon_t *menuitem )
 {
 	char buffer[MAX_STRING_CHARS];
@@ -242,9 +242,9 @@ static void M_Demo_Playdemo( menucommon_t *menuitem )
 	}
 }
 
-//==================
-//M_Demo_DemoButton
-//==================
+/*
+* M_Demo_DemoButton
+*/
 static void M_Demo_UpdateButton( menucommon_t *menuitem )
 {
 	m_listitem_t *item;
@@ -259,9 +259,9 @@ static void M_Demo_UpdateButton( menucommon_t *menuitem )
 		Q_snprintfz( menuitem->title, MAX_STRING_CHARS, NO_ITEM_STRING );
 }
 
-//==================
-//Demos_MenuInit
-//==================
+/*
+* Demos_MenuInit
+*/
 void Demos_MenuInit( void )
 {
 	char path[MAX_QPATH];
@@ -279,7 +279,7 @@ void Demos_MenuInit( void )
 		scrollwindow_width = uis.vidWidth * 0.65;
 
 	/*This is a hack, but utilizes the most room at low resolutions
-	   while leaving room so that the logo does not interfere. */
+	while leaving room so that the logo does not interfere. */
 	if( uis.vidHeight < 768 )
 		yoffset = uis.vidHeight * 0.07;
 	else
@@ -377,7 +377,7 @@ static const char *Demos_MenuKey( int key )
 	item = Menu_ItemAtCursor( &s_demos_menu );
 
 	if( key == K_ESCAPE || ( ( key == K_MOUSE2 ) && ( item->type != MTYPE_SPINCONTROL ) &&
-	                        ( item->type != MTYPE_SLIDER ) ) )
+		( item->type != MTYPE_SLIDER ) ) )
 	{
 		UI_FreeScrollItemList( &demosItemsList );
 	}

@@ -22,14 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // r_model.c -- model loading and caching
 
 #include "r_local.h"
+#include "iqm.h"
 
-#ifdef QUAKE2_JUNK
-void Mod_LoadAliasMD2Model( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *unused );
-#endif
 void Mod_LoadAliasMD3Model( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *unused );
-#ifdef QUAKE2_JUNK
-void Mod_LoadSpriteModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *unused );
-#endif
 void Mod_LoadSkeletalModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *unused );
 void Mod_LoadQ1BrushModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *format );
 void Mod_LoadQ2BrushModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *format );
@@ -37,30 +32,28 @@ void Mod_LoadQ3BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 
 model_t *Mod_LoadModel( model_t *mod, qboolean crash );
 
-model_t *mod_inline;
+static void R_InitMapConfig( const char *model );
+static void R_FinishMapConfig( void );
+
 static qbyte mod_novis[MAX_MAP_LEAFS/8];
 
-#define	MAX_MOD_KNOWN	512*4
+#define	MAX_MOD_KNOWN	512*MOD_MAX_LODS
 static model_t mod_known[MAX_MOD_KNOWN];
 static int mod_numknown;
 static int modfilelen;
+static qboolean mod_isworldmodel;
+static model_t *r_prevworldmodel;
+static mapconfig_t *mod_mapConfigs;
 
 static mempool_t *mod_mempool;
 
 static const modelFormatDescr_t mod_supportedformats[] =
 {
-#ifdef QUAKE2_JUNK
-	// Quake2 .md2 models
-	{ IDMD2HEADER, 4, NULL, MD3_ALIAS_MAX_LODS, ( const modelLoader_t )Mod_LoadAliasMD2Model },
-#endif
 	// Quake III Arena .md3 models
-	{ IDMD3HEADER, 4, NULL, MD3_ALIAS_MAX_LODS, ( const modelLoader_t )Mod_LoadAliasMD3Model },
-#ifdef QUAKE2_JUNK
-	// Quake2 .sp2 sprites
-	{ IDSP2HEADER, 4, NULL, 0, ( const modelLoader_t )Mod_LoadSpriteModel },
-#endif
+	{ IDMD3HEADER, 4, NULL, MOD_MAX_LODS, ( const modelLoader_t )Mod_LoadAliasMD3Model },
+
 	// Skeletal models
-	{ SKMHEADER, 4, NULL, SKM_MAX_LODS, ( const modelLoader_t )Mod_LoadSkeletalModel },
+	{ IQM_MAGIC, sizeof( IQM_MAGIC ), NULL, MOD_MAX_LODS, ( const modelLoader_t )Mod_LoadSkeletalModel },
 
 	// Q3-alike .bsp models
 	{ "*", 4, q3BSPFormats, 0, ( const modelLoader_t )Mod_LoadQ3BrushModel },
@@ -78,9 +71,7 @@ static const modelFormatDescr_t mod_supportedformats[] =
 //===============================================================================
 
 /*
-===============
-Mod_PointInLeaf
-===============
+* Mod_PointInLeaf
 */
 mleaf_t *Mod_PointInLeaf( vec3_t p, model_t *model )
 {
@@ -106,9 +97,7 @@ mleaf_t *Mod_PointInLeaf( vec3_t p, model_t *model )
 }
 
 /*
-==============
-Mod_ClusterVS
-==============
+* Mod_ClusterVS
 */
 static inline qbyte *Mod_ClusterVS( int cluster, dvis_t *vis )
 {
@@ -118,31 +107,17 @@ static inline qbyte *Mod_ClusterVS( int cluster, dvis_t *vis )
 }
 
 /*
-==============
-Mod_ClusterPVS
-==============
+* Mod_ClusterPVS
 */
 qbyte *Mod_ClusterPVS( int cluster, model_t *model )
 {
 	return Mod_ClusterVS( cluster, (( mbrushmodel_t * )model->extradata)->pvs );
 }
 
-/*
-==============
-Mod_ClusterPHS
-==============
-*/
-qbyte *Mod_ClusterPHS( int cluster, model_t *model )
-{
-	return Mod_ClusterVS( cluster, (( mbrushmodel_t * )model->extradata)->phs );
-}
-
 //===============================================================================
 
 /*
-=================
-Mod_SetParent
-=================
+* Mod_SetParent
 */
 static void Mod_SetParent( mnode_t *node, mnode_t *parent )
 {
@@ -154,9 +129,7 @@ static void Mod_SetParent( mnode_t *node, mnode_t *parent )
 }
 
 /*
-=================
-Mod_CreateVisLeafs
-=================
+* Mod_CreateVisLeafs
 */
 static void Mod_CreateVisLeafs( model_t *mod )
 {
@@ -220,41 +193,95 @@ static void Mod_CreateVisLeafs( model_t *mod )
 }
 
 /*
-=================
-Mod_FinishFaces
-=================
+* Mod_CalculateAutospriteBounds
+*
+* Make bounding box of an autosprite surf symmetric and enlarges it
+* to account for rotation along the longest axis.
+*/
+static void Mod_CalculateAutospriteBounds( msurface_t *surf )
+{
+	int j;
+	int l_axis, s1_axis, s2_axis;
+	vec_t dist, max_dist;
+	vec_t radius[3];
+	vec3_t centre;
+	vec_t *mins = surf->mins, *maxs = surf->maxs;
+
+	// find the longest axis
+	l_axis = 2;
+	max_dist = -9999999;
+	for( j = 0; j < 3; j++ ) {
+		dist = maxs[j] - mins[j];
+		if( dist > max_dist ) {
+			l_axis = j;
+			max_dist = dist;
+		}
+
+		// make the bbox symmetrical
+		radius[j] = dist * 0.5;
+		centre[j] = (maxs[j] + mins[j]) * 0.5;
+		mins[j] = centre[j] - radius[j];
+		maxs[j] = centre[j] + radius[j];
+	}
+
+	// shorter axis
+	s1_axis = (l_axis + 1) % 3;
+	s2_axis = (l_axis + 2) % 3;
+
+	// enlarge the bounding box, accouting for rotation along the longest axis
+	maxs[s1_axis] = max( maxs[s1_axis], centre[s1_axis] + radius[s2_axis] );
+	maxs[s2_axis] = max( maxs[s2_axis], centre[s2_axis] + radius[s1_axis] );
+
+	mins[s1_axis] = min( mins[s1_axis], centre[s1_axis] - radius[s2_axis] );
+	mins[s2_axis] = min( mins[s2_axis], centre[s2_axis] - radius[s1_axis] );
+}
+
+/*
+* Mod_FinishFaces
 */
 static void Mod_FinishFaces( model_t *mod )
 {
 	int i, j;
+	shader_t *shader;
 	mbrushmodel_t *loadbmodel = (( mbrushmodel_t * )mod->extradata);
 
 	for( i = 0; i < loadbmodel->numsurfaces; i++ )
 	{
 		vec_t *vert;
-		msurface_t *surf = loadbmodel->surfaces + i;
-		mesh_t *mesh = surf->mesh;
-		vec3_t ebbox = { 0, 0, 0 };
+		msurface_t *surf;
+		mesh_t *mesh;
+
+		surf = loadbmodel->surfaces + i;
+		mesh = surf->mesh;
+		shader = surf->shader;
 
 		if( !mesh || R_InvalidMesh( mesh ) )
 			continue;
 
-		ClearBounds( surf->mins, surf->maxs );
-		for( j = 0, vert = mesh->xyzArray[0]; j < mesh->numVerts; j++, vert += 4 )
+		// calculate bounding box of a surface
+		vert = mesh->xyzArray[0];
+		VectorCopy( vert, surf->mins );
+		VectorCopy( vert, surf->maxs );
+		for( j = 1, vert += 4; j < mesh->numVerts; j++, vert += 4 ) {
 			AddPointToBounds( vert, surf->mins, surf->maxs );
-		VectorSubtract( surf->mins, ebbox, surf->mins );
-		VectorAdd( surf->maxs, ebbox, surf->maxs );
+		}
 
 		// store mesh information in surface struct for faster access
-		surf->numVertexes = mesh->numVerts;
+		surf->numVerts = mesh->numVerts;
 		surf->numElems = mesh->numElems;
+
+		// handle autosprites
+		if( shader->flags & SHADER_AUTOSPRITE ) {
+			// handle autosprites as trisurfs to avoid backface culling
+			surf->facetype = FACETYPE_TRISURF;
+
+			Mod_CalculateAutospriteBounds( surf );
+		}
 	}
 }
 
 /*
-=================
-Mod_SetupSubmodels
-=================
+* Mod_SetupSubmodels
 */
 static void Mod_SetupSubmodels( model_t *mod )
 {
@@ -268,7 +295,7 @@ static void Mod_SetupSubmodels( model_t *mod )
 	for( i = 0; i < loadbmodel->numsubmodels; i++ )
 	{
 		bm = &loadbmodel->submodels[i];
-		starmod = &mod_inline[i];
+		starmod = &loadbmodel->inlines[i];
 		bmodel = ( mbrushmodel_t * )starmod->extradata;
 
 		memcpy( starmod, mod, sizeof( model_t ) );
@@ -339,7 +366,7 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 
 		// build visibility data for each face, based on what leafs
 		// this face belongs to (visible from)
-		visdata = Mod_Malloc( mod, rowbytes * loadbmodel->numsurfaces );
+		visdata = Mod_Malloc( mod, rowlongs * 4 * loadbmodel->numsurfaces );
 		areadata = Mod_Malloc( mod, areabytes * loadbmodel->numsurfaces );
 		for( pleaf = loadbmodel->visleafs, leaf = *pleaf; leaf; leaf = *pleaf++ )
 		{
@@ -403,17 +430,13 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 
 		shader = surf->shader;
 
-		// skies and portals can not be merged either
-		if( shader->flags & (SHADER_SKY|SHADER_PORTAL|SHADER_PORTAL_CAPTURE|SHADER_PORTAL_CAPTURE2) )
-			continue;
-
 		// we use hardware transforms to render this shader for whatever reasons
 		if( !(shader->features & MF_HARDWARE) )
 			continue;
 
 		// lightstyled faces with vertex lighting enabled can not be done in hardware
 		// despite shader saying otherwise
-		if( r_lighting_vertexlight->integer && ( r_superLightStyles[surf->superLightStyle].features & MF_COLORS1 ) )
+		if( r_lighting_vertexlight->integer && ( loadbmodel->superLightStyles[surf->superLightStyle].features & MF_COLORS1 ) )
 			continue;
 
 		// hardware fog requires GLSL support
@@ -429,7 +452,11 @@ static int Mod_CreateSubmodelBufferObjects( model_t *mod, int modnum, size_t *vb
 		ecount = mesh->numElems;
 
 		// if the shader explicitly says we can not using batch, so be it
-		if( !(surf->shader->features & MF_NONBATCHED) )
+		// portals can not be batched either
+		if( 
+			!(surf->shader->features & MF_NONBATCHED)
+			//|| !(shader->flags & (SHADER_PORTAL|SHADER_PORTAL_CAPTURE|SHADER_PORTAL_CAPTURE2))
+			)
 		{
 			// scan remaining face checking whether we merge them with the current one
 			for( j = 0, surf2 = loadbmodel->surfaces + bm->firstface + j; j < bm->numfaces; j++, surf2++ )
@@ -482,13 +509,16 @@ merge:
 		}
 
 		// create vertex buffer object for this face then upload data
-		vbo = R_CreateStaticMeshVBO( ( void * )surf, vcount, ecount, shader->features | r_superLightStyles[surf->superLightStyle].features );
+		vbo = R_CreateStaticMeshVBO( ( void * )surf, vcount, ecount, 
+			shader->features | loadbmodel->superLightStyles[surf->superLightStyle].features, VBO_TAG_WORLD );
 		if( vbo )
 		{
 			int errArr;
 
 			// upload vertex and elements data for face itself
 			surf->vbo = vbo;
+			surf->firstVBOVert = 0;
+			surf->firstVBOElem = 0;
 			errArr = R_UploadVBOVertexData( vbo, 0, surf->mesh );
 			R_UploadVBOElemData( vbo, 0, 0, surf->mesh );
 
@@ -506,6 +536,9 @@ merge:
 					mesh2 = surf2->mesh;
 
 					surf2->vbo = vbo;
+					surf2->firstVBOVert = vcount;
+					surf2->firstVBOElem = ecount;
+
 					errArr |= R_UploadVBOVertexData( vbo, vcount, mesh2 );
 					R_UploadVBOElemData( vbo, vcount, ecount, mesh2 );
 
@@ -560,6 +593,13 @@ void Mod_CreateVertexBufferObjects( model_t *mod )
 	if( !glConfig.ext.vertex_buffer_object )
 		return;
 
+	// free all VBO's allocated for previous world map so
+	// we won't end up with both maps residing in video memory
+	// until R_FreeUnusedVBOs call
+	if( r_prevworldmodel && r_prevworldmodel->registration_sequence != r_front.registration_sequence ) {
+		R_FreeVBOsByTag( VBO_TAG_WORLD );
+	}
+
 	for( i = 0; i < loadbmodel->numsubmodels; i++ )
 	{
 		vbos = Mod_CreateSubmodelBufferObjects( mod, i, &size );
@@ -572,9 +612,7 @@ void Mod_CreateVertexBufferObjects( model_t *mod )
 }
 
 /*
-=================
-Mod_FinalizeBrushModel
-=================
+* Mod_FinalizeBrushModel
 */
 static void Mod_FinalizeBrushModel( model_t *model )
 {
@@ -585,49 +623,128 @@ static void Mod_FinalizeBrushModel( model_t *model )
 	Mod_SetupSubmodels( model );
 
 	Mod_SetParent( (( mbrushmodel_t * )model->extradata)->nodes, NULL );
+
+	Mod_CreateVertexBufferObjects( model );
+}
+
+/*
+* Mod_TouchBrushModel
+*/
+static void Mod_TouchBrushModel( model_t *model )
+{
+	int i;
+	int modnum;
+	mmodel_t *bm;
+	mbrushmodel_t *loadbmodel;
+	msurface_t *surf;
+
+	assert( model );
+
+	loadbmodel = (( mbrushmodel_t * )model->extradata);
+	assert( loadbmodel );
+
+	// touch all shaders and vertex buffer objects for this bmodel
+
+	for( modnum = 0; modnum < loadbmodel->numsubmodels; modnum++ ) {
+		loadbmodel->inlines[modnum].registration_sequence = r_front.registration_sequence;
+
+		bm = loadbmodel->submodels + modnum;
+		for( i = 0, surf = loadbmodel->surfaces + bm->firstface; i < bm->numfaces; i++, surf++ ) {
+			if( surf->shader ) {
+				R_TouchShader( surf->shader );
+			}
+			if( surf->vbo ) {
+				R_TouchMeshVBO( surf->vbo );
+			}
+		}
+	}
+
+	for( i = 0; i < loadbmodel->numfogs; i++ ) {
+		if( loadbmodel->fogs[i].shader ) {
+			R_TouchShader( loadbmodel->fogs[i].shader );
+		}
+	}
+
+	R_TouchLightmapImages( model );
 }
 
 //===============================================================================
 
 /*
-================
-Mod_Modellist_f
-================
+* Mod_Modellist_f
 */
 void Mod_Modellist_f( void )
 {
 	int i;
 	model_t	*mod;
-	int total;
+	size_t size, total;
 
 	total = 0;
 	Com_Printf( "Loaded models:\n" );
 	for( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
 	{
-		if( !mod->name )
-			break;
-		Com_Printf( "%8i : %s\n", mod->mempool->totalsize, mod->name );
-		total += mod->mempool->totalsize;
+		if( !mod->name ) {
+			continue;
+		}
+		size = Mem_PoolTotalSize( mod->mempool );
+		Com_Printf( "%8i : %s\n", size, mod->name );
+		total += size;
 	}
 	Com_Printf( "Total: %i\n", mod_numknown );
 	Com_Printf( "Total resident: %i\n", total );
 }
 
 /*
-===============
-R_InitModels
-===============
+* R_InitModels
 */
 void R_InitModels( void )
 {
 	mod_mempool = Mem_AllocPool( NULL, "Models" );
 	memset( mod_novis, 0xff, sizeof( mod_novis ) );
+	mod_isworldmodel = qfalse;
+	r_prevworldmodel = NULL;
+	mod_mapConfigs = Mem_Alloc( mod_mempool, sizeof( *mod_mapConfigs ) * MAX_MOD_KNOWN );
 }
 
 /*
-================
-R_ShutdownModels
-================
+* Mod_Free
+*/
+static void Mod_Free( model_t *model )
+{
+	Mem_FreePool( &model->mempool );
+	memset( model, 0, sizeof( *model ) );
+	model->type = mod_bad;
+}
+
+/*
+* R_FreeUnusedModels
+*/
+void R_FreeUnusedModels( void )
+{
+	int i;
+	model_t *mod;
+
+	for( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ ) {
+		if( !mod->name ) {
+			continue;
+		}
+		if( mod->registration_sequence == r_front.registration_sequence ) {
+			// we need this model
+			continue;
+		}
+
+		Mod_Free( mod );
+	}
+
+	// check whether the world model has been freed
+	if( r_worldmodel && r_worldmodel->type == mod_bad ) {
+		r_worldmodel = NULL;
+		r_worldbrushmodel = NULL;
+	}
+}
+
+/*
+* R_ShutdownModels
 */
 void R_ShutdownModels( void )
 {
@@ -636,16 +753,10 @@ void R_ShutdownModels( void )
 	if( !mod_mempool )
 		return;
 
-	if( mod_inline )
-	{
-		Mem_Free( mod_inline );
-		mod_inline = NULL;
-	}
-
-	for( i = 0; i < mod_numknown; i++ )
-	{
-		if( mod_known[i].mempool )
-			Mem_FreePool( &mod_known[i].mempool );
+	for( i = 0; i < mod_numknown; i++ ) {
+		if( mod_known[i].name ) {
+			Mod_Free( &mod_known[i] );
+		}
 	}
 
 	r_worldmodel = NULL;
@@ -658,52 +769,43 @@ void R_ShutdownModels( void )
 }
 
 /*
-=================
-Mod_StripLODSuffix
-=================
+* Mod_StripLODSuffix
 */
 void Mod_StripLODSuffix( char *name )
 {
-	int len, lodnum;
+	size_t len;
 
 	len = strlen( name );
 	if( len <= 2 )
 		return;
+	if( name[len-2] != '_' )
+		return;
 
-	lodnum = atoi( &name[len - 1] );
-	if( lodnum < MD3_ALIAS_MAX_LODS )
-	{
-		if( name[len-2] == '_' )
-			name[len-2] = 0;
-	}
+	if( name[len-1] >= '0' && name[len-1] <= '0' + MOD_MAX_LODS )
+		name[len-2] = 0;
 }
 
 /*
-==================
-Mod_FindSlot
-==================
+* Mod_FindSlot
 */
-static model_t *Mod_FindSlot( const char *name, const char *shortname )
+static model_t *Mod_FindSlot( const char *name )
 {
 	int i;
 	model_t	*mod, *best;
-	size_t shortlen = shortname ? strlen( shortname ) : 0;
 
 	//
 	// search the currently loaded models
 	//
 	for( i = 0, mod = mod_known, best = NULL; i < mod_numknown; i++, mod++ )
 	{
-		if( !Q_stricmp( mod->name, name ) )
-			return mod;
-
-		if( ( mod->type == mod_bad ) && shortlen )
-		{
-			if( !Q_strnicmp( mod->name, shortname, shortlen ) )
-			{                                               // same basename, different extension
+		if( mod->type == mod_bad ) {
+			if( !best ) {
 				best = mod;
-				shortlen = 0;
 			}
+			continue;
+		}
+		if( !Q_stricmp( mod->name, name ) ) {
+			return mod;
 		}
 	}
 
@@ -718,13 +820,11 @@ static model_t *Mod_FindSlot( const char *name, const char *shortname )
 	//
 	if( mod_numknown == MAX_MOD_KNOWN )
 		Com_Error( ERR_DROP, "mod_numknown == MAX_MOD_KNOWN" );
-	return &mod_known[mod_numknown];
+	return &mod_known[mod_numknown++];
 }
 
 /*
-==================
-Mod_Handle
-==================
+* Mod_Handle
 */
 unsigned int Mod_Handle( model_t *mod )
 {
@@ -732,9 +832,7 @@ unsigned int Mod_Handle( model_t *mod )
 }
 
 /*
-==================
-Mod_ForHandle
-==================
+* Mod_ForHandle
 */
 model_t *Mod_ForHandle( unsigned int elem )
 {
@@ -742,11 +840,9 @@ model_t *Mod_ForHandle( unsigned int elem )
 }
 
 /*
-==================
-Mod_ForName
-
-Loads in a model for the given name
-==================
+* Mod_ForName
+* 
+* Loads in a model for the given name
 */
 model_t *Mod_ForName( const char *name, qboolean crash )
 {
@@ -770,16 +866,17 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 		i = atoi( name+1 );
 		if( i < 1 || !r_worldmodel || i >= r_worldbrushmodel->numsubmodels )
 			Com_Error( ERR_DROP, "bad inline model number" );
-		return &mod_inline[i];
+		return &r_worldbrushmodel->inlines[i];
 	}
 
 	Q_strncpyz( shortname, name, sizeof( shortname ) );
 	COM_StripExtension( shortname );
 	extension = &name[strlen( shortname )+1];
 
-	mod = Mod_FindSlot( name, shortname );
-	if( mod->name && !strcmp( mod->name, name ) )
-		return mod->type != mod_bad ? mod : NULL;
+	mod = Mod_FindSlot( name );
+	if( mod->type != mod_bad ) {
+		return mod;
+	}
 
 	//
 	// load the file
@@ -788,10 +885,10 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 	if( !buf && crash )
 		Com_Error( ERR_DROP, "Mod_NumForName: %s not found", name );
 
-	if( mod->mempool )  // overwrite
+	// free data we may still have from the previous load attempt for this model slot
+	if( mod->mempool ) {
 		Mem_FreePool( &mod->mempool );
-	else
-		mod_numknown++;
+	}
 
 	mod->type = mod_bad;
 	mod->mempool = Mem_AllocPool( mod_mempool, name );
@@ -810,13 +907,25 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 		return NULL;
 	}
 
+	if( mod_isworldmodel ) {
+		// we only init map config when loading the map from disk
+		R_InitMapConfig( name );
+	}
+
 	descr->loader( mod, NULL, buf, bspFormat );
 	if( ( qbyte *)buf != stack )
 		FS_FreeFile( buf );
 
+	if( mod_isworldmodel ) {
+		// we only init map config when loading the map from disk
+		R_FinishMapConfig();
+	}
+
 	// do some common things
-	if( mod->type == mod_brush )
+	if( mod->type == mod_brush ) {
 		Mod_FinalizeBrushModel( mod );
+		mod->touch = &Mod_TouchBrushModel;
+	}
 
 	if( !descr->maxLods )
 		return mod;
@@ -824,6 +933,7 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 	//
 	// load level-of-detail models
 	//
+	mod->lodnum = 0;
 	mod->numlods = 0;
 	for( i = 0; i < descr->maxLods; i++ )
 	{
@@ -832,11 +942,12 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 		if( !buf || strncmp( (const char *)buf, descr->header, descr->headerLen ) )
 			break;
 
-		lod = mod->lods[i] = Mod_FindSlot( lodname, NULL );
+		lod = mod->lods[i] = Mod_FindSlot( lodname );
 		if( lod->name && !strcmp( lod->name, lodname ) )
 			continue;
 
 		lod->type = mod_bad;
+		lod->lodnum = i+1;
 		lod->mempool = Mem_AllocPool( mod_mempool, lodname );
 		lod->name = Mod_Malloc( lod, strlen( lodname ) + 1 );
 		strcpy( lod->name, lodname );
@@ -853,71 +964,43 @@ model_t *Mod_ForName( const char *name, qboolean crash )
 	return mod;
 }
 
-#ifdef QUAKE2_JUNK
-
 /*
-==============================================================================
-
-SPRITE MODELS
-
-==============================================================================
+* R_TouchModel
 */
-
-/*
-=================
-Mod_LoadSpriteModel
-=================
-*/
-void Mod_LoadSpriteModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *unused )
+static void R_TouchModel( model_t *mod )
 {
 	int i;
-	dsprite_t *sprin;
-	smodel_t *sprout;
-	dsprframe_t *sprinframe;
-	sframe_t *sproutframe;
+	model_t *lod;
 
-	sprin = (dsprite_t *)buffer;
-
-	if( LittleLong( sprin->version ) != SPRITE_VERSION )
-		Com_Error( ERR_DROP, "%s has wrong version number (%i should be %i)",
-		mod->name, LittleLong( sprin->version ), SPRITE_VERSION );
-
-	mod->extradata = sprout = Mod_Malloc( mod, sizeof( smodel_t ) );
-	sprout->numframes = LittleLong( sprin->numframes );
-
-	sprinframe = sprin->frames;
-	sprout->frames = sproutframe = Mod_Malloc( mod, sizeof( sframe_t ) * sprout->numframes );
-
-	mod->radius = 0;
-	ClearBounds( mod->mins, mod->maxs );
-
-	// byte swap everything
-	for( i = 0; i < sprout->numframes; i++, sprinframe++, sproutframe++ )
-	{
-		sproutframe->width = LittleLong( sprinframe->width );
-		sproutframe->height = LittleLong( sprinframe->height );
-		sproutframe->origin_x = LittleLong( sprinframe->origin_x );
-		sproutframe->origin_y = LittleLong( sprinframe->origin_y );
-		sproutframe->shader = R_RegisterPic( sprinframe->name );
-		sproutframe->radius = sqrt( sproutframe->width * sproutframe->width + sproutframe->height * sproutframe->height );
-		mod->radius = max( mod->radius, sproutframe->radius );
+	if( mod->registration_sequence == r_front.registration_sequence ) {
+		return;
 	}
 
-	mod->type = mod_sprite;
-}
+	// touching a model precaches all images and possibly other assets
+	mod->registration_sequence = r_front.registration_sequence;
+	if( mod->touch ) {
+		mod->touch( mod );
+	}
 
-#endif
+	// handle Level Of Details
+	for( i = 0; i < mod->numlods; i++ ) {
+		lod = mod->lods[i];
+		lod->registration_sequence = r_front.registration_sequence;
+		if( lod->touch ) {
+			lod->touch( lod );
+		}
+	}
+}
 
 //=============================================================================
 
 /*
-=================
-R_RegisterWorldModel
-
-Specifies the model that will be used as the world
-=================
+* R_InitMapConfig
+*
+* Clears map config before loading the map from disk. NOT called when the map
+* is reloaded from model cache.
 */
-void R_RegisterWorldModel( const char *model, const dvis_t *pvsData, const dvis_t *phsData )
+static void R_InitMapConfig( const char *model )
 {
 	memset( &mapConfig, 0, sizeof( mapConfig ) );
 
@@ -956,20 +1039,15 @@ void R_RegisterWorldModel( const char *model, const dvis_t *pvsData, const dvis_
 			}
 		}
 	}
+}
 
-	r_farclip_min = Z_NEAR; // sky shaders will most likely modify this value
-	r_environment_color->modified = qtrue;
-
-	r_worldmodel = Mod_ForName( model, qtrue );
-	r_worldbrushmodel = ( mbrushmodel_t * )r_worldmodel->extradata;
-	r_worldbrushmodel->pvs = ( dvis_t * )pvsData;
-	r_worldbrushmodel->phs = ( dvis_t * )phsData;
-
-	r_worldent->scale = 1.0f;
-	r_worldent->model = r_worldmodel;
-	r_worldent->rtype = RT_MODEL;
-	Matrix_Identity( r_worldent->axis );
-
+/*
+* R_FinishMapConfig
+*
+* Called after loading the map from disk.
+*/
+static void R_FinishMapConfig( void )
+{
 	// ambient lighting
 	if( r_fullbright->integer )
 	{
@@ -980,11 +1058,11 @@ void R_RegisterWorldModel( const char *model, const dvis_t *pvsData, const dvis_
 		int i;
 		float scale;
 
-		scale = (float)( 1 << mapConfig.pow2MapOvrbr ) * (mapConfig.lightingIntensity ? mapConfig.lightingIntensity : 1.0) / 255.0f;
+		scale = mapConfig.mapLightColorScale / 255.0f;
 		if( mapConfig.lightingIntensity )
 		{
 			for( i = 0; i < 3; i++ )
-				mapConfig.ambient[i] = mapConfig.ambient[i]* scale;
+				mapConfig.ambient[i] = mapConfig.ambient[i] * scale;
 		}
 		else
 		{
@@ -992,30 +1070,70 @@ void R_RegisterWorldModel( const char *model, const dvis_t *pvsData, const dvis_
 				mapConfig.ambient[i] = bound( 0, mapConfig.ambient[i] * scale, 1 );
 		}
 	}
+}
 
+//=============================================================================
+
+/*
+* R_RegisterWorldModel
+* 
+* Specifies the model that will be used as the world
+*/
+void R_RegisterWorldModel( const char *model, const dvis_t *pvsData )
+{
 	r_framecount = 1;
-
 	r_oldviewcluster = r_viewcluster = -1;  // force markleafs
+	r_viewarea = -1;
+	r_farclip_min = Z_NEAR; // sky shaders will most likely modify this value
 
-	R_AllocWorldMeshLists ();
+	r_prevworldmodel = r_worldmodel;
+	r_worldmodel = NULL;
+	r_worldbrushmodel = NULL;
 
-	Mod_CreateVertexBufferObjects( r_worldmodel );
+	mod_isworldmodel = qtrue;
+	r_worldmodel = Mod_ForName( model, qtrue );
+	mod_isworldmodel = qfalse;
+
+	// FIXME: this is ugly... Resolve by allowing non-world .bsp models?
+	if( r_worldmodel ) {
+		// store or restore map config
+		if( r_worldmodel->registration_sequence == r_front.registration_sequence ) {
+			mod_mapConfigs[r_worldmodel - mod_known] = mapConfig;
+		}
+		else {
+			mapConfig = mod_mapConfigs[r_worldmodel - mod_known];
+		}
+	}
+
+	R_TouchModel( r_worldmodel );
+
+	r_worldbrushmodel = ( mbrushmodel_t * )r_worldmodel->extradata;
+	r_worldbrushmodel->pvs = ( dvis_t * )pvsData;
+
+	r_worldent->scale = 1.0f;
+	r_worldent->model = r_worldmodel;
+	r_worldent->rtype = RT_MODEL;
+	Matrix_Identity( r_worldent->axis );
+
+	R_AllocWorldMeshLists();
 }
 
 /*
-=================
-R_RegisterModel
-=================
+* R_RegisterModel
 */
 struct model_s *R_RegisterModel( const char *name )
 {
-	return Mod_ForName( name, qfalse );
+	model_t *mod;
+
+	mod = Mod_ForName( name, qfalse );
+	if( mod ) {
+		R_TouchModel( mod );
+	}
+	return mod;
 }
 
 /*
-=================
-R_ModelBounds
-=================
+* R_ModelBounds
 */
 void R_ModelBounds( const model_t *model, vec3_t mins, vec3_t maxs )
 {
@@ -1031,213 +1149,23 @@ void R_ModelBounds( const model_t *model, vec3_t mins, vec3_t maxs )
 	}
 }
 
-//==================================================================================
-
 /*
-=================
-R_ExportSkm2Iqe
-
-IQE format export according to http://lee.fov120.com/iqm/iqe.txt
-=================
+* R_ModelFrameBounds
 */
-static void R_ExportSkmToIqe( model_t *mod )
+void R_ModelFrameBounds( const struct model_s *model, int frame, vec3_t mins, vec3_t maxs )
 {
-	unsigned int i;
-	unsigned int j, k;
-	int filenum;
-	char buf[4096];
-	char *checkname;
-	size_t checkname_size;
-	mskmodel_t *skmodel;
-	mskbone_t *bone;
-	mskmesh_t *mesh;
-	bonepose_t *bp;
-
-	assert( mod );
-	assert( mod->type == mod_skeletal );
-
-	if( !mod )
-		return;
-
-	if( mod->type != mod_skeletal )
+	if( model )
 	{
-		Com_Printf( "R_ExportSkmToIqe: bad model type %i for '%s'\n", mod->type, mod->name );
-		return;
-	}
-
-	checkname_size = strlen( "iqe/" ) + strlen( mod->name ) + 4;
-	checkname = Mem_TempMalloc( checkname_size );
-
-	Q_snprintfz( checkname, checkname_size, "iqe/%s", mod->name );
-	COM_ReplaceExtension( checkname, ".iqe", checkname_size );
-
-	FS_FOpenFile( checkname, &filenum, FS_WRITE );
-	if( !filenum )
-	{
-		Com_Printf( "R_ExportSkmToIqe: failed opening '%s' for writing\n", checkname );
-		Mem_Free( checkname );
-		return;
-	}
-
-	// start
-	Q_snprintfz( buf, sizeof( buf ), "# Inter-Quake Export\n" );
-	FS_Write( buf, strlen( buf ), filenum );
-
-
-	// joints
-	Q_snprintfz( buf, sizeof( buf ), "\n" );
-	FS_Write( buf, strlen( buf ), filenum );
-
-	skmodel = ( mskmodel_t * )mod->extradata;
-	for( i = 0, bone = skmodel->bones; i < skmodel->numbones; i++, bone++ )
-	{
-		bp = &skmodel->frames[0].boneposes[i];
-
-		Q_snprintfz( buf, sizeof( buf ), 
-			"joint \"%s\" %i\n"
-			"\tpq %f %f %f %f %f %f %f\n", 
-				bone->name, bone->parent,
-				bp->origin[0], bp->origin[1], bp->origin[2], bp->quat[0], bp->quat[1], bp->quat[2], bp->quat[3] );
-		FS_Write( buf, strlen( buf ), filenum );
-	}
-
-
-	// meshes
-	for( i = 0, mesh = skmodel->meshes; i < skmodel->nummeshes; i++, mesh++ )
-	{
-		unsigned int *bones;
-		float *influences;
-
-		Q_snprintfz( buf, sizeof( buf ), "\n" );
-		FS_Write( buf, strlen( buf ), filenum );
-
-		Q_snprintfz( buf, sizeof( buf ), 
-			"mesh \"%s\"\n" 
-			"\tmaterial \"%s\"\n",
-			mesh->name, mesh->skin.shader->name );
-		FS_Write( buf, strlen( buf ), filenum );
-
-		// vertices
-		Q_snprintfz( buf, sizeof( buf ), "\n" );
-		FS_Write( buf, strlen( buf ), filenum );
-
-		bones = mesh->bones;
-		influences = mesh->influences;
-		for( j = 0; j < mesh->numverts; j++ )
-		{
-			// vertex position, texture coordinates and normal
-			Q_snprintfz( buf, sizeof( buf ), 
-				"vp %f %f %f\n"
-				"\tvt %f %f\n"
-				"\tvn %f %f %f\n",
-				mesh->xyzArray[j][0], mesh->xyzArray[j][1], mesh->xyzArray[j][2],
-				mesh->stArray[j][0], mesh->stArray[j][1],
-				mesh->normalsArray[j][0], mesh->normalsArray[j][1], mesh->normalsArray[j][2]
-			);
-			FS_Write( buf, strlen( buf ), filenum );
-
-			// influences
-			Q_snprintfz( buf, sizeof( buf ), "\tvb" );
-
-			for( k = 0; k < SKM_MAX_WEIGHTS; k++ )
-			{
-				if( !influences[k] )
-					break;
-				Q_strncatz( buf, va( " %i %f", bones[k], influences[k] ), sizeof( buf ) );
-			}
-			Q_strncatz( buf, "\n", sizeof( buf ) );
-			FS_Write( buf, strlen( buf ), filenum );
-
-			bones += SKM_MAX_WEIGHTS;
-			influences += SKM_MAX_WEIGHTS;
-		}
-
-		// triangles
-		Q_snprintfz( buf, sizeof( buf ), "\n" );
-		FS_Write( buf, strlen( buf ), filenum );
-
-		for( j = 0; j < mesh->numtris; j++ )
-		{
-			Q_snprintfz( buf, sizeof( buf ), 
-				"fm %i %i %i\n",
-				mesh->elems[j*3+0], mesh->elems[j*3+1], mesh->elems[j*3+2] );
-			FS_Write( buf, strlen( buf ), filenum );
-		}
-	}
-
-
-	// animation
-	Q_snprintfz( buf, sizeof( buf ), "\n" );
-	FS_Write( buf, strlen( buf ), filenum );
-
-	Q_snprintfz( buf, sizeof( buf ), 
-		"animation\n"
-		"\tframerate 0\n" );
-	FS_Write( buf, strlen( buf ), filenum );
-
-	// frames
-	for( i = 0; i < skmodel->numframes; i++ )
-	{
-		Q_snprintfz( buf, sizeof( buf ), "\n" );
-		FS_Write( buf, strlen( buf ), filenum );
-
-		Q_snprintfz( buf, sizeof( buf ), 
-			"frame\n"
-			"#%s\n",
-			skmodel->frames[i].name );
-		FS_Write( buf, strlen( buf ), filenum );
-
-		for( j = 0, bp = skmodel->frames[i].boneposes; j < skmodel->numbones; j++, bp++ )
-		{
-			Q_snprintfz( buf, sizeof( buf ), "pq %f %f %f %f %f %f %f\n", 
-				bp->origin[0], bp->origin[1], bp->origin[2], bp->quat[0], bp->quat[1], bp->quat[2], bp->quat[3] );
-			FS_Write( buf, strlen( buf ), filenum );
-		}
-	}
-
-
-	// end
-	FS_FCloseFile( filenum );
-
-	Com_Printf( "R_ExportSkmToIqe: wrote '%s'\n", checkname );
-
-	Mem_Free( checkname );
-}
-
-/*
-=================
-R_Skm2Iqe_f
-=================
-*/
-void R_Skm2Iqe_f( void )
-{
-	model_t *mod;
-	const char *mod_name;
-
-	mod_name = Cmd_Argv( 1 );
-	if( !strcmp( mod_name, "*" ) )
-	{
-		int i;
-
-		for( i = 0, mod = mod_known; i < mod_numknown; i++, mod++ )
-		{
-			if( !mod->name )
+		switch( model->type ) {
+			case mod_alias:
+				R_AliasModelFrameBounds( model, frame, mins, maxs );
 				break;
-			if( mod->type != mod_skeletal )
-				continue;
-
-			R_ExportSkmToIqe( mod );
+			case mod_skeletal:
+				R_SkeletalModelFrameBounds( model, frame, mins, maxs );
+				break;
+			default:
+				break;
 		}
-	}
-	else
-	{
-		mod = Mod_ForName( mod_name, qfalse );
-		if( !mod )
-		{
-			Com_Printf( "R_Skm2Iqe_f: no such model '%s'\n", mod_name );
-			return;
-		}
-
-		R_ExportSkmToIqe( mod );
 	}
 }
+

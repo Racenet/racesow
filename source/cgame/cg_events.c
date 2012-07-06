@@ -180,9 +180,9 @@ void CG_LaserBeamEffect( centity_t *cent )
 		range = GS_GetWeaponDef( WEAP_LASERGUN )->firedef.timeout;
 
 		if( cent->current.effects & EF_QUAD )
-			sound = trap_S_RegisterSound( S_WEAPON_LASERGUN_S_QUAD_HUM );
+			sound = CG_MediaSfx( cgs.media.sfxLasergunStrongQuadHum );
 		else
-			sound = trap_S_RegisterSound( S_WEAPON_LASERGUN_S_HUM );
+			sound = CG_MediaSfx( cgs.media.sfxLasergunStrongHum );
 
 		// trace the beam: for tracing we use the real beam origin
 		GS_TraceLaserBeam( &trace, laserOrigin, laserAngles, range, cent->current.number, 0, _LaserImpact );
@@ -204,9 +204,9 @@ void CG_LaserBeamEffect( centity_t *cent )
 		range = GS_GetWeaponDef( WEAP_LASERGUN )->firedef_weak.timeout;
 
 		if( cent->current.effects & EF_QUAD )
-			sound = trap_S_RegisterSound( S_WEAPON_LASERGUN_W_QUAD_HUM );
+			sound = CG_MediaSfx( cgs.media.sfxLasergunWeakQuadHum );
 		else
-			sound = trap_S_RegisterSound( S_WEAPON_LASERGUN_W_HUM );
+			sound = CG_MediaSfx( cgs.media.sfxLasergunWeakHum );
 
 		// trace the beam: for tracing we use the real beam origin
 		GS_TraceCurveLaserBeam( &trace, laserOrigin, laserAngles, laserPoint, cent->current.number, 0, _LaserImpact );

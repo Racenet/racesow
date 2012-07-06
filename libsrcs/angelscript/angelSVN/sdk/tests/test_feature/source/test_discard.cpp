@@ -9,7 +9,7 @@
 namespace TestDiscard
 {
 
-#define TESTNAME "TestDiscard"
+static const char * const TESTNAME = "TestDiscard";
 
 
 
@@ -37,20 +37,20 @@ bool Test()
 
 	COutStream out;
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-
+	RegisterScriptArray(engine, true);
 	r = engine->RegisterGlobalFunction("uint8 func(uint8[] &in, uint8[] &inout, uint8, uint32)", asFUNCTION(func), asCALL_GENERIC); assert( r >= 0 ); 
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
 	engine->DiscardModule(0);
 
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
 	engine->Release();
 

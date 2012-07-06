@@ -4,8 +4,6 @@
 namespace TestFile
 {
 
-#define TESTNAME "TestFile"
-
 bool Test()
 {
 	bool fail = false;
@@ -21,7 +19,7 @@ bool Test()
 	const char *script =
 		"file f;                                                  \n"
 		"int r = f.open(\"scripts/TestExecuteScript.as\", \"r\"); \n"
-		"if( r >= 0 ) {                                           \n" 
+		"if( r >= 0 ) {                                           \n"
 		"  assert( f.getSize() > 0 );                             \n"
 		"  string s1; f.readString(10000, s1);                    \n"
 		"  assert( s1.length() == uint(f.getSize()) );            \n"
@@ -37,10 +35,10 @@ bool Test()
 		"  f.close();                                             \n"
 		"}                                                        \n";
 
-	r = engine->ExecuteString(0, script);
+	r = ExecuteString(engine, script);
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

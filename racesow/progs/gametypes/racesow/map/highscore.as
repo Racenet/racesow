@@ -25,9 +25,9 @@ class Racesow_Map_HighScore
 	uint64 timeStamp;
 	
 	/**
-	 * @var cString
+	 * @var String
 	 */
-    cString playerName;
+    String playerName;
 	
 	/**
 	 * Overloaded operator =
@@ -47,9 +47,9 @@ class Racesow_Map_HighScore
 	
 	/**
 	 * getPlayerName
-	 * @return cString
+	 * @return String
 	 */
-	cString getPlayerName()
+	String getPlayerName()
 	{
 		return this.playerName;
 	}

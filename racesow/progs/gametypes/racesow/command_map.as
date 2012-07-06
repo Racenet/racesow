@@ -5,15 +5,18 @@
 const uint MAX_COMMANDS = 50;
 
 class RC_Pair {
-    cString first;
+    String first;
     Racesow_Command @second;
 
-    RC_Pair(cString &in first, Racesow_Command @second) {
+    RC_Pair() {
+    }
+
+    RC_Pair(String &in first, Racesow_Command @second) {
         this.first = first;
         @this.second = second;
     }
 
-    void setFirst(cString &in first) {
+    void setFirst(String &in first) {
         this.first = first;
     }
 
@@ -21,7 +24,7 @@ class RC_Pair {
         @this.second = second;
     }
 
-    cString @getFirst() {
+    String @getFirst() {
         return @this.first;
     }
 
@@ -39,7 +42,6 @@ class RC_Pair {
 * FIXME: This and the parts that use this will be extended when i get the new angelwrap working ;)
 *
 */
-
 class RC_Map {
     uint max_size;
     uint last;
@@ -48,16 +50,16 @@ class RC_Map {
     RC_Map() {
         this.max_size=MAX_COMMANDS;
         this.last = 0;
-        this.elements = RC_Pair@[](max_size);
+        this.elements.resize(max_size); //RC_Pair@[](max_size); <- This doesn't seem to work anymore
     }
 
     RC_Map(uint size) {
         this.max_size = size;
         this.last = 0;
-        this.elements = RC_Pair@[](max_size);
+        this.elements.resize(max_size); //RC_Pair@[](max_size);
     }
 
-    Racesow_Command @get_opIndex(cString &in idx) {
+    Racesow_Command @get_opIndex(String &in idx) {
         int position;
         if ( (position = this.find(idx)) != -1 ) {
             return @elements[position].getSecond();
@@ -65,7 +67,7 @@ class RC_Map {
         return null;
     }
 
-    void set_opIndex(cString &idx, Racesow_Command @idy) {
+    void set_opIndex(String &idx, Racesow_Command @idy) {
         if( @idx == null || @idy == null )
             return;
         if( this.last < this.max_size) {
@@ -83,7 +85,7 @@ class RC_Map {
             G_Print("================================Warning: Map Full================================\n");
     }
 
-    int find( cString &in search) {
+    int find( String &in search) {
         for (uint i = 0; i < this.max_size; i++) {
             if ( @elements[i] != null ) {
                 if ( elements[i].getFirst() == search )

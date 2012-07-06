@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2009 Andreas Jonsson
+   Copyright (c) 2003-2012 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -55,14 +55,17 @@ public:
 	asDWORD get() const;
 	void    set(asDWORD val);
 
+	// Increase and return new value
 	asDWORD atomicInc();
+
+	// Decrease and return new value
 	asDWORD atomicDec();
 
 protected:
 	asDWORD value;
 
 #if !defined(AS_NO_THREADS) && defined(AS_NO_ATOMIC)
-	DECLARECRITICALSECTION(cs);
+	DECLARECRITICALSECTION(cs)
 #endif
 };
 

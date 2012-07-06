@@ -5,7 +5,7 @@
 //    {
 //        super( "set authmask (debug) 127 = superadmin", "<mask>" );
 //    }
-//    bool execute(Racesow_Player @player, cString &args, int argc)
+//    bool execute(Racesow_Player @player, String &args, int argc)
 //    {
 //    	player.getAuth().authorizationsMask = args.getToken( 0 ).toInt();
 //        return true;
@@ -61,7 +61,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
       // if the gametype doesn't have a config file, create it
       if ( !G_FileExists( "configs/server/gametypes/race.cfg" ) )
       {
-          cString config;
+          String config;
     
           // the config file doesn't exist or it's empty, create it
           config = "//*\n"
@@ -189,7 +189,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
         ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
 
         // disable autojump
-        if ( rs_allowAutoHop.getBool() == false )
+        if ( rs_allowAutoHop.get_boolean() == false )
         {
             ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_CONTINOUSJUMP );
         }
@@ -199,14 +199,14 @@ class Racesow_Gametype_Race : Racesow_Gametype
         player.restartingRace();
     }
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args )
+    void scoreEvent( cClient @client, String &score_event, String &args )
     {
         
     }
     
-    cString @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( uint maxlen )
     {
-        cString scoreboardMessage, entry;
+        String scoreboardMessage, entry;
         cTeam @team;
         cEntity @ent;
         int i, playerID;
@@ -265,7 +265,7 @@ Racesow_Gametype@ getRacesowGametype() {
  */
 class Command_Noclip_Race : Command_Noclip
 {
-    bool validate(Racesow_Player @player, cString &args, int argc)
+    bool validate(Racesow_Player @player, String &args, int argc)
     {
         if( !Command_Noclip::validate( player, args, argc ) )
             return false;
@@ -278,7 +278,7 @@ class Command_Noclip_Race : Command_Noclip
 
 class Command_Position_Race : Command_Position
 {
-    bool validate(Racesow_Player @player, cString &args, int argc)
+    bool validate(Racesow_Player @player, String &args, int argc)
     {
     	if( !player.practicing )
     	{

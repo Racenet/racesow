@@ -368,14 +368,6 @@ typedef unsigned int GLhandleARB;
 #define GL_SAMPLES_PASSED_ARB								0x8914
 #endif /* GL_ARB_occlusion_query */
 
-/* GL_SGIS_generate_mipmap */
-#ifndef GL_SGIS_generate_mipmap
-#define GL_SGIS_generate_mipmap
-
-#define GL_GENERATE_MIPMAP_SGIS								0x8191
-#define GL_GENERATE_MIPMAP_HINT_SGIS						0x8192
-#endif /* GL_SGIS_generate_mipmap */
-
 /* GL_EXT_framebuffer_object */
 #ifndef GL_EXT_framebuffer_object
 #define GL_EXT_framebuffer_object
@@ -433,6 +425,26 @@ typedef unsigned int GLhandleARB;
 #define GL_RENDERBUFFER_DEPTH_SIZE_EXT						0x8D54
 #define GL_RENDERBUFFER_STENCIL_SIZE_EXT					0x8D55
 #endif /* GL_EXT_framebuffer_object */
+
+/* GL_NVX_gpu_memory_info */
+#ifndef GL_NVX_gpu_memory_info
+#define GL_NVX_gpu_memory_info
+
+#define	GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX				0x9047
+#define	GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX			0x9048
+#define	GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX		0x9049
+#define	GPU_MEMORY_INFO_EVICTION_COUNT_NVX					0x904A
+#define	GPU_MEMORY_INFO_EVICTED_MEMORY_NVX					0x904B
+#endif /* GL_NVX_gpu_memory_info */
+
+/* GL_ATI_meminfo */
+#ifndef GL_ATI_meminfo
+#define GL_ATI_meminfo
+
+#define VBO_FREE_MEMORY_ATI									0x87FB
+#define TEXTURE_FREE_MEMORY_ATI								0x87FC
+#define RENDERBUFFER_FREE_MEMORY_ATI						0x87FD
+#endif /* GL_ATI_meminfo */
 
 #endif /*__QGL_H__*/
 
@@ -614,6 +626,9 @@ QGL_EXT(void, glEndQueryARB, (GLenum target));
 QGL_EXT(void, glGetQueryivARB, (GLenum target, GLenum pname, GLint *params));
 QGL_EXT(void, glGetQueryObjectivARB, (GLuint id, GLenum pname, GLint *params));
 QGL_EXT(void, glGetQueryObjectuivARB, (GLuint id, GLenum pname, GLuint *params));
+
+QGL_EXT(void, glDrawArraysInstancedARB, (GLenum mode, GLint first, GLsizei count, GLsizei primcount));
+QGL_EXT(void, glDrawElementsInstancedARB, (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount));
 
 QGL_EXT(GLboolean, glIsRenderbufferEXT, (GLuint));
 QGL_EXT(void, glBindRenderbufferEXT ,(GLenum, GLuint));

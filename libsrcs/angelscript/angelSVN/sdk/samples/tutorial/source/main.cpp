@@ -1,5 +1,6 @@
 #include <iostream>  // cout
 #include <assert.h>  // assert()
+#include <string.h>  // strstr()
 #ifdef _LINUX_
 	#include <sys/time.h>
 	#include <stdio.h>
@@ -10,7 +11,7 @@
 	#include <windows.h> // timeGetTime()
 #endif
 #include <angelscript.h>
-#include "../../../add_on/scriptstring/scriptstring.h"
+#include "../../../add_on/scriptstdstring/scriptstdstring.h"
 
 using namespace std;
 
@@ -180,8 +181,7 @@ int RunApplication()
 			cout << "The script ended with an exception." << endl;
 
 			// Write some information about the script exception
-			int funcID = ctx->GetExceptionFunction();
-			asIScriptFunction *func = engine->GetFunctionDescriptorById(funcID);
+			asIScriptFunction *func = ctx->GetExceptionFunction();
 			cout << "func: " << func->GetDeclaration() << endl;
 			cout << "modl: " << func->GetModuleName() << endl;
 			cout << "sect: " << func->GetScriptSectionName() << endl;
@@ -214,8 +214,7 @@ void ConfigureEngine(asIScriptEngine *engine)
 	// Register the script string type
 	// Look at the implementation for this function for more information  
 	// on how to register a custom string type, and other object types.
-	// The implementation is in "/add_on/scriptstring/scriptstring.cpp"
-	RegisterScriptString(engine);
+	RegisterStdString(engine);
 
 	if( !strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
 	{

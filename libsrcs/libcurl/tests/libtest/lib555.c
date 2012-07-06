@@ -1,12 +1,26 @@
-/*****************************************************************************
+/***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
  *                             / __| | | | |_) | |
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
+ * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
- * This test case is supposed to be identical to 547 except that this uses the
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at http://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/
+
+/* This test case is supposed to be identical to 547 except that this uses the
  * multi interface and 547 is easy interface.
  *
  * argv1 = URL
@@ -16,6 +30,7 @@
 
 #include "test.h"
 #include "testutil.h"
+#include "warnless.h"
 #include "memdebug.h"
 
 #define MULTI_PERFORM_HANG_TIMEOUT 60 * 1000
@@ -121,6 +136,10 @@ int test(char *URL)
   mp_start = tutil_tvnow();
 
   while (running) {
+    static struct timeval timeout = /* 100 ms */ { 0, 100000L };
+    fd_set fdread, fdwrite, fdexcep;
+    int maxfd = -1;
+
     res = (int)curl_multi_perform(m, &running);
     if (tutil_tvdiff(tutil_tvnow(), mp_start) >
         MULTI_PERFORM_HANG_TIMEOUT) {
@@ -134,11 +153,26 @@ int test(char *URL)
       fprintf(stderr, "nothing left running.\n");
       break;
     }
+
+    FD_ZERO(&fdread);
+    FD_ZERO(&fdwrite);
+    FD_ZERO(&fdexcep);
+    curl_multi_fdset(m, &fdread, &fdwrite, &fdexcep, &maxfd);
+
+    /* In a real-world program you OF COURSE check the return code of the
+       function calls.  On success, the value of maxfd is guaranteed to be
+       greater or equal than -1.  We call select(maxfd + 1, ...), specially in
+       case of (maxfd == -1), we call select(0, ...), which is basically equal
+       to sleep. */
+
+    if (select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout) == -1) {
+      res = ~CURLM_OK;
+      break;
+    }
   }
 
   if (mp_timedout) {
-    if (mp_timedout) fprintf(stderr, "mp_timedout\n");
-    fprintf(stderr, "ABORTING TEST, since it seems "
+    fprintf(stderr, "mp_timedout\nABORTING TEST, since it seems "
             "that it would have run forever.\n");
     res = TEST_ERR_RUNS_FOREVER;
   }

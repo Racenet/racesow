@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // cmd.c -- Quake script command processing module
 
 #include "qcommon.h"
@@ -57,14 +57,12 @@ static int Cmd_PatternMatchesAlias( void *alias, void *pattern )
 //=============================================================================
 
 /*
-   ============
-   Cmd_Wait_f
-
-   Causes execution of the remainder of the command buffer to be delayed until
-   next frame.  This allows commands like:
-   bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
-   ============
- */
+* Cmd_Wait_f
+* 
+* Causes execution of the remainder of the command buffer to be delayed until
+* next frame.  This allows commands like:
+* bind g "impulse 5 ; +attack ; wait ; -attack ; impulse 2"
+*/
 static void Cmd_Wait_f( void )
 {
 	cmd_wait = qtrue;
@@ -72,18 +70,18 @@ static void Cmd_Wait_f( void )
 
 
 /*
-   =============================================================================
+=============================================================================
 
-   			COMMAND BUFFER
+COMMAND BUFFER
 
-   =============================================================================
- */
+=============================================================================
+*/
 
 /*
- * Command buffer is a cyclical dynamically allocated buffer
- * It must never be totally full, since cbuf_text_head points to first free
- * position in the buffer
- */
+* Command buffer is a cyclical dynamically allocated buffer
+* It must never be totally full, since cbuf_text_head points to first free
+* position in the buffer
+*/
 
 static qboolean cbuf_initialized = qfalse;
 
@@ -97,10 +95,8 @@ static mempool_t *cbuf_pool;
 #define Cbuf_Free( data ) Mem_Free( data )
 
 /*
-   ============
-   Cbuf_Init
-   ============
- */
+* Cbuf_Init
+*/
 void Cbuf_Init( void )
 {
 	assert( !cbuf_initialized );
@@ -116,10 +112,8 @@ void Cbuf_Init( void )
 }
 
 /*
-   ============
-   Cbuf_Shutdown
-   ============
- */
+* Cbuf_Shutdown
+*/
 void Cbuf_Shutdown( void )
 {
 	if( !cbuf_initialized )
@@ -137,12 +131,10 @@ void Cbuf_Shutdown( void )
 }
 
 /*
-   ============
-   Cbuf_FreeSpace
-
-   Frees some space, if we have too big buffer in use
-   ============
- */
+* Cbuf_FreeSpace
+* 
+* Frees some space, if we have too big buffer in use
+*/
 void Cbuf_FreeSpace( void )
 {
 	char *old;
@@ -182,10 +174,8 @@ void Cbuf_FreeSpace( void )
 }
 
 /*
-   ============
-   Cbuf_EnsureSpace
-   ============
- */
+* Cbuf_EnsureSpace
+*/
 void Cbuf_EnsureSpace( size_t size )
 {
 	size_t free;
@@ -208,18 +198,16 @@ void Cbuf_EnsureSpace( size_t size )
 	if( cbuf_text_head < cbuf_text_tail )
 	{
 		memcpy( cbuf_text + cbuf_text_tail, cbuf_text + cbuf_text_tail + ( size - free ) + MIN_CMD_TEXT_SIZE,
-		        cbuf_text_size - cbuf_text_tail );
+			cbuf_text_size - cbuf_text_tail );
 		cbuf_text_tail += ( size - free ) + MIN_CMD_TEXT_SIZE;
 	}
 }
 
 /*
-   ============
-   Cbuf_AddText
-
-   Adds command text at the end of the buffer
-   ============
- */
+* Cbuf_AddText
+* 
+* Adds command text at the end of the buffer
+*/
 void Cbuf_AddText( const char *text )
 {
 	Cbuf_EnsureSpace( strlen( text ) + 1 );
@@ -242,15 +230,13 @@ void Cbuf_AddText( const char *text )
 }
 
 /*
-   ============
-   Cbuf_InsertText
-
-   When a command wants to issue other commands immediately, the text is
-   inserted at the beginning of the buffer, before any remaining unexecuted
-   commands.
-   Adds a \n to the text
-   ============
- */
+* Cbuf_InsertText
+* 
+* When a command wants to issue other commands immediately, the text is
+* inserted at the beginning of the buffer, before any remaining unexecuted
+* commands.
+* Adds a \n to the text
+*/
 void Cbuf_InsertText( const char *text )
 {
 	Cbuf_EnsureSpace( strlen( text ) + 1 );
@@ -270,11 +256,9 @@ void Cbuf_InsertText( const char *text )
 
 
 /*
-   ============
-   Cbuf_ExecuteText
-   This can be used in place of either Cbuf_AddText or Cbuf_InsertText
-   ============
- */
+* Cbuf_ExecuteText
+* This can be used in place of either Cbuf_AddText or Cbuf_InsertText
+*/
 void Cbuf_ExecuteText( int exec_when, const char *text )
 {
 	switch( exec_when )
@@ -294,14 +278,12 @@ void Cbuf_ExecuteText( int exec_when, const char *text )
 }
 
 /*
-   ============
-   Cbuf_Execute
-   // Pulls off \n terminated lines of text from the command buffer and sends
-   // them through Cmd_ExecuteString.  Stops when the buffer is empty.
-   // Normally called once per frame, but may be explicitly invoked.
-   // Do not call inside a command function!
-   ============
- */
+* Cbuf_Execute
+* // Pulls off \n terminated lines of text from the command buffer and sends
+* // them through Cmd_ExecuteString.  Stops when the buffer is empty.
+* // Normally called once per frame, but may be explicitly invoked.
+* // Do not call inside a command function!
+*/
 void Cbuf_Execute( void )
 {
 	size_t i;
@@ -364,28 +346,26 @@ void Cbuf_Execute( void )
 
 
 /*
-   ===============
-   Cbuf_AddEarlyCommands
-
-   Adds all the +set commands from the command line:
-
-   Adds command line parameters as script statements
-   Commands lead with a +, and continue until another +
-
-   Set and exec commands are added early, so they are guaranteed to be set before
-   the client and server initialize for the first time.
-
-   This command is first run before autoexec.cfg and config.cfg to allow changing
-   fs_basepath etc. The second run is after those files has been execed in order
-   to allow overwriting values set in them.
-
-   Other commands are added late, after all initialization is complete.
-   ===============
- */
+* Cbuf_AddEarlyCommands
+* 
+* Adds all the +set commands from the command line:
+* 
+* Adds command line parameters as script statements
+* Commands lead with a +, and continue until another +
+* 
+* Set and exec commands are added early, so they are guaranteed to be set before
+* the client and server initialize for the first time.
+* 
+* This command is first run before autoexec.cfg and config.cfg to allow changing
+* fs_basepath etc. The second run is after those files has been execed in order
+* to allow overwriting values set in them.
+* 
+* Other commands are added late, after all initialization is complete.
+*/
 void Cbuf_AddEarlyCommands( qboolean second_run )
 {
 	int i;
-	char *s;
+	const char *s;
 
 	for( i = 1; i < COM_Argc(); ++i )
 	{
@@ -415,17 +395,15 @@ void Cbuf_AddEarlyCommands( qboolean second_run )
 }
 
 /*
-   =================
-   Cbuf_AddLateCommands
-
-   Adds command line parameters as script statements
-   Commands lead with a + and continue until another + or -
-   quake +map amlev1
-
-   Returns true if any late commands were added, which
-   will keep the demoloop from immediately starting
-   =================
- */
+* Cbuf_AddLateCommands
+* 
+* Adds command line parameters as script statements
+* Commands lead with a + and continue until another + or -
+* quake +map amlev1
+* 
+* Returns true if any late commands were added, which
+* will keep the demoloop from immediately starting
+*/
 qboolean Cbuf_AddLateCommands( void )
 {
 	int i;
@@ -471,19 +449,17 @@ qboolean Cbuf_AddLateCommands( void )
 
 
 /*
-   ==============================================================================
+==============================================================================
 
-   			SCRIPT COMMANDS
+SCRIPT COMMANDS
 
-   ==============================================================================
- */
+==============================================================================
+*/
 
 
 /*
-   ===============
-   Cmd_Exec_f
-   ===============
- */
+* Cmd_Exec_f
+*/
 static void Cmd_Exec_f( void )
 {
 	char *f, *name;
@@ -537,12 +513,10 @@ static void Cmd_Exec_f( void )
 
 
 /*
-   ===============
-   Cmd_Echo_f
-
-   Just prints the rest of the line to the console
-   ===============
- */
+* Cmd_Echo_f
+* 
+* Just prints the rest of the line to the console
+*/
 static void Cmd_Echo_f( void )
 {
 	int i;
@@ -552,10 +526,8 @@ static void Cmd_Echo_f( void )
 }
 
 /*
-   ===============
-   Cmd_AliasList_f
-   ===============
- */
+* Cmd_AliasList_f
+*/
 static void Cmd_AliasList_f( void )
 {
 	char *pattern;
@@ -589,12 +561,10 @@ static void Cmd_AliasList_f( void )
 }
 
 /*
-   ===============
-   Cmd_Alias_f
-
-   Creates a new command that executes a command string (possibly ; separated)
-   ===============
- */
+* Cmd_Alias_f
+* 
+* Creates a new command that executes a command string (possibly ; separated)
+*/
 static void Cmd_Alias_f( void )
 {
 	cmd_alias_t *a;
@@ -655,12 +625,10 @@ static void Cmd_Alias_f( void )
 }
 
 /*
-   ===============
-   Cmd_Unalias_f
-
-   Removes an alias command
-   ===============
- */
+* Cmd_Unalias_f
+* 
+* Removes an alias command
+*/
 static void Cmd_Unalias_f( void )
 {
 	char *s;
@@ -692,12 +660,10 @@ static void Cmd_Unalias_f( void )
 }
 
 /*
-   ===============
-   Cmd_UnaliasAll_f
-
-   Removes an alias command
-   ===============
- */
+* Cmd_UnaliasAll_f
+* 
+* Removes an alias command
+*/
 static void Cmd_UnaliasAll_f( void )
 {
 	struct trie_dump_s *dump;
@@ -716,13 +682,11 @@ static void Cmd_UnaliasAll_f( void )
 }
 
 /*
-   ===============
-   Cmd_WriteAliases
-
-   Write lines containing "aliasa alias value" for all aliases
-   with the archive flag set to true
-   ===============
- */
+* Cmd_WriteAliases
+* 
+* Write lines containing "aliasa alias value" for all aliases
+* with the archive flag set to true
+*/
 void Cmd_WriteAliases( int file )
 {
 	struct trie_dump_s *dump;
@@ -743,12 +707,12 @@ void Cmd_WriteAliases( int file )
 }
 
 /*
-   =============================================================================
+=============================================================================
 
-   		    COMMAND EXECUTION
+COMMAND EXECUTION
 
-   =============================================================================
- */
+=============================================================================
+*/
 
 typedef struct cmd_function_s
 {
@@ -778,20 +742,16 @@ static int Cmd_PatternMatchesFunction( void *cmd, void *pattern )
 // if arg > argc, so string operations are always safe.
 
 /*
-   ============
-   Cmd_Argc
-   ============
- */
+* Cmd_Argc
+*/
 int Cmd_Argc( void )
 {
 	return cmd_argc;
 }
 
 /*
-   ============
-   Cmd_Argv
-   ============
- */
+* Cmd_Argv
+*/
 char *Cmd_Argv( int arg )
 {
 	if( arg >= cmd_argc )
@@ -800,26 +760,22 @@ char *Cmd_Argv( int arg )
 }
 
 /*
-   ============
-   Cmd_Args
-
-   Returns a single string containing argv(1) to argv(argc()-1)
-   ============
- */
+* Cmd_Args
+* 
+* Returns a single string containing argv(1) to argv(argc()-1)
+*/
 char *Cmd_Args( void )
 {
 	return cmd_args;
 }
 
 /*
-   ============
-   Cmd_TokenizeString
-
-   Parses the given string into command line tokens.
-   $Cvars will be expanded unless they are in a quoted token
-   Takes a null terminated string.  Does not need to be /n terminated.
-   ============
- */
+* Cmd_TokenizeString
+* 
+* Parses the given string into command line tokens.
+* $Cvars will be expanded unless they are in a quoted token
+* Takes a null terminated string.  Does not need to be /n terminated.
+*/
 void Cmd_TokenizeString( const char *text )
 {
 	char *com_token;
@@ -886,15 +842,13 @@ void Cmd_TokenizeString( const char *text )
 
 
 /*
-   ============
-   Cmd_AddCommand
-   // called by the init functions of other parts of the program to
-   // register commands and functions to call for them.
-   // The cmd_name is referenced later, so it should not be in temp memory
-   // if function is NULL, the command will be forwarded to the server
-   // as a clc_clientcommand instead of executed locally
-   ============
- */
+* Cmd_AddCommand
+* // called by the init functions of other parts of the program to
+* // register commands and functions to call for them.
+* // The cmd_name is referenced later, so it should not be in temp memory
+* // if function is NULL, the command will be forwarded to the server
+* // as a clc_clientcommand instead of executed locally
+*/
 void Cmd_AddCommand( const char *cmd_name, xcommand_t function )
 {
 	cmd_function_t *cmd;
@@ -932,10 +886,8 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function )
 }
 
 /*
-   ============
-   Cmd_RemoveCommand
-   ============
- */
+* Cmd_RemoveCommand
+*/
 void Cmd_RemoveCommand( const char *cmd_name )
 {
 	cmd_function_t *cmd;
@@ -952,11 +904,9 @@ void Cmd_RemoveCommand( const char *cmd_name )
 }
 
 /*
-   ============
-   Cmd_Exists
-   // used by the cvar code to check for cvar / command name overlap
-   ============
- */
+* Cmd_Exists
+* // used by the cvar code to check for cvar / command name overlap
+*/
 qboolean Cmd_Exists( const char *cmd_name )
 {
 	cmd_function_t *cmd;
@@ -967,10 +917,8 @@ qboolean Cmd_Exists( const char *cmd_name )
 }
 
 /*
-============
-Cmd_SetCompletionFunc
-============
- */
+* Cmd_SetCompletionFunc
+*/
 void Cmd_SetCompletionFunc( const char *cmd_name, xcompletionf_t completion_func )
 {
 	cmd_function_t *cmd;
@@ -991,10 +939,8 @@ void Cmd_SetCompletionFunc( const char *cmd_name, xcompletionf_t completion_func
 }
 
 /*
-   ============
-   Cmd_VStr_f
-   ============
- */
+* Cmd_VStr_f
+*/
 static void Cmd_VStr_f( void )
 {
 	if( Cmd_Argc() != 2 )
@@ -1006,10 +952,8 @@ static void Cmd_VStr_f( void )
 
 
 /*
-   ============
-   Cmd_CompleteCountPossible
-   ============
- */
+* Cmd_CompleteCountPossible
+*/
 int Cmd_CompleteCountPossible( const char *partial )
 {
 	assert( partial );
@@ -1025,10 +969,8 @@ int Cmd_CompleteCountPossible( const char *partial )
 }
 
 /*
-   ============
-   Cmd_CompleteBuildList
-   ============
- */
+* Cmd_CompleteBuildList
+*/
 char **Cmd_CompleteBuildList( const char *partial )
 {
 	struct trie_dump_s *dump;
@@ -1047,16 +989,14 @@ char **Cmd_CompleteBuildList( const char *partial )
 }
 
 /*
-============
-Cmd_CompleteBuildArgList
-
-Find a possible single matching command 
-============
- */
+* Cmd_CompleteBuildArgList
+* 
+* Find a possible single matching command
+*/
 char **Cmd_CompleteBuildArgList( const char *partial )
 {
 	const char *p;
-	
+
 	p = strstr( partial, " " );
 	if( p )
 	{
@@ -1074,8 +1014,8 @@ char **Cmd_CompleteBuildArgList( const char *partial )
 }
 
 /*
-   Cmd_CompleteAlias
- */
+Cmd_CompleteAlias
+*/
 char *Cmd_CompleteAlias( const char *partial )
 {
 	size_t len;
@@ -1091,8 +1031,8 @@ char *Cmd_CompleteAlias( const char *partial )
 }
 
 /*
-   Cmd_CompleteAliasCountPossible
- */
+Cmd_CompleteAliasCountPossible
+*/
 int Cmd_CompleteAliasCountPossible( const char *partial )
 {
 	assert( partial );
@@ -1108,8 +1048,8 @@ int Cmd_CompleteAliasCountPossible( const char *partial )
 }
 
 /*
-   Cmd_CompleteAliasBuildList
- */
+Cmd_CompleteAliasBuildList
+*/
 char **Cmd_CompleteAliasBuildList( const char *partial )
 {
 	struct trie_dump_s *dump;
@@ -1128,11 +1068,9 @@ char **Cmd_CompleteAliasBuildList( const char *partial )
 }
 
 /*
-============
-Cmd_CheckForCommand
-
-Used by console code to check if text typed is a command/cvar/alias or chat
-============
+* Cmd_CheckForCommand
+* 
+* Used by console code to check if text typed is a command/cvar/alias or chat
 */
 qboolean Cmd_CheckForCommand( char *text )
 {
@@ -1163,13 +1101,11 @@ qboolean Cmd_CheckForCommand( char *text )
 }
 
 /*
-   ============
-   Cmd_ExecuteString
-   // Parses a single line of text into arguments and tries to execute it
-   // as if it was typed at the console
-   FIXME: lookupnoadd the token to speed search?
-   ============
- */
+* Cmd_ExecuteString
+* // Parses a single line of text into arguments and tries to execute it
+* // as if it was typed at the console
+* FIXME: lookupnoadd the token to speed search?
+*/
 void Cmd_ExecuteString( const char *text )
 {
 	char *str;
@@ -1231,10 +1167,8 @@ void Cmd_ExecuteString( const char *text )
 }
 
 /*
-   ============
-   Cmd_List_f
-   ============
- */
+* Cmd_List_f
+*/
 static void Cmd_List_f( void )
 {
 	struct trie_dump_s *dump;
@@ -1259,10 +1193,8 @@ static void Cmd_List_f( void )
 }
 
 /*
-   ============
-   Cmd_PreInit
-   ============
- */
+* Cmd_PreInit
+*/
 void Cmd_PreInit( void )
 {
 	assert( !cmd_preinitialized );
@@ -1278,10 +1210,8 @@ void Cmd_PreInit( void )
 }
 
 /*
-   ============
-   Cmd_Init
-   ============
- */
+* Cmd_Init
+*/
 void Cmd_Init( void )
 {
 	assert( !cmd_initialized );
@@ -1340,7 +1270,7 @@ void Cmd_Shutdown( void )
 		{
 #ifndef PUBLIC_BUILD
 			Com_Printf( "Warning: Command %s was never removed\n",
-			            ( (cmd_function_t *)dump->key_value_vector[i].value )->name );
+				( (cmd_function_t *)dump->key_value_vector[i].value )->name );
 #endif
 			Cmd_RemoveCommand( ( (cmd_function_t *)dump->key_value_vector[i].value )->name );
 		}

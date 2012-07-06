@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestExecute32Args"
+static const char * const TESTNAME = "TestExecute32Args";
 
 static bool testVal = false;
 static bool called  = false;
@@ -192,7 +192,7 @@ static void cfunction_gen(asIScriptGeneric *gen)
 
 bool TestExecute32Args()
 {
-	bool ret = false;
+	bool fail = false;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
@@ -238,7 +238,7 @@ bool TestExecute32Args()
 									   asFUNCTION(cfunctiond), asCALL_CDECL);
 	}
 
-	engine->ExecuteString(0, "cfunction( 1,  2,  3,  4,"
+	ExecuteString(engine, "cfunction( 1,  2,  3,  4,"
 	                                " 5,  6,  7,  8,"
 	                                " 9, 10, 11, 12,"
 	                                "13, 14, 15, 16,"
@@ -251,7 +251,7 @@ bool TestExecute32Args()
 	{
 		// failure
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	} 
 	else if( !testVal ) 
 	{
@@ -260,7 +260,7 @@ bool TestExecute32Args()
 		for (int i = 0; i < 32; i++) 
 			printf("value %d: %d\n", i, values[i]);
 		
-		ret = true;
+		TEST_FAILED;
 	}
 	
 	if( !strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
@@ -268,7 +268,7 @@ bool TestExecute32Args()
 		called = false;
 		testVal = false;
 		
-		engine->ExecuteString(0, "cfunctionf( 1,  2,  3,  4,"
+		ExecuteString(engine, "cfunctionf( 1,  2,  3,  4,"
 	                                " 5,  6,  7,  8,"
 	                                " 9, 10, 11, 12,"
 	                                "13, 14, 15, 16,"
@@ -281,7 +281,7 @@ bool TestExecute32Args()
 		{
 			// failure
 			printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-			ret = true;
+			TEST_FAILED;
 		} 
 		else if( !testVal ) 
 		{
@@ -290,13 +290,13 @@ bool TestExecute32Args()
 			for (int i = 0; i < 32; i++) 
 				printf("value %d: %f\n", i, fvalues[i]);
 		
-			ret = true;
+			TEST_FAILED;
 		}
 		
 		called = false;
 		testVal = false;
 		
-		engine->ExecuteString(0, "cfunctiond( 1,  2,  3,  4,"
+		ExecuteString(engine, "cfunctiond( 1,  2,  3,  4,"
 	                                " 5,  6,  7,  8,"
 	                                " 9, 10, 11, 12,"
 	                                "13, 14, 15, 16,"
@@ -309,7 +309,7 @@ bool TestExecute32Args()
 		{
 			// failure
 			printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-			ret = true;
+			TEST_FAILED;
 		} 
 		else if( !testVal ) 
 		{
@@ -318,12 +318,12 @@ bool TestExecute32Args()
 			for (int i = 0; i < 32; i++) 
 				printf("value %d: %f\n", i, dvalues[i]);
 		
-			ret = true;
+			TEST_FAILED;
 		}
 	}
 
 	engine->Release();
 	
 	// Success
-	return ret;
+	return fail;
 }

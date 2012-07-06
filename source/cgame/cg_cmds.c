@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "cg_local.h"
+#include "../qcommon/version.h" // racesow - need this for demo file extension
 
 /*
 ==========================================================================
@@ -92,7 +93,7 @@ static void CG_SC_CenterPrint( void )
 /*
 * CG_ConfigString
 */
-void CG_ConfigString( int i, char *s )
+void CG_ConfigString( int i, const char *s )
 {
 	size_t len;
 
@@ -161,7 +162,12 @@ void CG_ConfigString( int i, char *s )
 	else if( i >= CS_GAMECOMMANDS && i < CS_GAMECOMMANDS+MAX_GAMECOMMANDS )
 	{
 		if( !cgs.demoPlaying )
+		{
 			trap_Cmd_AddCommand( cgs.configStrings[i], NULL );
+			if( !Q_stricmp( cgs.configStrings[i], "gametypemenu" ) ) {
+				cgs.hasGametypeMenu = qtrue;
+			}
+		}
 	}
 	else if( i >= CS_WEAPONDEFS && i < CS_WEAPONDEFS + MAX_WEAPONDEFS )
 	{
@@ -360,26 +366,22 @@ static const char *CG_SC_AutoRecordName( void )
 /*
 * CG_SC_RaceDemoRename
 */
-/* enable this, when trap_FS_MoveFile works! (tested)
 static qboolean CG_SC_RaceDemoRename( const char *src, const char *dst )
 {
 	char *baseDirectory = "demos"; //hardcoded string
-	char *ext = "wd"; //hardcoded string
-	int protocol = cgs.gameProtocol;
 	int file;
 
-	if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s.%s%d", baseDirectory, dst, ext, protocol ) ) )
+	if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s%s", baseDirectory, dst, APP_DEMO_EXTENSION_STR ) ) )
 	{
 		//workaround to create the path
-		trap_FS_FOpenFile( va( "%s/%s.%s%d", baseDirectory, dst, ext, protocol ), &file, FS_WRITE );
+		trap_FS_FOpenFile( va( "%s/%s%s", baseDirectory, dst, APP_DEMO_EXTENSION_STR ), &file, FS_WRITE );
 		trap_FS_FCloseFile( file );
 
-		if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s.%s%d", baseDirectory, dst, ext, protocol ) ) )
+		if ( !trap_FS_MoveFile( va( "%s/%s", baseDirectory, src ), va( "%s/%s%s", baseDirectory, dst, APP_DEMO_EXTENSION_STR ) ) )
 			return qfalse;
 	}
 	return qtrue;
 }
-*/
 
 /*
 * CG_SC_RaceDemoName
@@ -426,8 +428,7 @@ enum {
 */
 static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 {
-	//enable this, when trap_FS_MoveFile works!
-//	char *demoname = "currentrace.rec";
+	char *demoname = "currentrace.rec";
 
 	char *directory = "autorecord";
 	const char *realname;
@@ -443,18 +444,10 @@ static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 	case RS_RACEDEMO_START:
 		if( rs_autoRaceDemo->integer )
 		{
-			//delete "cancel", when trap_FS_MoveFile works!
-			trap_Cmd_ExecuteText( EXEC_NOW, "stop cancel silent" );
+			trap_Cmd_ExecuteText( EXEC_NOW, "stop silent" );
 
-			//delete this, when trap_FS_MoveFile works!
-			realname = CG_SC_AutoRecordName();
-			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s/%s silent",
-				directory, gs.gametypeName, realname ) );
-
-			//enable this, when trap_FS_MoveFile works!
-//			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
-//					directory, demoname ) );
-
+			trap_Cmd_ExecuteText( EXEC_NOW, va( "record %s/%s silent",
+					directory, demoname ) );
 		}
 		autorecording = qtrue;
 		break;
@@ -470,10 +463,9 @@ static void CG_SC_RaceDemo( int action, unsigned int raceTime )
 				trap_Cmd_ExecuteText( EXEC_NOW, va( "screenshot %s/%s silent",
 						directory, realname ) );
 
-			//enable this, when trap_FS_MoveFile works!
-//			if ( rs_autoRaceDemo->integer )
-//				CG_SC_RaceDemoRename( va( "%s/%s", directory, demoname ),
-//						va( "%s/%s", directory, realname ) );
+			if( rs_autoRaceDemo->integer )
+				CG_SC_RaceDemoRename( va( "%s/%s", directory, demoname ),
+						va( "%s/%s", directory, realname ) );
 		}
 		autorecording = qfalse;
 		break;
@@ -591,7 +583,7 @@ static void CG_SC_ChannelAdd( void )
 {
 	char menuparms[MAX_STRING_CHARS];
 
-	Q_snprintfz( menuparms, sizeof( menuparms ), "menu_tv_channel_add %s\n", trap_Cmd_Args() );
+	Q_snprintfz( menuparms, sizeof( menuparms ), "menu_tvchannel_add %s\n", trap_Cmd_Args() );
 	trap_Cmd_ExecuteText( EXEC_NOW, menuparms );
 }
 
@@ -607,7 +599,7 @@ static void CG_SC_ChannelRemove( void )
 		id = atoi( trap_Cmd_Argv( i ) );
 		if( id <= 0 )
 			continue;
-		trap_Cmd_ExecuteText( EXEC_NOW, va( "menu_tv_channel_remove %i\n", id ) );
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "menu_tvchannel_remove %i\n", id ) );
 	}
 }
 
@@ -743,10 +735,24 @@ static void CG_SC_MOTD( void )
 */
 static void CG_SC_MenuCustom( void )
 {
+	char request[MAX_STRING_CHARS];
+	int i, c;
+
 	if( cgs.demoPlaying || cgs.tv )
 		return;
 
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "menu_custom %s %s", trap_Cmd_Args(), " Cancel \"\"\n"  ) );
+	if( trap_Cmd_Argc() < 2 )
+		return;
+
+	Q_strncpyz( request, va( "menu_open custom title \"%s\" ", trap_Cmd_Argv( 1 ) ), sizeof( request ) );
+	
+	for( i = 2, c = 1; i < trap_Cmd_Argc() - 1; i += 2, c++ )
+	{
+		Q_strncatz( request, va( "btn%i \"%s\" ", c, trap_Cmd_Argv( i ) ), sizeof( request ) );
+		Q_strncatz( request, va( "cmd%i \"%s\" ", c, trap_Cmd_Argv( i + 1 ) ), sizeof( request ) );
+	}
+
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s\n", request ) );
 }
 
 /*
@@ -1068,6 +1074,10 @@ void CG_RegisterCGameCommands( void )
 			if( cmd->name )
 				continue;
 
+			if( !cgs.hasGametypeMenu && !Q_stricmp( name, "gametypemenu" ) ) {
+				cgs.hasGametypeMenu = qtrue;
+			}
+
 			trap_Cmd_AddCommand( name, NULL );
 		}
 	}
@@ -1111,6 +1121,8 @@ void CG_UnregisterCGameCommands( void )
 
 			trap_Cmd_RemoveCommand( name );
 		}
+
+		cgs.hasGametypeMenu = qfalse;
 	}
 
 	// remove local commands

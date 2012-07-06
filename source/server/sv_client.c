@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // sv_client.c -- server code for moving users
 
 #include "server.h"
@@ -49,13 +49,14 @@ void SV_ClientResetCommandBuffers( client_t *client )
 }
 
 
-//==================
-//SV_ClientConnect
-// accept the new client
-// this is the only place a client_t is ever initialized
-//==================
+/*
+* SV_ClientConnect
+* accept the new client
+* this is the only place a client_t is ever initialized
+*/
 qboolean SV_ClientConnect( const socket_t *socket, const netadr_t *address, client_t *client, char *userinfo,
-                           int game_port, int challenge, qboolean fakeClient, qboolean tvClient )
+						  int game_port, int challenge, qboolean fakeClient, qboolean tvClient,
+						  unsigned int ticket_id, int session_id )
 {
 	edict_t	*ent;
 	int edictnum;
@@ -65,8 +66,14 @@ qboolean SV_ClientConnect( const socket_t *socket, const netadr_t *address, clie
 
 	// give mm a chance to reject if the server is locked ready for mm
 	// must be called before ge->ClientConnect
-	if( !SV_MM_ClientConnect( address, userinfo ) )
+	// ch : rly ignore fakeClient and tvClient here?
+	session_id = SV_MM_ClientConnect( address, userinfo, ticket_id, session_id );
+	if( !session_id )
 		return qfalse;
+
+	// we need to set local sessions to userinfo ourselves
+	if( session_id < 0 )
+		Info_SetValueForKey( userinfo, "cl_mm_session", va("%d", session_id) );
 
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !ge->ClientConnect( ent, userinfo, fakeClient, tvClient ) )
@@ -79,6 +86,9 @@ qboolean SV_ClientConnect( const socket_t *socket, const netadr_t *address, clie
 	client->challenge = challenge; // save challenge for checksumming
 
 	client->tvclient = tvClient;
+
+	client->mm_session = session_id;
+	client->mm_ticket = ticket_id;
 
 	if( socket )
 	{
@@ -123,6 +133,8 @@ qboolean SV_ClientConnect( const socket_t *socket, const netadr_t *address, clie
 	if( fakeClient )
 	{
 		client->netchan.remoteAddress.type = NA_NOTRANSMIT; // fake-clients can't transmit
+		// TODO: if mm_debug_reportbots
+		Info_SetValueForKey( userinfo, "cl_mm_session", va("%d", client->mm_session) );
 	}
 	else
 	{
@@ -136,6 +148,9 @@ qboolean SV_ClientConnect( const socket_t *socket, const netadr_t *address, clie
 		}
 	}
 
+	// create default rating for the client and current gametype
+	ge->AddDefaultRating( ent, NULL );
+
 	// parse some info from the info strings
 	Q_strncpyz( client->userinfo, userinfo, sizeof( client->userinfo ) );
 	SV_UserinfoChanged( client );
@@ -143,13 +158,13 @@ qboolean SV_ClientConnect( const socket_t *socket, const netadr_t *address, clie
 	return qtrue;
 }
 
-//=====================
-//SV_DropClient
-//
-//Called when the player is totally leaving the server, either willingly
-//or unwillingly.  This is NOT called if the entire server is quiting
-//or crashing.
-//=====================
+/*
+* SV_DropClient
+* 
+* Called when the player is totally leaving the server, either willingly
+* or unwillingly.  This is NOT called if the entire server is quiting
+* or crashing.
+*/
 void SV_DropClient( client_t *drop, int type, const char *format, ... )
 {
 	va_list	argptr;
@@ -168,6 +183,10 @@ void SV_DropClient( client_t *drop, int type, const char *format, ... )
 		Q_strncpyz( string, "User disconnected", sizeof( string ) );
 		reason = NULL;
 	}
+
+	// remove the rating of the client
+	if( drop->edict )
+		ge->RemoveRating( drop->edict );
 
 	// add the disconnect
 	if( drop->edict && ( drop->edict->r.svflags & SVF_FAKECLIENT ) )
@@ -193,9 +212,11 @@ void SV_DropClient( client_t *drop, int type, const char *format, ... )
 		else if( drop->name[0] )
 		{
 			Com_Printf( "Connecting client %s%s disconnected (%s%s)\n", drop->name, S_COLOR_WHITE, reason,
-			            S_COLOR_WHITE );
+				S_COLOR_WHITE );
 		}
 	}
+
+	SV_MM_ClientDisconnect( drop );
 
 	SNAP_FreeClientFrames( drop );
 
@@ -230,19 +251,19 @@ void SV_DropClient( client_t *drop, int type, const char *format, ... )
 
 
 /*
-   ============================================================
+============================================================
 
-   CLIENT COMMAND EXECUTION
+CLIENT COMMAND EXECUTION
 
-   ============================================================
- */
+============================================================
+*/
 
-//================
-//SV_New_f
-//
-//Sends the first message from the server to a connected client.
-//This will be sent on the initial connection and upon each server load.
-//================
+/*
+* SV_New_f
+* 
+* Sends the first message from the server to a connected client.
+* This will be sent on the initial connection and upon each server load.
+*/
 static void SV_New_f( client_t *client )
 {
 	int playernum;
@@ -322,9 +343,9 @@ static void SV_New_f( client_t *client )
 	client->state = CS_CONNECTING;
 }
 
-//==================
-//SV_Configstrings_f
-//==================
+/*
+* SV_Configstrings_f
+*/
 static void SV_Configstrings_f( client_t *client )
 {
 	int start;
@@ -359,7 +380,7 @@ static void SV_Configstrings_f( client_t *client )
 
 	// write a packet full of data
 	while( start < MAX_CONFIGSTRINGS &&
-	       client->reliableSequence - client->reliableAcknowledge < MAX_RELIABLE_COMMANDS - 8 )
+		client->reliableSequence - client->reliableAcknowledge < MAX_RELIABLE_COMMANDS - 8 )
 	{
 		if( sv.configstrings[start][0] )
 		{
@@ -375,9 +396,9 @@ static void SV_Configstrings_f( client_t *client )
 		SV_SendServerCommand( client, "cmd configstrings %i %i", svs.spawncount, start );
 }
 
-//==================
-//SV_Baselines_f
-//==================
+/*
+* SV_Baselines_f
+*/
 static void SV_Baselines_f( client_t *client )
 {
 	int start;
@@ -430,9 +451,9 @@ static void SV_Baselines_f( client_t *client )
 	SV_SendMessageToClient( client, &tmpMessage );
 }
 
-//==================
-//SV_Begin_f
-//==================
+/*
+* SV_Begin_f
+*/
 static void SV_Begin_f( client_t *client )
 {
 	Com_DPrintf( "Begin() from %s\n", client->name );
@@ -465,12 +486,12 @@ static void SV_Begin_f( client_t *client )
 //=============================================================================
 
 
-//==================
-//SV_NextDownload_f
-//
-//Responds to reliable nextdl packet with unreliable download packet
-//If nextdl packet's offet information is negative, download will be stopped
-//==================
+/*
+* SV_NextDownload_f
+* 
+* Responds to reliable nextdl packet with unreliable download packet
+* If nextdl packet's offet information is negative, download will be stopped
+*/
 static void SV_NextDownload_f( client_t *client )
 {
 	int blocksize;
@@ -562,10 +583,10 @@ static void SV_NextDownload_f( client_t *client )
 	client->download.timeout = svs.realtime + 10000;
 }
 
-//==================
-//SV_GameAllowDownload
-//Asks game function whether to allow downloading of a file
-//==================
+/*
+* SV_GameAllowDownload
+* Asks game function whether to allow downloading of a file
+*/
 static qboolean SV_GameAllowDownload( client_t *client, const char *requestname, const char *uploadname )
 {
 	if( client->state < CS_SPAWNED )
@@ -574,10 +595,10 @@ static qboolean SV_GameAllowDownload( client_t *client, const char *requestname,
 	return ge->AllowDownload( client->edict, requestname, uploadname );
 }
 
-//==================
-//SV_DenyDownload
-//Helper function for generating initdownload packets for denying download
-//==================
+/*
+* SV_DenyDownload
+* Helper function for generating initdownload packets for denying download
+*/
 static void SV_DenyDownload( client_t *client, const char *reason )
 {
 	// size -1 is used to signal that it's refused
@@ -588,10 +609,10 @@ static void SV_DenyDownload( client_t *client, const char *reason )
 	SV_SendMessageToClient( client, &tmpMessage );
 }
 
-//==================
-//SV_BeginDownload_f
-//Responds to reliable download packet with reliable initdownload packet
-//==================
+/*
+* SV_BeginDownload_f
+* Responds to reliable download packet with reliable initdownload packet
+*/
 static void SV_BeginDownload_f( client_t *client )
 {
 	const char *requestname;
@@ -732,12 +753,19 @@ static void SV_BeginDownload_f( client_t *client )
 
 	Com_Printf( "Offering %s to %s\n", client->download.name, client->name );
 
-	// only .pk3 and .pak from web atm.
 	if( FS_CheckPakExtension( uploadname ) && sv_uploads_baseurl->string[0] != 0 )
 	{
+		// .pk3 and .pak download from the web
 		alloc_size = sizeof( char ) * ( strlen( sv_uploads_baseurl->string ) + 1 );
 		url = Mem_TempMalloc( alloc_size );
 		Q_snprintfz( url, alloc_size, "%s/", sv_uploads_baseurl->string );
+	}
+	else if( SV_IsDemoDownloadRequest( requestname ) && sv_uploads_demos_baseurl->string[0] != 0 )
+	{
+		// demo file download from the web
+		alloc_size = sizeof( char ) * ( strlen( sv_uploads_demos_baseurl->string ) + 1 );
+		url = Mem_TempMalloc( alloc_size );
+		Q_snprintfz( url, alloc_size, "%s/", sv_uploads_demos_baseurl->string );
 	}
 	else
 	{
@@ -747,7 +775,7 @@ static void SV_BeginDownload_f( client_t *client )
 	// start the download
 	SV_InitClientMessage( client, &tmpMessage, NULL, 0 );
 	SV_SendServerCommand( client, "initdownload \"%s\" %i %u %i \"%s\"", client->download.name,
-	                     client->download.size, checksum, ( sv_uploads_from_server->integer != 0 ), ( url ? url : "" ) );
+		client->download.size, checksum, ( sv_uploads_from_server->integer != 0 ), ( url ? url : "" ) );
 	SV_AddReliableCommandsToMessage( client, &tmpMessage );
 	SV_SendMessageToClient( client, &tmpMessage );
 
@@ -762,28 +790,28 @@ static void SV_BeginDownload_f( client_t *client )
 //============================================================================
 
 
-//=================
-//SV_Disconnect_f
-//The client is going to disconnect, so remove the connection immediately
-//=================
+/*
+* SV_Disconnect_f
+* The client is going to disconnect, so remove the connection immediately
+*/
 static void SV_Disconnect_f( client_t *client )
 {
 	SV_DropClient( client, DROP_TYPE_GENERAL, NULL );
 }
 
 
-//==================
-//SV_ShowServerinfo_f
-//Dumps the serverinfo info string
-//==================
+/*
+* SV_ShowServerinfo_f
+* Dumps the serverinfo info string
+*/
 static void SV_ShowServerinfo_f( client_t *client )
 {
 	Info_Print( Cvar_Serverinfo() );
 }
 
-//==================
-//SV_UserinfoCommand_f
-//==================
+/*
+* SV_UserinfoCommand_f
+*/
 static void SV_UserinfoCommand_f( client_t *client )
 {
 	char *info;
@@ -800,9 +828,9 @@ static void SV_UserinfoCommand_f( client_t *client )
 	SV_UserinfoChanged( client );
 }
 
-//==================
-//SV_NoDelta_f
-//==================
+/*
+* SV_NoDelta_f
+*/
 static void SV_NoDelta_f( client_t *client )
 {
 	client->nodelta = qtrue;
@@ -810,9 +838,9 @@ static void SV_NoDelta_f( client_t *client )
 	client->lastframe = -1; // jal : I'm not sure about this. Seems like it's missing but...
 }
 
-//==================
-//SV_Multiview_f
-//==================
+/*
+* SV_Multiview_f
+*/
 static void SV_Multiview_f( client_t *client )
 {
 	qboolean mv;
@@ -883,9 +911,9 @@ ucmd_t ucmds[] =
 	{ NULL, NULL }
 };
 
-//==================
-//SV_ExecuteUserCommand
-//==================
+/*
+* SV_ExecuteUserCommand
+*/
 static void SV_ExecuteUserCommand( client_t *client, char *s )
 {
 	ucmd_t *u;
@@ -907,16 +935,16 @@ static void SV_ExecuteUserCommand( client_t *client, char *s )
 
 
 /*
-   ===========================================================================
+===========================================================================
 
-   USER CMD EXECUTION
+USER CMD EXECUTION
 
-   ===========================================================================
- */
+===========================================================================
+*/
 
-//===================
-//SV_FindNextUserCommand - Returns the next valid usercmd_t in execution list
-//===================
+/*
+* SV_FindNextUserCommand - Returns the next valid usercmd_t in execution list
+*/
 usercmd_t *SV_FindNextUserCommand( client_t *client )
 {
 	usercmd_t *ucmd;
@@ -944,9 +972,9 @@ usercmd_t *SV_FindNextUserCommand( client_t *client )
 	return ucmd;
 }
 
-//===================
-//SV_ExecuteClientThinks - Execute all pending usercmd_t
-//===================
+/*
+* SV_ExecuteClientThinks - Execute all pending usercmd_t
+*/
 void SV_ExecuteClientThinks( int clientNum )
 {
 	unsigned int msec;
@@ -992,9 +1020,9 @@ void SV_ExecuteClientThinks( int clientNum )
 	client->UcmdExecuted = client->UcmdReceived;
 }
 
-//==================
-//SV_ParseMoveCommand
-//==================
+/*
+* SV_ParseMoveCommand
+*/
 static void SV_ParseMoveCommand( client_t *client, msg_t *msg )
 {
 	unsigned int i, ucmdHead, ucmdFirst, ucmdCount;
@@ -1052,10 +1080,10 @@ static void SV_ParseMoveCommand( client_t *client, msg_t *msg )
 	}
 }
 
-//===================
-//SV_ParseClientMessage
-//The current message is parsed for the given client
-//===================
+/*
+* SV_ParseClientMessage
+* The current message is parsed for the given client
+*/
 void SV_ParseClientMessage( client_t *client, msg_t *msg )
 {
 	int c;
@@ -1094,31 +1122,31 @@ void SV_ParseClientMessage( client_t *client, msg_t *msg )
 			break;
 
 		case clc_move:
-		{
-			if( move_issued )
-				return; // someone is trying to cheat...
+			{
+				if( move_issued )
+					return; // someone is trying to cheat...
 
-			move_issued = qtrue;
-			SV_ParseMoveCommand( client, msg );
-		}
+				move_issued = qtrue;
+				SV_ParseMoveCommand( client, msg );
+			}
 			break;
 
 		case clc_svcack:
-		{
-			if( client->reliable )
 			{
-				Com_Printf( "SV_ParseClientMessage: svack from reliable client\n" );
-				SV_DropClient( client, DROP_TYPE_GENERAL, "Error: svack from reliable client" );
-				return;
+				if( client->reliable )
+				{
+					Com_Printf( "SV_ParseClientMessage: svack from reliable client\n" );
+					SV_DropClient( client, DROP_TYPE_GENERAL, "Error: svack from reliable client" );
+					return;
+				}
+				cmdNum = MSG_ReadLong( msg );
+				if( cmdNum < client->reliableAcknowledge || cmdNum > client->reliableSent )
+				{
+					//					SV_DropClient( client, DROP_TYPE_GENERAL, "Error: bad server command acknowledged" );
+					return;
+				}
+				client->reliableAcknowledge = cmdNum;
 			}
-			cmdNum = MSG_ReadLong( msg );
-			if( cmdNum < client->reliableAcknowledge || cmdNum > client->reliableSent )
-			{
-				//					SV_DropClient( client, DROP_TYPE_GENERAL, "Error: bad server command acknowledged" );
-				return;
-			}
-			client->reliableAcknowledge = cmdNum;
-		}
 			break;
 
 		case clc_clientcommand:

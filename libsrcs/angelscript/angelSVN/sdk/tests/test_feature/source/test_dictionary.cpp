@@ -5,9 +5,6 @@
 namespace TestDictionary
 {
 
-#define TESTNAME "TestDictionary"
-
-
 const char *script =
 "void Test()                       \n"
 "{                                 \n"
@@ -86,15 +83,15 @@ bool Test()
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	asIScriptContext *ctx = 0;
-	r = engine->ExecuteString(0, "Test()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "Test()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
-		fail = true;
+		TEST_FAILED;
 	}
 	ctx->Release();
 
@@ -103,36 +100,36 @@ bool Test()
 	engine->GarbageCollect();
 	engine->GetGCStatistics(&gcCurrentSize, &gcTotalDestroyed, &gcTotalDetected);
 
-	if( gcCurrentSize != 0 || gcTotalDestroyed != 1 || gcTotalDetected != 1 )
-		fail = true;
+	if( gcCurrentSize != 1 || gcTotalDestroyed != 2 || gcTotalDetected != 1 )
+		TEST_FAILED;
 
 	// Test circular references including a script class and the dictionary
 	mod->AddScriptSection("script", script2, strlen(script2));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->ExecuteString(0, "f()");
+	r = ExecuteString(engine, "f()", mod);
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	engine->GetGCStatistics(&gcCurrentSize, &gcTotalDestroyed, &gcTotalDetected);
 	engine->GarbageCollect();
 	engine->GetGCStatistics(&gcCurrentSize, &gcTotalDestroyed, &gcTotalDetected);
 
-	if( gcCurrentSize != 0 || gcTotalDestroyed != 3 || gcTotalDetected != 3  )
-		fail = true;
+	if( gcCurrentSize != 4 || gcTotalDestroyed != 6 || gcTotalDetected != 3  )
+		TEST_FAILED;
 
 	// Test invalid ref cast together with the variable argument
 	bout.buffer = "";
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
-	r = engine->ExecuteString(0, "dictionary d; d.set('hello', cast<int>(4));");
+	r = ExecuteString(engine, "dictionary d; d.set('hello', cast<int>(4));");
 	if( r >= 0 ) 
-		fail = true;
+		TEST_FAILED;
 	if( bout.buffer != "ExecuteString (1, 35) : Error   : Illegal target type for reference cast\n" )
 	{
-		fail = true;
-		printf(bout.buffer.c_str());
+		TEST_FAILED;
+		printf("%s", bout.buffer.c_str());
 	}
 
 	engine->Release();
@@ -152,18 +149,99 @@ bool Test()
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->ExecuteString(0, "Test()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "Test()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
-		fail = true;
+		TEST_FAILED;
 	}
 	ctx->Release();
 
 	engine->Release();
+
+	//------------------------
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+
+		engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+		RegisterScriptString(engine);
+		RegisterScriptDictionary(engine);
+
+		mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+	
+		const char *script =
+			"class Test \n"
+			"{ \n"
+			"  Test() { dict.set('int', 1); dict.set('string', 'test'); dict.set('handle', @'handle'); } \n"
+			"  dictionary dict; \n"
+			"} \n"
+			"void main() \n"
+			"{ \n"
+			"  Test test = Test(); \n"
+			"} \n";
+
+		mod->AddScriptSection("script", script);
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		ctx = engine->CreateContext();
+		r = ExecuteString(engine, "main()", mod, ctx);
+		if( r != asEXECUTION_FINISHED )
+		{
+			if( r == asEXECUTION_EXCEPTION )
+				PrintException(ctx);
+			TEST_FAILED;
+		}
+		ctx->Release();
+
+		engine->Release();
+	}
+
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+
+		engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+		RegisterStdString(engine);
+		RegisterScriptDictionary(engine);
+
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+		mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+	
+		const char *script =
+			"void main() \n"
+			"{ \n"
+			" dictionary test; \n"
+			" test.set('test', 'something'); \n"
+			" string output; \n"
+			" test.get('test', output); \n"
+			" assert(output == 'something'); \n"
+			"} \n";
+
+		mod->AddScriptSection("script", script);
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		ctx = engine->CreateContext();
+		r = ExecuteString(engine, "main()", mod, ctx);
+		if( r != asEXECUTION_FINISHED )
+		{
+			if( r == asEXECUTION_EXCEPTION )
+				PrintException(ctx);
+			TEST_FAILED;
+		}
+		ctx->Release();
+
+		engine->Release();
+	}
 
 	return fail;
 }

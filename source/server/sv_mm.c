@@ -1,598 +1,709 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
+
+#include <time.h>		// just for dev
 
 #include "server.h"
-#include "../qcommon/rsa.h"
-#include "../qcommon/sha1.h"
+#include "../gameshared/q_shared.h"
 
-#ifdef MATCHMAKER_SUPPORT
+#include "../matchmaker/mm_common.h"
+#include "../matchmaker/mm_rating.h"
+#include "../matchmaker/mm_query.h"
 
-#ifndef TCP_SUPPORT
-#	ifdef _MSC_VER
-#		pragma message( "TCP support needed for matchmaker" )
-#	else
-#		warning TCP support needed for matchmaker
-#	endif
-#endif
+// interval between successive attempts to get match UUID from the mm
+#define SV_MM_MATCH_UUID_FETCH_INTERVAL		20	// in seconds
 
-#define MM_LOCK_TIMEOUT 40000
-
-static void SV_MM_GenerateSalt( void );
-static void SV_MM_Status( void );
-static void SV_MM_LoadPublicKey( void );
-static void SV_MM_FreePublicKey( void );
-static qboolean SV_MM_SendMsgToServer( const char *format, ... );
-
-static void SV_MMC_Lock( msg_t *msg );
-static void SV_MMC_Setup( msg_t *msg );
-
-//================
-// sv_mm_locked_t
-// Contains all the data necessary for server locking
-//================
-typedef struct
-{
-	unsigned int locked;
-
-	int clientcount;
-	qbyte clientips[MAX_CLIENTS][4];
-} sv_mm_locked_t;
-
-//================
-// private vars
-//================
+/*
+* private vars
+*/
 static qboolean sv_mm_initialized = qfalse;
+static int sv_mm_session;
 
-static sv_mm_locked_t sv_mm_locked;
-static rsa_context sv_mm_ctx;
+// local session counter
+static unsigned int sv_mm_localsession;
+static unsigned int sv_mm_last_heartbeat;
+static qboolean sv_mm_logout_semaphore = qfalse;
 
-static char sv_mm_salt[SALT_LEN];
-static netadr_t sv_mm_address;
+// flag for gamestate = game-on
+static qboolean sv_mm_gameon = qfalse;
 
-#ifdef TCP_SUPPORT
-static incoming_t *sv_mm_connection;
-#endif
+static stat_query_t *sv_login_query = NULL;
 
-//================
-// public vars
-//================
-cvar_t *sv_mmserver;
-cvar_t *sv_allowmm;
+static stat_query_api_t *sq_api = NULL;
 
-//================
-// SV_MM_Init
-// Initialize matchmaking components
-//================
-void SV_MM_Init( void )
-{
-	if( sv_mm_initialized )
-		return;
+static char sv_mm_match_uuid[37];
+static unsigned sv_mm_next_match_uuid_fetch;
+static stat_query_t *sv_mm_match_uuid_fetch_query;
+static void (*sv_mm_match_uuid_callback_fn)( const char *uuid );
 
-	sv_mmserver = Cvar_Get( "mmserver", MM_SERVER_IP, CVAR_ARCHIVE );
-	sv_allowmm = Cvar_Get( "sv_allowmm", "1", CVAR_ARCHIVE );
+/*
+* public vars
+*/
+cvar_t *sv_mm_authkey;
+cvar_t *sv_mm_enable;
+cvar_t *sv_mm_loginonly;
+cvar_t *sv_mm_debug_reportbots;
 
-	if( !sv_tcp->integer )
-	{
-		Com_Printf( "TCP must be enabled for matchmaker.\n" );
-		Cvar_FullSet( "sv_allowmm", "0", CVAR_READONLY, qtrue );
-	}
+/*
+* prototypes
+*/
+static void SV_MM_ReportMatch( const char *report );
+static qboolean SV_MM_Login( void );
+static void SV_MM_Logout( qboolean force );
+static void SV_MM_GetMatchUUIDThink( void );
 
-	NET_StringToAddress( sv_mmserver->string, &sv_mm_address );
-	if( sv_mm_address.type == NA_NOTRANSMIT )
-	{
-		Com_Printf( "Invalid matchmaker server address.\n" );
-		Cvar_FullSet( "sv_allowmm", "0", CVAR_READONLY, qtrue );
-	}
-
-	if( !sv_allowmm->integer )
-		return;
-
-	Cmd_AddCommand( "mmstatus", SV_MM_Status );
-
-	SV_MM_GenerateSalt();
-
-	SV_MM_LoadPublicKey();
-
-	svc.last_mmheartbeat = MM_HEARTBEAT_SECONDS * 1000;
-
-	sv_mm_initialized = qtrue;
-}
-
-//================
-// SV_MM_Shutdown
-// Shutdown matchmaking stuff
-//================
-void SV_MM_Shutdown( void )
-{
-	if( !sv_mm_initialized )
-		return;
-
-	Cmd_RemoveCommand( "mmstatus" );
-
-	// tell mm we cant host anymore because we are shutting down
-	if( ( sv_mm_address.type != NA_NOTRANSMIT ) && svs.socket_udp.open )
-		Netchan_OutOfBandPrint( &svs.socket_udp, &sv_mm_address, "heartbeat no " APP_PROTOCOL_VERSION_STR );
-
-	SV_MM_FreePublicKey();
-
-	sv_mm_initialized = qfalse;
-}
-
-//================
-// SV_MM_Frame
-// Called every game frame
-//================
-void SV_MM_Frame( void )
-{
-	if( !sv_mm_initialized )
-		return;
-
-	if( !sv_mm_locked.locked )
-		return;
-
-	// if all clients have quit, then we can release the server again
-	// make sure mm clients have had time to connect first
-	if( SV_MM_CanHost()	&& sv_mm_locked.locked + MM_LOCK_TIMEOUT < svs.realtime	)
-	{
-		// reset game environment to what it was before
-		Com_DPrintf( "Resetting settings after matchmaker\n" );
-		ge->MM_Reset();
-		memset( &sv_mm_locked, 0, sizeof( sv_mm_locked ) );
-
-		SV_MM_GenerateSalt();
-	}
-}
-
-//================
-// SV_MM_GetSlotCount
-// Returns the number of slots that can be used for clients
-//================
-int SV_MM_GetSlotCount( void )
-{
-	int i, tvclients = 0;
-
-	// count tv clients
-	for( i = 0 ; i < sv_maxclients->integer ; i++ )
-	{
-		if( svs.clients[i].tvclient )
-			tvclients++;
-	}
-
-	return sv_maxclients->integer - tvclients;
-}
-
-//================
-// SV_MM_CanHostMM
-// Returns whether server is capable of hosting a match
-//================
-qboolean SV_MM_CanHost( void )
+/*
+* Utilities
+*/
+static client_t *SV_MM_ClientForSession( int session_id )
 {
 	int i;
+	client_t *cl;
 
-	if( !sv_mm_initialized )
-		return qfalse;
-
-	for( i = 0 ; i < sv_maxclients->integer ; i++ )
+	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		if( svs.clients[i].edict->r.svflags & SVF_FAKECLIENT || svs.clients[i].tvclient )
+		// also ignore zombies?
+		if( cl->state == CS_FREE )
 			continue;
 
-		if( svs.clients[i].state >= CS_CONNECTING )
-			return qfalse;
+		if( cl->mm_session == session_id )
+			return cl;
 	}
 
-	return qtrue;
+	return NULL;
 }
 
-//================
-// SV_MM_IsLocked
-// Returns whether server is locked
-//================
-qboolean SV_MM_IsLocked( void )
+int SV_MM_GenerateLocalSession( void )
 {
-	return sv_mm_locked.locked != 0;
+	unsigned int id;
+
+	id = sv_mm_localsession;
+	do
+	{
+		id = ( id + 1 ) & 0x7fffffff;
+		if( !id )
+			id = 1;
+	} while( SV_MM_ClientForSession( -(int)id ) != NULL );
+
+	sv_mm_localsession = id;
+	return -(int)sv_mm_localsession;
 }
 
-//================
-// SV_MM_Initialized
-//================
+//======================================
+//		HTTP REQUESTS
+//======================================
+
+void SV_MM_SendQuery( struct stat_query_s *query )
+{
+	// add our session id
+	sq_api->SetField( query, "ssession", va("%d", sv_mm_session ) );
+	sq_api->Send( query );
+}
+
+// TODO: instead of this, factor ClientDisconnect to game module which can flag
+// the gamestate in that function
+void SV_MM_GameState( qboolean gameon )
+{
+	sv_mm_gameon = gameon;
+}
+
+static void sv_mm_heartbeat_done( stat_query_t *query, qboolean success, void *customp )
+{
+}
+
+void SV_MM_Heartbeat( void )
+{
+	stat_query_t *query;
+
+	if( !sv_mm_initialized || !sv_mm_session )
+		return;
+
+	// push a request
+	query = sq_api->CreateQuery( "shb", qfalse );
+	if( query == NULL )
+		return;
+
+	// servers own session (TODO: put this to a cookie or smth)
+	sq_api->SetField( query, "ssession", va("%d", sv_mm_session ) );
+
+	// redundant atm
+	sq_api->SetCallback( query, sv_mm_heartbeat_done, NULL );
+	sq_api->Send( query );
+}
+
+/*
+* sv_mm_clientdisconnect_done
+* This only exists so that we are sure the message got through
+*/
+static void sv_mm_clientdisconnect_done( stat_query_t *query, qboolean success, void *customp )
+{
+	if( success == qtrue )
+		Com_Printf("SV_MM_ClientDisconnect: Acknowledged %d\n", (int)customp );
+	else
+		Com_Printf("SV_MM_ClientDisconnect: Error\n" );
+}
+
+void SV_MM_ClientDisconnect( client_t *client )
+{
+	stat_query_t *query;
+
+	if( !sv_mm_initialized || !sv_mm_session )
+		return;
+
+	// do we need to tell about anonymous clients?
+	if( client->mm_session <= 0 )
+		return;
+
+	// push a request
+	query = sq_api->CreateQuery( "scd", qfalse );
+	if( query == NULL )
+		return;
+
+	// servers own session (TODO: put this to a cookie or smth)
+	sq_api->SetField( query, "ssession", va("%d", sv_mm_session ) );
+
+	// clients session
+	sq_api->SetField( query, "csession", va("%d", client->mm_session ) );
+	sq_api->SetField( query, "gameon", sv_mm_gameon == qtrue ? "1" : "0" );
+
+	sq_api->SetCallback( query, sv_mm_clientdisconnect_done, (void*)client->mm_session );
+	sq_api->Send( query );
+}
+
+/*
+* sv_clientconnect_done
+* callback for clientconnect POST request
+*/
+static void sv_mm_clientconnect_done( stat_query_t *query, qboolean success, void *customp )
+{
+	stat_query_section_t *root, *ratings_section;
+	int session_id, isession_id;
+	client_t *cl;
+	edict_t *ent;
+
+	/*
+	 * ch : JSON API
+	 * {
+	 *		id: [int],	// 0 on error, > 0 on logged-in user, < 0 for "anonymous" user
+	 *		login: [string],	// login-name for user on success
+	 *		ratings: [
+	 *			{ gametype: [string], rating: [float]: deviation: [float] }
+	 *			..
+	 *		]
+	 * }
+	 */
+
+	/*
+	 * since we are now generating the local session in SV_MM_ClientConnect, we should
+	 * check if session_id < 0 just in case so that we wont try to regenerate local
+	 * session or do anything stupid like that
+	 * (currently we dont even tell MM about these so ignore)
+	 */
+	
+	session_id = (int)customp;
+	isession_id = 0;
+	cl = SV_MM_ClientForSession( session_id );
+
+	if( cl == NULL )
+	{
+		// or figure out the validation anyway from the received session-id?
+		Com_Printf("SV_MM_ClientConnect: Couldnt find client with session-id %d\n", session_id );
+		return;
+	}
+
+	if( !success )
+		Com_Printf( "SV_MM_ClientConnect: Error\n" );
+	else
+	{
+		root = sq_api->GetRoot( query );
+		if( query == NULL )
+		{
+			Com_Printf("SV_MM_ParseResponse: Failed to parse data\n");
+		}
+		else
+		{
+			isession_id = (int)sq_api->GetNumber( root, "id" );
+			if( isession_id == 0 )
+			{
+				Com_Printf( "SV_MM_ClientConnect: Client not logged in\n");
+			}
+			else if( isession_id != session_id )
+			{
+				Com_Printf( "SV_MM_ClientConnect: Session-id doesnt match %d -> %d\n", isession_id, session_id );
+				isession_id = 0;
+			}
+			else
+			{
+				const char *login = sq_api->GetString( root, "login" );
+				ratings_section = sq_api->GetSection( root, "ratings" );
+				if( !Info_SetValueForKey( cl->userinfo, "cl_mm_login", login ) )
+					Com_Printf( "Failed to set infokey cl_mm_login for player %s\n", login );
+				if( ge != NULL && ratings_section != NULL )
+				{
+					int idx = 0;
+					stat_query_section_t *element = sq_api->GetArraySection( ratings_section, idx++ );
+					ent = EDICT_NUM( (cl - svs.clients) + 1 );
+					while( element != NULL )
+					{
+						ge->AddRating( ent, sq_api->GetString( element, "gametype" ),
+							sq_api->GetNumber( element, "rating" ),
+							sq_api->GetNumber( element, "deviation" ) );
+						element = sq_api->GetArraySection( ratings_section, idx++ );
+					}
+				}
+				SV_UserinfoChanged( cl );
+			}
+		}
+	}
+
+	// unable to validate client, either kick him out or force local session
+	if( isession_id == 0 )
+	{
+		if( sv_mm_loginonly->integer )
+		{
+			SV_DropClient( cl, DROP_TYPE_GENERAL, "Error: This server requires login. Create account at http://www.warsow.net/" );
+			return;
+		}
+
+		// TODO: check that session_id >= 0
+		isession_id = SV_MM_GenerateLocalSession();
+		Com_Printf("SV_MM_ClientConnect: Forcing local_session %d on client %s\n", isession_id, cl->name );
+		cl->mm_session = isession_id;
+		// TODO: reflect this to the userinfo
+		Info_SetValueForKey( cl->userinfo, "cl_mm_session", va("%d", isession_id ) );
+
+		// We should also notify MM about the new local session id?
+		// Or another option would be that MM doesnt track local sessions at all,
+		// it just emits the results straight away.
+
+		// resend scc query
+		// cl->socket->address
+	}
+
+	Com_Printf("SV_MM_ClientConnect: %s with session id %d\n", cl->name, cl->mm_session );
+}
+
+int SV_MM_ClientConnect( const netadr_t *address, char *userinfo, unsigned int ticket_id, int session_id )
+{
+	/*
+	* what crizis did.. push a query after checking that ticket id and session id
+	* at least aren't null and if server expects login-only clients
+	*
+	* ahem, figure out how to handle anonymous players. currently this will bug out so that
+	* session_id is 0 -> request receives zero id's and freaks out. generate a session_id
+	* here and return it.
+	*
+	* ok done. so this function receives session_id = 0 if we are dealing with 'anonymous'
+	* player and this here generates local session-id for the client
+	*/
+	stat_query_t *query;
+
+	// return of -1 is not an error, it just marks a dummy local session
+	if( !sv_mm_initialized || !sv_mm_session )
+		return -1;
+
+	// accept only players that are logged in (session_id <= 0 ??)
+	if( sv_mm_loginonly->integer && session_id == 0 )
+	{
+		Com_Printf("SV_MM_ClientConnect: Login-only\n");
+		return 0;
+	}
+
+	// expect a ticket for logged-in client (rly?) session_id > 0
+	// we should force local session in here
+	if( ticket_id == 0 && session_id != 0 )
+	{
+		Com_Printf( "SV_MM_ClientConnect: Logged-in client didnt declare ticket, marking as anonymous\n" );
+		session_id = 0;
+	}
+
+	if( session_id == 0 )
+	{
+		// WMM doesnt care about anonymous players
+		session_id = SV_MM_GenerateLocalSession();
+		Com_Printf("SV_MM_ClientConnect: Generated local session %d\n", session_id );
+		return session_id;
+	}
+
+	// push a request
+	query = sq_api->CreateQuery( "scc", qfalse );
+	if( query == NULL )
+		return 0;
+
+	// servers own session (TODO: put this to a cookie or smth)
+	sq_api->SetField( query, "ssession", va("%d", sv_mm_session ) );
+
+	// clients attributes (nickname here?)
+	sq_api->SetField( query, "cticket", va("%u", ticket_id ) );
+	sq_api->SetField( query, "csession", va("%d", session_id ) );
+	sq_api->SetField( query, "cip", NET_AddressToString( address ) );
+
+	sq_api->SetCallback( query, sv_mm_clientconnect_done, (void*)session_id );
+	sq_api->Send( query );
+
+	return session_id;
+}
+
+void SV_MM_Frame( void )
+{
+	unsigned int time;
+
+	if( sv_mm_enable->modified )
+	{
+		if( sv_mm_enable->integer && !sv_mm_initialized )
+			SV_MM_Login();
+		else if( !sv_mm_enable->integer && sv_mm_initialized )
+			SV_MM_Logout(qfalse);
+
+		sv_mm_enable->modified = qfalse;
+	}
+
+	if( sv_mm_initialized )
+	{
+		if( sv_mm_logout_semaphore )
+		{
+			// logout process is finished so we can shutdown game
+			SV_MM_Shutdown( qfalse );
+			sv_mm_logout_semaphore = qfalse;
+			return;
+		}
+
+		// heartbeat
+		time = Sys_Milliseconds();
+		if( (sv_mm_last_heartbeat + MM_HEARTBEAT_INTERVAL) < time )
+		{
+			SV_MM_Heartbeat();
+			sv_mm_last_heartbeat = time;
+		}
+
+		SV_MM_GetMatchUUIDThink();
+	}
+}
+
 qboolean SV_MM_Initialized( void )
 {
 	return sv_mm_initialized;
 }
 
-//================
-// SV_MM_NetAddress
-//================
-qboolean SV_MM_NetAddress( netadr_t *addr )
-{
-	if( sv_mm_address.type == NA_NOTRANSMIT )
-		return qfalse;
 
-	assert( addr );
-	*addr = sv_mm_address;
-	return qtrue;
+static void sv_mm_logout_done( stat_query_t *query, qboolean success, void *customp )
+{
+	Com_Printf("SV_MM_Logout: Loggin off..\n");
+
+	// ignore response-status and just mark us as logged-out
+	sv_mm_logout_semaphore = qtrue;
 }
 
 /*
-* SV_MM_Salt
+* SV_MM_Logout
 */
-const char *SV_MM_Salt( void )
+static void SV_MM_Logout( qboolean force )
 {
-	return sv_mm_salt;
-}
+	stat_query_t *query;
+	unsigned int timeout;
 
-/*
-* SV_MM_SetConnection
-*/
-#ifdef TCP_SUPPORT
-void SV_MM_SetConnection( incoming_t *connection )
-{
-	sv_mm_connection = connection;
-}
-#endif
-
-//================
-// SV_MM_GenerateSalt
-// Generates the salt
-//================
-static void SV_MM_GenerateSalt( void )
-{
-	int i;
-	srand( time( NULL ) );
-	for( i = 0 ; i < sizeof( sv_mm_salt ) ; i++ )
-		sv_mm_salt[i] = brandom( '0', 'z' );
-}
-
-//================
-// SV_MM_Status
-// Outputs server's matchmaking status to console
-//================
-static void SV_MM_Status( void )
-{
-	int i;
-
-	if( !sv_mm_initialized )
-	{
-		Com_Printf( "Server does not have matchmaking enabled\n" );
-		return;
-	}
-
-	if( SV_MM_IsLocked() )
-	{
-		Com_Printf( "Server is in matchmaking mode" );
-		if( SV_MM_CanHost() )
-			Com_Printf( " (timeout in %d seconds)", ( MM_LOCK_TIMEOUT - ( svs.realtime - sv_mm_locked.locked ) ) / 1000 );
-
-		Com_Printf( "\nClients (%d total):\n", sv_mm_locked.clientcount );
-		for( i = 0 ; i < sv_mm_locked.clientcount ; i++ )
-			Com_Printf( "  %d.%d.%d.%d\n", sv_mm_locked.clientips[i][0], sv_mm_locked.clientips[i][1], sv_mm_locked.clientips[i][2], sv_mm_locked.clientips[i][3] );
-	}
-	else
-		Com_Printf( "Server is not in matchmaking mode\n" );
-}
-
-//================
-// SV_MM_LoadPublicKey
-// Loads the public key from file
-//================
-static void SV_MM_LoadPublicKey( void )
-{
-	qboolean success;
-	size_t offsets[] =
-	{
-		CTXOFS( N ),
-		CTXOFS( E ),
-		0
-	};
-
-	Com_Printf( "Loading matchmaker public key... " );
-
-	success = MM_LoadKey( &sv_mm_ctx, RSA_PUBLIC, offsets, "mm_pubkey.txt" );
-	if( success )
-		Com_Printf( "success!\n" );
-	else
-	{
-		Com_Printf( "failed!\n%s\n", MM_LoadKeyError() );
-		Cvar_FullSet( "sv_allowmm", "0", CVAR_READONLY, qtrue );
-	}
-}
-
-//================
-// SV_MM_FreePublicKey
-// Frees the public key
-//================
-static void SV_MM_FreePublicKey( void )
-{
-	rsa_free( &sv_mm_ctx );
-}
-
-//================
-// SV_MM_SendMsgToServer
-// Sends a msg to the matchmaker
-//================
-static qboolean SV_MM_SendMsgToServer( const char *format, ... )
-{
-#ifdef TCP_SUPPORT
-	va_list argptr;
-	char msg[1024];
-	connection_status_t status;
-
-	if( !sv_mm_connection || !sv_mm_connection->socket.open )
-		return qfalse;
-
-	status = NET_CheckConnect( &sv_mm_connection->socket );
-	if( status != CONNECTION_SUCCEEDED )
-		return qfalse;
-
-	va_start( argptr, format );
-	Q_vsnprintfz( msg, sizeof( msg ), format, argptr );
-	va_end( argptr );
-
-	if( !*msg )
-		return qfalse;
-
-	Com_DPrintf( "Sending packet to matchmaker: %s\n", msg );
-
-	if( !NET_SendPacket( &sv_mm_connection->socket, msg, strlen( msg ) + 1, &sv_mm_connection->address ) )
-	{
-		NET_CloseSocket( &sv_mm_connection->socket );
-		sv_mm_connection->active = qfalse;
-
-		return qfalse;
-	}
-
-	return qtrue;
-#else
-	return qfalse;
-#endif
-}
-
-//================
-// Supported commands
-//================
-typedef struct
-{
-	char *name;
-	void ( *func )( msg_t *msg );
-} mm_cmd_t;
-
-static mm_cmd_t mm_cmds[] =
-{
-	{ "lock", SV_MMC_Lock },
-	{ "setup", SV_MMC_Setup },
-	
-	{ NULL, NULL }
-};
-
-//================
-// SV_MM_Packet
-// Handle matchmaking packets
-//================
-void SV_MM_Packet( msg_t *msg )
-{
-	mm_cmd_t *cmd;
-	unsigned char sha1sum[20];
-	char salt[SALT_LEN];
-
-	if( !sv_mm_initialized )
+	if( !sv_mm_initialized || !sv_mm_session )
 		return;
 
-	MSG_BeginReading( msg );
-	MSG_SkipData( msg, sv_mm_ctx.len );
-
-	memset( salt, 0, sizeof( salt ) );
-	MSG_ReadData( msg, salt, strlen( sv_mm_salt ) );
-
-	// salt must be correct
-	if( memcmp( salt, sv_mm_salt, sizeof( salt ) ) )
+	query = sq_api->CreateQuery( "slogout", qfalse );
+	if( query == NULL )
 		return;
 
-	// get sha1 sum of data
-	sha1( msg->data + sv_mm_ctx.len, msg->cursize - sv_mm_ctx.len, sha1sum );
+	sv_mm_logout_semaphore = qfalse;
 
-	if( rsa_pkcs1_verify( &sv_mm_ctx, RSA_PUBLIC, RSA_SHA1, 0, sha1sum, msg->data ) )
-		return;
+	// TODO: pull the authkey out of cvar into file
+	sq_api->SetField( query, "ssession", va( "%d", sv_mm_session ) );
+	sq_api->SetCallback( query, sv_mm_logout_done, NULL );
+	sq_api->Send( query );
 
-	for( cmd = mm_cmds ; cmd->name ; cmd++ )
+	if( force )
 	{
-		if( !memcmp( msg->data + sv_mm_ctx.len + sizeof( salt ), cmd->name, strlen( cmd->name ) ) )
+		timeout = Sys_Milliseconds();
+		while( !sv_mm_logout_semaphore && Sys_Milliseconds() < ( timeout + MM_LOGOUT_TIMEOUT ) )
 		{
-			// set msg read point after command name
-			MSG_SkipData( msg, strlen( cmd->name ) );
-			if( cmd->func )
-				cmd->func( msg );
-			break;
+			sq_api->Poll();
+
+			Sys_Sleep( 10 );
+		}
+
+		if( !sv_mm_logout_semaphore )
+			Com_Printf("SV_MM_Logout: Failed to force logout\n");
+		else
+			Com_Printf("SV_MM_Logout: force logout successful\n");
+
+		sv_mm_logout_semaphore = qfalse;
+
+		// dont call this, we are coming from shutdown
+		// SV_MM_Shutdown( qfalse );
+	}
+}
+
+/*
+* sv_mm_login_done
+* callback for login post request
+*/
+static void sv_mm_login_done( stat_query_t *query, qboolean success, void *customp )
+{
+	stat_query_section_t *root;
+
+	sv_mm_initialized = qfalse;
+	sv_login_query = NULL;
+
+	if( !success )
+	{
+		Com_Printf( "SV_MM_Login_Done: Error\n" );
+		Cvar_ForceSet( sv_mm_enable->name, "0" );
+		return;
+	}
+
+	Com_DPrintf( "SV_MM_Login: %s\n", sq_api->GetRawResponse( query ) );
+
+	/*
+	 * ch : JSON API
+	 * {
+	 *		id: [int], // 0 on error, > 0 on success
+	 * }
+	 */
+	root = sq_api->GetRoot( query );
+	if( root == NULL )
+	{
+		Com_Printf("SV_MM_Login: Failed to parse data\n");
+	}
+	else
+	{
+		sv_mm_session = (int)sq_api->GetNumber( root, "id" );
+		sv_mm_initialized = ( sv_mm_session == 0 ? qfalse : qtrue );
+	}
+
+	if( sv_mm_initialized )
+		Com_Printf( "SV_MM_Login: Success, session id %u\n", sv_mm_session );
+	else
+	{
+		Com_Printf( "SV_MM_Login: Failed, no session id\n" );
+		Cvar_ForceSet( sv_mm_enable->name, "0" );
+	}
+}
+
+/*
+* SV_MM_Login
+*/
+static qboolean SV_MM_Login( void )
+{
+	stat_query_t *query;
+
+	if( sv_login_query != NULL || sv_mm_initialized )
+		return qfalse;
+	if( sv_mm_authkey->string[0] == '\0' ) {
+		return qfalse;
+	}
+
+	Com_Printf( "SV_MM_Login: Creating query\n" );
+
+	query = sq_api->CreateQuery( "slogin", qfalse );
+	if( query == NULL )
+		return qfalse;
+
+	sq_api->SetField( query, "authkey", sv_mm_authkey->string );
+	sq_api->SetField( query, "port", va( "%d", sv_port->integer ) );
+	sq_api->SetField( query, "hostname", sv.configstrings[CS_HOSTNAME] );
+	sq_api->SetCallback( query, sv_mm_login_done, NULL );
+	sq_api->Send( query );
+
+	sv_login_query = query;
+
+	return qtrue;
+}
+
+/*
+* sv_mm_match_uuid_done
+* callback for match uuid fetching
+*/
+static void sv_mm_match_uuid_done( stat_query_t *query, qboolean success, void *customp )
+{
+	stat_query_section_t *root;
+
+	// set the repeat timer, which will be ignored in case we successfully parse the response
+	sv_mm_next_match_uuid_fetch = Sys_Milliseconds() + SV_MM_MATCH_UUID_FETCH_INTERVAL * 1000;
+	sv_mm_match_uuid_fetch_query = NULL;
+
+	if( !success ) {
+		return;
+	}
+
+	Com_DPrintf( "SV_MM_GetMatchUUID: %s\n", sq_api->GetRawResponse( query ) );
+
+	/*
+	 * JSON API
+	 * {
+	 *		uuid: [string]
+	 * }
+	 */
+	root = sq_api->GetRoot( query );
+	if( root == NULL )
+	{
+		Com_Printf( "SV_MM_GetMatchUUID: Failed to parse data\n" );
+	}
+	else
+	{
+		Q_strncpyz( sv_mm_match_uuid, sq_api->GetString( root, "uuid" ), sizeof( sv_mm_match_uuid ) );
+		if( sv_mm_match_uuid_callback_fn ) {
+			// fire the callback function
+			sv_mm_match_uuid_callback_fn( sv_mm_match_uuid );
 		}
 	}
 }
 
-//================
-// SV_MM_ClientConnect
-// When server is locked, this checks if the connecting player is
-// one of the players who can connect
-//================
-qboolean SV_MM_ClientConnect( const netadr_t *address, char *userinfo )
+/*
+* SV_MM_GetMatchUUIDThink
+*
+* Repeatedly query the matchmaker for match UUID until we get one.
+*/
+static void SV_MM_GetMatchUUIDThink( void )
 {
-	int i;
-	netadr_t client;
+	stat_query_t *query;
 
-	if( !sv_mm_initialized )
-		return qtrue;
-
-	if( !sv_mm_locked.locked )
-		return qtrue;
-
-	for( i = 0 ; i < sv_mm_locked.clientcount ; i++ )
-	{
-		memcpy( client.ip, sv_mm_locked.clientips[i], 4 );
-		client.type = NA_IP;
-
-		if( !NET_CompareBaseAddress( &client, address ) )
-			continue;
-
-		// hack a password into the userinfo, so users can connect
-		// even if there is a password
-		Info_SetValueForKey( userinfo, "password", Cvar_String( "password" ) );
-		return qtrue;
+	if( !sv_mm_initialized || !sv_mm_session ) {
+		return;
+	}
+	if( sv_mm_next_match_uuid_fetch > Sys_Milliseconds() ) {
+		// not ready yet
+		return;
+	}
+	if( sv_mm_match_uuid_fetch_query != NULL ) {
+		// already in progress
+		return;
+	}
+	if( sv_mm_match_uuid[0] != '\0' ) {
+		// we have already queried the server
+		return;
 	}
 
-	Info_SetValueForKey( userinfo, "rejtype", va( "%d", DROP_TYPE_GENERAL ) );
-	Info_SetValueForKey( userinfo, "rejflag", "0" );
-	Info_SetValueForKey( userinfo, "rejmsg", "Server locked for matchmaking" );
+	// ok, get it now!
+	Com_DPrintf( "SV_MM_GetMatchUUIDThink: Creating query\n" );
 
-	return qfalse;
+	query = sq_api->CreateQuery( "smuuid", qfalse );
+	if( query == NULL ) {
+		return;
+	}
+
+	sq_api->SetField( query, "ssession", va("%d", sv_mm_session ) );
+	sq_api->SetCallback( query, sv_mm_match_uuid_done, NULL );
+	sq_api->Send( query );
+
+	sv_mm_match_uuid_fetch_query = query;
 }
 
-//================
-// SV_MMC_Lock
-// Lock the server ready for matchmaking
-//================
-static void SV_MMC_Lock( msg_t *msg )
+/*
+* SV_MM_GetMatchUUID
+*
+* Start querying the server for match UUID. Fire the callback function
+* upon success.
+*/
+void SV_MM_GetMatchUUID( void (*callback_fn)( const char *uuid ) )
 {
-	if( !SV_MM_CanHost() )
-	{
-		SV_MM_SendMsgToServer( "reply lock failed" );
+	if( !sv_mm_initialized ) {
+		return;
+	}
+	if( sv_mm_match_uuid_fetch_query != NULL ) {
+		// already in progress
+		return;
+	}
+	if( sv_mm_next_match_uuid_fetch > Sys_Milliseconds() ) {
+		// not ready yet
 		return;
 	}
 
-	if( SV_MM_SendMsgToServer( "reply lock success" ) )
-		sv_mm_locked.locked = svs.realtime;
+	sv_mm_match_uuid[0] = '\0';
+	sv_mm_match_uuid_callback_fn = callback_fn;
+
+	// think now!
+	sv_mm_next_match_uuid_fetch = Sys_Milliseconds();
+	SV_MM_GetMatchUUIDThink();
 }
 
-//================
-// SV_MMC_Setup
-// Change gameplay settings ready for matchmaking
-//================
-static void SV_MMC_Setup( msg_t *msg )
-{
-	int i = 0;
-	unsigned int len;
-	char *gametype;
-	float timelimit;
-	int scorelimit;
-
-	if( !SV_MM_CanHost() || sv_mm_locked.clientcount )
-	{
-		SV_MM_SendMsgToServer( "reply setup failed" );
-		return;
-	}
-
-	len = MSG_ReadLong( msg );
-	if( len <= 0 )
-		return;
-
-	gametype = ( char * )Mem_TempMalloc( len + 1 );
-	MSG_ReadData( msg, gametype, len );
-	// we need to check if the gametype is supported here.
-	if( !*gametype )
-	{
-		Mem_TempFree( gametype );
-		SV_MM_SendMsgToServer( "reply setup failed" );
-		return;
-	}
-
-	timelimit = MSG_ReadFloat( msg );
-	scorelimit = MSG_ReadLong( msg );
-
-	if( !SV_MM_SendMsgToServer( "reply setup success" ) )
-	{
-		Mem_TempFree( gametype );
-		return;
-	}
-
-	while( msg->readcount < msg->cursize && i < MAX_CLIENTS )
-		MSG_ReadData( msg, sv_mm_locked.clientips[i++], 4 );
-	sv_mm_locked.clientcount = i;
-	sv_mm_locked.locked = svs.realtime;
-
-	Com_DPrintf( "Changing server settings for matchmaker:\n" );
-	Com_DPrintf( "  gametype: %s\n", gametype );
-	Com_DPrintf( "  timelimit: %f\n", timelimit );
-	Com_DPrintf( "  scorelimit: %d\n", scorelimit );
-
-	ge->MM_Setup( gametype, scorelimit, timelimit, qtrue );
-
-	Mem_TempFree( gametype );
-}
-
-#else
-
+/*
+* SV_MM_Init
+*/
 void SV_MM_Init( void )
 {
+	sv_mm_initialized = qfalse;
+	sv_mm_session = 0;
+	sv_mm_localsession = 0;
+	sv_mm_last_heartbeat = 0;
+	sv_mm_logout_semaphore = qfalse;
+
+	sv_mm_gameon = qfalse;
+
+	sv_mm_match_uuid[0] = '\0';
+	sv_mm_next_match_uuid_fetch = Sys_Milliseconds();
+	sv_mm_match_uuid_fetch_query = NULL;
+	sv_mm_match_uuid_callback_fn = NULL;
+
+	StatQuery_Init();
+	sq_api = StatQuery_GetAPI();
+
+	/*
+	* create cvars
+	* ch : had to make sv_mm_enable to cmdline only, because of possible errors
+	* if enabled while players on server
+	*/
+	sv_mm_enable = Cvar_Get( "sv_mm_enable", "0", CVAR_ARCHIVE | CVAR_NOSET | CVAR_SERVERINFO );
+	sv_mm_loginonly = Cvar_Get( "sv_mm_loginonly", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
+	sv_mm_debug_reportbots = Cvar_Get( "sv_mm_debug_reportbots", "0", CVAR_CHEAT );
+
+	// this is used by game, but to pass it to client, we'll initialize it in sv
+	Cvar_Get( "sv_skillRating", va( "%.0f", MM_RATING_DEFAULT), CVAR_READONLY | CVAR_SERVERINFO );
+
+	// TODO: remove as cvar
+	sv_mm_authkey = Cvar_Get( "sv_mm_authkey", "", CVAR_ARCHIVE );
+
+	/*
+	* login
+	*/
+	sv_login_query = NULL;
+	//if( sv_mm_enable->integer )
+	//	SV_MM_Login();
+	sv_mm_enable->modified = qtrue;
 }
 
-void SV_MM_Shutdown( void )
+void SV_MM_Shutdown( qboolean logout )
 {
-}
+	if( !sv_mm_initialized )
+		return;
 
-void SV_MM_Frame( void )
-{
-}
+	Com_Printf("SV_MM_Shutdown..\n");
 
-void SV_MM_Packet( msg_t *msg )
-{
-}
+	if( logout )
+		// logout is always force in here
+		SV_MM_Logout( qtrue );
 
-qboolean SV_MM_Initialized( void )
-{
-	return qfalse;
-}
+	Cvar_ForceSet( "sv_mm_enable", "0" );
 
-qboolean SV_MM_CanHost( void )
-{
-	return qfalse;
-}
+	sv_mm_gameon = qfalse;
 
-int SV_MM_GetSlotCount( void )
-{
-	return 0;
-}
+	sv_mm_last_heartbeat = 0;
+	sv_mm_logout_semaphore = qfalse;
 
-qboolean SV_MM_IsLocked( void )
-{
-	return qfalse;
-}
+	sv_mm_initialized = qfalse;
+	sv_mm_session = 0;
 
-qboolean SV_MM_ClientConnect( const netadr_t *address, char *userinfo )
-{
-	return qtrue;
+	StatQuery_Shutdown();
+	sq_api = NULL;
 }
-
-qboolean SV_MM_NetAddress( netadr_t *addr )
-{
-	addr->type = NA_NOTRANSMIT;
-	return qfalse;
-}
-
-const char *SV_MM_Salt( void )
-{
-	static const char salt[1] = { '\0' };
-	return salt;
-}
-
-#ifdef TCP_SUPPORT
-void SV_MM_SetConnection( incoming_t *connection )
-{
-	connection = NULL;
-}
-#endif
-
-#endif

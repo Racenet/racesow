@@ -22,6 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "client.h"
 #include "../qcommon/trie.h"
 
+#ifdef PUBLIC_BUILD
+#define SERVERBROWSER_PROTOCOL_VERSION		APP_PROTOCOL_VERSION
+#else
+#define SERVERBROWSER_PROTOCOL_VERSION		APP_PROTOCOL_VERSION
+//#define SERVERBROWSER_PROTOCOL_VERSION	12
+#endif
+
 //=========================================================
 
 typedef struct serverlist_s
@@ -341,7 +348,7 @@ void CL_PingServer_f( void )
 
 	pingserver->pingTimeStamp = cls.realtime;
 
-	Q_snprintfz( requestString, sizeof( requestString ), "info %i %s %s", APP_PROTOCOL_VERSION,
+	Q_snprintfz( requestString, sizeof( requestString ), "info %i %s %s", SERVERBROWSER_PROTOCOL_VERSION,
 		filter_allow_full ? "full" : "",
 		filter_allow_empty ? "empty" : "" );
 
@@ -462,12 +469,12 @@ void CL_ParseGetServersResponse( const socket_t *socket, const netadr_t *address
 	serverlist_t *server;
 	netadr_t adr;
 
-	CL_ReadServerCache();
+//	CL_ReadServerCache();
 
 	// add the new server addresses to the local addresses list
 	CL_ParseGetServersResponseMessage( msg, extended );
 
-	CL_WriteServerCache();
+//	CL_WriteServerCache();
 
 	// dump the whole list to the ui
 	server = masterList;
@@ -479,57 +486,6 @@ void CL_ParseGetServersResponse( const socket_t *socket, const netadr_t *address
 		server = server->pnext;
 	}
 }
-
-/*
-//jal: I will remove this function soon
-//jal: the browser bug was the response string being parsed by
-//jal: using MSG_ParseStringLine instead of using MSG_ParseString.
-//jal: MSG_ParseStringLine cut off the string when it found
-//jal: a line ending, a zero or a -1.
-void CL_ParseGetServersResponse( const socket_t *socket, const netadr_t *address, msg_t *msg )
-{
-	CL_FreeServerlist( &masterList );
-	CL_ParseGetServersResponseMessage( msg );
-	//	CL_LoadServerList(); //jal: tmp
-	//	CL_WriteServerList();
-#if 1
-	//send the servers to the ui
-	{
-		serverlist_t *server;
-		netadr_t adr;
-
-		server = masterList;
-		while( server )
-		{
-			if( NET_StringToAddress( server->address, &adr ) )
-			{
-				CL_UIModule_AddToServerList( server->address, "\\\\EOT" );
-			}
-			server = server->pnext;
-		}
-	}
-#else
-	{
-		serverlist_t *server;
-		char requestString[32];
-		netadr_t adr;
-
-		Q_snprintfz( requestString, sizeof( requestString ), "info %i %s %s", APP_PROTOCOL_VERSION,
-			filter_allow_full ? "full" : "",
-			filter_allow_empty ? "empty" : "" );
-
-		server = masterList;
-		while( server )
-		{
-			if( NET_StringToAddress( server->address, &adr ) )
-				Netchan_OutOfBandPrint( &cls.socket_udp, &adr, requestString );
-			server = server->pnext;
-		}
-	}
-#endif
-	CL_FreeServerlist( &masterList );
-}
-*/
 
 /*
 * CL_ResolveMasterAddress
@@ -628,7 +584,7 @@ void CL_GetServers_f( void )
 
 		// erm... modname isn't sent in local queries?
 
-		requeststring = va( "info %i %s %s", APP_PROTOCOL_VERSION,
+		requeststring = va( "info %i %s %s", SERVERBROWSER_PROTOCOL_VERSION,
 			filter_allow_full ? "full" : "",
 			filter_allow_empty ? "empty" : "" );
 
@@ -672,7 +628,7 @@ void CL_GetServers_f( void )
 		}
 
 		// create the message
-		requeststring = va( "%s %c%s %i %s %s", cmdname, toupper( modname[0] ), modname+1, APP_PROTOCOL_VERSION,
+		requeststring = va( "%s %c%s %i %s %s", cmdname, toupper( modname[0] ), modname+1, SERVERBROWSER_PROTOCOL_VERSION,
 			filter_allow_full ? "full" : "",
 			filter_allow_empty ? "empty" : "" );
 
@@ -697,7 +653,7 @@ void CL_InitServerList( void )
 	CL_FreeServerlist( &masterList );
 	CL_FreeServerlist( &favoritesList );
 
-	CL_ReadServerCache();
+//	CL_ReadServerCache();
 
 	CL_MasterAddressCache_Init();
 }
@@ -707,7 +663,7 @@ void CL_InitServerList( void )
 */
 void CL_ShutDownServerList( void )
 {
-	CL_WriteServerCache();
+//	CL_WriteServerCache();
 
 	CL_FreeServerlist( &masterList );
 	CL_FreeServerlist( &favoritesList );

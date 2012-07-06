@@ -22,12 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-static mesh_t poly_mesh;
+static mesh_t r_poly_mesh;
 
 /*
-=================
-R_PushPoly
-=================
+* R_PushPoly
 */
 void R_PushPoly( const meshbuffer_t *mb )
 {
@@ -35,30 +33,34 @@ void R_PushPoly( const meshbuffer_t *mb )
 	poly_t *p;
 	shader_t *shader;
 	int features;
+	mesh_t *mesh = &r_poly_mesh;
 
 	MB_NUM2SHADER( mb->shaderkey, shader );
 
-	features = shader->features | MF_TRIFAN;
+	features = shader->features;
 	for( i = -mb->infokey-1, p = r_polys + i; i < mb->lastPoly; i++, p++ )
 	{
-		poly_mesh.numVerts = p->numverts;
-		poly_mesh.xyzArray = inVertsArray;
-		poly_mesh.normalsArray = inNormalsArray;
-		poly_mesh.stArray = p->stcoords;
-		poly_mesh.colorsArray[0] = p->colors;
+		mesh->numVerts = p->numverts;
+		mesh->xyzArray = inVertsArray;
+		mesh->normalsArray = inNormalsArray;
+		mesh->stArray = p->stcoords;
+		mesh->colorsArray[0] = p->colors;
+		mesh->numElems = 0;
+		mesh->elems = NULL;
+
 		for( j = 0; j < p->numverts; j++ )
 		{
-			Vector4Set( inVertsArray[r_backacc.numVerts+j], p->verts[j][0], p->verts[j][1], p->verts[j][2], 1 );
+			Vector4Set( inVertsArray[r_backacc.numVerts+j], 
+				p->verts[j][0], p->verts[j][1], p->verts[j][2], 1 );
 			VectorCopy( p->normal, inNormalsArray[r_backacc.numVerts+j] );
 		}
-		R_PushMesh( NULL, &poly_mesh, features );
+
+		R_PushMesh( mesh, qfalse, features | MF_TRIFAN );
 	}
 }
 
 /*
-=================
-R_AddPolysToList
-=================
+* R_AddPolysToList
 */
 void R_AddPolysToList( void )
 {
@@ -101,8 +103,58 @@ void R_AddPolysToList( void )
 			VectorCopy( p->normal, lastNormal );
 
 			mb = R_AddMeshToList( MB_POLY, fog, shader, -( (signed int)i+1 ), NULL, 0, 0 );
-			mb->lastPoly = i;
+			if( mb ) {
+				mb->lastPoly = i;
+			}
 		}
+	}
+}
+
+/*
+* R_DrawStretchPoly
+*/
+void R_DrawStretchPoly( const poly_t *poly, float x_offset, float y_offset )
+{
+	int i, j;
+	int numVerts, numElems;
+	int curNumVerts;
+	shader_t *shader;
+	mesh_t *mesh = &r_poly_mesh;
+
+	if( !poly ) {
+		return;
+	}
+
+	shader = poly->shader;
+	if( !shader ) {
+		return;
+	}
+
+	for( i = 0; i < poly->numverts; ) {
+		// prevent overflows
+		numVerts = min( poly->numverts - i, MAX_ARRAY_VERTS );
+		numElems = numVerts * 3 / 2; // 6 elements per 4 vertices for quad
+
+		R_DrawStretchBegin( numVerts, numElems, shader, x_offset, y_offset );
+
+		mesh->numVerts = numVerts;
+		mesh->xyzArray = inVertsArray;
+		mesh->normalsArray = inNormalsArray;
+		mesh->stArray = poly->stcoords + i;
+		mesh->colorsArray[0] = poly->colors + i;
+		mesh->numElems = 0;
+		mesh->elems = NULL;
+
+		// copy vertex data into global batching buffer
+		curNumVerts = r_backacc.numVerts;
+		for( j = 0; j < mesh->numVerts; j++ ) {
+			Vector4Set( inVertsArray[curNumVerts+j], poly->verts[i+j][0], poly->verts[i+j][1], poly->verts[i+j][2], 1 );
+			VectorCopy( poly->normal, inNormalsArray[curNumVerts+j] );
+		}
+
+		R_DrawStretchEnd( mesh, NULL, MF_QUAD | MF_NOCULL | shader->features );
+
+		i += numVerts;
 	}
 }
 
@@ -127,14 +179,12 @@ static int r_fragmentframecount;
 #define	MAX_FRAGMENT_VERTS  64
 
 /*
-=================
-R_WindingClipFragment
-
-This function operates on windings (convex polygons without
-any points inside) like triangles, quads, etc. The output is
-a convex fragment (polygon, trifan) which the result of clipping
-the input winding by six fragment planes.
-=================
+* R_WindingClipFragment
+* 
+* This function operates on windings (convex polygons without
+* any points inside) like triangles, quads, etc. The output is
+* a convex fragment (polygon, trifan) which the result of clipping
+* the input winding by six fragment planes.
 */
 static qboolean R_WindingClipFragment( vec3_t *wVerts, int numVerts, msurface_t *surf, vec3_t snorm )
 {
@@ -264,14 +314,12 @@ static qboolean R_WindingClipFragment( vec3_t *wVerts, int numVerts, msurface_t 
 }
 
 /*
-=================
-R_PlanarSurfClipFragment
-
-NOTE: one might want to combine this function with
-R_WindingClipFragment for special cases like trifans (q1 and
-q2 polys) or tristrips for ultra-fast clipping, providing there's
-enough stack space (depending on MAX_FRAGMENT_VERTS value).
-=================
+* R_PlanarSurfClipFragment
+* 
+* NOTE: one might want to combine this function with
+* R_WindingClipFragment for special cases like trifans (q1 and
+* q2 polys) or tristrips for ultra-fast clipping, providing there's
+* enough stack space (depending on MAX_FRAGMENT_VERTS value).
 */
 static qboolean R_PlanarSurfClipFragment( msurface_t *surf, vec3_t normal )
 {
@@ -326,9 +374,7 @@ static qboolean R_PlanarSurfClipFragment( msurface_t *surf, vec3_t normal )
 }
 
 /*
-=================
-R_PatchSurfClipFragment
-=================
+* R_PatchSurfClipFragment
 */
 static qboolean R_PatchSurfClipFragment( msurface_t *surf, vec3_t normal )
 {
@@ -385,9 +431,7 @@ tri2:
 }
 
 /*
-=================
-R_SurfPotentiallyFragmented
-=================
+* R_SurfPotentiallyFragmented
 */
 qboolean R_SurfPotentiallyFragmented( msurface_t *surf )
 {
@@ -397,9 +441,7 @@ qboolean R_SurfPotentiallyFragmented( msurface_t *surf )
 }
 
 /*
-=================
-R_RecursiveFragmentNode
-=================
+* R_RecursiveFragmentNode
 */
 static void R_RecursiveFragmentNode( void )
 {
@@ -467,9 +509,7 @@ nextNodeOnStack:
 }
 
 /*
-=================
-R_GetClippedFragments
-=================
+* R_GetClippedFragments
 */
 int R_GetClippedFragments( const vec3_t origin, float radius, vec3_t axis[3], int maxfverts, vec3_t *fverts, int maxfragments, fragment_t *fragments )
 {
@@ -530,13 +570,11 @@ static cplane_t trace_plane;
 static msurface_t *trace_surface;
 
 /*
-=================
-R_TraceAgainstTriangle
-
-Ray-triangle intersection as per
-http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
-(original paper by Dan Sunday)
-=================
+* R_TraceAgainstTriangle
+* 
+* Ray-triangle intersection as per
+* http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
+* (original paper by Dan Sunday)
 */
 static void R_TraceAgainstTriangle( const vec_t *a, const vec_t *b, const vec_t *c )
 {
@@ -555,12 +593,12 @@ static void R_TraceAgainstTriangle( const vec_t *a, const vec_t *b, const vec_t 
 		return;		// degenerate triangle
 
 	VectorSubtract( p2, p1, p );
-	VectorSubtract( p1, p0, w );
-
-	d1 = -DotProduct( n, w );
 	d2 = DotProduct( n, p );
 	if( fabs( d2 ) < 0.0001 )
 		return;
+
+	VectorSubtract( p1, p0, w );
+	d1 = -DotProduct( n, w );
 
     // get intersect point of ray with triangle plane
     frac = (d1) / d2;
@@ -580,15 +618,15 @@ static void R_TraceAgainstTriangle( const vec_t *a, const vec_t *b, const vec_t 
 	VectorSubtract( p, p0, w );
 	wu = DotProduct( w, u );
 	wv = DotProduct( w, v );
-	d = uv * uv - uu * vv;
+	d = 1.0 / (uv * uv - uu * vv);
 
 	// get and test parametric coords
 
-	s = (uv * wv - vv * wu) / d;
+	s = (uv * wv - vv * wu) * d;
 	if( s < 0.0 || s > 1.0 )
 		return;		// p is outside
 
-	t = (uv * wu - uu * wv) / d;
+	t = (uv * wu - uu * wv) * d;
 	if( t < 0.0 || (s + t) > 1.0 )
 		return;		// p is outside
 
@@ -598,9 +636,7 @@ static void R_TraceAgainstTriangle( const vec_t *a, const vec_t *b, const vec_t 
 }
 
 /*
-=================
-R_TraceAgainstSurface
-=================
+* R_TraceAgainstSurface
 */
 static qboolean R_TraceAgainstSurface( msurface_t *surf )
 {
@@ -609,6 +645,7 @@ static qboolean R_TraceAgainstSurface( msurface_t *surf )
 	elem_t	*elem = mesh->elems;
 	vec4_t *verts = mesh->xyzArray;
 	float old_frac = trace_fraction;
+	qboolean isPlanar = ( surf->facetype == FACETYPE_PLANAR ) ? qtrue : qfalse;
 
 	// clip each triangle individually
 	for( i = 0; i < mesh->numElems; i += 3, elem += 3 )
@@ -617,7 +654,7 @@ static qboolean R_TraceAgainstSurface( msurface_t *surf )
 		if( old_frac > trace_fraction )
 		{
 			// flip normal is we are on the backside (does it really happen?)...
-			if( surf->facetype == FACETYPE_PLANAR )
+			if( isPlanar )
 			{
 				if( DotProduct( trace_plane.normal, surf->plane->normal ) < 0 )
 					VectorInverse( trace_plane.normal );
@@ -630,9 +667,7 @@ static qboolean R_TraceAgainstSurface( msurface_t *surf )
 }
 
 /*
-=================
-R_TraceAgainstLeaf
-=================
+* R_TraceAgainstLeaf
 */
 static int R_TraceAgainstLeaf( mleaf_t *leaf )
 {
@@ -664,9 +699,7 @@ static int R_TraceAgainstLeaf( mleaf_t *leaf )
 }
 
 /*
-=================
-R_TraceAgainstBmodel
-=================
+* R_TraceAgainstBmodel
 */
 static int R_TraceAgainstBmodel( mbrushmodel_t *bmodel )
 {
@@ -678,6 +711,8 @@ static int R_TraceAgainstBmodel( mbrushmodel_t *bmodel )
 		surf = bmodel->firstmodelsurface + i;
 		if( surf->flags & trace_umask )
 			continue;
+		if( !R_SurfPotentiallyFragmented( surf ) )
+			continue;
 
 		if( R_TraceAgainstSurface( surf ) )
 			trace_surface = surf;	// impact point
@@ -687,9 +722,7 @@ static int R_TraceAgainstBmodel( mbrushmodel_t *bmodel )
 }
 
 /*
-=================
-R_RecursiveHullCheck
-=================
+* R_RecursiveHullCheck
 */
 static int R_RecursiveHullCheck( mnode_t *node, const vec3_t start, const vec3_t end )
 {
@@ -740,9 +773,7 @@ loc0:
 }
 
 /*
-=================
-R_TraceLine
-=================
+* R_TraceLine
 */
 msurface_t *R_TransformedTraceLine( trace_t *tr, const vec3_t start, const vec3_t end, entity_t *test, int surfumask )
 {

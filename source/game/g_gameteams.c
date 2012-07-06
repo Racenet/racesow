@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
@@ -28,9 +28,9 @@
 cvar_t *g_teams_maxplayers;
 cvar_t *g_teams_allow_uneven;
 
-//=================
-//G_Teams_InitLevel
-//=================
+/*
+* G_Teams_InitLevel
+*/
 void G_Teams_Init( void )
 {
 	int team;
@@ -49,7 +49,7 @@ void G_Teams_Init( void )
 	memset( teamlist, 0, sizeof( teamlist ) );
 	for( team = TEAM_SPECTATOR; team < GS_MAX_TEAMS; team++ )
 		teamlist[team].playerIndices[0] = -1;
-	
+
 	for( ent = game.edicts + 1; PLAYERNUM( ent ) < gs.maxclients; ent++ )
 	{
 		if( ent->r.inuse )
@@ -63,14 +63,14 @@ void G_Teams_Init( void )
 			ent->r.client->resp.timeStamp = level.time;
 		}
 	}
-	
+
 }
 
-//=================
-//G_Teams_UpdateMembersList
-// It's better to count the list in detail once per fame, than
-// creating a quick list each time we need it.
-//=================
+/*
+* G_Teams_UpdateMembersList
+* It's better to count the list in detail once per fame, than
+* creating a quick list each time we need it.
+*/
 void G_Teams_UpdateMembersList( void )
 {
 	static int list[MAX_CLIENTS];
@@ -146,9 +146,9 @@ void G_Teams_UpdateMembersList( void )
 	}
 }
 
-//=================
-//G_Teams_TeamIsLocked
-//=================
+/*
+* G_Teams_TeamIsLocked
+*/
 qboolean G_Teams_TeamIsLocked( int team )
 {
 	if( team > TEAM_SPECTATOR && team < GS_MAX_TEAMS )
@@ -157,9 +157,9 @@ qboolean G_Teams_TeamIsLocked( int team )
 		return qfalse;
 }
 
-//=================
-//G_Teams_LockTeam
-//=================
+/*
+* G_Teams_LockTeam
+*/
 qboolean G_Teams_LockTeam( int team )
 {
 	if( team <= TEAM_SPECTATOR || team >= GS_MAX_TEAMS )
@@ -172,9 +172,9 @@ qboolean G_Teams_LockTeam( int team )
 	return qtrue;
 }
 
-//=================
-//G_Teams_UnLockTeam
-//=================
+/*
+* G_Teams_UnLockTeam
+*/
 qboolean G_Teams_UnLockTeam( int team )
 {
 	if( team <= TEAM_SPECTATOR || team >= GS_MAX_TEAMS )
@@ -187,9 +187,9 @@ qboolean G_Teams_UnLockTeam( int team )
 	return qtrue;
 }
 
-//=================
-//G_Teams_PlayerIsInvited
-//=================
+/*
+* G_Teams_PlayerIsInvited
+*/
 static qboolean G_Teams_PlayerIsInvited( int team, edict_t *ent )
 {
 	int i;
@@ -209,9 +209,9 @@ static qboolean G_Teams_PlayerIsInvited( int team, edict_t *ent )
 	return qfalse;
 }
 
-//=================
-//G_Teams_InvitePlayer
-//=================
+/*
+* G_Teams_InvitePlayer
+*/
 static void G_Teams_InvitePlayer( int team, edict_t *ent )
 {
 	int i;
@@ -231,9 +231,9 @@ static void G_Teams_InvitePlayer( int team, edict_t *ent )
 	teamlist[team].invited[i] = ENTNUM( ent );
 }
 
-//=================
-//G_Teams_UnInvitePlayer
-//=================
+/*
+* G_Teams_UnInvitePlayer
+*/
 void G_Teams_UnInvitePlayer( int team, edict_t *ent )
 {
 	int i;
@@ -257,10 +257,10 @@ void G_Teams_UnInvitePlayer( int team, edict_t *ent )
 	teamlist[team].invited[MAX_CLIENTS-1] = 0;
 }
 
-//=================
-//G_Teams_RemoveInvites
-// Removes all invites from all teams
-//=================
+/*
+* G_Teams_RemoveInvites
+* Removes all invites from all teams
+*/
 void G_Teams_RemoveInvites( void )
 {
 	int team;
@@ -269,9 +269,9 @@ void G_Teams_RemoveInvites( void )
 		teamlist[team].invited[0] = 0;
 }
 
-//=================
-//G_Teams_Invite_f
-//=================
+/*
+* G_Teams_Invite_f
+*/
 void G_Teams_Invite_f( edict_t *ent )
 {
 	char *text;
@@ -333,13 +333,21 @@ void G_Teams_Invite_f( edict_t *ent )
 		toinvite->r.client->netname, S_COLOR_WHITE, GS_TeamName( team ), S_COLOR_WHITE );
 }
 
-//=================
-//G_Teams_SetTeam - sets clients team without any checking
-//=================
+/*
+* G_Teams_SetTeam - sets clients team without any checking
+*/
 void G_Teams_SetTeam( edict_t *ent, int team )
 {
 	assert( ent && ent->r.inuse && ent->r.client );
 	assert( team >= TEAM_SPECTATOR && team < GS_MAX_TEAMS );
+
+	// if player was on a team, send partial report to matchmaker
+	if( ent->r.client->team != TEAM_SPECTATOR && ent->r.client->team != team && GS_MatchState() == MATCH_STATE_PLAYTIME )
+	{
+		G_Printf("Sending teamchange to MM, team %d to team %d\n", ent->r.client->team, team );
+		G_AddPlayerReport( ent, qfalse );
+		// trap_MR_SendPartialReport();
+	}
 
 	//clean scores at changing team
 	memset( &ent->r.client->level.stats, 0, sizeof( ent->r.client->level.stats ) );
@@ -348,7 +356,7 @@ void G_Teams_SetTeam( edict_t *ent, int team )
 	ent->r.client->team = team;
 	ent->r.client->teamstate.timeStamp = level.time;
 	G_Teams_UnInvitePlayer( team, ent );
-	
+
 	G_ClientRespawn( ent, qtrue ); // make ghost using G_ClientRespawn so team is updated at ghosting
 	G_SpawnQueue_AddClient( ent );
 
@@ -386,9 +394,9 @@ static qboolean G_Teams_CanKeepEvenTeam( int team )
 	return min == max ? qtrue : teamlist[team].numplayers != max;
 }
 
-//=================
-//G_GameTypes_DenyJoinTeam
-//=================
+/*
+* G_GameTypes_DenyJoinTeam
+*/
 static int G_GameTypes_DenyJoinTeam( edict_t *ent, int team )
 {
 	if( team < 0 || team >= GS_MAX_TEAMS )
@@ -405,7 +413,7 @@ static int G_GameTypes_DenyJoinTeam( edict_t *ent, int team )
 
 	// waiting for chanllengers queue to be executed
 	if( GS_HasChallengers() &&
-	   game.realtime < level.spawnedTimeStamp + (unsigned)( G_CHALLENGERS_MIN_JOINTEAM_MAPTIME + game.snapFrameTime ) )
+		game.realtime < level.spawnedTimeStamp + (unsigned)( G_CHALLENGERS_MIN_JOINTEAM_MAPTIME + game.snapFrameTime ) )
 		return ER_TEAM_CHALLENGERS;
 
 	// force eveyone to go through queue so things work on map change
@@ -424,9 +432,9 @@ static int G_GameTypes_DenyJoinTeam( edict_t *ent, int team )
 			int count = teamlist[team].numplayers;
 
 			if( ( count + 1 > level.gametype.maxPlayersPerTeam &&
-				  level.gametype.maxPlayersPerTeam > 0 ) ||
-			   ( count + 1 > g_teams_maxplayers->integer &&
-				 g_teams_maxplayers->integer > 0 ) )
+				level.gametype.maxPlayersPerTeam > 0 ) ||
+				( count + 1 > g_teams_maxplayers->integer &&
+				g_teams_maxplayers->integer > 0 ) )
 				return ER_TEAM_FULL;
 
 			if( !g_teams_allow_uneven->integer && !G_Teams_CanKeepEvenTeam( team ) )
@@ -447,9 +455,9 @@ static int G_GameTypes_DenyJoinTeam( edict_t *ent, int team )
 	return ER_TEAM_INVALID;
 }
 
-//=================
-//G_Teams_JoinTeam - checks that client can join the given team and then joins it
-//=================
+/*
+* G_Teams_JoinTeam - checks that client can join the given team and then joins it
+*/
 qboolean G_Teams_JoinTeam( edict_t *ent, int team )
 {
 	int error;
@@ -464,7 +472,7 @@ qboolean G_Teams_JoinTeam( edict_t *ent, int team )
 		if( error == ER_TEAM_INVALID )
 		{
 			G_PrintMsg( ent, "Can't join %s in %s\n", GS_TeamName( team ),
-			           gs.gametypeName );
+				gs.gametypeName );
 		}
 		else if( error == ER_TEAM_CHALLENGERS )
 		{
@@ -497,9 +505,9 @@ qboolean G_Teams_JoinTeam( edict_t *ent, int team )
 	return qtrue;
 }
 
-//=================
-//G_Teams_JoinAnyTeam - find us a team since we are too lazy to do ourselves
-//=================
+/*
+* G_Teams_JoinAnyTeam - find us a team since we are too lazy to do ourselves
+*/
 qboolean G_Teams_JoinAnyTeam( edict_t *ent, qboolean silent )
 {
 	int best = gs.maxclients+1;
@@ -553,7 +561,7 @@ qboolean G_Teams_JoinAnyTeam( edict_t *ent, qboolean silent )
 			if( !silent )
 			{
 				G_PrintMsg( ent, "%sCouldn't find an emptier team than team %s.\n",
-				           S_COLOR_WHITE, GS_TeamName( ent->s.team ) );
+					S_COLOR_WHITE, GS_TeamName( ent->s.team ) );
 			}
 			return qfalse;
 		}
@@ -581,9 +589,9 @@ qboolean G_Teams_JoinAnyTeam( edict_t *ent, qboolean silent )
 	return qfalse;
 }
 
-//=================
-//G_Teams_Join_Cmd
-//=================
+/*
+* G_Teams_Join_Cmd
+*/
 void G_Teams_Join_Cmd( edict_t *ent )
 {
 	char *t;
@@ -632,9 +640,9 @@ void G_Teams_Join_Cmd( edict_t *ent )
 //
 //======================================================================
 
-//==================
-//G_Teams_TDM_UpdateTeamInfoMessages
-//==================
+/*
+* G_Teams_TDM_UpdateTeamInfoMessages
+*/
 void G_Teams_UpdateTeamInfoMessages( void )
 {
 	static int nexttime = 0;
@@ -643,7 +651,6 @@ void G_Teams_UpdateTeamInfoMessages( void )
 	size_t len;
 	int i, j, team;
 	char entry[MAX_TOKEN_CHARS];
-	char scratch[MAX_TOKEN_CHARS];
 	int locationTag;
 
 	nexttime -= game.snapFrameTime;
@@ -673,9 +680,7 @@ void G_Teams_UpdateTeamInfoMessages( void )
 				continue;
 
 			// get location name
-			*scratch = 0;
-			G_LocationName( ent->s.origin, scratch, sizeof( scratch ) );
-			locationTag = G_LocationTAG( scratch );
+			locationTag = G_MapLocationTAGForOrigin( ent->s.origin );
 			if( locationTag == -1 )
 				continue;
 
@@ -741,12 +746,12 @@ static int G_Teams_ChallengersQueueCmp( const edict_t **pe1, const edict_t **pe2
 	return rand() & 1 ? -1 : 1;
 }
 
-//=================
-//G_Teams_ChallengersQueue
-//
-// Returns a NULL-terminated list of challengers or NULL if
-// there are no challengers.
-//=================
+/*
+* G_Teams_ChallengersQueue
+* 
+* Returns a NULL-terminated list of challengers or NULL if
+* there are no challengers.
+*/
 edict_t **G_Teams_ChallengersQueue( void )
 {
 	int num_challengers = 0;
@@ -782,9 +787,9 @@ edict_t **G_Teams_ChallengersQueue( void )
 	return challengers;
 }
 
-//=================
-//G_Teams_ExecuteChallengersQueue
-//=================
+/*
+* G_Teams_ExecuteChallengersQueue
+*/
 void G_Teams_ExecuteChallengersQueue( void )
 {
 	edict_t *ent;
@@ -840,9 +845,10 @@ void G_Teams_ExecuteChallengersQueue( void )
 	}
 }
 
-//=================
-////G_Teams_BestScoreBelow
-//=================
+/*
+* 
+* G_Teams_BestScoreBelow
+*/
 static edict_t *G_Teams_BestScoreBelow( int maxscore )
 {
 	int team, i;
@@ -857,7 +863,7 @@ static edict_t *G_Teams_BestScoreBelow( int maxscore )
 			{
 				e = game.edicts + teamlist[team].playerIndices[i];
 				if( e->r.client->level.stats.score > bestScore &&
-				    e->r.client->level.stats.score <= maxscore
+					e->r.client->level.stats.score <= maxscore
 					&& !e->r.client->queueTimeStamp )
 				{
 					bestScore = e->r.client->level.stats.score;
@@ -872,7 +878,7 @@ static edict_t *G_Teams_BestScoreBelow( int maxscore )
 		{
 			e = game.edicts + teamlist[TEAM_PLAYERS].playerIndices[i];
 			if( e->r.client->level.stats.score > bestScore &&
-			    e->r.client->level.stats.score <= maxscore
+				e->r.client->level.stats.score <= maxscore
 				&& !e->r.client->queueTimeStamp )
 			{
 				bestScore = e->r.client->level.stats.score;
@@ -884,9 +890,9 @@ static edict_t *G_Teams_BestScoreBelow( int maxscore )
 	return best;
 }
 
-//=================
-//G_Teams_AdvanceChallengersQueue
-//=================
+/*
+* G_Teams_AdvanceChallengersQueue
+*/
 void G_Teams_AdvanceChallengersQueue( void )
 {
 	int i, team, loserscount, winnerscount, playerscount = 0;
@@ -943,9 +949,9 @@ void G_Teams_AdvanceChallengersQueue( void )
 	}
 }
 
-//=================
-//G_Teams_LeaveChallengersQueue
-//=================
+/*
+* G_Teams_LeaveChallengersQueue
+*/
 void G_Teams_LeaveChallengersQueue( edict_t *ent )
 {
 	if( !GS_HasChallengers() )
@@ -966,9 +972,9 @@ void G_Teams_LeaveChallengersQueue( edict_t *ent )
 	}
 }
 
-//=================
-//G_Teams_JoinChallengersQueue
-//=================
+/*
+* G_Teams_JoinChallengersQueue
+*/
 void G_Teams_JoinChallengersQueue( edict_t *ent )
 {
 	int pos = 0;
@@ -1088,7 +1094,7 @@ static void UpdatePoint( edict_t *who )
 
 static void Say_Team_Location( edict_t *who, char *buf, int buflen, const char *current_color )
 {
-	G_LocationName( who->s.origin, buf, buflen );
+	G_MapLocationNameForTAG( G_MapLocationTAGForOrigin( who->s.origin ), buf, buflen );
 	Q_strncatz( buf, current_color, buflen );
 }
 
@@ -1125,7 +1131,7 @@ static void WeaponString( edict_t *who, int weapon, char *buf, int buflen, const
 	gs_weapon_definition_t *weapondef = GS_GetWeaponDef( weapon );
 
 	Q_snprintfz( buf, buflen, "%s%s%s", ( GS_FindItemByTag( weapon )->color ? GS_FindItemByTag( weapon )->color : "" ),
-	             GS_FindItemByTag( weapon )->shortname, current_color );
+		GS_FindItemByTag( weapon )->shortname, current_color );
 
 	strong_ammo = who->r.client->ps.inventory[weapondef->firedef.ammo_id];
 	weak_ammo = who->r.client->ps.inventory[weapondef->firedef_weak.ammo_id];
@@ -1215,7 +1221,7 @@ static void Say_Team_Point( edict_t *who, char *buf, int buflen, const char *cur
 
 static void Say_Team_Point_Location( edict_t *who, char *buf, int buflen, const char *current_color )
 {
-	G_LocationName( point_location, buf, buflen );
+	G_MapLocationNameForTAG( G_MapLocationTAGForOrigin( point_location ), buf, buflen );
 	Q_strncatz( buf, current_color, buflen );
 }
 
@@ -1243,7 +1249,7 @@ static void Say_Team_Pickup_Location( edict_t *who, char *buf, int buflen, const
 	}
 	else
 	{
-		G_LocationName( who->r.client->teamstate.last_pickup->s.origin, buf, buflen );
+		G_MapLocationNameForTAG( G_MapLocationTAGForOrigin( point_location ), buf, buflen );
 		Q_strncatz( buf, current_color, buflen );
 	}
 }
@@ -1266,7 +1272,7 @@ static void Say_Team_Drop_Location( edict_t *who, char *buf, int buflen, const c
 	}
 	else
 	{
-		G_LocationName( who->r.client->teamstate.last_drop_location, buf, buflen );
+		G_MapLocationNameForTAG( G_MapLocationTAGForOrigin( who->r.client->teamstate.last_drop_location ), buf, buflen );
 		Q_strncatz( buf, current_color, buflen );
 	}
 }
@@ -1405,7 +1411,7 @@ void G_Teams_Coach( edict_t *ent )
 				G_GhostClient( ent );
 				ent->health = ent->max_health;
 				ent->deadflag = DEAD_NO;
-				
+
 				G_ChasePlayer( ent, NULL, qtrue, 0 );
 
 				//clear up his scores

@@ -7,7 +7,7 @@ class Racesow_Gametype_Trace : Racesow_Gametype_Durace
         // if the gametype doesn't have a config file, create it
         if ( !G_FileExists( "configs/server/gametypes/trace.cfg" ) )
         {
-            cString config;
+            String config;
 
             // the config file doesn't exist or it's empty, create it
             config = "// '" + gametype.getTitle() + "' gametype configuration file\n"

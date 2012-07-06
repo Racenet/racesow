@@ -3,76 +3,76 @@
 namespace TestBool
 {
 
-#define TESTNAME "TestBool"
+static const char * const TESTNAME = "TestBool";
 
-static const char *declarations = "  \n\
-bool south = false;              \n\
-bool north = true;               \n\
-bool east = false;              \n\
-bool west = true;               \n\
-class MyClass                  \n\
-{                              \n\
-	string myName;             \n\
-	float myFloat;             \n\
-	bool myBool1;              \n\
-	bool myBool2;              \n\
-}                              \n\
-MyClass[] a(4);                \n\
-int maxCnt = 4;				\n\
-int cnt = 0;				   \n\
-\n";
+static const char *declarations = "  \n"
+"bool south = false;              \n"
+"bool north = true;               \n"
+"bool east = false;              \n"
+"bool west = true;               \n"
+"class MyClass                  \n"
+"{                              \n"
+"	string myName;             \n"
+"	float myFloat;             \n"
+"	bool myBool1;              \n"
+"	bool myBool2;              \n"
+"}                              \n"
+"MyClass[] a(4);                \n"
+"int maxCnt = 4;				\n"
+"int cnt = 0;				   \n"
+"\n";
 
-static const char *script = "  \n\
-void addToArray(string _name, float _myFloat, bool _bool1, bool _bool2) \n\
-{							   \n\
-	if(maxCnt == cnt)		   \n\
-		return;				   \n\
-	a[cnt].myName = _name;	   \n\
-	a[cnt].myFloat = _myFloat; \n\
-	a[cnt].myBool1 = _bool1;   \n\
-	a[cnt].myBool2 = _bool2;   \n\
-	cnt++;					   \n\
-}							   \n\
-							   \n\
-void MyTest()                  \n\
-{                              \n\
-  MyClass c;                   \n\
-  c.myName = \"test\";         \n\
-  c.myFloat = 3.14f;           \n\
-  c.myBool1 = south;           \n\
-  c.myBool2 = south;           \n\
-  Assert(c.myBool1 == false);  \n\
-  Assert(c.myBool2 == false);  \n\
-  c.myBool1 = north;            \n\
-  Assert(c.myBool1 == true);   \n\
-  Assert(c.myBool2 == false);  \n\
-  c.myBool2 = north;            \n\
-  Assert(c.myBool1 == true);   \n\
-  Assert(c.myBool2 == true);   \n\
-  c.myBool1 = south;           \n\
-  Assert(c.myBool1 == false);  \n\
-  Assert(c.myBool2 == true);   \n\
-  Assert(c.myFloat == 3.14f);  \n\
-  CFunc(c.myFloat, c.myBool1, c.myBool2, c.myName); \n\
-								\n\
-  addToArray(c.myName, 3.14f, south, east); \n\
-  addToArray(c.myName, 3.14f, north, east); \n\
-  addToArray(c.myName, 3.14f, south, west); \n\
-  addToArray(c.myName, 3.14f, north, west); \n\
-								\n\
-  Assert(a[0].myBool1 == false);  \n\
-  Assert(a[0].myBool2 == false);  \n\
-  Assert(a[1].myBool1 == true);   \n\
-  Assert(a[1].myBool2 == false);  \n\
-  Assert(a[2].myBool1 == false);  \n\
-  Assert(a[2].myBool2 == true);   \n\
-  Assert(a[3].myBool1 == true);   \n\
-  Assert(a[3].myBool2 == true);   \n\
-  CFunc(a[0].myFloat, a[0].myBool1, a[0].myBool2, a[0].myName); \n\
-  CFunc(a[1].myFloat, a[1].myBool1, a[1].myBool2, a[1].myName); \n\
-  CFunc(a[2].myFloat, a[2].myBool1, a[2].myBool2, a[2].myName); \n\
-  CFunc(a[3].myFloat, a[3].myBool1, a[3].myBool2, a[3].myName); \n\
-}                              \n";
+static const char *script = "  \n"
+"void addToArray(string _name, float _myFloat, bool _bool1, bool _bool2) \n"
+"{							   \n"
+"	if(maxCnt == cnt)		   \n"
+"		return;				   \n"
+"	a[cnt].myName = _name;	   \n"
+"	a[cnt].myFloat = _myFloat; \n"
+"	a[cnt].myBool1 = _bool1;   \n"
+"	a[cnt].myBool2 = _bool2;   \n"
+"	cnt++;					   \n"
+"}							   \n"
+"							   \n"
+"void MyTest()                  \n"
+"{                              \n"
+"  MyClass c;                   \n"
+"  c.myName = \"test\";         \n"
+"  c.myFloat = 3.14f;           \n"
+"  c.myBool1 = south;           \n"
+"  c.myBool2 = south;           \n"
+"  Assert(c.myBool1 == false);  \n"
+"  Assert(c.myBool2 == false);  \n"
+"  c.myBool1 = north;            \n"
+"  Assert(c.myBool1 == true);   \n"
+"  Assert(c.myBool2 == false);  \n"
+"  c.myBool2 = north;            \n"
+"  Assert(c.myBool1 == true);   \n"
+"  Assert(c.myBool2 == true);   \n"
+"  c.myBool1 = south;           \n"
+"  Assert(c.myBool1 == false);  \n"
+"  Assert(c.myBool2 == true);   \n"
+"  Assert(c.myFloat == 3.14f);  \n"
+"  CFunc(c.myFloat, c.myBool1, c.myBool2, c.myName); \n"
+"								\n"
+"  addToArray(c.myName, 3.14f, south, east); \n"
+"  addToArray(c.myName, 3.14f, north, east); \n"
+"  addToArray(c.myName, 3.14f, south, west); \n"
+"  addToArray(c.myName, 3.14f, north, west); \n"
+"								\n"
+"  Assert(a[0].myBool1 == false);  \n"
+"  Assert(a[0].myBool2 == false);  \n"
+"  Assert(a[1].myBool1 == true);   \n"
+"  Assert(a[1].myBool2 == false);  \n"
+"  Assert(a[2].myBool1 == false);  \n"
+"  Assert(a[2].myBool2 == true);   \n"
+"  Assert(a[3].myBool1 == true);   \n"
+"  Assert(a[3].myBool2 == true);   \n"
+"  CFunc(a[0].myFloat, a[0].myBool1, a[0].myBool2, a[0].myName); \n"
+"  CFunc(a[1].myFloat, a[1].myBool1, a[1].myBool2, a[1].myName); \n"
+"  CFunc(a[2].myFloat, a[2].myBool1, a[2].myBool2, a[2].myName); \n"
+"  CFunc(a[3].myFloat, a[3].myBool1, a[3].myBool2, a[3].myName); \n"
+"}                              \n";
 
 static const char *script2 =
 "bool gFlag = false;\n"
@@ -217,7 +217,7 @@ bool Test()
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-
+	RegisterScriptArray(engine, true);
 	RegisterScriptString(engine);
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 
@@ -229,35 +229,35 @@ bool Test()
 	mod->AddScriptSection("decl", declarations, strlen(declarations));
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
-	r = engine->ExecuteString(0, "MyTest()");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "MyTest()", mod);
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
 	
 	// TEST 2
 	mod->AddScriptSection("script", script2, strlen(script2));
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
 	int idx = engine->GetModule(0)->GetGlobalVarIndexByName("gFlag");
 	bool *flag = (bool*)engine->GetModule(0)->GetAddressOfGlobalVar(idx);
 	*(int*)flag = 0xCDCDCDCD;
 
-	engine->ExecuteString(0, "Set()");
+	ExecuteString(engine, "Set()", mod);
 	if( *flag != true )
-		fail = true;
-	engine->ExecuteString(0, "Assert(gFlag == true)");
+		TEST_FAILED;
+	ExecuteString(engine, "Assert(gFlag == true)", mod);
 
-	engine->ExecuteString(0, "gFlag = false; DoNothing()");
+	ExecuteString(engine, "gFlag = false; DoNothing()", mod);
 	if( *flag != false )
 		fail = false;
-	engine->ExecuteString(0, "Assert(gFlag == false)");
+	ExecuteString(engine, "Assert(gFlag == false)", mod);
 
-	engine->ExecuteString(0, "gFlag = true; DoNothing()");
+	ExecuteString(engine, "gFlag = true; DoNothing()", mod);
 	if( *flag != true )
 		fail = false;
-	engine->ExecuteString(0, "Assert(gFlag == true)");
+	ExecuteString(engine, "Assert(gFlag == true)", mod);
 
 	// TEST 3
 	// It was reported that if( t.test_f() ) would always be true, even though the method returns false
@@ -265,29 +265,29 @@ bool Test()
 	engine->RegisterObjectType("tst", sizeof(tst), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
 	engine->RegisterObjectMethod("tst", "bool test_f(uint)", asMETHOD(tst, test_f), asCALL_THISCALL);
 	
-	r = engine->ExecuteString(0, "tst t; if( t.test_f(2000) == true ) Assert(false);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "tst t; if( t.test_f(2000) == true ) Assert(false);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 	
-	r = engine->ExecuteString(0, "tst t; if( !(t.test_f(2000) == false) ) Assert(false);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "tst t; if( !(t.test_f(2000) == false) ) Assert(false);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 	
 //	engine->SetEngineProperty(asEP_OPTIMIZE_BYTECODE, 0);
-	r = engine->ExecuteString(0, "tst t; if( t.test_f(2000) ) Assert(false);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "tst t; if( t.test_f(2000) ) Assert(false);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 		
 	engine->RegisterGlobalFunction("bool test_t()", asFUNCTION(test_t), asCALL_CDECL);
-	r = engine->ExecuteString(0, "Assert( test_t() );");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "Assert( test_t() );");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 		
 	// TEST 4
 	// Return a false value as out parameter. The value must be properly interpreted, even with trash in upper bytes
 	engine->RegisterGlobalFunction("void GiveFalse(bool &out)", asFUNCTION(GiveFalse), asCALL_CDECL);
-	r = engine->ExecuteString(0, "bool f; GiveFalse(f); Assert( !f );");
-	if( r != asEXECUTION_FINISHED ) fail = true;
-	r = engine->ExecuteString(0, "bool f; GiveFalse(f); if( f ) Assert(false);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
-	r = engine->ExecuteString(0, "bool f, f2 = false; GiveFalse(f); Assert( !(f || f2) );");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "bool f; GiveFalse(f); Assert( !f );");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+	r = ExecuteString(engine, "bool f; GiveFalse(f); if( f ) Assert(false);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+	r = ExecuteString(engine, "bool f, f2 = false; GiveFalse(f); Assert( !(f || f2) );");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
 	// TEST 5
 	// The same test with global variable
@@ -295,12 +295,12 @@ bool Test()
 	if( sizeof(bool) == 1 )
 		falseValue = 0x00FFFF00;
 	engine->RegisterGlobalProperty("bool falseValue", &falseValue);
-	r = engine->ExecuteString(0, "Assert( !falseValue );");
-	if( r != asEXECUTION_FINISHED ) fail = true;
-	r = engine->ExecuteString(0, "if( falseValue ) Assert(false);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
-	r = engine->ExecuteString(0, "bool f2 = false; Assert( !(falseValue || f2) );");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "Assert( !falseValue );");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+	r = ExecuteString(engine, "if( falseValue ) Assert(false);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+	r = ExecuteString(engine, "bool f2 = false; Assert( !(falseValue || f2) );");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
 	// TEST 6
 	// Test to make sure bools can be passed to member functions properly
@@ -309,19 +309,19 @@ bool Test()
 	engine->RegisterObjectMethod("BoolTester", "void TestFalse(bool)", asMETHOD(TestBoolClass, TestFalse), asCALL_THISCALL);	
 	TestBoolClass testBool;
 	r = engine->RegisterGlobalProperty("BoolTester TestBoolClass", &testBool );
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 	mod->AddScriptSection("script", script3, strlen(script3));
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	else
 	{
-		r = engine->ExecuteString(0, "TestBoolToMember();");
-		if( r != asEXECUTION_FINISHED ) fail = true;
+		r = ExecuteString(engine, "TestBoolToMember();", mod);
+		if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
-		if( testBool.m_fail ) fail = true;
+		if( testBool.m_fail ) TEST_FAILED;
 	}
 
 	// TEST 7
@@ -329,14 +329,16 @@ bool Test()
 	mod->AddScriptSection("script", script4, strlen(script4));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+	{
+		TEST_FAILED;
+	}
 	else
 	{
-		r = engine->ExecuteString(0, "test();");
-		if( r != asEXECUTION_FINISHED ) fail = true;
+		r = ExecuteString(engine, "test();", mod);
+		if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
 		if( buf != "false\ntrue\nfalse\n" )
-			fail = true;
+			TEST_FAILED;
 	}
 
 
@@ -345,13 +347,13 @@ bool Test()
 		"class CTest                        \n"
 		"{                                  \n"
 		"  bool isTrue() { return true; }   \n"
-		"  void func() { if( !isTrue() ); } \n"
+		"  void func() { if( !isTrue() ) {} } \n"
 		"}                                  \n";
 
 	mod->AddScriptSection("script", script5, strlen(script5));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 
