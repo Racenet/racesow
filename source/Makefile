@@ -3,7 +3,7 @@
 ###########################################################
 
 # do a debug build?
-DEBUG_BUILD?=YES
+DEBUG_BUILD?=NO
 
 # use mingw and build Windows binaries?
 USE_MINGW?=NO
