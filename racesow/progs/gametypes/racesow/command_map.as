@@ -39,8 +39,6 @@ class RC_Pair {
 *
 * Every gametype has an object of this class and stores all the commands available in it.
 *
-* FIXME: This and the parts that use this will be extended when i get the new angelwrap working ;)
-*
 */
 class RC_Map {
     uint max_size;
