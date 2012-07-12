@@ -227,10 +227,51 @@ class Racesow_Player
 	 */
     Racesow_Player()
     {
+		/*@this.auth = Racesow_Player_Auth();
+		@this.demo = Racesow_Player_ClientDemo();
+        this.Blocking = false;*/
+    }
+
+    Racesow_Player( cClient @client )
+    {
 		@this.auth = Racesow_Player_Auth();
 		@this.demo = Racesow_Player_ClientDemo();
-        this.Blocking = false;
-    }
+		@this.client = client;
+		this.Blocking = false;
+
+		this.practicing = false;
+		this.completedInPracticemode = false;
+		this.idleTime = 0;
+		this.isSpawned = true;
+		this.isJoinlocked = false;
+		this.inOvertime = false;
+		this.isVotemuted = false;
+		this.wasTelekilled = false;
+		this.onQuad = false;
+		this.isWaitingForCommand = false;
+		this.bestRaceTime = 0;
+		this.resetAuth();
+		this.auth.setPlayer(@this);
+		this.demo.setPlayer(@this);
+		this.bestCheckPoints.resize( numCheckpoints );
+		for ( int i = 0; i < numCheckpoints; i++ )
+		{
+			this.bestCheckPoints[i] = 0;
+		}
+		if(@this.gravestone != null)
+			this.gravestone.freeEntity();
+		this.positionSaved = false;
+		@this.triggerEntity = null;
+		this.triggerTimeout = 0;
+		this.tries = 0;
+		this.overallTries = 0;
+		this.racingTime = 0;
+		this.racingTimeSinceLastRace = 0;
+		this.challengerList = "";
+		this.printWelcomeMessage = false;
+		this.highestSpeed = 0;
+		this.state = "";
+	}
 
 	/**
 	 * Destructor
@@ -244,7 +285,7 @@ class Racesow_Player
 	 * Reset the player, just f*ckin remove this and use the constructor...
 	 * @return void
 	 */
-	void reset()
+	/*void reset()
 	{
 		this.practicing = false;
 		this.completedInPracticemode = false;
@@ -278,7 +319,7 @@ class Racesow_Player
 		this.printWelcomeMessage = false;
 		this.highestSpeed = 0;
 		this.state = "";
-	}
+	}*/
 
 	/**
 	 * Reset the players auth
@@ -1247,7 +1288,7 @@ class Racesow_Player
         int playerNum = this.client.playerNum();
         if( message.length() > 0)
             G_PrintMsg( null, S_COLOR_RED + "Kicked "+ this.getName() + S_COLOR_RED + " Reason: " + message + "\n" );
-        this.reset();
+        //this.reset(); //FIXME: Was this really necessary? -K1ll
         G_CmdExecute( "kick " + playerNum );
 	}
 
@@ -1272,7 +1313,7 @@ class Racesow_Player
     void kickban( String message )
     {
         String ip = this.client.getUserInfoKey( "ip" );
-        this.reset();
+        //this.reset(); //FIXME -K1ll
         G_CmdExecute( "addip " + ip + " 15;kick " + this.client.playerNum() );
     }
 

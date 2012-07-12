@@ -151,7 +151,7 @@ Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
     if ( @client == null || client.playerNum() < 0 )
         return null;
 
-    return @racesowGametype.players[ client.playerNum() ].setClient( @client ); //FIXME: why set the client HERE??
+    return @racesowGametype.players[ client.playerNum() ]; //.setClient( @client ); //FIXME: why set the client HERE??
 }
 
 /**

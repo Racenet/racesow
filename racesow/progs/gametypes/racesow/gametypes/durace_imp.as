@@ -7,7 +7,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
             @this.players[i] = @Racesow_Player_Durace();
 
         @this.commandMap["racerestart"] = @Command_RaceRestart();
-        @this.commandMap["kill"] = @Command_Kill();
+        @this.commandMap["kill"] = @Command_RaceRestart();
         @this.commandMap["top"] = @Command_Top();
         @this.commandMap["whoisgod"] = @Command_WhoIsGod("Jerm's");
     }
@@ -54,7 +54,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         gametype.enableDrowning = true;
 
         //store the timelimit because value in DURACE is not the same than in RACE
-        oldTimelimit = g_timelimit.getInteger();
+        oldTimelimit = g_timelimit.get_integer();
             
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );
@@ -251,11 +251,11 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         }
         else if ( score_event == "enterGame" )
         {
-            Racesow_GetPlayerByClient( client ).reset();
+            //Racesow_GetPlayerByClient( client ).reset(); //FIXME: Necessary? -K1ll
         }
     }
     
-    String @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( uint maxlen )
     {
         String scoreboardMessage = "";
         String entry;
@@ -311,6 +311,17 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     {
         return false;
     }
+
+    void onConnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player_Durace( client );
+    }
+
+    void onDisconnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player_Durace();
+    }
+
 }
 
 void DURACE_SetUpMatch()
@@ -361,6 +372,16 @@ void DURACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter
 
 class Racesow_Player_Durace : Racesow_Player
 {
+
+    Racesow_Player_Durace()
+    {
+    }
+
+    Racesow_Player_Durace( cClient @client )
+    {
+        super(client);
+    }
+
     void touchStopTimer_gametype()
     {
         this.client.stats.addScore( 1 );

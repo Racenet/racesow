@@ -253,6 +253,16 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     {
         return false;// let the default code handle it itself
     }
+
+    void onConnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player_Freestyle( client );
+    }
+
+    void onDisconnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player_Freestyle();
+    }
 }
 
 Racesow_Gametype@ getRacesowGametype() {
@@ -263,6 +273,12 @@ class Racesow_Player_Freestyle : Racesow_Player
 {
     Racesow_Player_Freestyle()
     {
+        //this.Blocking = true;
+    }
+
+    Racesow_Player_Freestyle(cClient @client)
+    {
+        super(client);
         this.Blocking = true;
     }
 

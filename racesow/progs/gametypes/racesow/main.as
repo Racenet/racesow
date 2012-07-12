@@ -169,7 +169,13 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 {
     if( @client == null)//basewsw does check that too ("clients can be null")
         return;
-    Racesow_Player @player = Racesow_GetPlayerByClient( client );
+
+	if ( score_event == "connect" )
+	{
+		racesowGametype.onConnect( client );
+	}
+
+	Racesow_Player @player = Racesow_GetPlayerByClient( client );
 	if (@player != null )
 	{
 		if ( score_event == "dmg" )
@@ -183,7 +189,6 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 		}
 		else if ( score_event == "connect" )
 		{
-			player.reset();
 			RS_ircSendMessage( player.getName().removeColorTokens() + " connected" );
 		}
 		else if ( score_event == "enterGame" )
@@ -198,8 +203,8 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 		else if ( score_event == "disconnect" )
 		{
 			player.disappear(player.getName(), true);
-			player.reset();
 			RS_ircSendMessage( player.getName().removeColorTokens() + " disconnected" );
+			racesowGametype.onDisconnect( client );
 		}
 		else if ( score_event == "userinfochanged" )
 		{
@@ -475,9 +480,9 @@ void GT_SpawnGametype()
     racesowAdapter.initGametype();
 
 
-	// setup players
-    for ( int i = 0; i < maxClients; i++ )
-        racesowGametype.players[i].reset();
+	// setup players //FIXME: Necessary? i don't see why -K1ll
+    /*for ( int i = 0; i < maxClients; i++ )
+        racesowGametype.players[i].reset();*/
 
     for ( int i = 0; i <= numEntities; i++ )
     {

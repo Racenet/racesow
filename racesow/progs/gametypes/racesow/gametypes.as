@@ -133,4 +133,14 @@ class Racesow_Gametype
             G_RegisterCallvote( cmd.name, cmd.usage, cmd.description );
         }
     }
+
+    void onConnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player( client );
+    }
+
+    void onDisconnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player();
+    }
 }

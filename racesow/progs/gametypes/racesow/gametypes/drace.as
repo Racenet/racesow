@@ -803,8 +803,9 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       }
       else if ( score_event == "enterGame" )
       {
-          Racesow_Player @player = Racesow_GetPlayerByClient( client );
-          player.reset();
+          //FIXME: Is this necessary? -K1ll
+          /*Racesow_Player @player = Racesow_GetPlayerByClient( client );
+          player.reset();*/
       }
     }
     
@@ -926,6 +927,16 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         return false;
     }
     
+    void onConnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player_Drace( client );
+    }
+
+    void onDisconnect( cClient @client )
+    {
+        @this.players[client.playerNum()] = Racesow_Player_Drace();
+    }
+
     /*bool Command( cClient @client, String @cmdString, String @argsString, int argc )
     {
         if (cmdString == "resetcam")
@@ -950,6 +961,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
            
           if ( vote == "draw" )
           {
+
             if ( match.getState() == MATCH_STATE_WARMUP )
           	{
               G_PrintMsg( client.getEnt(), S_COLOR_RED + "Callvote draw unavailable in warmup\n");
@@ -1085,6 +1097,16 @@ Racesow_Gametype@ getRacesowGametype() {
 
 class Racesow_Player_Drace : Racesow_Player
 {
+
+    Racesow_Player_Drace()
+    {
+    }
+
+    Racesow_Player_Drace( cClient @client )
+    {
+        super(client);
+    }
+
     void touchStopTimer_gametype()
     {
         // we kill the player who lost
@@ -1166,7 +1188,7 @@ class Command_MaxVictories : Racesow_Command
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-          G_PrintMsg( player.getClient().getEnt(), "Current: " + g_drace_max_victories.getString() + "\n" ); // why not player.sendMessage() ?
+          G_PrintMsg( player.getClient().getEnt(), "Current: " + g_drace_max_victories.get_string() + "\n" ); // why not player.sendMessage() ?
           return true;
     }
 }
