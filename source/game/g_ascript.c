@@ -4769,6 +4769,7 @@ static const asProperty_t gameclient_Properties[] =
 	{ SCRIPT_PROPERTY_DECL(int, chaseFollowMode), FOFFSET(gclient_t, resp.chase.followmode) },
 	{ SCRIPT_PROPERTY_DECL(const bool, coach), FOFFSET(gclient_t, teamstate.is_coach) },
 	{ SCRIPT_PROPERTY_DECL(const int, ping), FOFFSET(gclient_t, r.ping) },
+	{ SCRIPT_PROPERTY_DECL(const uint, serverTimeStamp), FOFFSET(gclient_t, ucmd.serverTimeStamp) }, // racesow
 	{ SCRIPT_PROPERTY_DECL(const int16, weapon), FOFFSET(gclient_t, ps.stats[STAT_WEAPON]) },
 	{ SCRIPT_PROPERTY_DECL(const int16, pendingWeapon), FOFFSET(gclient_t, ps.stats[STAT_PENDING_WEAPON]) },
 	{ SCRIPT_PROPERTY_DECL(const int16, pmoveFeatures), FOFFSET(gclient_t, ps.pmove.stats[PM_STAT_FEATURES]) },

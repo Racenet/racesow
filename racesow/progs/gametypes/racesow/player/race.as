@@ -19,13 +19,13 @@ class Racesow_Player_Race : Racesow_Player_Implemented
     cString checkPointsString;
 
 	/**
-	 * serverTime when started race
+	 * Client timestamp when started race
 	 * @var uint
 	 */
     uint startTime;
 
 	/**
-	 * Duration of the race
+	 * Client timestamp when stopped race
 	 * @var uint
 	 */
     uint stopTime;
@@ -168,7 +168,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	 */
 	uint getCurrentTime()
 	{
-		return serverTime - this.startTime;
+		return this.player.getClient().serverTimeStamp - this.startTime;
 	}
 
 	/**
@@ -190,7 +190,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 		if ( this.checkPoints[id] != 0 ) // already past this checkPoint
             return;
 
-		this.checkPoints[id] = serverTime - this.startTime;
+		this.checkPoints[id] = this.player.getClient().serverTimeStamp - this.startTime;
 
 		uint newTime = this.checkPoints[id];
 		uint serverBestTime = map.getHighScore().getCheckPoint(id);
@@ -242,7 +242,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
 	void start()
 	{
 		clearCheckpoints();
-		this.startTime = serverTime;
+		this.startTime = this.player.getClient().serverTimeStamp;
 		this.startDistance = this.player.distance;
 	}
 
@@ -255,7 +255,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
         if ( !this.inRace() )
             return false;
 
-        this.stopTime = serverTime;
+        this.stopTime = this.player.getClient().serverTimeStamp;
 		this.stopDistance = this.player.distance;
 		this.timeStamp = localTime;
 
