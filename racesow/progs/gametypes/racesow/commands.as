@@ -196,7 +196,7 @@ class Racesow_TargetCommand : Racesow_Command
             return false;
         }
 //      Racesow_Player @targetPlayer = @this.getTargetPlayer( args.getToken( 0 ) );
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         if( @targetPlayer == null || args.getToken( 0 ).length() == 0 )
         {
             player.sendErrorMessage( "Player " + args.getToken( 0 ) + COMMAND_COLOR_DEFAULT + " not found." );
@@ -211,7 +211,7 @@ class Racesow_TargetCommand : Racesow_Command
     //why do these functions break subclasses???
 //    Racesow_Player@ getTargetPlayer( String str )
 //    {
-//      return @Racesow_GetPlayerByClient( @Racesow_GetClientByString( str ) );
+//      return @racesowGametype.getPlayer( @Racesow_GetClientByString( str ) );
 //    }
 //    cClient@ getTarget( String str )
 //    {
@@ -951,7 +951,7 @@ class Command_Privsay : Racesow_TargetCommand
     }
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
 
         String message = args.substr(args.getToken( 0 ).length()+1, args.len() );
 
@@ -1628,7 +1628,7 @@ class Command_AdminVotemute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         if( @targetPlayer == null )
             return false;
         targetPlayer.isVotemuted = true;
@@ -1648,7 +1648,7 @@ class Command_AdminUnvotemute : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         if( @targetPlayer == null )
             return false;
         targetPlayer.isVotemuted = false;
@@ -1668,7 +1668,7 @@ class Command_AdminRemove : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         if( @targetPlayer == null )
             return false;
         targetPlayer.remove("");
@@ -1688,7 +1688,7 @@ class Command_AdminKick : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         if( @targetPlayer == null )
             return false;
         targetPlayer.kick("");
@@ -1708,7 +1708,7 @@ class Command_AdminJoinlock : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         if( @targetPlayer == null )
             return false;
         targetPlayer.isJoinlocked = true;
@@ -1728,7 +1728,7 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         if( @targetPlayer == null )
             return false;
         targetPlayer.isJoinlocked = false;
@@ -1748,7 +1748,7 @@ class Command_AdminKickban : Racesow_TargetCommand
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByClient( @Racesow_GetClientByString( args.getToken( 0 ) ) );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.kickban("");
         player.sendMessage( "Kickbanned player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
@@ -1849,7 +1849,7 @@ class Command_AdminSetpermission : Racesow_TargetCommand
         else
             return false;
 
-        Racesow_Player @targetPlayer = @Racesow_GetPlayerByNumber( args.getToken( 1 ).toInt() );
+        Racesow_Player @targetPlayer = @racesowGametype.getPlayer( args.getToken( 1 ).toInt() );
 
         if( args.getToken( 3 ).toInt() == 1 )
             player.sendErrorMessage( args.getToken( 2 ) + "enabled" );
@@ -2090,9 +2090,9 @@ class Command_CallvotePassed : Racesow_BaseCommand
 //            Racesow_Player@ target = null;
 //
 //            if ( args.getToken( 1 ).isNumerical() && args.getToken( 1 ).toInt() <= maxClients )
-//                @target = @Racesow_GetPlayerByNumber( args.getToken( 1 ).toInt() );
+//                @target = @racesowGametype.getPlayer( args.getToken( 1 ).toInt() );
 //            else if ( Racesow_GetClientNumber( args.getToken( 1 ) ) != -1 )
-//                @target = @Racesow_GetPlayerByNumber( Racesow_GetClientNumber( args.getToken( 1 ) ) );
+//                @target = @racesowGametype.getPlayer( Racesow_GetClientNumber( args.getToken( 1 ) ) );
 //
 //            if ( vote == "joinlock" )
 //                target.isJoinlocked = true;

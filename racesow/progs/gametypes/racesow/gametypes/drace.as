@@ -505,7 +505,7 @@ class cDRACERound
             client.printMessage( target.client.getName() + " was killed by " + attacker.client.getName() + " (health: " + int( attacker.health ) + ", armor: " + int( attacker.client.armor ) + ")\n" );
         }
         
-        Racesow_GetPlayerByClient( target.client ).cancelRace();
+        racesowGametype.getPlayer( target.client ).cancelRace();
     }
     
     bool checkMaxVictories( cClient @client )
@@ -741,10 +741,10 @@ class Racesow_Gametype_Drace : Racesow_Gametype
             client.setHUDStat( STAT_MESSAGE_BETA, 0 );
     
             // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
-            if ( Racesow_GetPlayerByClient( client ).isRacing() )
-                client.setHUDStat( STAT_TIME_SELF, Racesow_GetPlayerByClient( client ).race.getCurrentTime() / 100 );
+            if ( racesowGametype.getPlayer( client ).isRacing() )
+                client.setHUDStat( STAT_TIME_SELF, racesowGametype.getPlayer( client ).race.getCurrentTime() / 100 );
     
-            client.setHUDStat( STAT_TIME_BEST, Racesow_GetPlayerByClient( client ).bestRaceTime / 100 );
+            client.setHUDStat( STAT_TIME_BEST, racesowGametype.getPlayer( client ).bestRaceTime / 100 );
             client.setHUDStat( STAT_TIME_RECORD, map.getHighScore().getTime() / 100 );
     
             client.setHUDStat( STAT_TIME_ALPHA, -9999 );
@@ -756,7 +756,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
     
     void playerRespawn( cEntity @ent, int old_team, int new_team )
     {
-      Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+      Racesow_Player @player = racesowGametype.getPlayer( ent.client );
       player.cancelRace();
 
       if ( old_team != new_team )
@@ -804,7 +804,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       else if ( score_event == "enterGame" )
       {
           //FIXME: Is this necessary? -K1ll
-          /*Racesow_Player @player = Racesow_GetPlayerByClient( client );
+          /*Racesow_Player @player = racesowGametype.getPlayer( client );
           player.reset();*/
       }
     }
@@ -840,11 +840,11 @@ class Racesow_Gametype_Drace : Racesow_Gametype
           else
               playerID = client.getEnt().isGhosting() ? -( client.playerNum() + 1 ) : client.playerNum();
   
-          racing = int( Racesow_GetPlayerByClient( client ).isRacing() ? 1 : 0 );
+          racing = int( racesowGametype.getPlayer( client ).isRacing() ? 1 : 0 );
           entry = "&p " + playerID + " "
                   + client.getClanName() + " "
                   + client.stats.score + " "
-                  + Racesow_GetPlayerByClient( client ).bestRaceTime + " "
+                  + racesowGametype.getPlayer( client ).bestRaceTime + " "
                   + client.ping + " "
                   + racing + " "
                   + readyIcon + " ";
@@ -866,11 +866,11 @@ class Racesow_Gametype_Drace : Racesow_Gametype
           else
               playerID = client.getEnt().isGhosting() ? -( client.playerNum() + 1 ) : client.playerNum();
   
-          racing = int( Racesow_GetPlayerByClient( client ).isRacing() ? 1 : 0 );
+          racing = int( racesowGametype.getPlayer( client ).isRacing() ? 1 : 0 );
           entry = "&p " + playerID + " "
                   + client.getClanName() + " "
                   + client.stats.score + " "
-                  + Racesow_GetPlayerByClient( client ).bestRaceTime + " "
+                  + racesowGametype.getPlayer( client ).bestRaceTime + " "
                   + client.ping + " "
                   + racing + " "
                   + readyIcon + " ";
@@ -900,12 +900,12 @@ class Racesow_Gametype_Drace : Racesow_Gametype
           else
               playerID = client.getEnt().isGhosting() ? -( client.playerNum() + 1 ) : client.playerNum();
           
-          racing = int( Racesow_GetPlayerByClient( client ).isRacing() ? 1 : 0 );
+          racing = int( racesowGametype.getPlayer( client ).isRacing() ? 1 : 0 );
   
           entry = "&p " + playerID + " "
                   + client.getClanName() + " "
                   + client.stats.score + " "
-                  + Racesow_GetPlayerByClient( client ).bestRaceTime + " "
+                  + racesowGametype.getPlayer( client ).bestRaceTime + " "
                   + client.ping + " "
                   + racing + " "
                   + readyIcon + " ";
@@ -1021,7 +1021,7 @@ void DRACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter 
     if ( @target == null || @target.client == null )
       return;
 
-    Racesow_GetPlayerByClient( target.client ).cancelRace();
+    racesowGametype.getPlayer( target.client ).cancelRace();
 }
 
 void DRACE_SetUpWarmup()

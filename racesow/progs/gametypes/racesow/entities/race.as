@@ -9,10 +9,10 @@ void race_respawner_think( cEntity @respawner )
     cClient @client = G_GetClient( respawner.count );
 
     // the client may have respawned on his own. If the last time was erased, don't respawn him
-    if ( !Racesow_GetPlayerByClient( client ).isSpawned )
+    if ( !racesowGametype.getPlayer( client ).isSpawned )
     {
         client.respawn( false );
-        Racesow_GetPlayerByClient( client ).isSpawned = true;
+        racesowGametype.getPlayer( client ).isSpawned = true;
     }
 
     respawner.freeEntity(); // free the respawner
@@ -23,9 +23,9 @@ void practice_respawner_think( cEntity @practiceRespawner )
     cClient @client = G_GetClient( practiceRespawner.count );
 
     // the client may have respawned on his own. If the last time was erased, don't respawn him
-    if ( !Racesow_GetPlayerByClient( client ).isSpawned )
+    if ( !racesowGametype.getPlayer( client ).isSpawned )
     {
-        Racesow_GetPlayerByClient( client ).restartRace();
+        racesowGametype.getPlayer( client ).restartRace();
     }
 
     practiceRespawner.freeEntity(); // free the respawner
@@ -124,10 +124,10 @@ void target_checkpoint_use( cEntity @self, cEntity @other, cEntity @activator )
     if ( @activator.client == null )
         return;
 
-    if ( !Racesow_GetPlayerByClient( activator.client ).isRacing() )
+    if ( !racesowGametype.getPlayer( activator.client ).isRacing() )
         return;
 
-    Racesow_GetPlayerByClient( activator.client ).touchCheckPoint( self.count );
+    racesowGametype.getPlayer( activator.client ).touchCheckPoint( self.count );
 }
 
 /**
@@ -154,7 +154,7 @@ void target_stoptimer_use( cEntity @self, cEntity @other, cEntity @activator )
     if ( @activator.client == null )
         return;
 
-    Racesow_GetPlayerByClient( activator.client ).touchStopTimer();
+    racesowGametype.getPlayer( activator.client ).touchStopTimer();
 }
 
 /**
@@ -203,7 +203,7 @@ void target_starttimer_use( cEntity @self, cEntity @other, cEntity @activator )
     if ( @activator.client == null )
         return;
 
-    Racesow_GetPlayerByClient( activator.client ).touchStartTimer();
+    racesowGametype.getPlayer( activator.client ).touchStartTimer();
 }
 
 /**

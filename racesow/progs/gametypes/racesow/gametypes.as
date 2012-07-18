@@ -95,7 +95,7 @@ class Racesow_Gametype
     bool Command( cClient @client, String @cmdString, String @argsString, int argc )
     {
         Racesow_Command @command;
-        Racesow_Player @player = Racesow_GetPlayerByClient( client );
+        Racesow_Player @player = racesowGametype.getPlayer( client );
 
 
         // check if it was an internal command
@@ -143,4 +143,30 @@ class Racesow_Gametype
     {
         @this.players[client.playerNum()] = Racesow_Player();
     }
+
+    /**
+     * getPlayer
+     * @param int playerNum
+     * @return Racesow_Player
+     */
+    Racesow_Player @getPlayer(int playerNum)
+    {
+        if ( playerNum < 0 )
+            return null;
+        return @this.players[ playerNum ];
+    }
+
+    /**
+     * getPlayer
+     * @param cClient @client
+     * @return Racesow_Player
+     */
+    Racesow_Player @getPlayer( cClient @client )
+    {
+        if ( @client == null || client.playerNum() < 0 )
+            return null;
+
+        return @this.players[ client.playerNum() ]; //.setClient( @client ); //FIXME: why set the client HERE??
+    }
+
 }

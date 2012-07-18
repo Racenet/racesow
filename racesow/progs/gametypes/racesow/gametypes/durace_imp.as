@@ -204,10 +204,10 @@ class Racesow_Gametype_Durace : Racesow_Gametype
             client.setHUDStat( STAT_MESSAGE_BETA, 0 );
     
             // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
-            if ( Racesow_GetPlayerByClient( client ).isRacing() )
-                client.setHUDStat( STAT_TIME_SELF, Racesow_GetPlayerByClient( client ).race.getCurrentTime() / 100 );
+            if ( racesowGametype.getPlayer( client ).isRacing() )
+                client.setHUDStat( STAT_TIME_SELF, racesowGametype.getPlayer( client ).race.getCurrentTime() / 100 );
     
-            client.setHUDStat( STAT_TIME_BEST, Racesow_GetPlayerByClient( client ).bestRaceTime / 100 );
+            client.setHUDStat( STAT_TIME_BEST, racesowGametype.getPlayer( client ).bestRaceTime / 100 );
             client.setHUDStat( STAT_TIME_RECORD, map.getHighScore().getTime() / 100 );
     
             client.setHUDStat( STAT_TIME_ALPHA, -9999 );
@@ -220,7 +220,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         if ( ent.isGhosting() )
 	        return;
           
-        Racesow_GetPlayerByClient( ent.client ).cancelRace();
+        racesowGametype.getPlayer( ent.client ).cancelRace();
         
         // set player movement to pass through other players and remove gunblade auto attacking
         ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
@@ -251,7 +251,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         }
         else if ( score_event == "enterGame" )
         {
-            //Racesow_GetPlayerByClient( client ).reset(); //FIXME: Necessary? -K1ll
+            //racesowGametype.getPlayer( client ).reset(); //FIXME: Necessary? -K1ll
         }
     }
     
@@ -284,13 +284,13 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     
                 int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
     
-                racing = int( Racesow_GetPlayerByClient( ent.client ).isRacing() ? 1 : 0 );
+                racing = int( racesowGametype.getPlayer( ent.client ).isRacing() ? 1 : 0 );
                 
                 //"Name Clan Score Time Ping Racing R"
                 entry = "&p " + playerID + " "
                         + ent.client.getClanName() + " "
                         + ent.client.stats.score + " "
-                        + Racesow_GetPlayerByClient( ent.client ).bestRaceTime + " "
+                        + racesowGametype.getPlayer( ent.client ).bestRaceTime + " "
                         + ent.client.ping + " "
                         + racing + " "
                         + readyIcon + " ";
@@ -367,7 +367,7 @@ void DURACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter
     if ( @target == null || @target.client == null )
       return;
 
-    Racesow_GetPlayerByClient( target.client ).cancelRace();
+    racesowGametype.getPlayer( target.client ).cancelRace();
 }
 
 class Racesow_Player_Durace : Racesow_Player

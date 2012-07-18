@@ -146,26 +146,26 @@ String DateToString( uint64 dateuint64 )
  * @param cClient @client
  * @return Racesow_Player
  */
-Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
+/*Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
 {
     if ( @client == null || client.playerNum() < 0 )
         return null;
 
     return @racesowGametype.players[ client.playerNum() ]; //.setClient( @client ); //FIXME: why set the client HERE??
-}
+}*/
 
 /**
  * Racesow_GetPlayerByNumber
  * @param int playerNum
  * @return Racesow_Player
  */
-Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
+/*Racesow_Player @Racesow_GetPlayerByNumber(int playerNum)
 {
     if ( playerNum < 0 )
         return null;
 
     return @racesowGametype.players[ playerNum ];
-}
+}*/
 
 
 /**
