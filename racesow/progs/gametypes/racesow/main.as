@@ -102,7 +102,7 @@ bool GT_UpdateBotStatus( cEntity @self )
  */
 cEntity @GT_SelectSpawnPoint( cEntity @self )
 {
-	Racesow_Player @player = Racesow_GetPlayerByClient(self.client);
+	Racesow_Player @player = racesowGametype.getPlayer(self.client);
 	player.onSpawn();
 	return racesowGametype.SelectSpawnPoint( @self );
 }
@@ -175,7 +175,7 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 		racesowGametype.onConnect( client );
 	}
 
-	Racesow_Player @player = Racesow_GetPlayerByClient( client );
+	Racesow_Player @player = racesowGametype.getPlayer( client );
 	if (@player != null )
 	{
 		if ( score_event == "dmg" )
@@ -244,7 +244,7 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
 {
-	Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+	Racesow_Player @player = racesowGametype.getPlayer( ent.client );
 
   if (new_team == TEAM_PLAYERS) {
 
@@ -335,7 +335,7 @@ void GT_ThinkRules()
         if ( client.state() < CS_SPAWNED )
             continue;
 
-		Racesow_Player @player = Racesow_GetPlayerByClient( client );
+		Racesow_Player @player = racesowGametype.getPlayer( client );
 
 		player.advanceDistance();
 

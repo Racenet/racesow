@@ -982,7 +982,7 @@ class Racesow_Player
 						cEntity @gravestone = @G_SpawnEntity( "gravestone" );
 						// copy client position
 						gravestone.setOrigin( other.getOrigin() + Vec3( 0.0f, 0.0f, 50.0f ) );
-						Racesow_GetPlayerByClient( other.client ).setupTelekilled( @gravestone );
+						racesowGametype.getPlayer( other.client ).setupTelekilled( @gravestone );
 					}
 
 				}
@@ -1409,7 +1409,7 @@ class Racesow_Player
 //                return false;
 //            }
 //
-//            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+//            Racesow_Player @player = @racesowGametype.getPlayer( cmdString.getToken( 1 ).toInt() );
 //            if (@player == null )
 //                return false;
 //
@@ -1469,7 +1469,7 @@ class Racesow_Player
 //            else
 //                return false;
 //
-//            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+//            Racesow_Player @player = @racesowGametype.getPlayer( cmdString.getToken( 1 ).toInt() );
 //            if (@player == null )
 //                return false;
 //
@@ -1563,7 +1563,7 @@ class Racesow_Player
 //                showNotification = false;
 //                return false;
 //            }
-//            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+//            Racesow_Player @player = @racesowGametype.getPlayer( cmdString.getToken( 1 ).toInt() );
 //            if (@player == null )
 //                return false;
 //
@@ -1596,7 +1596,7 @@ class Racesow_Player
 //                showNotification = false;
 //                return false;
 //            }
-//            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+//            Racesow_Player @player = @racesowGametype.getPlayer( cmdString.getToken( 1 ).toInt() );
 //            if (@player == null )
 //                return false;
 //
@@ -1638,7 +1638,7 @@ class Racesow_Player
 //                showNotification = false;
 //                return false;
 //            }
-//            Racesow_Player @player = @Racesow_GetPlayerByNumber( cmdString.getToken( 1 ).toInt() );
+//            Racesow_Player @player = @racesowGametype.getPlayer( cmdString.getToken( 1 ).toInt() );
 //            if (@player != null )
 //                player.kickban("");
 //        }

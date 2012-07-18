@@ -18,9 +18,9 @@ void addToEntStorage( int id, String string)
 
 bool TriggerWait( cEntity @ent, cEntity @activator )
 {
-	if( @activator.client == null || @Racesow_GetPlayerByClient( activator.client ) == null )
+	if( @activator.client == null || @racesowGametype.getPlayer( activator.client ) == null )
 		return false;
-	Racesow_Player @player = @Racesow_GetPlayerByClient( activator.client );
+	Racesow_Player @player = @racesowGametype.getPlayer( activator.client );
 	if( @player.triggerEntity == @ent && player.getTriggerTimeout() != 0
 			&& player.getTriggerTimeout() >= levelTime )
 		return true;
@@ -179,10 +179,10 @@ void target_teleporter_use( cEntity @ent, cEntity @other, cEntity @activator )
 	if(TriggerWait( @ent, @activator ))
 		return;
 	if(@activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null
-			|| @Racesow_GetPlayerByClient( activator.client ) == null || !TriggerWait(@ent, @activator)
+			|| @racesowGametype.getPlayer( activator.client ) == null || !TriggerWait(@ent, @activator)
 			|| @ent.enemy == null)
 		return;
-	Racesow_GetPlayerByClient( activator.client ).teleport(ent.enemy.getOrigin(), ent.enemy.getAngles(), true, true);
+	racesowGametype.getPlayer( activator.client ).teleport(ent.enemy.getOrigin(), ent.enemy.getAngles(), true, true);
 
 }
 

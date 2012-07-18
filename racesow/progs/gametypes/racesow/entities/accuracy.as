@@ -69,7 +69,7 @@ void target_fragsFilter_use( cEntity @ent, cEntity @other, cEntity @activator )
     int frags = entStorage[ent.entNum()].getToken(0).toInt();
 
     if(@activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null
-        || @Racesow_GetPlayerByClient( activator.client ) == null )
+        || @racesowGametype.getPlayer( activator.client ) == null )
         return;
 
 	if( frags <= 0 )
@@ -158,7 +158,7 @@ Adds score to both the client and his team in the fragfilter
 */
 void fragsFilter_addScore( cEntity @ent, Vec3 origin, int score ) {
 	if(@ent == null || (ent.svflags & SVF_NOCLIENT) == 1 || @ent.client == null
-		|| @Racesow_GetPlayerByClient( ent.client ) == null)
+		|| @racesowGametype.getPlayer( ent.client ) == null)
         return;
 
 	// I'm not sure what this did in Defrag
@@ -197,7 +197,7 @@ void target_score( cEntity @ent )
 void target_score_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
     if(@activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null
-		|| @Racesow_GetPlayerByClient( activator.client ) == null )
+		|| @racesowGametype.getPlayer( activator.client ) == null )
         return;
 
     fragsFilter_addScore( activator, ent.getOrigin(), ent.count);

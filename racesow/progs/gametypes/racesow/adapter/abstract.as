@@ -97,7 +97,7 @@ class Racesow_Adapter_Abstract
         }
         else
         {
-            @player = Racesow_GetPlayerByNumber(playerNum);
+            @player = racesowGametype.getPlayer(playerNum);
 
             if ( @player == null )
             {

@@ -203,7 +203,7 @@ class cFlagBase
 
     void flagCaptured( cEntity @ent )
     {
-        Racesow_Player @player = @Racesow_GetPlayerByClient( ent.client );
+        Racesow_Player @player = @racesowGametype.getPlayer( ent.client );
         player.sendAward( S_COLOR_GREEN + "Flag Capture!" );
         this.resetCarrier( ent );
         player.touchStopTimer();
@@ -211,7 +211,7 @@ class cFlagBase
 
     void flagStolen( cEntity @ent )
     {   
-        Racesow_Player @player = @Racesow_GetPlayerByClient( ent.client );
+        Racesow_Player @player = @racesowGametype.getPlayer( ent.client );
         player.sendAward( S_COLOR_GREEN + "Flag Steal!" );
         this.setCarrier( ent );
         player.touchStartTimer();

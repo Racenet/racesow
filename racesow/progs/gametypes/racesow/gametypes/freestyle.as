@@ -131,7 +131,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
             if ( client.state() < CS_SPAWNED )
                 continue;
 
-            Racesow_Player @player = Racesow_GetPlayerByClient( client );
+            Racesow_Player @player = racesowGametype.getPlayer( client );
             if ( client.team != TEAM_SPECTATOR )
             {
                 client.inventorySetCount( AMMO_GUNBLADE, 10 );
@@ -146,7 +146,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         if ( ent.isGhosting() )
 	        return;
 	      
-        Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+        Racesow_Player @player = racesowGametype.getPlayer( ent.client );
         cItem @item;
         cItem @ammoItem;
         if( player.wasTelekilled )
@@ -176,7 +176,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     
     void scoreEvent( cClient @client, String &score_event, String &args )
     {
-        Racesow_Player @player = Racesow_GetPlayerByClient( client );
+        Racesow_Player @player = racesowGametype.getPlayer( client );
         if (@player != null )
         {
             if ( score_event == "kill" )
@@ -185,7 +185,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
                 if( @victim.client == null )
                     return;
         
-                Racesow_Player @victimPlayer = Racesow_GetPlayerByClient( victim.client );
+                Racesow_Player @victimPlayer = racesowGametype.getPlayer( victim.client );
                 if( @victimPlayer == null )
                     return;
         
@@ -224,7 +224,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         for ( i = 0; @team.ent( i ) != null; i++ )
         {
             @ent = @team.ent( i );
-            Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+            Racesow_Player @player = racesowGametype.getPlayer( ent.client );
 
             int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
             entry = "&p " + playerID + " " + ent.client.getClanName() + " "
@@ -238,7 +238,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     
     cEntity @SelectSpawnPoint( cEntity @self )
     {
-        Racesow_Player @player = Racesow_GetPlayerByClient( self.client );
+        Racesow_Player @player = racesowGametype.getPlayer( self.client );
         if( player.wasTelekilled )
         {
             return @player.gravestone;

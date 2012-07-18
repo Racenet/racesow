@@ -143,7 +143,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
             if ( client.state() < CS_SPAWNED )
                 continue;
 
-            Racesow_Player @player = Racesow_GetPlayerByClient( client );
+            Racesow_Player @player = racesowGametype.getPlayer( client );
 
             if( ( player.client.team == TEAM_SPECTATOR ) && !( player.client.chaseActive ) )
                 @player.race = null;
@@ -172,7 +172,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
         if ( ent.isGhosting() )
 	        return;
 	        
-        Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+        Racesow_Player @player = racesowGametype.getPlayer( ent.client );
         // set player movement to pass through other players and remove gunblade auto attacking
         ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
 
@@ -212,7 +212,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
         for ( i = 0; @team.ent( i ) != null; i++ )
         {
             @ent = @team.ent( i );
-            Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
+            Racesow_Player @player = racesowGametype.getPlayer( ent.client );
 
             int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
 			
