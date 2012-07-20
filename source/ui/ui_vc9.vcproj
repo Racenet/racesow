@@ -461,6 +461,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\widgets\ui_irc.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\widgets\ui_keyselect.cpp"
 					>
 				</File>
@@ -565,7 +569,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\as\as_bind_downloadinfo.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\as\as_bind_game.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\as\as_bind_irc.cpp"
 					>
 				</File>
 				<File
@@ -665,6 +677,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\datasources\ui_ircchannels_datasource.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\datasources\ui_maps_datasource.cpp"
 					>
 				</File>
@@ -735,6 +751,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\as\asui_loadingscreen.h"
+					>
+				</File>
+				<File
 					RelativePath=".\as\asui_local.h"
 					>
 				</File>
@@ -764,6 +784,10 @@
 				</File>
 				<File
 					RelativePath=".\kernel\ui_documentloader.h"
+					>
+				</File>
+				<File
+					RelativePath=".\kernel\ui_downloadinfo.h"
 					>
 				</File>
 				<File
@@ -916,6 +940,10 @@
 				</File>
 				<File
 					RelativePath=".\datasources\ui_huds_datasource.h"
+					>
+				</File>
+				<File
+					RelativePath=".\datasources\ui_ircchannels_datasource.h"
 					>
 				</File>
 				<File

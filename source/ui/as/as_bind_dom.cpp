@@ -7,6 +7,7 @@
 #include "as/asui_url.h"
 
 #include <Rocket/Controls.h>
+#include <Rocket/Controls/ElementTabSet.h>
 
 // macro to addref a return object (rocket element)
 #define _RETREF(a)	if( (a) ) { (a)->AddReference(); } return (a);
@@ -28,6 +29,8 @@ typedef Rocket::Controls::ElementFormControl ElementFormControl;
 typedef Rocket::Controls::ElementDataGrid ElementDataGrid;
 typedef Rocket::Controls::ElementDataGridRow ElementDataGridRow;
 
+typedef Rocket::Controls::ElementTabSet ElementTabSet;
+
 }
 
 //==========================================================
@@ -37,6 +40,8 @@ ASBIND_TYPE( Rocket::Controls::ElementFormControl, ElementFormControl );
 
 ASBIND_TYPE( Rocket::Controls::ElementDataGrid, ElementDataGrid );
 ASBIND_TYPE( Rocket::Controls::ElementDataGridRow, ElementDataGridRow );
+
+ASBIND_TYPE( Rocket::Controls::ElementTabSet, ElementTabSet );
 
 // array of Element handlers
 ASBIND_ARRAY_TYPE( ASUI::ASElementsArray, Element @ );
@@ -414,6 +419,93 @@ static void BindElementForm( ASInterface *as )
 //==============================================================
 
 //
+// TABSET
+
+static ElementTabSet *Element_CastToElementTabSet( Element *self ) {
+	ElementTabSet *f = dynamic_cast<ElementTabSet *>( self );
+	_RETREF(f);
+}
+
+static Element *ElementTabSet_CastToElement( ElementTabSet *self ) {
+	Element *e = dynamic_cast<Element *>( self );
+	_RETREF(e);
+}
+
+/// Sets the specifed tab index's tab title RML.
+static void ElementTabSet_SetTab( ElementTabSet *self, int tabIndex, const asstring_t & rml ) {
+	self->SetTab( tabIndex, ASSTR( rml ) );
+}
+
+/// Sets the specifed tab index's tab panel RML.
+static void ElementTabSet_SetPanel( ElementTabSet *self, int tabIndex, const asstring_t & rml ) {
+	self->SetPanel( tabIndex, ASSTR( rml ) );
+}
+
+/// Set the specifed tab index's title element.
+static void ElementTabSet_SetTab( ElementTabSet *self, int tabIndex, Element *e ) {
+	self->SetTab( tabIndex, e );
+	_DECREF(e);
+}
+
+/// Set the specified tab index's body element.
+static void ElementTabSet_SetPanel( ElementTabSet *self, int tabIndex, Element *e ) {
+	self->SetPanel( tabIndex, e );
+	_DECREF(e);
+}
+
+/// Remove one of the tab set's panels and its corresponding tab.
+static void ElementTabSet_RemoveTab( ElementTabSet *self, int tabIndex ) {
+	self->RemoveTab( tabIndex );
+}
+
+/// Retrieve the number of tabs in the tabset.
+static int ElementTabSet_GetNumTabs( ElementTabSet *self ) {
+	return self->GetNumTabs();
+}
+
+/// Sets the currently active (visible) tab index.
+static void ElementTabSet_SetActiveTab( ElementTabSet *self, int tabIndex ) {
+	self->SetActiveTab( tabIndex );
+}
+
+/// Get the current active tab index.
+static int ElementTabSet_GetActiveTab( ElementTabSet *self ) {
+	return self->GetActiveTab();
+}
+
+static void PreBindElementTabSet( ASInterface *as )
+{
+	ASBind::Class<ElementTabSet, ASBind::class_ref>( as->getEngine() );
+}
+
+static void BindElementTabSet( ASInterface *as )
+{
+	asIScriptEngine *engine = as->getEngine();
+
+	ASBind::GetClass<ElementTabSet>( engine )
+		.refs( &ElementTabSet::AddReference, &ElementTabSet::RemoveReference )
+
+		.method<void ( ElementTabSet *, int , const asstring_t & )>( &ElementTabSet_SetTab, "setTab", true )
+		.method<void ( ElementTabSet *, int , Element * )>( &ElementTabSet_SetTab, "setTab", true )
+		.method<void ( ElementTabSet *, int , const asstring_t & )>( &ElementTabSet_SetPanel, "setPanel", true )
+		.method<void ( ElementTabSet *, int , Element * )>( &ElementTabSet_SetPanel, "setPanel", true )
+		.method( &ElementTabSet_RemoveTab, "removeTab", true )
+		.constmethod( &ElementTabSet_GetNumTabs, "getNumTabs", true )
+		.method( &ElementTabSet_SetActiveTab, "setActiveTab", true )
+		.constmethod( &ElementTabSet_GetActiveTab, "getActiveTab", true )
+
+		.refcast( &ElementTabSet_CastToElement, true, true )
+		;
+
+	// Cast behavior for the Element class
+	ASBind::GetClass<Element>( engine )
+		.refcast( &Element_CastToElementTabSet, true, true )
+		;
+}
+
+//==============================================================
+
+//
 // DOCUMENT
 
 static ElementDocument *Element_CastToElementDocument( Element *self ) {
@@ -658,6 +750,8 @@ void PrebindElement( ASInterface *as )
 	PreBindElementForm( as );
 
 	PreBindElementFormControl( as );
+
+	PreBindElementTabSet( as );
 }
 
 void BindElement( ASInterface *as )
@@ -775,6 +869,9 @@ void BindElement( ASInterface *as )
 
 	// ElementFormControl
 	BindElementFormControl( as );
+
+	// ElementTabSet
+	BindElementTabSet( as );
 }
 
 }

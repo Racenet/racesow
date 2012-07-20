@@ -27,6 +27,7 @@
 #include "datasources/ui_profiles_datasource.h"
 #include "datasources/ui_serverbrowser_datasource.h"
 #include "datasources/ui_tvchannels_datasource.h"
+#include "datasources/ui_ircchannels_datasource.h"
 
 #include "formatters/ui_crosshair_formatter.h"
 #include "formatters/ui_levelshot_formatter.h"
@@ -39,6 +40,9 @@
 namespace WSWUI
 {
 UI_Main *UI_Main::self = 0;
+
+const std::string UI_Main::ui_index( "index.rml" );
+const std::string UI_Main::ui_connectscreen( "connectscreen.rml" );
 
 UI_Main::UI_Main( int vidWidth, int vidHeight, int protocol, int sharedSeed, bool demoPlaying, const char *demoName )
 	// pointers to zero
@@ -56,7 +60,6 @@ UI_Main::UI_Main( int vidWidth, int vidHeight, int protocol, int sharedSeed, boo
 
 	Vector4Set( colorWhite, 1, 1, 1, 1 );
 	ui_basepath = trap::Cvar_Get( "ui_basepath", "/ui/porkui", CVAR_ARCHIVE );
-	ui_index = trap::Cvar_Get( "ui_index", "index.rml", CVAR_DEVELOPER );
 	ui_cursor = trap::Cvar_Get( "ui_cursor", "cursors/default.rml", CVAR_DEVELOPER );
 	ui_developer = trap::Cvar_Get( "developer", "0", 0 );
 
@@ -84,6 +87,7 @@ UI_Main::UI_Main( int vidWidth, int vidHeight, int protocol, int sharedSeed, boo
 	mods = __new__( ModsDataSource )();
 	crosshairs = __new__( CrosshairDataSource )();
 	tvchannels = __new__( TVChannelsDataSource )();
+	ircchannels = __new__( IrcChannelsDataSource )();
 
 	crosshair_fmt = __new__( CrosshairFormatter )();
 	datetime_fmt = __new__( DatetimeFormatter )();
@@ -184,7 +188,7 @@ void UI_Main::preloadUI( void )
 	navigator->setDefaultPath( ui_basepath->string );
 
 	// postpone displaying the document until the first valid refresh state
-	navigator->pushDocument( ui_index->string, false, false );
+	navigator->pushDocument( ui_index, false, false );
 	showNavigationStack = navigator->hasDocuments();
 }
 
@@ -240,8 +244,6 @@ void UI_Main::unregisterRocketCustoms( void )
 
 void UI_Main::shutdownRocket( void )
 {
-	//Com_Printf("UI_Main::shutdownRocket..\n");
-
 	// clear the navigation stack
 	navigator->popAllDocuments();
 	// clear the navigation stack from previous installment
@@ -296,7 +298,25 @@ void UI_Main::setRefreshState( unsigned int time, int clientState, int serverSta
 	demoInfo.setPaused( demoPaused );
 }
 
-int UI_Main::getGameProtocol( void )
+void UI_Main::drawConnectScreen( const char *serverName, const char *rejectMessage, 
+	int downloadType, const char *downloadFilename, float downloadPercent, int downloadSpeed, 
+	int connectCount, bool backGround )
+{
+	DownloadInfo dlinfo( downloadFilename, downloadType );
+	dlinfo.setPercent( downloadPercent );
+	dlinfo.setSpeed( downloadSpeed );
+
+	this->serverName = serverName ? serverName : "";
+	this->rejectMessage = rejectMessage ? rejectMessage : "";
+	this->downloadInfo = dlinfo;
+
+	navigator->pushDocument( ui_connectscreen, true, true );
+
+	forceUI( true );
+	showUI( true );
+}
+
+int UI_Main::getGameProtocol( void ) const 
 {
 	return gameProtocol;
 }
@@ -339,7 +359,6 @@ void UI_Main::keyEvent( int key, bool pressed )
 	rocketModule->keyEvent( key, pressed );
 }
 
-
 void UI_Main::addToServerList(const char *adr, const char *info)
 {
 	if( !serverBrowser )
@@ -348,18 +367,8 @@ void UI_Main::addToServerList(const char *adr, const char *info)
 	serverBrowser->addToServerList( adr, info );
 }
 
-void UI_Main::drawConnectScreen( const char *serverName, const char *rejectmessage, int downloadType, const char *downloadfilename, 
-		float downloadPercent, int downloadSpeed, int connectCount, bool backGround )
-{
-	if( backGround ) {
-		trap::R_DrawStretchPic( 0, 0, refreshState.width, refreshState.height, 0, 0, 1, 1, colorWhite, trap::R_RegisterPic( UI_SHADER_BACKGROUND ) );
-	}
-}
-
 void UI_Main::forceMenuOff(void)
 {
-	// Com_Printf("UI_Main::ForceMenuOff..\n");
-
 	forceUI( false );
 	showUI( false );
 }
@@ -369,9 +378,8 @@ bool UI_Main::debugOn( void )
 	return ui_developer->integer != 0;
 }
 
-void UI_Main::refreshScreen(unsigned int time, int clientState, int serverState, bool demoPaused, unsigned int demoTime, bool backGround)
+void UI_Main::refreshScreen( unsigned int time, int clientState, int serverState, bool demoPaused, unsigned int demoTime, bool backGround, bool showCursor )
 {
-	// object passed to AS
 	setRefreshState( time, clientState, serverState, demoPaused, demoTime, backGround );
 
 	// postponed showing of the stacked document, we need to set the refresh state first
@@ -380,6 +388,14 @@ void UI_Main::refreshScreen(unsigned int time, int clientState, int serverState,
 		showNavigationStack = false;
 	}
 
+	// update necessary modules
+	if( serverBrowser )
+		serverBrowser->updateFrame();
+	if( demos )
+		demos->UpdateFrame();
+	if( ircchannels )
+		ircchannels->UpdateFrame();
+
 	// TODO: handle the intervalled functions in AS somehow,
 	// taking care that they are not called when menu is hidden.
 	// i may need to make the interface public..
@@ -387,6 +403,13 @@ void UI_Main::refreshScreen(unsigned int time, int clientState, int serverState,
 
 	// run incremental garbage collection
 	asmodule->garbageCollectOneStep();
+
+	if( showCursor ) { 
+		rocketModule->showCursor();
+	}
+	else {
+		rocketModule->hideCursor();
+	}
 
 	if( !menuVisible ) {
 		return;
@@ -398,15 +421,9 @@ void UI_Main::refreshScreen(unsigned int time, int clientState, int serverState,
 		return;
 	}
 
-	// update necessary modules
-	if( serverBrowser )
-		serverBrowser->updateFrame();
-	if( demos )
-		demos->UpdateFrame();
-
 	// rocket update+render
-	getRocketContext()->Update();
-	getRocketContext()->Render();
+	rocketModule->update();
+	rocketModule->render();
 
 	// mark the top stack document as viwed for history tracking
 	navigator->markTopAsViewed();
@@ -476,7 +493,7 @@ void UI_Main::M_Menu_Force_f( void )
 
 	// if forced, ensure we have at least the default page on stack
 	if( !nav->hasDocuments() ) {
-		nav->pushDocument( self->ui_index->string );
+		nav->pushDocument( self->ui_index );
 	}
 	self->showUI( true );
 }

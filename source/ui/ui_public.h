@@ -21,12 +21,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __UI_PUBLIC_H__
 #define __UI_PUBLIC_H__
 
-#define	UI_API_VERSION	    35
+#define	UI_API_VERSION	    38
 
 typedef size_t (*ui_async_stream_read_cb_t)(const void *buf, size_t numb, float percentage, const char *contentType, void *privatep);
 typedef void (*ui_async_stream_done_cb_t)(int status, const char *contentType, void *privatep);
 
 #include "../cgame/ref.h"
+
+struct irc_chat_history_node_s;
 
 //
 // these are the functions exported by the refresh module
@@ -169,6 +171,7 @@ typedef struct
 	int ( *MM_GetLoginState )( void );
 	size_t ( *MM_GetLastErrorMessage )( char *buffer, size_t buffer_size );
 	size_t ( *MM_GetProfileURL )( char *buffer, size_t buffer_size, qboolean rml );
+	size_t ( *MM_GetBaseWebURL )( char *buffer, size_t buffer_size );
 
 	void *( *Mem_Alloc )( size_t size, const char *filename, int fileline );
 	void ( *Mem_Free )( void *data, const char *filename, int fileline );
@@ -180,6 +183,16 @@ typedef struct
 	size_t ( *AsyncStream_UrlDecode )( const char *src, char *dst, size_t size );
 	int ( *AsyncStream_PerformRequest )( const char *url, const char *method, const char *data, int timeout,
 		ui_async_stream_read_cb_t read_cb, ui_async_stream_done_cb_t done_cb, void *privatep );
+
+	// IRC
+	size_t (*Irc_HistorySize)(void);
+	size_t (*Irc_HistoryTotalSize)(void);
+
+	// history is in reverse order (newest line first)
+	const struct irc_chat_history_node_s *(*Irc_GetHistoryHeadNode)(void);
+	const struct irc_chat_history_node_s *(*Irc_GetNextHistoryNode)(const struct irc_chat_history_node_s *n);
+	const struct irc_chat_history_node_s *(*Irc_GetPrevHistoryNode)(const struct irc_chat_history_node_s *n);
+	const char *(*Irc_GetHistoryNodeLine)(const struct irc_chat_history_node_s *n);
 } ui_import_t;
 
 typedef struct
@@ -189,8 +202,8 @@ typedef struct
 	void ( *Init )( int vidWidth, int vidHeight, int protocol, int sharedSeed, qboolean demoPlaying, const char *demoName );
 	void ( *Shutdown )( void );
 
-	void ( *Refresh )( unsigned int time, int clientState, int serverState, qboolean demoPaused, unsigned int demoTime, qboolean backGround );
-	void ( *DrawConnectScreen )( const char *serverName, const char *rejectmessage, int downloadType, const char *downloadfilename,
+	void ( *Refresh )( unsigned int time, int clientState, int serverState, qboolean demoPaused, unsigned int demoTime, qboolean backGround, qboolean showCursor );
+	void ( *UpdateConnectScreen )( const char *serverName, const char *rejectmessage, int downloadType, const char *downloadfilename,
 						  float downloadPercent, int downloadSpeed, int connectCount, qboolean backGround );
 
 	void ( *Keydown )( int key );

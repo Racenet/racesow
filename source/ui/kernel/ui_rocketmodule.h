@@ -35,6 +35,9 @@ namespace WSWUI
 		void textInput( qwchar c );
 		void keyEvent( int key, bool pressed );
 
+		void update( void );
+		void render( void );
+
 		Rocket::Core::ElementDocument *loadDocument( const char *filename, bool show=false );
 		void closeDocument( Rocket::Core::ElementDocument *doc );
 
@@ -43,9 +46,9 @@ namespace WSWUI
 		void registerElementDefaults( Rocket::Core::Element *);
 
 		// GET/SET Submodules
-		UI_SystemInterface *getSystemInterface() { return system; }
-		UI_FileInterface *getFileInterface() { return files; }
-		UI_RenderInterface *getRenderInterface() { return render; }
+		UI_SystemInterface *getSystemInterface() { return systemInterface; }
+		UI_FileInterface *getFileInterface() { return fsInterface; }
+		UI_RenderInterface *getRenderInterface() { return renderInterface; }
 
 		// you shouldnt need to use this
 		Rocket::Core::Context *getContext() { return context; }
@@ -61,9 +64,9 @@ namespace WSWUI
 
 		bool rocketInitialized;
 
-		UI_SystemInterface *system;
-		UI_FileInterface *files;
-		UI_RenderInterface *render;
+		UI_SystemInterface *systemInterface;
+		UI_FileInterface *fsInterface;
+		UI_RenderInterface *renderInterface;
 
 		Rocket::Core::Context *context;
 

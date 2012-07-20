@@ -74,6 +74,10 @@ namespace ASUI
 	void PrebindDemoInfo( ASInterface *as );
 	void BindDemoInfo( ASInterface *as );
 
+	// as_bind_downloadinfo.cpp
+	void PrebindDownloadInfo( ASInterface *as );
+	void BindDownloadInfo( ASInterface *as );
+
 	// as_bind_datasouce.cpp
 	void PrebindDataSource( ASInterface *as );
 	void BindDataSource( ASInterface *as );
@@ -98,6 +102,16 @@ namespace ASUI
 	void PrebindMatchMaker( ASInterface *as );
 	void BindMatchMaker( ASInterface *as );
 	void BindMatchMakerGlobal( ASInterface *as );
+
+	// as_bind_irc.cpp
+	void PrebindIrc( ASInterface *as );
+	void BindIrc( ASInterface *as );
+	void BindIrcGlobal( ASInterface *as );
+
+	// asui_loadingscreen.cpp
+	void PrebindLoadingscreen( ASInterface *as );
+	void BindLoadingscreen( ASInterface *as );
+	void BindLoadingscreenGlobal( ASInterface *as );
 }
 
 // type definitions required by ASBind
@@ -112,5 +126,7 @@ ASBIND_TYPE( Rocket::Core::Event, Event );
 ASBIND_TYPE( Rocket::Core::EventListener, EventListener );
 
 ASBIND_TYPE( WSWUI::DemoInfo, DemoInfo );
+
+ASBIND_TYPE( WSWUI::DownloadInfo, DownloadInfo );
 
 #endif

@@ -220,7 +220,10 @@ using namespace Rocket::Core;
 			if( event == "keydown" )
 			{
 				key = GetKeyboardKey( event );
-				this->SetKeybind( key );
+				if( key != K_ESCAPE ) {
+					this->SetKeybind( key );
+					event.StopPropagation();
+				}
 				return;
 			}
 			else if( event == "textinput" )
@@ -241,17 +244,20 @@ using namespace Rocket::Core;
 
 				key = GetMouseKey( event );
 				this->SetKeybind( key );
+				event.StopPropagation();
 				return;
 			}
 			else if( event == "mousescroll" )
 			{
 				key = GetWheelKey( event );
 				this->SetKeybind( key );
+				event.StopPropagation();
 				return;
 			}
 			else if( event == "mousemove" || event == "mouseout" )
 			{
 				GetRocketModule()->mouseMove( mouse_x, mouse_y );
+				event.StopPropagation();
 				return;
 			}
 		}

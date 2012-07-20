@@ -21,3 +21,9 @@
 #include <stdexcept>
 
 #include "kernel/ui_syscalls.h"
+
+#if defined (__APPLE__)
+// LLVM GCC 4.2 complains min and max undefined in q_math.c
+using std::max;
+using std::min;
+#endif

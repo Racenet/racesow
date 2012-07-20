@@ -83,7 +83,7 @@ public:
 		vec3_t mins, maxs;
 		trap::R_ModelFrameBounds( entity.model, entity.frame, mins, maxs );
 
-		entity.origin[0] = 0.5 * ( maxs[2] - mins[2] ) * ( 1.0 / 0.200 );
+		entity.origin[0] = 0.5 * ( maxs[2] - mins[2] ) * ( 1.0 / 0.220 );
 		entity.origin[1] = 0.5 * ( mins[1] + maxs[1] );
 		entity.origin[2] = -0.5 * ( mins[2] + maxs[2] );
 

@@ -998,10 +998,10 @@ template<typename T> struct GetArg<const T*> {
 	const T * operator()( asIScriptContext *ctx ) { return ctx->GetReturnAddress(); }
 };
 template<typename T> struct GetArg<T&> {
-	T & operator()( asIScriptContext *ctx ) { return *ctx->GetReturnAddress(); }
+	T & operator()( asIScriptContext *ctx ) { return *static_cast<T*>(ctx->GetReturnAddress()); }
 };
 template<typename T> struct GetArg<const T&> {
-	const T & operator()( asIScriptContext *ctx ) { return *ctx->GetReturnAddress(); }
+	const T & operator()( asIScriptContext *ctx ) { return *static_cast<T*>(ctx->GetReturnAddress()); }
 };
 
 //====================

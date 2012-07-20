@@ -12,6 +12,7 @@
 #include "kernel/ui_documentloader.h"
 #include "kernel/ui_streamcache.h"
 #include "kernel/ui_demoinfo.h"
+#include "kernel/ui_downloadinfo.h"
 #include "as/asmodule.h"
 
 namespace WSWUI
@@ -39,6 +40,7 @@ class ModsDataSource;
 class ModelsDataSource;
 class CrosshairDataSource;
 class TVChannelsDataSource;
+class IrcChannelsDataSource;
 
 class LevelShotFormatter;
 class DatetimeFormatter;
@@ -53,7 +55,7 @@ class UI_Main
 public:
 	virtual ~UI_Main();
 
-	void refreshScreen( unsigned int time, int clientState, int serverState, bool demoPaused, unsigned int demoTime, bool backGround );
+	void refreshScreen( unsigned int time, int clientState, int serverState, bool demoPaused, unsigned int demoTime, bool backGround, bool showCursor );
 	void drawConnectScreen( const char *serverName, const char *rejectmessage, int downloadType, const char *downloadfilename,
 						  float downloadPercent, int downloadSpeed, int connectCount, bool backGround );
 
@@ -105,7 +107,10 @@ public:
 	void setRefreshState( unsigned int time, int clientState, int serverState, bool demoPaused, unsigned int demoTime, bool backGround );
 	const RefreshState &getRefreshState( void ) { return refreshState; }
 
-	int getGameProtocol( void );
+	std::string getServerName( void ) const { return serverName; }
+	std::string getRejectMessage( void ) const { return rejectMessage; }
+	const DownloadInfo *getDownloadInfo ( void ) const { return &downloadInfo; }
+	int getGameProtocol( void ) const;
 
 	bool debugOn( void );
 
@@ -154,6 +159,7 @@ private:
 	ModelsDataSource *playerModels;
 	CrosshairDataSource *crosshairs;
 	TVChannelsDataSource *tvchannels;
+	IrcChannelsDataSource *ircchannels;
 
 	NavigationStack *navigator;
 
@@ -168,14 +174,21 @@ private:
 	bool menuVisible;
 	bool forceMenu;
 	bool showNavigationStack;
+
 	DemoInfo demoInfo;
+	DownloadInfo downloadInfo;
+
+	std::string serverName;
+	std::string rejectMessage;
 
 	int sharedSeed;
 
 	vec4_t colorWhite;
 
+	static const std::string ui_index;
+	static const std::string ui_connectscreen;
+
 	cvar_t *ui_basepath;
-	cvar_t *ui_index;
 	cvar_t *ui_cursor;
 	cvar_t *ui_developer;
 };

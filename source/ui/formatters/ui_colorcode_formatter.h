@@ -99,16 +99,14 @@ public:
 	}
 
 	// FIXME: this is a mess...
-	// FIXME: add &quot; support to libRocket (wtf?)
 
 	// html encode single string inplace
 	void htmlEncode( Rocket::Core::String &s )
 	{
-		s.Replace( "&", "&amp;" );
-		s.Replace( "<", "&lt;" );
-		s.Replace( ">", "&gt;" );
-		// rocket knows no &quot;
-		//s.Replace( "\"", "&quot;" );
+		s = s.Replace( "&", "&amp;" );
+		s = s.Replace( "<", "&lt;" );
+		s = s.Replace( ">", "&gt;" );
+		s = s.Replace( "\"", "&quot;" );
 	}
 };
 

@@ -62,7 +62,7 @@ void Document::Show( bool show, bool modal )
 	if( rocketDocument ) {
 		if( show ) {
 			rocketDocument->Focus();
-			rocketDocument->Show( modal ? Rocket::Core::ElementDocument::MODAL : Rocket::Core::ElementDocument::NONE );
+			rocketDocument->Show( modal ? Rocket::Core::ElementDocument::MODAL : Rocket::Core::ElementDocument::FOCUS );
 		}
 		else {
 			rocketDocument->Hide();
@@ -392,11 +392,14 @@ void NavigationStack::attachMainEventListenerToTop( Document *prev )
 	// dynamically instanced, then we cant call GetMainListener every time?
 	// only for UI documents!
 	Rocket::Core::EventListener *listener = UI_GetMainListener();
-	if( prev && prev->getRocketDocument() )
+	if( prev && prev->getRocketDocument() ) {
 		top->getRocketDocument()->RemoveEventListener( "keydown", listener );
+		top->getRocketDocument()->RemoveEventListener( "change", listener );
+	}
 
 	if( top && top->getRocketDocument() ) {
 		top->getRocketDocument()->AddEventListener( "keydown", listener );
+		top->getRocketDocument()->AddEventListener( "change", listener );
 	}
 }
 
@@ -413,7 +416,7 @@ void NavigationStack::markTopAsViewed(void)
 		modal = top;
 
 		documentStack.pop_back();
-		top = documentStack.back();
+		top = documentStack.size() > 0 ? documentStack.back() : NULL;
 	}
 
 	if( top ) {
