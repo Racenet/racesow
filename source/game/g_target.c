@@ -864,6 +864,7 @@ static void target_give_use( edict_t *self, edict_t *other, edict_t *activator )
 	// play unique pickup sounds
 	for( i = 0; i < numsounds; i++ ) {
 		Touch_ItemSound( activator, sounds[i] );
+	}
 }
 
 void SP_target_give( edict_t *self )

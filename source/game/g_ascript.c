@@ -1166,7 +1166,7 @@ static const asMethod_t gametypedescr_Methods[] =
 	{ ASLIB_FUNCTION_DECL(void, set_version, ( String & )), objectGametypeDescriptor_setVersion, asCALL_CDECL_OBJLAST },
 	{ ASLIB_FUNCTION_DECL(String @, get_author, () const), objectGametypeDescriptor_getAuthor, asCALL_CDECL_OBJLAST },
 	{ ASLIB_FUNCTION_DECL(void, set_author, ( String & )), objectGametypeDescriptor_setAuthor, asCALL_CDECL_OBJLAST },
-	{ ASLIB_FUNCTION_DECL(String @, get_manifest, () const), objectGametypeDescriptor_getManifest, asCALL_CDECL_OBJLAST }
+	{ ASLIB_FUNCTION_DECL(String @, get_manifest, () const), objectGametypeDescriptor_getManifest, asCALL_CDECL_OBJLAST },
 	{ ASLIB_FUNCTION_DECL(void, setTeamSpawnsystem, ( int team, int spawnsystem, int wave_time, int wave_maxcount, bool deadcam )), objectGametypeDescriptor_SetTeamSpawnsystem, asCALL_CDECL_OBJLAST },
 	{ ASLIB_FUNCTION_DECL(bool, get_isInstagib, () const), objectGametypeDescriptor_isInstagib, asCALL_CDECL_OBJLAST },
 	{ ASLIB_FUNCTION_DECL(bool, get_hasFallDamage, () const), objectGametypeDescriptor_hasFallDamage, asCALL_CDECL_OBJLAST },
