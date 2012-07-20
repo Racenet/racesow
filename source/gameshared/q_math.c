@@ -1112,7 +1112,7 @@ void Quat_Quat3( const vec3_t in, quat_t out )
 	out[0] = in[0];
 	out[1] = in[1];
 	out[2] = in[2];
-	out[3] = -sqrt(max(1 - in[0]*in[0] - in[1]*in[1] - in[2]*in[2], 0));
+	out[3] = -sqrt(max(1 - in[0]*in[0] - in[1]*in[1] - in[2]*in[2], 0.0f));
 }
 
 qboolean Quat_Compare( const quat_t q1, const quat_t q2 )

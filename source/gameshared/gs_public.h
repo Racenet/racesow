@@ -74,7 +74,7 @@ extern vec3_t item_box_maxs;
 #define MAX_FOV				140
 #define DEFAULT_FOV			100
 
-#define	MIN_ZOOMFOV			1
+#define	MIN_ZOOMFOV			3
 #define MAX_ZOOMFOV			60
 #define DEFAULT_ZOOMFOV		30
 
@@ -408,7 +408,7 @@ typedef enum
 {
 	AMMO_NONE = 0,
 	AMMO_GUNBLADE = WEAP_TOTAL,
-	AMMO_STRONG_BULLETS,
+	AMMO_BULLETS,
 	AMMO_SHELLS,
 	AMMO_GRENADES,
 	AMMO_ROCKETS,
@@ -418,7 +418,7 @@ typedef enum
 	AMMO_INSTAS,
 
 	AMMO_WEAK_GUNBLADE, //this is the blade
-	AMMO_BULLETS,
+	AMMO_WEAK_BULLETS,
 	AMMO_WEAK_SHELLS,
 	AMMO_WEAK_GRENADES,
 	AMMO_WEAK_ROCKETS,
@@ -1105,6 +1105,7 @@ typedef struct firedef_s
 	int spread;
 
 	// ammo amounts
+	int weapon_pickup;
 	int ammo_pickup;
 	int ammo_max;
 

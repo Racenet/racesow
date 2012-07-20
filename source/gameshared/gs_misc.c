@@ -235,17 +235,17 @@ void GS_Obituary( void *victim, int gender, void *attacker, int mod, char *messa
 		strcpy( message2, "'s gunblade" );
 		break;
 	case MOD_GUNBLADE_S:
-		strcpy( message, "was killed by" );
-		strcpy( message2, "'s almighty gunblade" ); // TODO
+		strcpy( message, "could not hide from" );
+		strcpy( message2, "'s almighty gunblade" );
 		break;
 	case MOD_MACHINEGUN_W:
 	case MOD_MACHINEGUN_S:
-		strcpy( message, "was killed by" );
+		strcpy( message, "was penetrated by" );
 		strcpy( message2, "'s machinegun" );
 		break;
 	case MOD_RIOTGUN_W:
 	case MOD_RIOTGUN_S:
-		strcpy( message, "was killed by" );
+		strcpy( message, "was shred by" );
 		strcpy( message2, "'s riotgun" );
 		break;
 	case MOD_GRENADE_W:
