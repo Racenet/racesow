@@ -886,10 +886,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\client\cl_auth.c"
-				>
-			</File>
-			<File
 				RelativePath="..\client\cl_cin.c"
 				>
 			</File>
