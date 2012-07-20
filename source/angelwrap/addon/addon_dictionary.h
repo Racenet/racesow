@@ -5,7 +5,11 @@
 // string type must be registered with the engine before registering the
 // dictionary type
 
+#if defined ( __APPLE__ )
+#include <angelscript/angelscript.h>
+#else
 #include <angelscript.h>
+#endif
 #include <string>
 
 #ifdef _MSC_VER

@@ -79,6 +79,82 @@
 		61FDA02814DCA9BA00161C82 /* as_typeinfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FDC14DCA9BA00161C82 /* as_typeinfo.h */; };
 		61FDA02914DCA9BA00161C82 /* as_variablescope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FDD14DCA9BA00161C82 /* as_variablescope.cpp */; };
 		61FDA02A14DCA9BA00161C82 /* as_variablescope.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FDE14DCA9BA00161C82 /* as_variablescope.h */; };
+		9D251DC6159F3348001CE46F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9D251DC4159F3348001CE46F /* InfoPlist.strings */; };
+		9D251DCF159F33D1001CE46F /* as_array.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9F9314DCA9BA00161C82 /* as_array.h */; };
+		9D251DD0159F33D1001CE46F /* as_atomic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9F9414DCA9BA00161C82 /* as_atomic.cpp */; };
+		9D251DD1159F33D1001CE46F /* as_atomic.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9F9514DCA9BA00161C82 /* as_atomic.h */; };
+		9D251DD2159F33D1001CE46F /* as_builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9F9614DCA9BA00161C82 /* as_builder.cpp */; };
+		9D251DD3159F33D1001CE46F /* as_builder.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9F9714DCA9BA00161C82 /* as_builder.h */; };
+		9D251DD4159F33D1001CE46F /* as_bytecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9F9814DCA9BA00161C82 /* as_bytecode.cpp */; };
+		9D251DD5159F33D1001CE46F /* as_bytecode.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9F9914DCA9BA00161C82 /* as_bytecode.h */; };
+		9D251DD6159F33D1001CE46F /* as_callfunc_arm_xcode.S in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9F9C14DCA9BA00161C82 /* as_callfunc_arm_xcode.S */; };
+		9D251DD7159F33D1001CE46F /* as_callfunc_arm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9F9D14DCA9BA00161C82 /* as_callfunc_arm.cpp */; };
+		9D251DD8159F33D1001CE46F /* as_callfunc_mips.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9F9E14DCA9BA00161C82 /* as_callfunc_mips.cpp */; };
+		9D251DD9159F33D1001CE46F /* as_callfunc_ppc_64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9F9F14DCA9BA00161C82 /* as_callfunc_ppc_64.cpp */; };
+		9D251DDA159F33D1001CE46F /* as_callfunc_ppc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FA014DCA9BA00161C82 /* as_callfunc_ppc.cpp */; };
+		9D251DDB159F33D1001CE46F /* as_callfunc_sh4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FA114DCA9BA00161C82 /* as_callfunc_sh4.cpp */; };
+		9D251DDC159F33D1001CE46F /* as_callfunc_x64_gcc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FA214DCA9BA00161C82 /* as_callfunc_x64_gcc.cpp */; };
+		9D251DDD159F33D1001CE46F /* as_callfunc_x86.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FA514DCA9BA00161C82 /* as_callfunc_x86.cpp */; };
+		9D251DDE159F33D1001CE46F /* as_callfunc_xenon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FA614DCA9BA00161C82 /* as_callfunc_xenon.cpp */; };
+		9D251DDF159F33D1001CE46F /* as_callfunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FA714DCA9BA00161C82 /* as_callfunc.cpp */; };
+		9D251DE0159F33D1001CE46F /* as_callfunc.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FA814DCA9BA00161C82 /* as_callfunc.h */; };
+		9D251DE1159F33D1001CE46F /* as_compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FA914DCA9BA00161C82 /* as_compiler.cpp */; };
+		9D251DE2159F33D1001CE46F /* as_compiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FAA14DCA9BA00161C82 /* as_compiler.h */; };
+		9D251DE3159F33D1001CE46F /* as_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FAB14DCA9BA00161C82 /* as_config.h */; };
+		9D251DE4159F33D1001CE46F /* as_configgroup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FAC14DCA9BA00161C82 /* as_configgroup.cpp */; };
+		9D251DE5159F33D1001CE46F /* as_configgroup.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FAD14DCA9BA00161C82 /* as_configgroup.h */; };
+		9D251DE6159F33D1001CE46F /* as_context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FAE14DCA9BA00161C82 /* as_context.cpp */; };
+		9D251DE7159F33D1001CE46F /* as_context.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FAF14DCA9BA00161C82 /* as_context.h */; };
+		9D251DE8159F33D1001CE46F /* as_criticalsection.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FB014DCA9BA00161C82 /* as_criticalsection.h */; };
+		9D251DE9159F33D1001CE46F /* as_datatype.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FB114DCA9BA00161C82 /* as_datatype.cpp */; };
+		9D251DEA159F33D1001CE46F /* as_datatype.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FB214DCA9BA00161C82 /* as_datatype.h */; };
+		9D251DEB159F33D1001CE46F /* as_debug.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FB314DCA9BA00161C82 /* as_debug.h */; };
+		9D251DEC159F33D1001CE46F /* as_gc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FB414DCA9BA00161C82 /* as_gc.cpp */; };
+		9D251DED159F33D1001CE46F /* as_gc.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FB514DCA9BA00161C82 /* as_gc.h */; };
+		9D251DEE159F33D1001CE46F /* as_generic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FB614DCA9BA00161C82 /* as_generic.cpp */; };
+		9D251DEF159F33D1001CE46F /* as_generic.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FB714DCA9BA00161C82 /* as_generic.h */; };
+		9D251DF0159F33D1001CE46F /* as_globalproperty.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FB814DCA9BA00161C82 /* as_globalproperty.cpp */; };
+		9D251DF1159F33D1001CE46F /* as_map.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FB914DCA9BA00161C82 /* as_map.h */; };
+		9D251DF2159F33D1001CE46F /* as_memory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FBA14DCA9BA00161C82 /* as_memory.cpp */; };
+		9D251DF3159F33D1001CE46F /* as_memory.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FBB14DCA9BA00161C82 /* as_memory.h */; };
+		9D251DF4159F33D1001CE46F /* as_module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FBC14DCA9BA00161C82 /* as_module.cpp */; };
+		9D251DF5159F33D1001CE46F /* as_module.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FBD14DCA9BA00161C82 /* as_module.h */; };
+		9D251DF6159F33D1001CE46F /* as_objecttype.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FBE14DCA9BA00161C82 /* as_objecttype.cpp */; };
+		9D251DF7159F33D1001CE46F /* as_objecttype.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FBF14DCA9BA00161C82 /* as_objecttype.h */; };
+		9D251DF8159F33D1001CE46F /* as_outputbuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FC014DCA9BA00161C82 /* as_outputbuffer.cpp */; };
+		9D251DF9159F33D1001CE46F /* as_outputbuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FC114DCA9BA00161C82 /* as_outputbuffer.h */; };
+		9D251DFA159F33D1001CE46F /* as_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FC214DCA9BA00161C82 /* as_parser.cpp */; };
+		9D251DFB159F33D1001CE46F /* as_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FC314DCA9BA00161C82 /* as_parser.h */; };
+		9D251DFC159F33D1001CE46F /* as_property.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FC414DCA9BA00161C82 /* as_property.h */; };
+		9D251DFD159F33D1001CE46F /* as_restore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FC514DCA9BA00161C82 /* as_restore.cpp */; };
+		9D251DFE159F33D1001CE46F /* as_restore.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FC614DCA9BA00161C82 /* as_restore.h */; };
+		9D251DFF159F33D1001CE46F /* as_scriptcode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FC714DCA9BA00161C82 /* as_scriptcode.cpp */; };
+		9D251E00159F33D1001CE46F /* as_scriptcode.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FC814DCA9BA00161C82 /* as_scriptcode.h */; };
+		9D251E01159F33D1001CE46F /* as_scriptengine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FC914DCA9BA00161C82 /* as_scriptengine.cpp */; };
+		9D251E02159F33D1001CE46F /* as_scriptengine.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FCA14DCA9BA00161C82 /* as_scriptengine.h */; };
+		9D251E03159F33D1001CE46F /* as_scriptfunction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FCB14DCA9BA00161C82 /* as_scriptfunction.cpp */; };
+		9D251E04159F33D1001CE46F /* as_scriptfunction.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FCC14DCA9BA00161C82 /* as_scriptfunction.h */; };
+		9D251E05159F33D1001CE46F /* as_scriptnode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FCD14DCA9BA00161C82 /* as_scriptnode.cpp */; };
+		9D251E06159F33D1001CE46F /* as_scriptnode.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FCE14DCA9BA00161C82 /* as_scriptnode.h */; };
+		9D251E07159F33D1001CE46F /* as_scriptobject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FCF14DCA9BA00161C82 /* as_scriptobject.cpp */; };
+		9D251E08159F33D1001CE46F /* as_scriptobject.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FD014DCA9BA00161C82 /* as_scriptobject.h */; };
+		9D251E09159F33D1001CE46F /* as_string_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FD114DCA9BA00161C82 /* as_string_util.cpp */; };
+		9D251E0A159F33D1001CE46F /* as_string_util.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FD214DCA9BA00161C82 /* as_string_util.h */; };
+		9D251E0B159F33D1001CE46F /* as_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FD314DCA9BA00161C82 /* as_string.cpp */; };
+		9D251E0C159F33D1001CE46F /* as_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FD414DCA9BA00161C82 /* as_string.h */; };
+		9D251E0D159F33D1001CE46F /* as_texts.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FD514DCA9BA00161C82 /* as_texts.h */; };
+		9D251E0E159F33D1001CE46F /* as_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FD614DCA9BA00161C82 /* as_thread.cpp */; };
+		9D251E0F159F33D1001CE46F /* as_thread.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FD714DCA9BA00161C82 /* as_thread.h */; };
+		9D251E10159F33D1001CE46F /* as_tokendef.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FD814DCA9BA00161C82 /* as_tokendef.h */; };
+		9D251E11159F33D1001CE46F /* as_tokenizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FD914DCA9BA00161C82 /* as_tokenizer.cpp */; };
+		9D251E12159F33D1001CE46F /* as_tokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FDA14DCA9BA00161C82 /* as_tokenizer.h */; };
+		9D251E13159F33D1001CE46F /* as_typeinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FDB14DCA9BA00161C82 /* as_typeinfo.cpp */; };
+		9D251E14159F33D1001CE46F /* as_typeinfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FDC14DCA9BA00161C82 /* as_typeinfo.h */; };
+		9D251E15159F33D1001CE46F /* as_variablescope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61FD9FDD14DCA9BA00161C82 /* as_variablescope.cpp */; };
+		9D251E16159F33D1001CE46F /* as_variablescope.h in Headers */ = {isa = PBXBuildFile; fileRef = 61FD9FDE14DCA9BA00161C82 /* as_variablescope.h */; };
+		9D251E17159F33D1001CE46F /* angelscript_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* angelscript_Prefix.pch */; };
+		9D251E19159F341F001CE46F /* angelscript.h in Headers */ = {isa = PBXBuildFile; fileRef = 9D251E18159F341F001CE46F /* angelscript.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9D251E1A159F3472001CE46F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 		AA747D9F0F9514B9006C5449 /* angelscript_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* angelscript_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
@@ -156,12 +232,24 @@
 		61FD9FDC14DCA9BA00161C82 /* as_typeinfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = as_typeinfo.h; path = ../../source/as_typeinfo.h; sourceTree = SOURCE_ROOT; };
 		61FD9FDD14DCA9BA00161C82 /* as_variablescope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = as_variablescope.cpp; path = ../../source/as_variablescope.cpp; sourceTree = SOURCE_ROOT; };
 		61FD9FDE14DCA9BA00161C82 /* as_variablescope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = as_variablescope.h; path = ../../source/as_variablescope.h; sourceTree = SOURCE_ROOT; };
+		9D251DBA159F3348001CE46F /* angelscript.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = angelscript.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D251DC3159F3348001CE46F /* angelscript_framework-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "angelscript_framework-Info.plist"; sourceTree = "<group>"; };
+		9D251DC5159F3348001CE46F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9D251E18159F341F001CE46F /* angelscript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = angelscript.h; path = ../../include/angelscript.h; sourceTree = SOURCE_ROOT; };
 		AA747D9E0F9514B9006C5449 /* angelscript_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = angelscript_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D2AAC07E0554694100DB518D /* libangelscript.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libangelscript.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		9D251DB6159F3348001CE46F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D251E1A159F3472001CE46F /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2AAC07C0554694100DB518D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -177,6 +265,7 @@
 			isa = PBXGroup;
 			children = (
 				D2AAC07E0554694100DB518D /* libangelscript.a */,
+				9D251DBA159F3348001CE46F /* angelscript.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -186,6 +275,7 @@
 			children = (
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
+				9D251DC1159F3348001CE46F /* angelscript_framework */,
 				0867D69AFE84028FC02AAC07 /* Frameworks */,
 				034768DFFF38A50411DB9C8B /* Products */,
 			);
@@ -287,9 +377,71 @@
 			name = "Other Sources";
 			sourceTree = "<group>";
 		};
+		9D251DC1159F3348001CE46F /* angelscript_framework */ = {
+			isa = PBXGroup;
+			children = (
+				9D251E18159F341F001CE46F /* angelscript.h */,
+				9D251DC2159F3348001CE46F /* Supporting Files */,
+			);
+			path = angelscript_framework;
+			sourceTree = "<group>";
+		};
+		9D251DC2159F3348001CE46F /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				9D251DC3159F3348001CE46F /* angelscript_framework-Info.plist */,
+				9D251DC4159F3348001CE46F /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		9D251DB7159F3348001CE46F /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D251E19159F341F001CE46F /* angelscript.h in Headers */,
+				9D251DCF159F33D1001CE46F /* as_array.h in Headers */,
+				9D251DD1159F33D1001CE46F /* as_atomic.h in Headers */,
+				9D251DD3159F33D1001CE46F /* as_builder.h in Headers */,
+				9D251DD5159F33D1001CE46F /* as_bytecode.h in Headers */,
+				9D251DE0159F33D1001CE46F /* as_callfunc.h in Headers */,
+				9D251DE2159F33D1001CE46F /* as_compiler.h in Headers */,
+				9D251DE3159F33D1001CE46F /* as_config.h in Headers */,
+				9D251DE5159F33D1001CE46F /* as_configgroup.h in Headers */,
+				9D251DE7159F33D1001CE46F /* as_context.h in Headers */,
+				9D251DE8159F33D1001CE46F /* as_criticalsection.h in Headers */,
+				9D251DEA159F33D1001CE46F /* as_datatype.h in Headers */,
+				9D251DEB159F33D1001CE46F /* as_debug.h in Headers */,
+				9D251DED159F33D1001CE46F /* as_gc.h in Headers */,
+				9D251DEF159F33D1001CE46F /* as_generic.h in Headers */,
+				9D251DF1159F33D1001CE46F /* as_map.h in Headers */,
+				9D251DF3159F33D1001CE46F /* as_memory.h in Headers */,
+				9D251DF5159F33D1001CE46F /* as_module.h in Headers */,
+				9D251DF7159F33D1001CE46F /* as_objecttype.h in Headers */,
+				9D251DF9159F33D1001CE46F /* as_outputbuffer.h in Headers */,
+				9D251DFB159F33D1001CE46F /* as_parser.h in Headers */,
+				9D251DFC159F33D1001CE46F /* as_property.h in Headers */,
+				9D251DFE159F33D1001CE46F /* as_restore.h in Headers */,
+				9D251E00159F33D1001CE46F /* as_scriptcode.h in Headers */,
+				9D251E02159F33D1001CE46F /* as_scriptengine.h in Headers */,
+				9D251E04159F33D1001CE46F /* as_scriptfunction.h in Headers */,
+				9D251E06159F33D1001CE46F /* as_scriptnode.h in Headers */,
+				9D251E08159F33D1001CE46F /* as_scriptobject.h in Headers */,
+				9D251E0A159F33D1001CE46F /* as_string_util.h in Headers */,
+				9D251E0C159F33D1001CE46F /* as_string.h in Headers */,
+				9D251E0D159F33D1001CE46F /* as_texts.h in Headers */,
+				9D251E0F159F33D1001CE46F /* as_thread.h in Headers */,
+				9D251E10159F33D1001CE46F /* as_tokendef.h in Headers */,
+				9D251E12159F33D1001CE46F /* as_tokenizer.h in Headers */,
+				9D251E14159F33D1001CE46F /* as_typeinfo.h in Headers */,
+				9D251E16159F33D1001CE46F /* as_variablescope.h in Headers */,
+				9D251E17159F33D1001CE46F /* angelscript_Prefix.pch in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2AAC07A0554694100DB518D /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -336,6 +488,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		9D251DB9159F3348001CE46F /* angelscript_framework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D251DCD159F3348001CE46F /* Build configuration list for PBXNativeTarget "angelscript_framework" */;
+			buildPhases = (
+				9D251DB5159F3348001CE46F /* Sources */,
+				9D251DB6159F3348001CE46F /* Frameworks */,
+				9D251DB7159F3348001CE46F /* Headers */,
+				9D251DB8159F3348001CE46F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = angelscript_framework;
+			productName = angelscript_framework;
+			productReference = 9D251DBA159F3348001CE46F /* angelscript.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		D2AAC07D0554694100DB518D /* angelscript */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "angelscript" */;
@@ -358,6 +528,9 @@
 /* Begin PBXProject section */
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+			};
 			buildConfigurationList = 1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "angelscript" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -367,6 +540,7 @@
 				Japanese,
 				French,
 				German,
+				en,
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* angelscript */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
@@ -374,11 +548,67 @@
 			projectRoot = "";
 			targets = (
 				D2AAC07D0554694100DB518D /* angelscript */,
+				9D251DB9159F3348001CE46F /* angelscript_framework */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		9D251DB8159F3348001CE46F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D251DC6159F3348001CE46F /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		9D251DB5159F3348001CE46F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D251DD0159F33D1001CE46F /* as_atomic.cpp in Sources */,
+				9D251DD2159F33D1001CE46F /* as_builder.cpp in Sources */,
+				9D251DD4159F33D1001CE46F /* as_bytecode.cpp in Sources */,
+				9D251DD6159F33D1001CE46F /* as_callfunc_arm_xcode.S in Sources */,
+				9D251DD7159F33D1001CE46F /* as_callfunc_arm.cpp in Sources */,
+				9D251DD8159F33D1001CE46F /* as_callfunc_mips.cpp in Sources */,
+				9D251DD9159F33D1001CE46F /* as_callfunc_ppc_64.cpp in Sources */,
+				9D251DDA159F33D1001CE46F /* as_callfunc_ppc.cpp in Sources */,
+				9D251DDB159F33D1001CE46F /* as_callfunc_sh4.cpp in Sources */,
+				9D251DDC159F33D1001CE46F /* as_callfunc_x64_gcc.cpp in Sources */,
+				9D251DDD159F33D1001CE46F /* as_callfunc_x86.cpp in Sources */,
+				9D251DDE159F33D1001CE46F /* as_callfunc_xenon.cpp in Sources */,
+				9D251DDF159F33D1001CE46F /* as_callfunc.cpp in Sources */,
+				9D251DE1159F33D1001CE46F /* as_compiler.cpp in Sources */,
+				9D251DE4159F33D1001CE46F /* as_configgroup.cpp in Sources */,
+				9D251DE6159F33D1001CE46F /* as_context.cpp in Sources */,
+				9D251DE9159F33D1001CE46F /* as_datatype.cpp in Sources */,
+				9D251DEC159F33D1001CE46F /* as_gc.cpp in Sources */,
+				9D251DEE159F33D1001CE46F /* as_generic.cpp in Sources */,
+				9D251DF0159F33D1001CE46F /* as_globalproperty.cpp in Sources */,
+				9D251DF2159F33D1001CE46F /* as_memory.cpp in Sources */,
+				9D251DF4159F33D1001CE46F /* as_module.cpp in Sources */,
+				9D251DF6159F33D1001CE46F /* as_objecttype.cpp in Sources */,
+				9D251DF8159F33D1001CE46F /* as_outputbuffer.cpp in Sources */,
+				9D251DFA159F33D1001CE46F /* as_parser.cpp in Sources */,
+				9D251DFD159F33D1001CE46F /* as_restore.cpp in Sources */,
+				9D251DFF159F33D1001CE46F /* as_scriptcode.cpp in Sources */,
+				9D251E01159F33D1001CE46F /* as_scriptengine.cpp in Sources */,
+				9D251E03159F33D1001CE46F /* as_scriptfunction.cpp in Sources */,
+				9D251E05159F33D1001CE46F /* as_scriptnode.cpp in Sources */,
+				9D251E07159F33D1001CE46F /* as_scriptobject.cpp in Sources */,
+				9D251E09159F33D1001CE46F /* as_string_util.cpp in Sources */,
+				9D251E0B159F33D1001CE46F /* as_string.cpp in Sources */,
+				9D251E0E159F33D1001CE46F /* as_thread.cpp in Sources */,
+				9D251E11159F33D1001CE46F /* as_tokenizer.cpp in Sources */,
+				9D251E13159F33D1001CE46F /* as_typeinfo.cpp in Sources */,
+				9D251E15159F33D1001CE46F /* as_variablescope.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2AAC07B0554694100DB518D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -425,6 +655,17 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		9D251DC4159F3348001CE46F /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9D251DC5159F3348001CE46F /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		1DEB921F08733DC00010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -434,7 +675,6 @@
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/angelscript.dst;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -467,7 +707,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				OTHER_LDFLAGS = "-ObjC";
-				PREBINDING = NO;
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -480,8 +719,75 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				OTHER_LDFLAGS = "-ObjC";
-				PREBINDING = NO;
 				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
+		9D251DCB159F3348001CE46F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = angelscript_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				INFOPLIST_FILE = "angelscript_framework/angelscript_framework-Info.plist";
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = angelscript;
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Debug;
+		};
+		9D251DCC159F3348001CE46F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = angelscript_Prefix.pch;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				INFOPLIST_FILE = "angelscript_framework/angelscript_framework-Info.plist";
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = angelscript;
+				SDKROOT = macosx;
+				WRAPPER_EXTENSION = framework;
 			};
 			name = Release;
 		};
@@ -502,6 +808,15 @@
 			buildConfigurations = (
 				1DEB922308733DC00010E9CD /* Debug */,
 				1DEB922408733DC00010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9D251DCD159F3348001CE46F /* Build configuration list for PBXNativeTarget "angelscript_framework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D251DCB159F3348001CE46F /* Debug */,
+				9D251DCC159F3348001CE46F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
