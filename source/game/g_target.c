@@ -802,10 +802,15 @@ static void target_give_use( edict_t *self, edict_t *other, edict_t *activator )
 {
 	edict_t *give;
 	gsitem_t *item;
-	int i, numsounds = 0;
+	int i, numsounds;
+	float attenuation;
+	const char *pickup_sound;
+	int prev_pickup = -1;
+	gclient_t *aclient = activator && activator->r.client ? activator->r.client : NULL;
 	gsitem_t *sounds[MAX_GIVE_SOUNDS];
 
 	give = NULL;
+	numsounds = 0;
 
 	// more than one item can be given
 	while( ( give = G_Find( give, FOFS( targetname ), self->target ) ) != NULL )
@@ -818,42 +823,46 @@ static void target_give_use( edict_t *self, edict_t *other, edict_t *activator )
 		if( !( item->flags & ITFLAG_PICKABLE ) )
 			continue;
 
+		if( aclient ) {
+			prev_pickup = aclient->ps.stats[STAT_PICKUP_ITEM];
+		}
+		pickup_sound = item->pickup_sound;
+
+		// disable pickup sound, we'll play it later
+		attenuation = give->attenuation;
+		give->attenuation = 0;
+
 		Touch_Item( give, activator, NULL, 0 );
 
+		if( give->r.inuse ) {
+			give->nextThink = 0;
+			give->think = 0;
+			give->attenuation = attenuation;
+			GClip_UnlinkEntity( give );
+		}
+
 		// a hacky way to check for successful item pickup
-		if( activator->r.client && activator->r.client->ps.stats[STAT_PICKUP_ITEM] == give->item->tag )
+		if( aclient && aclient->ps.stats[STAT_PICKUP_ITEM] == item->tag && prev_pickup != item->tag )
 		{
-			// play only unique pickup sounds, to prevent spam
-			if( item->pickup_sound )
-			{
-				for( i = 0; i < numsounds; i++ )
-				{
-					if( !Q_stricmp( sounds[i]->pickup_sound, item->pickup_sound ) )
+			prev_pickup = item->tag;
+
+			// see if we don't know this pickup sound yet
+			if( pickup_sound ) {
+				for( i = 0; i < numsounds; i++ ) {
+					if( !Q_stricmp( sounds[i]->pickup_sound, pickup_sound ) )
 						break;
 				}
 
-				if( i == numsounds )
-				{
-					if( i < MAX_GIVE_SOUNDS )
-					{
-						give->attenuation = 0;
-						sounds[numsounds++] = item;
-					}
-				}
-				else
-				{
-					give->attenuation = 0;
+				if( i == numsounds && numsounds < MAX_GIVE_SOUNDS ) {
+					sounds[numsounds++] = item;
 				}
 			}
 		}
 
-		give->nextThink = 0;
-		give->think = 0;
-		give->attenuation = 1;
-		GClip_UnlinkEntity( give );
 	}
 
-	for( i = 0; i < numsounds; i++ )
+	// play unique pickup sounds
+	for( i = 0; i < numsounds; i++ ) {
 		Touch_ItemSound( activator, sounds[i] );
 }
 

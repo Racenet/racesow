@@ -192,9 +192,10 @@ typedef struct
 	unsigned int spawnedTimeStamp; // time when map was restarted
 
 	char level_name[MAX_CONFIGSTRING_CHARS];    // the descriptive name (Outer Base, etc)
-	char mapname[MAX_CONFIGSTRING_CHARS];           // the server name (q3dm0, etc)
-	char nextmap[MAX_CONFIGSTRING_CHARS];           // go here when match is finished
+	char mapname[MAX_CONFIGSTRING_CHARS];       // the server name (q3dm0, etc)
+	char nextmap[MAX_CONFIGSTRING_CHARS];       // go here when match is finished
 	char forcemap[MAX_CONFIGSTRING_CHARS];      // go here
+	char autorecord_name[128];
 
 	// backup entities string
 	char *mapString;

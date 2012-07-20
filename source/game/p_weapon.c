@@ -89,24 +89,30 @@ void Use_Weapon( edict_t *ent, gsitem_t *item )
 qboolean Pickup_Weapon( edict_t *ent, edict_t *other )
 {
 	int ammo_tag;
+	gsitem_t *item;
+	gs_weapon_definition_t *weapondef;
 
-	other->r.client->ps.inventory[ent->item->tag]++;
+	item = ent->item;
+	weapondef = GS_GetWeaponDef( item->tag );
+
+	other->r.client->ps.inventory[item->tag]++;
 
 	// never allow the player to carry more than 2 copies of the same weapon
-	if( other->r.client->ps.inventory[ent->item->tag] > ent->item->inventory_max )
-		other->r.client->ps.inventory[ent->item->tag] = ent->item->inventory_max;
+	if( other->r.client->ps.inventory[item->tag] > item->inventory_max )
+		other->r.client->ps.inventory[item->tag] = item->inventory_max;
 
 	if( !( ent->spawnflags & DROPPED_ITEM ) )
 	{
 		// give them some ammo with it
-		ammo_tag = ent->item->weakammo_tag;
+		ammo_tag = item->ammo_tag;
 
 		if( ammo_tag )
-			Add_Ammo( other->r.client, GS_FindItemByTag( ammo_tag ), GS_FindItemByTag( ammo_tag )->quantity, qtrue );
+			Add_Ammo( other->r.client, GS_FindItemByTag( ammo_tag ), weapondef->firedef.weapon_pickup, qtrue );
 	}
 	else
-	{    //it's a dropped weapon
-		ammo_tag = ent->item->weakammo_tag;
+	{    
+		// it's a dropped weapon
+		ammo_tag = item->ammo_tag;
 		if( ent->count && ammo_tag )
 			Add_Ammo( other->r.client, GS_FindItemByTag( ammo_tag ), ent->count, qtrue );
 	}
@@ -130,19 +136,19 @@ void Drop_Weapon( edict_t *ent, gsitem_t *item )
 	}
 
 	// find out the amount of ammo to drop
-	if( ent->r.client->ps.inventory[item->tag] > 1 && ent->r.client->ps.inventory[item->weakammo_tag] > 5 )
+	if( ent->r.client->ps.inventory[item->tag] > 1 && ent->r.client->ps.inventory[item->ammo_tag] > 5 )
 	{
-		ammodrop = ent->r.client->ps.inventory[item->weakammo_tag] / 2;
+		ammodrop = ent->r.client->ps.inventory[item->ammo_tag] / 2;
 	}
 	else // drop all
 	{
-		ammodrop = ent->r.client->ps.inventory[item->weakammo_tag];
+		ammodrop = ent->r.client->ps.inventory[item->ammo_tag];
 	}
 
 	drop = Drop_Item( ent, item );
 	if( drop )
 	{
-		ent->r.client->ps.inventory[item->weakammo_tag] -= ammodrop;
+		ent->r.client->ps.inventory[item->ammo_tag] -= ammodrop;
 		drop->count = ammodrop;
 		drop->spawnflags |= DROPPED_PLAYER_ITEM;
 		ent->r.client->ps.inventory[item->tag]--;

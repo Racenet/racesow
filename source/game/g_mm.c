@@ -658,8 +658,11 @@ static void g_mm_writeHeader( stat_query_t *query, qboolean teamGame )
 	sq_api->SetNumber( matchsection, "instagib", ( GS_Instagib() ? 1 : 0 ));
 	sq_api->SetNumber( matchsection, "teamgame", teamGame );
 	sq_api->SetNumber( matchsection, "racegame", ( GS_RaceGametype() ? 1 : 0 ));
-	sq_api->SetString( matchsection, "gamedir", trap_Cvar_String( "fs_gamedir" ) );
+	sq_api->SetString( matchsection, "gamedir", trap_Cvar_String( "fs_game" ) );
 	sq_api->SetNumber( matchsection, "timestamp", trap_Milliseconds() );
+	if( g_autorecord->integer ) {
+		sq_api->SetString( matchsection, "demo_filename", va( "%s.wd%i", level.autorecord_name, game.protocol ) );
+	}
 }
 
 static stat_query_t *G_Match_GenerateReport( void )

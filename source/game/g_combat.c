@@ -31,9 +31,9 @@ int G_ModToAmmo( int mod )
 	else if( mod == MOD_GUNBLADE_S )
 		return AMMO_GUNBLADE;
 	else if( mod == MOD_MACHINEGUN_W )
-		return AMMO_BULLETS;
+		return AMMO_WEAK_BULLETS;
 	else if( mod == MOD_MACHINEGUN_S )
-		return AMMO_STRONG_BULLETS;
+		return AMMO_BULLETS;
 	else if( mod == MOD_RIOTGUN_W )
 		return AMMO_WEAK_SHELLS;
 	else if( mod == MOD_RIOTGUN_S )
