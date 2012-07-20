@@ -442,7 +442,7 @@ static int Mod_AddUpdatePatchGroup( const rdface_t *in )
 		lodMaxs[i] = in->maxs[i];
 	}
 
-	subdivLevel = bound( 1, r_subdivisions->value,  16 );
+	subdivLevel = bound( SUBDIVISIONS_MIN, r_subdivisions->value, SUBDIVISIONS_MAX );
 	inFirstVert = LittleLong( in->firstvert );
 
 	// find the degree of subdivision in the u and v directions
@@ -1345,7 +1345,8 @@ static void Mod_LoadLightArray( void )
 static void Mod_LoadLightArray_RBSP( const lump_t *l )
 {
 	int i, count;
-	short *in;
+	unsigned index;
+	unsigned short *in;
 	mgridlight_t **out;
 
 	in = ( void * )( mod_base + l->fileofs );
@@ -1358,7 +1359,13 @@ static void Mod_LoadLightArray_RBSP( const lump_t *l )
 	loadbmodel->numlightarrayelems = count;
 
 	for( i = 0; i < count; i++, in++, out++ )
-		*out = loadbmodel->lightgrid + LittleShort( *in );
+	{
+		index = LittleShort( *in );
+		if( index >= (unsigned)loadbmodel->numlightgridelems ) {
+			Com_Error( ERR_DROP, "Mod_LoadLightArray_RBSP: funny grid index(%i):%i in %s", i, index, loadmodel->name );
+		}
+		*out = loadbmodel->lightgrid + index;
+	}
 }
 
 /*

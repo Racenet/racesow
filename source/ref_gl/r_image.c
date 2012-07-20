@@ -21,10 +21,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #if defined ( __MACOSX__ )
 #include "libjpeg/jpeglib.h"
+#include "png/png.h"
 #else
 #include "jpeglib.h"
-#endif
 #include "png.h"
+#endif
+
 
 #include <setjmp.h>
 

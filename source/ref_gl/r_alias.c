@@ -748,7 +748,6 @@ qboolean R_CullAliasModel( entity_t *e )
 	unsigned int modhandle;
 	model_t	*mod;
 	shader_t *shader;
-	meshbuffer_t *mb;
 	maliasmodel_t *aliasmodel;
 	maliasmesh_t *mesh;
 
@@ -792,15 +791,8 @@ qboolean R_CullAliasModel( entity_t *e )
 			}
 		}
 
-		if( shader && ( shader->sort <= SHADER_SORT_ALPHATEST ) )
-		{
-			mb = R_AddMeshToList( MB_MODEL, NULL, R_PlanarShadowShader(), -( i+1 ), NULL, 0, 0 );
-			if( mb ) {
-				mb->LODModelHandle = modhandle;
-				if( shader->features & MF_HARDWARE && mesh->vbo != NULL ) {
-					mb->vboIndex = mesh->vbo->index;
-				}
-			}
+		if( shader && ( shader->sort <= SHADER_SORT_ALPHATEST ) ) {
+			R_AddModelMeshToList( modhandle, mesh->vbo, NULL, R_PlanarShadowShader(), i, 0, mesh->numverts, mesh->numtris * 3 );
 		}
 	}
 

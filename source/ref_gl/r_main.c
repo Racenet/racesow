@@ -301,6 +301,17 @@ void GL_SetState( int state )
 			qglDisable( GL_POLYGON_OFFSET_FILL );
 	}
 
+	if( diff & GLSTATE_STENCIL_TEST )
+	{
+		if( glState.stencilEnabled )
+		{
+			if( state & GLSTATE_STENCIL_TEST )
+				qglEnable( GL_STENCIL_TEST );
+			else
+				qglDisable( GL_STENCIL_TEST );
+		}
+	}
+
 	glState.flags = state;
 }
 
@@ -2287,19 +2298,6 @@ void R_BeginFrame( float cameraSeparation, qboolean forceClear )
 {
 	glState.cameraSeparation = cameraSeparation;
 
-	if( gl_finish->integer && gl_delayfinish->integer )
-	{
-		// flush any remaining 2D bits
-//		R_Set2DMode( qfalse );
-
-		// apply software gamma
-//		R_ApplySoftwareGamma ();
-
-		qglFinish();
-
-		GLimp_EndFrame();
-	}
-
 	GLimp_BeginFrame();
 
 	if( mapConfig.forceClear )
@@ -2565,7 +2563,7 @@ void R_RenderScene( const refdef_t *fd )
 	VectorCopy( fd->vieworg, ri.pvsOrigin );
 	VectorCopy( fd->vieworg, ri.lodOrigin );
 
-	if( gl_finish->integer && !gl_delayfinish->integer && !( fd->rdflags & RDF_NOWORLDMODEL ) )
+	if( gl_finish->integer && !( fd->rdflags & RDF_NOWORLDMODEL ) )
 		qglFinish();
 
 	// update the fd pointer to reflect possible fov adjustments
@@ -2611,12 +2609,6 @@ void R_EndFrame( void )
 
 	// free temporary image buffers
 	R_FreeImageBuffers ();
-
-	if( gl_finish->integer && gl_delayfinish->integer )
-	{
-		qglFlush();
-		return;
-	}
 
 	GLimp_EndFrame();
 }

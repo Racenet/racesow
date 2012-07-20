@@ -132,7 +132,6 @@ cvar_t *gl_extensions;
 cvar_t *gl_drawbuffer;
 cvar_t *gl_driver;
 cvar_t *gl_finish;
-cvar_t *gl_delayfinish;
 cvar_t *gl_cull;
 
 static qboolean	r_verbose;
@@ -731,7 +730,7 @@ void R_Register( void )
 
 	r_dynamiclight = Cvar_Get( "r_dynamiclight", "1", CVAR_ARCHIVE );
 	r_coronascale = Cvar_Get( "r_coronascale", "0.2", 0 );
-	r_subdivisions = Cvar_Get( "r_subdivisions", "5", CVAR_ARCHIVE|CVAR_LATCH_VIDEO );
+	r_subdivisions = Cvar_Get( "r_subdivisions", STR_TOSTR( SUBDIVISIONS_DEFAULT ), CVAR_ARCHIVE|CVAR_LATCH_VIDEO );
 	r_faceplanecull = Cvar_Get( "r_faceplanecull", "1", CVAR_ARCHIVE );
 	r_shownormals = Cvar_Get( "r_shownormals", "0", CVAR_CHEAT );
 	r_draworder = Cvar_Get( "r_draworder", "0", CVAR_CHEAT );
@@ -775,7 +774,7 @@ void R_Register( void )
 	r_shadows_alpha = Cvar_Get( "r_shadows_alpha", "0.4", CVAR_ARCHIVE );
 	r_shadows_nudge = Cvar_Get( "r_shadows_nudge", "1", CVAR_ARCHIVE );
 	r_shadows_projection_distance = Cvar_Get( "r_shadows_projection_distance", "128", CVAR_CHEAT );
-	r_shadows_maxtexsize = Cvar_Get( "r_shadows_maxtexsize", "256", CVAR_ARCHIVE );
+	r_shadows_maxtexsize = Cvar_Get( "r_shadows_maxtexsize", "128", CVAR_ARCHIVE );
 	r_shadows_pcf = Cvar_Get( "r_shadows_pcf", "4", CVAR_ARCHIVE );
 	r_shadows_self_shadow = Cvar_Get( "r_shadows_self_shadow", "0", CVAR_ARCHIVE );
 	r_shadows_dither = Cvar_Get( "r_shadows_dither", "1", CVAR_ARCHIVE );
@@ -820,7 +819,6 @@ void R_Register( void )
 	r_maxglslbones = Cvar_Get( "r_maxglslbones", STR_TOSTR( MAX_GLSL_BONES ), CVAR_LATCH_VIDEO );
 
 	gl_finish = Cvar_Get( "gl_finish", "0", CVAR_ARCHIVE );
-	gl_delayfinish = Cvar_Get( "gl_delayfinish", "1", CVAR_ARCHIVE );
 	gl_cull = Cvar_Get( "gl_cull", "1", 0 );
 	gl_driver = Cvar_Get( "gl_driver", GL_DRIVERNAME, CVAR_ARCHIVE|CVAR_LATCH_VIDEO );
 	gl_drawbuffer = Cvar_Get( "gl_drawbuffer", "GL_BACK", 0 );

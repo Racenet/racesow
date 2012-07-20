@@ -1530,7 +1530,6 @@ qboolean R_CullSkeletalModel( entity_t *e )
 	shader_t *shader;
 	mskmesh_t *mesh;
 	mskmodel_t *skmodel;
-	meshbuffer_t *mb;
 
 	mod = R_SkeletalModelLOD( e );
 	if( !( skmodel = ( ( mskmodel_t * )mod->extradata ) ) || !skmodel->nummeshes )
@@ -1565,15 +1564,8 @@ qboolean R_CullSkeletalModel( entity_t *e )
 		else if( mesh->skin.shader )
 			shader = mesh->skin.shader;
 
-		if( shader && ( shader->sort <= SHADER_SORT_ALPHATEST ) )
-		{
-			mb = R_AddMeshToList( MB_MODEL, NULL, R_PlanarShadowShader(), -( i+1 ), NULL, 0, 0 );
-			if( mb ) {
-				mb->LODModelHandle = modhandle;
-				if( shader->features & MF_HARDWARE && mesh->vbo != NULL ) {
-					mb->vboIndex = mesh->vbo->index;
-				}
-			}
+		if( shader && ( shader->sort <= SHADER_SORT_ALPHATEST ) ) {
+			R_AddModelMeshToList( modhandle, mesh->vbo, NULL, R_PlanarShadowShader(), i, 0, mesh->numverts, mesh->numtris * 3 );
 		}
 	}
 

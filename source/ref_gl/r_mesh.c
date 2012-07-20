@@ -140,9 +140,7 @@ void R_AddModelMeshToList( unsigned int modhandle, const mesh_vbo_t *vbo, const 
 	if( mb ) {
 		mb->LODModelHandle = modhandle;
 		mb->shaderkey |= MB_DISTANCE2NUM( distance );
-		if( shader->features & MF_HARDWARE && vbo != NULL ) {
-			mb->vboIndex = vbo->index;
-		}
+		mb->vboIndex = MB_VBOINDEX( vbo, shader, fog );
 		mb->numVerts = numVerts;
 		mb->numElems = numElems;
 	}

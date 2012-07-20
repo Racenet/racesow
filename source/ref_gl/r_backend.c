@@ -2253,7 +2253,7 @@ static void R_RenderAccumulatedPasses( void )
 	if( pass->flags & SHADERPASS_STENCILSHADOW )
 	{
 		r_back.numAccumPasses = 0;
-		R_PlanarShadowPass( r_back.currentShaderState | ( pass->flags & r_back.currentShaderPassMask ) );
+		R_PlanarShadowPass( r_back.currentShaderState | ( pass->flags & r_back.currentShaderPassMask ) | GLSTATE_STENCIL_TEST );
 		return;
 	}
 

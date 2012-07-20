@@ -157,7 +157,8 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 	shader_t *shader;
 	meshbuffer_t *mb;
 	mesh_vbo_t *vbo;
-	msurface_t *vbo_surf;
+	msurface_t *vboSurf;
+	int vboIndex;
 
 	if( R_CullSurface( surf, clipflags ) )
 		return NULL;
@@ -185,12 +186,13 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 
 	c_brush_polys++;
 
-	vbo = surf->vbo;
-	if( vbo )
+	vboIndex = MB_VBOINDEX( surf->vbo, shader, NULL );
+	if( vboIndex )
 	{
-		vbo_surf = ( msurface_t * )vbo->owner;
+		vbo = surf->vbo;
+		vboSurf = ( msurface_t * )vbo->owner;
 
-		mb = ri.meshlist->surfmbuffers[vbo_surf - r_worldbrushmodel->surfaces];
+		mb = ri.meshlist->surfmbuffers[vboSurf - r_worldbrushmodel->surfaces];
 		if( mb )
 		{
 			// keep track of the actual vbo chunk we need to render
@@ -216,7 +218,8 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 	}
 	else
 	{
-		vbo_surf = NULL;
+		vbo = NULL;
+		vboSurf = NULL;
 	}
 
 	mb = R_AddMeshToList( surf->facetype == FACETYPE_FLARE ? MB_SPRITE : MB_MODEL,
@@ -229,13 +232,13 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 
 		if( vbo )
 		{
-			mb->vboIndex = vbo->index;
+			mb->vboIndex = vboIndex;
 			mb->firstVBOVert = surf->firstVBOVert;
 			mb->firstVBOElem = surf->firstVBOElem;
 			mb->numVerts = surf->numVerts;
 			mb->numElems = surf->numElems;
 
-			ri.meshlist->surfmbuffers[vbo_surf - r_worldbrushmodel->surfaces] = mb;
+			ri.meshlist->surfmbuffers[vboSurf - r_worldbrushmodel->surfaces] = mb;
 			c_world_vbos++;
 		}
 
