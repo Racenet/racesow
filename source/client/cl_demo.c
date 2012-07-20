@@ -265,14 +265,14 @@ void CL_DemoCompleted( void )
 
 	cls.demo.playing = qfalse;
 	cls.demo.basetime = cls.demo.duration = cls.demo.time = 0;
+	Mem_ZoneFree( cls.demo.filename );
+	cls.demo.filename = NULL;
 	Mem_ZoneFree( cls.demo.name );
 	cls.demo.name = NULL;
 
 	Com_SetDemoPlaying( qfalse );
 
 	CL_PauseDemo( qfalse );
-
-	Cvar_ForceSet( "demoname", "" ); // used by democams to load up the .cam file
 
 	Com_Printf( "Demo completed\n" );
 
@@ -403,12 +403,10 @@ static void CL_StartDemo( const char *demoname )
 
 	cls.demo.play_ignore_next_frametime = qfalse;
 	cls.demo.play_jump = qfalse;
+	cls.demo.filename = ZoneCopyString( name );
 	cls.demo.name = ZoneCopyString( servername );
 
 	CL_PauseDemo( qfalse );
-
-	// hack the read-only cvars in (for UI)
-	Cvar_ForceSet( "demoname", name ); // used by democams to load up the .cam file
 
 	// set up for timedemo settings
 	memset( &cl.timedemo, 0, sizeof( cl.timedemo ) );
@@ -438,7 +436,6 @@ void CL_PlayDemo_f( void )
 static void CL_PauseDemo( qboolean paused )
 {
 	cls.demo.paused = paused;
-	Cvar_ForceSet( "demopaused", va("%i", cls.demo.paused ) );
 }
 
 /*

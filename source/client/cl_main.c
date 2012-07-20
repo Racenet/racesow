@@ -1565,23 +1565,23 @@ void CL_RequestNextDownload( void )
 			restart_msg = "Files downloaded. Restarting media...";
 		}
 
+		R_BeginRegistration();
+		CL_SoundModule_BeginRegistration();
+
 		if( restart ) {
 			Com_Printf( "%s\n", restart_msg );
 
 			// the following registration calls will ensure 
 			// no media assets survives the restart
 
-			R_BeginRegistration();
-			CL_SoundModule_BeginRegistration();
-
 			R_EndRegistration();
 			CL_SoundModule_EndRegistration();
 
 			R_BeginRegistration();
 			CL_SoundModule_BeginRegistration();
-
-			CL_RestartMedia( qfalse );
 		}
+
+		CL_RestartMedia( qfalse );
 
 		cls.download.successCount = 0;
 
@@ -1967,8 +1967,8 @@ static void CL_InitLocal( void )
 	Cvar_Get( "skin", DEFAULT_PLAYERSKIN, CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "handicap", "0", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get( "fov", STR_TOSTR( DEFAULT_FOV ), CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get( "zoomfov", STR_TOSTR( DEFAULT_ZOOMFOV ), CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get( "fov", "100", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get( "zoomfov", "30", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get( "zoomsens", "0", CVAR_ARCHIVE );
 
 	Cvar_Get( "cl_download_name", "", CVAR_READONLY );

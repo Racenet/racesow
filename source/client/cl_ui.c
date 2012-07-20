@@ -258,8 +258,16 @@ void CL_UIModule_Init( void )
 	import.MM_GetLoginState = CL_MM_GetLoginState;
 	import.MM_GetLastErrorMessage = CL_MM_GetLastErrorMessage;
 	import.MM_GetProfileURL = CL_MM_GetProfileURL;
+	import.MM_GetBaseWebURL = CL_MM_GetBaseWebURL;
 
 	import.asGetAngelExport = Com_asGetAngelExport;
+
+	import.Irc_HistorySize = Irc_HistorySize;
+	import.Irc_HistoryTotalSize = Irc_HistoryTotalSize;
+	import.Irc_GetHistoryHeadNode = Irc_GetHistoryHeadNode;
+	import.Irc_GetNextHistoryNode = Irc_GetNextHistoryNode;
+	import.Irc_GetPrevHistoryNode = Irc_GetPrevHistoryNode;
+	import.Irc_GetHistoryNodeLine = Irc_GetHistoryNodeLine;
 
 	uie = (ui_export_t *)Com_LoadGameLibrary( "ui", "GetUIAPI", &module_handle, &import, builtinAPIfunc, cls.sv_pure, NULL );
 	if( !uie )
@@ -298,27 +306,27 @@ void CL_UIModule_Shutdown( void )
 /*
 * CL_UIModule_Refresh
 */
-void CL_UIModule_Refresh( qboolean backGround )
+void CL_UIModule_Refresh( qboolean backGround, qboolean showCursor )
 {
 	if( uie )
-		uie->Refresh( cls.realtime, Com_ClientState(), Com_ServerState(), cls.demo.paused, Q_rint(cls.demo.time/1000.0f), backGround );
+		uie->Refresh( cls.realtime, Com_ClientState(), Com_ServerState(), cls.demo.paused, Q_rint(cls.demo.time/1000.0f), backGround, showCursor );
 }
 
 /*
-* CL_UIModule_DrawConnectScreen
+* CL_UIModule_UpdateConnectScreen
 */
-void CL_UIModule_DrawConnectScreen( qboolean backGround )
+void CL_UIModule_UpdateConnectScreen( qboolean backGround )
 {
 	if( uie )
 	{
 		int downloadType, downloadSpeed;
 
 		if( cls.download.web )
-			downloadType = 2;
+			downloadType = DOWNLOADTYPE_WEB;
 		else if( cls.download.filenum )
-			downloadType = 1;
+			downloadType = DOWNLOADTYPE_SERVER;
 		else
-			downloadType = 0;
+			downloadType = DOWNLOADTYPE_NONE;
 
 		if( downloadType )
 		{
@@ -372,9 +380,11 @@ void CL_UIModule_DrawConnectScreen( qboolean backGround )
 			downloadSpeed = 0;
 		}
 
-		uie->DrawConnectScreen( cls.servername, cls.rejected ? cls.rejectmessage : NULL,
+		uie->UpdateConnectScreen( cls.servername, cls.rejected ? cls.rejectmessage : NULL,
 			downloadType, cls.download.name, cls.download.percent * 100.0f, downloadSpeed,
 			cls.connect_count, backGround );
+
+		CL_UIModule_Refresh( backGround, qfalse );	
 	}
 }
 

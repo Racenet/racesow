@@ -1126,7 +1126,7 @@ void SCR_UpdateScreen( void )
 		{ 
 			// loading plaque over black screen
 			scr_draw_loading = 0;
-			CL_UIModule_DrawConnectScreen( qtrue );
+			CL_UIModule_UpdateConnectScreen( qtrue );
 		}
 		// if a cinematic is supposed to be running, handle menus
 		// and console specially
@@ -1137,23 +1137,23 @@ void SCR_UpdateScreen( void )
 		}
 		else if( cls.state == CA_DISCONNECTED )
 		{
-			CL_UIModule_Refresh( qtrue );
+			CL_UIModule_Refresh( qtrue, qtrue );
 			SCR_DrawConsole();
 		}
 		else if( cls.state == CA_GETTING_TICKET || cls.state == CA_CONNECTING || cls.state == CA_CONNECTED || cls.state == CA_HANDSHAKE )
 		{
-			CL_UIModule_DrawConnectScreen( qtrue );
+			CL_UIModule_UpdateConnectScreen( qtrue );
 		}
 		else if( cls.state == CA_LOADING )
 		{
 			SCR_RenderView( separation[i] );
-			CL_UIModule_DrawConnectScreen( qfalse );
+			CL_UIModule_UpdateConnectScreen( qfalse );
 		}
 		else if( cls.state == CA_ACTIVE )
 		{
 			SCR_RenderView( separation[i] );
 
-			CL_UIModule_Refresh( qfalse );
+			CL_UIModule_Refresh( qfalse, qtrue );
 
 			if( scr_timegraph->integer )
 				SCR_DebugGraph( cls.frametime*300, 1, 1, 1 );
