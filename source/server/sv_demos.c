@@ -151,13 +151,10 @@ void SV_Demo_Start_f( void )
 
 	// real name
 	demofilename_size =
-		sizeof( char ) * ( strlen( SV_DEMO_DIR ) + 1 + strlen( Cmd_Argv( 1 ) ) + strlen( "_auto" ) + 4 + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
+		sizeof( char ) * ( strlen( SV_DEMO_DIR ) + 1 + strlen( Cmd_Args() ) + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
 	svs.demo.filename = Mem_ZoneMalloc( demofilename_size );
 
-	Q_snprintfz( svs.demo.filename, demofilename_size, "%s/%s", SV_DEMO_DIR, Cmd_Argv( 1 ) );
-
-	if( Cmd_Argc() == 3 && atoi( Cmd_Argv( 2 ) ) > 0 )
-		Q_strncatz( svs.demo.filename, va( "_auto%04i", atoi( Cmd_Argv( 2 ) ) ), demofilename_size );
+	Q_snprintfz( svs.demo.filename, demofilename_size, "%s/%s", SV_DEMO_DIR, Cmd_Args() );
 
 	COM_SanitizeFilePath( svs.demo.filename );
 
