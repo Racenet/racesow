@@ -1442,7 +1442,7 @@ void G_Sound( edict_t *owner, int channel, int soundindex, float attenuation )
 		return; // event entities can't be owner of sound entities
 
 	ent = _G_SpawnSound( channel, soundindex, attenuation );
-	if( ent->s.attenuation != ATTN_NONE )
+	if( attenuation != ATTN_NONE )
 	{
 		assert( owner );
 		ent->s.ownerNum = owner->s.number;
@@ -1454,6 +1454,10 @@ void G_Sound( edict_t *owner, int channel, int soundindex, float attenuation )
 			VectorAdd( owner->r.mins, owner->r.maxs, ent->s.origin );
 			VectorMA( owner->s.origin, 0.5f, ent->s.origin, ent->s.origin );
 		}
+	}
+	else
+	{
+		ent->r.svflags |= SVF_BROADCAST;
 	}
 
 	GClip_LinkEntity( ent );
@@ -1473,11 +1477,15 @@ void G_PositionedSound( vec3_t origin, int channel, int soundindex, float attenu
 		attenuation = ATTN_NONE;
 
 	ent = _G_SpawnSound( channel, soundindex, attenuation );
-	if( ent->s.attenuation != ATTN_NONE )
+	if( attenuation != ATTN_NONE )
 	{
 		assert( origin );
 		ent->s.channel |= CHAN_FIXED;
 		VectorCopy( origin, ent->s.origin );
+	}
+	else
+	{
+		ent->r.svflags |= SVF_BROADCAST;
 	}
 
 	GClip_LinkEntity( ent );

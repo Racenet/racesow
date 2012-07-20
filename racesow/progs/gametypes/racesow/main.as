@@ -134,17 +134,17 @@ String @GT_ScoreboardMessage( uint maxlen )
                 if( !other.client.connecting && other.client.state() >= CS_SPAWNED )
                     //add all other spectators
                 {
-                    spectatorList += other.client.playerNum() + " " + other.client.ping + " ";
+                    spectatorList += other.client.playerNum + " " + other.client.ping + " ";
                 }
                 else if( other.client.connecting ) //add connecting spectators
                 {
-                    spectatorList += other.client.playerNum() + " " + -1 + " ";
+                    spectatorList += other.client.playerNum + " " + -1 + " ";
                 }
                 if( other.client.chaseActive && other.client.chaseTarget != 0)
                     //add him to the challenger list of the player he's spectating
                 {
                     Racesow_Player @player = racesowGametype.players[other.client.chaseTarget-1];
-                    player.challengerList += other.client.playerNum() + " " + other.client.ping + " ";
+                    player.challengerList += other.client.playerNum + " " + other.client.ping + " ";
                 }
             }
         }
@@ -193,9 +193,9 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-            player.getAuth().setName(client.getUserInfoKey(rs_authField_Name.get_string()));
-            player.getAuth().setPass(client.getUserInfoKey(rs_authField_Pass.get_string()));
-            player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.get_string()));
+            player.getAuth().setName(client.getUserInfoKey(rs_authField_Name.string));
+            player.getAuth().setPass(client.getUserInfoKey(rs_authField_Pass.string));
+            player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.string));
 
             player.appear();
             RS_ircSendMessage( player.getName().removeColorTokens() + " entered the game" );
@@ -214,7 +214,7 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 
 
 				// auto-hop check
-				if ( rs_allowAutoHop.get_boolean() == false )
+				if ( rs_allowAutoHop.boolean == false )
 				{
 					// checking if the player is restoring his autojump (we can't cheatprotect a client variable from the server, can we?)
 					if ( client.getUserInfoKey("cg_noAutohop").toInt() == 0 )
@@ -279,7 +279,7 @@ void GT_ThinkRules()
 	// perform a C callback if there is one pending
 	racesowAdapter.thinkCallbackQueue();
 
-	if ( racesowGametype.timelimited || g_maprotation.get_boolean() )
+	if ( racesowGametype.timelimited || g_maprotation.boolean )
 	{
 
 		if ( match.timeLimitHit() )
@@ -297,7 +297,7 @@ void GT_ThinkRules()
 	if ( match.getState() >= MATCH_STATE_POSTMATCH )
 	{
 		// that piece of code needs to be always executed during postmatch when g_maprotation=0 or freestyle=1
-		if ( ( !racesowGametype.timelimited || !g_maprotation.get_boolean() ) && match.timeLimitHit() )
+		if ( ( !racesowGametype.timelimited || !g_maprotation.boolean ) && match.timeLimitHit() )
 		{
 			match.launchState( match.getState() + 1 );
 		}
@@ -367,8 +367,8 @@ void GT_ThinkRules()
         if ( player.printWelcomeMessage and levelTime - player.joinedTime > 1000 )
         {
             player.printWelcomeMessage = false;
-            player.sendMessage( rs_welcomeMessage.get_string() + "\n" );
-            player.sendMessage( rs_registrationInfo.get_string() + "\n" );
+            player.sendMessage( rs_welcomeMessage.string + "\n" );
+            player.sendMessage( rs_registrationInfo.string + "\n" );
         }
 
         // always clear all before setting
@@ -437,7 +437,7 @@ void GT_MatchStateStarted()
  */
 void GT_Shutdown()
 {
-    if( g_gravity.get_defaultString() != g_gravity.get_string() )
+    if( g_gravity.defaultString != g_gravity.string )
     {
         //some maps might have set a custom g_gravity which normaly won't get restored
         g_gravity.reset();
@@ -490,16 +490,16 @@ void GT_SpawnGametype()
         if( @ent == null )
             continue;
 
-        if( ent.getClassname() == "trigger_multiple" )
+        if( ent.classname == "trigger_multiple" )
         {
             cEntity @target = @ent.findTargetEntity( @ent );
-            if( @target != null && ( ( target.getClassname() == "target_startTimer" )
-                            || ( target.getClassname() == "target_starttimer" ) ) )
+            if( @target != null && ( ( target.classname == "target_startTimer" )
+                            || ( target.classname == "target_starttimer" ) ) )
             {
                 ent.wait = 0;
             }
         }
-        else if( ent.getClassname() == "target_give" )
+        else if( ent.classname == "target_give" )
         {
             cEntity @target = @ent.findTargetEntity( null );
             if( @target == null )
@@ -512,11 +512,11 @@ void GT_SpawnGametype()
         else if( ent.type == ET_ITEM )
         {
             cItem @Item = @ent.item;
-            if( @Item != null && ent.getClassname() == Item.getClassname() )
+            if( @Item != null && ent.classname == Item.classname )
             {
-                if( ( ent.solid != SOLID_NOT ) || ( ( @ent.findTargetingEntity( null ) != null ) && ( ent.findTargetingEntity( null ).getClassname() != "target_give" ) ) ) //ok, not connected to target_give
+                if( ( ent.solid != SOLID_NOT ) || ( ( @ent.findTargetingEntity( null ) != null ) && ( ent.findTargetingEntity( null ).classname != "target_give" ) ) ) //ok, not connected to target_give
                 {
-                    ent.setClassname( "AS_" + Item.getClassname() );
+                    ent.classname = "AS_" + Item.classname;
                     replacementItem( @ent );
                 }
             }
@@ -538,9 +538,9 @@ void GT_SpawnGametype()
  */
 void GT_InitGametype()
 {
-    gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.6.2" );
-    gametype.setAuthor( "warsow-race.net" );
+    gametype.title = "Racesow";
+    gametype.version = "0.6.2";
+    gametype.author = "warsow-race.net";
 
     // initalize weapondef config
     if( !G_FileExists( "configs/server/gametypes/racesow/racesow_weapondefs.cfg" ) )
@@ -565,7 +565,7 @@ void GT_InitGametype()
     G_CmdExecute( "exec configs/server/gametypes/racesow/racesow.cfg silent" );
 
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
-    if ( gametype.isInstagib() )
+    if ( gametype.isInstagib )
       gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
 
     gametype.respawnableItemsMask = gametype.spawnableItemsMask;
@@ -632,7 +632,7 @@ void GT_InitGametype()
 	g_self_knockback.forceSet("1.25"); // 1.18 in basewsw.6
 
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
-	oldTimelimit = g_timelimit.get_integer();
+	oldTimelimit = g_timelimit.integer;
 
     @racesowGametype = @getRacesowGametype();
 

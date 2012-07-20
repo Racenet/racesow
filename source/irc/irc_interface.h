@@ -7,7 +7,7 @@
 #include "../qcommon/cvar.h"
 #include "../qcommon/trie.h"
 
-#define IRC_API_VERSION 2
+#define IRC_API_VERSION 3
 
 // numeric commands as specified by RFC 1459 - Internet Relay Chat Protocol
 typedef enum irc_numeric_e {
@@ -181,6 +181,7 @@ typedef void (*irc_listener_f)(irc_command_t cmd, const char *prefix, const char
 struct mufont_s;
 struct shader_s;
 struct poly_s;
+struct irc_chat_history_node_s;
 
 typedef struct
 {
@@ -271,18 +272,21 @@ typedef struct irc_export_s {
 	qboolean	(*Disconnect)(void);
 	void		(*AddListener)(irc_command_t cmd, irc_listener_f listener);
 	void		(*RemoveListener)(irc_command_t cmd, irc_listener_f listener);
+
+	size_t		(*HistorySize)(void);
+	size_t		(*HistoryTotalSize)(void);
+
+	// history is in reverse order (newest line first)
+	const struct irc_chat_history_node_s *(*GetHistoryHeadNode)(void);
+	const struct irc_chat_history_node_s *(*GetNextHistoryNode)(const struct irc_chat_history_node_s *n);
+	const struct irc_chat_history_node_s *(*GetPrevHistoryNode)(const struct irc_chat_history_node_s *n);
+	const char *(*GetHistoryNodeLine)(const struct irc_chat_history_node_s *n);
+
 	const char	*ERROR_MSG;			// error string (set after error)
 } irc_export_t;
 
 // the one and only function this shared library exports
 typedef irc_export_t *(*GetIrcAPI_t)(const irc_import_t *imports);
 QF_DLL_EXPORT irc_export_t *GetIrcAPI(const irc_import_t *imports);
-
-// the functions in irc_export_t
-int Irc_If_API(void);
-qboolean Irc_If_Init(void);
-void Irc_If_Shutdown(void);
-qboolean Irc_If_Connect(void);
-qboolean Irc_If_Disconnect(void);
 
 #endif

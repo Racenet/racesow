@@ -73,7 +73,7 @@ class Racesow_Map
 	{
 		Cvar mapName( "mapname", "", 0 );
         this.id = 0;
-		this.name = mapName.get_string();
+		this.name = mapName.string;
 		this.inOvertime = false;
         this.overtimeFinished = false;
         this.firstAnnouncement = false;
@@ -133,7 +133,7 @@ class Racesow_Map
     void loadCallback(int id, int bestTime)
     {
         this.setId( id );
-        if ( rs_loadHighscores.get_boolean() )
+        if ( rs_loadHighscores.boolean )
         {
             this.worldBest = bestTime; // save it for AS
         }

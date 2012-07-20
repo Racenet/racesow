@@ -52,7 +52,7 @@ static cvar_t *logconsole_append;
 static cvar_t *logconsole_flush;
 static cvar_t *logconsole_timestamp;
 static cvar_t *com_showtrace;
-static cvar_t *com_introPlayed;
+static cvar_t *com_introPlayed2;
 
 int log_stats_file = 0;
 static int log_file = 0;
@@ -1249,7 +1249,7 @@ void Qcommon_Init( int argc, char **argv )
 	logconsole_timestamp =	Cvar_Get( "logconsole_timestamp", "0", CVAR_ARCHIVE );
 
 	com_showtrace =	    Cvar_Get( "com_showtrace", "0", 0 );
-	com_introPlayed =   Cvar_Get( "com_introPlayed", "1", CVAR_ARCHIVE );
+	com_introPlayed2 =   Cvar_Get( "com_introPlayed2", "0", CVAR_ARCHIVE );
 
 	Cvar_Get( "irc_server", "irc.quakenet.org", CVAR_ARCHIVE );
 	Cvar_Get( "irc_port", "6667", CVAR_ARCHIVE );
@@ -1285,9 +1285,9 @@ void Qcommon_Init( int argc, char **argv )
 		if( !dedicated->integer )
 		{
 			// only play the introduction sequence once
-			if( !com_introPlayed->integer )
+			if( !com_introPlayed2->integer )
 			{
-				Cvar_ForceSet( com_introPlayed->name, "1" );
+				Cvar_ForceSet( com_introPlayed2->name, "1" );
 				Cbuf_AddText( "cinematic intro.roq\n" );
 			}
 		}

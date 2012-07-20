@@ -105,6 +105,7 @@ vidmode_t vid_modes[] =
 	{ 856, 480, qtrue },
 	{ 1024,	576, qtrue },
 	{ 1024, 600, qtrue },
+	{ 1280, 720, qtrue },
 	{ 1200, 800, qtrue },
 	{ 1280, 800, qtrue },
 	{ 1360, 768, qtrue },
@@ -382,10 +383,12 @@ void VID_CheckChanges( void )
 
 		if( cgameActive ) {
 			CL_GameModule_Init();
+			Con_Close();
+			CL_UIModule_ForceMenuOff();
 			CL_SetKeyDest( key_game );
 		}
 		else {
-			Cbuf_ExecuteText( EXEC_NOW, "menu_force 1" );
+			Cbuf_ExecuteText( EXEC_NOW, "menu_force 1\n" );
 			CL_SetKeyDest( key_menu );
 		}
 

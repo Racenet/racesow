@@ -157,8 +157,8 @@ RESFLAGS_COMMON=-I. -Iwin32/include
 
 LIBDIR=win32/$(ARCH)/lib/mingw
 
-LDFLAGS_COMMON=-L$(LIBDIR) $(LDFLAGS) -lws2_32 -lwinmm -lzstat -Wl,-subsystem,windows
-LXXFLAGS_COMMON=-L$(LIBDIR) $(LDFLAGS) -lws2_32 -lwinmm -lzstat -Wl,-subsystem,windows
+LDFLAGS_COMMON=-L$(LIBDIR) $(LDFLAGS) -lwinmm -Wl,-subsystem,windows
+LXXFLAGS_COMMON=-L$(LIBDIR) $(LDFLAGS) -lwinmm -Wl,-subsystem,windows
 
 ifeq ($(CROSS_COMPILE),YES)
 LDFLAGS_COMMON+= -lgcc -static-libgcc
@@ -170,11 +170,11 @@ LDFLAGS_COMMON+= -s
 LXXFLAGS_COMMON+= -s
 endif
 
-LDFLAGS_CLIENT=-lcurlstat -lws2_32 -lwsock32 -ljpegstat -lpngstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid
-LDFLAGS_DED=-lcurlstat -lws2_32 -lwsock32
+LDFLAGS_CLIENT=-lcurlstat lwsock32 -ljpegstat -lpngstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid -lws2_32 -lzstat
+LDFLAGS_DED=-lcurlstat -lwsock32 -lws2_32 -lzstat
 LDFLAGS_MODULE=-shared
 LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lzstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
-LDFLAGS_TV_SERVER=-lcurlstat -lws2_32 -lwsock32
+LDFLAGS_TV_SERVER=-lcurlstat -lwsock32 -lws2_32 -lzstat
 
 # openal
 ifeq ($(BUILD_SND_OPENAL),YES)
@@ -193,6 +193,7 @@ CFLAGS_CIN=-I../libsrcs/libogg/include -I../libsrcs/libvorbis/include -I../libsr
 LDFLAGS_CIN=-lvorbisstat -loggstat -ltheorastat
 endif
 
+LDFLAGS_IRC=-lwsock32 -lws2_32
 LDFLAGS_ANGELWRAP=$(ANGELSCRIPT_LIB)
 
 CLIENT_EXE=warsow_$(ARCH).exe
@@ -223,12 +224,12 @@ LXXFLAGS_COMMON=$(LDFLAGS) -lstdc++ -lsupc++
 ifeq ($(OS),FreeBSD)
 LDFLAGS_COMMON+= -L/usr/local/lib -lm -pthread
 else
-LDFLAGS_COMMON+= -L/usr/local/lib -ldl -lm -Wl -O1 -Wl,--as-needed
+LDFLAGS_COMMON+= -L/usr/local/lib -ldl -lm -O1 -Wl,--as-needed
 endif
 
 ifneq ($(DEBUG_BUILD),YES)
 LDFLAGS_COMMON+= -s
-+LXXFLAGS_COMMON+= -s
+LXXFLAGS_COMMON+= -s
 endif
 
 ifeq ($(ARCH),x86_64)
@@ -264,6 +265,7 @@ CFLAGS_CIN=$(shell $(OPENAL_CONFIG) --cflags)
 LDFLAGS_CIN=-lvorbis -ltheora -ltheoradec
 endif
 
+LDFLAGS_IRC=
 LDFLAGS_ANGELWRAP=$(ANGELSCRIPT_LIB) -lpthread
 
 CLIENT_EXE=warsow.$(ARCH)
@@ -297,6 +299,7 @@ LDFLAGS_COMMON=-arch ppc -arch i386 -framework AppKit -mmacosx-version-min=10.4 
 LXXFLAGS_COMMON=$(LDFLAGS_COMMON) -lstdc++ -lsupc++
 LDFLAGS_DED=-lz -lcurl
 LDFLAGS_QF=-framework SDL -framework Ogg -framework Vorbis
+LDFLAGS_IRC=
 LDFLAGS_OPENAL=-framework OpenAL -framework Ogg -framework Vorbis
 LDFLAGS_ANGELWRAP=$(ANGELSCRIPT_LIB) -lpthread
 LDFLAGS_CIN=
@@ -772,7 +775,7 @@ $(BINDIR)/racesow/ui_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_UI_ROCKET)
 
 $(BINDIR)/libs/irc_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_IRC)
 	@echo "  > Linking $@" && \
-	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE)
+	$(LD) -o $@ $^ $(LDFLAGS_COMMON) $(LDFLAGS_MODULE) $(LDFLAGS_IRC)
 
 $(BINDIR)/libs/cin_$(ARCH).$(SHARED_LIBRARY_EXTENSION): $(OBJS_CIN)
 	@echo "  > Linking $@" && \

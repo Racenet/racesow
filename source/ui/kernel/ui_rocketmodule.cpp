@@ -54,18 +54,18 @@ public:
 RocketModule::RocketModule( int vidWidth, int vidHeight )
 	: rocketInitialized(false),
 	// pointers
-	system(0), files(0), render(0), context(0)
+	systemInterface(0), fsInterface(0), renderInterface(0), context(0)
 {
 
-	render = __new__( UI_RenderInterface )( vidWidth, vidHeight );
-	Rocket::Core::SetRenderInterface( render );
-	system = __new__( UI_SystemInterface )();
-	Rocket::Core::SetSystemInterface( system );
-	files = __new__( UI_FileInterface )();
-	Rocket::Core::SetFileInterface( files );
+	renderInterface = __new__( UI_RenderInterface )( vidWidth, vidHeight );
+	Rocket::Core::SetRenderInterface( renderInterface );
+	systemInterface = __new__( UI_SystemInterface )();
+	Rocket::Core::SetSystemInterface( systemInterface );
+	fsInterface = __new__( UI_FileInterface )();
+	Rocket::Core::SetFileInterface( fsInterface );
 
 	// TODO: figure out why renderinterface has +1 refcount
-	render->AddReference();
+	renderInterface->AddReference();
 
 	rocketInitialized = Rocket::Core::Initialise();
 	if( !rocketInitialized )
@@ -101,9 +101,9 @@ RocketModule::~RocketModule()
 	// instancers bye bye
 	// std::for_each( elementInstancers.begin(), elementInstancers.end(), unref_object<Rocket::Core::ElementInstancer> );
 
-	__SAFE_DELETE_NULLIFY( files );
-	__SAFE_DELETE_NULLIFY( system );
-	__SAFE_DELETE_NULLIFY( render );
+	__SAFE_DELETE_NULLIFY( fsInterface );
+	__SAFE_DELETE_NULLIFY( systemInterface );
+	__SAFE_DELETE_NULLIFY( renderInterface );
 }
 
 //==================================================
@@ -198,6 +198,7 @@ Rocket::Core::ElementDocument *RocketModule::loadDocument( const char *filename,
 		// only for UI documents! FIXME: we are already doing this in NavigationStack
 		Rocket::Core::EventListener *listener = UI_GetMainListener();
 		document->AddEventListener( "keydown", listener );
+		document->AddEventListener( "change", listener );
 	}
 
 	return document;
@@ -269,6 +270,16 @@ void RocketModule::hideCursor( void )
 	context->ShowMouseCursor( false );
 }
 
+void RocketModule::update( void )
+{
+	context->Update();
+}
+
+void RocketModule::render( void )
+{
+	context->Render();
+}
+
 void RocketModule::registerCustoms()
 {
 	//
@@ -292,6 +303,7 @@ void RocketModule::registerCustoms()
 	registerElement( "img", GetImageWidgetInstancer() );
 	registerElement( "field", GetElementFieldInstancer() );
 	registerElement( "video", GetVideoInstancer() );
+	registerElement( "irclog", GetIrcLogWidgetInstancer() );
 
 	//
 	// EVENTS

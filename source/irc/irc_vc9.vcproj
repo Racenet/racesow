@@ -677,6 +677,10 @@
 				RelativePath=".\irc_common.c"
 				>
 			</File>
+			<File
+				RelativePath="..\gameshared\q_shared.c"
+				>
+			</File>
 			<Filter
 				Name="Interface"
 				>

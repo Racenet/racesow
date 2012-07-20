@@ -399,6 +399,13 @@ typedef enum
 	MM_LOGIN_STATE_LOGGED_IN
 } mmstate_t;
 
+typedef enum
+{
+	DOWNLOADTYPE_NONE,
+	DOWNLOADTYPE_SERVER,
+	DOWNLOADTYPE_WEB
+} downloadtype_t;
+
 //==============================================
 
 #define	MAX_GAME_STATS	16

@@ -49,7 +49,7 @@ public:
 
 	asstring_t *user( void ) const
 	{
-		return ASSTR( trap::Cvar_String( "mm_user" ) );
+		return ASSTR( trap::Cvar_String( "cl_mm_user" ) );
 	}
 
 	asstring_t *profileURL( bool rml ) const
@@ -57,6 +57,14 @@ public:
 		char buffer[2048];
 
 		trap::MM_GetProfileURL( buffer, sizeof( buffer ), rml ? qtrue : qfalse );
+		return ASSTR( buffer );
+	}
+
+	asstring_t *baseWebURL() const
+	{
+		char buffer[2048];
+
+		trap::MM_GetBaseWebURL( buffer, sizeof( buffer ) );
 		return ASSTR( buffer );
 	}
 
@@ -95,6 +103,7 @@ void BindMatchMaker( ASInterface *as )
 		.method( &ASMatchMaker::lastError, "get_lastError" )
 		.method( &ASMatchMaker::user, "get_user" )
 		.method( &ASMatchMaker::profileURL, "profileURL" )
+		.method( &ASMatchMaker::baseWebURL, "baseWebURL" )
 	;
 }
 

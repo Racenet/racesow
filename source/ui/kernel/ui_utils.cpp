@@ -88,6 +88,7 @@ void tokenize( const std::string &str, char sep, std::vector<std::string> &token
 {
 	size_t len, left, right = 0;
 
+	tokens.clear();
 	while( right != std::string::npos ) {
 		left = str.find_first_not_of( sep, right );
 		if( left == std::string::npos )

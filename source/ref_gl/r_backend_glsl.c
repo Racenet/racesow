@@ -917,11 +917,9 @@ static void R_RenderMeshGLSL_PlanarShadow( r_glslfeat_t programFeatures )
 	GL_SetTexCoordArrayMode( 0 );
 
 	qglDisable( GL_TEXTURE_2D );
-	if( glState.stencilEnabled )
-		qglEnable( GL_STENCIL_TEST );
 
 	// set shaderpass state (blending, depthwrite, etc)
-	state = r_back.currentShaderState | ( pass->flags & r_back.currentShaderPassMask );
+	state = r_back.currentShaderState | ( pass->flags & r_back.currentShaderPassMask ) | GLSTATE_STENCIL_TEST;
 	GL_SetState( state );
 
 	// calculate the fragment color
@@ -947,8 +945,6 @@ static void R_RenderMeshGLSL_PlanarShadow( r_glslfeat_t programFeatures )
 		qglUseProgramObjectARB( 0 );
 	}
 	
-	if( glState.stencilEnabled )
-		qglDisable( GL_STENCIL_TEST );
 	qglEnable( GL_TEXTURE_2D );
 }
 

@@ -69,15 +69,10 @@ static void Irc_ConnectedListener_f( void *connected )
 	if( *(qboolean *) connected )
 	{
 		assert( irc_server );
-		Com_Printf( "Connected to %s.\n", Cvar_GetStringValue( irc_server ) );
 	}
 	else
 	{
 		assert( irc_server );
-		if( irc_export->ERROR_MSG[0] )
-			Com_Printf( "Disconnected from %s (%s).\n", Cvar_GetStringValue( irc_server ), irc_export->ERROR_MSG );
-		else
-			Com_Printf( "Disconnected from %s.\n", Cvar_GetStringValue( irc_server ) );
 		Dynvar_RemoveListener( irc_connected, Irc_ConnectedListener_f );
 	}
 }
@@ -271,7 +266,6 @@ static void Irc_UnloadLibrary( void )
 
 void Irc_Connect_f( void )
 {
-
 	const int argc = Cmd_Argc();
 	if( argc <= 3 )
 	{
@@ -282,7 +276,7 @@ void Irc_Connect_f( void )
 			// library loaded, check for connection status
 			qboolean *c;
 			if( !irc_server )
-				irc_server = Cvar_Get( "irc_server", "irc.quakenet.eu.org", CVAR_ARCHIVE );
+				irc_server = Cvar_Get( "irc_server", "irc.quakenet.org", CVAR_ARCHIVE );
 			if( !irc_connected )
 				irc_connected = Dynvar_Lookup( "irc_connected" );
 			assert( irc_server );
@@ -337,3 +331,52 @@ void Irc_Disconnect_f( void )
 	else
 		Com_Printf( "IRC module not loaded. Connect first.\n" );
 }
+
+qboolean Irc_IsConnected( void )
+{
+	if( irc_libhandle ) {
+		qboolean *c;
+
+		if( !irc_connected )
+			irc_connected = Dynvar_Lookup( "irc_connected" );
+		assert( irc_connected );
+		
+		Dynvar_GetValue( irc_connected, (void **) &c );
+		if( *c ) {
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+size_t Irc_HistorySize( void )
+{
+	return irc_libhandle ? irc_export->HistorySize() : 0;
+}
+
+size_t Irc_HistoryTotalSize( void )
+{
+	return irc_libhandle ? irc_export->HistoryTotalSize() : 0;
+}
+
+// history is in reverse order (newest line first)
+const struct irc_chat_history_node_s *Irc_GetHistoryHeadNode(void)
+{
+	return irc_libhandle ? irc_export->GetHistoryHeadNode() : NULL;
+}
+
+const struct irc_chat_history_node_s *Irc_GetNextHistoryNode(const struct irc_chat_history_node_s *n)
+{
+	return irc_libhandle ? irc_export->GetNextHistoryNode(n) : NULL;
+}
+
+const struct irc_chat_history_node_s *Irc_GetPrevHistoryNode(const struct irc_chat_history_node_s *n)
+{
+	return irc_libhandle ? irc_export->GetPrevHistoryNode(n) : NULL;
+}
+
+const char *Irc_GetHistoryNodeLine(const struct irc_chat_history_node_s *n)
+{
+	return irc_libhandle ? irc_export->GetHistoryNodeLine(n) : NULL;
+}
+

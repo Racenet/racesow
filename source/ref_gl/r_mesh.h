@@ -115,6 +115,9 @@ typedef struct mesh_s
 
 #define MB_DISTANCE2NUM( d )		( bound( 1, 0x4000 - (unsigned int)(d), 0x4000 - 1 ) << 12 )
 
+// can't use VBO's for incompatible shaders (deformvs, etc) or in case fog is present in non-GLSL rendering path
+#define MB_VBOINDEX(vbo,shader,fog) ( ( (vbo) != NULL && ( (shader)->features & MF_HARDWARE ) && ( glConfig.ext.GLSL || (fog) == NULL )) ? (vbo)->index : 0 )
+
 #define MIN_RENDER_MESHES			2048
 
 typedef struct

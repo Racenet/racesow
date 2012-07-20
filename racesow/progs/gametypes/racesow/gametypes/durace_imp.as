@@ -54,7 +54,7 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         gametype.enableDrowning = true;
 
         //store the timelimit because value in DURACE is not the same than in RACE
-        oldTimelimit = g_timelimit.get_integer();
+        oldTimelimit = g_timelimit.integer;
             
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );

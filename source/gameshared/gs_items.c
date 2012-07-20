@@ -108,7 +108,7 @@ gsitem_t	itemdefs[] =
 		"Machinegun", "MG", S_COLOR_GREY,
 		1,
 		1,
-		AMMO_STRONG_BULLETS,
+		AMMO_WEAK_BULLETS,
 		AMMO_BULLETS,
 		NULL,
 		NULL, NULL, NULL
@@ -313,12 +313,12 @@ gsitem_t	itemdefs[] =
 		,0 ,0
 	},
 
-	//QUAKED ammo_machinegun_strong (.3 .3 1) (-16 -16 -16) (16 16 16)
+	//QUAKED ammo_machinegun (.3 .3 1) (-16 -16 -16) (16 16 16)
 	{
-		"ammo_machinegun_strong",
-		AMMO_STRONG_BULLETS,
+		"ammo_machinegun",
+		AMMO_BULLETS,
 		IT_AMMO,
-		0,				// NOT SPAWNABLE
+		ITFLAG_PICKABLE,
 
 		{ PATH_AMMO_BOX_MODEL, PATH_AMMO_BOX_MODEL2 },
 		PATH_MACHINEGUN_AMMO_ICON,
@@ -326,7 +326,7 @@ gsitem_t	itemdefs[] =
 		S_PICKUP_AMMO,
 		EF_ROTATE_AND_BOB|EF_OUTLINE|EF_AMMOBOX,
 
-		"Strong bullets", "11mm", S_COLOR_GREY,
+		"Bullets", "bullets", S_COLOR_GREY,
 		0, // actual value comes from weapondefs instead
 		0, // actual value comes from weapondefs instead
 		AMMO_NONE,
@@ -523,12 +523,12 @@ gsitem_t	itemdefs[] =
 		,0 ,0
 	},
 
-	//QUAKED ammo_machinegun (.3 .3 1) (-16 -16 -16) (16 16 16)
+	//QUAKED ammo_machinegun_weak (.3 .3 1) (-16 -16 -16) (16 16 16)
 	{
-		"ammo_machinegun",
-		AMMO_BULLETS,
+		"ammo_machinegun_weak",
+		AMMO_WEAK_BULLETS,
 		IT_AMMO,
-		ITFLAG_PICKABLE,
+		0,				// NOT SPAWNABLE
 
 		{ PATH_AMMO_BOX_MODEL, PATH_AMMO_BOX_MODEL2 },
 		PATH_MACHINEGUN_AMMO_ICON,
@@ -536,7 +536,7 @@ gsitem_t	itemdefs[] =
 		S_PICKUP_AMMO,
 		EF_ROTATE_AND_BOB|EF_OUTLINE|EF_AMMOBOX,
 
-		"Bullets", "bullets", S_COLOR_GREY,
+		"Strong bullets", "11mm", S_COLOR_GREY,
 		0, // actual value comes from weapondefs instead
 		0, // actual value comes from weapondefs instead
 		AMMO_NONE,

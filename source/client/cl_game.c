@@ -350,7 +350,10 @@ void CL_GameModule_Init( void )
 	cls.state = CA_LOADING;
 
 	start = Sys_Milliseconds();
-	cge->Init( cl.playernum, viddef.width, viddef.height, cls.demo.playing, cls.sv_pure, cl.snapFrameTime, APP_PROTOCOL_VERSION, cls.mediaRandomSeed );
+	cge->Init( cls.servername, cl.playernum, viddef.width, viddef.height, 
+		cls.demo.playing, cls.demo.playing ? cls.demo.filename : "",
+		cls.sv_pure, cl.snapFrameTime, APP_PROTOCOL_VERSION, cls.mediaRandomSeed );
+
 	Com_DPrintf( "CL_GameModule_Init: %.2f seconds\n", (float)( Sys_Milliseconds() - start ) * 0.001f );
 
 	cls.state = oldState;

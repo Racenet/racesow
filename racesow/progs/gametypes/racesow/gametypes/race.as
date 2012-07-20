@@ -44,7 +44,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
     
     void InitGametype()
     {
-      gametype.setTitle( "Race" );
+      gametype.title = "Race";
       
       // if the gametype doesn't have a config file, create it
       if ( !G_FileExists( "configs/server/gametypes/race.cfg" ) )
@@ -177,7 +177,7 @@ class Racesow_Gametype_Race : Racesow_Gametype
         ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK | PMFEAT_GHOSTMOVE );
 
         // disable autojump
-        if ( rs_allowAutoHop.get_boolean() == false )
+        if ( rs_allowAutoHop.boolean == false )
         {
             ent.client.setPMoveFeatures( ent.client.pmoveFeatures & ~PMFEAT_CONTINOUSJUMP );
         }
@@ -214,9 +214,9 @@ class Racesow_Gametype_Race : Racesow_Gametype
             @ent = @team.ent( i );
             Racesow_Player @player = racesowGametype.getPlayer( ent.client );
 
-            int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
+            int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
 			
-            entry = "&p " + playerID + " " + ent.client.getClanName() + " "
+            entry = "&p " + playerID + " " + ent.client.clanName + " "
                 + player.getBestTime() + " "
                 + player.highestSpeed + " "
                 + ent.client.ping + " " + player.getState() + " ";

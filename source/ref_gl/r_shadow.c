@@ -163,13 +163,9 @@ void R_PlanarShadowPass( int state )
 	qglColor4f( 0, 0, 0, bound( 0.0f, r_shadows_alpha->value, 1.0f ) );
 
 	qglDisable( GL_TEXTURE_2D );
-	if( glState.stencilEnabled )
-		qglEnable( GL_STENCIL_TEST );
 
 	R_FlushArrays();
 
-	if( glState.stencilEnabled )
-		qglDisable( GL_STENCIL_TEST );
 	qglEnable( GL_TEXTURE_2D );
 }
 

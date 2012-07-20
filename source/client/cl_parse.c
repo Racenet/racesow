@@ -800,7 +800,6 @@ static void CL_ParseServerData( msg_t *msg )
 {
 	const char *str, *gamedir;
 	int i, sv_bitflags, numpure;
-	qboolean game_restarted;
 
 	Com_DPrintf( "Serverdata packet received.\n" );
 
@@ -812,7 +811,7 @@ static void CL_ParseServerData( msg_t *msg )
 	// parse protocol version number
 	i = MSG_ReadLong( msg );
 
-	if( i != APP_PROTOCOL_VERSION && i != 6093 )
+	if( i != APP_PROTOCOL_VERSION && i != 6093 && i != 6094 )
 		Com_Error( ERR_DROP, "Server returned version %i, not %i", i, APP_PROTOCOL_VERSION );
 
 	cl.servercount = MSG_ReadLong( msg );
@@ -851,12 +850,6 @@ static void CL_ParseServerData( msg_t *msg )
 		if( !FS_SetGameDirectory( str, qtrue ) )
 			Com_Error( ERR_DROP, "Failed to load game directory set by server: %s", str );
 		ML_Restart( qtrue );
-
-		game_restarted = qtrue;
-	}
-	else
-	{
-		game_restarted = qfalse;
 	}
 
 	// parse player entity number
@@ -899,14 +892,7 @@ static void CL_ParseServerData( msg_t *msg )
 	// get the configstrings request
 	CL_AddReliableCommand( va( "configstrings %i 0", cl.servercount ) );
 
-	R_BeginRegistration();
-
-	CL_SoundModule_BeginRegistration();
-
-	// no need to restart media after a vid_restart forced by game directory change
-	if( !game_restarted ) {
-		CL_RestartMedia( qfalse );
-	}
+	CL_RestartMedia( qfalse );
 
 	cls.sv_pure = ( sv_bitflags & SV_BITFLAGS_PURE ) != 0;
 	cls.sv_tv = ( sv_bitflags & SV_BITFLAGS_TVSERVER ) != 0;

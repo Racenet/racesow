@@ -709,7 +709,7 @@ static void CG_ChaseCamButtons( void )
 	usercmd_t cmd;
 	qboolean chasecam = ( cg.frame.playerState.pmove.pm_type == PM_CHASECAM )
 		&& ( cg.frame.playerState.POVnum != (unsigned)( cgs.playerNum + 1 ) );
-	qboolean realSpec = cgs.demoPlaying || cg.frame.playerState.stats[STAT_REALTEAM] == TEAM_SPECTATOR;
+	qboolean realSpec = cgs.demoPlaying || ISREALSPECTATOR();
 
 	if( (cg.frame.multipov || chasecam) && !CG_DemoCam_IsFree() )
 	{

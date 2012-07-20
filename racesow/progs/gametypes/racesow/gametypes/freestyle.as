@@ -25,7 +25,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     
     void InitGametype()
     {
-      gametype.setTitle( "Freestyle" );
+      gametype.title = "Freestyle";
       
       // if the gametype doesn't have a config file, create it
       if ( !G_FileExists( "configs/server/gametypes/freestyle.cfg" ) )
@@ -194,12 +194,12 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
                     if( @client.getEnt() == null)
                         return;
                     cTrace tr;
-                    if( tr.doTrace( client.getEnt().getOrigin(), vec3Origin, vec3Origin, client.getEnt().getOrigin() + Vec3( 0.0f, 0.0f, 50.0f ), 0, MASK_DEADSOLID ))
+                    if( tr.doTrace( client.getEnt().origin, vec3Origin, vec3Origin, client.getEnt().origin + Vec3( 0.0f, 0.0f, 50.0f ), 0, MASK_DEADSOLID ))
                         return;
                     //spawn a gravestone to store the postition
                     cEntity @gravestone = @G_SpawnEntity( "gravestone" );
                     // copy client position
-                    gravestone.setOrigin( client.getEnt().getOrigin() + Vec3( 0.0f, 0.0f, 50.0f ) );
+                    gravestone.origin = client.getEnt().origin + Vec3( 0.0f, 0.0f, 50.0f );
                     victimPlayer.setupTelekilled( @gravestone );
                 }
             }
@@ -226,8 +226,8 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
             @ent = @team.ent( i );
             Racesow_Player @player = racesowGametype.getPlayer( ent.client );
 
-            int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
-            entry = "&p " + playerID + " " + ent.client.getClanName() + " "
+            int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
+            entry = "&p " + playerID + " " + ent.client.clanName + " "
                     + ent.client.ping + " ";
 
             if ( scoreboardMessage.len() + entry.len() < maxlen )

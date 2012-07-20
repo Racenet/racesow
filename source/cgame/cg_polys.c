@@ -315,11 +315,19 @@ void CG_LaserGunPolyBeam( vec3_t start, vec3_t end, vec4_t color, int tag )
 			VectorCopy( min_team_color, tcolor );
 	}
 
-	cgpoly = CG_SpawnPolyBeam( start, end, color ? tcolor : NULL, 12, 1, 0, CG_MediaShader( cgs.media.shaderLaserGunBeam ), 64, tag );
+	if( cg_lgbeam_old->integer ) {
+		cgpoly = CG_SpawnPolyBeam( start, end, color ? tcolor : NULL, 12, 1, 0, CG_MediaShader( cgs.media.shaderLaserGunBeamOld ), 64, tag );
 
-	// since autosprite doesn't work, spawn a second and rotate it 90 degrees
-	cgpoly2 = CG_SpawnPolyBeam( start, end, color ? tcolor : NULL, 12, 1, 0, CG_MediaShader( cgs.media.shaderLaserGunBeam ), 64, tag );
-	cgpoly2->angles[ROLL] += 90;
+		// since autosprite doesn't work, spawn a second and rotate it 90 degrees
+		cgpoly2 = CG_SpawnPolyBeam( start, end, color ? tcolor : NULL, 12, 1, 0, CG_MediaShader( cgs.media.shaderLaserGunBeamOld ), 64, tag );
+		cgpoly2->angles[ROLL] += 90;
+	} else {
+		cgpoly = CG_SpawnPolyBeam( start, end, color ? tcolor : NULL, 12, 1, 0, CG_MediaShader( cgs.media.shaderLaserGunBeam ), 64, tag );
+
+		// since autosprite doesn't work, spawn a second and rotate it 90 degrees
+		cgpoly2 = CG_SpawnPolyBeam( start, end, color ? tcolor : NULL, 12, 1, 0, CG_MediaShader( cgs.media.shaderLaserGunBeam ), 64, tag );
+		cgpoly2->angles[ROLL] += 90;
+	}
 }
 
 /*

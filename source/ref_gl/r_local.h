@@ -117,6 +117,10 @@ enum
 
 #define SHADOW_MAPPING			( SHADOW_PLANAR+1 )
 
+#define SUBDIVISIONS_MIN		3
+#define SUBDIVISIONS_MAX		16
+#define SUBDIVISIONS_DEFAULT	5
+
 //===================================================================
 
 #include "r_math.h"
@@ -402,7 +406,6 @@ extern cvar_t *r_floorcolor;
 extern cvar_t *r_maxglslbones;
 
 extern cvar_t *gl_finish;
-extern cvar_t *gl_delayfinish;
 extern cvar_t *gl_cull;
 extern cvar_t *gl_extensions;
 
@@ -926,7 +929,9 @@ enum
 	GLSTATE_OFFSET_FILL						= 0x4000,
 	GLSTATE_NO_DEPTH_TEST					= 0x8000,
 
-	GLSTATE_MARK_END						= 0x10000 // SHADERPASS_MARK_BEGIN
+	GLSTATE_STENCIL_TEST					= 0x10000,
+
+	GLSTATE_MARK_END						= 0x20000 // SHADERPASS_MARK_BEGIN
 };
 
 #define GLSTATE_MASK		( GLSTATE_MARK_END-1 )

@@ -40,6 +40,8 @@ static qboolean	key_initialized = qfalse;
 static char alt_color_escape = '$';
 static dynvar_t *key_colorEscape = NULL;
 
+static cvar_t *in_debug;
+
 static dynvar_get_status_t Key_GetColorEscape_f( void **key )
 {
 	assert( key );
@@ -509,6 +511,8 @@ void Key_Init( void )
 	// wsw : aiwa : create dynvar for alternative color escape character
 	key_colorEscape = Dynvar_Create( "key_colorEscape", qtrue, Key_GetColorEscape_f, Key_SetColorEscape_f );
 
+	in_debug = Cvar_Get( "in_debug", "0", 0 );
+
 	key_initialized = qtrue;
 }
 
@@ -718,6 +722,10 @@ void Key_Event( int key, qboolean down, unsigned time )
 
 		if( kb )
 		{
+			if( in_debug && in_debug->integer ) {
+				Com_Printf( "key:%i down:%i time:%i %s\n", key, down, time, kb );
+			}
+
 			if( kb[0] == '+' )
 			{ // button commands add keynum and time as a parm
 				if( down )

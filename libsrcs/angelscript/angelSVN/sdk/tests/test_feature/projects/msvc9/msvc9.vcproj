@@ -352,6 +352,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\mytest.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\test2modules.cpp"
 				>
 			</File>

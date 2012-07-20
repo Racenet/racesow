@@ -523,6 +523,7 @@ static qboolean SV_MM_Login( void )
 	sq_api->SetField( query, "authkey", sv_mm_authkey->string );
 	sq_api->SetField( query, "port", va( "%d", sv_port->integer ) );
 	sq_api->SetField( query, "hostname", sv.configstrings[CS_HOSTNAME] );
+	sq_api->SetField( query, "demos_baseurl", sv_uploads_demos_baseurl->string );
 	sq_api->SetCallback( query, sv_mm_login_done, NULL );
 	sq_api->Send( query );
 

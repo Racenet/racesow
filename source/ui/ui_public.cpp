@@ -62,20 +62,19 @@ namespace WSWUI
 		ui_main = 0;
 	}
 
-	void Refresh( unsigned int time, int clientState, int serverState, qboolean demoPaused, unsigned int demoTime, qboolean backGround )
+	void Refresh( unsigned int time, int clientState, int serverState, qboolean demoPaused, unsigned int demoTime, qboolean backGround, qboolean showCursor )
 	{
 		if( ui_main ) {
-			ui_main->refreshScreen( time, clientState, serverState, demoPaused == qtrue, demoTime, backGround == qtrue );
+			ui_main->refreshScreen( time, clientState, serverState, demoPaused == qtrue, demoTime, backGround == qtrue, showCursor == qtrue );
 		}
 	}
 
-	void DrawConnectScreen( const char *serverName, const char *rejectmessage, int downloadType, const char *downloadfilename,
+	void UpdateConnectScreen( const char *serverName, const char *rejectmessage, int downloadType, const char *downloadfilename,
 						  float downloadPercent, int downloadSpeed, int connectCount, qboolean backGround )
 	{
-		if( ui_main ) {
+		if( ui_main )
 			ui_main->drawConnectScreen( serverName, rejectmessage, downloadType, downloadfilename, 
-				downloadPercent, downloadSpeed, connectCount, backGround == qtrue );
-		}
+				downloadPercent, downloadSpeed, connectCount, (backGround == qtrue) );
 	}
 
 	void Keydown( int key )
@@ -141,7 +140,7 @@ ui_export_t *GetUIAPI( ui_import_t *import )
 	globals.Shutdown = WSWUI::Shutdown;
 
 	globals.Refresh = WSWUI::Refresh;
-	globals.DrawConnectScreen = WSWUI::DrawConnectScreen;
+	globals.UpdateConnectScreen = WSWUI::UpdateConnectScreen;
 
 	globals.Keydown = WSWUI::Keydown;
 	globals.Keyup = WSWUI::Keyup;

@@ -380,7 +380,7 @@ class Racesow_Player
                     + S_COLOR_ORANGE + " Distance: " + S_COLOR_WHITE + ((this.lastRace.stopDistance - this.lastRace.startDistance)/1000) // racing distance
                     + S_COLOR_ORANGE + " Personal: " + S_COLOR_WHITE + diffString(oldTime, newTime) // personal best
                     + S_COLOR_ORANGE + "/Server: " + S_COLOR_WHITE + diffString(oldServerBestTime, newTime) // server best
-                    + S_COLOR_ORANGE + "/" + Capitalize(rs_networkName.get_string()) + ": " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
+                    + S_COLOR_ORANGE + "/" + Capitalize(rs_networkName.string) + ": " + S_COLOR_WHITE + diffString(oldBestTime, newTime) // database best
                     + "\n");
 		}
 
@@ -422,10 +422,10 @@ class Racesow_Player
         //world record
         if ( ( oldBestTime == 0 || newTime < oldBestTime ) and ( newTime < oldTime ) )
         {
-            this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.get_string() + " record!" );
+            this.sendAward( S_COLOR_GREEN + "New " + rs_networkName.string + " record!" );
             G_PrintMsg(null, this.getName() + " "
                              + S_COLOR_YELLOW + "made a new "
-                             + S_COLOR_GREEN  + rs_networkName.get_string()
+                             + S_COLOR_GREEN  + rs_networkName.string
                              + S_COLOR_YELLOW + " record: " + TimeToString( newTime ) + "\n");
 
             if ( mysqlConnected == 1)
@@ -526,7 +526,7 @@ class Racesow_Player
 	{
 		if (@this.client != null)
         {
-            return this.client.getName();
+            return this.client.name;
         }
 
         return "";
@@ -611,7 +611,7 @@ class Racesow_Player
 	 */
 	int getSpeed()
 	{
-	    Vec3 globalSpeed = this.getClient().getEnt().getVelocity();
+	    Vec3 globalSpeed = this.getClient().getEnt().velocity;
 	    Vec3 horizontalSpeed = Vec3(globalSpeed.x, globalSpeed.y, 0);
 	    return horizontalSpeed.length();
 	}
@@ -653,7 +653,7 @@ class Racesow_Player
         this.triesSinceLastRace++;
         int tries = this.overallTries+this.tries;
 
-		this.race.prejumped=RS_QueryPjState(this.getClient().playerNum());
+		this.race.prejumped=RS_QueryPjState(this.getClient().playerNum);
 		if (this.race.prejumped)
 		{
 		    this.sendAward(S_COLOR_RED + "Prejumped!");
@@ -701,7 +701,7 @@ class Racesow_Player
 			cEntity @practiceRespawner = G_SpawnEntity( "practice_respawner" );
 			@practiceRespawner.think = practice_respawner_think; //FIXME: Workaround because the practice_respawner function isn't called
 			practiceRespawner.nextThink = levelTime + 3000;
-			practiceRespawner.count = client.playerNum();
+			practiceRespawner.count = client.playerNum;
 		}
 
 		// when the race can not be finished something is very wrong, maybe small penis playing, or practicemode is enabled.
@@ -725,7 +725,7 @@ class Racesow_Player
     cEntity @respawner = G_SpawnEntity( "race_respawner" );
     @respawner.think = race_respawner_think; //FIXME: Workaround because the race_respawner function isn't called
     respawner.nextThink = levelTime + 3000;
-    respawner.count = client.playerNum();
+    respawner.count = client.playerNum;
     }
 
 	/**
@@ -769,7 +769,7 @@ class Racesow_Player
   		if( @this.client.getEnt() != null )
   			removeProjectiles( this.client.getEnt() );
   		if ( !this.practicing )
-  			RS_ResetPjState(this.getClient().playerNum());
+  			RS_ResetPjState(this.getClient().playerNum);
     }
 
 	/**
@@ -845,7 +845,7 @@ class Racesow_Player
 	 */
 	void advanceDistance()
 	{
-        Vec3 position = this.getClient().getEnt().getOrigin();
+        Vec3 position = this.getClient().getEnt().origin;
         position.z = 0;
         this.distance += ( position.distance( this.oldPosition ) * 1000 );
         this.oldPosition = position;
@@ -910,8 +910,8 @@ class Racesow_Player
 		    Vec3 mins, maxs;
 		    client.getEnt().getSize( mins, maxs );
 		    cTrace tr;
-            if( tr.doTrace( this.client.getEnt().getOrigin(), mins, maxs,
-                    this.client.getEnt().getOrigin(), 0, MASK_PLAYERSOLID ))
+            if( tr.doTrace( this.client.getEnt().origin, mins, maxs,
+                    this.client.getEnt().origin, 0, MASK_PLAYERSOLID ))
             {
                 //don't allow players to end noclip inside others or the world
                 this.sendMessage( S_COLOR_WHITE + "WARNING: can't switch noclip back when being in something solid.\n" );
@@ -981,7 +981,7 @@ class Racesow_Player
 						//spawn a gravestone to store the postition
 						cEntity @gravestone = @G_SpawnEntity( "gravestone" );
 						// copy client position
-						gravestone.setOrigin( other.getOrigin() + Vec3( 0.0f, 0.0f, 50.0f ) );
+						gravestone.origin = other.origin + Vec3( 0.0f, 0.0f, 50.0f );
 						racesowGametype.getPlayer( other.client ).setupTelekilled( @gravestone );
 					}
 
@@ -991,9 +991,9 @@ class Racesow_Player
 		if( ent.team != TEAM_SPECTATOR )
             ent.teleportEffect( true );
 		if(!keepVelocity)
-			ent.setVelocity( Vec3(0,0,0) );
-		ent.setOrigin( origin );
-		ent.setAngles( angles );
+			ent.velocity = Vec3(0,0,0);
+		ent.origin = origin;
+		ent.angles = angles;
 		if( ent.team != TEAM_SPECTATOR )
 			ent.teleportEffect( false );
 		return true;
@@ -1011,8 +1011,8 @@ class Racesow_Player
 		cEntity@ ent = @this.client.getEnt();
 		if( @ent == null )
 			return false;
-		this.positionOrigin = ent.getOrigin();
-		this.positionAngles = ent.getAngles();
+		this.positionOrigin = ent.origin;
+		this.positionAngles = ent.angles;
 		if ( ent.moveType == MOVETYPE_NOCLIP )
 			this.positionWeapon = this.noclipWeapon;
 		else
@@ -1039,8 +1039,8 @@ class Racesow_Player
 
 	bool positionStore( int id, String name )
 	{
-		Vec3 position = client.getEnt().getOrigin();
-		Vec3 angles = client.getEnt().getAngles();
+		Vec3 position = client.getEnt().origin;
+		Vec3 angles = client.getEnt().angles;
 		//position set <x> <y> <z> <pitch> <yaw>
 		this.client.execGameCommand("cmd seta storedposition_" + id
 				+ " \"" + name + " "
@@ -1052,7 +1052,7 @@ class Racesow_Player
 
 	bool positionRestore( int id )
 	{
-		G_CmdExecute( "cvarcheck " + this.client.playerNum()
+		G_CmdExecute( "cvarcheck " + this.client.playerNum
 				+ " storedposition_" + id );
 		this.positionLastcmd = realTime;
 		return true;
@@ -1092,8 +1092,8 @@ class Racesow_Player
 //			cEntity@ ent = @this.client.getEnt();
 //			if( @ent == null )
 //				return false;
-//			this.positionOrigin = ent.getOrigin();
-//			this.positionAngles = ent.getAngles();
+//			this.positionOrigin = ent.origin;
+//			this.positionAngles = ent.angles;
 //			if ( ent.moveType == MOVETYPE_NOCLIP )
 //				this.positionWeapon = this.noclipWeapon;
 //			else
@@ -1121,8 +1121,8 @@ class Racesow_Player
 //		}
 //		else if( action == "store" && argsString.getToken( 2 ) != "" )
 //		{
-//			Vec3 position = client.getEnt().getOrigin();
-//			Vec3 angles = client.getEnt().getAngles();
+//			Vec3 position = client.getEnt().origin;
+//			Vec3 angles = client.getEnt().angles;
 //			//position set <x> <y> <z> <pitch> <yaw>
 //			this.client.execGameCommand("cmd seta storedposition_" + argsString.getToken(1)
 //					+ " \"" +  argsString.getToken(2) + " "
@@ -1131,7 +1131,7 @@ class Racesow_Player
 //		}
 //		else if( action == "restore" && argsString.getToken( 1 ) != "" )
 //		{
-//			G_CmdExecute( "cvarcheck " + this.client.playerNum()
+//			G_CmdExecute( "cvarcheck " + this.client.playerNum
 //					+ " storedposition_" + argsString.getToken(1) );
 //		}
 //		else if( action == "storedlist" && argsString.getToken( 1 ) != "" )
@@ -1161,8 +1161,8 @@ class Racesow_Player
 //			msg += "position store <id> <name> - Store a position for another session\n";
 //			msg += "position restore <id> - Restore a stored position from another session\n";
 //			msg += "position storedlist <limit> - Sends you a list of your stored positions\n";
-//			msg += "Current position: " + " " + ent.getOrigin().x + " " + ent.getOrigin().y + " " +
-//		ent.getOrigin().z + " " + ent.getAngles().x + " " + ent.getAngles().y + "\n";
+//			msg += "Current position: " + " " + ent.origin.x + " " + ent.origin.y + " " +
+//		ent.origin.z + " " + ent.angles.x + " " + ent.angles.y + "\n";
 //			this.sendMessage( msg );
 //		}
 //
@@ -1203,7 +1203,7 @@ class Racesow_Player
             @other = @spectators.ent( i );
             if ( @other.client != null && other.client.chaseActive )
             {
-                if( other.client.chaseTarget == this.client.playerNum() + 1 )
+                if( other.client.chaseTarget == this.client.playerNum + 1 )
                 {
                     other.client.execGameCommand( "aw \"" + message + "\"" );
                 }
@@ -1271,9 +1271,9 @@ class Racesow_Player
 	 */
 	bool privSay( String message, cClient @target )
 	{
-	    this.sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.getName()
+	    this.sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + target.name
 	            + S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n");
-	    sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + client.getName()
+	    sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + client.name
 	            + S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n", @target );
 		return true;
 	}
@@ -1285,7 +1285,7 @@ class Racesow_Player
 	 */
 	void kick( String message )
 	{
-        int playerNum = this.client.playerNum();
+        int playerNum = this.client.playerNum;
         if( message.length() > 0)
             G_PrintMsg( null, S_COLOR_RED + "Kicked "+ this.getName() + S_COLOR_RED + " Reason: " + message + "\n" );
         //this.reset(); //FIXME: Was this really necessary? -K1ll
@@ -1314,7 +1314,7 @@ class Racesow_Player
     {
         String ip = this.client.getUserInfoKey( "ip" );
         //this.reset(); //FIXME -K1ll
-        G_CmdExecute( "addip " + ip + " 15;kick " + this.client.playerNum() );
+        G_CmdExecute( "addip " + ip + " 15;kick " + this.client.playerNum );
     }
 
     /**
@@ -1337,7 +1337,7 @@ class Racesow_Player
 	 */
 	bool ammoSwitch(  )
 	{
-		if ( racesowGametype.ammoSwitchAllowed() || g_allowammoswitch.get_boolean() )
+		if ( racesowGametype.ammoSwitchAllowed() || g_allowammoswitch.boolean )
 		{
 			if ( @this.client.getEnt() == null )
 			{
@@ -1509,7 +1509,7 @@ class Racesow_Player
 //                this.sendErrorMessage( "You are not permitted to execute the command 'admin "+ cmdString);
 //                return false;
 //            }
-//            RS_UpdateMapList( this.client.playerNum() );
+//            RS_UpdateMapList( this.client.playerNum );
 //            showNotification = true;
 //        }
 //

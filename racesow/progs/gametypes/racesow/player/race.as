@@ -209,7 +209,7 @@ class Racesow_Player_Race : Racesow_Player_Implemented
             @other = @spectators.ent( i );
             if ( @other.client != null && other.client.chaseActive )
             {
-                if( other.client.chaseTarget == this.player.getClient().playerNum() + 1 )
+                if( other.client.chaseTarget == this.player.getClient().playerNum + 1 )
                 {
                     G_CenterPrintMsg( other.client.getEnt(), "Current: " + TimeToString( newTime ) + "\n"
                         + ( noDelta ? "" : diffString( serverBestTime, newTime ) ) );

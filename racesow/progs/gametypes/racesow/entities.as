@@ -36,10 +36,10 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 void replacementItem( cEntity @oldItem )
 {
   	Vec3 min, max;
-	cEntity @ent = @G_SpawnEntity( oldItem.getClassname() );
+	cEntity @ent = @G_SpawnEntity( oldItem.classname );
 	cItem @item = @G_GetItem( oldItem.item.tag );
 	@ent.item = @item;
-	ent.setOrigin( oldItem.getOrigin() );
+	ent.origin = oldItem.origin;
 	oldItem.getSize( min, max );
 	ent.setSize( min, max );
 	ent.type = ET_ITEM;
@@ -49,11 +49,11 @@ void replacementItem( cEntity @oldItem )
 	ent.spawnFlags = oldItem.spawnFlags;
 	ent.svflags &= ~SVF_NOCLIENT;
 	ent.style = oldItem.style;
-	ent.setTargetString( oldItem.getTargetString() );
-	ent.setTargetnameString( oldItem.getTargetnameString() );
-    ent.setupModel( oldItem.item.getModelString(), oldItem.item.getModel2String() );
+	ent.target = oldItem.target;
+	ent.targetname = oldItem.targetname;
+    ent.setupModel( oldItem.item.model, oldItem.item.model2 );
 	oldItem.solid = SOLID_NOT;
-	oldItem.setClassname( "ASmodel_" + ent.item.getClassname() );
+	oldItem.classname = "ASmodel_" + ent.item.classname;
 	ent.wait = oldItem.wait;
 
 	if( ent.wait > 0 )
@@ -104,10 +104,10 @@ void trigger_push_velocity( cEntity @ent )
 	//@ent.enemy = @ent.findTargetEntity( ent );
 	String speed = G_SpawnTempValue("speed");
 	String count = G_SpawnTempValue("count");
-	addToEntStorage( ent.entNum(), speed + " " + count );
+	addToEntStorage( ent.entNum, speed + " " + count );
 	ent.solid = SOLID_TRIGGER;
 	ent.moveType = MOVETYPE_NONE;
-    ent.setupModel(ent.getModelString());
+    ent.setupModel(ent.model);
 	ent.svflags &= ~SVF_NOCLIENT;
 	ent.svflags |= SVF_TRANSMITORIGIN2/*|SVF_NOCULLATORIGIN2 Removed in Warsow 0.7*/;
 	ent.wait = 1;
@@ -144,18 +144,18 @@ void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const Vec3 plane
 */
 	Vec3 dir, velocity;
 	//if(( ent.spawnFlags & 1 ) == 0 )
-	velocity = other.getVelocity();
+	velocity = other.velocity;
 	if( velocity.length() == 0 || other.type != ET_PLAYER || other.moveType != MOVETYPE_PLAYER )
 		return;
 	if(TriggerWait( @ent, @other ))
 			return;
-	int speed = entStorage[ent.entNum()].getToken(0).toInt();
+	int speed = entStorage[ent.entNum].getToken(0).toInt();
 	if(velocity.x == 0 && velocity.y == 0)
 		return;
 	velocity.x += (speed * velocity.x)/sqrt(pow(velocity.x, 2) + pow(velocity.y, 2));
 	velocity.y += (speed * velocity.y)/sqrt(pow(velocity.x, 2) + pow(velocity.y, 2));
-	velocity.z += entStorage[ent.entNum()].getToken(1).toInt();
-	other.setVelocity( velocity );
+	velocity.z += entStorage[ent.entNum].getToken(1).toInt();
+	other.velocity = velocity;
 
 }
 
@@ -182,7 +182,7 @@ void target_teleporter_use( cEntity @ent, cEntity @other, cEntity @activator )
 			|| @racesowGametype.getPlayer( activator.client ) == null || !TriggerWait(@ent, @activator)
 			|| @ent.enemy == null)
 		return;
-	racesowGametype.getPlayer( activator.client ).teleport(ent.enemy.getOrigin(), ent.enemy.getAngles(), true, true);
+	racesowGametype.getPlayer( activator.client ).teleport(ent.enemy.origin, ent.enemy.angles, true, true);
 
 }
 
@@ -230,23 +230,23 @@ void RS_UseShooter( cEntity @self, cEntity @other, cEntity @activator ) {
 	Vec3 angles;
 
     if ( @self.enemy != null ) {
-        dir = self.enemy.getOrigin() - self.getOrigin();
+        dir = self.enemy.origin - self.origin;
         dir.normalize();
     } else {
-        dir = self.getMovedir();
+        dir = self.movedir;
         dir.normalize();
     }
     angles = dir.toAngles();
 	switch ( self.weapon )
 	{
         case WEAP_GRENADELAUNCHER:
-        	G_FireGrenade( self.getOrigin(), angles, rs_grenadeweak_speed.get_integer(), 0, 65, rs_grenadeweak_knockback.get_integer(), 0, @activator );
+        	G_FireGrenade( self.origin, angles, rs_grenadeweak_speed.integer, 0, 65, rs_grenadeweak_knockback.integer, 0, @activator );
             break;
         case WEAP_ROCKETLAUNCHER:
-        	G_FireRocket( self.getOrigin(), angles, rs_rocketweak_speed.get_integer(), rs_rocketweak_splash.get_integer(), 75, rs_rocketweak_knockback.get_integer(), 0, @activator );
+        	G_FireRocket( self.origin, angles, rs_rocketweak_speed.integer, rs_rocketweak_splash.integer, 75, rs_rocketweak_knockback.integer, 0, @activator );
             break;
         case WEAP_PLASMAGUN:
-        	G_FirePlasma( self.getOrigin(), angles, rs_plasmaweak_speed.get_integer(), rs_plasmaweak_splash.get_integer(), 15, rs_plasmaweak_knockback.get_integer(), 0, @activator );
+        	G_FirePlasma( self.origin, angles, rs_plasmaweak_speed.integer, rs_plasmaweak_splash.integer, 15, rs_plasmaweak_knockback.integer, 0, @activator );
             break;
     }
 
@@ -266,9 +266,8 @@ void RS_InitShooter_Finish( cEntity @self )
 //===============
 void RS_InitShooter( cEntity @self, int weapon ) {
     self.weapon = weapon;
-    self.setMovedir();
     // target might be a moving object, so we can't set a movedir for it
-    if ( self.getTargetnameString() != "" ) {
+    if ( self.targetname != "" ) {
         self.nextThink = levelTime + 500;
     }
     self.linkEntity();
@@ -337,14 +336,14 @@ void target_smallprint( cEntity @ent )
     }
     else
     {
-    	addToEntStorage( ent.entNum(), message );
+    	addToEntStorage( ent.entNum, message );
     }
 }
 
 void target_smallprint_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
 	if(@activator.client != null)
-		G_CenterPrintMsg( activator, entStorage[ent.entNum()] );
+		G_CenterPrintMsg( activator, entStorage[ent.entNum] );
 }
 
 void target_kill( cEntity @ent )
@@ -441,5 +440,5 @@ void replacementItem_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal
            return;
         other.health = healthAmount;
 	}
-	G_Sound( other, CHAN_ITEM, G_SoundIndex( ent.item.getPickupSoundString() ), 0.875 );
+	G_Sound( other, CHAN_ITEM, G_SoundIndex( ent.item.pickupSound ), 0.875 );
 }

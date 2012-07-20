@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // cg_public.h -- client game dll information visible to engine
 
-#define	CGAME_API_VERSION   60
+#define	CGAME_API_VERSION   61
 
 //
 // structs and variables shared with the main engine
@@ -224,7 +224,9 @@ typedef struct
 	int ( *API )( void );
 
 	// the init function will be called at each restart
-	void ( *Init )( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demoplaying, qboolean pure, unsigned int snapFrameTime, int protocol, int sharedSeed );
+	void ( *Init )( const char *serverName, unsigned int playerNum, int vidWidth, int vidHeight, 
+		qboolean demoplaying, const char *demoName, qboolean pure, unsigned int snapFrameTime, 
+		int protocol, int sharedSeed );
 
 	// "soft restarts" at demo jumps
 	void ( *Reset )( void );

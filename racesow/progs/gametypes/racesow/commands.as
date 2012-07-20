@@ -377,14 +377,14 @@ class Command_Gametype : Racesow_Command
     {
         String response = "";
         Cvar fs_game( "fs_game", "", 0 );
-        String manifest = gametype.getManifest();
+        String manifest = gametype.manifest;
 
         response += "\n";
-        response += "Gametype " + gametype.getName() + " : " + gametype.getTitle() + "\n";
+        response += "Gametype " + gametype.name + " : " + gametype.title + "\n";
         response += "----------------\n";
-        response += "Version: " + gametype.getVersion() + "\n";
-        response += "Author: " + gametype.getAuthor() + "\n";
-        response += "Mod: " + fs_game.get_string() + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
+        response += "Version: " + gametype.version + "\n";
+        response += "Author: " + gametype.author + "\n";
+        response += "Mod: " + fs_game.string + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
         response += "----------------\n";
 
         player.sendMessage(response);
@@ -442,7 +442,7 @@ class Command_Help : Racesow_Command
         {
             String help;
             help += COMMAND_COLOR_LINE + "--------------------------------------------------------------------------------------------------------------------------\n";
-            help += COMMAND_COLOR_HEAD + baseCommandString.toupper() + " " + "HELP for Racesow " + gametype.getVersion() + "\n";
+            help += COMMAND_COLOR_HEAD + baseCommandString.toupper() + " " + "HELP for Racesow " + gametype.version + "\n";
             help += COMMAND_COLOR_LINE + "--------------------------------------------------------------------------------------------------------------------------\n";
             player.sendMessage(help);
             help = "";
@@ -558,7 +558,7 @@ class Command_Mapfilter : Racesow_Command
             page = args.getToken( 1 ).toInt();
 
         player.isWaitingForCommand = true;
-        return RS_MapFilter(player.getClient().playerNum(),filter,page);
+        return RS_MapFilter(player.getClient().playerNum,filter,page);
     }
 }
 
@@ -587,7 +587,7 @@ class Command_Maplist : Racesow_Command
         if (argc >= 1)
             page = args.getToken(0).toInt();
 
-        return RS_Maplist(player.getClient().playerNum(),page);
+        return RS_Maplist(player.getClient().playerNum,page);
     }
 }
 
@@ -690,7 +690,7 @@ class Command_Oneliner : Racesow_Command
     bool execute(Racesow_Player @player, String &args, int argc)
     {
 	    player.isWaitingForCommand = true;
-        RS_MysqlSetOneliner(player.getClient().playerNum(), player.getId(), map.getId(), args);
+        RS_MysqlSetOneliner(player.getClient().playerNum, player.getId(), map.getId(), args);
         return true;
     }
 }
@@ -955,9 +955,9 @@ class Command_Privsay : Racesow_TargetCommand
 
         String message = args.substr(args.getToken( 0 ).length()+1, args.len() );
 
-        player.sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + targetPlayer.getClient().getName()
+        player.sendMessage( S_COLOR_RED + "(Private message to " + S_COLOR_WHITE + targetPlayer.getClient().name
         		+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n");
-        targetPlayer.sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + player.getClient().getName()
+        targetPlayer.sendMessage( S_COLOR_RED + "(Private message from " + S_COLOR_WHITE + player.getClient().name
         		+ S_COLOR_RED + " ) " + S_COLOR_WHITE + ": " + message + "\n" );
         return true;
     }
@@ -996,11 +996,11 @@ class Command_ProtectedNick : Racesow_Command
     {
 		if ( argc < 1 )
 		{
-			RS_GetPlayerNick( player.getClient().playerNum(), player.getId() );
+			RS_GetPlayerNick( player.getClient().playerNum, player.getId() );
 		}
 		else if ( args.getToken(0) == "update" )
 		{
-			RS_UpdatePlayerNick( player.getName(), player.getClient().playerNum(), player.getId() );
+			RS_UpdatePlayerNick( player.getName(), player.getClient().playerNum, player.getId() );
 		}
 		player.isWaitingForCommand = true;
         return true;
@@ -1109,7 +1109,7 @@ class Command_Ranking : Racesow_Command
     bool execute(Racesow_Player @player, String &args, int argc)
     {
         player.isWaitingForCommand = true;
-        RS_MysqlLoadRanking(player.getClient().playerNum(), this.page, this.order);
+        RS_MysqlLoadRanking(player.getClient().playerNum, this.page, this.order);
         return true;
     }
 
@@ -1177,7 +1177,7 @@ class Command_Stats : Racesow_BaseCommand
     {
         if( argc > 0 )
             return Racesow_BaseCommand::execute( player, args, argc ); // this executes the subcommand
-        return RS_LoadStats( player.getClient().playerNum(), "player", player.getName() );
+        return RS_LoadStats( player.getClient().playerNum, "player", player.getName() );
     }
 }
 
@@ -1195,7 +1195,7 @@ class Command_StatsPlayer : Racesow_Command
         else
         	target = player.getName();
 
-        return RS_LoadStats(player.getClient().playerNum(), this.name, target);
+        return RS_LoadStats(player.getClient().playerNum, this.name, target);
     }
 }
 
@@ -1213,7 +1213,7 @@ class Command_StatsMap : Racesow_Command
         else
         	target = map.name;
 
-        return RS_LoadStats(player.getClient().playerNum(), this.name, target);
+        return RS_LoadStats(player.getClient().playerNum, this.name, target);
     }
 }
 
@@ -1232,13 +1232,13 @@ class Command_Timeleft : Racesow_Command
             return false;
         }
 		
-		if ( !g_maprotation.get_boolean() )
+		if ( !g_maprotation.boolean )
 		{
 			player.sendErrorMessage( "The command isn't available when g_maprotation == 0.");
             return false;
 		}
 		
-        if( g_timelimit.get_integer() <= 0 )
+        if( g_timelimit.integer <= 0 )
         {
             player.sendErrorMessage( "There is no timelimit set");
             return false;
@@ -1248,7 +1248,7 @@ class Command_Timeleft : Racesow_Command
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        uint timelimit = g_timelimit.get_integer() * 60000;//convert mins to ms
+        uint timelimit = g_timelimit.integer * 60000;//convert mins to ms
         uint time = levelTime - match.startTime(); //in ms
         uint timeleft = timelimit - time;
         if( timelimit < time )
@@ -1341,7 +1341,7 @@ class Command_Top : Racesow_Command
     bool execute(Racesow_Player @player, String &args, int argc)
     {
         player.isWaitingForCommand=true;
-        RS_MysqlLoadHighscores(player.getClient().playerNum(), this.limit, map.getId(), this.mapname, this.prejumped);
+        RS_MysqlLoadHighscores(player.getClient().playerNum, this.limit, map.getId(), this.mapname, this.prejumped);
         return true;
     }
 
@@ -1470,7 +1470,7 @@ class Command_AdminUpdateml : Racesow_Command // (should be subclass of Racesow_
 	}
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        RS_UpdateMapList( player.client.playerNum() );
+        RS_UpdateMapList( player.client.playerNum );
         return true;
     }
 }
@@ -1500,7 +1500,7 @@ class Command_AdminExtendtime : Racesow_Command // (should be subclass of Raceso
 	}
     bool validate(Racesow_Player @player, String &args, int argc)
     {
-        if( g_timelimit.get_integer() <= 0 )
+        if( g_timelimit.integer <= 0 )
         {
             player.sendErrorMessage( "This command is only available for timelimits.\n");
             return false;
@@ -1510,7 +1510,7 @@ class Command_AdminExtendtime : Racesow_Command // (should be subclass of Raceso
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        g_timelimit.set(g_timelimit.get_integer() + g_extendtime.get_integer());
+        g_timelimit.set(g_timelimit.integer + g_extendtime.integer);
 
         map.cancelOvertime(); //FIXME: merge player.cancelOvertime and map.cancelOvertime into a gametype function?
         for ( int i = 0; i < maxClients; i++ )
@@ -1552,7 +1552,7 @@ class Command_AdminMute : Racesow_TargetCommand
         if( @target == null )
             return false;
         target.muted |= 1;
-        player.sendMessage( "Muted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" ); // send these messages to all players?
+        player.sendMessage( "Muted player " + target.name + COMMAND_COLOR_DEFAULT + ".\n" ); // send these messages to all players?
         return true;
     }
 }
@@ -1572,7 +1572,7 @@ class Command_AdminUnmute : Racesow_TargetCommand
         if( @target == null )
             return false;
         target.muted &= ~1;
-        player.sendMessage( "Unmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Unmuted player " + target.name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1592,7 +1592,7 @@ class Command_AdminVmute : Racesow_TargetCommand
         if( @target == null )
             return false;
         target.muted |= 2;
-        player.sendMessage( "Vmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Vmuted player " + target.name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1612,7 +1612,7 @@ class Command_AdminVunmute : Racesow_TargetCommand
         if( @target == null )
             return false;
         target.muted &= ~2;
-        player.sendMessage( "Vunmuted player " + target.getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Vunmuted player " + target.name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1632,7 +1632,7 @@ class Command_AdminVotemute : Racesow_TargetCommand
         if( @targetPlayer == null )
             return false;
         targetPlayer.isVotemuted = true;
-        player.sendMessage( "Votemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Votemuted player " + targetPlayer.getClient().name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1652,7 +1652,7 @@ class Command_AdminUnvotemute : Racesow_TargetCommand
         if( @targetPlayer == null )
             return false;
         targetPlayer.isVotemuted = false;
-        player.sendMessage( "Unvotemuted player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Unvotemuted player " + targetPlayer.getClient().name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1672,7 +1672,7 @@ class Command_AdminRemove : Racesow_TargetCommand
         if( @targetPlayer == null )
             return false;
         targetPlayer.remove("");
-        player.sendMessage( "Removed player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Removed player " + targetPlayer.getClient().name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1692,7 +1692,7 @@ class Command_AdminKick : Racesow_TargetCommand
         if( @targetPlayer == null )
             return false;
         targetPlayer.kick("");
-        player.sendMessage( "Kicked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Kicked player " + targetPlayer.getClient().name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1712,7 +1712,7 @@ class Command_AdminJoinlock : Racesow_TargetCommand
         if( @targetPlayer == null )
             return false;
         targetPlayer.isJoinlocked = true;
-        player.sendMessage( "Joinlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Joinlocked player " + targetPlayer.getClient().name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1732,7 +1732,7 @@ class Command_AdminJoinunlock : Racesow_TargetCommand
         if( @targetPlayer == null )
             return false;
         targetPlayer.isJoinlocked = false;
-        player.sendMessage( "Joinunlocked player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Joinunlocked player " + targetPlayer.getClient().name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1750,7 +1750,7 @@ class Command_AdminKickban : Racesow_TargetCommand
     {
         Racesow_Player @targetPlayer = @racesowGametype.getPlayer( @Racesow_GetClientByString( args.getToken( 0 ) ) );
         targetPlayer.kickban("");
-        player.sendMessage( "Kickbanned player " + targetPlayer.getClient().getName() + COMMAND_COLOR_DEFAULT + ".\n" );
+        player.sendMessage( "Kickbanned player " + targetPlayer.getClient().name + COMMAND_COLOR_DEFAULT + ".\n" );
         return true;
     }
 }
@@ -1946,19 +1946,19 @@ class Command_CallvoteValidate : Racesow_BaseCommand
 //
 //        if ( vote == "extend_time" )
 //        {
-//            if( g_timelimit.get_integer() <= 0 )
+//            if( g_timelimit.integer <= 0 )
 //            {
 //                player.getClient().printMessage( "This vote is only available for timelimits.\n");
 //                return false;
 //            }
-//            uint timelimit = g_timelimit.get_integer() * 60000;//convert mins to ms
-//            uint extendtimeperiod = rs_extendtimeperiod.get_integer() * 60000;//convert mins to ms
+//            uint timelimit = g_timelimit.integer * 60000;//convert mins to ms
+//            uint extendtimeperiod = rs_extendtimeperiod.integer * 60000;//convert mins to ms
 //            uint time = levelTime - match.startTime(); //in ms
 //            uint remainingtime = timelimit - time;
 //            bool isNegative = (timelimit < time ) ? true : false;
 //            if( remainingtime > extendtimeperiod && !isNegative )
 //            {
-//                player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.get_string() + " minutes available.\n" );
+//                player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.string + " minutes available.\n" );
 //                return false;
 //            }
 //            return true;
@@ -1973,7 +1973,7 @@ class Command_CallvoteValidate : Racesow_BaseCommand
 //                return false;
 //            }
 //
-//            if ( new_timelimit == g_timelimit.get_integer() )
+//            if ( new_timelimit == g_timelimit.integer )
 //            {
 //                player.getClient().printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
 //                return false;
@@ -2003,7 +2003,7 @@ class Command_CallvoteValidate : Racesow_BaseCommand
 //            for ( int i = 0; i < maxClients; i++ )
 //            {
 //              if ( @racesowGametype.players[i].getClient() != null )
-//            player.getClient().printMessage( "  " + racesowGametype.players[i].getClient().playerNum() + ": " + racesowGametype.players[i].getClient().getName() + "\n");
+//            player.getClient().printMessage( "  " + racesowGametype.players[i].getClient().playerNum + ": " + racesowGametype.players[i].getClient().name + "\n");
 //        }
 //
 //        return false;
@@ -2052,7 +2052,7 @@ class Command_CallvotePassed : Racesow_BaseCommand
 //
 //        if ( vote == "extend_time" )
 //        {
-//            g_timelimit.set(g_timelimit.get_integer() + g_extendtime.get_integer());
+//            g_timelimit.set(g_timelimit.integer + g_extendtime.integer);
 //            map.cancelOvertime();
 //            for ( int i = 0; i < maxClients; i++ )
 //            {
@@ -2067,9 +2067,9 @@ class Command_CallvotePassed : Racesow_BaseCommand
 //
 //            // g_timelimit_reset == 1: this timelimit value is not kept after current map
 //            // g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
-//            if (g_timelimit_reset.get_boolean() == false)
+//            if (g_timelimit_reset.boolean == false)
 //            {
-//                oldTimelimit = g_timelimit.get_integer();
+//                oldTimelimit = g_timelimit.integer;
 //            }
 //        }
 //
@@ -2145,14 +2145,14 @@ class Command_CallvoteExtend_time : Command_AdminExtendtime
         if( !Command_AdminExtendtime::validate( player, args, argc ) )
             return false;
 
-        uint timelimit = g_timelimit.get_integer() * 60000;//convert mins to ms
-        uint extendtimeperiod = rs_extendtimeperiod.get_integer() * 60000;//convert mins to ms
+        uint timelimit = g_timelimit.integer * 60000;//convert mins to ms
+        uint extendtimeperiod = rs_extendtimeperiod.integer * 60000;//convert mins to ms
         uint time = levelTime - match.startTime(); //in ms
         uint remainingtime = timelimit - time;
         bool isNegative = (timelimit < time ) ? true : false;
         if( remainingtime > extendtimeperiod && !isNegative )
         {
-            player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.get_string() + " minutes available.\n" );
+            player.getClient().printMessage( "This vote is only in the last " + rs_extendtimeperiod.string + " minutes available.\n" );
             return false;
         }
         return true;
@@ -2177,7 +2177,7 @@ class Command_CallvoteTimelimit : Racesow_Command
             return false;
         }
 
-        if( new_timelimit == g_timelimit.get_integer() )
+        if( new_timelimit == g_timelimit.integer )
         {
             player.getClient().printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
             return false;
@@ -2193,9 +2193,9 @@ class Command_CallvoteTimelimit : Racesow_Command
 
         // g_timelimit_reset == 1: this timelimit value is not kept after current map
         // g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
-        if (g_timelimit_reset.get_boolean() == false)
+        if (g_timelimit_reset.boolean == false)
         {
-            oldTimelimit = g_timelimit.get_integer();
+            oldTimelimit = g_timelimit.integer;
         }
         return true;
     }

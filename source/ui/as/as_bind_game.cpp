@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "kernel/ui_common.h"
 #include "kernel/ui_main.h"
 #include "kernel/ui_demoinfo.h"
+#include "kernel/ui_downloadinfo.h"
 #include "as/asui.h"
 #include "as/asui_local.h"
 
@@ -31,14 +32,13 @@ namespace ASUI {
 class Game 
 {
 public:
-	Game() : backgroundTrackPlaying(false)
+	Game()
 	{
 	}
-
-	bool backgroundTrackPlaying;
 };
 
 typedef WSWUI::DemoInfo DemoInfo;
+typedef WSWUI::DownloadInfo DownloadInfo;
 
 // ch : whats up with these statics?
 static Game dummyGame;
@@ -55,28 +55,24 @@ static const DemoInfo & Game_GetDemoInfo( Game *game )
 	return *UI_Main::Get()->getDemoInfo();
 }
 
-static void Game_StartLocalSound( const asstring_t &s )
-{
-	trap::S_StartLocalSound( s.buffer );
-}
-
-static void Game_StartBackgroundTrack( Game *game, const asstring_t &intro, const asstring_t &loop, bool stopIfPlaying )
-{
-	if( stopIfPlaying || !game->backgroundTrackPlaying ) {
-		trap::S_StartBackgroundTrack( intro.buffer, loop.buffer );
-		game->backgroundTrackPlaying = true;
-	}
-}
-
-static void Game_StopBackgroundTrack( Game *game )
-{
-	trap::S_StopBackgroundTrack();
-	game->backgroundTrackPlaying = false;
-}
-
 static asstring_t *Game_Name( Game *game )
 {
 	return ASSTR( trap::Cvar_String( "gamename" ) );
+}
+
+static asstring_t *Game_ServerName( Game *game )
+{
+	return ASSTR( UI_Main::Get()->getServerName() );
+}
+
+static asstring_t *Game_RejectMessage( Game *game )
+{
+	return ASSTR( UI_Main::Get()->getRejectMessage() );
+}
+
+static const DownloadInfo & Game_GetDownloadInfo( Game *game )
+{
+	return *UI_Main::Get()->getDownloadInfo();
 }
 
 static asstring_t *Game_ConfigString( Game *game, int cs )
@@ -171,16 +167,15 @@ void BindGame( ASInterface *as )
 		( "DROP_TYPE_TOTAL", DROP_TYPE_TOTAL )
 		;
 
-	ASBind::GetClass<Game>( as->getEngine() )
-		// current refresh state
+	ASBind::Enum( as->getEngine(), "eDownloadType" )
+		( "DOWNLOADTYPE_NONE", DOWNLOADTYPE_NONE )
+		( "DOWNLOADTYPE_SERVER", DOWNLOADTYPE_SERVER )
+		( "DOWNLOADTYPE_WEB", DOWNLOADTYPE_WEB )
+		;
 
+	ASBind::GetClass<Game>( as->getEngine() )
 		// gives access to properties and controls of the currently playing demo instance
 		.constmethod( Game_GetDemoInfo, "get_demo", true )
-
-		// FIXME: move this to window.
-		.constmethod( Game_StartLocalSound, "startLocalSound", true )
-		.method2( Game_StartBackgroundTrack, "void startBackgroundTrack( String &in intro, String &in loop, bool stopIfPlaying = true ) const", true )
-		.constmethod( Game_StopBackgroundTrack, "stopBackgroundTrack", true )
 
 		.constmethod( Game_Name, "get_name", true )
 
@@ -196,6 +191,10 @@ void BindGame( ASInterface *as )
 
 		.constmethod( Game_Print, "print", true )
 		.constmethod( Game_DPrint, "dprint", true )
+
+		.constmethod( Game_ServerName, "get_serverName", true )
+		.constmethod( Game_RejectMessage, "get_rejectMessage", true )
+		.constmethod( Game_GetDownloadInfo, "get_download", true )
 	;
 }
 

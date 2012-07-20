@@ -29,8 +29,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define TEAM_ENEMY  ( GS_MAX_TEAMS + 2 )
 
 extern cvar_t *cg_weaponlist;
-extern cvar_t *cg_debug_HUD;
+extern cvar_t *cg_debugHUD;
 extern cvar_t *cg_clientHUD;
+extern cvar_t *cg_specHUD;
 
 cvar_t *cg_showminimap;
 cvar_t *cg_showitemtimers;
@@ -3124,6 +3125,10 @@ static cg_layoutnode_t *CG_RecurseParseLayoutScript( char **ptr, int level )
 			// precache arguments by calling the function at load time
 			if( command && expecArgs == numArgs && command->func && command->precache ) {
 				Vector4Set( layout_cursor_color, 0, 0, 0, 0 );
+				layout_cursor_x = -layout_cursor_width - 1;
+				layout_cursor_y = -layout_cursor_height - 1;
+				layout_cursor_width = 0;
+				layout_cursor_height = 0;
 				command->func( command, argumentnode, numArgs );
 			}
 		}
@@ -3525,7 +3530,7 @@ static char *CG_LoadHUDFile( char *path )
    	if( (!Q_stricmp( token, "include" )) && skip_include == qfalse)
    	{
    	    toinclude=COM_ParseExt2( &parse, qtrue, qfalse );
-   	    //if( cg_debug_HUD && cg_debug_HUD->integer )
+   	    //if( cg_debugHUD && cg_debugHUD->integer )
    	    //CG_Printf( "included: %s \n", toinclude );
 
    	    fipath_size = strlen("huds/inc/") + strlen(toinclude) + strlen(".hud") + 1;
@@ -3590,7 +3595,7 @@ static char *CG_LoadHUDFile( char *path )
    		char *include_buffer;
 
    		// not an empty file
-   		if( cg_debug_HUD && cg_debug_HUD->integer )
+   		if( cg_debugHUD && cg_debugHUD->integer )
    		    CG_Printf( "HUD: Including sub hud file: %s \n", toinclude );
 
    		// reparse all lines from included file to skip include commands
@@ -3683,27 +3688,28 @@ static void CG_LoadStatusBarFile( char *path )
 */
 void CG_LoadStatusBar( void )
 {
+	cvar_t *hud = ISREALSPECTATOR() ? cg_specHUD : cg_clientHUD;
 	size_t filename_size;
 	char *filename;
 
-	assert( cg_clientHUD && cg_clientHUD->dvalue[0] );
+	assert( hud && hud->dvalue[0] );
 
 	// buffer for filenames
-	filename_size = strlen( "huds/" ) + max( strlen( cg_clientHUD->dvalue ), strlen( cg_clientHUD->string ) ) + 4 + 1;
+	filename_size = strlen( "huds/" ) + max( strlen( hud->dvalue ), strlen( hud->string ) ) + 4 + 1;
 	filename = CG_Malloc( filename_size );
 
 	// always load default first. Custom second if needed
-	if( cg_debug_HUD && cg_debug_HUD->integer )
-		CG_Printf( "HUD: Loading default clientHUD huds/%s\n", cg_clientHUD->dvalue );
-	Q_snprintfz( filename, filename_size, "huds/%s", cg_clientHUD->dvalue );
+	if( cg_debugHUD && cg_debugHUD->integer )
+		CG_Printf( "HUD: Loading default clientHUD huds/%s\n", hud->dvalue );
+	Q_snprintfz( filename, filename_size, "huds/%s", hud->dvalue );
 	COM_DefaultExtension( filename, ".hud", filename_size );
 	CG_LoadStatusBarFile( filename );
 
-	if( cg_clientHUD->string[0] && Q_stricmp( cg_clientHUD->string, cg_clientHUD->dvalue ) )
+	if( hud->string[0] && Q_stricmp( hud->string, hud->dvalue ) )
 	{
-		if( cg_debug_HUD && cg_debug_HUD->integer )
-			CG_Printf( "HUD: Loading custom clientHUD huds/%s\n", cg_clientHUD->string );
-		Q_snprintfz( filename, filename_size, "huds/%s", cg_clientHUD->string );
+		if( cg_debugHUD && cg_debugHUD->integer )
+			CG_Printf( "HUD: Loading custom clientHUD huds/%s\n", hud->string );
+		Q_snprintfz( filename, filename_size, "huds/%s", hud->string );
 		COM_DefaultExtension( filename, ".hud", filename_size );
 		CG_LoadStatusBarFile( filename );
 	}

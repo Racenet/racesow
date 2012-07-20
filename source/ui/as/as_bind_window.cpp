@@ -38,7 +38,8 @@ public:
 		EventListener(), 
 		suspendedContext( NULL ),
 		attachedModalDocument( NULL ),
-		modalValue( 0 )
+		modalValue( 0 ),
+		backgroundTrackPlaying( false )
 	{
 		schedulers.clear();
 	}
@@ -260,6 +261,30 @@ public:
 		}
 	}
 
+	void startLocalSound( const asstring_t &s )
+	{
+		trap::S_StartLocalSound( s.buffer );
+	}
+
+	void startBackgroundTrack( const asstring_t &intro, const asstring_t &loop, bool stopIfPlaying )
+	{
+		if( stopIfPlaying || !backgroundTrackPlaying ) {
+			trap::S_StartBackgroundTrack( intro.buffer, loop.buffer );
+			backgroundTrackPlaying = true;
+		}
+	}
+
+	void stopBackgroundTrack( void )
+	{
+		trap::S_StopBackgroundTrack();
+		backgroundTrackPlaying = false;
+	}
+
+	void flash( unsigned int count )
+	{
+		trap::VID_FlashWindow( count );
+	}
+
 private:
 	typedef std::map<ElementDocument *, FunctionCallScheduler *>  SchedulerMap;
 	SchedulerMap schedulers;
@@ -324,6 +349,8 @@ private:
 
 	// exit code passed via document.close() of the modal document
 	int modalValue;
+
+	bool backgroundTrackPlaying;
 };
 
 // ====================================================================
@@ -364,6 +391,10 @@ void BindWindow( ASInterface *as )
 		.method( &ASWindow::historySize, "history_size" )
 		.method( &ASWindow::historyBack, "history_back" )
 
+		.constmethod( &ASWindow::startLocalSound, "startLocalSound" )
+		.method2( &ASWindow::startBackgroundTrack, "void startBackgroundTrack( String &in intro, String &in loop, bool stopIfPlaying = true ) const" )
+		.constmethod( &ASWindow::stopBackgroundTrack, "stopBackgroundTrack" )
+
 		.method2<int (ASWindow::*)(asIScriptFunction *, unsigned int)>
 			( &ASWindow::setTimeout, "int setTimeout (TimerCallback @, uint)" )
 		.method2<int (ASWindow::*)(asIScriptFunction *, unsigned int)>
@@ -376,6 +407,8 @@ void BindWindow( ASInterface *as )
 
 		.method( &ASWindow::clearTimeout, "clearTimeout" )
 		.method( &ASWindow::clearInterval, "clearInterval" )
+
+		.method( &ASWindow::flash, "flash" )
 	;
 }
 

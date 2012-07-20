@@ -490,6 +490,8 @@ void ServerBrowserDataSource::GetRow( StringList &row, const String &table, int 
 			row.push_back( info.tv ? "yes" : "no" );
 		else if( *it == "favorite" )
 			row.push_back( info.favorite ? "yes" : "no" );
+		else if( *it == "mod" )
+			row.push_back( info.modname.c_str() );
 		else
 			// Com_Printf("ServerBrowserDataSource::GetRow: unknown column %s\n", it->CString() );
 			row.push_back( "" );
@@ -619,6 +621,9 @@ void ServerBrowserDataSource::startFullUpdate( void )
 
 		trap::Cmd_ExecuteText( EXEC_APPEND, queryString.c_str() );
 	}
+
+	// query for LAN servers too
+	trap::Cmd_ExecuteText( EXEC_APPEND, "requestservers local" );
 
 	for( ReferenceListMap::iterator it = referenceListMap.begin(); it != referenceListMap.end(); it++ ) {
 		size_t size = it->second.size();

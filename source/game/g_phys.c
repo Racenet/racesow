@@ -822,7 +822,7 @@ static void SV_Physics_Toss( edict_t *ent )
 				d = DotProduct( trace.plane.normal, ent->velocity );
 
 				// wsw: Lardase fix for grenade bouncing in stairs
-				if( fabs( d ) < 60 )
+				if( fabs( d ) < 60 || trace.allsolid )
 				{
 					ent->groundentity = &game.edicts[trace.ent];
 					ent->groundentity_linkcount = ent->groundentity->r.linkcount;

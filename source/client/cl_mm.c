@@ -739,6 +739,25 @@ size_t CL_MM_GetProfileURL( char *buffer, size_t buffer_size, qboolean rml )
 }
 
 /*
+* CL_MM_GetBaseWebURL
+*/
+size_t CL_MM_GetBaseWebURL( char *buffer, size_t buffer_size )
+{
+	const char *web_url = APP_MATCHMAKER_WEB_URL;
+
+	if( !buffer || !buffer_size ) {
+		return 0;
+	}
+	if( !web_url || !*web_url ) {
+		*buffer = '\0';
+		return 0;
+	}
+
+	Q_strncpyz( buffer, web_url, buffer_size );
+	return strlen( web_url );
+}
+
+/*
 * CL_MM_ErrorMessage
 * Stores error message in local buffer and optionally prints it to console
 */

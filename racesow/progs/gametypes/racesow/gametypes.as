@@ -136,12 +136,12 @@ class Racesow_Gametype
 
     void onConnect( cClient @client )
     {
-        @this.players[client.playerNum()] = Racesow_Player( client );
+        @this.players[client.playerNum] = Racesow_Player( client );
     }
 
     void onDisconnect( cClient @client )
     {
-        @this.players[client.playerNum()] = Racesow_Player();
+        @this.players[client.playerNum] = Racesow_Player();
     }
 
     /**
@@ -163,10 +163,10 @@ class Racesow_Gametype
      */
     Racesow_Player @getPlayer( cClient @client )
     {
-        if ( @client == null || client.playerNum() < 0 )
+        if ( @client == null || client.playerNum < 0 )
             return null;
 
-        return @this.players[ client.playerNum() ]; //.setClient( @client ); //FIXME: why set the client HERE??
+        return @this.players[ client.playerNum ]; //.setClient( @client ); //FIXME: why set the client HERE??
     }
 
 }

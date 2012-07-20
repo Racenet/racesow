@@ -13,7 +13,7 @@ void assert( const bool test, const String msg )
 	if ( !test )
 	{
         String@ assertstring;
-		G_Print( S_COLOR_RED + "assert failed [" + gametype.getName() + " " + gametype.getVersion() + "]: " + "\n" );
+		G_Print( S_COLOR_RED + "assert failed [" + gametype.name + " " + gametype.version + "]: " + "\n" );
         G_Print( S_COLOR_RED + msg + "\n");
         assertstring.length();
 	}
@@ -148,11 +148,12 @@ String DateToString( uint64 dateuint64 )
  */
 /*Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
 {
-    if ( @client == null || client.playerNum() < 0 )
+    if ( @client == null || client.playerNum < 0 )
         return null;
 
-    return @racesowGametype.players[ client.playerNum() ]; //.setClient( @client ); //FIXME: why set the client HERE??
+    return @racesowGametype.players[ client.playerNum ]; //.setClient( @client ); //FIXME: why set the client HERE??
 }*/
+
 
 /**
  * Racesow_GetPlayerByNumber
@@ -183,8 +184,8 @@ int Racesow_GetClientNumber( String playerName )
         if ( client.state() < CS_SPAWNED )
             continue;
 
-        if (client.getName().removeColorTokens() == playerName)
-            return client.playerNum();
+        if (client.name.removeColorTokens() == playerName)
+            return client.playerNum;
     }
     return -1;
 }
@@ -215,7 +216,7 @@ cClient @Racesow_GetClientByString( String playerString )
     for ( int i = 0; i < maxClients; i++ )
     {
       @client = @G_GetClient( i );
-      if ( client.getName().removeColorTokens() == playerString )
+      if ( client.name.removeColorTokens() == playerString )
         return @client;
     }
   }

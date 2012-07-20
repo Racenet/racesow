@@ -17,11 +17,13 @@ void BindAPI( ASInterface *as )
 	PrebindEventListener( as );
 	PrebindElement( as );
 	PrebindWindow( as );
+	PrebindIrc( as );
 
 	PrebindOptionsForm( as );
 	PrebindServerbrowser( as );
 	PrebindDataSource( as );
 	PrebindDemoInfo( as );
+	PrebindDownloadInfo( as );
 	PrebindGame( as );
 	PrebindMatchMaker( as );
 
@@ -30,11 +32,13 @@ void BindAPI( ASInterface *as )
 	BindEvent( as );
 	BindElement( as );
 	BindWindow( as );
+	BindIrc( as );
 
 	BindOptionsForm( as );
 	BindServerbrowser( as );
 	BindDataSource( as );
 	BindDemoInfo( as );
+	BindDownloadInfo( as );
 	BindGame( as );
 	BindMatchMaker( as );
 }
@@ -47,14 +51,13 @@ void BindGlobals( ASInterface *as )
 	BindServerbrowserGlobal( as );
 	BindGameGlobal( as );
 	BindMatchMakerGlobal( as );
+	BindIrcGlobal( as );
 }
 
 // update function for bound api
 void BindFrame( ASInterface *as )
 {
 	RunWindowFrame();
-
-	// FUTURE: run update events
 }
 
 // release bound resources (funcdefs, etc)

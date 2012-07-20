@@ -570,7 +570,7 @@ void G_Match_Autorecord_Start( void )
 
 	if( playerCount && g_autorecord->integer )
 	{
-		char name[MAX_STRING_CHARS], datetime[17], players[MAX_STRING_CHARS];
+		char datetime[17], players[MAX_STRING_CHARS];
 		time_t long_time;
 		struct tm *newtime;
 
@@ -613,10 +613,10 @@ void G_Match_Autorecord_Start( void )
 		}
 
 		// combine
-		Q_snprintfz( name, sizeof( name ), "%s_%s_%s%s%s", datetime, gs.gametypeName,
-			level.mapname, players[0] == '\0' ? "" : "_", players );
+		Q_snprintfz( level.autorecord_name, sizeof( level.autorecord_name ), "%s_%s_%s%s%s_auto%04i", 
+			datetime, gs.gametypeName, level.mapname, players[0] == '\0' ? "" : "_", players, (int)brandom( 1, 9999 ) );
 
-		trap_Cmd_ExecuteText( EXEC_APPEND, va( "serverrecord \"%s\" %i\n", name, (int)brandom( 1, 9999 ) ) );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va( "serverrecord %s\n", level.autorecord_name ) );
 	}
 }
 
@@ -1155,6 +1155,7 @@ static void G_Match_ReadyAnnouncement( void )
 			if( level.ready[teamlist[team].playerIndices[i]-1] )
 			{
 				readyupwarnings = qtrue;
+				break;
 			}
 		}
 	}
