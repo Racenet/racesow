@@ -152,7 +152,7 @@ cvar_t *cg_instabeam_width;
 cvar_t *cg_instabeam_alpha;
 cvar_t *cg_instabeam_time;
 
-cvar_t *cg_demoname;
+cvar_t *cg_lgbeam_old;
 
 cvar_t *cg_playList;
 cvar_t *cg_playListShuffle;
@@ -674,17 +674,16 @@ static void CG_RegisterVariables( void )
 	cg_ebbeam_width = trap_Cvar_Get( "cg_ebbeam_width", "64", CVAR_ARCHIVE );
 	cg_ebbeam_alpha = trap_Cvar_Get( "cg_ebbeam_alpha", "0.4", CVAR_ARCHIVE );
 	cg_ebbeam_time = trap_Cvar_Get( "cg_ebbeam_time", "0.6", CVAR_ARCHIVE );
+	cg_lgbeam_old = trap_Cvar_Get( "cg_lgbeam_old", "0", CVAR_ARCHIVE );
 
 	cg_instabeam_width = trap_Cvar_Get( "cg_instabeam_width", "7", CVAR_ARCHIVE );
 	cg_instabeam_alpha = trap_Cvar_Get( "cg_instabeam_alpha", "0.4", CVAR_ARCHIVE );
 	cg_instabeam_time = trap_Cvar_Get( "cg_instabeam_time", "0.4", CVAR_ARCHIVE );
 
-	cg_showminimap = trap_Cvar_Get( "cg_showMiniMap", "1", CVAR_ARCHIVE );
+	cg_showminimap = trap_Cvar_Get( "cg_showMiniMap", "0", CVAR_ARCHIVE );
 	cg_showitemtimers = trap_Cvar_Get( "cg_showItemTimers", "3", CVAR_ARCHIVE );
 	cg_placebo =  trap_Cvar_Get( "cg_placebo", "0", CVAR_ARCHIVE );
 	cg_strafeHUD = trap_Cvar_Get( "cg_strafeHUD", "0", CVAR_ARCHIVE );
-
-	cg_demoname = trap_Cvar_Get( "demoname", "", 0 );
 
 	cg_playList = trap_Cvar_Get( "cg_playList", S_PLAYLIST_MATCH, CVAR_ARCHIVE );
 	cg_playListShuffle = trap_Cvar_Get( "cg_playListShuffle", "1", CVAR_ARCHIVE );
@@ -825,6 +824,8 @@ static void CG_RegisterConfigStrings( void )
 	GS_SetGametypeName( cgs.configStrings[CS_GAMETYPENAME] );
 
 	trap_Cmd_ExecuteText( EXEC_NOW, va( "exec configs/client/%s.cfg silent", gs.gametypeName ) );
+
+	CG_SC_AutoRecordAction( cgs.configStrings[i] );
 }
 
 /*
@@ -877,8 +878,9 @@ void CG_Reset( void )
 /*
 * CG_Init
 */
-void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demoplaying,
-              qboolean pure, unsigned int snapFrameTime, int protocol, int sharedSeed )
+void CG_Init( const char *serverName, unsigned int playerNum, int vidWidth, int vidHeight, 
+			 qboolean demoplaying, const char *demoName, qboolean pure, 
+			 unsigned int snapFrameTime, int protocol, int sharedSeed )
 {
 	CG_InitGameShared();
 
@@ -890,6 +892,9 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 	CG_Printf( S_COLOR_MAGENTA"Hi, I'm an unpure bitch 7\n" );
 #endif
 
+	// save server name
+	cgs.serverName = CG_CopyString( serverName );
+
 	// save local player number
 	cgs.playerNum = playerNum;
 
@@ -899,6 +904,7 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 
 	// demo
 	cgs.demoPlaying = demoplaying;
+	cgs.demoName = demoName;
 
 	// whether to only allow pure files
 	cgs.pure = pure;
@@ -959,7 +965,7 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 
 	cgs.precacheDone = qtrue;
 
-	cgs.demoTutorial = cgs.demoPlaying && (strstr( cg_demoname->string, "tutorials/" ) != NULL);
+	cgs.demoTutorial = cgs.demoPlaying && (strstr( cgs.demoName, "tutorials/" ) != NULL);
 
 	// now that we're done with precaching, let the autorecord actions do something
 	CG_ConfigString( CS_AUTORECORDSTATE, cgs.configStrings[CS_AUTORECORDSTATE] );

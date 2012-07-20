@@ -29,8 +29,6 @@ SERVER COMMANDS
 ==========================================================================
 */
 
-static void CG_SC_AutoRecordAction( const char *action );
-
 /*
 * CG_SC_Print
 */
@@ -497,7 +495,7 @@ static void CG_SC_RaceDemoCancel( void )
 /*
 * CG_SC_AutoRecordAction
 */
-static void CG_SC_AutoRecordAction( const char *action )
+void CG_SC_AutoRecordAction( const char *action )
 {
 	static qboolean autorecording = qfalse;
 	const char *name;
@@ -649,7 +647,7 @@ static void CG_CS_UpdateTeamInfo( void )
 * CG_Cmd_DemoGet_f
 */
 static qboolean demo_requested = qfalse;
-void CG_Cmd_DemoGet_f( void )
+static void CG_Cmd_DemoGet_f( void )
 {
 	if( demo_requested )
 	{
