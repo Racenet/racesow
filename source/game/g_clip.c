@@ -863,7 +863,6 @@ void GClip_SetBrushModel( edict_t *ent, char *name )
 		return;
 		//!racesow
 	}
-		G_Error( "GClip_SetBrushModel: NULL model in '%s'", ent->classname ? ent->classname : "no classname" );
 
 	if( !name[0] )
 	{
