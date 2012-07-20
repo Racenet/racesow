@@ -185,9 +185,9 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
 	 */
 	bool signUp(String &authName, String &authEmail, String &password, String &confirmation)
 	{
-        if (rs_registrationDisabled.get_boolean()) {
+        if (rs_registrationDisabled.boolean) {
         
-            this.player.sendMessage( S_COLOR_RED + rs_registrationInfo.get_string() );
+            this.player.sendMessage( S_COLOR_RED + rs_registrationInfo.string );
             return false;
         }
     
@@ -414,7 +414,7 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
         bool hasLogin = this.authenticationName != "" || this.authenticationPass != "";
         String msg;
     
-        if ( rs_loadHighscores.get_boolean() )
+        if ( rs_loadHighscores.boolean )
 		{
 		    this.player.bestRaceTime = personalBest;
 		    if ( gametypeFlag == MODFLAG_RACE )
@@ -424,9 +424,9 @@ const uint RACESOW_AUTH_ADMIN           = (RACESOW_AUTH_REGISTERED | RACESOW_AUT
 		    this.player.overallTries = overallTries;
 		}
 
-        if ( rs_loadPlayerCheckpoints.get_boolean() )
+        if ( rs_loadPlayerCheckpoints.boolean )
         {
-            String checkpoints = RS_PrintQueryCallback(this.player.getClient().playerNum());
+            String checkpoints = RS_PrintQueryCallback(this.player.getClient().playerNum);
 
             for ( int i = 0; i < numCheckpoints; i++ )
             {

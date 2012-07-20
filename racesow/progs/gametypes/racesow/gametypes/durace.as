@@ -34,13 +34,13 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         gametype.enableDrowning = true;
 
         //store the timelimit because value in DURACE is not the same than in RACE
-        oldTimelimit = g_timelimit.get_integer();
+        oldTimelimit = g_timelimit.integer;
             
         // define the scoreboard layout
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );
         G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Score Time Ping Racing R" );
     
-        G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
+        G_Print( "Gametype '" + gametype.title + "' initialized\n" );
     }
     
     void SpawnGametype()
@@ -52,20 +52,20 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         	cItem @Item = G_GetItem( tag );
         	if( @Item == null)
         		continue;
-        	String itemClassname = Item.getClassname();
+        	String itemClassname = Item.classname;
         	@from = null;
         	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
         	if( @item == null )
         		continue;
       		do
       		{
-      			if( ( item.solid == SOLID_NOT ) && ( ( @item.findTargetingEntity( null ) != null ) && ( item.findTargetingEntity( null ).getClassname() == "target_give" ) ) ) //connected to target_give
+      			if( ( item.solid == SOLID_NOT ) && ( ( @item.findTargetingEntity( null ) != null ) && ( item.findTargetingEntity( null ).classname == "target_give" ) ) ) //connected to target_give
       			{
       				@from = @item;
       			}
       			else
       			{
-      				item.setClassname( "AS_" + itemClassname );
+      				item.classname = "AS_" + itemClassname;
       				replacementItem( @item );
       				@from = @item;
       			}
@@ -262,13 +262,13 @@ class Racesow_Gametype_Durace : Racesow_Gametype
                 else
                     readyIcon = 0;
     
-                int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
+                int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
     
                 racing = int( Racesow_GetPlayerByClient( ent.client ).isRacing() ? 1 : 0 );
                 
                 //"Name Clan Score Time Ping Racing R"
                 entry = "&p " + playerID + " "
-                        + ent.client.getClanName() + " "
+                        + ent.client.clanName + " "
                         + ent.client.stats.score + " "
                         + Racesow_GetPlayerByClient( ent.client ).bestRaceTime + " "
                         + ent.client.ping + " "
@@ -346,14 +346,14 @@ void DURACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter
 
 void DURACE_InitGametype()
 {
-  gametype.setTitle( "Duel Race 1vs1" );
+  gametype.title = "Duel Race 1vs1";
   // if the gametype doesn't have a config file, create it
   if ( !G_FileExists( "configs/server/gametypes/durace.cfg" ) )
   {
       String config;
 
       // the config file doesn't exist or it's empty, create it
-      config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
+      config = "// '" + gametype.title + "' gametype configuration file\n"
                + "// This config will be executed each time the gametype is started\n"
                + "\n// game settings\n"
                + "set g_scorelimit \"0\"\n"
@@ -380,14 +380,14 @@ void DURACE_InitGametype()
 
 void TRACE_InitGametype()
 {
-  gametype.setTitle( "Team Race" );
+  gametype.title = "Team Race";
   // if the gametype doesn't have a config file, create it
   if ( !G_FileExists( "configs/server/gametypes/trace.cfg" ) )
   {
       String config;
 
       // the config file doesn't exist or it's empty, create it
-      config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
+      config = "// '" + gametype.title + "' gametype configuration file\n"
                + "// This config will be executed each time the gametype is started\n"
                + "\n// game settings\n"
                + "set g_scorelimit \"0\"\n"

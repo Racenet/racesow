@@ -149,7 +149,7 @@ class Command_Mapfilter : Racesow_Command
             page = args.getToken( 1 ).toInt();
 
         player.isWaitingForCommand = true;
-        return RS_MapFilter(player.client.playerNum(),filter,page);
+        return RS_MapFilter(player.client.playerNum,filter,page);
     }
 }
 
@@ -159,14 +159,14 @@ class Command_Gametype : Racesow_Command
     {
         String response = "";
         Cvar fs_game( "fs_game", "", 0 );
-        String manifest = gametype.getManifest();
+        String manifest = gametype.manifest;
 
         response += "\n";
-        response += "Gametype " + gametype.getName() + " : " + gametype.getTitle() + "\n";
+        response += "Gametype " + gametype.name + " : " + gametype.title + "\n";
         response += "----------------\n";
-        response += "Version: " + gametype.getVersion() + "\n";
-        response += "Author: " + gametype.getAuthor() + "\n";
-        response += "Mod: " + fs_game.get_string() + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
+        response += "Version: " + gametype.version + "\n";
+        response += "Author: " + gametype.author + "\n";
+        response += "Mod: " + fs_game.string + (manifest.length() > 0 ? " (manifest: " + manifest + ")" : "") + "\n";
         response += "----------------\n";
 
         player.sendMessage(response);
@@ -257,7 +257,7 @@ class Command_Top : Racesow_Command
     bool execute(Racesow_Player @player, String &args, int argc)
     {
         player.isWaitingForCommand=true;
-        RS_MysqlLoadHighscores(player.getClient().playerNum(), this.limit, map.getId(), this.mapname, this.prejumped);
+        RS_MysqlLoadHighscores(player.getClient().playerNum, this.limit, map.getId(), this.mapname, this.prejumped);
         return true;
     }
 
@@ -317,7 +317,7 @@ class Command_Ranking : Racesow_Command
     bool execute(Racesow_Player @player, String &args, int argc)
     {
         player.isWaitingForCommand = true;
-        RS_MysqlLoadRanking(player.getClient().playerNum(), this.page, this.order);
+        RS_MysqlLoadRanking(player.getClient().playerNum, this.page, this.order);
         return true;
     }
 
@@ -351,7 +351,7 @@ class Command_Oneliner : Racesow_Command
     bool execute(Racesow_Player @player, String &args, int argc)
     {
 	    player.isWaitingForCommand = true;
-        RS_MysqlSetOneliner(player.getClient().playerNum(), player.getId(), map.getId(), args);
+        RS_MysqlSetOneliner(player.getClient().playerNum, player.getId(), map.getId(), args);
         return true;
     }
 
@@ -432,7 +432,7 @@ class Command_Maplist : Racesow_Command
         if (argc >= 1)
             page = args.getToken(0).toInt();
 
-        return RS_Maplist(player.client.playerNum(),page);
+        return RS_Maplist(player.client.playerNum,page);
     }
 }
 
@@ -494,11 +494,11 @@ class Command_ProtectedNick : Racesow_Command
     {
 		if ( argc < 1 )
 		{
-			RS_GetPlayerNick( player.client.playerNum(), player.getId() );
+			RS_GetPlayerNick( player.client.playerNum, player.getId() );
 		}
 		else if ( args.getToken(0) == "update" )
 		{
-			RS_UpdatePlayerNick( player.getName(), player.client.playerNum(), player.getId() );
+			RS_UpdatePlayerNick( player.getName(), player.client.playerNum, player.getId() );
 		}
 		player.isWaitingForCommand = true;
         return true;
@@ -552,7 +552,7 @@ class Command_Help : Racesow_Command
         {
             String help;
             help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
-            help += S_COLOR_RED + "HELP for Racesow " + gametype.getVersion() + "\n";
+            help += S_COLOR_RED + "HELP for Racesow " + gametype.version + "\n";
             help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
             player.sendMessage(help);
             help = "";
@@ -586,13 +586,13 @@ class Command_Timeleft : Racesow_Command
             return false;
         }
 		
-		if ( !g_maprotation.get_boolean() )
+		if ( !g_maprotation.boolean )
 		{
 			player.sendErrorMessage( "The command isn't available when g_maprotation == 0.");
             return false;
 		}
 		
-        if( g_timelimit.get_integer() <= 0 )
+        if( g_timelimit.integer <= 0 )
         {
             player.sendErrorMessage( "There is no timelimit set");
             return false;
@@ -602,7 +602,7 @@ class Command_Timeleft : Racesow_Command
 
     bool execute(Racesow_Player @player, String &args, int argc)
     {
-        uint timelimit = g_timelimit.get_integer() * 60000;//convert mins to ms
+        uint timelimit = g_timelimit.integer * 60000;//convert mins to ms
         uint time = levelTime - match.startTime(); //in ms
         uint timeleft = timelimit - time;
         if( timelimit < time )
@@ -770,7 +770,7 @@ class Command_Noclip : Racesow_Command
             player.sendErrorMessage("Noclip is not available in your current state");
             return false;
         }
-        if ( gametypeFlag == MODFLAG_RACE && !player.practicing && !sv_cheats.get_boolean() )
+        if ( gametypeFlag == MODFLAG_RACE && !player.practicing && !sv_cheats.boolean )
 			return false;
 
         return true;
@@ -871,7 +871,7 @@ class Command_Stats : Racesow_Command
     bool execute(Racesow_Player @player, String &args, int argc)
     {
         //player.sendMessage( S_COLOR_RED + "TODO: " + S_COLOR_WHITE + "retrieve stats for " + this.what + " " + this.which + "\n" );
-        return RS_LoadStats(player.client.playerNum(), this.what, this.which);
+        return RS_LoadStats(player.client.playerNum, this.what, this.which);
     }
 }
 
@@ -922,7 +922,7 @@ void RS_CreateCommands()
     admin.description = "Execute an admin command";
     admin.usage =
             S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
-            + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.getVersion() + "\n"
+            + S_COLOR_RED + "ADMIN HELP for Racesow " + gametype.version + "\n"
             + S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n"
             /*+ S_COLOR_RED + "admin add           " + S_COLOR_YELLOW + "add player as an admin\n" //The command string is not long enough to hold all commands
             + S_COLOR_RED + "admin delete           " + S_COLOR_YELLOW + "remove admin rights from player\n"
@@ -1035,7 +1035,7 @@ void RS_CreateCommands()
     @commands[commandCount] = @maplist;
     commandCount++;
 
-    if (dedicated.get_boolean())
+    if (dedicated.boolean)
     {
         Command_Mapname mapname;
         mapname.name = "mapname";

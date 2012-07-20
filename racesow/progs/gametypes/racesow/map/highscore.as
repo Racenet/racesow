@@ -122,7 +122,7 @@ class Racesow_Map_HighScore
 	void fromRace( Racesow_Player_Race &race )
 	{
 		this.finishTime = race.getTime();
-		this.playerName = race.getPlayer().getClient().getName();
+		this.playerName = race.getPlayer().getClient().name;
 		this.timeStamp = race.getTimeStamp();
 		this.checkPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )

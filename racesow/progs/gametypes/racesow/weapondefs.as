@@ -18,7 +18,7 @@ bool weaponDefCommand( String &cmdString, cClient @client )
 	
 	if ( !Racesow_GetPlayerByClient(client).auth.allow( RACESOW_AUTH_ADMIN ) )
 	{
-		G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_RED
+		G_PrintMsg( null, S_COLOR_WHITE + client.name + S_COLOR_RED
 		+ " tried to execute an admin command without permission.\n" );
 		
 		return false;
@@ -41,7 +41,7 @@ bool weaponDefCommand( String &cmdString, cClient @client )
 			String value = cmdString.getToken( 2 );
 			
 			Cvar wdefCvar( "rs_"+ command + "_" + property , "", CVAR_ARCHIVE );
-			if (wdefCvar.get_string() != "")
+			if (wdefCvar.string != "")
 			{
 				if (value != "")
 				{
@@ -50,7 +50,7 @@ bool weaponDefCommand( String &cmdString, cClient @client )
 				}
 				else 
 				{
-					G_PrintMsg( client.getEnt(), "Current value for rs_" + command + "_" + property + " : " + wdefCvar.get_string() + "\n");
+					G_PrintMsg( client.getEnt(), "Current value for rs_" + command + "_" + property + " : " + wdefCvar.string + "\n");
 				}
 			}
 			else
@@ -67,11 +67,11 @@ bool weaponDefCommand( String &cmdString, cClient @client )
 				Cvar cvar_smk( "rs_rocket_minknockback", "", CVAR_ARCHIVE );Cvar cvar_wmk( "rs_rocketweak_minknockback", "", CVAR_ARCHIVE );
 				Cvar cvar_sps( "rs_rocket_prestep", "", CVAR_ARCHIVE );
 				Cvar cvar_sal( "rs_rocket_antilag", "", CVAR_ARCHIVE );
-				String skb=cvar_skb.get_string(); String wkb=cvar_wkb.get_string();
-				String ssp=cvar_ssp.get_string(); String wsp=cvar_wsp.get_string();
-				String smk=cvar_smk.get_string(); String wmk=cvar_wmk.get_string();
-				String sps=cvar_sps.get_string(); 
-				String sal=cvar_sal.get_string();
+				String skb=cvar_skb.string; String wkb=cvar_wkb.string;
+				String ssp=cvar_ssp.string; String wsp=cvar_wsp.string;
+				String smk=cvar_smk.string; String wmk=cvar_wmk.string;
+				String sps=cvar_sps.string; 
+				String sal=cvar_sal.string;
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 				help += S_COLOR_RED + "rocket___|strong__cur__0.5__0.42__|_weak__cur__0.5__0.42\n";
 				help += S_COLOR_RED + "knockbk__|_______"+skb+"__100__100__|_______"+wkb+"___95__100\n";
@@ -89,12 +89,12 @@ bool weaponDefCommand( String &cmdString, cClient @client )
 				Cvar cvar_spd( "rs_plasma_speed", "", CVAR_ARCHIVE );Cvar cvar_wpd( "rs_plasma_speed", "", CVAR_ARCHIVE );
 				Cvar cvar_shk( "rs_plasma_hack", "", CVAR_ARCHIVE );
 				Cvar cvar_sps( "rs_plasma_prestep", "", CVAR_ARCHIVE );
-				String skb=cvar_skb.get_string(); String wkb=cvar_wkb.get_string();
-				String ssp=cvar_ssp.get_string(); String wsp=cvar_wsp.get_string();
-				String smk=cvar_smk.get_string(); String wmk=cvar_wmk.get_string();
-				String spd=cvar_spd.get_string(); String wpd=cvar_wpd.get_string();
-				String shk=cvar_shk.get_string(); 
-				String sps=cvar_sps.get_string(); 
+				String skb=cvar_skb.string; String wkb=cvar_wkb.string;
+				String ssp=cvar_ssp.string; String wsp=cvar_wsp.string;
+				String smk=cvar_smk.string; String wmk=cvar_wmk.string;
+				String spd=cvar_spd.string; String wpd=cvar_wpd.string;
+				String shk=cvar_shk.string; 
+				String sps=cvar_sps.string; 
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 				help += S_COLOR_RED + "plasma___|strong__cur__0.5__0.42_|_weak__cur__0.5__0.42\n";
 				help += S_COLOR_RED + "knockbk__|_______"+skb+"__20___28__|________"+wkb+"___14___19\n";
@@ -115,14 +115,14 @@ bool weaponDefCommand( String &cmdString, cClient @client )
 				Cvar cvar_sfr( "rs_grenade_friction", "", CVAR_ARCHIVE );
 				Cvar cvar_sgr( "rs_grenade_gravity", "", CVAR_ARCHIVE );
 				Cvar cvar_sps( "rs_grenade_prestep", "", CVAR_ARCHIVE );
-				String stm=cvar_stm.get_string(); String wtm=cvar_wtm.get_string();
-				String skb=cvar_skb.get_string(); String wkb=cvar_wkb.get_string();
-				String ssp=cvar_ssp.get_string(); String wsp=cvar_wsp.get_string();
-				String smk=cvar_smk.get_string(); String wmk=cvar_wmk.get_string();
-				String spd=cvar_spd.get_string(); String wpd=cvar_wpd.get_string();
-				String sfr=cvar_sfr.get_string(); 
-				String sgr=cvar_sgr.get_string(); 
-				String sps=cvar_sps.get_string(); 
+				String stm=cvar_stm.string; String wtm=cvar_wtm.string;
+				String skb=cvar_skb.string; String wkb=cvar_wkb.string;
+				String ssp=cvar_ssp.string; String wsp=cvar_wsp.string;
+				String smk=cvar_smk.string; String wmk=cvar_wmk.string;
+				String spd=cvar_spd.string; String wpd=cvar_wpd.string;
+				String sfr=cvar_sfr.string; 
+				String sgr=cvar_sgr.string; 
+				String sps=cvar_sps.string; 
 				help += S_COLOR_BLACK + "--------------------------------------------------------------------------------------------------------------------------\n";
 				help += S_COLOR_RED + "grenade__|strong_cur__0.5__0.42_|_weak__cur__0.5__0.42\n";
 				help += S_COLOR_RED + "timeout__|_____"+stm+"_1250_2000__|_______"+wtm+"__1250_2000\n";
@@ -181,7 +181,7 @@ bool weaponDefCommand( String &cmdString, cClient @client )
 	}
 	else if ( showNotification )
 	{
-		G_PrintMsg( null, S_COLOR_WHITE + client.getName() + S_COLOR_GREEN
+		G_PrintMsg( null, S_COLOR_WHITE + client.name + S_COLOR_GREEN
 		+ " executed command 'weapondef "+ cmdString +"'\n" );
 	}
 	
@@ -284,11 +284,11 @@ void weaponDefSave()
 		Cvar cvar_smk( "rs_rocket_minknockback", "", CVAR_ARCHIVE );Cvar cvar_wmk( "rs_rocketweak_minknockback", "", CVAR_ARCHIVE );
 		Cvar cvar_sps( "rs_rocket_prestep", "", CVAR_ARCHIVE );
 		Cvar cvar_sal( "rs_rocket_antilag", "", CVAR_ARCHIVE );
-		String skb=cvar_skb.get_string(); String wkb=cvar_wkb.get_string();
-		String ssp=cvar_ssp.get_string(); String wsp=cvar_wsp.get_string();
-		String smk=cvar_smk.get_string(); String wmk=cvar_wmk.get_string();
-		String sps=cvar_sps.get_string(); 
-		String sal=cvar_sal.get_string();
+		String skb=cvar_skb.string; String wkb=cvar_wkb.string;
+		String ssp=cvar_ssp.string; String wsp=cvar_wsp.string;
+		String smk=cvar_smk.string; String wmk=cvar_wmk.string;
+		String sps=cvar_sps.string; 
+		String sal=cvar_sal.string;
 		config_wpdef = "// racesow weapon defs, with default warsow.5 values\n"
 		+ "\n"
 		+ "// rocket weak\n"
@@ -309,12 +309,12 @@ void weaponDefSave()
 		Cvar cvar_spd( "rs_plasma_speed", "", CVAR_ARCHIVE );Cvar cvar_wpd( "rs_plasma_speed", "", CVAR_ARCHIVE );
 		Cvar cvar_shk( "rs_plasma_hack", "", CVAR_ARCHIVE );
 		Cvar cvar_sps( "rs_plasma_prestep", "", CVAR_ARCHIVE );
-		String skb=cvar_skb.get_string(); String wkb=cvar_wkb.get_string();
-		String ssp=cvar_ssp.get_string(); String wsp=cvar_wsp.get_string();
-		String smk=cvar_smk.get_string(); String wmk=cvar_wmk.get_string();
-		String spd=cvar_spd.get_string(); String wpd=cvar_wpd.get_string();
-		String shk=cvar_shk.get_string(); 
-		String sps=cvar_sps.get_string(); 
+		String skb=cvar_skb.string; String wkb=cvar_wkb.string;
+		String ssp=cvar_ssp.string; String wsp=cvar_wsp.string;
+		String smk=cvar_smk.string; String wmk=cvar_wmk.string;
+		String spd=cvar_spd.string; String wpd=cvar_wpd.string;
+		String shk=cvar_shk.string; 
+		String sps=cvar_sps.string; 
 		config_wpdef = config_wpdef + "// plasma weak\n"
 		+ "set rs_plasmaweak_knockback \""+wkb+"\"\n"
 		+ "set rs_plasmaweak_splash \""+wsp+"\"\n"
@@ -337,14 +337,14 @@ void weaponDefSave()
 		Cvar cvar_sfr( "rs_grenade_friction", "", CVAR_ARCHIVE );
 		Cvar cvar_sgr( "rs_grenade_gravity", "", CVAR_ARCHIVE );
 		Cvar cvar_sps( "rs_grenade_prestep", "", CVAR_ARCHIVE );
-		String stm=cvar_stm.get_string(); String wtm=cvar_wtm.get_string();
-		String skb=cvar_skb.get_string(); String wkb=cvar_wkb.get_string();
-		String ssp=cvar_ssp.get_string(); String wsp=cvar_wsp.get_string();
-		String smk=cvar_smk.get_string(); String wmk=cvar_wmk.get_string();
-		String spd=cvar_spd.get_string(); String wpd=cvar_wpd.get_string();
-		String sfr=cvar_sfr.get_string(); 
-		String sgr=cvar_sgr.get_string(); 
-		String sps=cvar_sps.get_string(); 
+		String stm=cvar_stm.string; String wtm=cvar_wtm.string;
+		String skb=cvar_skb.string; String wkb=cvar_wkb.string;
+		String ssp=cvar_ssp.string; String wsp=cvar_wsp.string;
+		String smk=cvar_smk.string; String wmk=cvar_wmk.string;
+		String spd=cvar_spd.string; String wpd=cvar_wpd.string;
+		String sfr=cvar_sfr.string; 
+		String sgr=cvar_sgr.string; 
+		String sps=cvar_sps.string; 
 		config_wpdef = config_wpdef + "// grenade weak\n"
 		+ "set rs_grenadeweak_timeout \""+wtm+"\"\n"
 		+ "set rs_grenadeweak_knockback \""+wkb+"\"\n"

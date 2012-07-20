@@ -131,10 +131,10 @@ String DateToString( uint64 dateuint64 )
  */
 Racesow_Player @Racesow_GetPlayerByClient( cClient @client )
 {
-    if ( @client == null || client.playerNum() < 0 )
+    if ( @client == null || client.playerNum < 0 )
         return null;
 
-    return @players[ client.playerNum() ].setClient( @client );
+    return @players[ client.playerNum ].setClient( @client );
 }
 
 /**
@@ -166,8 +166,8 @@ int Racesow_GetClientNumber( String playerName )
         if ( client.state() < CS_SPAWNED )
             continue;
 
-        if (client.getName().removeColorTokens() == playerName)
-            return client.playerNum();
+        if (client.name.removeColorTokens() == playerName)
+            return client.playerNum;
     }
     return -1;
 }
@@ -198,7 +198,7 @@ cClient @Racesow_GetClientByString( String playerString )
     for ( int i = 0; i < maxClients; i++ )
     {
       @client = @G_GetClient( i );
-      if ( client.getName().removeColorTokens() == playerString )
+      if ( client.name.removeColorTokens() == playerString )
         return @client;
     }
   }
