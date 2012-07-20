@@ -12,7 +12,6 @@ struct irc_channel_s {
 extern dynvar_t *irc_connected;
 
 dynvar_t *irc_channels = NULL;
-dynvar_t *irc_defaultChannel = NULL;
 cvar_t *irc_ctcpReplies = NULL;
 
 static char *defaultChan_str = NULL;
@@ -110,8 +109,7 @@ void Irc_Logic_Connected_f(void *connected) {
 		IRC_IMPORT.Dynvar_AddListener(frametick, Irc_Logic_Frame_f);
 		Cvar_FlagSet(&irc_nick->flags, CVAR_READONLY);
 		IRC_IMPORT.Cmd_AddCommand("irc_setNick", Irc_Logic_SetNick_f);
-		irc_defaultChannel = IRC_IMPORT.Dynvar_Create("irc_defaultChannel", qtrue, Irc_Logic_GetDefaultChan_f, Irc_Logic_SetDefaultChan_f);
-		IRC_IMPORT.Dynvar_SetValue(irc_defaultChannel, (void*) "");
+		IRC_IMPORT.Cvar_Set(irc_defaultChannel->name, "");
 		irc_channels = IRC_IMPORT.Dynvar_Create("irc_channels", qtrue, Irc_Logic_GetChannels_f, IRC_IMPORT.DYNVAR_READONLY);
 		irc_ctcpReplies = IRC_IMPORT.Cvar_Get("irc_ctcpReplies", "1", CVAR_ARCHIVE);
 		assert(!chan_trie);
@@ -141,8 +139,6 @@ void Irc_Logic_Connected_f(void *connected) {
 		Cvar_FlagUnset(&irc_nick->flags, CVAR_READONLY);
 		IRC_IMPORT.Cmd_RemoveCommand("irc_setNick");
 		IRC_IMPORT.Dynvar_RemoveListener(frametick, Irc_Logic_Frame_f);
-		IRC_IMPORT.Dynvar_Destroy(irc_defaultChannel);
-		irc_defaultChannel = NULL;
 		Irc_MemFree(defaultChan_str);
 		IRC_IMPORT.Dynvar_Destroy(irc_channels);
 		irc_channels = NULL;
@@ -177,8 +173,9 @@ static irc_channel_t *Irc_Logic_AddChannel(const char *name) {
 		strcpy(chan->name, name);
 		IRC_IMPORT.Trie_Create(TRIE_CASE_SENSITIVE, &chan->names);
 		chan->topic = Irc_MemAlloc(1);	chan->topic[0] = '\0';
-		if (Irc_Logic_NoOfChannels() == 1)
-			IRC_IMPORT.Dynvar_SetValue(irc_defaultChannel, (void*) name);
+		if (Irc_Logic_NoOfChannels() == 1) {
+			IRC_IMPORT.Cvar_Set(irc_defaultChannel->name, name);
+		}
 		IRC_IMPORT.Dynvar_CallListeners(irc_channels, Irc_Logic_DumpChannelNames());
 		return chan;
 	} else {
@@ -192,10 +189,10 @@ static void Irc_Logic_RemoveChannel(irc_channel_t *channel) {
 	assert(channel);
 	assert(chan_trie);
 	if (IRC_IMPORT.Trie_Remove(chan_trie, channel->name, (void**) &chan) == TRIE_OK) {
-		char *oldDefaultChan;
-		IRC_IMPORT.Dynvar_GetValue(irc_defaultChannel, (void**) &oldDefaultChan);
+		const char *oldDefaultChan;
+		oldDefaultChan = Cvar_GetStringValue(irc_defaultChannel);
 		if (!Irc_Logic_NoOfChannels())
-			IRC_IMPORT.Dynvar_SetValue(irc_defaultChannel, "");
+			IRC_IMPORT.Cvar_Set(irc_defaultChannel->name, "");
 		else if (!strcmp(channel->name, oldDefaultChan)) {
 			char *newDefaultChan;
 			trie_dump_t *dump;
@@ -203,7 +200,7 @@ static void Irc_Logic_RemoveChannel(irc_channel_t *channel) {
 			assert(dump->size);
 			newDefaultChan = (char*) dump->key_value_vector[0].key;
 			Irc_Printf("Warning: Left default channel. New default channel is \"%s\".\n", newDefaultChan);
-			IRC_IMPORT.Dynvar_SetValue(irc_defaultChannel, newDefaultChan);
+			IRC_IMPORT.Cvar_Set(irc_defaultChannel->name, newDefaultChan);
 			IRC_IMPORT.Trie_FreeDump(dump);
 		}
 		IRC_IMPORT.Trie_Destroy(channel->names);
@@ -632,30 +629,6 @@ static void Irc_Logic_SetNick_f(void) {
 		Irc_Proto_Nick(IRC_IMPORT.Cmd_Argv(1));
 	} else
 		Irc_Printf("usage: irc_setNick <nick>\n");
-}
-
-static dynvar_get_status_t Irc_Logic_GetDefaultChan_f(void **chan) {
-	*chan = defaultChan_str;
-	return DYNVAR_GET_OK;
-}
-
-static dynvar_set_status_t Irc_Logic_SetDefaultChan_f(void *chan) {
-	const char * const chanStr = (char*) chan;
-	assert(chanStr);
-	if (!*chanStr) {
-		// empty string
-		Irc_MemFree(defaultChan_str);
-		defaultChan_str = Irc_MemAlloc(1);
-		defaultChan_str[0] = '\0';
-		return DYNVAR_SET_OK;
-	} else if (Irc_Logic_GetChannel(chanStr)) {
-		// non-empty string
-		Irc_MemFree(defaultChan_str);
-		defaultChan_str = Irc_MemAlloc(strlen(chanStr) + 1);
-		strcpy(defaultChan_str, chanStr);
-		return DYNVAR_SET_OK;
-	} else
-		return DYNVAR_SET_INVALID;
 }
 
 static dynvar_get_status_t Irc_Logic_GetChannels_f(void **channels) {

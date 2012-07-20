@@ -19,10 +19,11 @@ const char *Irc_Logic_GetChannelTopic(const irc_channel_t *channel);
 const trie_t *Irc_Logic_GetChannelNames(const irc_channel_t *channel);
 
 extern dynvar_t *irc_channels;
-extern dynvar_t *irc_defaultChannel;
 extern cvar_t *irc_server;
 extern cvar_t *irc_port;
 extern cvar_t *irc_nick;
 extern cvar_t *irc_ctcpReplies;
+extern cvar_t *irc_perform;
+extern cvar_t *irc_defaultChannel;
 
 #endif

@@ -12,7 +12,7 @@ cvar_t *irc_windowWidth = NULL;
 static vec4_t IRC_WINDOW_BG_COLOR = {0.5f, 0.5f, 0.5f, 0.25f};
 static vec4_t IRC_WINDOW_TXT_COLOR = {0.0f, 0.8f, 0.0f, 1.0f};
 static vec4_t IRC_TXT_COLOR_WHITE = {1.0f, 1.0f, 1.0f, 1.0f};
-static const char IRC_WINDOW_BG_PIC[] = "gfx/ui/white";
+static const char IRC_WINDOW_BG_PIC[] = "$whiteimage";
 
 struct mufont_s;
 

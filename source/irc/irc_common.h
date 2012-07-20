@@ -79,6 +79,9 @@ void Irc_ColorFilter(const char *pre, irc_color_filter_t filter, char *post);
 // clear all lines in irc_chat_history_node_t
 void Irc_ClearHistory(void);
 
+size_t Irc_HistorySize(void);
+size_t Irc_HistoryTotalSize(void);
+
 // parses usermask for nick and chanmode prefix
 void Irc_ParseName(const char *mask, char *nick, irc_nick_prefix_t *prefix);
 

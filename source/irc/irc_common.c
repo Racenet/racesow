@@ -9,9 +9,10 @@ const irc_chat_history_node_t *irc_chat_history = NULL;
 // private, modifyable history
 struct {
 	size_t size;
+	size_t total_size;
 	irc_chat_history_node_t *first;
 	irc_chat_history_node_t *last;
-} static irc_chat_history_list = { 0, NULL, NULL };
+} static irc_chat_history_list = { 0, 0, NULL, NULL };
 
 static cvar_t *irc_console = NULL;
 
@@ -60,10 +61,11 @@ void Irc_Println_Str(const char *line) {
 		--irc_chat_history_list.size;
 	}
 	++irc_chat_history_list.size;
+	++irc_chat_history_list.total_size;
 
 	// print to console
 	if (!irc_console)
-		irc_console = IRC_IMPORT.Cvar_Get("irc_console", "1", CVAR_ARCHIVE);
+		irc_console = IRC_IMPORT.Cvar_Get("irc_console", "0", CVAR_ARCHIVE);
 	assert(irc_console);
 	if (Cvar_GetIntegerValue(irc_console))
 		Irc_Printf("IRC | %s\n", line);
@@ -147,16 +149,29 @@ void Irc_ColorFilter(const char *pre, irc_color_filter_t filter, char *post) {
 					// IRC color code found, replace with Warsow color code (best fit)
 					++in;
 					if (Cvar_GetIntegerValue(irc_colors)) {
+						int c1, c2;
+
+						c1 = *in;
+						c2 = -1;
+						if (isdigit(*(in+1))) {
+							// 2 digit color code
+							c2 = *(in+1);
+							in++;
+						}
+
+						// \0n format
+						if (c1 == '0' && c2 != -1) {
+							c1 = c2;
+						}
+
 						*out++ = Q_COLOR_ESCAPE;
-						switch (*in) {
+						switch (c1) {
 							case '0':
 								*out++ = COLOR_WHITE;
 								break;
 							case '1':
-								if (isdigit(*(in+1))) {
-									// 2 digit color code
-									++in;
-									switch (*in) {
+								if (c2 != -1) {
+									switch (c2) {
 										case '0':
 											*out++ = COLOR_CYAN;
 											break;
@@ -247,7 +262,16 @@ void Irc_ClearHistory(void) {
 	irc_chat_history_list.first = NULL;
 	irc_chat_history_list.last = NULL;
 	irc_chat_history_list.size = 0;
+	irc_chat_history_list.total_size = 0;
 	irc_chat_history = NULL;
+}
+
+size_t Irc_HistorySize(void) {
+	return irc_chat_history_list.size;
+}
+
+size_t Irc_HistoryTotalSize(void) {
+	return irc_chat_history_list.total_size;
 }
 
 void Irc_ParseName(const char *mask, char *nick, irc_nick_prefix_t *prefix) {

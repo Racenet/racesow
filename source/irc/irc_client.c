@@ -16,6 +16,7 @@ cvar_t *dedicated = NULL;
 static void Irc_Client_Join_f(void);
 static void Irc_Client_Part_f(void);
 static void Irc_Client_Msg_f(void);
+static void Irc_Client_Action_f(void);
 static void Irc_Client_PrivMsg_f(void);
 static void Irc_Client_Mode_f(void);
 static void Irc_Client_Topic_f(void);
@@ -38,6 +39,7 @@ static void Irc_Client_Draw_f(void *frametick);
 static void Irc_Client_Frametick_f(void *frame);
 
 // server command listeners
+static void Irc_Client_NicknameInUse_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing);
 static void Irc_Client_CmdError_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing);
 static void Irc_Client_CmdNotice_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing);
 static void Irc_Client_CmdEndofmotd_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing);
@@ -160,7 +162,7 @@ void Irc_Client_Connected_f(void *connected) {
 		cmd.numeric = ERR_FILEERROR;		Irc_Proto_AddListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_NONICKNAMEGIVEN;	Irc_Proto_AddListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_ERRONEUSNICKNAME;	Irc_Proto_AddListener(cmd, Irc_Client_CmdError_f);
-		cmd.numeric = ERR_NICKNAMEINUSE;	Irc_Proto_AddListener(cmd, Irc_Client_CmdError_f);
+		cmd.numeric = ERR_NICKNAMEINUSE;	Irc_Proto_AddListener(cmd, Irc_Client_NicknameInUse_f);
 		cmd.numeric = ERR_NICKCOLLISION;	Irc_Proto_AddListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_BANNICKCHANGE;	Irc_Proto_AddListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_NCHANGETOOFAST;	Irc_Proto_AddListener(cmd, Irc_Client_CmdError_f);
@@ -219,10 +221,14 @@ void Irc_Client_Connected_f(void *connected) {
 		IRC_IMPORT.Cmd_AddCommand("irc_whowas", Irc_Client_Whowas_f);
 		IRC_IMPORT.Cmd_AddCommand("irc_quote", Irc_Client_Quote_f);
 		IRC_IMPORT.Cmd_AddCommand("irc_chanmsg", Irc_Client_Msg_f);
+		IRC_IMPORT.Cmd_AddCommand("irc_action", Irc_Client_Action_f);
 		IRC_IMPORT.Cmd_AddCommand("irc_topic", Irc_Client_Topic_f);
 		IRC_IMPORT.Cmd_AddCommand("irc_names", Irc_Client_Names_f);
 		IRC_IMPORT.Cmd_AddCommand("irc_kick", Irc_Client_Kick_f);
 
+		Irc_Println( "Connected to %s.\n", IRC_COLOR_NONE, Cvar_GetStringValue( irc_server ) );
+
+		srand( time( NULL ) );
 	} else if (!*c) {
 
 		// teardown
@@ -293,7 +299,7 @@ void Irc_Client_Connected_f(void *connected) {
 		cmd.numeric = ERR_FILEERROR;		Irc_Proto_RemoveListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_NONICKNAMEGIVEN;	Irc_Proto_RemoveListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_ERRONEUSNICKNAME;	Irc_Proto_RemoveListener(cmd, Irc_Client_CmdError_f);
-		cmd.numeric = ERR_NICKNAMEINUSE;	Irc_Proto_RemoveListener(cmd, Irc_Client_CmdError_f);
+		cmd.numeric = ERR_NICKNAMEINUSE;	Irc_Proto_RemoveListener(cmd, Irc_Client_NicknameInUse_f);
 		cmd.numeric = ERR_NICKCOLLISION;	Irc_Proto_RemoveListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_BANNICKCHANGE;	Irc_Proto_RemoveListener(cmd, Irc_Client_CmdError_f);
 		cmd.numeric = ERR_NCHANGETOOFAST;	Irc_Proto_RemoveListener(cmd, Irc_Client_CmdError_f);
@@ -344,7 +350,9 @@ void Irc_Client_Connected_f(void *connected) {
 		IRC_IMPORT.Cmd_RemoveCommand("irc_who");
 		IRC_IMPORT.Cmd_RemoveCommand("irc_whois");
 		IRC_IMPORT.Cmd_RemoveCommand("irc_whowas");
+		IRC_IMPORT.Cmd_RemoveCommand("irc_quote");
 		IRC_IMPORT.Cmd_RemoveCommand("irc_chanmsg");
+		IRC_IMPORT.Cmd_RemoveCommand("irc_action");
 		IRC_IMPORT.Cmd_RemoveCommand("irc_topic");
 		IRC_IMPORT.Cmd_RemoveCommand("irc_names");
 		IRC_IMPORT.Cmd_RemoveCommand("irc_kick");
@@ -362,6 +370,10 @@ void Irc_Client_Connected_f(void *connected) {
 			reading_from_keyboard = IRC_MESSAGEMODE_NONE;
 		}
 
+		if( IRC_ERROR_MSG[0] )
+			Irc_Println( "Disconnected from %s (%s).\n", IRC_COLOR_NONE, Cvar_GetStringValue( irc_server ), IRC_ERROR_MSG );
+		else
+			Irc_Println( "Disconnected from %s.\n", IRC_COLOR_NONE, Cvar_GetStringValue( irc_server ) );
 	}
 }
 
@@ -372,7 +384,7 @@ static void Irc_Client_Draw_f(void *frametick) {
 		if (IRC_IMPORT.CL_GetKeyDest() != key_console) {
 			// not in console, we may draw
 			if (!irc_window)
-				irc_window = IRC_IMPORT.Cvar_Get("irc_window", "1", CVAR_ARCHIVE);
+				irc_window = IRC_IMPORT.Cvar_Get("irc_window", "0", CVAR_ARCHIVE);
 			if (!irc_windowLines)
 				irc_windowLines = IRC_IMPORT.Cvar_Get("irc_windowLines", "8", CVAR_ARCHIVE);
 			if (reading_from_keyboard) {
@@ -380,7 +392,7 @@ static void Irc_Client_Draw_f(void *frametick) {
 				int buflen = 0;
 				switch (reading_from_keyboard) {
 					case IRC_MESSAGEMODE_CHANMSG:
-						IRC_IMPORT.Dynvar_GetValue(irc_defaultChannel, (void**) &target);
+						target = Cvar_GetStringValue(irc_defaultChannel);
 						buf = irc_messagemode_buf;
 						buflen = irc_messagemode_buflen;
 						break;
@@ -450,16 +462,11 @@ static void Irc_Client_Msg_f(void) {
 		char colored_msg[1024];
 		const char *msg = IRC_IMPORT.Cmd_Args();
 		const char * const nick = Cvar_GetStringValue(irc_nick);
-		char *channel;
-		IRC_IMPORT.Dynvar_GetValue(irc_defaultChannel, (void**) &channel);
+		const char *channel;
+		channel = Cvar_GetStringValue(irc_defaultChannel);
 		if (*channel) {
-			if (*msg == '"') {
-				size_t msg_len = strlen(msg);
-				memcpy(cropped_msg, msg + 1, msg_len - 2);
-				cropped_msg[msg_len - 2] = '\0';
-				msg = cropped_msg;
-			}
-			Irc_ColorFilter(msg, IRC_COLOR_WSW_TO_IRC, colored_msg);
+			Q_strncpyz(cropped_msg, msg, sizeof(cropped_msg));
+			Irc_ColorFilter(cropped_msg, IRC_COLOR_WSW_TO_IRC, colored_msg);
 			Irc_Proto_Msg(channel, colored_msg);
 			// create echo
 			Irc_Println(IRC_COLOR_YELLOW "%s " IRC_COLOR_WHITE "| " IRC_COLOR_GREEN "<%s> %s", IRC_COLOR_IRC_TO_WSW, channel, nick, colored_msg);
@@ -467,6 +474,27 @@ static void Irc_Client_Msg_f(void) {
 			Irc_Printf("Join a channel first.\n");
 	} else
 		Irc_Printf("usage: irc_chanmsg {<msg>}\n");
+}
+
+static void Irc_Client_Action_f(void) {
+	if (IRC_IMPORT.Cmd_Argc() >= 2) {
+		char cropped_msg[IRC_SEND_BUF_SIZE];
+		char colored_msg[1024];
+		const char *msg = IRC_IMPORT.Cmd_Args();
+		const char * const nick = Cvar_GetStringValue(irc_nick);
+		const char *channel;
+		channel = Cvar_GetStringValue(irc_defaultChannel);
+		if (*channel) {
+			Q_strncpyz(cropped_msg, msg, sizeof(cropped_msg) - 7);
+			Irc_ColorFilter(cropped_msg, IRC_COLOR_WSW_TO_IRC, colored_msg);
+			Q_strncpyz(cropped_msg, va( "%cACTION %s%c", IRC_CTCP_MARKER_CHR, colored_msg, IRC_CTCP_MARKER_CHR ), sizeof(cropped_msg));
+			Irc_Proto_Msg(channel, cropped_msg);
+			// create echo
+			Irc_Println(IRC_COLOR_YELLOW "%s " IRC_COLOR_WHITE "| " IRC_COLOR_MAGENTA "%s %s", IRC_COLOR_IRC_TO_WSW, channel, nick, colored_msg);
+		} else
+			Irc_Printf("Join a channel first.\n");
+	} else
+		Irc_Printf("usage: irc_action {<action>}\n");
 }
 
 static void Irc_Client_PrivMsg_f(void) {
@@ -478,13 +506,8 @@ static void Irc_Client_PrivMsg_f(void) {
 			? IRC_COLOR_YELLOW "%s " IRC_COLOR_WHITE "| " IRC_COLOR_GREEN "<%s> %s"
 			: IRC_COLOR_RED "%s " IRC_COLOR_WHITE "| " IRC_COLOR_GREEN "<%s> %s";
 		const char *msg = IRC_IMPORT.Cmd_Args() + strlen(target) + 1;
-		if (*msg == '"') {
-			size_t msg_len = strlen(msg);
-			memcpy(cropped_msg, msg + 1, msg_len - 2);
-			cropped_msg[msg_len - 2] = '\0';
-			msg = cropped_msg;
-		}
-		Irc_ColorFilter(msg, IRC_COLOR_WSW_TO_IRC, colored_msg);
+		Q_strncpyz(cropped_msg, msg, sizeof(cropped_msg));
+		Irc_ColorFilter(cropped_msg, IRC_COLOR_WSW_TO_IRC, colored_msg);
 		Irc_Proto_Msg(target, colored_msg);
 		// create echo
 		Irc_Println(format, IRC_COLOR_IRC_TO_WSW, target, Cvar_GetStringValue(irc_nick), colored_msg);
@@ -563,10 +586,8 @@ static void Irc_Client_Names_f(void) {
 			}
 			*out++ = '\0';
 			namebuf2 = Irc_MemAlloc(namebufsize);
-			Irc_ColorFilter(namebuf, IRC_COLOR_IRC_TO_WSW, namebuf2);
-			Irc_Printf("%s names: \"%s\"\n", channel, namebuf2);
+			Irc_Println("%s names: \"%s\"\n", IRC_COLOR_IRC_TO_WSW, channel, namebuf);
 			Irc_MemFree(namebuf);
-			Irc_MemFree(namebuf2);
 			IRC_IMPORT.Trie_FreeDump(dump);
 		} else
 			Irc_Printf("Not joined: %s\n", channel);
@@ -765,6 +786,20 @@ static void Irc_Client_CharEvent_f(qwchar key) {
 	}
 }
 
+static void Irc_Client_NicknameInUse_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing) {
+	const char * const nick = Cvar_GetStringValue(irc_nick);
+	assert(nick);
+	if (!strncmp(nick, params, strlen(nick))) {
+		const char * const space = strchr(params, ' ');
+		if (space)
+			params = space + 1;
+	}
+	Irc_Println(IRC_COLOR_RED "%s : %s", IRC_COLOR_IRC_TO_WSW, params, trailing);
+
+	IRC_IMPORT.Cvar_ForceSet(irc_nick->name, va("%s_%04i", irc_nick->string, rand() % 9999));
+	Irc_Proto_Nick(Cvar_GetStringValue(irc_nick));
+}
+
 static void Irc_Client_CmdError_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing) {
 	const char * const nick = Cvar_GetStringValue(irc_nick);
 	assert(nick);
@@ -782,7 +817,7 @@ static void Irc_Client_CmdNotice_f(irc_command_t cmd, const char *prefix, const 
 
 static void Irc_Client_CmdEndofmotd_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing) {
 	Irc_Client_CmdNotice_f(cmd, prefix, params, trailing);
-	IRC_IMPORT.Cmd_ExecuteString("exec irc_perform.cfg");
+	IRC_IMPORT.Cmd_ExecuteString("vstr irc_perform");
 }
 
 static void Irc_Client_CmdParamNotice_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing) {
@@ -803,8 +838,15 @@ static void Irc_Client_CmdPrivmsg_f(irc_command_t cmd, const char *prefix, const
 		memcpy(nick, prefix, emph - prefix);
 	else
 		strcpy(nick, prefix);
-	if (*params == '#' || *params == '&')
-	{
+	if (Irc_IsChannel(params)) {
+		// is private message
+		if (*trailing == IRC_CTCP_MARKER_CHR) {
+			// is probably a CTCP message
+			if (!strncmp(trailing + 1, "ACTION ", 7)) {
+				Irc_Println(IRC_COLOR_YELLOW "%s " IRC_COLOR_WHITE "| " IRC_COLOR_MAGENTA "%s %s", IRC_COLOR_IRC_TO_WSW, params, nick, trailing + 7);
+				return;
+			}
+		}
 		Irc_Println(IRC_COLOR_YELLOW "%s " IRC_COLOR_WHITE "| " IRC_COLOR_GREEN "<%s> %s", IRC_COLOR_IRC_TO_WSW, params, nick, trailing);
 		//racesow
 		char msg[1024];
