@@ -3,14 +3,14 @@ class Racesow_Gametype_Trace : Racesow_Gametype_Durace
 
     void InitGametype()
     {
-        gametype.setTitle( "Team Race" );
+        gametype.title = "Team Race";
         // if the gametype doesn't have a config file, create it
         if ( !G_FileExists( "configs/server/gametypes/trace.cfg" ) )
         {
             String config;
 
             // the config file doesn't exist or it's empty, create it
-            config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
+            config = "// '" + gametype.title + "' gametype configuration file\n"
                      + "// This config will be executed each time the gametype is started\n"
                      + "\n// game settings\n"
                      + "set g_scorelimit \"0\"\n"
@@ -48,7 +48,7 @@ class Racesow_Gametype_Trace : Racesow_Gametype_Durace
         G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %i 52 %t 96 %l 48 %b 50 %p 18" );
         G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Score Time Ping Racing R" );
     
-        G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
+        G_Print( "Gametype '" + gametype.title + "' initialized\n" );
     }
 }
 

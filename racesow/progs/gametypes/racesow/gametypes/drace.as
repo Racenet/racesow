@@ -929,12 +929,12 @@ class Racesow_Gametype_Drace : Racesow_Gametype
     
     void onConnect( cClient @client )
     {
-        @this.players[client.playerNum()] = Racesow_Player_Drace( client );
+        @this.players[client.playerNum] = Racesow_Player_Drace( client );
     }
 
     void onDisconnect( cClient @client )
     {
-        @this.players[client.playerNum()] = Racesow_Player_Drace();
+        @this.players[client.playerNum] = Racesow_Player_Drace();
     }
 
     /*bool Command( cClient @client, String @cmdString, String @argsString, int argc )

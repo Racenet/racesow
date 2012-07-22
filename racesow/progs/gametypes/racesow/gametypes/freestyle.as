@@ -256,12 +256,12 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
 
     void onConnect( cClient @client )
     {
-        @this.players[client.playerNum()] = Racesow_Player_Freestyle( client );
+        @this.players[client.playerNum] = Racesow_Player_Freestyle( client );
     }
 
     void onDisconnect( cClient @client )
     {
-        @this.players[client.playerNum()] = Racesow_Player_Freestyle();
+        @this.players[client.playerNum] = Racesow_Player_Freestyle();
     }
 }
 
