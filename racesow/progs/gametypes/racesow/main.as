@@ -103,7 +103,8 @@ bool GT_UpdateBotStatus( cEntity @self )
 cEntity @GT_SelectSpawnPoint( cEntity @self )
 {
 	Racesow_Player @player = racesowGametype.getPlayer(self.client);
-	player.onSpawn();
+	if(@player != null)
+	    player.onSpawn();
 	return racesowGametype.SelectSpawnPoint( @self );
 }
 
@@ -121,7 +122,8 @@ String @GT_ScoreboardMessage( uint maxlen )
     {
         for ( int i = 0; i < maxClients; i++ )
         {
-            racesowGametype.players[i].challengerList = "";
+            if(@racesowGametype.players[i] != null)
+                racesowGametype.players[i].challengerList = "";
         }
         cTeam @spectators = @G_GetTeam( TEAM_SPECTATOR );
         cEntity @other;
@@ -172,7 +174,11 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 
 	if ( score_event == "connect" )
 	{
-		racesowGametype.onConnect( client );
+		RS_ircSendMessage( client.name.removeColorTokens() + " connected" );
+	}
+	else if ( score_event == "enterGame" )
+	{
+		racesowGametype.onEnterGame( client );
 	}
 
 	Racesow_Player @player = racesowGametype.getPlayer( client );
@@ -186,10 +192,6 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 		}
 		else if ( score_event == "award" )
 		{
-		}
-		else if ( score_event == "connect" )
-		{
-			RS_ircSendMessage( player.getName().removeColorTokens() + " connected" );
 		}
 		else if ( score_event == "enterGame" )
 		{
@@ -445,7 +447,7 @@ void GT_Shutdown()
     }
 
     for ( int i = 0; i < maxClients; i++ )
-		if ( @racesowGametype.players[i].getClient() != null )
+		if ( @racesowGametype.players[i] != null )
 		{
 		    // run it unthreaded to prevent a mysql crash
 			racesowGametype.players[i].disappear(racesowGametype.players[i].getName(),false);

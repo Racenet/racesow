@@ -3,9 +3,6 @@ class Racesow_Gametype_Durace : Racesow_Gametype
     
     Racesow_Gametype_Durace()
     {
-        for( int i= 0; i < maxClients; i++ )
-            @this.players[i] = @Racesow_Player_Durace();
-
         @this.commandMap["racerestart"] = @Command_RaceRestart();
         @this.commandMap["kill"] = @Command_RaceRestart();
         @this.commandMap["top"] = @Command_Top();
@@ -248,10 +245,6 @@ class Racesow_Gametype_Durace : Racesow_Gametype
         }
         else if ( score_event == "award" )
         {
-        }
-        else if ( score_event == "enterGame" )
-        {
-            //racesowGametype.getPlayer( client ).reset(); //FIXME: Necessary? -K1ll
         }
     }
     

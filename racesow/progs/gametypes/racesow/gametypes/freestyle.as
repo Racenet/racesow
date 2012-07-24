@@ -2,9 +2,6 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
 {
     Racesow_Gametype_Freestyle()
     {
-        for( int i= 0; i < maxClients; i++ )
-            @this.players[i] = @Racesow_Player_Freestyle();
-
         this.ammoSwitch = true;
         this.timelimited = false;
         @this.commandMap["chrono"] = @Command_Chrono();
@@ -273,7 +270,6 @@ class Racesow_Player_Freestyle : Racesow_Player
 {
     Racesow_Player_Freestyle()
     {
-        //this.Blocking = true;
     }
 
     Racesow_Player_Freestyle(cClient @client)

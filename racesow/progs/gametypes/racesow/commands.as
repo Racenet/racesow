@@ -1515,7 +1515,8 @@ class Command_AdminExtendtime : Racesow_Command // (should be subclass of Raceso
         map.cancelOvertime(); //FIXME: merge player.cancelOvertime and map.cancelOvertime into a gametype function?
         for ( int i = 0; i < maxClients; i++ )
         {
-            racesowGametype.players[i].cancelOvertime();
+            if(@racesowGametype.players[i] != null)
+                racesowGametype.players[i].cancelOvertime();
         }
         return true;
     }

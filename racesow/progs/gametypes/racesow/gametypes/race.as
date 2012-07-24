@@ -18,9 +18,6 @@ class Racesow_Gametype_Race : Racesow_Gametype
     {
         this.racescore = true;
 
-        for( int i= 0; i < maxClients; i++ )
-            @this.players[i] = @Racesow_Player();
-
         @this.commandMap["join"] = @Command_Join();
         @this.commandMap["spec"] = @Command_Spec();
         @this.commandMap["chase"] = @Command_Spec();

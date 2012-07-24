@@ -542,9 +542,6 @@ class Racesow_Gametype_Drace : Racesow_Gametype
 {
     Racesow_Gametype_Drace()
     {
-        for( int i= 0; i < maxClients; i++ )
-            @this.players[i] = @Racesow_Player_Drace();
-
         //@this.commandMap["callvotevalidate"] = @Command_CallvoteValidateDrace();
         //@this.commandMap["callvotecheckpermission"] = @Command_CallvoteCheckPermissionDrace();
         //@this.commandMap["callvotepassed"] = @Command_CallvotePassed();
@@ -800,12 +797,6 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       }
       else if ( score_event == "award" )
       {
-      }
-      else if ( score_event == "enterGame" )
-      {
-          //FIXME: Is this necessary? -K1ll
-          /*Racesow_Player @player = racesowGametype.getPlayer( client );
-          player.reset();*/
       }
     }
     
