@@ -151,7 +151,6 @@ cvar_t *cg_ebbeam_time;
 cvar_t *cg_instabeam_width;
 cvar_t *cg_instabeam_alpha;
 cvar_t *cg_instabeam_time;
-
 cvar_t *cg_lgbeam_old;
 
 cvar_t *cg_playList;

@@ -314,6 +314,7 @@ void CG_ScreenInit( void )
 
 	// wsw : hud debug prints
 	cg_debugHUD =		    trap_Cvar_Get( "cg_debugHUD", "0", 0 );
+
 	//
 	// register our commands
 	//
@@ -1281,7 +1282,7 @@ void CG_Draw2DView( void )
 	}
 
 	// if changed from or to spec, reload the HUD
-	if (SPECSTATECHANGED()) {
+	if (cg.specStateChanged) {
 		cg_specHUD->modified = cg_clientHUD->modified = qtrue;
 	}
 

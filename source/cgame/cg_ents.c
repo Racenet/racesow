@@ -467,6 +467,8 @@ void CG_NewFrameSnap( snapshot_t *frame, snapshot_t *lerpframe )
 		cgs.tvRequested = qtrue;
 	}
 
+	cg.specStateChanged = SPECSTATECHANGED() || lerpframe == NULL;
+
 	// a new server frame begins now
 	CG_FixVolumeCvars();
 
@@ -646,7 +648,7 @@ static void CG_AddLinkedModel( centity_t *cent )
 	VectorCopy( cent->ent.lightingOrigin, ent.lightingOrigin );
 	Matrix_Copy( cent->ent.axis, ent.axis );
 
-	if( cent->effects & EF_AMMOBOX )  // ammobox icon hack
+	if( cent->item && ( cent->effects & EF_AMMOBOX ) )  // ammobox icon hack
 		ent.customShader = trap_R_RegisterPic( cent->item->icon );
 
 	if( cent->item && ( cent->item->type & IT_WEAPON ) )

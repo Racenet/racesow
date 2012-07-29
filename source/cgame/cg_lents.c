@@ -627,8 +627,7 @@ void CG_BladeImpact( vec3_t pos, vec3_t dir )
 	else if( trace.surfFlags & SURF_DUST )
 	{
 		// throw particles on dust
-		if( trace.surfFlags & SURF_DUST )
-			CG_ParticleEffect( trace.endpos, trace.plane.normal, 0.30f, 0.30f, 0.25f, 30 );
+		CG_ParticleEffect( trace.endpos, trace.plane.normal, 0.30f, 0.30f, 0.25f, 30 );
 
 		//fixme? would need a dust sound
 		trap_S_StartFixedSound( CG_MediaSfx( cgs.media.sfxBladeWallHit[(int)( random()*2 )] ), pos, CHAN_AUTO,
