@@ -213,8 +213,12 @@ void R_TouchBloomTextures( void )
 	r_bloomscreentexture->registration_sequence = 
 	r_bloomeffecttexture->registration_sequence = 
 	r_bloombackuptexture->registration_sequence = 
-	r_bloomdownsamplingtexture->registration_sequence = 
 		r_front.registration_sequence;
+
+	if( r_bloomdownsamplingtexture ) {
+		r_bloomdownsamplingtexture->registration_sequence = 
+			r_front.registration_sequence;
+	}
 }
 
 /*

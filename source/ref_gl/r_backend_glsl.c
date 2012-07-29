@@ -240,7 +240,7 @@ static void R_RenderMeshGLSL_Material( r_glslfeat_t programFeatures )
 
 #if 1
 	// don't waste time on processing GLSL programs with zero colormask
-	if( ( ri.params & RP_SHADOWMAPVIEW ) & !(programFeatures & GLSL_COMMON_APPLY_BONETRANSFORMS) )
+	if( ( ri.params & RP_SHADOWMAPVIEW ) && !(programFeatures & GLSL_COMMON_APPLY_BONETRANSFORMS) )
 	{
 		pass->tcgen = tcgen; // restore original tcgen
 		R_FlushArrays();
