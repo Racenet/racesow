@@ -467,14 +467,7 @@ static void Irc_Logic_CmdQuit_f(irc_command_t cmd, const char *prefix, const cha
 }
 
 static void Irc_Logic_CmdKill_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing) {
-	char nick[IRC_SEND_BUF_SIZE];
-	irc_nick_prefix_t p;
-	irc_channel_t * const *channels, * const *c;
-	Irc_ParseName(prefix, nick, &p);
-	channels = Irc_Logic_DumpChannels();
-	for (c = channels; *c; ++c)
-		Irc_Logic_RemoveChannelName(*c, nick);
-	Irc_Logic_FreeChannelDump(channels);
+	Irc_Logic_CmdQuit_f(cmd, prefix, params, trailing);
 }
 
 static void Irc_Logic_CmdKick_f(irc_command_t cmd, const char *prefix, const char *params, const char *trailing) {
