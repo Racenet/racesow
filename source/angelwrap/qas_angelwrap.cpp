@@ -1334,7 +1334,7 @@ int qasExecute( int contextHandle )
 	if( !ch )
 		return QASINVALIDHANDLE;
 
-	ch->timeOut = trap_Milliseconds() + 500;
+	//ch->timeOut = trap_Milliseconds() + 500;
 	ch->timeOut = 0;
 	return ch->ctx->Execute();
 }
