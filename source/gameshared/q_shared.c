@@ -1489,6 +1489,7 @@ qboolean Info_Validate( const char *info )
 static char *Info_FindKey( const char *info, const char *key )
 {
 	const char *p, *start;
+	size_t key_len;
 
 	assert( Info_Validate( info ) );
 	assert( Info_ValidateKey( key ) );
@@ -1497,13 +1498,14 @@ static char *Info_FindKey( const char *info, const char *key )
 		return NULL;
 
 	p = info;
+	key_len = strlen( key );
 
 	while( p && *p )
 	{
 		start = p;
 
 		p++; // skip the \ char
-		if( !strncmp( key, p, strlen( key ) ) && p[strlen( key )] == '\\' )
+		if( !strncmp( key, p, key_len ) && p[key_len] == '\\' )
 			return (char *)start;
 
 		p = strchr( p, '\\' );
