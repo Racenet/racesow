@@ -759,7 +759,7 @@ static int Cvar_NotDeveloper( void *cvar, void *nothing )
 #endif
 
 /*
-CVar_CompleteCountPossible
+* CVar_CompleteCountPossible
 */
 int Cvar_CompleteCountPossible( const char *partial )
 {
@@ -775,7 +775,7 @@ int Cvar_CompleteCountPossible( const char *partial )
 }
 
 /*
-CVar_CompleteBuildList
+* CVar_CompleteBuildList
 */
 char **Cvar_CompleteBuildList( const char *partial )
 {
@@ -795,6 +795,38 @@ char **Cvar_CompleteBuildList( const char *partial )
 	buf[dump->size] = NULL;
 	Trie_FreeDump( dump );
 	return buf;
+}
+
+
+/*
+* CVar_CompleteBuildList
+*/
+char **Cvar_CompleteBuildListWithFlag( const char *partial, cvar_flag_t flag )
+{
+	struct trie_dump_s *dump;
+	char **buf;
+	unsigned int i;
+
+	assert( cvar_trie );
+	Trie_DumpIf( cvar_trie, partial, TRIE_DUMP_VALUES, Cvar_HasFlags, &flag, &dump );
+	buf = (char **) Mem_TempMalloc( sizeof( char * ) * ( dump->size + 1 ) );
+	for( i = 0; i < dump->size; ++i )
+		buf[i] = ( (cvar_t *) ( dump->key_value_vector[i].value ) )->name;
+	buf[dump->size] = NULL;
+	Trie_FreeDump( dump );
+	return buf;
+}
+
+
+char **Cvar_CompleteBuildListUser( const char *partial )
+{
+	return Cvar_CompleteBuildListWithFlag( partial, CVAR_USERINFO );
+}
+
+
+char **Cvar_CompleteBuildListServer( const char *partial )
+{
+	return Cvar_CompleteBuildListWithFlag( partial, CVAR_SERVERINFO );
 }
 
 /*
@@ -833,6 +865,16 @@ void Cvar_Init( void )
 	Cmd_AddCommand( "reset", Cvar_Reset_f );
 	Cmd_AddCommand( "toggle", Cvar_Toggle_f );
 	Cmd_AddCommand( "cvarlist", Cvar_List_f );
+
+	Cmd_SetCompletionFunc( "set", Cvar_CompleteBuildList );
+	Cmd_SetCompletionFunc( "seta", Cvar_CompleteBuildList );
+	Cmd_SetCompletionFunc( "reset", Cvar_CompleteBuildList );
+	Cmd_SetCompletionFunc( "toggle", Cvar_CompleteBuildList );
+	Cmd_SetCompletionFunc( "setau", Cvar_CompleteBuildListUser );
+	Cmd_SetCompletionFunc( "setas", Cvar_CompleteBuildListServer );
+	Cmd_SetCompletionFunc( "setu", Cvar_CompleteBuildListUser );
+	Cmd_SetCompletionFunc( "sets", Cvar_CompleteBuildListServer );
+
 #ifndef PUBLIC_BUILD
 	Cmd_AddCommand( "cvararchivelist", Cvar_ArchiveList_f );
 #endif

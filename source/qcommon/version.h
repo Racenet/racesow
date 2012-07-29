@@ -27,11 +27,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifndef APP_VERSION_MAJOR
-#define APP_VERSION_MAJOR				0
+#define APP_VERSION_MAJOR				1
 #endif
 
 #ifndef APP_VERSION_MINOR
-#define APP_VERSION_MINOR				7
+#define APP_VERSION_MINOR				0
 #endif
 
 #ifndef APP_VERSION_UPDATE
@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef PUBLIC_BUILD
-#define APP_PROTOCOL_VERSION			6095
+#define APP_PROTOCOL_VERSION			15
 #else
 #define APP_PROTOCOL_VERSION			6095	// we're using revision number as protocol version for internal builds
 #endif

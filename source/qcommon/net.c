@@ -1272,7 +1272,7 @@ void NET_InitAddress( netadr_t *address, netadrtype_t type )
 */
 void NET_BroadcastAddress( netadr_t *address, int port )
 {
-	memset( address, 0, sizeof( address ) );
+	memset( address, 0, sizeof( *address ) );
 	address->type = NA_IP;
 	*(int*)address->address.ipv4.ip = htonl( INADDR_BROADCAST );
 	address->address.ipv4.port = BigShort( port );
