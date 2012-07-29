@@ -534,7 +534,7 @@ qboolean CheckFlood( edict_t *ent, qboolean teamonly )
 
 	assert( ent != NULL );
 
-	client = ent->r.client
+	client = ent->r.client;
 	assert( client != NULL );
 
 	if( g_floodprotection_messages->modified )
