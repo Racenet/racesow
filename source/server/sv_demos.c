@@ -300,11 +300,7 @@ void SV_Demo_Purge_f( void )
 
 	maxautodemos = 0;
 	if( Cmd_Argc() == 2 )
-	{
 		maxautodemos = atoi( Cmd_Argv( 1 ) );
-		if( maxautodemos < 0 )
-			maxautodemos = 0;
-	}
 
 	numdemos = FS_GetFileListExt( SV_DEMO_DIR, APP_DEMO_EXTENSION_STR, NULL, &bufSize, 0, 0 );
 	if( !numdemos )

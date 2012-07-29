@@ -941,10 +941,7 @@ void SV_Init( void )
 	if( sv_skilllevel->integer < 0 )
 		Cvar_ForceSet( "sv_skilllevel", "0" );
 
-	if( dedicated->integer )
-		sv_masterservers =	    Cvar_Get( "masterservers", DEFAULT_MASTER_SERVERS_IPS, CVAR_LATCH );
-	else
-		sv_masterservers =	    Cvar_Get( "masterservers", DEFAULT_MASTER_SERVERS_IPS, CVAR_LATCH );
+	sv_masterservers =	    Cvar_Get( "masterservers", DEFAULT_MASTER_SERVERS_IPS, CVAR_LATCH );
 
 	sv_debug_serverCmd =	    Cvar_Get( "sv_debug_serverCmd", "0", CVAR_ARCHIVE );
 
