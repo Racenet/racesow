@@ -514,7 +514,7 @@ static void CL_Rcon_f( void )
 	if( cls.demo.playing )
 		return;
 
-	if( strlen( rcon_client_password->string ) == 0 )
+	if( rcon_client_password->string[0] == '\0' )
 	{
 		Com_Printf( "You must set 'rcon_password' before issuing an rcon command.\n" );
 		return;
@@ -1151,7 +1151,7 @@ static void CL_ConnectionlessPacket( const socket_t *socket, const netadr_t *add
 		// CA_CONNECTING is allowed, because old servers send protocol mismatch connection error message with it
 		if( ( ( cls.state != CA_UNINITIALIZED && cls.state != CA_DISCONNECTED ) &&
 			NET_CompareAddress( address, &cls.serveraddress ) ) ||
-			( strlen( rcon_address->string ) > 0 && NET_CompareAddress( address, &cls.rconaddress ) ) )
+			( rcon_address->string[0] != '\0' && NET_CompareAddress( address, &cls.rconaddress ) ) )
 		{
 			s = MSG_ReadString( msg );
 			Com_Printf( "%s", s );
@@ -1549,6 +1549,7 @@ void CL_RequestNextDownload( void )
 	if( precache_check == ENV_CNT )
 	{
 		qboolean restart = qfalse;
+		qboolean vid_restart = qfalse;
 		const char *restart_msg = "";
 		unsigned map_checksum;
 
@@ -1559,9 +1560,10 @@ void CL_RequestNextDownload( void )
 			restart = qtrue;
 			restart_msg = "Pure server. Restarting media...";
 		}
-		else if( cls.download.successCount )
+		if( cls.download.successCount )
 		{
 			restart = qtrue;
+			vid_restart = qtrue;
 			restart_msg = "Files downloaded. Restarting media...";
 		}
 
@@ -1571,17 +1573,24 @@ void CL_RequestNextDownload( void )
 		if( restart ) {
 			Com_Printf( "%s\n", restart_msg );
 
-			// the following registration calls will ensure 
-			// no media assets survives the restart
+			if( vid_restart ) {
+				// no media is going to survive a vid_restart...
+				Cbuf_ExecuteText( EXEC_NOW, "s_restart 1\n" );
+			}
+			else {
+				// the following registration calls will ensure 
+				// no media assets survives the restart
+				R_EndRegistration();
+				CL_SoundModule_EndRegistration();
 
-			R_EndRegistration();
-			CL_SoundModule_EndRegistration();
-
-			R_BeginRegistration();
-			CL_SoundModule_BeginRegistration();
+				R_BeginRegistration();
+				CL_SoundModule_BeginRegistration();
+			}
 		}
 
-		CL_RestartMedia( qfalse );
+		if( !vid_restart ) {
+			CL_RestartMedia( qfalse );
+		}
 
 		cls.download.successCount = 0;
 
@@ -2119,9 +2128,6 @@ void CL_AdjustServerTime( unsigned int gamemsec )
 		if( cl.newServerTimeDelta > cl.serverTimeDelta )
 			cl.serverTimeDelta++;
 	}
-
-	if( cls.gametime + cl.serverTimeDelta < 0 )  // should never happen
-		cl.serverTimeDelta = 0;
 
 	cl.serverTime = cls.gametime + cl.serverTimeDelta;
 
