@@ -214,7 +214,7 @@ public:
 		engine->SetMessageCallback( asMETHOD(ASModule, MessageCallback), (void*)this, asCALL_THISCALL );
 
 		// koochi: always enable default constructor
-		engine->SetEngineProperty( asEP_ALWAYS_IMPL_DEFAULT_CONSTRUCT, true );
+		engine->SetEngineProperty( asEP_ALWAYS_IMPL_DEFAULT_CONSTRUCT, 1 );
 
 		stringObjectType = engine->GetObjectTypeById(engine->GetTypeIdByDecl("String"));
 

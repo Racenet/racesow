@@ -1338,7 +1338,7 @@ public:
 		registerSelf();
 	}
 
-	Class( asIScriptEngine *_engine, const char *name )
+	Class( asIScriptEngine *engine, const char *name )
 		: engine( engine ), name( name )
 	{
 		registerSelf();
