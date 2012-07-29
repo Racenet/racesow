@@ -530,9 +530,12 @@ static void Cmd_Spectators_f( edict_t *ent )
 qboolean CheckFlood( edict_t *ent, qboolean teamonly )
 {
 	int i;
-	gclient_t *client = ent->r.client;
+	gclient_t *client;
 
-	assert( ent && client );
+	assert( ent != NULL );
+
+	client = ent->r.client
+	assert( client != NULL );
 
 	if( g_floodprotection_messages->modified )
 	{
@@ -884,7 +887,7 @@ static void G_vsay_f( edict_t *ent, qboolean team )
 
 		// print information
 		string[0] = 0;
-		if( msg && strlen( msg ) > 0 )
+		if( msg && msg[0] != '\0' )
 			Q_strncatz( string, va( "%sUnknown vsay token%s \"%s\"\n", S_COLOR_YELLOW, S_COLOR_WHITE, msg ), sizeof( string ) );
 		Q_strncatz( string, va( "%svsays:%s\n", S_COLOR_YELLOW, S_COLOR_WHITE ), sizeof( string ) );
 		for( vsay = g_vsays; vsay->name; vsay++ )

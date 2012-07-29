@@ -402,8 +402,8 @@ static void G_VoteGametypeExtraHelp( edict_t *ent )
 
 	message[0] = 0;
 
-	if( ( g_gametype->latched_string && strlen( g_gametype->latched_string ) > 0 ) &&
-		( G_Gametype_Exists( g_gametype->latched_string ) ) )
+	if( g_gametype->latched_string && g_gametype->latched_string[0] != '\0' &&
+		G_Gametype_Exists( g_gametype->latched_string ) )
 	{
 		Q_strncatz( message, "- Will be changed to: ", sizeof( message ) );
 		Q_strncatz( message, g_gametype->latched_string, sizeof( message ) );

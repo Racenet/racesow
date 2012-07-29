@@ -55,8 +55,8 @@ void SP_target_temp_entity( edict_t *ent )
 //-------- SPAWNFLAGS --------
 //LOOPED_ON : &1 sound will loop and initially start on in level (will toggle on/off when triggered).
 //LOOPED_OFF : &2 sound will loop and initially start off in level (will toggle on/off when triggered).
-//RELIABLE : &4
-//GLOBAL : &8 Overrides attenuation setting. Sound will play full volume throughout the level as if it had attenuation -1
+//GLOBAL : &4 Overrides attenuation setting. Sound will play full volume throughout the level as if it had attenuation -1
+//RELATIVE : &8 Activator relative
 //ACTIVATOR : &16 sound will play only for the player that activated the target.
 //-------- NOTES --------
 //The path portion value of the "noise" key can be replaced by the implicit folder character "*" for triggered sounds that belong to a particular player model. For example, if you want to create a "bottomless pit" in which the player screams and dies when he falls into, you would place a trigger_multiple over the floor of the pit and target a target_speaker with it. Then, you would set the "noise" key to "*falling1.wav". The * character means the current player model's sound folder. So if your current player model is Visor, * = sounds/players/visor, if your current player model is Sarge, * = sounds/players/sarge, etc. This cool feature provides an excellent way to create "player-specific" triggered sounds in your levels.
@@ -80,6 +80,10 @@ static void Use_Target_Speaker( edict_t *ent, edict_t *other, edict_t *activator
 		// normal sound
 		if( ent->spawnflags & 8 )
 			G_Sound( activator, CHAN_VOICE, ent->noise_index, ent->attenuation );
+		else if( ent->spawnflags & 16 )
+			G_LocalSound( activator, CHAN_AUTO, ent->noise_index );
+		else if( ent->spawnflags & 4 )
+			G_GlobalSound( CHAN_AUTO, ent->noise_index );
 		// use a G_PositionedSound, because this entity won't normally be
 		// sent to any clients because it is invisible
 		else
@@ -103,13 +107,15 @@ void SP_target_speaker( edict_t *ent )
 	ent->noise_index = trap_SoundIndex( buffer );
 	G_PureSound( buffer );
 
-	if( ent->attenuation == -1 || ent->spawnflags & 8 )  // use -1 so 0 defaults to ATTN_NONE
+	if( ent->attenuation == -1 || ent->spawnflags & 4 )  // use -1 so 0 defaults to ATTN_NONE
 		ent->attenuation = ATTN_NONE;
 	else if( !ent->attenuation )
 		ent->attenuation = ATTN_NORM;
 
 	if( ent->attenuation == ATTN_NONE )
 		ent->r.svflags |= SVF_BROADCAST;
+	if( ent->spawnflags & 16 )
+		ent->r.svflags |= SVF_ONLYOWNER;
 
 	// check for prestarted looping sound
 	if( ent->spawnflags & 1 )

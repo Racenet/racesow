@@ -617,6 +617,7 @@ void G_Obituary( edict_t *victim, edict_t *attacker, int mod );
 void G_Sound( edict_t *owner, int channel, int soundindex, float attenuation );
 void G_PositionedSound( vec3_t origin, int channel, int soundindex, float attenuation );
 void G_GlobalSound( int channel, int soundindex );
+void G_LocalSound( edict_t *owner, int channel, int soundindex );
 
 float vectoyaw( vec3_t vec );
 

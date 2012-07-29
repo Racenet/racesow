@@ -458,7 +458,6 @@ void G_SetClientStats( edict_t *ent )
 		}
 	}
 
-
 	// last killer. ignore world and team kills
 	if( client->teamstate.last_killer )
 	{
