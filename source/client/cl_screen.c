@@ -1,40 +1,41 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // cl_scrn.c -- master for refresh, status bar, console, chat, notify, etc
 
 /*
 
-   full screen console
-   put up loading plaque
-   blanked background with loading plaque
-   blanked background with menu
-   cinematics
-   full screen image for quit and victory
+full screen console
+put up loading plaque
+blanked background with loading plaque
+blanked background with menu
+cinematics
+full screen image for quit and victory
 
-   end of unit intermissions
+end of unit intermissions
 
- */
+*/
 
 #include "client.h"
 
 float scr_con_current;    // aproaches scr_conlines at scr_conspeed
+float scr_con_previous;
 float scr_conlines;       // 0.0 to 1.0 lines of console to display
 
 qboolean scr_initialized;    // ready to draw
@@ -52,12 +53,12 @@ static cvar_t *scr_graphshift;
 static cvar_t *scr_forceclear;
 
 /*
-   ===============================================================================
+===============================================================================
 
-   MUFONT STRINGS
+MUFONT STRINGS
 
-   ===============================================================================
- */
+===============================================================================
+*/
 
 
 //
@@ -88,6 +89,7 @@ typedef struct
 typedef struct mufont_s
 {
 	char *name;
+	char *shadername;
 	int fontheight;
 	float imagewidth, imageheight;
 	struct shader_s	*shader;
@@ -136,13 +138,12 @@ static mufont_t *SCR_LoadMUFont( const char *name, size_t len )
 		return NULL;
 	}
 
-	Mem_TempFree( filename );
-
 	buf = Mem_TempMalloc( length + 1 );
 	length = FS_Read( buf, length, filenum );
 	FS_FCloseFile( filenum );
 	if( !length )
 	{
+		Mem_TempFree( filename );
 		Mem_TempFree( buf );
 		return NULL;
 	}
@@ -150,8 +151,13 @@ static mufont_t *SCR_LoadMUFont( const char *name, size_t len )
 	// seems to be valid. Allocate it
 	font = (mufont_t *)Font_Alloc( sizeof( mufont_t ) );
 	font->shader = shader;
+
 	font->name = Font_Alloc( len + 1 );
 	Q_strncpyz( font->name, name, len + 1 );
+
+	font->shadername = Font_Alloc( filename_size );
+	Q_strncpyz( font->shadername, filename, filename_size );
+	COM_ReplaceExtension( font->shadername, ".tga", filename_size );
 
 	// proceed
 	ptr = ( char * )buf;
@@ -234,6 +240,7 @@ static mufont_t *SCR_LoadMUFont( const char *name, size_t len )
 	if( !( font->chars[REPLACEMENT_CHAR].height ) )
 		font->chars[REPLACEMENT_CHAR] = font->chars['?'];
 
+	Mem_TempFree( filename );
 	Mem_TempFree( buf );
 	return font;
 
@@ -243,25 +250,28 @@ error:
 	if( font->name )
 		Font_Free( font->name );
 	Font_Free( font );
+
+	Mem_TempFree( filename );
 	Mem_TempFree( buf );
 	return NULL;
 }
 
-//==================
-// SCR_FreeMUFont
-//==================
+/*
+* SCR_FreeMUFont
+*/
 void SCR_FreeMUFont( mufont_t *font )
 {
 	assert( font );
 
 	Font_Free( font->chars );
 	Font_Free( font->name );
+	Font_Free( font->shadername );
 	Font_Free( font );
 }
 
-//==================
-// SCR_RegisterFont
-//==================
+/*
+* SCR_RegisterFont
+*/
 struct mufont_s *SCR_RegisterFont( const char *name )
 {
 	mufont_t *font;
@@ -273,8 +283,10 @@ struct mufont_s *SCR_RegisterFont( const char *name )
 
 	for( font = gs_muFonts; font; font = font->next )
 	{
-		if( !Q_strnicmp( font->name, name, len ) )
+		if( !Q_strnicmp( font->name, name, len ) ) {
+			font->shader = R_RegisterPic( font->shadername );
 			return font;
+		}
 	}
 
 	font = SCR_LoadMUFont( name, len );
@@ -289,9 +301,9 @@ struct mufont_s *SCR_RegisterFont( const char *name )
 	return font;
 }
 
-//==================
-// SCR_FreeFont
-//==================
+/*
+* SCR_FreeFont
+*/
 static void SCR_FreeFont( struct mufont_s *font )
 {
 	mufont_t *prev, *iter;
@@ -393,10 +405,10 @@ static int SCR_VerticalAlignForString( const int y, int align, int height )
 	return ny;
 }
 
-//==================
-// SCR_strHeight
-// it's font height in fact, but for preserving simetry I call it str
-//==================
+/*
+* SCR_strHeight
+* it's font height in fact, but for preserving simetry I call it str
+*/
 size_t SCR_strHeight( struct mufont_s *font )
 {
 	if( !font )
@@ -405,10 +417,10 @@ size_t SCR_strHeight( struct mufont_s *font )
 	return font->fontheight;
 }
 
-//==================
-// SCR_strWidth
-// doesn't count invisible characters. Counts up to given length, if any.
-//==================
+/*
+* SCR_strWidth
+* doesn't count invisible characters. Counts up to given length, if any.
+*/
 size_t SCR_strWidth( const char *str, struct mufont_s *font, int maxlen )
 {
 	const char *s = str;
@@ -450,10 +462,10 @@ size_t SCR_strWidth( const char *str, struct mufont_s *font, int maxlen )
 	return width;
 }
 
-//==================
-// SCR_StrlenForWidth
-// returns the len allowed for the string to fit inside a given width when using a given font.
-//==================
+/*
+* SCR_StrlenForWidth
+* returns the len allowed for the string to fit inside a given width when using a given font.
+*/
 size_t SCR_StrlenForWidth( const char *str, struct mufont_s *font, size_t maxwidth )
 {
 	const char *s, *olds;
@@ -506,13 +518,13 @@ size_t SCR_StrlenForWidth( const char *str, struct mufont_s *font, size_t maxwid
 //STRINGS DRAWING
 //===============================================================================
 
-//================
-//SCR_DrawRawChar
-//
-//Draws one graphics character with 0 being transparent.
-//It can be clipped to the top of the screen to allow the console to be
-//smoothly scrolled off.
-//================
+/*
+* SCR_DrawRawChar
+* 
+* Draws one graphics character with 0 being transparent.
+* It can be clipped to the top of the screen to allow the console to be
+* smoothly scrolled off.
+*/
 void SCR_DrawRawChar( int x, int y, qwchar num, struct mufont_s *font, vec4_t color )
 {
 	if( !font )
@@ -527,8 +539,8 @@ void SCR_DrawRawChar( int x, int y, qwchar num, struct mufont_s *font, vec4_t co
 		return; // totally off screen
 
 	R_DrawStretchPic( x, y, font->chars[num].width, font->fontheight,
-	                  font->chars[num].s1, font->chars[num].t1, font->chars[num].s2, font->chars[num].t2,
-	                  color, font->shader );
+		font->chars[num].s1, font->chars[num].t1, font->chars[num].s2, font->chars[num].t2,
+		color, font->shader );
 }
 
 static void SCR_DrawClampChar( int x, int y, qwchar num, int xmin, int ymin, int xmax, int ymax, struct mufont_s *font, vec4_t color )
@@ -548,7 +560,7 @@ static void SCR_DrawClampChar( int x, int y, qwchar num, int xmin, int ymin, int
 
 	// ignore if completely out of the drawing space
 	if( y + font->fontheight <= ymin || y >= ymax ||
-	    x + font->chars[num].width <= xmin || x >= xmax )
+		x + font->chars[num].width <= xmin || x >= xmax )
 		return;
 
 	pixelsize = 1.0f / font->imageheight;
@@ -672,10 +684,10 @@ void SCR_DrawClampString( int x, int y, const char *str, int xmin, int ymin, int
 	}
 }
 
-//===============
-//SCR_DrawRawString - Doesn't care about aligning. Returns drawn len.
-// It can stop when reaching maximum width when a value has been parsed.
-//===============
+/*
+* SCR_DrawRawString - Doesn't care about aligning. Returns drawn len.
+* It can stop when reaching maximum width when a value has been parsed.
+*/
 static int SCR_DrawRawString( int x, int y, const char *str, int maxwidth, struct mufont_s *font, vec4_t color )
 {
 	int xoffset = 0, yoffset = 0;
@@ -718,8 +730,8 @@ static int SCR_DrawRawString( int x, int y, const char *str, int maxwidth, struc
 
 			if( num != ' ' )
 				R_DrawStretchPic( x+xoffset, y+yoffset, font->chars[num].width, font->chars[num].height,
-			                  font->chars[num].s1, font->chars[num].t1, font->chars[num].s2, font->chars[num].t2,
-			                  scolor, font->shader );
+				font->chars[num].s1, font->chars[num].t1, font->chars[num].s2, font->chars[num].t2,
+				scolor, font->shader );
 
 			xoffset += font->chars[num].width;
 		}
@@ -737,9 +749,9 @@ static int SCR_DrawRawString( int x, int y, const char *str, int maxwidth, struc
 	return ( s - str );
 }
 
-//==================
-// SCR_DrawString
-//==================
+/*
+* SCR_DrawString
+*/
 void SCR_DrawString( int x, int y, int align, const char *str, struct mufont_s *font, vec4_t color )
 {
 	int width;
@@ -766,9 +778,9 @@ void SCR_DrawString( int x, int y, int align, const char *str, struct mufont_s *
 	}
 }
 
-//===============
-//SCR_DrawStringWidth - clamp to width in pixels. Returns drawn len
-//===============
+/*
+* SCR_DrawStringWidth - clamp to width in pixels. Returns drawn len
+*/
 int SCR_DrawStringWidth( int x, int y, int align, const char *str, int maxwidth, struct mufont_s *font, vec4_t color )
 {
 	int width;
@@ -797,29 +809,29 @@ int SCR_DrawStringWidth( int x, int y, int align, const char *str, int maxwidth,
 	return 0;
 }
 
-//=============
-//SCR_DrawFillRect
-//
-//Fills a box of pixels with a single color
-//=============
+/*
+* SCR_DrawFillRect
+* 
+* Fills a box of pixels with a single color
+*/
 void SCR_DrawFillRect( int x, int y, int w, int h, vec4_t color )
 {
 	R_DrawStretchPic( x, y, w, h, 0, 0, 1, 1, color, cls.whiteShader );
 }
 
 /*
-   ===============================================================================
+===============================================================================
 
-   BAR GRAPHS
+BAR GRAPHS
 
-   ===============================================================================
- */
+===============================================================================
+*/
 
-//==============
-//CL_AddNetgraph
-//
-//A new packet was just parsed
-//==============
+/*
+* CL_AddNetgraph
+* 
+* A new packet was just parsed
+*/
 void CL_AddNetgraph( void )
 {
 	int i;
@@ -855,10 +867,8 @@ static int current;
 static graphsamp_t values[1024];
 
 /*
-   ==============
-   SCR_DebugGraph
-   ==============
- */
+* SCR_DebugGraph
+*/
 void SCR_DebugGraph( float value, float r, float g, float b )
 {
 	values[current].value = value;
@@ -872,10 +882,8 @@ void SCR_DebugGraph( float value, float r, float g, float b )
 }
 
 /*
-   ==============
-   SCR_DrawDebugGraph
-   ==============
- */
+* SCR_DrawDebugGraph
+*/
 static void SCR_DrawDebugGraph( void )
 {
 	int a, x, y, w, i, h;
@@ -888,7 +896,7 @@ static void SCR_DrawDebugGraph( void )
 	x = 0;
 	y = 0+viddef.height;
 	SCR_DrawFillRect( x, y-scr_graphheight->integer,
-	                  w, scr_graphheight->integer, colorBlack );
+		w, scr_graphheight->integer, colorBlack );
 
 	for( a = 0; a < w; a++ )
 	{
@@ -906,10 +914,8 @@ static void SCR_DrawDebugGraph( void )
 //============================================================================
 
 /*
-   ==================
-   SCR_InitScreen
-   ==================
- */
+* SCR_InitScreen
+*/
 void SCR_InitScreen( void )
 {
 	scr_consize = Cvar_Get( "scr_consize", "0.5", CVAR_ARCHIVE );
@@ -922,20 +928,16 @@ void SCR_InitScreen( void )
 	scr_graphshift = Cvar_Get( "graphshift", "0", 0 );
 	scr_forceclear = Cvar_Get( "scr_forceclear", "0", CVAR_READONLY );
 
-	SCR_InitCinematic();
-
 	scr_initialized = qtrue;
 }
 
 //=============================================================================
 
 /*
-   ==================
-   SCR_RunConsole
-
-   Scroll it up or down
-   ==================
- */
+* SCR_RunConsole
+* 
+* Scroll it up or down
+*/
 void SCR_RunConsole( int msec )
 {
 	// decide on the height of the console
@@ -944,6 +946,7 @@ void SCR_RunConsole( int msec )
 	else
 		scr_conlines = 0;
 
+	scr_con_previous = scr_con_current;
 	if( scr_conlines < scr_con_current )
 	{
 		scr_con_current -= scr_conspeed->value * msec * 0.001f;
@@ -960,14 +963,10 @@ void SCR_RunConsole( int msec )
 }
 
 /*
-   ==================
-   SCR_DrawConsole
-   ==================
- */
+* SCR_DrawConsole
+*/
 static void SCR_DrawConsole( void )
 {
-	Con_CheckResize();
-
 	if( scr_con_current )
 	{
 		Con_DrawConsole( scr_con_current );
@@ -981,10 +980,8 @@ static void SCR_DrawConsole( void )
 }
 
 /*
-   ================
-   SCR_BeginLoadingPlaque
-   ================
- */
+* SCR_BeginLoadingPlaque
+*/
 void SCR_BeginLoadingPlaque( void )
 {
 	CL_SoundModule_StopAllSounds();
@@ -996,31 +993,11 @@ void SCR_BeginLoadingPlaque( void )
 	SCR_UpdateScreen();
 
 	CL_ShutdownMedia( qfalse );
-
-#if 0
-	if( cls.disable_screen )
-		return;
-	if( developer->integer )
-		return;
-	if( cls.state == ca_disconnected )
-		return; // if at console, don't bring up the plaque
-	if( cls.key_dest == key_console )
-		return;
-	if( cl.cin.time > 0 )
-		scr_draw_loading = 2; // clear to black first
-	else
-		scr_draw_loading = 1;
-	SCR_UpdateScreen();
-	cls.disable_screen = Sys_Milliseconds();
-	cls.disable_servercount = cl.servercount;
-#endif
 }
 
 /*
-   ================
-   SCR_EndLoadingPlaque
-   ================
- */
+* SCR_EndLoadingPlaque
+*/
 void SCR_EndLoadingPlaque( void )
 {
 	cls.disable_screen = 0;
@@ -1031,19 +1008,19 @@ void SCR_EndLoadingPlaque( void )
 
 //=======================================================
 
-//=================
-//SCR_RegisterConsoleMedia
-//=================
+/*
+* SCR_RegisterConsoleMedia
+*/
 void SCR_RegisterConsoleMedia( void )
 {
-	cls.whiteShader = R_RegisterPic( "gfx/ui/white" );
+	cls.whiteShader = R_RegisterPic( "$whiteimage" );
 	cls.consoleShader = R_RegisterPic( "gfx/ui/console" );
 	SCR_InitFonts();
 }
 
-//=================
-//SCR_ShutDownConsoleMedia
-//=================
+/*
+* SCR_ShutDownConsoleMedia
+*/
 void SCR_ShutDownConsoleMedia( void )
 {
 	SCR_ShutdownFonts();
@@ -1052,11 +1029,8 @@ void SCR_ShutDownConsoleMedia( void )
 //============================================================================
 
 /*
-   ==================
-   SCR_RenderView
-
-   ==================
- */
+* SCR_RenderView
+*/
 static void SCR_RenderView( float stereo_separation )
 {
 	if( cls.demo.playing )
@@ -1077,19 +1051,18 @@ static void SCR_RenderView( float stereo_separation )
 //============================================================================
 
 /*
-   ==================
-   SCR_UpdateScreen
-
-   This is called every frame, and can also be called explicitly to flush
-   text to the screen.
-   ==================
- */
+* SCR_UpdateScreen
+* 
+* This is called every frame, and can also be called explicitly to flush
+* text to the screen.
+*/
 void SCR_UpdateScreen( void )
 {
 	static dynvar_t *updatescreen = NULL;
 	int numframes;
 	int i;
 	float separation[2];
+	qboolean scr_cinematic;
 
 	if( !updatescreen )
 		updatescreen = Dynvar_Create( "updatescreen", qfalse, DYNVAR_WRITEONLY, DYNVAR_READONLY );
@@ -1108,6 +1081,8 @@ void SCR_UpdateScreen( void )
 
 	if( !scr_initialized || !con_initialized || !cls.mediaInitialized )
 		return;     // not initialized yet
+
+	Con_CheckResize();
 
 	/*
 	** range check cl_camera_separation so we don't inadvertently fry someone's
@@ -1131,41 +1106,54 @@ void SCR_UpdateScreen( void )
 		numframes = 1;
 	}
 
+	// avoid redrawing fullscreen cinematics unless damaged by console drawing
+	scr_cinematic = cls.state == CA_CINEMATIC ? qtrue : qfalse;
+//	if( scr_cinematic && !cl.cin.redraw && !scr_con_current && !scr_con_previous ) {
+//		return;
+//	}
+
+	if( cls.cgameActive && cls.state < CA_LOADING ) {
+		// this is when we've finished loading cgame media and are waiting
+		// for the first valid snapshot to arrive. keep the loading screen untouched
+		return;
+	}
+
 	for( i = 0; i < numframes; i++ )
 	{
-		R_BeginFrame( separation[i], scr_forceclear->integer ? qtrue : qfalse );
+		R_BeginFrame( separation[i], scr_cinematic || scr_forceclear->integer ? qtrue : qfalse );
 
 		if( scr_draw_loading == 2 )
 		{ 
 			// loading plaque over black screen
 			scr_draw_loading = 0;
-			CL_UIModule_DrawConnectScreen( qtrue );
+			CL_UIModule_UpdateConnectScreen( qtrue );
 		}
 		// if a cinematic is supposed to be running, handle menus
 		// and console specially
-		else if( SCR_GetCinematicTime() > 0 )
+		else if( scr_cinematic )
 		{
 			SCR_DrawCinematic();
+			SCR_DrawConsole();
 		}
 		else if( cls.state == CA_DISCONNECTED )
 		{
-			CL_UIModule_Refresh( qtrue );
+			CL_UIModule_Refresh( qtrue, qtrue );
 			SCR_DrawConsole();
 		}
-		else if( cls.state == CA_CONNECTING || cls.state == CA_CONNECTED || cls.state == CA_HANDSHAKE )
+		else if( cls.state == CA_GETTING_TICKET || cls.state == CA_CONNECTING || cls.state == CA_CONNECTED || cls.state == CA_HANDSHAKE )
 		{
-			CL_UIModule_DrawConnectScreen( qtrue );
+			CL_UIModule_UpdateConnectScreen( qtrue );
 		}
 		else if( cls.state == CA_LOADING )
 		{
 			SCR_RenderView( separation[i] );
-			CL_UIModule_DrawConnectScreen( qfalse );
+			CL_UIModule_UpdateConnectScreen( qfalse );
 		}
 		else if( cls.state == CA_ACTIVE )
 		{
 			SCR_RenderView( separation[i] );
 
-			CL_UIModule_Refresh( qfalse );
+			CL_UIModule_Refresh( qfalse, qtrue );
 
 			if( scr_timegraph->integer )
 				SCR_DebugGraph( cls.frametime*300, 1, 1, 1 );

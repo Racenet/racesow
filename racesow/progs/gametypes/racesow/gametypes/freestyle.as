@@ -13,12 +13,12 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
     
     void InitGametype()
     {
-      gametype.setTitle( "Freestyle" );
+      gametype.title = "Freestyle";
       
       // if the gametype doesn't have a config file, create it
       if ( !G_FileExists( "configs/server/gametypes/freestyle.cfg" ) )
       {
-          cString config;
+          String config;
     
           // the config file doesn't exist or it's empty, create it
           config = "//*\n"
@@ -155,7 +155,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         player.restartingRace();
     }
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args )
+    void scoreEvent( cClient @client, String &score_event, String &args )
     {
         Racesow_Player @player = Racesow_GetPlayerByClient( client );
         if (@player != null )
@@ -175,21 +175,21 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
                     if( @client.getEnt() == null)
                         return;
                     cTrace tr;
-                    if( tr.doTrace( client.getEnt().getOrigin(), vec3Origin, vec3Origin, client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ), 0, MASK_DEADSOLID ))
+                    if( tr.doTrace( client.getEnt().origin, vec3Origin, vec3Origin, client.getEnt().origin + Vec3( 0.0f, 0.0f, 50.0f ), 0, MASK_DEADSOLID ))
                         return;
                     //spawn a gravestone to store the postition
                     cEntity @gravestone = @G_SpawnEntity( "gravestone" );
                     // copy client position
-                    gravestone.setOrigin( client.getEnt().getOrigin() + cVec3( 0.0f, 0.0f, 50.0f ) );
+                    gravestone.origin = client.getEnt().origin + Vec3( 0.0f, 0.0f, 50.0f );
                     victimPlayer.setupTelekilled( @gravestone );
                 }
             }
         }
     }
     
-    cString @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( uint maxlen )
     {
-        cString scoreboardMessage, entry;
+        String scoreboardMessage, entry;
         cTeam @team;
         cEntity @ent;
         int i, playerID;
@@ -207,8 +207,8 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
             @ent = @team.ent( i );
             Racesow_Player @player = Racesow_GetPlayerByClient( ent.client );
 
-            int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum() + 1 ) : ent.playerNum();
-            entry = "&p " + playerID + " " + ent.client.getClanName() + " "
+            int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
+            entry = "&p " + playerID + " " + ent.client.clanName + " "
                     + ent.client.ping + " ";
 
             if ( scoreboardMessage.len() + entry.len() < maxlen )
@@ -235,7 +235,7 @@ class Racesow_Gametype_Freestyle : Racesow_Gametype
         return false;// let the default code handle it itself
     }
     
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    bool Command( cClient @client, String @cmdString, String @argsString, int argc )
     {
         return false;
     }

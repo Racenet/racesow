@@ -92,7 +92,7 @@ static void SNAP_EmitPacketEntities( ginfo_t *gi, client_snapshot_t *from, clien
 		if( newnum < oldnum )
 		{
 			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity( &baselines[newnum], newent, msg, qtrue, ( (( EDICT_NUM( newent->number ) )->r.svflags & (SVF_TRANSMITORIGIN2|SVF_NOORIGIN2)) != SVF_NOORIGIN2 ) ? qtrue : qfalse );
+			MSG_WriteDeltaEntity( &baselines[newnum], newent, msg, qtrue, ( ( EDICT_NUM( newent->number ) )->r.svflags & SVF_TRANSMITORIGIN2 ) ? qtrue : qfalse );
 			newindex++;
 			continue;
 		}
@@ -191,7 +191,7 @@ static void SNAP_WritePlayerstateToClient( player_state_t *ops, player_state_t *
 	int i;
 	int pflags;
 	player_state_t dummy;
-	int statbits;
+	int statbits[SNAP_STATS_LONGS];
 
 	if( !ops )
 	{
@@ -396,43 +396,44 @@ static void SNAP_WritePlayerstateToClient( player_state_t *ops, player_state_t *
 
 	if( pflags & PS_PMOVESTATS )
 	{
-		statbits = 0;
+		int pmstatbits;
+		
+		pmstatbits = 0;
 		for( i = 0; i < PM_STAT_SIZE; i++ )
 		{
 			if( ps->pmove.stats[i] != ops->pmove.stats[i] )
-				statbits |= ( 1<<i );
+				pmstatbits |= ( 1<<i );
 		}
 
-		MSG_WriteShort( msg, statbits & 0xFFFF );
+		MSG_WriteShort( msg, pmstatbits & 0xFFFF );
 
 		for( i = 0; i < PM_STAT_SIZE; i++ )
 		{
-			if( statbits & ( 1<<i ) )
+			if( pmstatbits & ( 1<<i ) )
 				MSG_WriteShort( msg, ps->pmove.stats[i] );
 		}
 	}
 
 	if( pflags & PS_INVENTORY )
 	{
-		int ithalf = MAX_ITEMS / 2;
+		int invstatbits[SNAP_INVENTORY_LONGS];
 
 		// send inventory stats
-		statbits = 0;
-		for( i = 0; i < ithalf; i++ )
+		memset( invstatbits, 0, sizeof( invstatbits ) );
+		for( i = 0; i < MAX_ITEMS; i++ )
 		{
-			if( ps->inventory[i] != ops->inventory[i] || ps->inventory[i+ithalf] != ops->inventory[i+ithalf] )
-				statbits |= ( 1<<i );
+			if( ps->inventory[i] != ops->inventory[i] )
+				invstatbits[i>>5] |= ( 1<<(i&31) );
 		}
 
-		MSG_WriteLong( msg, statbits );
+		for( i = 0; i < SNAP_INVENTORY_LONGS; i++ ) {
+			MSG_WriteLong( msg, invstatbits[i] );
+		}
 
-		for( i = 0; i < ithalf; i++ )
+		for( i = 0; i < MAX_ITEMS; i++ )
 		{
-			if( statbits & ( 1<<i ) )
-			{
+			if( invstatbits[i>>5] & ( 1<<(i&31) ) )
 				MSG_WriteByte( msg, (qbyte)ps->inventory[i] );
-				MSG_WriteByte( msg, (qbyte)ps->inventory[i+ithalf] );
-			}
 		}
 	}
 
@@ -440,17 +441,20 @@ static void SNAP_WritePlayerstateToClient( player_state_t *ops, player_state_t *
 		MSG_WriteByte( msg, ps->plrkeys );
 
 	// send stats
-	statbits = 0;
+	memset( statbits, 0, sizeof( statbits ) );
 	for( i = 0; i < PS_MAX_STATS; i++ )
 	{
 		if( ps->stats[i] != ops->stats[i] )
-			statbits |= 1<<i;
+			statbits[i>>5] |= 1<<(i&31);
 	}
 
-	MSG_WriteLong( msg, statbits );
+	for( i = 0; i < SNAP_STATS_LONGS; i++ ) {
+		MSG_WriteLong( msg, statbits[i] );
+	}
+
 	for( i = 0; i < PS_MAX_STATS; i++ )
 	{
-		if( statbits & ( 1<<i ) )
+		if( statbits[i>>5] & ( 1<<(i&31) ) )
 			MSG_WriteShort( msg, ps->stats[i] );
 	}
 }
@@ -573,12 +577,26 @@ static void SNAP_WriteMultiPOVCommands( ginfo_t *gi, client_t *client, msg_t *ms
 static void SNAP_RelayMultiPOVCommands( ginfo_t *gi, client_t *client, msg_t *msg, int numcmds, gcommand_t *commands, const char *commandsData )
 {
 	int i, index;
+	int first_index, last_index;
 	gcommand_t *gcmd;
+	const char *command;
 
-	for( index = 0, gcmd = commands; index < numcmds; index++, gcmd++ )
+	first_index = numcmds - MAX_RELIABLE_COMMANDS;
+	last_index = first_index + MAX_RELIABLE_COMMANDS;
+
+	clamp_low( first_index, 0 );
+	clamp_high( last_index, numcmds );
+
+	for( index = first_index, gcmd = commands + index; index < last_index; index++, gcmd++ )
 	{
+		command = commandsData + gcmd->commandOffset;
+
+		// do not allow the message buffer to overflow (can happen on flood updates)
+		if( msg->cursize + strlen( command ) + 512 > msg->maxsize )
+			continue;
+
 		MSG_WriteShort( msg, 0 );
-		MSG_WriteString( msg, commandsData + gcmd->commandOffset );
+		MSG_WriteString( msg, command );
 
 		if( gcmd->all )
 		{
@@ -752,15 +770,6 @@ static void SNAP_FatPVS( cmodel_state_t *cms, vec3_t org, qbyte *fatpvs )
 }
 
 /*
-* SV_FatPHS
-*/
-static void SNAP_FatPHS( cmodel_state_t *cms, int cluster, qbyte *fatphs )
-{
-	memset( fatphs, 0, CM_ClusterRowSize( cms ) );
-	CM_MergePHS( cms, cluster, fatphs );
-}
-
-/*
 * SNAP_BitsCullEntity
 */
 static qboolean SNAP_BitsCullEntity( cmodel_state_t *cms, edict_t *ent, qbyte *bits, int max_clusters )
@@ -787,7 +796,6 @@ static qboolean SNAP_BitsCullEntity( cmodel_state_t *cms, edict_t *ent, qbyte *b
 }
 
 #define SNAP_PVSCullEntity(cms,fatpvs,ent) SNAP_BitsCullEntity(cms,ent,fatpvs,ent->r.num_clusters)
-#define SNAP_PHSCullEntity(cms,fatphs,ent) SNAP_BitsCullEntity(cms,ent,fatphs,1)
 
 //=====================================================================
 
@@ -868,15 +876,12 @@ static float SNAP_GainForAttenuation( float dist, float attenuation )
 /*
 * SNAP_SnapCullSoundEntity
 */
-static qboolean SNAP_SnapCullSoundEntity( cmodel_state_t *cms, qbyte *fatphs, edict_t *ent, vec3_t listener_origin, float attenuation )
+static qboolean SNAP_SnapCullSoundEntity( cmodel_state_t *cms, edict_t *ent, vec3_t listener_origin, float attenuation )
 {
 	float gain, dist;
 
 	if( !attenuation )
 		return qfalse;
-
-	if( SNAP_PHSCullEntity( cms, fatphs, ent ) )
-		return qtrue;
 
 	dist = DistanceFast( ent->s.origin, listener_origin ) - 256; // extend the influence sphere cause the player could be moving
 	gain = SNAP_GainForAttenuation( dist < 0 ? 0 : dist, attenuation );
@@ -889,7 +894,7 @@ static qboolean SNAP_SnapCullSoundEntity( cmodel_state_t *cms, qbyte *fatphs, ed
 /*
 * SNAP_SnapCullEntity
 */
-static qboolean SNAP_SnapCullEntity( cmodel_state_t *cms, edict_t *ent, edict_t *clent, client_snapshot_t *frame, vec3_t vieworg, qbyte *fatpvs, qbyte *fatphs )
+static qboolean SNAP_SnapCullEntity( cmodel_state_t *cms, edict_t *ent, edict_t *clent, client_snapshot_t *frame, vec3_t vieworg, qbyte *fatpvs )
 {
 	qbyte *areabits;
 
@@ -906,20 +911,12 @@ static qboolean SNAP_SnapCullEntity( cmodel_state_t *cms, edict_t *ent, edict_t 
 	if( ( ent->r.svflags & SVF_ONLYTEAM ) && ( clent && ent->s.team != clent->s.team ) )
 		return qtrue;
 
+	// send only to owner
+	if( ( ent->r.svflags & SVF_ONLYOWNER ) && ( clent && ent->s.ownerNum != clent->s.number ) )
+		return qtrue;
+
 	if( ent->r.svflags & SVF_BROADCAST )  // send to everyone
 		return qfalse;
-
-	// sound entities culling
-	if( ent->r.svflags & SVF_SOUNDCULL )
-		return SNAP_SnapCullSoundEntity( cms, fatphs, ent, vieworg, (float)(ent->s.attenuation / 16.0f) );
-
-	// if not a sound entity but the entity is only a sound
-	if( !ent->s.modelindex && !ent->s.events[0] && !ent->s.light && !ent->s.effects && ent->s.sound )
-	{
-#define	ATTN_STATIC		5 // FIXME!
-		return SNAP_SnapCullSoundEntity( cms, fatphs, ent, vieworg, ATTN_STATIC );
-#undef ATTN_STATIC
-	}
 
 	if( ent->r.areanum < 0 )
 		return qtrue;
@@ -935,15 +932,25 @@ static qboolean SNAP_SnapCullEntity( cmodel_state_t *cms, edict_t *ent, edict_t 
 		}
 	}
 
-	if( (ent->r.svflags & SVF_TRANSMITORIGIN2) && !(ent->r.svflags & SVF_NOCULLATORIGIN2) )
-		return SNAP_PHSCullEntity( cms, fatphs, ent );		// cull by PHS
+	// sound entities culling
+	if( ent->r.svflags & SVF_SOUNDCULL )
+		return SNAP_SnapCullSoundEntity( cms, ent, vieworg, (float)(ent->s.attenuation / 16.0f) );
+
+	// if not a sound entity but the entity is only a sound
+	if( !ent->s.modelindex && !ent->s.events[0] && !ent->s.light && !ent->s.effects && ent->s.sound )
+	{
+#define	ATTN_STATIC		5 // FIXME!
+		return SNAP_SnapCullSoundEntity( cms, ent, vieworg, ATTN_STATIC );
+#undef ATTN_STATIC
+	}
+
 	return SNAP_PVSCullEntity( cms, fatpvs, ent );			// cull by PVS
 }
 
 /*
 * SNAP_BuildSnapEntitiesList
 */
-static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_t *clent, vec3_t vieworg, vec3_t skyorg, qbyte *fatpvs, qbyte *fatphs, client_snapshot_t *frame, snapshotEntityNumbers_t *entsList )
+static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_t *clent, vec3_t vieworg, vec3_t skyorg, qbyte *fatpvs, client_snapshot_t *frame, snapshotEntityNumbers_t *entsList )
 {
 	int leafnum = -1, clusternum = -1, clientarea = -1;
 	int entNum;
@@ -967,7 +974,6 @@ static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_
 	if( clent )
 	{
 		SNAP_FatPVS( cms, vieworg, fatpvs );
-		SNAP_FatPHS( cms, clusternum, fatphs );
 
 		// if the client is outside of the world, don't send him any entity (excepting himself)
 		if( !frame->allentities && clusternum == -1 )
@@ -990,7 +996,7 @@ static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_
 	{
 		// make a pass checking for sky portal and portal entities and merge PVS in case of finding any
 		if( skyorg )
-			CM_MergeVisSets( cms, skyorg, fatpvs, fatphs, frame->areabits + clientarea * CM_AreaRowSize( cms ) );
+			CM_MergeVisSets( cms, skyorg, fatpvs, frame->areabits + clientarea * CM_AreaRowSize( cms ) );
 
 		for( entNum = 1; entNum < gi->num_edicts; entNum++ )
 		{
@@ -998,11 +1004,11 @@ static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_
 			if( ent->r.svflags & SVF_PORTAL )
 			{
 				// merge visibility sets if portal
-				if( SNAP_SnapCullEntity( cms, ent, clent, frame, vieworg, fatpvs, fatphs ) )
+				if( SNAP_SnapCullEntity( cms, ent, clent, frame, vieworg, fatpvs ) )
 					continue;
 
 				if( !VectorCompare( ent->s.origin, ent->s.origin2 ) )
-					CM_MergeVisSets( cms, ent->s.origin2, fatpvs, fatphs, frame->areabits + clientarea * CM_AreaRowSize( cms ) );
+					CM_MergeVisSets( cms, ent->s.origin2, fatpvs, frame->areabits + clientarea * CM_AreaRowSize( cms ) );
 			}
 		}
 	}
@@ -1020,7 +1026,7 @@ static void SNAP_BuildSnapEntitiesList( cmodel_state_t *cms, ginfo_t *gi, edict_
 		}
 
 		// always add the client entity, even if SVF_NOCLIENT
-		if( ( ent != clent ) && SNAP_SnapCullEntity( cms, ent, clent, frame, vieworg, fatpvs, fatphs ) )
+		if( ( ent != clent ) && SNAP_SnapCullEntity( cms, ent, clent, frame, vieworg, fatpvs ) )
 			continue;
 
 		// add it
@@ -1109,7 +1115,7 @@ void SNAP_BuildClientFrameSnap( cmodel_state_t *cms, ginfo_t *gi, unsigned int f
 			Mem_Free( frame->areabits );
 			frame->areabits = NULL;
 		}
-		frame->areabits = Mem_Alloc( mempool, numareas );
+		frame->areabits = (qbyte*)Mem_Alloc( mempool, numareas );
 	}
 
 	// grab the current player_state_t
@@ -1136,7 +1142,7 @@ void SNAP_BuildClientFrameSnap( cmodel_state_t *cms, ginfo_t *gi, unsigned int f
 			frame->ps = NULL;
 		}
 
-		frame->ps = Mem_Alloc( mempool, sizeof( player_state_t )*frame->numplayers );
+		frame->ps = ( player_state_t* )Mem_Alloc( mempool, sizeof( player_state_t )*frame->numplayers );
 		frame->ps_size = frame->numplayers;
 	}
 
@@ -1164,7 +1170,7 @@ void SNAP_BuildClientFrameSnap( cmodel_state_t *cms, ginfo_t *gi, unsigned int f
 	//=============================
 	entsList.numSnapshotEntities = 0;
 	memset( entsList.entityAddedToSnapList, 0, sizeof( entsList.entityAddedToSnapList ) );
-	SNAP_BuildSnapEntitiesList( cms, gi, clent, org, fatvis->skyorg, fatvis->pvs, fatvis->phs, frame, &entsList );
+	SNAP_BuildSnapEntitiesList( cms, gi, clent, org, fatvis->skyorg, fatvis->pvs, frame, &entsList );
 
 	//Com_Printf( "Snap NumEntities:%i\n", entsList.numSnapshotEntities );
 

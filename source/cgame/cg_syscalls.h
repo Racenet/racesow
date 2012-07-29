@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2002-2003 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #ifdef CGAME_HARD_LINKED
 #define CGAME_IMPORT cgi_imp_local
@@ -216,6 +216,11 @@ static inline qboolean trap_FS_IsPureFile( const char *filename )
 	return CGAME_IMPORT.FS_IsPureFile( filename );
 }
 
+static inline qboolean trap_FS_MoveFile( const char *src, const char *dst )
+{
+	return CGAME_IMPORT.FS_MoveFile( src, dst );
+}
+
 static inline const char *trap_Key_GetBindingBuf( int binding )
 {
 	return CGAME_IMPORT.Key_GetBindingBuf( binding );
@@ -321,9 +326,19 @@ static inline void trap_R_ModelBounds( const struct model_s *mod, vec3_t mins, v
 	CGAME_IMPORT.R_ModelBounds( mod, mins, maxs );
 }
 
+static inline void trap_R_ModelFrameBounds( const struct model_s *mod, int frame, vec3_t mins, vec3_t maxs )
+{
+	CGAME_IMPORT.R_ModelFrameBounds( mod, frame, mins, maxs );
+}
+
 static inline struct shader_s *trap_R_RegisterPic( const char *name )
 {
 	return CGAME_IMPORT.R_RegisterPic( name );
+}
+
+static inline struct shader_s *trap_R_RegisterRawPic( const char *name, int width, int height, qbyte *data )
+{
+	return CGAME_IMPORT.R_RegisterRawPic( name, width, height, data );
 }
 
 static inline struct shader_s *trap_R_RegisterLevelshot( const char *name, struct shader_s *defaultPic, qboolean *matchesDefault )
@@ -339,6 +354,11 @@ static inline struct shader_s *trap_R_RegisterSkin( const char *name )
 static inline struct skinfile_s *trap_R_RegisterSkinFile( const char *name )
 {
 	return CGAME_IMPORT.R_RegisterSkinFile( name );
+}
+
+static inline struct shader_s *trap_R_RegisterVideo( const char *name )
+{
+	return CGAME_IMPORT.R_RegisterVideo( name );
 }
 
 static inline qboolean trap_R_LerpTag( orientation_t *orient, const struct model_s *mod, int oldframe, int frame, float lerpfrac, const char *name )
@@ -361,9 +381,29 @@ static inline void trap_R_DrawStretchPic( int x, int y, int w, int h, float s1, 
 	CGAME_IMPORT.R_DrawStretchPic( x, y, w, h, s1, t1, s2, t2, color, shader );
 }
 
+static inline void trap_R_DrawRotatedStretchPic( int x, int y, int w, int h, float s1, float t1, float s2, float t2, float angle, const vec4_t color, const struct shader_s *shader )
+{
+	CGAME_IMPORT.R_DrawRotatedStretchPic( x, y, w, h, s1, t1, s2, t2, angle, color, shader );
+}
+
+static inline void trap_R_DrawStretchPoly( const poly_t *poly, float x_offset, float y_offset )
+{
+	CGAME_IMPORT.R_DrawStretchPoly( poly, x_offset, y_offset );
+}
+
 static inline void trap_R_TransformVectorToScreen( const refdef_t *rd, const vec3_t in, vec2_t out )
 {
 	CGAME_IMPORT.R_TransformVectorToScreen( rd, in, out );
+}
+
+static inline void trap_R_SetScissorRegion( int x, int y, int w, int h )
+{
+	CGAME_IMPORT.R_SetScissorRegion( x, y, w, h );
+}
+
+static inline void trap_R_GetShaderDimensions( const struct shader_s *shader, int *width, int *height, int *depth )
+{
+	CGAME_IMPORT.R_GetShaderDimensions( shader, width, height, depth );
 }
 
 static inline int trap_R_SkeletalGetNumBones( const struct model_s *mod, int *numFrames )
@@ -381,6 +421,11 @@ static inline void trap_R_SkeletalGetBonePose( const struct model_s *mod, int bo
 	CGAME_IMPORT.R_SkeletalGetBonePose( mod, bone, frame, bonepose );
 }
 
+static inline void trap_VID_FlashWindow( int count )
+{
+	CGAME_IMPORT.VID_FlashWindow( count );
+}
+
 static inline struct cmodel_s *trap_CM_InlineModel( int num )
 {
 	return CGAME_IMPORT.CM_InlineModel( num );
@@ -389,6 +434,11 @@ static inline struct cmodel_s *trap_CM_InlineModel( int num )
 static inline struct cmodel_s *trap_CM_ModelForBBox( vec3_t mins, vec3_t maxs )
 {
 	return CGAME_IMPORT.CM_ModelForBBox( mins, maxs );
+}
+
+static inline struct cmodel_s *trap_CM_OctagonModelForBBox( vec3_t mins, vec3_t maxs )
+{
+	return CGAME_IMPORT.CM_OctagonModelForBBox( mins, maxs );
 }
 
 static inline int trap_CM_NumInlineModels( void )
@@ -421,9 +471,9 @@ static inline struct sfx_s *trap_S_RegisterSound( const char *name )
 	return CGAME_IMPORT.S_RegisterSound( name );
 }
 
-static inline void trap_S_Update( const vec3_t origin, const vec3_t velocity, const vec3_t v_forward, const vec3_t v_right, const vec3_t v_up )
+static inline void trap_S_Update( const vec3_t origin, const vec3_t velocity, const vec3_t v_forward, const vec3_t v_right, const vec3_t v_up, const char *identity )
 {
-	CGAME_IMPORT.S_Update( origin, velocity, v_forward, v_right, v_up );
+	CGAME_IMPORT.S_Update( origin, velocity, v_forward, v_right, v_up, identity );
 }
 
 static inline void trap_S_StartFixedSound( struct sfx_s *sfx, const vec3_t origin, int channel, float fvol, float attenuation )

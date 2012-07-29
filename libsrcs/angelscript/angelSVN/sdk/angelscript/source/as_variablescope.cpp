@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2007 Andreas Jonsson
+   Copyright (c) 2003-2012 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied 
    warranty. In no event will the authors be held liable for any 
@@ -37,6 +37,9 @@
 
 
 #include "as_config.h"
+
+#ifndef AS_NO_COMPILER
+
 #include "as_variablescope.h"
 
 BEGIN_AS_NAMESPACE
@@ -65,7 +68,7 @@ void asCVariableScope::Reset()
 	variables.SetLength(0);
 }
 
-int asCVariableScope::DeclareVariable(const char *name, const asCDataType &type, int stackOffset)
+int asCVariableScope::DeclareVariable(const char *name, const asCDataType &type, int stackOffset, bool onHeap)
 {
 	// TODO: optimize: Improve linear search
 	// See if the variable is already declared
@@ -79,11 +82,12 @@ int asCVariableScope::DeclareVariable(const char *name, const asCDataType &type,
 	}
 
 	sVariable *var = asNEW(sVariable);
-	var->name = name;
-	var->type = type;
-	var->stackOffset = stackOffset;
-	var->isInitialized = false;
+	var->name           = name;
+	var->type           = type;
+	var->stackOffset    = stackOffset;
+	var->isInitialized  = false;
 	var->isPureConstant = false;
+	var->onHeap         = onHeap;
 
 	// Parameters are initialized
 	if( stackOffset <= 0 )
@@ -127,3 +131,7 @@ sVariable *asCVariableScope::GetVariableByOffset(int offset)
 }
 
 END_AS_NAMESPACE
+
+#endif // AS_NO_COMPILER
+
+

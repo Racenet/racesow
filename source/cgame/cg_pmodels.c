@@ -1,30 +1,30 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 /*
-   ==========================================================================
+==========================================================================
 
-   			 - SPLITMODELS -
+- SPLITMODELS -
 
-   ==========================================================================
- */
+==========================================================================
+*/
 // - Adding the Player model using Skeletal animation blending
 // by Jalisk0
 
@@ -37,17 +37,17 @@ pmodelinfo_t *cg_PModelInfos;
 //						PlayerModel Registering
 //======================================================================
 
-//================
-//CG_PModelsInit
-//================
+/*
+* CG_PModelsInit
+*/
 void CG_PModelsInit( void )
 {
 	memset( cg_entPModels, 0, sizeof( cg_entPModels ) );
 }
 
-//================
-//CG_ResetPModels
-//================
+/*
+* CG_ResetPModels
+*/
 void CG_ResetPModels( void )
 {
 	int i;
@@ -60,9 +60,9 @@ void CG_ResetPModels( void )
 	memset( &cg.weapon, 0, sizeof( cg.weapon ) );
 }
 
-//================
-//CG_CopyAnimation
-//================
+/*
+* CG_CopyAnimation
+*/
 static void CG_CopyAnimation( gs_pmodel_animationset_t *animSet, int put, int pick )
 {
 	animSet->firstframe[put] = animSet->firstframe[pick];
@@ -70,9 +70,9 @@ static void CG_CopyAnimation( gs_pmodel_animationset_t *animSet, int put, int pi
 	animSet->loopingframes[put] = animSet->loopingframes[pick];
 }
 
-//================
-//CG_FindBoneNum
-//================
+/*
+* CG_FindBoneNum
+*/
 static int CG_FindBoneNum( cgs_skeleton_t *skel, char *bonename )
 {
 	int j;
@@ -89,9 +89,9 @@ static int CG_FindBoneNum( cgs_skeleton_t *skel, char *bonename )
 	return -1;
 }
 
-//================
-//CG_ParseRotationBone
-//================
+/*
+* CG_ParseRotationBone
+*/
 static void CG_ParseRotationBone( pmodelinfo_t *pmodelinfo, char *token, int pmpart )
 {
 	int boneNumber;
@@ -110,9 +110,9 @@ static void CG_ParseRotationBone( pmodelinfo_t *pmodelinfo, char *token, int pmp
 	pmodelinfo->numRotators[pmpart]++;
 }
 
-//================
-//CG_ParseTagMask
-//================
+/*
+* CG_ParseTagMask
+*/
 static void CG_ParseTagMask( struct model_s *model, int bonenum, char *name, float forward, float right, float up, float pitch, float yaw, float roll )
 {
 	cg_tagmask_t *tagmask;
@@ -146,21 +146,19 @@ static void CG_ParseTagMask( struct model_s *model, int bonenum, char *name, flo
 }
 
 /*
-================
-CG_ParseAnimationScript
-
-Reads the animation config file.
-
-0 = first frame
-1 = lastframe
-2 = looping frames
-3 = fps
-
-Note: The animations count begins at 1, not 0. I preserve zero for "no animation change"
----------------
-keyword:
-alljumps: Uses 3 different jump animations (bunnyhoping)
-================
+* CG_ParseAnimationScript
+* 
+* Reads the animation config file.
+* 
+* 0 = first frame
+* 1 = lastframe
+* 2 = looping frames
+* 3 = fps
+* 
+* Note: The animations count begins at 1, not 0. I preserve zero for "no animation change"
+* ---------------
+* keyword:
+* alljumps: Uses 3 different jump animations (bunnyhoping)
 */
 static qboolean CG_ParseAnimationScript( pmodelinfo_t *pmodelinfo, char *filename )
 {
@@ -402,16 +400,16 @@ static qboolean CG_ParseAnimationScript( pmodelinfo_t *pmodelinfo, char *filenam
 	return qtrue;
 }
 
-//================
-//CG_LoadPlayerModel
-//================
+/*
+* CG_LoadPlayerModel
+*/
 static qboolean CG_LoadPlayerModel( pmodelinfo_t *pmodelinfo, char *filename )
 {
 	qboolean loaded_model = qfalse;
 	char anim_filename[MAX_QPATH];
 	char scratch[MAX_QPATH];
 
-	Q_snprintfz( scratch, sizeof( scratch ), "%s/tris.skm", filename );
+	Q_snprintfz( scratch, sizeof( scratch ), "%s/tris.iqm", filename );
 	if( cgs.pure && !trap_FS_IsPureFile( scratch ) )
 		return qfalse;
 
@@ -445,11 +443,11 @@ static qboolean CG_LoadPlayerModel( pmodelinfo_t *pmodelinfo, char *filename )
 	return qtrue;
 }
 
-//===============
-//CG_RegisterPModel
-//PModel is not exactly the model, but the indexes of the
-//models contained in the pmodel and it's animation data
-//===============
+/*
+* CG_RegisterPModel
+* PModel is not exactly the model, but the indexes of the
+* models contained in the pmodel and it's animation data
+*/
 struct pmodelinfo_s *CG_RegisterPlayerModel( char *filename )
 {
 	pmodelinfo_t *pmodelinfo;
@@ -473,10 +471,10 @@ struct pmodelinfo_s *CG_RegisterPlayerModel( char *filename )
 	return pmodelinfo;
 }
 
-//================
-//CG_RegisterBasePModel
-//Default fallback replacements
-//================
+/*
+* CG_RegisterBasePModel
+* Default fallback replacements
+*/
 void CG_RegisterBasePModel( void )
 {
 	char filename[MAX_QPATH];
@@ -499,11 +497,11 @@ void CG_RegisterBasePModel( void )
 //======================================================================
 
 
-//===============
-//CG_GrabTag
-//In the case of skeletal models, boneposes must
-//be transformed prior to calling this function
-//===============
+/*
+* CG_GrabTag
+* In the case of skeletal models, boneposes must
+* be transformed prior to calling this function
+*/
 qboolean CG_GrabTag( orientation_t *tag, entity_t *ent, char *tagname )
 {
 	cgs_skeleton_t *skel;
@@ -518,9 +516,9 @@ qboolean CG_GrabTag( orientation_t *tag, entity_t *ent, char *tagname )
 	return trap_R_LerpTag( tag, ent->model, ent->frame, ent->oldframe, ent->backlerp, tagname );
 }
 
-//===============
-//CG_PlaceRotatedModelOnTag
-//===============
+/*
+* CG_PlaceRotatedModelOnTag
+*/
 void CG_PlaceRotatedModelOnTag( entity_t *ent, entity_t *dest, orientation_t *tag )
 {
 	int i;
@@ -537,9 +535,9 @@ void CG_PlaceRotatedModelOnTag( entity_t *ent, entity_t *dest, orientation_t *ta
 	Matrix_Multiply( tmpAxis, dest->axis, ent->axis );
 }
 
-//===============
-//CG_PlaceModelOnTag
-//===============
+/*
+* CG_PlaceModelOnTag
+*/
 void CG_PlaceModelOnTag( entity_t *ent, entity_t *dest, orientation_t *tag )
 {
 	int i;
@@ -554,16 +552,16 @@ void CG_PlaceModelOnTag( entity_t *ent, entity_t *dest, orientation_t *tag )
 	Matrix_Multiply( tag->axis, dest->axis, ent->axis );
 }
 
-//===============
-//CG_MoveToTag
-//"move" tag must have an axis and origin set up. Use vec3_origin and axis_identity for "nothing"
-//===============
+/*
+* CG_MoveToTag
+* "move" tag must have an axis and origin set up. Use vec3_origin and axis_identity for "nothing"
+*/
 void CG_MoveToTag( vec3_t move_origin,
-                   vec3_t move_axis[3],
-                   const vec3_t space_origin,
-                   vec3_t space_axis[3],
-                   const vec3_t tag_origin,
-                   vec3_t tag_axis[3] )
+				  vec3_t move_axis[3],
+				  const vec3_t space_origin,
+				  vec3_t space_axis[3],
+				  const vec3_t tag_origin,
+				  vec3_t tag_axis[3] )
 {
 	int i;
 	vec3_t tmpAxis[3];
@@ -577,10 +575,10 @@ void CG_MoveToTag( vec3_t move_origin,
 	Matrix_Multiply( tmpAxis, space_axis, move_axis );
 }
 
-//===============
-//CG_PModel_GetProjectionSource
-//It asumes the player entity is up to date
-//===============
+/*
+* CG_PModel_GetProjectionSource
+* It asumes the player entity is up to date
+*/
 qboolean CG_PModel_GetProjectionSource( int entnum, orientation_t *tag_result )
 {
 	centity_t *cent;
@@ -611,9 +609,9 @@ qboolean CG_PModel_GetProjectionSource( int entnum, orientation_t *tag_result )
 	return qtrue;
 }
 
-//===============
-//CG_AddRaceGhostShell
-//===============
+/*
+* CG_AddRaceGhostShell
+*/
 static void CG_AddRaceGhostShell( entity_t *ent )
 {
 	entity_t shell;
@@ -640,18 +638,18 @@ static void CG_AddRaceGhostShell( entity_t *ent )
 	CG_AddEntityToScene( &shell );
 }
 
-//===============
-//CG_AddShellEffects
-//===============
+/*
+* CG_AddShellEffects
+*/
 void CG_AddShellEffects( entity_t *ent, int effects )
 {
 	if( effects & EF_RACEGHOST )
 		CG_AddRaceGhostShell( ent );
 }
 
-//===============
-//CG_SetOutlineColor
-//===============
+/*
+* CG_SetOutlineColor
+*/
 void CG_SetOutlineColor( byte_vec4_t outlineColor, byte_vec4_t color )
 {
 	float darken = 0.25f;
@@ -661,9 +659,9 @@ void CG_SetOutlineColor( byte_vec4_t outlineColor, byte_vec4_t color )
 	outlineColor[3] = ( qbyte )( 255 );
 }
 
-//===============
-//CG_OutlineScaleForDist
-//===============
+/*
+* CG_OutlineScaleForDist
+*/
 static float CG_OutlineScaleForDist( entity_t *e, float maxdist, float scale )
 {
 	float dist;
@@ -700,9 +698,9 @@ static float CG_OutlineScaleForDist( entity_t *e, float maxdist, float scale )
 	return 1.0f;
 }
 
-//===============
-//CG_AddColoredOutLineEffect
-//===============
+/*
+* CG_AddColoredOutLineEffect
+*/
 void CG_AddColoredOutLineEffect( entity_t *ent, int effects, qbyte r, qbyte g, qbyte b, qbyte a )
 {
 	float scale;
@@ -720,14 +718,21 @@ void CG_AddColoredOutLineEffect( entity_t *ent, int effects, qbyte r, qbyte g, q
 			effects &= ~EF_SHELL;
 	}
 
-	if( effects & ( EF_QUAD|EF_SHELL|EF_GODMODE ) )
+	if( effects & EF_REGEN )
+	{
+		if( ( effects & EF_EXPIRING_REGEN ) && ((cg.time / 100) & 4) )
+			effects &= ~EF_REGEN;
+	}
+
+
+	if( effects & ( EF_QUAD|EF_SHELL|EF_REGEN|EF_GODMODE ) )
 	{
 		float pulse;
 		scale = CG_OutlineScaleForDist( ent, 2048, 3.5f );
 		pulse = fabs( sin( cg.time * 0.005f ) );
 		scale += 1.25f * scale * pulse * pulse;
 	}
-	else if( !cg_outlineModels->integer || !( effects & EF_OUTLINE ) )
+	else if ( !cg_outlineModels->integer || !( effects & EF_OUTLINE ) )
 	{
 		scale = 0;
 	}
@@ -745,10 +750,40 @@ void CG_AddColoredOutLineEffect( entity_t *ent, int effects, qbyte r, qbyte g, q
 	ent->outlineHeight = scale;
 	RGBA = ent->outlineRGBA;
 
-	if( ( effects & (EF_QUAD|EF_SHELL) ) == (EF_QUAD|EF_SHELL) )
+	// All powerups
+	if( ( effects & (EF_QUAD|EF_SHELL|EF_REGEN) ) == (EF_QUAD|EF_SHELL|EF_REGEN) )
 	{
 		if( (unsigned int)(cg.time * 0.005) & 1 )
 			effects &= ~EF_SHELL;
+		else if( (unsigned int)(cg.time * 0.01) & 1 )
+			effects &= ~EF_REGEN;
+		else
+			effects &= ~EF_QUAD;
+	}
+
+	// Quad + regen
+	if( ( effects & (EF_QUAD|EF_REGEN) ) == (EF_QUAD|EF_REGEN) )
+	{
+		if( (unsigned int)(cg.time * 0.005) & 1 )
+			effects &= ~EF_REGEN;
+		else
+			effects &= ~EF_QUAD;
+	}
+
+	// Shell + regen
+	if( ( effects & (EF_SHELL|EF_REGEN) ) == (EF_SHELL|EF_REGEN) )
+	{
+		if( (unsigned int)(cg.time * 0.005) & 1 )
+			effects &= ~EF_REGEN;
+		else
+			effects &= ~EF_SHELL;
+	}
+
+	// Shell + quad
+	if( ( effects & (EF_SHELL|EF_QUAD) ) == (EF_SHELL|EF_QUAD) )
+	{
+		if( (unsigned int)(cg.time * 0.005) & 1 )
+			effects &= ~EF_REGEN;
 		else
 			effects &= ~EF_QUAD;
 	}
@@ -759,21 +794,23 @@ void CG_AddColoredOutLineEffect( entity_t *ent, int effects, qbyte r, qbyte g, q
 		Vector4Set( RGBA, 255, 255, 0, 255 );
 	else if( effects & EF_SHELL )
 		Vector4Set( RGBA, 125, 200, 255, 255 );
+	else if( effects & EF_REGEN )
+		Vector4Set( RGBA, 255, 0, 0, 255 );
 	else
 		Vector4Set( RGBA, ( qbyte )r, ( qbyte )g, ( qbyte )b, ( qbyte )a );
 }
 
-//===============
-//CG_AddCentityOutLineEffect
-//===============
+/*
+* CG_AddCentityOutLineEffect
+*/
 void CG_AddCentityOutLineEffect( centity_t *cent )
 {
 	CG_AddColoredOutLineEffect( &cent->ent, cent->effects, cent->outlineColor[0], cent->outlineColor[1], cent->outlineColor[2], cent->outlineColor[3] );
 }
 
-//===============
-//CG_PModel_AddFlag
-//===============
+/*
+* CG_PModel_AddFlag
+*/
 static void CG_PModel_AddFlag( centity_t *cent )
 {
 	int flag_team  = ( cent->current.team == TEAM_ALPHA ) ? TEAM_BETA : TEAM_ALPHA;
@@ -791,9 +828,9 @@ static void CG_PModel_AddFlag( centity_t *cent )
 	CG_AddFlagModelOnTag( cent, col, "tag_flag1" );
 }
 
-//===============
-//CG_PModel_AddHeadIcon
-//===============
+/*
+* CG_PModel_AddHeadIcon
+*/
 static void CG_AddHeadIcon( centity_t *cent )
 {
 	entity_t balloon;
@@ -991,10 +1028,10 @@ void CG_UpdatePModelAnimations( centity_t *cent )
 	CG_PModel_AddAnimation( cent->current.number, newanim[LOWER], newanim[UPPER], newanim[HEAD], BASE_CHANNEL );
 }
 
-//==================
-//CG_UpdatePlayerModelEnt
-//  Called each new serverframe
-//==================
+/*
+* CG_UpdatePlayerModelEnt
+* Called each new serverframe
+*/
 void CG_UpdatePlayerModelEnt( centity_t *cent )
 {
 	int i;
@@ -1128,9 +1165,9 @@ void CG_UpdatePlayerModelEnt( centity_t *cent )
 
 static bonepose_t blendpose[SKM_MAX_BONES];
 
-//===============
-//CG_AddPModel
-//===============
+/*
+* CG_AddPModel
+*/
 void CG_AddPModel( centity_t *cent )
 {
 	int i, j;
@@ -1288,10 +1325,10 @@ void CG_AddPModel( centity_t *cent )
 
 	CG_AddHeadIcon( cent );
 
-  //racesow
-  if( rc_showPlayerTrails->value )
-    RC_AddLinearTrail( cent, rc_showPlayerTrails->value );
-  //!racesow
+	//racesow
+	if( rc_showPlayerTrails->value )
+		RC_AddLinearTrail( cent, rc_showPlayerTrails->value );
+	//!racesow
 
 #ifdef CGAMEGETLIGHTORIGIN
 	if( !( cent->ent.renderfx & RF_NOSHADOW ) && ( cg_shadows->integer == 1 ) )

@@ -36,9 +36,7 @@ BRUSH MODELS
 */
 
 /*
-=================
-R_SurfPotentiallyVisible
-=================
+* R_SurfPotentiallyVisible
 */
 qboolean R_SurfPotentiallyVisible( msurface_t *surf )
 {
@@ -52,9 +50,7 @@ qboolean R_SurfPotentiallyVisible( msurface_t *surf )
 }
 
 /*
-=================
-R_CullSurface
-=================
+* R_CullSurface
 */
 qboolean R_CullSurface( msurface_t *surf, unsigned int clipflags )
 {
@@ -100,7 +96,6 @@ qboolean R_CullSurface( msurface_t *surf, unsigned int clipflags )
 		&& (!ri.currententity->outlineHeight || (ri.params & RP_CLIPPLANE))
 #endif
 		&& ( shader->flags & ( SHADER_CULL_FRONT|SHADER_CULL_BACK ) )
-		&& !( shader->flags & SHADER_AUTOSPRITE )
 		)
 	{
 		// Vic: I hate q3map2. I really do.
@@ -126,9 +121,7 @@ qboolean R_CullSurface( msurface_t *surf, unsigned int clipflags )
 }
 
 /*
-=================
-R_BrushModelBBox
-=================
+* R_BrushModelBBox
 */
 float R_BrushModelBBox( entity_t *e, vec3_t mins, vec3_t maxs, qboolean *rotated )
 {
@@ -157,16 +150,15 @@ float R_BrushModelBBox( entity_t *e, vec3_t mins, vec3_t maxs, qboolean *rotated
 }
 
 /*
-=================
-R_AddSurfaceToList
-=================
+* R_AddSurfaceToList
 */
 static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflags )
 {
 	shader_t *shader;
 	meshbuffer_t *mb;
 	mesh_vbo_t *vbo;
-	msurface_t *vbo_surf;
+	msurface_t *vboSurf;
+	int vboIndex;
 
 	if( R_CullSurface( surf, clipflags ) )
 		return NULL;
@@ -178,7 +170,7 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 		if( vis )
 		{
 			R_AddMeshToList( MB_MODEL, surf->fog, shader, surf - r_worldbrushmodel->surfaces + 1,
-				surf->mesh, surf->numVertexes, surf->numElems );
+				surf->mesh, surf->numVerts, surf->numElems );
 			ri.params &= ~RP_NOSKY;
 		}
 		return NULL;
@@ -194,22 +186,45 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 
 	c_brush_polys++;
 
-	vbo = surf->vbo;
-	vbo_surf = vbo ? ( msurface_t * )vbo->owner : NULL;
-
-	if( vbo )
+	vboIndex = MB_VBOINDEX( surf->vbo, shader, NULL );
+	if( vboIndex )
 	{
-		mb = ri.meshlist->surfmbuffers[vbo_surf - r_worldbrushmodel->surfaces];
+		vbo = surf->vbo;
+		vboSurf = ( msurface_t * )vbo->owner;
+
+		mb = ri.meshlist->surfmbuffers[vboSurf - r_worldbrushmodel->surfaces];
 		if( mb )
 		{
+			// keep track of the actual vbo chunk we need to render
+			if( surf->firstVBOVert < mb->firstVBOVert )
+			{
+				// prepend
+				mb->numVerts = mb->numVerts + mb->firstVBOVert - surf->firstVBOVert;
+				mb->numElems = mb->numElems + mb->firstVBOElem - surf->firstVBOElem;
+
+				mb->firstVBOVert = surf->firstVBOVert;
+				mb->firstVBOElem = surf->firstVBOElem;
+			}
+			else
+			{
+				// append
+				mb->numVerts = max( mb->numVerts, surf->numVerts + surf->firstVBOVert - mb->firstVBOVert );
+				mb->numElems = max( mb->numElems, surf->numElems + surf->firstVBOElem - mb->firstVBOElem );
+			}
+
 			ri.meshlist->surfmbuffers[surf - r_worldbrushmodel->surfaces] = mb;
 			return mb;
 		}
 	}
+	else
+	{
+		vbo = NULL;
+		vboSurf = NULL;
+	}
 
 	mb = R_AddMeshToList( surf->facetype == FACETYPE_FLARE ? MB_SPRITE : MB_MODEL,
 		surf->fog, shader, surf - r_worldbrushmodel->surfaces + 1,
-		surf->mesh, surf->numVertexes, surf->numElems );
+		surf->mesh, surf->numVerts, surf->numElems );
 
 	if( mb )
 	{
@@ -217,12 +232,17 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 
 		if( vbo )
 		{
-			mb->vbo = vbo;
-			ri.meshlist->surfmbuffers[vbo_surf - r_worldbrushmodel->surfaces] = mb;
+			mb->vboIndex = vboIndex;
+			mb->firstVBOVert = surf->firstVBOVert;
+			mb->firstVBOElem = surf->firstVBOElem;
+			mb->numVerts = surf->numVerts;
+			mb->numElems = surf->numElems;
+
+			ri.meshlist->surfmbuffers[vboSurf - r_worldbrushmodel->surfaces] = mb;
 			c_world_vbos++;
 		}
 
-		c_world_verts += surf->numVertexes;
+		c_world_verts += surf->numVerts;
 		c_world_tris += surf->numElems / 3;
 	}
 
@@ -231,9 +251,7 @@ static meshbuffer_t *R_AddSurfaceToList( msurface_t *surf, unsigned int clipflag
 }
 
 /*
-=================
-R_AddBrushModelToList
-=================
+* R_AddBrushModelToList
 */
 void R_AddBrushModelToList( entity_t *e )
 {
@@ -312,9 +330,7 @@ WORLD MODEL
 */
 
 /*
-================
-R_MarkLeafSurfaces
-================
+* R_MarkLeafSurfaces
 */
 static void R_MarkLeafSurfaces( msurface_t **mark, unsigned int clipflags, unsigned int dlightbits )
 {
@@ -349,9 +365,7 @@ static void R_MarkLeafSurfaces( msurface_t **mark, unsigned int clipflags, unsig
 }
 
 /*
-================
-R_RecursiveWorldNode
-================
+* R_RecursiveWorldNode
 */
 static void R_RecursiveWorldNode( mnode_t *node, unsigned int clipflags, unsigned int dlightbits )
 {
@@ -423,9 +437,7 @@ static void R_RecursiveWorldNode( mnode_t *node, unsigned int clipflags, unsigne
 }
 
 /*
-================
-R_MarkShadowLeafSurfaces
-================
+* R_MarkShadowLeafSurfaces
 */
 static void R_MarkShadowLeafSurfaces( msurface_t **mark, unsigned int clipflags )
 {
@@ -439,15 +451,26 @@ static void R_MarkShadowLeafSurfaces( msurface_t **mark, unsigned int clipflags 
 		if( surf->flags & ( SURF_NOIMPACT|SURF_NODRAW|SURF_SKY ) )
 			continue;
 
+		// this surface is visible in previous RI, not marked as shadowed...
 		mb = prevRI.meshlist->surfmbuffers[surf - r_worldbrushmodel->surfaces];
 		if( !mb || (mb->shadowbits & bit) )
 			continue;
 
-		// this surface is visible in previous RI, not marked as shadowed...
+		// is opaque...
 		if( ( surf->shader->sort >= SHADER_SORT_OPAQUE ) && ( surf->shader->sort <= SHADER_SORT_ALPHATEST ) )
-		{	// ...is opaque
+		{
 			if( !R_CullSurface( surf, clipflags ) )
-			{	// and is visible to the light source too
+			{
+				int j;
+
+				// add surface bounds to view bounds
+				for( j = 0; j < 3; j++ )
+				{
+					ri.visMins[j] = min( ri.visMins[j], surf->mins[j] );
+					ri.visMaxs[j] = max( ri.visMaxs[j], surf->maxs[j] );
+				}
+
+				// and is visible to the light source too
 				ri.params |= RP_WORLDSURFVISIBLE;
 				mb->shadowbits |= bit;
 			}
@@ -456,9 +479,7 @@ static void R_MarkShadowLeafSurfaces( msurface_t **mark, unsigned int clipflags 
 }
 
 /*
-================
-R_LinearShadowLeafs
-================
+* R_LinearShadowLeafs
 */
 static void R_LinearShadowLeafs( void )
 {
@@ -484,7 +505,8 @@ static void R_LinearShadowLeafs( void )
 				cpf &= ~bit;	// leaf is entirely on screen
 		}
 
-		if( !i ) {
+		if( !i )
+		{
 			R_MarkShadowLeafSurfaces( leaf->firstVisSurface, cpf );
 			c_world_leafs++;
 		}
@@ -496,9 +518,7 @@ static void R_LinearShadowLeafs( void )
 int r_surfQueryKeys[MAX_SURF_QUERIES];
 
 /*
-===============
-R_ClearSurfOcclusionQueryKeys
-===============
+* R_ClearSurfOcclusionQueryKeys
 */
 void R_ClearSurfOcclusionQueryKeys( void )
 {
@@ -506,9 +526,7 @@ void R_ClearSurfOcclusionQueryKeys( void )
 }
 
 /*
-===============
-R_SurfOcclusionQueryKey
-===============
+* R_SurfOcclusionQueryKey
 */
 int R_SurfOcclusionQueryKey( entity_t *e, msurface_t *surf )
 {
@@ -537,9 +555,7 @@ int R_SurfOcclusionQueryKey( entity_t *e, msurface_t *surf )
 }
 
 /*
-===============
-R_SurfIssueOcclusionQueries
-===============
+* R_SurfIssueOcclusionQueries
 */
 void R_SurfIssueOcclusionQueries( void )
 {
@@ -556,23 +572,42 @@ void R_SurfIssueOcclusionQueries( void )
 //==================================================================================
 
 /*
-=============
-R_CalcDistancesToFogVolumes
-=============
+* R_CalcDistancesToFogVolumes
 */
 static void R_CalcDistancesToFogVolumes( void )
 {
-	int i;
+	int i, j;
+	float dist;
+	const vec_t *v;
 	mfog_t *fog;
 
-	for( i = 0, fog = r_worldbrushmodel->fogs; i < r_worldbrushmodel->numfogs; i++, fog++ )
-		ri.fog_dist_to_eye[fog - r_worldbrushmodel->fogs] = PlaneDiff( ri.viewOrigin, fog->visibleplane );
+	v = ri.viewOrigin;
+	ri.fog_eye = NULL;
+
+	for( i = 0, fog = r_worldbrushmodel->fogs; i < r_worldbrushmodel->numfogs; i++, fog++ ) {
+		dist = PlaneDiff( v, fog->visibleplane );
+
+		// determine the fog volume the viewer is inside
+		if( dist < 0 ) {	
+			for( j = 0; j < 3; j++ ) {
+				if( v[j] >= fog->maxs[j] ) {
+					break;
+				}
+				if( v[j] <= fog->mins[j] ) {
+					break;
+				}
+			}
+			if( j == 3 ) {
+				ri.fog_eye = fog;
+			}
+		}
+
+		ri.fog_dist_to_eye[i] = dist;
+	}
 }
 
 /*
-=============
-R_DrawWorld
-=============
+* R_DrawWorld
 */
 void R_DrawWorld( void )
 {
@@ -631,11 +666,9 @@ void R_DrawWorld( void )
 }
 
 /*
-===============
-R_MarkLeaves
-
-Mark the leaves and nodes that are in the PVS for the current cluster
-===============
+* R_MarkLeaves
+* 
+* Mark the leaves and nodes that are in the PVS for the current cluster
 */
 void R_MarkLeaves( void )
 {
@@ -654,6 +687,8 @@ void R_MarkLeaves( void )
 	if( r_oldviewcluster == r_viewcluster && ( rdflags & RDF_OLDAREABITS ) && !(ri.params & RP_NOVIS) && r_viewcluster != -1 && r_oldviewcluster != -1 )
 		return;
 	if( ri.params & RP_SHADOWMAPVIEW )
+		return;
+	if( !r_worldmodel )
 		return;
 
 	// development aid to let you run around and see exactly where

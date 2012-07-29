@@ -7,7 +7,7 @@
 #include "utils.h"
 #include "bstr.h"
 
-#define TESTNAME "TestBStr"
+static const char * const TESTNAME = "TestBStr";
 
 static asBSTR NewString(int length)
 {
@@ -29,7 +29,7 @@ bool TestBStr()
 		return false;
 	}
 
-	bool ret = false;
+	bool fail = false;
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 
@@ -38,16 +38,16 @@ bool TestBStr()
 	engine->RegisterGlobalFunction("bstr NewString(int)", asFUNCTION(NewString), asCALL_CDECL);
 	engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 
-	int r = engine->ExecuteString(0, "bstr s = NewString(10)");
+	int r = ExecuteString(engine, "bstr s = NewString(10)");
 	if( r < 0 ) 
 	{
 		printf("%s: ExecuteString() failed\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	}
 	else if( r != asEXECUTION_FINISHED )
 	{
 		printf("%s: ExecuteString() returned %d\n", TESTNAME, r);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	// Test passing bstr strings to a script function
@@ -56,7 +56,7 @@ bool TestBStr()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		ret = true;
+		TEST_FAILED;
 	}
 
 	int funcId = mod->GetFunctionIdByIndex(0);
@@ -69,7 +69,7 @@ bool TestBStr()
 	asBSTR *a = (asBSTR*)engine->CreateScriptObject(engine->GetTypeIdByDecl("bstr"));
 	*a = asBStrAlloc(1);
 	strcpy((char*)*a, "a");
-	*(asBSTR**)ctx->GetArgPointer(0) = a;
+	*(asBSTR**)ctx->GetAddressOfArg(0) = a;
 
 	// Create a local instance and have the script engine copy it.
 	// The application must free its copy of the object.
@@ -80,11 +80,11 @@ bool TestBStr()
 
 	r = ctx->Execute();
 	if( r != asEXECUTION_FINISHED )
-		ret = true;
+		TEST_FAILED;
 
 	if( ctx ) ctx->Release();
 
 	engine->Release();
 
-	return ret;
+	return fail;
 }

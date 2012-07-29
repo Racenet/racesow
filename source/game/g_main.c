@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
@@ -109,23 +109,31 @@ cvar_t *g_allow_spectator_voting;
 cvar_t *g_asGC_stats;
 cvar_t *g_asGC_interval;
 
+cvar_t *g_skillRating;
+
+
+static char *map_rotation_s = NULL;
+static char **map_rotation_p = NULL;
+static int map_rotation_current = 0;
+static int map_rotation_count = 0;
+
 static char *G_SelectNextMapName( void );
 
 //===================================================================
 
-//=================
-//G_API
-//=================
+/*
+* G_API
+*/
 int G_API( void )
 {
 	return GAME_API_VERSION;
 }
 
-//============
-//G_Error
-//
-//Abort the server with a game error
-//============
+/*
+* G_Error
+* 
+* Abort the server with a game error
+*/
 void G_Error( const char *format, ... )
 {
 	char msg[1024];
@@ -138,11 +146,11 @@ void G_Error( const char *format, ... )
 	trap_Error( msg );
 }
 
-//============
-//G_Printf
-//
-//Debug print to server console
-//============
+/*
+* G_Printf
+* 
+* Debug print to server console
+*/
 void G_Printf( const char *format, ... )
 {
 	char msg[1024];
@@ -155,25 +163,25 @@ void G_Printf( const char *format, ... )
 	trap_Print( msg );
 }
 
-//============
-//G_GS_Malloc - Used only for gameshared linking
-//============
+/*
+* G_GS_Malloc - Used only for gameshared linking
+*/
 static void *G_GS_Malloc( size_t size )
 {
 	return G_Malloc( size );
 }
 
-//============
-//G_GS_Free - Used only for gameshared linking
-//============
+/*
+* G_GS_Free - Used only for gameshared linking
+*/
 static void G_GS_Free( void *data )
 {
 	G_Free( data );
 }
 
-//============
-//G_GS_Trace - Used only for gameshared linking
-//============
+/*
+* G_GS_Trace - Used only for gameshared linking
+*/
 static void G_GS_Trace( trace_t *tr, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int ignore, int contentmask, int timeDelta )
 {
 	edict_t *passent = NULL;
@@ -183,9 +191,9 @@ static void G_GS_Trace( trace_t *tr, vec3_t start, vec3_t mins, vec3_t maxs, vec
 	G_Trace4D( tr, start, mins, maxs, end, passent, contentmask, timeDelta );
 }
 
-//============
-//G_GS_RoundUpToHullSize
-//============
+/*
+* G_GS_RoundUpToHullSize
+*/
 static void G_GS_RoundUpToHullSize( vec3_t mins, vec3_t maxs )
 {
 	trap_CM_RoundUpToHullSize( mins, maxs, NULL );
@@ -193,10 +201,10 @@ static void G_GS_RoundUpToHullSize( vec3_t mins, vec3_t maxs )
 
 entity_state_t *G_GetEntityStateForDeltaTime( int entNum, int deltaTime );
 
-//============
-//G_InitGameShared
-//give gameshared access to some utilities
-//============
+/*
+* G_InitGameShared
+* give gameshared access to some utilities
+*/
 static void G_InitGameShared( void )
 {
 	memset( &gs, 0, sizeof( gs_state_t ) );
@@ -219,12 +227,12 @@ static void G_InitGameShared( void )
 	module_GetConfigString = trap_GetConfigString;
 }
 
-//============
-//G_Init
-//
-//This will be called when the dll is first loaded, which
-//only happens when a new game is started or a save game is loaded.
-//============
+/*
+* G_Init
+* 
+* This will be called when the dll is first loaded, which
+* only happens when a new game is started or a save game is loaded.
+*/
 void G_Init( unsigned int seed, unsigned int framemsec, int protocol )
 {
 	cvar_t *g_maxentities;
@@ -348,6 +356,9 @@ void G_Init( unsigned int seed, unsigned int framemsec, int protocol )
 	g_asGC_stats = trap_Cvar_Get( "g_asGC_stats", "0", CVAR_ARCHIVE );
 	g_asGC_interval = trap_Cvar_Get( "g_asGC_interval", "10", CVAR_ARCHIVE );
 
+	g_skillRating = trap_Cvar_Get( "sv_skillRating", va("%.0f", MM_RATING_DEFAULT), CVAR_SERVERINFO|CVAR_READONLY );
+	// trap_Cvar_ForceSet( "sv_skillRating", va("%d", MM_RATING_DEFAULT) );
+
 	// nextmap
 	trap_Cvar_ForceSet( "nextmap", "match \"advance\"" );
 
@@ -358,6 +369,8 @@ void G_Init( unsigned int seed, unsigned int framemsec, int protocol )
 
 	// initialize all clients for this game
 	game.clients = G_Malloc( gs.maxclients * sizeof( game.clients[0] ) );
+
+	game.quits = NULL;
 
 	game.numentities = gs.maxclients + 1;
 
@@ -370,15 +383,17 @@ void G_Init( unsigned int seed, unsigned int framemsec, int protocol )
 
 	// weapon items
 	GS_InitWeapons();
+
 	//racesow
 	//Initialize racesow
 	RS_Init();
 	//!racesow
+
 }
 
-//=================
-//G_Shutdown
-//=================
+/*
+* G_Shutdown
+*/
 void G_Shutdown( void )
 {
 	int i;
@@ -389,8 +404,6 @@ void G_Shutdown( void )
 	//Shutdown racesow
 	RS_Shutdown();
 	//!racesow
-
-	G_asGarbageCollect( qtrue );
 
 	G_asCallShutdownScript();
 	G_asShutdownGametypeScript();
@@ -419,9 +432,9 @@ void G_Shutdown( void )
 
 //======================================================================
 
-//=================
-//G_AllowDownload
-//=================
+/*
+* G_AllowDownload
+*/
 qboolean G_AllowDownload( edict_t *ent, const char *requestname, const char *uploadname )
 {
 	// allow uploading of demos
@@ -443,12 +456,12 @@ qboolean G_AllowDownload( edict_t *ent, const char *requestname, const char *upl
 
 //======================================================================
 
-//=================
-//CreateTargetChangeLevel
-//
-//Returns the created target changelevel
-//=================
-static edict_t *CreateTargetChangeLevel( char *map )
+/*
+* CreateTargetChangeLevel
+* 
+* Returns the created target changelevel
+*/
+static edict_t *CreateTargetChangeLevel( const char *map )
 {
 	edict_t *ent;
 
@@ -459,115 +472,146 @@ static edict_t *CreateTargetChangeLevel( char *map )
 	return ent;
 }
 
-//=================
-//G_ChooseNextMap
-//=================
+/*
+* G_UpdateMapRotation
+* 
+* Reads current map rotation into internal list
+*/
+static void G_UpdateMapRotation( void )
+{
+	int count;
+	qboolean thiswhitespace, lastwhitespace;
+	char *p;
+	static const char *seps = " ,\n\r";
+
+	if( g_maplist->modified || !map_rotation_s || !map_rotation_p )
+	{
+		g_maplist->modified = qfalse;
+
+		// reread the maplist
+		if( map_rotation_s )
+			G_Free( map_rotation_s );
+		if( map_rotation_p )
+			G_Free( map_rotation_p );
+
+		map_rotation_s = G_CopyString( g_maplist->string );
+		map_rotation_p = NULL;
+		map_rotation_current = 0;	// reset the mapcounter too
+		map_rotation_count = 0;
+
+		// count the number of tokens
+		p = map_rotation_s;
+		count = 0;
+		lastwhitespace = qtrue;
+		while( *p )
+		{
+			thiswhitespace = ( strchr( seps, *p ) != NULL ) ? qtrue : qfalse;
+			if( lastwhitespace && !thiswhitespace )
+				count++;
+
+			lastwhitespace = thiswhitespace;
+			p++;
+		}
+
+		if( !count )
+			return;
+
+		// allocate the array of pointers
+		map_rotation_p = G_Malloc( ( count + 1 ) * sizeof( *map_rotation_p ) );
+
+		// now convert the string to tokens by nulling the separators
+		p = map_rotation_s;
+		count = 0;
+		lastwhitespace = qtrue;
+		while( *p )
+		{
+			thiswhitespace = ( strchr( seps, *p ) != NULL ) ? qtrue : qfalse;
+			if( lastwhitespace && !thiswhitespace )
+				map_rotation_p[count++] = p;
+
+			if( thiswhitespace )
+				*p = 0;
+
+			lastwhitespace = thiswhitespace;
+			p++;
+		}
+
+		// final null pointer to mark the end
+		map_rotation_p[count] = NULL;
+
+		map_rotation_count = count;
+	}
+}
+
+/*
+* G_MapRotationNormal
+*/
+static const char *G_MapRotationNormal( void )
+{
+	G_UpdateMapRotation();
+
+	if( !map_rotation_count )
+		return NULL;
+
+	if( map_rotation_current >= map_rotation_count || map_rotation_p[map_rotation_current] == NULL )
+		map_rotation_current = 0;
+
+	return map_rotation_p[map_rotation_current++];
+}
+
+/*
+* G_MapRotationNormal
+*/
+static const char *G_MapRotationRandom( void )
+{
+	int seed, selection;
+
+	G_UpdateMapRotation();
+
+	// avoid eternal loop
+	if( !map_rotation_count || map_rotation_count == 1 )
+		return NULL;
+
+	seed = game.realtime;
+	do
+	{
+		selection = (int)Q_brandom( &seed, 0, map_rotation_count );
+	} while( selection == map_rotation_current );
+
+	map_rotation_current = selection;
+	return map_rotation_p[map_rotation_current];
+}
+
+/*
+* G_ChooseNextMap
+*/
 static edict_t *G_ChooseNextMap( void )
 {
 	edict_t	*ent = NULL;
-	char *s, *t, *f;
-	static const char *seps = " ,\n\r";
+	const char *next;
 
 	if( *level.forcemap )
 	{
 		return CreateTargetChangeLevel( level.forcemap );
 	}
 
-	if( !( *g_maplist->string ) || strlen( g_maplist->string ) == 0 || g_maprotation->integer == 0 )
+	if( !( *g_maplist->string ) || g_maplist->string[0] == '\0' || g_maprotation->integer == 0 )
 	{
 		// same map again
 		return CreateTargetChangeLevel( level.mapname );
 	}
 	else if( g_maprotation->integer == 1 )
 	{
-		// next map in list
-		s = G_CopyString( g_maplist->string );
-		f = NULL;
-		t = strtok( s, seps );
-
-		while( t != NULL )
-		{
-			if( !Q_stricmp( t, level.mapname ) )
-			{
-				// it's in the list, go to the next one
-				do {
-				t = strtok( NULL, seps );
-				} while ( t && !trap_ML_FilenameExists( t ) );
-
-				if( t == NULL )
-				{
-					// end of list, go to first one. if there isn't a first one, same level
-					ent = CreateTargetChangeLevel( f ? f : level.mapname );
-				}
-				else
-					ent = CreateTargetChangeLevel( t );
-				G_Free( s );
-				return ent;
-			}
-			if( !f && trap_ML_FilenameExists( t ) )
-				f = t;
-			t = strtok( NULL, seps );
-		}
+		next = G_MapRotationNormal();
 
 		// not in the list, we go for the first one
-		ent = CreateTargetChangeLevel( f ? f : level.mapname );
-		G_Free( s );
+		ent = CreateTargetChangeLevel( next ? next : level.mapname );
 		return ent;
 	}
 	else if( g_maprotation->integer == 2 )
 	{
-		// random from the list, but not the same
-		char *s1;
-		size_t str_size;
-
-		int count = 0;
-		s = G_CopyString( g_maplist->string );
-
-		str_size = strlen( s ) + 1;
-		s1 = G_Malloc( str_size );
-		s1[0] = s1[str_size-1] = '\0';
-
-		t = strtok( s, seps );
-		while( t != NULL )
-		{
-			if( Q_stricmp( t, level.mapname ) && trap_ML_FilenameExists( t ) ) {
-				count++;
-				if( *s1 ) {
-					Q_strncatz( s1, " ", str_size );
-				}
-				Q_strncatz( s1, t, str_size );
-			}	
-			t = strtok( NULL, seps );
-		}
-
-		G_Free( s );
-		s = NULL;
-
-		if( count < 1 )
-		{
-			// no other maps found, restart
-			ent = CreateTargetChangeLevel( level.mapname );
-		}
-		else
-		{
-			int seed = game.realtime;
-			count -= (int)Q_brandom( &seed, 0, count ); // this should give random integer from 0 to count-1
-			ent = NULL; // shutup compiler warning;
-
-			t = strtok( s1, seps );
-			while( t != NULL )
-			{
-				count--;
-				if( count == 0 )
-				{
-					ent = CreateTargetChangeLevel( t );
-					break;
-				}
-				t = strtok( NULL, seps );
-			}
-		}
-
-		G_Free( s1 );
+		next = G_MapRotationRandom();
+		ent = CreateTargetChangeLevel( next ? next : level.mapname );
 		return ent;
 	}
 
@@ -585,9 +629,9 @@ static edict_t *G_ChooseNextMap( void )
 	return ent;
 }
 
-//=================
-//G_SelectNextMapName
-//=================
+/*
+* G_SelectNextMapName
+*/
 static char *G_SelectNextMapName( void )
 {
 	edict_t *changelevel;
@@ -596,9 +640,9 @@ static char *G_SelectNextMapName( void )
 	return changelevel->map;
 }
 
-//=============
-//G_ExitLevel
-//=============
+/*
+* G_ExitLevel
+*/
 void G_ExitLevel( void )
 {
 	int i;
@@ -611,7 +655,7 @@ void G_ExitLevel( void )
 
 	level.exitNow = qfalse;
 
-	nextmapname = RS_ChooseNextMap(); //racesow
+	nextmapname = RS_ChooseNextMap(); // racesow
 	timeLimit = g_timelimit->integer > 0 ? max( g_timelimit->integer, 60 ) : 60;
 	timeLimit *= 60 * 1000;
 

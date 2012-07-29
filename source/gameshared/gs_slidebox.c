@@ -1,6 +1,22 @@
 /*
- */
+Copyright (C) 1997-2001 Id Software, Inc.
 
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
 
 #include "q_arch.h"
 #include "q_math.h"
@@ -20,9 +36,9 @@
 // SNAP AND CLIP ORIGIN AND VELOCITY
 //==================================================
 
-//=================
-//GS_GoodPosition
-//=================
+/*
+* GS_GoodPosition
+*/
 static qboolean GS_GoodPosition( int snaptorigin[3], vec3_t mins, vec3_t maxs, int passent, int contentmask )
 {
 	trace_t	trace;
@@ -39,9 +55,9 @@ static qboolean GS_GoodPosition( int snaptorigin[3], vec3_t mins, vec3_t maxs, i
 	return !trace.allsolid;
 }
 
-//=================
-//GS_SnapInitialPosition
-//=================
+/*
+* GS_SnapInitialPosition
+*/
 qboolean GS_SnapInitialPosition( vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask )
 {
 	int x, y, z;
@@ -75,9 +91,9 @@ qboolean GS_SnapInitialPosition( vec3_t origin, vec3_t mins, vec3_t maxs, int pa
 	return qfalse;
 }
 
-//=================
-//GS_SnapPosition
-//=================
+/*
+* GS_SnapPosition
+*/
 qboolean GS_SnapPosition( vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask )
 {
 	int sign[3];
@@ -121,9 +137,9 @@ qboolean GS_SnapPosition( vec3_t origin, vec3_t mins, vec3_t maxs, int passent, 
 	return qfalse;
 }
 
-//=================
-//GS_SnapVelocity
-//=================
+/*
+* GS_SnapVelocity
+*/
 void GS_SnapVelocity( vec3_t velocity )
 {
 	int i, velocityInt[3];
@@ -135,9 +151,9 @@ void GS_SnapVelocity( vec3_t velocity )
 	}
 }
 
-//=================
-//GS_ClipVelocity
-//=================
+/*
+* GS_ClipVelocity
+*/
 void GS_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce )
 {
 	float backoff;
@@ -180,9 +196,9 @@ void GS_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce )
 // Note: groundentity info should be up to date when calling any slide move function
 //==================================================
 
-//=================
-//GS_ClipVelocity
-//=================
+/*
+* GS_ClipVelocity
+*/
 static void GS_AddTouchEnt( move_t *move, int entNum )
 {
 	int i;
@@ -202,17 +218,17 @@ static void GS_AddTouchEnt( move_t *move, int entNum )
 	move->numtouch++;
 }
 
-//=================
-//GS_ClearClippingPlanes
-//=================
+/*
+* GS_ClearClippingPlanes
+*/
 static void GS_ClearClippingPlanes( move_t *move )
 {
 	move->numClipPlanes = 0;
 }
 
-//=================
-//GS_ClipVelocityToClippingPlanes
-//=================
+/*
+* GS_ClipVelocityToClippingPlanes
+*/
 static void GS_ClipVelocityToClippingPlanes( move_t *move )
 {
 	int i;
@@ -236,9 +252,9 @@ static void GS_ClipVelocityToClippingPlanes( move_t *move )
 	}
 }
 
-//=================
-//GS_AddClippingPlane
-//=================
+/*
+* GS_AddClippingPlane
+*/
 static void GS_AddClippingPlane( move_t *move, const vec3_t planeNormal )
 {
 	int i;
@@ -260,9 +276,9 @@ static void GS_AddClippingPlane( move_t *move, const vec3_t planeNormal )
 	move->numClipPlanes++;
 }
 
-//=================
-//GS_SlideMoveClipMove
-//=================
+/*
+* GS_SlideMoveClipMove
+*/
 static int GS_SlideMoveClipMove( move_t *move /*, const qboolean stepping*/ )
 {
 	vec3_t endpos, startingOrigin, startingVelocity;
@@ -318,9 +334,9 @@ static int GS_SlideMoveClipMove( move_t *move /*, const qboolean stepping*/ )
 	return blockedmask;
 }
 
-//=================
-//GS_SlideMove
-//=================
+/*
+* GS_SlideMove
+*/
 int GS_SlideMove( move_t *move )
 {
 #define MAX_SLIDEMOVE_ATTEMPTS	8

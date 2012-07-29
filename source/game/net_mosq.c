@@ -37,6 +37,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/socket.h>
 #include <unistd.h>
 #else
+#ifdef __MINGW32__
+#define _WIN32_WINNT 0x0600
+#endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
@@ -67,6 +70,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #  define COMPAT_ECONNRESET ECONNRESET
 #  define COMPAT_EWOULDBLOCK EWOULDBLOCK
 #else
+#ifdef __MINGW32__
+#  define COMPAT_ECONNRESET WSAECONNRESET
+#endif
 #  define COMPAT_EWOULDBLOCK WSAEWOULDBLOCK
 #endif
 

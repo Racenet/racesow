@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "qcommon.h"
 
@@ -26,57 +26,57 @@
 
 /*
 
-   packet header
-   -------------
-   31	sequence
-   1	does this message contain a reliable payload
-   31	acknowledge sequence
-   1	acknowledge receipt of even/odd message
-   16	game port
+packet header
+-------------
+31	sequence
+1	does this message contain a reliable payload
+31	acknowledge sequence
+1	acknowledge receipt of even/odd message
+16	game port
 
-   The remote connection never knows if it missed a reliable message, the
-   local side detects that it has been dropped by seeing a sequence acknowledge
-   higher than the last reliable sequence, but without the correct even/odd
-   bit for the reliable set.
+The remote connection never knows if it missed a reliable message, the
+local side detects that it has been dropped by seeing a sequence acknowledge
+higher than the last reliable sequence, but without the correct even/odd
+bit for the reliable set.
 
-   If the sender notices that a reliable message has been dropped, it will be
-   retransmitted. It will not be retransmitted again until a message after
-   the retransmit has been acknowledged and the reliable still failed to get there.
+If the sender notices that a reliable message has been dropped, it will be
+retransmitted. It will not be retransmitted again until a message after
+the retransmit has been acknowledged and the reliable still failed to get there.
 
-   If the sequence number is -1, the packet should be handled without a netcon.
+If the sequence number is -1, the packet should be handled without a netcon.
 
-   The reliable message can be added to at any time by doing
-   MSG_Write* (&netchan->message, <data>).
+The reliable message can be added to at any time by doing
+MSG_Write* (&netchan->message, <data>).
 
-   If the message buffer is overflowed, either by a single message, or by
-   multiple frames worth piling up while the last reliable transmit goes
-   unacknowledged, the netchan signals a fatal error.
+If the message buffer is overflowed, either by a single message, or by
+multiple frames worth piling up while the last reliable transmit goes
+unacknowledged, the netchan signals a fatal error.
 
-   Reliable messages are always placed first in a packet, then the unreliable
-   message is included if there is sufficient room.
+Reliable messages are always placed first in a packet, then the unreliable
+message is included if there is sufficient room.
 
-   To the receiver, there is no distinction between the reliable and unreliable
-   parts of the message, they are just processed out as a single larger message.
+To the receiver, there is no distinction between the reliable and unreliable
+parts of the message, they are just processed out as a single larger message.
 
-   Illogical packet sequence numbers cause the packet to be dropped, but do
-   not kill the connection. This, combined with the tight window of valid
-   reliable acknowledgement numbers provides protection against malicious
-   address spoofing.
-
-
-   The game port field is a workaround for bad address translating routers that
-   sometimes remap the client's source port on a packet during gameplay.
-
-   If the base part of the net address matches and the game port matches, then the
-   channel matches even if the IP port differs. The IP port should be updated
-   to the new value before sending out any replies.
+Illogical packet sequence numbers cause the packet to be dropped, but do
+not kill the connection. This, combined with the tight window of valid
+reliable acknowledgement numbers provides protection against malicious
+address spoofing.
 
 
-   If there is no information that needs to be transfered on a given frame,
-   such as during the connection stage while waiting for the client to load,
-   then a packet only needs to be delivered if there is something in the
-   unacknowledged reliable
- */
+The game port field is a workaround for bad address translating routers that
+sometimes remap the client's source port on a packet during gameplay.
+
+If the base part of the net address matches and the game port matches, then the
+channel matches even if the IP port differs. The IP port should be updated
+to the new value before sending out any replies.
+
+
+If there is no information that needs to be transfered on a given frame,
+such as during the connection stage while waiting for the client to load,
+then a packet only needs to be delivered if there is something in the
+unacknowledged reliable
+*/
 
 // application level protocol port number, to differentiate multiple clients
 // from the same IP address, and still work even if client's UDP port number suddenly changes
@@ -87,12 +87,10 @@ static cvar_t *showdrop;
 static cvar_t *net_showfragments;
 
 /*
-   ===============
-   Netchan_OutOfBand
-
-   Sends an out-of-band datagram
-   ================
- */
+* Netchan_OutOfBand
+* 
+* Sends an out-of-band datagram
+*/
 void Netchan_OutOfBand( const socket_t *socket, const netadr_t *address, size_t length, const qbyte *data )
 {
 	msg_t send;
@@ -110,12 +108,10 @@ void Netchan_OutOfBand( const socket_t *socket, const netadr_t *address, size_t 
 }
 
 /*
-   ===============
-   Netchan_OutOfBandPrint
-
-   Sends a text message in an out-of-band datagram
-   ================
- */
+* Netchan_OutOfBandPrint
+* 
+* Sends a text message in an out-of-band datagram
+*/
 void Netchan_OutOfBandPrint( const socket_t *socket, const netadr_t *address, const char *format, ... )
 {
 	va_list	argptr;
@@ -129,12 +125,10 @@ void Netchan_OutOfBandPrint( const socket_t *socket, const netadr_t *address, co
 }
 
 /*
-   ==============
-   Netchan_Setup
-
-   called to open a channel to a remote system
-   ==============
- */
+* Netchan_Setup
+* 
+* called to open a channel to a remote system
+*/
 void Netchan_Setup( netchan_t *chan, const socket_t *socket, const netadr_t *address, int game_port )
 {
 	memset( chan, 0, sizeof( *chan ) );
@@ -157,18 +151,18 @@ static qbyte msg_process_data[MAX_MSGLEN];
 
 #ifdef ALT_ZLIB_COMPRESSION
 /*
-   http://www.zlib.net/manual.html#compress2
-   int compress2 (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen, int level);
-   Compresses the source buffer into the destination buffer. The level parameter has the same meaning
-   as in deflateInit. sourceLen is the byte length of the source buffer. Upon entry, destLen is the
-   total size of the destination buffer, which must be at least 0.1% larger than sourceLen plus 12 bytes.
-   Upon exit, destLen is the actual size of the compressed buffer.
+http://www.zlib.net/manual.html#compress2
+int compress2 (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen, int level);
+Compresses the source buffer into the destination buffer. The level parameter has the same meaning
+as in deflateInit. sourceLen is the byte length of the source buffer. Upon entry, destLen is the
+total size of the destination buffer, which must be at least 0.1% larger than sourceLen plus 12 bytes.
+Upon exit, destLen is the actual size of the compressed buffer.
 
-   compress2 returns Z_OK if success, Z_MEM_ERROR if there was not enough memory, Z_BUF_ERROR if there
-   was not enough room in the output buffer, Z_STREAM_ERROR if the level parameter is invalid.
- */
+compress2 returns Z_OK if success, Z_MEM_ERROR if there was not enough memory, Z_BUF_ERROR if there
+was not enough room in the output buffer, Z_STREAM_ERROR if the level parameter is invalid.
+*/
 static int Netchan_ZLibCompressChunk( const qbyte *source, unsigned long sourceLen, qbyte *dest, unsigned long destLen,
-                                      int level, int wbits )
+									 int level, int wbits )
 {
 	int result, zlerror;
 
@@ -199,22 +193,22 @@ static int Netchan_ZLibCompressChunk( const qbyte *source, unsigned long sourceL
 	return result;
 }
 /*
-   http://www.zlib.net/manual.html#uncompress
-   int uncompress (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen);
-   Decompresses the source buffer into the destination buffer. sourceLen is the byte length
-   of the source buffer. Upon entry, destLen is the total size of the destination buffer,
-   which must be large enough to hold the entire uncompressed data. (The size of the uncompressed
-   data must have been saved previously by the compressor and transmitted to the decompressor
-   by some mechanism outside the scope of this compression library.) Upon exit, destLen is the
-   actual size of the compressed buffer.
+http://www.zlib.net/manual.html#uncompress
+int uncompress (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen);
+Decompresses the source buffer into the destination buffer. sourceLen is the byte length
+of the source buffer. Upon entry, destLen is the total size of the destination buffer,
+which must be large enough to hold the entire uncompressed data. (The size of the uncompressed
+data must have been saved previously by the compressor and transmitted to the decompressor
+by some mechanism outside the scope of this compression library.) Upon exit, destLen is the
+actual size of the compressed buffer.
 
-   This function can be used to decompress a whole file at once if the input file is mmap'ed.
+This function can be used to decompress a whole file at once if the input file is mmap'ed.
 
-   uncompress returns Z_OK if success, Z_MEM_ERROR if there was not enough memory, Z_BUF_ERROR if
-   there was not enough room in the output buffer, or Z_DATA_ERROR if the input data was corrupted.
- */
+uncompress returns Z_OK if success, Z_MEM_ERROR if there was not enough memory, Z_BUF_ERROR if
+there was not enough room in the output buffer, or Z_DATA_ERROR if the input data was corrupted.
+*/
 static int Netchan_ZLibDecompressChunk( const qbyte *source, unsigned long sourceLen, qbyte *dest, unsigned long destLen,
-                                        int wbits )
+									   int wbits )
 {
 	int result, zlerror;
 
@@ -326,9 +320,9 @@ int Netchan_ZLibCompressChunk( qbyte *in, int len_in, qbyte *out, int max_len_ou
 
 #endif // ALT_ZLIB_COMPRESSION
 
-//=======================
-//Netchan_CompressMessage
-//=======================
+/*
+* Netchan_CompressMessage
+*/
 int Netchan_CompressMessage( msg_t *msg )
 {
 	int length;
@@ -358,9 +352,9 @@ int Netchan_CompressMessage( msg_t *msg )
 	return length; // return the new size
 }
 
-//=======================
-//Netchan_DecompressMessage
-//=======================
+/*
+* Netchan_DecompressMessage
+*/
 int Netchan_DecompressMessage( msg_t *msg )
 {
 	int length;
@@ -389,11 +383,11 @@ int Netchan_DecompressMessage( msg_t *msg )
 	return length;
 }
 
-//=================
-//Netchan_DropAllFragments
-//
-//Send all remaining fragments at once
-//=================
+/*
+* Netchan_DropAllFragments
+* 
+* Send all remaining fragments at once
+*/
 static void Netchan_DropAllFragments( netchan_t *chan )
 {
 	if( chan->unsentFragments )
@@ -403,11 +397,11 @@ static void Netchan_DropAllFragments( netchan_t *chan )
 	}
 }
 
-//=================
-//Netchan_TransmitNextFragment
-//
-//Send one fragment of the current message
-//=================
+/*
+* Netchan_TransmitNextFragment
+* 
+* Send one fragment of the current message
+*/
 qboolean Netchan_TransmitNextFragment( netchan_t *chan )
 {
 	msg_t send;
@@ -460,7 +454,7 @@ qboolean Netchan_TransmitNextFragment( netchan_t *chan )
 	if( showpackets->integer )
 	{
 		Com_Printf( "%s send %4i : s=%i fragment=%i,%i\n", NET_SocketToString( chan->socket ), send.cursize,
-		            chan->outgoingSequence, chan->unsentFragmentStart, fragmentLength );
+			chan->outgoingSequence, chan->unsentFragmentStart, fragmentLength );
 	}
 
 	chan->unsentFragmentStart += fragmentLength;
@@ -478,11 +472,11 @@ qboolean Netchan_TransmitNextFragment( netchan_t *chan )
 	return qtrue;
 }
 
-//=================
-//Netchan_PushAllFragments
-//
-//Send all remaining fragments at once
-//=================
+/*
+* Netchan_PushAllFragments
+* 
+* Send all remaining fragments at once
+*/
 qboolean Netchan_PushAllFragments( netchan_t *chan )
 {
 	while( chan->unsentFragments )
@@ -494,12 +488,12 @@ qboolean Netchan_PushAllFragments( netchan_t *chan )
 	return qtrue;
 }
 
-//===============
-//Netchan_Transmit
-//
-//Sends a message to a connection, fragmenting if necessary
-//A 0 length will still generate a packet.
-//================
+/*
+* Netchan_Transmit
+* 
+* Sends a message to a connection, fragmenting if necessary
+* A 0 length will still generate a packet.
+*/
 qboolean Netchan_Transmit( netchan_t *chan, msg_t *msg )
 {
 	msg_t send;
@@ -554,22 +548,22 @@ qboolean Netchan_Transmit( netchan_t *chan, msg_t *msg )
 	if( showpackets->integer )
 	{
 		Com_Printf( "%s send %4i : s=%i ack=%i\n", NET_SocketToString( chan->socket ), send.cursize,
-		            chan->outgoingSequence - 1, chan->incomingSequence );
+			chan->outgoingSequence - 1, chan->incomingSequence );
 	}
 
 	return qtrue;
 }
 
-//=================
-//Netchan_Process
-//
-//Returns qfalse if the message should not be processed due to being
-//out of order or a fragment.
-//
-//Msg must be large enough to hold MAX_MSGLEN, because if this is the
-//final fragment of a multi-part message, the entire thing will be
-//copied out.
-//=================
+/*
+* Netchan_Process
+* 
+* Returns qfalse if the message should not be processed due to being
+* out of order or a fragment.
+* 
+* Msg must be large enough to hold MAX_MSGLEN, because if this is the
+* final fragment of a multi-part message, the entire thing will be
+* copied out.
+*/
 qboolean Netchan_Process( netchan_t *chan, msg_t *msg )
 {
 	int sequence, sequence_ack;
@@ -634,7 +628,7 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg )
 		if( fragmented )
 		{
 			Com_Printf( "%s recv %4i : s=%i fragment=%i,%i\n", NET_SocketToString( chan->socket ), msg->cursize,
-			            sequence, fragmentStart, fragmentLength );
+				sequence, fragmentStart, fragmentLength );
 		}
 		else
 		{
@@ -650,7 +644,7 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg )
 		if( showdrop->integer || showpackets->integer )
 		{
 			Com_Printf( "%s:Out of order packet %i at %i\n", NET_AddressToString( &chan->remoteAddress ), sequence,
-			            chan->incomingSequence );
+				chan->incomingSequence );
 		}
 		return qfalse;
 	}
@@ -664,7 +658,7 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg )
 		if( showdrop->integer || showpackets->integer )
 		{
 			Com_Printf( "%s:Dropped %i packets at %i\n", NET_AddressToString( &chan->remoteAddress ), chan->dropped,
-			            sequence );
+				sequence );
 		}
 	}
 
@@ -699,7 +693,7 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg )
 
 		// copy the fragment to the fragment buffer
 		if( fragmentLength < 0 || msg->readcount + fragmentLength > msg->cursize ||
-		   chan->fragmentLength + fragmentLength > sizeof( chan->fragmentBuffer ) )
+			chan->fragmentLength + fragmentLength > sizeof( chan->fragmentBuffer ) )
 		{
 			if( showdrop->integer || showpackets->integer )
 			{
@@ -721,7 +715,7 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg )
 		if( chan->fragmentLength > msg->maxsize )
 		{
 			Com_Printf( "%s:fragmentLength %i > msg->maxsize\n", NET_AddressToString( &chan->remoteAddress ),
-			            chan->fragmentLength );
+				chan->fragmentLength );
 			return qfalse;
 		}
 
@@ -754,20 +748,16 @@ qboolean Netchan_Process( netchan_t *chan, msg_t *msg )
 }
 
 /*
-   ===============
-   Netchan_GamePort
-   ===============
- */
+* Netchan_GamePort
+*/
 int Netchan_GamePort( void )
 {
 	return game_port;
 }
 
 /*
-   ===============
-   Netchan_Init
-   ===============
- */
+* Netchan_Init
+*/
 void Netchan_Init( void )
 {
 	// pick a game port value that should be nice and random
@@ -779,10 +769,8 @@ void Netchan_Init( void )
 }
 
 /*
-   ===============
-   Netchan_Shutdown
-   ===============
- */
+* Netchan_Shutdown
+*/
 void Netchan_Shutdown( void )
 {
 }

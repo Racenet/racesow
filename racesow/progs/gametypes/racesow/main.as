@@ -9,12 +9,12 @@ int numCheckpoints = 0;
 bool demoRecording = false;
 int oldTimelimit; // for restoring the original value, because extend_time changes it
 
-cString playerList; //scoreboard message for custom scoreboards
-cString spectatorList; //list of all spectators for custom scoreboards
+String playerList; //scoreboard message for custom scoreboards
+String spectatorList; //list of all spectators for custom scoreboards
 uint scoreboardLastUpdate; //when got the scoreboard updated? (levelTime)
 bool scoreboardUpdated = false; //GT_ScoreboardMessage got called
 
-cString previousMapName; // to remember the previous map on the server
+String previousMapName; // to remember the previous map on the server
 
 Racesow_Player[] players( maxClients );
 Racesow_Map @map;
@@ -25,32 +25,32 @@ int gametypeFlag = 0;
 int prcFlagIconStolen;
 int prcYesIcon;
 
-cVar dedicated( "dedicated", "0", CVAR_ARCHIVE);
-cVar rs_authField_Name( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET );
-cVar rs_authField_Pass( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET );
-cVar rs_authField_Token( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET );
-cVar rs_networkName( "rs_networkName", "racenet", CVAR_ARCHIVE|CVAR_NOSET );
-cVar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
-cVar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
-cVar rs_loadPlayerCheckpoints( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE );
-cVar rs_allowAutoHop( "rs_allowAutoHop", "1", CVAR_ARCHIVE );
+Cvar dedicated( "dedicated", "0", CVAR_ARCHIVE);
+Cvar rs_authField_Name( "rs_authField_Name", "", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar rs_authField_Pass( "rs_authField_Pass", "", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar rs_authField_Token( "rs_authField_Token", "", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar rs_networkName( "rs_networkName", "racenet", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar rs_extendtimeperiod( "rs_extendtimeperiod", "3", CVAR_ARCHIVE );
+Cvar rs_loadHighscores( "rs_loadHighscores", "0", CVAR_ARCHIVE );
+Cvar rs_loadPlayerCheckpoints( "rs_loadPlayerCheckpoints", "0", CVAR_ARCHIVE );
+Cvar rs_allowAutoHop( "rs_allowAutoHop", "1", CVAR_ARCHIVE );
 
-cVar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_ARCHIVE|CVAR_NOSET );
-cVar g_timelimit_reset( "g_timelimit_reset", "1", CVAR_ARCHIVE|CVAR_NOSET );
-cVar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
-cVar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
-cVar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
-cVar g_warmup_timelimit( "g_warmup_timelimit", "0", CVAR_ARCHIVE ); //cvar g_warmup_enabled was removed in warsow 0.6
-cVar g_gametype( "g_gametype", "race", CVAR_ARCHIVE);
+Cvar g_allowammoswitch( "g_allowammoswitch", "0", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar g_timelimit_reset( "g_timelimit_reset", "1", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar g_timelimit( "g_timelimit", "20", CVAR_ARCHIVE );
+Cvar g_extendtime( "g_extendtime", "10", CVAR_ARCHIVE );
+Cvar g_maprotation( "g_maprotation", "1", CVAR_ARCHIVE );
+Cvar g_warmup_timelimit( "g_warmup_timelimit", "0", CVAR_ARCHIVE ); //cvar g_warmup_enabled was removed in warsow 0.6
+Cvar g_gametype( "g_gametype", "race", CVAR_ARCHIVE);
 
-cVar rs_welcomeMessage ("rs_welcomeMessage", S_COLOR_WHITE + "Welcome to this Racesow server. Type " + S_COLOR_ORANGE + "help" + S_COLOR_WHITE + " to get a list of commands\n", CVAR_ARCHIVE );
-cVar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_ARCHIVE|CVAR_NOSET );
-cVar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar rs_welcomeMessage ("rs_welcomeMessage", S_COLOR_WHITE + "Welcome to this Racesow server. Type " + S_COLOR_ORANGE + "help" + S_COLOR_WHITE + " to get a list of commands\n", CVAR_ARCHIVE );
+Cvar rs_registrationDisabled( "rs_registrationDisabled", "0", CVAR_ARCHIVE|CVAR_NOSET );
+Cvar rs_registrationInfo( "rs_registrationInfo", "Please ask the serveradmin how to create a new account.", CVAR_ARCHIVE|CVAR_NOSET );
 
-cVar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
+Cvar sv_cheats( "sv_cheats", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_NOSET );
 
-cVar g_gravity( "g_gravity", "850", CVAR_ARCHIVE );
-cVar g_self_knockback( "g_self_knockback", "1.18", CVAR_ARCHIVE);
+Cvar g_gravity( "g_gravity", "850", CVAR_ARCHIVE );
+Cvar g_self_knockback( "g_self_knockback", "1.18", CVAR_ARCHIVE);
 
 /**
  * Determines if the current client is using Racesow game library
@@ -67,12 +67,12 @@ bool isUsingRacesowClient( cClient @client )
  * GT_Command
  *
  * @param cClient @client,
- * @param cString &cmdString
- * @param cString &argsString
+ * @param String &cmdString
+ * @param String &argsString
  * @param int argc
  * @return void
  */
-bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int argc )
+bool GT_Command( cClient @client, String &cmdString, String &argsString, int argc )
 {
     Racesow_Player @player = Racesow_GetPlayerByClient( client );
     Racesow_Command@ command = RS_GetCommandByName( cmdString );
@@ -91,7 +91,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     else if ( cmdString == "whoisgod" )
     {
         int index;
-        cString[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
+        String[] devs = { "R2", "Zaran", "Zolex", "Schaaf", "K1ll", "Weqo", "Jerm's" };
         if ( gametypeFlag == MODFLAG_DRACE || gametypeFlag == MODFLAG_DURACE || gametypeFlag == MODFLAG_TRACE )
             index = brandom( 0, 7 );
         else
@@ -113,13 +113,13 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
         }
         else
         {
-            cString vote = argsString.getToken( 0 );
+            String vote = argsString.getToken( 0 );
             if( vote == "mute" || vote == "vmute" ||
                 vote == "kickban" || vote == "kick" || vote == "remove" ||
                 vote == "joinlock" || vote == "joinunlock" )
             {
                 Racesow_Player @victimPlayer;
-                cString victim = argsString.getToken( 1 );
+                String victim = argsString.getToken( 1 );
 
                 if ( Racesow_GetClientNumber( victim ) != -1 )
                     @victimPlayer = players[ Racesow_GetClientNumber( victim ) ];
@@ -154,23 +154,23 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 	else if ( cmdString == "callvotevalidate" )
 	{
-		cString vote = argsString.getToken( 0 );
+		String vote = argsString.getToken( 0 );
 
 		if ( vote == "extend_time" )
 		{
-			if( g_timelimit.getInteger() <= 0 )
+			if( g_timelimit.integer <= 0 )
 			{
 				client.printMessage( "This vote is only available for timelimits.\n");
 				return false;
 			}
-			uint timelimit = g_timelimit.getInteger() * 60000;//convert mins to ms
-			uint extendtimeperiod = rs_extendtimeperiod.getInteger() * 60000;//convert mins to ms
+			uint timelimit = g_timelimit.integer * 60000;//convert mins to ms
+			uint extendtimeperiod = rs_extendtimeperiod.integer * 60000;//convert mins to ms
 			uint time = levelTime - match.startTime(); //in ms
 			uint remainingtime = timelimit - time;
 			bool isNegative = (timelimit < time ) ? true : false;
 			if( remainingtime > extendtimeperiod && !isNegative )
 			{
-				client.printMessage( "This vote is only in the last " + rs_extendtimeperiod.getString() + " minutes available.\n" );
+				client.printMessage( "This vote is only in the last " + rs_extendtimeperiod.string + " minutes available.\n" );
 				return false;
 			}
 			return true;
@@ -186,7 +186,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 				return false;
 			}
 
-			if ( new_timelimit == g_timelimit.getInteger() )
+			if ( new_timelimit == g_timelimit.integer )
 			{
 				client.printMessage( S_COLOR_RED + "Timelimit is already set to " + new_timelimit + "\n" );
 				return false;
@@ -216,7 +216,7 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     		for ( int i = 0; i < maxClients; i++ )
     		{
     		  if ( @players[i].getClient() != null )
-            client.printMessage( "  " + players[i].getClient().playerNum() + ": " + players[i].getClient().getName() + "\n");
+            client.printMessage( "  " + players[i].getClient().playerNum + ": " + players[i].getClient().name + "\n");
         }
 
        	return false;
@@ -246,11 +246,11 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 	else if ( cmdString == "callvotepassed" )
 	{
-    cString vote = argsString.getToken( 0 );
+    String vote = argsString.getToken( 0 );
 
     if ( vote == "extend_time" )
     {
-      g_timelimit.set(g_timelimit.getInteger() + g_extendtime.getInteger());
+      g_timelimit.set(g_timelimit.integer + g_extendtime.integer);
 
       map.cancelOvertime();
 			for ( int i = 0; i < maxClients; i++ )
@@ -266,9 +266,9 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
 
 				// g_timelimit_reset == 1: this timelimit value is not kept after current map
 				// g_timelimit_reset == 0: current value is permanently stored in g_timelimit as long as the server runs
-				if (g_timelimit_reset.getBool() == false)
+				if (g_timelimit_reset.boolean == false)
 				{
-					oldTimelimit = g_timelimit.getInteger();
+					oldTimelimit = g_timelimit.integer;
 				}
     }
 
@@ -311,14 +311,14 @@ bool GT_Command( cClient @client, cString &cmdString, cString &argsString, int a
     */
 	else if ( ( cmdString == "cvarinfo" ) )
   {
-		//token0: cVar name; token1: cVar value
-		cString cvarName = argsString.getToken(0);
-		cString cvarValue = argsString.getToken(1);
+		//token0: Cvar name; token1: Cvar value
+		String cvarName = argsString.getToken(0);
+		String cvarValue = argsString.getToken(1);
 
 		if( cvarName.substr(0,15) == "storedposition_")
 		{
-			cString positionValues = cvarValue;
-			cVec3 origin, angles;
+			String positionValues = cvarValue;
+			Vec3 origin, angles;
 			origin.x = positionValues.getToken(1).toFloat();
 			origin.y = positionValues.getToken(2).toFloat();
 			origin.z = positionValues.getToken(3).toFloat();
@@ -365,11 +365,11 @@ cEntity @GT_SelectSpawnPoint( cEntity @self )
 /**
  * GT_ScoreboardMessage
  * @param int maxlen
- * @return cString
+ * @return String
  */
-cString @GT_ScoreboardMessage( int maxlen )
+String @GT_ScoreboardMessage( uint maxlen )
 {
-    cString @scoreboardMessage = @racesowGametype.ScoreboardMessage( maxlen );
+    String @scoreboardMessage = @racesowGametype.ScoreboardMessage( maxlen );
 
     //custom scoreboard for ppl who are getting spectated
     if( levelTime > scoreboardLastUpdate + 1800 )
@@ -389,17 +389,17 @@ cString @GT_ScoreboardMessage( int maxlen )
                 if( !other.client.connecting && other.client.state() >= CS_SPAWNED )
                     //add all other spectators
                 {
-                    spectatorList += other.client.playerNum() + " " + other.client.ping + " ";
+                    spectatorList += other.client.playerNum + " " + other.client.ping + " ";
                 }
                 else if( other.client.connecting ) //add connecting spectators
                 {
-                    spectatorList += other.client.playerNum() + " " + -1 + " ";
+                    spectatorList += other.client.playerNum + " " + -1 + " ";
                 }
                 if( other.client.chaseActive && other.client.chaseTarget != 0)
                     //add him to the challenger list of the player he's spectating
                 {
                     Racesow_Player @player = players[other.client.chaseTarget-1];
-                    player.challengerList += other.client.playerNum() + " " + other.client.ping + " ";
+                    player.challengerList += other.client.playerNum + " " + other.client.ping + " ";
                 }
             }
         }
@@ -416,11 +416,11 @@ cString @GT_ScoreboardMessage( int maxlen )
  * handles different game events
  *
  * @param cClient @client
- * @param cString &score_event
- * @param cString &args
+ * @param String &score_event
+ * @param String &args
  * @return void
  */
-void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
+void GT_scoreEvent( cClient @client, String &score_event, String &args )
 {
     if( @client == null)//basewsw does check that too ("clients can be null")
         return;
@@ -443,9 +443,9 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-            player.getAuth().setName(client.getUserInfoKey(rs_authField_Name.getString()));
-            player.getAuth().setPass(client.getUserInfoKey(rs_authField_Pass.getString()));
-            player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.getString()));
+            player.getAuth().setName(client.getUserInfoKey(rs_authField_Name.string));
+            player.getAuth().setPass(client.getUserInfoKey(rs_authField_Pass.string));
+            player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.string));
 
             player.appear();
             RS_ircSendMessage( player.getName().removeColorTokens() + " entered the game" );
@@ -464,7 +464,7 @@ void GT_scoreEvent( cClient @client, cString &score_event, cString &args )
 
 
 				// auto-hop check
-				if ( rs_allowAutoHop.getBool() == false )
+				if ( rs_allowAutoHop.boolean == false )
 				{
 					// checking if the player is restoring his autojump (we can't cheatprotect a client variable from the server, can we?)
 					if ( client.getUserInfoKey("cg_noAutohop").toInt() == 0 )
@@ -528,7 +528,7 @@ void GT_ThinkRules()
 	// perform a C callback if there is one pending
 	racesowAdapter.thinkCallbackQueue();
 
-	bool timelimited = not ( gametypeFlag == MODFLAG_FREESTYLE  || !g_maprotation.getBool());
+	bool timelimited = not ( gametypeFlag == MODFLAG_FREESTYLE  || !g_maprotation.boolean);
 
 	if ( timelimited )
 	{
@@ -594,7 +594,7 @@ void GT_ThinkRules()
 
 		if( scoreboardUpdated && player.challengerList != "")//send the scoreboard to the player
 		{
-            cString command = "scb \""
+            String command = "scb \""
                     + playerList + " "
                     + "&s " + spectatorList + " "
                     + "&w " + player.challengerList + "\"";
@@ -618,8 +618,8 @@ void GT_ThinkRules()
         if ( player.printWelcomeMessage and levelTime - player.joinedTime > 1000 )
         {
             player.printWelcomeMessage = false;
-            player.sendMessage( rs_welcomeMessage.getString() + "\n" );
-            player.sendMessage( rs_registrationInfo.getString() + "\n" );
+            player.sendMessage( rs_welcomeMessage.string + "\n" );
+            player.sendMessage( rs_registrationInfo.string + "\n" );
         }
 
         // always clear all before setting
@@ -688,7 +688,7 @@ void GT_MatchStateStarted()
  */
 void GT_Shutdown()
 {
-    if( g_gravity.getDefaultString() != g_gravity.getString() )
+    if( g_gravity.defaultString != g_gravity.string )
     {
         //some maps might have set a custom g_gravity which normaly won't get restored
         g_gravity.reset();
@@ -741,16 +741,16 @@ void GT_SpawnGametype()
         if( @ent == null )
             continue;
 
-        if( ent.getClassname() == "trigger_multiple" )
+        if( ent.classname == "trigger_multiple" )
         {
             cEntity @target = @ent.findTargetEntity( @ent );
-            if( @target != null && ( ( target.getClassname() == "target_startTimer" )
-                            || ( target.getClassname() == "target_starttimer" ) ) )
+            if( @target != null && ( ( target.classname == "target_startTimer" )
+                            || ( target.classname == "target_starttimer" ) ) )
             {
                 ent.wait = 0;
             }
         }
-        else if( ent.getClassname() == "target_give" )
+        else if( ent.classname == "target_give" )
         {
             cEntity @target = @ent.findTargetEntity( null );
             if( @target == null )
@@ -763,11 +763,11 @@ void GT_SpawnGametype()
         else if( ent.type == ET_ITEM )
         {
             cItem @Item = @ent.item;
-            if( @Item != null && ent.getClassname() == Item.getClassname() )
+            if( @Item != null && ent.classname == Item.classname )
             {
-                if( ( ent.solid != SOLID_NOT ) || ( ( @ent.findTargetingEntity( null ) != null ) && ( ent.findTargetingEntity( null ).getClassname() != "target_give" ) ) ) //ok, not connected to target_give
+                if( ( ent.solid != SOLID_NOT ) || ( ( @ent.findTargetingEntity( null ) != null ) && ( ent.findTargetingEntity( null ).classname != "target_give" ) ) ) //ok, not connected to target_give
                 {
-                    ent.setClassname( "AS_" + Item.getClassname() );
+                    ent.classname = "AS_" + Item.classname;
                     replacementItem( @ent );
                 }
             }
@@ -789,9 +789,9 @@ void GT_SpawnGametype()
  */
 void GT_InitGametype()
 {
-    gametype.setTitle( "Racesow" );
-    gametype.setVersion( "0.6.2" );
-    gametype.setAuthor( "warsow-race.net" );
+    gametype.title = "Racesow";
+    gametype.version = "0.6.2";
+    gametype.author = "warsow-race.net";
 
     // initalize weapondef config
     weaponDefInit();
@@ -813,10 +813,10 @@ void GT_InitGametype()
     // always execute racesow.cfg
     G_CmdExecute( "exec configs/server/gametypes/racesow/racesow.cfg silent" );
 
-    gametypeFlag = RS_GetModFlagByName(g_gametype.getString());
+    gametypeFlag = RS_GetModFlagByName(g_gametype.string);
 
     gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
-    if ( gametype.isInstagib() )
+    if ( gametype.isInstagib )
       gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
 
     gametype.respawnableItemsMask = gametype.spawnableItemsMask;
@@ -859,8 +859,9 @@ void GT_InitGametype()
     // weapondef not needed anymore, we're not testing weapons
     //G_RegisterCommand( "weapondef" );
 
-    G_RegisterCommand( "ammoswitch" );
-    G_RegisterCommand( "whoisgod" );
+    //FIXME: I've commented these out for now so we don't exceed the command limit -K1ll
+    //G_RegisterCommand( "ammoswitch" );
+    //G_RegisterCommand( "whoisgod" );
 
     //add callvotes
     G_RegisterCallvote( "extend_time", "", "Extends the matchtime." );
@@ -883,7 +884,7 @@ void GT_InitGametype()
 	g_self_knockback.forceSet("1.25"); // 1.18 in basewsw.6
 
 	//store g_timelimit for restoring it at the end of the map (it will be altered by extend_time votes)
-	oldTimelimit = g_timelimit.getInteger();
+	oldTimelimit = g_timelimit.integer;
 
 	// load maps list (basic or mysql)
 	RS_LoadMapList( gametypeFlag & MODFLAG_FREESTYLE );

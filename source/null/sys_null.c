@@ -59,7 +59,7 @@ char *Sys_ConsoleInput( void )
 	return NULL;
 }
 
-void	Sys_ConsoleOutput( char *string )
+void Sys_ConsoleOutput( char *string )
 {
 }
 
@@ -81,6 +81,10 @@ qboolean Sys_SetClipboardData( char *data )
 }
 
 void Sys_FreeClipboardData( char *data )
+{
+}
+
+void Sys_OpenURLInBrowser( const char *url )
 {
 }
 
@@ -122,6 +126,11 @@ void Sys_FindClose( void )
 
 void Sys_Init( void )
 {
+}
+
+time_t Sys_FS_FileMTime( const char *filename )
+{
+	return -1;
 }
 
 //=============================================================================

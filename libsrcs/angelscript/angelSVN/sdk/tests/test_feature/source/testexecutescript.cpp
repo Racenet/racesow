@@ -15,7 +15,7 @@
 #endif
 #include "../../../add_on/scriptbuilder/scriptbuilder.h"
 
-#define TESTNAME "TestExecuteScript"
+static const char * const TESTNAME = "TestExecuteScript";
 
 static bool ExecuteScript();
 
@@ -23,7 +23,7 @@ static asIScriptEngine *engine;
 
 bool TestExecuteScript()
 {
-	bool ret = false;
+	bool fail = false;
 	COutStream out;
 
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
@@ -34,16 +34,20 @@ bool TestExecuteScript()
 
 	CScriptBuilder builder;
 
-	int r = builder.BuildScriptFromFile(engine, 0, "scripts/TestExecuteScript.as");
+	int r = builder.StartNewModule(engine, 0);
+	if( r >= 0 )
+		r = builder.AddSectionFromFile("scripts/TestExecuteScript.as");
+	if( r >= 0 )
+		r = builder.BuildModule();
 	if( r >= 0 )
 	{
-		ret = ExecuteScript();
+		fail = ExecuteScript();
 	}
 
 	engine->Release();
 	engine = NULL;
 
-	return ret;
+	return fail;
 }
 
 
@@ -70,7 +74,7 @@ static bool ExecuteScript()
 	// PrepareContext on it again. If the same stack size is used as the last time
 	// there will not be any new allocation thus saving some time.
 
-	int r = ctx->Prepare(engine->GetModule(0)->GetFunctionIdByName("main"));
+	int r = ctx->Prepare(engine->GetModule(0)->GetFunctionByName("main"));
 	if( r < 0 )
 	{
 		printf("%s: Failed to prepare context\n", TESTNAME);
@@ -107,10 +111,9 @@ static bool ExecuteScript()
 		// In this case we can call Execute again to continue
 		// execution where it last stopped.
 
-		int funcID = ctx->GetCurrentFunction();
-		const asIScriptFunction *func = engine->GetFunctionDescriptorById(funcID);
+		const asIScriptFunction *func = ctx->GetFunction();
 		printf("func : %s\n", func->GetName());
-		printf("line : %d\n", ctx->GetCurrentLineNumber());
+		printf("line : %d\n", ctx->GetLineNumber());
 	}
 	else if( r == asEXECUTION_ABORTED )
 	{
@@ -121,8 +124,8 @@ static bool ExecuteScript()
 		printf("%s: An exception occured during execution\n", TESTNAME);
 
 		// Print exception description
-		int funcID = ctx->GetExceptionFunction();
-		const asIScriptFunction *func = engine->GetFunctionDescriptorById(funcID);
+		int funcId = ctx->GetExceptionFunction();
+		const asIScriptFunction *func = engine->GetFunctionById(funcId);
 		printf("func : %s\n", func->GetName());
 		printf("line : %d\n", ctx->GetExceptionLineNumber());
 		printf("desc : %s\n", ctx->GetExceptionString());

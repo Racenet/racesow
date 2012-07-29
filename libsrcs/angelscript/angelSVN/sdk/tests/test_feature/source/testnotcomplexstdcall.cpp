@@ -6,27 +6,27 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestNotComplexStdcall"
+static const char * const TESTNAME = "TestNotComplexStdcall";
 
 class Class1
 {
 public:
-	unsigned long a;
+	asDWORD a;
 };
 
 class Class2
 {
 public:
-	unsigned long a;
-	unsigned long b;
+	asDWORD a;
+	asDWORD b;
 };
 
 class Class3
 {
 public:
-	unsigned long a;
-	unsigned long b;
-	unsigned long c;
+	asDWORD a;
+	asDWORD b;
+	asDWORD c;
 };
 
 static Class1 STDCALL notComplex1()
@@ -64,9 +64,9 @@ bool TestNotComplexStdcall()
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 
-	engine->RegisterObjectType("class1", sizeof(Class1), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
-	engine->RegisterObjectType("class2", sizeof(Class2), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
-	engine->RegisterObjectType("class3", sizeof(Class3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);
+	engine->RegisterObjectType("class1", sizeof(Class1), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS | asOBJ_APP_CLASS_ALLINTS);
+	engine->RegisterObjectType("class2", sizeof(Class2), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS | asOBJ_APP_CLASS_ALLINTS);
+	engine->RegisterObjectType("class3", sizeof(Class3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS | asOBJ_APP_CLASS_ALLINTS);
 	
 	engine->RegisterGlobalProperty("class1 c1", &c1);
 	engine->RegisterGlobalProperty("class2 c2", &c2);
@@ -81,69 +81,69 @@ bool TestNotComplexStdcall()
 	c1.a = 0;
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 
-	int r = engine->ExecuteString(0, "c1 = notComplex1();");
+	int r = ExecuteString(engine, "c1 = notComplex1();");
 	if( r < 0 )
 	{
 		printf("%s: ExecuteString() failed %d\n", TESTNAME, r);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	if( c1.a != 0xDEADC0DE )
 	{
-		printf("%s: Failed to assign object returned from function. c1.a = %X\n", TESTNAME, c1.a);
-		fail = true;
+		printf("%s: Failed to assign object returned from function. c1.a = %X\n", TESTNAME, (unsigned int)c1.a);
+		TEST_FAILED;
 	}
 
 
 	c2.a = 0;
 	c2.b = 0;
 
-	r = engine->ExecuteString(0, "c2 = notComplex2();");
+	r = ExecuteString(engine, "c2 = notComplex2();");
 	if( r < 0 )
 	{
 		printf("%s: ExecuteString() failed %d\n", TESTNAME, r);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	if( c2.a != 0xDEADC0DE )
 	{
-		printf("%s: Failed to assign object returned from function. c2.a = %X\n", TESTNAME, c2.a);
-		fail = true;
+		printf("%s: Failed to assign object returned from function. c2.a = %X\n", TESTNAME, (unsigned int)c2.a);
+		TEST_FAILED;
 	}
 
 	if( c2.b != 0x01234567 )
 	{
-		printf("%s: Failed to assign object returned from function. c2.b = %X\n", TESTNAME, c2.b);
-		fail = true;
+		printf("%s: Failed to assign object returned from function. c2.b = %X\n", TESTNAME, (unsigned int)c2.b);
+		TEST_FAILED;
 	}
 
 	c3.a = 0;
 	c3.b = 0;
 	c3.c = 0;
 
-	r = engine->ExecuteString(0, "c3 = notComplex3();");
+	r = ExecuteString(engine, "c3 = notComplex3();");
 	if( r < 0 )
 	{
 		printf("%s: ExecuteString() failed %d\n", TESTNAME, r);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	if( c3.a != 0xDEADC0DE )
 	{
-		printf("%s: Failed to assign object returned from function. c3.a = %X\n", TESTNAME, c3.a);
-		fail = true;
+		printf("%s: Failed to assign object returned from function. c3.a = %X\n", TESTNAME, (unsigned int)c3.a);
+		TEST_FAILED;
 	}
 
 	if( c3.b != 0x01234567 )
 	{
-		printf("%s: Failed to assign object returned from function. c3.b = %X\n", TESTNAME, c3.b);
-		fail = true;
+		printf("%s: Failed to assign object returned from function. c3.b = %X\n", TESTNAME, (unsigned int)c3.b);
+		TEST_FAILED;
 	}
 
 	if( c3.c != 0x89ABCDEF )
 	{
-		printf("%s: Failed to assign object returned from function. c3.c = %X\n", TESTNAME, c3.c);
-		fail = true;
+		printf("%s: Failed to assign object returned from function. c3.c = %X\n", TESTNAME, (unsigned int)c3.c);
+		TEST_FAILED;
 	}
 
 	engine->Release();

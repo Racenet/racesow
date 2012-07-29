@@ -182,15 +182,14 @@ void CG_RecurseBlendSkeletalBone( bonepose_t *inboneposes, bonepose_t *outbonepo
 	{
 		inbone = inboneposes + bonenode->bonenum;
 		outbone = outboneposes + bonenode->bonenum;
-		if( frac == 1.0f )
+		if( frac == 1 )
 		{
 			memcpy( &outboneposes[bonenode->bonenum], &inboneposes[bonenode->bonenum], sizeof( bonepose_t ) );
 		}
 		else
 		{
 			// blend current node pose
-			Quat_Lerp( inbone->quat, outbone->quat, frac, outbone->quat );
-			VectorLerp( outbone->origin, frac, inbone->origin, outbone->origin );
+			DualQuat_Lerp( inbone->dualquat, outbone->dualquat, frac, outbone->dualquat );
 		}
 	}
 
@@ -215,7 +214,7 @@ void CG_TransformBoneposes( cgs_skeleton_t *skel, bonepose_t *outboneposes, bone
 		if( skel->bones[j].parent >= 0 )
 		{
 			memcpy( &temppose, &sourceboneposes[j], sizeof( bonepose_t ) );
-			Quat_ConcatTransforms( outboneposes[skel->bones[j].parent].quat, outboneposes[skel->bones[j].parent].origin, temppose.quat, temppose.origin, outboneposes[j].quat, outboneposes[j].origin );
+			DualQuat_Multiply( outboneposes[skel->bones[j].parent].dualquat, temppose.dualquat, outboneposes[j].dualquat );
 		}
 		else
 			memcpy( &outboneposes[j], &sourceboneposes[j], sizeof( bonepose_t ) );
@@ -234,23 +233,19 @@ qboolean CG_LerpBoneposes( cgs_skeleton_t *skel, bonepose_t *curboneposes, bonep
 	assert( curboneposes && oldboneposes && outboneposes );
 	assert( skel && skel->numBones && skel->numFrames );
 
-	if( frontlerp == 1.0f )
+	if( frontlerp == 1 )
 	{
 		memcpy( outboneposes, curboneposes, sizeof( bonepose_t ) * skel->numBones );
 	}
-	else if( frontlerp == 0.0f )
+	else if( frontlerp == 0 )
 	{
-		memcpy(  outboneposes, oldboneposes, sizeof( bonepose_t ) * skel->numBones );
+		memcpy( outboneposes, oldboneposes, sizeof( bonepose_t ) * skel->numBones );
 	}
 	else
 	{
-		// run all bones
-		for( i = 0; i < (int)skel->numBones; i++, curboneposes++, oldboneposes++, outboneposes++ )
-		{
-			Quat_Lerp( oldboneposes->quat, curboneposes->quat, frontlerp, outboneposes->quat );
-			outboneposes->origin[0] = oldboneposes->origin[0] + ( curboneposes->origin[0] - oldboneposes->origin[0] ) * frontlerp;
-			outboneposes->origin[1] = oldboneposes->origin[1] + ( curboneposes->origin[1] - oldboneposes->origin[1] ) * frontlerp;
-			outboneposes->origin[2] = oldboneposes->origin[2] + ( curboneposes->origin[2] - oldboneposes->origin[2] ) * frontlerp;
+		// lerp all bone poses
+		for( i = 0; i < (int)skel->numBones; i++, curboneposes++, oldboneposes++, outboneposes++ ) {
+			DualQuat_Lerp( oldboneposes->dualquat, curboneposes->dualquat, frontlerp, outboneposes->dualquat );
 		}
 	}
 
@@ -292,20 +287,19 @@ qboolean CG_LerpSkeletonPoses( cgs_skeleton_t *skel, int curframe, int oldframe,
 */
 void CG_RotateBonePose( vec3_t angles, bonepose_t *bonepose )
 {
-	vec3_t axis_rotator[3];
-	quat_t quat_rotator;
+	dualquat_t quat_rotator;
 	bonepose_t temppose;
 	vec3_t tempangles;
 
 	tempangles[0] = -angles[YAW];
 	tempangles[1] = -angles[PITCH];
 	tempangles[2] = -angles[ROLL];
-	AnglesToAxis( tempangles, axis_rotator );
-	Matrix_Quat( axis_rotator, quat_rotator );
+
+	DualQuat_FromAnglesAndVector( tempangles, vec3_origin, quat_rotator );
 
 	memcpy( &temppose, bonepose, sizeof( bonepose_t ) );
 
-	Quat_ConcatTransforms( quat_rotator, vec3_origin, temppose.quat, temppose.origin, bonepose->quat, bonepose->origin );
+	DualQuat_Multiply( quat_rotator, temppose.dualquat, bonepose->dualquat );
 }
 
 /*
@@ -377,11 +371,10 @@ qboolean CG_SkeletalPoseGetAttachment( orientation_t *orient, cgs_skeleton_t *sk
 	bonepose = boneposes + i;
 
 	// copy the inverted bone into the tag
-	Quat_Inverse( bonepose->quat, quat ); // inverse the tag direction
+	Quat_Inverse( &bonepose->dualquat[0], quat ); // inverse the tag direction
 	Quat_Matrix( quat, orient->axis );
-	orient->origin[0] = bonepose->origin[0];
-	orient->origin[1] = bonepose->origin[1];
-	orient->origin[2] = bonepose->origin[2];
+	DualQuat_GetVector( bonepose->dualquat, orient->origin );
+
 	// normalize each axis
 	for( i = 0; i < 3; i++ )
 		VectorNormalizeFast( orient->axis[i] );

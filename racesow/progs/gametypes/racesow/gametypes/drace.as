@@ -1,4 +1,4 @@
-cVar g_drace_max_victories( "g_drace_max_victories", "0", CVAR_ARCHIVE );
+Cvar g_drace_max_victories( "g_drace_max_victories", "0", CVAR_ARCHIVE );
 
 const int DRACE_ROUNDSTATE_NONE = 0;
 const int DRACE_ROUNDSTATE_PREROUND = 1;
@@ -60,7 +60,7 @@ class cDRACERound
         // check for already added
         for ( int i = 0; i < maxClients; i++ )
         {
-            if ( this.DRACEChallengersQueue[i] == client.playerNum() )
+            if ( this.DRACEChallengersQueue[i] == client.playerNum )
                 return;
         }
 
@@ -68,7 +68,7 @@ class cDRACERound
         {
             if ( this.DRACEChallengersQueue[i] < 0 || this.DRACEChallengersQueue[i] >= maxClients )
             {
-                this.DRACEChallengersQueue[i] = client.playerNum();
+                this.DRACEChallengersQueue[i] = client.playerNum;
                 break;
             }
         }
@@ -81,7 +81,7 @@ class cDRACERound
 
         for ( int i = 0; i < maxClients; i++ )
         {
-            if ( this.DRACEChallengersQueue[i] == client.playerNum() )
+            if ( this.DRACEChallengersQueue[i] == client.playerNum )
             {
                 int j;
                 for ( j = i + 1; j < maxClients; j++ )
@@ -138,7 +138,7 @@ class cDRACERound
         }
     }
 
-    void roundAnnouncementPrint( cString &string )
+    void roundAnnouncementPrint( String &string )
     {
         if ( string.len() <= 0 )
             return;
@@ -210,10 +210,10 @@ class cDRACERound
 
         if ( @this.roundWinner != null )
         {
-            cVar scoreLimit( "g_scorelimit", "", 0 );
-            if ( this.roundWinner.stats.score == scoreLimit.getInteger() )
+            Cvar scoreLimit( "g_scorelimit", "", 0 );
+            if ( this.roundWinner.stats.score == scoreLimit.integer )
             {
-                this.roundAnnouncementPrint( S_COLOR_WHITE + this.roundWinner.getName() + S_COLOR_GREEN + " wins the game!" );
+                this.roundAnnouncementPrint( S_COLOR_WHITE + this.roundWinner.name + S_COLOR_GREEN + " wins the game!" );
             }
         }
 
@@ -293,9 +293,9 @@ class cDRACERound
             }
 
             this.roundAnnouncementPrint( S_COLOR_GREEN + "New Round:" );
-            this.roundAnnouncementPrint( S_COLOR_WHITE + this.roundWinner.getName()
+            this.roundAnnouncementPrint( S_COLOR_WHITE + this.roundWinner.name
                                          + S_COLOR_GREEN + " vs. "
-                                         + S_COLOR_WHITE + this.roundChallenger.getName() );
+                                         + S_COLOR_WHITE + this.roundChallenger.name );
         }
         break;
 
@@ -388,7 +388,7 @@ class cDRACERound
                     this.challengersQueueAddPlayer( loser );
                 }
 
-                this.roundAnnouncementPrint( S_COLOR_WHITE + winner.getName() + S_COLOR_GREEN + " wins the round!" );
+                this.roundAnnouncementPrint( S_COLOR_WHITE + winner.name + S_COLOR_GREEN + " wins the round!" );
                 //if the winner reached the max successive victories
                 if ( !this.checkMaxVictories( winner ) )
                 {
@@ -491,7 +491,7 @@ class cDRACERound
         if ( @attacker == null || @attacker.client == null )
             return;
 
-        target.client.printMessage( "You were killed by " + attacker.client.getName() + " (health: " + rint( attacker.health ) + ", armor: " + rint( attacker.client.armor ) + ")\n" );
+        target.client.printMessage( "You were killed by " + attacker.client.name + " (health: " + int( attacker.health ) + ", armor: " + int( attacker.client.armor ) + ")\n" );
 
         for ( int i = 0; i < maxClients; i++ )
         {
@@ -502,7 +502,7 @@ class cDRACERound
             if ( @client == @this.roundWinner || @client == @this.roundChallenger )
                 continue;
 
-            client.printMessage( target.client.getName() + " was killed by " + attacker.client.getName() + " (health: " + int( attacker.health ) + ", armor: " + int( attacker.client.armor ) + ")\n" );
+            client.printMessage( target.client.name + " was killed by " + attacker.client.name + " (health: " + int( attacker.health ) + ", armor: " + int( attacker.client.armor ) + ")\n" );
         }
         
         Racesow_GetPlayerByClient( target.client ).cancelRace();
@@ -511,7 +511,7 @@ class cDRACERound
     bool checkMaxVictories( cClient @client )
     {
         //we only check the max victories if the CVAR is set to 1 or more
-        if ( g_drace_max_victories.getValue() > 0 )
+        if ( g_drace_max_victories.get_value() > 0 )
         {
           //if not the same player, nbVictories set to 0, and last winner to current player
           if ( @client != @lastWinner )
@@ -523,7 +523,7 @@ class cDRACERound
           // number of victories incremented, and compared to the max autorized
           this.nbVictories++;
           
-          if ( this.nbVictories >= g_drace_max_victories.getInteger() )
+          if ( this.nbVictories >= g_drace_max_victories.integer )
           {
             //reset
             @this.lastWinner = null;
@@ -554,16 +554,16 @@ class Racesow_Gametype_Drace : Racesow_Gametype
     
     void InitGametype()
     {
-        gametype.setTitle( "Duel Race" );
+        gametype.title = "Duel Race";
         DRACERound.init();
     
         // if the gametype doesn't have a config file, create it
         if ( !G_FileExists( "configs/server/gametypes/drace.cfg" ) )
         {
-            cString config;
+            String config;
     
             // the config file doesn't exist or it's empty, create it
-            config = "// '" + gametype.getTitle() + "' gametype configuration file\n"
+            config = "// '" + gametype.title + "' gametype configuration file\n"
                      + "// This config will be executed each time the gametype is started\n"
                      + "\n// game settings\n"
                      + "set g_scorelimit \"11\"\n"
@@ -608,7 +608,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         G_RegisterCallvote( "draw", "", "Declares the current round Draw." ) ;
         G_RegisterCallvote( "max_victories", "<number>", "Maximum successive victories." ) ;
     
-        G_Print( "Gametype '" + gametype.getTitle() + "' initialized\n" );
+        G_Print( "Gametype '" + gametype.title + "' initialized\n" );
     }
     
     void SpawnGametype()
@@ -620,20 +620,20 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         	cItem @Item = G_GetItem( tag );
         	if( @Item == null)
         		continue;
-        	cString itemClassname = Item.getClassname();
+        	String itemClassname = Item.classname;
         	@from = null;
         	cEntity @item = @G_FindEntityWithClassname( @from, itemClassname );
         	if( @item == null )
         		continue;
       		do
       		{
-      			if( ( item.solid == SOLID_NOT ) && ( ( @item.findTargetingEntity( null ) != null ) && ( item.findTargetingEntity( null ).getClassname() == "target_give" ) ) ) //connected to target_give
+      			if( ( item.solid == SOLID_NOT ) && ( ( @item.findTargetingEntity( null ) != null ) && ( item.findTargetingEntity( null ).classname == "target_give" ) ) ) //connected to target_give
       			{
       				@from = @item;
       			}
       			else
       			{
-      				item.setClassname( "AS_" + itemClassname );
+      				item.classname = "AS_" + itemClassname;
       				replacementItem( @item );
       				@from = @item;
       			}
@@ -776,7 +776,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
     }
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args )
+    void scoreEvent( cClient @client, String &score_event, String &args )
     {
       if ( score_event == "dmg" )
       {
@@ -804,10 +804,10 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       }
     }
     
-    cString @ScoreboardMessage( int maxlen )
+    String @ScoreboardMessage( uint maxlen )
     {
-      cString scoreboardMessage = "";
-      cString entry;
+      String scoreboardMessage = "";
+      String entry;
       cTeam @team;
       cClient @client;
       cEntity @ent;
@@ -831,13 +831,13 @@ class Racesow_Gametype_Drace : Racesow_Gametype
               readyIcon = 0;
   
           if ( match.getState() != MATCH_STATE_PLAYTIME )
-              playerID = client.playerNum();
+              playerID = client.playerNum;
           else
-              playerID = client.getEnt().isGhosting() ? -( client.playerNum() + 1 ) : client.playerNum();
+              playerID = client.getEnt().isGhosting() ? -( client.playerNum + 1 ) : client.playerNum;
   
           racing = int( Racesow_GetPlayerByClient( client ).isRacing() ? 1 : 0 );
           entry = "&p " + playerID + " "
-                  + client.getClanName() + " "
+                  + client.clanName + " "
                   + client.stats.score + " "
                   + Racesow_GetPlayerByClient( client ).bestRaceTime + " "
                   + client.ping + " "
@@ -857,13 +857,13 @@ class Racesow_Gametype_Drace : Racesow_Gametype
               readyIcon = 0;
   
           if ( match.getState() != MATCH_STATE_PLAYTIME )
-              playerID = client.playerNum();
+              playerID = client.playerNum;
           else
-              playerID = client.getEnt().isGhosting() ? -( client.playerNum() + 1 ) : client.playerNum();
+              playerID = client.getEnt().isGhosting() ? -( client.playerNum + 1 ) : client.playerNum;
   
           racing = int( Racesow_GetPlayerByClient( client ).isRacing() ? 1 : 0 );
           entry = "&p " + playerID + " "
-                  + client.getClanName() + " "
+                  + client.clanName + " "
                   + client.stats.score + " "
                   + Racesow_GetPlayerByClient( client ).bestRaceTime + " "
                   + client.ping + " "
@@ -891,14 +891,14 @@ class Racesow_Gametype_Drace : Racesow_Gametype
               readyIcon = 0;
   
           if ( match.getState() != MATCH_STATE_PLAYTIME )
-              playerID = client.playerNum();
+              playerID = client.playerNum;
           else
-              playerID = client.getEnt().isGhosting() ? -( client.playerNum() + 1 ) : client.playerNum();
+              playerID = client.getEnt().isGhosting() ? -( client.playerNum + 1 ) : client.playerNum;
           
           racing = int( Racesow_GetPlayerByClient( client ).isRacing() ? 1 : 0 );
   
           entry = "&p " + playerID + " "
-                  + client.getClanName() + " "
+                  + client.clanName + " "
                   + client.stats.score + " "
                   + Racesow_GetPlayerByClient( client ).bestRaceTime + " "
                   + client.ping + " "
@@ -922,7 +922,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         return false;
     }
     
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc )
+    bool Command( cClient @client, String @cmdString, String @argsString, int argc )
     {
         if (cmdString == "resetcam")
         {
@@ -937,12 +937,12 @@ class Racesow_Gametype_Drace : Racesow_Gametype
         }
         else if (cmdString == "max_victories")
         {
-          G_PrintMsg( client.getEnt(), "Current: " + g_drace_max_victories.getString() + "\n" );      
+          G_PrintMsg( client.getEnt(), "Current: " + g_drace_max_victories.string + "\n" );      
           return true;
         }
       	else if ( cmdString == "callvotevalidate" )
       	{
-          cString vote = argsString.getToken( 0 );
+          String vote = argsString.getToken( 0 );
            
           if ( vote == "draw" )
           {
@@ -972,7 +972,7 @@ class Racesow_Gametype_Drace : Racesow_Gametype
       	}
       	else if ( cmdString == "callvotepassed" )
       	{
-            cString vote = argsString.getToken( 0 );
+            String vote = argsString.getToken( 0 );
       
             if ( vote == "draw" )
             {
@@ -1029,22 +1029,22 @@ void DRACE_SetUpCountdown()
     G_RemoveAllProjectiles();
 
     // lock teams
-    bool any = false;
+    bool any_bool = false; //FIXME: any is now a keyword. i've changed it to any_bool but it really should get a more clarifying name from someone who knows what it's for -K1ll
     if ( gametype.isTeamBased )
     {
         for ( int team = TEAM_ALPHA; team < GS_MAX_TEAMS; team++ )
         {
             if ( G_GetTeam( team ).lock() )
-                any = true;
+                any_bool = true;
         }
     }
     else
     {
         if ( G_GetTeam( TEAM_PLAYERS ).lock() )
-            any = true;
+            any_bool = true;
     }
 
-    if ( any )
+    if ( any_bool )
         G_PrintMsg( null, "Teams locked.\n" );
 
     // Countdowns should be made entirely client side, because we now can

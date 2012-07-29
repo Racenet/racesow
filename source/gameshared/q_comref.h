@@ -37,21 +37,21 @@ extern "C" {
 #define	MAX_SOUNDS					256			// so they cannot be blindly increased
 #define	MAX_IMAGES					256
 #define MAX_SKINFILES				256
-#define MAX_ITEMS					64 // 16x4
-#define MAX_GENERAL		( MAX_CLIENTS )		// general config strings
+#define MAX_ITEMS					64			// 16x4
+#define MAX_GENERAL					( MAX_CLIENTS )	// general config strings
 
 //==============================================
 
 //
 // button bits
 //
-#define	BUTTON_ATTACK	    1
-#define	BUTTON_WALK	    2
-#define	BUTTON_SPECIAL	    4
-#define	BUTTON_USE	    8
-#define	BUTTON_ZOOM	    16
-#define	BUTTON_BUSYICON	    32
-#define	BUTTON_ANY	    128     // any key whatsoever
+#define	BUTTON_ATTACK				1
+#define	BUTTON_WALK					2
+#define	BUTTON_SPECIAL				4
+#define	BUTTON_USE					8
+#define	BUTTON_ZOOM					16
+#define	BUTTON_BUSYICON				32
+#define	BUTTON_ANY					128     // any key whatsoever
 
 enum
 {
@@ -107,6 +107,7 @@ enum
 	PM_STAT_MAXSPEED,
 	PM_STAT_JUMPSPEED,
 	PM_STAT_DASHSPEED,
+	PM_STAT_FWDTIME,
 
 	PM_STAT_SIZE = MAX_PM_STATS
 };
@@ -194,7 +195,7 @@ typedef struct
 #define	CS_MAPNAME			6
 #define	CS_AUDIOTRACK		7
 #define CS_SKYBOX			8
-#define CS_SCORESTATNUMS	9
+#define CS_STATNUMS			9
 #define CS_POWERUPEFFECTS	10
 #define CS_GAMETYPETITLE	11
 #define CS_GAMETYPENAME		12
@@ -211,6 +212,8 @@ typedef struct
 #define CS_TEAM_BETA_NAME	21
 
 #define CS_MATCHNAME		22
+#define CS_MATCHSCORE		23
+#define CS_MATCHUUID		24
 
 #define CS_WORLDMODEL		30
 #define	CS_MAPCHECKSUM		31		// for catching cheater maps
@@ -252,16 +255,15 @@ typedef struct
 // edict->svflags
 #define	SVF_NOCLIENT			0x00000001		// don't send entity to clients, even if it has effects
 #define SVF_PORTAL				0x00000002		// merge PVS at old_origin
-#define	SVF_NOORIGIN2			0x00000004		// don't send old_origin (non-continuous events)
-#define	SVF_TRANSMITORIGIN2		0x00000008		// always send old_origin (beams, etc), just check one point for PHS if not SVF_PORTAL (must be non-solid)
-#define SVF_NOCULLATORIGIN2		SVF_NOORIGIN2	// when used in conjunction with SVF_TRANSMITORIGIN2, send origin2 but use PVS checks instead of PHS (non-continuous)
-#define	SVF_SOUNDCULL			0x00000010
+#define	SVF_TRANSMITORIGIN2		0x00000008		// always send old_origin (beams, etc)
+#define	SVF_SOUNDCULL			0x00000010		// distance culling
 #define SVF_FAKECLIENT			0x00000020		// do not try to send anything to this client
 #define SVF_BROADCAST			0x00000040		// always transmit
 #define SVF_CORPSE				0x00000080		// treat as CONTENTS_CORPSE for collision
 #define SVF_PROJECTILE			0x00000100		// sets s.solid to SOLID_NOT for prediction
 #define SVF_ONLYTEAM			0x00000200		// this entity is only transmited to clients with the same ent->s.team value
 #define SVF_FORCEOWNER			0x00000400		// this entity forces the entity at s.ownerNum to be included in the snapshot
+#define SVF_ONLYOWNER			0x00000800		// this entity is only transmitted to its owner
 
 // edict->solid values
 typedef enum
@@ -365,11 +367,13 @@ typedef enum
 {
 	CA_UNINITIALIZED,
 	CA_DISCONNECTED,					// not talking to a server
+	CA_GETTING_TICKET,					// getting a session ticket for matchmaking
 	CA_CONNECTING,						// sending request packets to the server
 	CA_HANDSHAKE,						// netchan_t established, waiting for svc_serverdata
 	CA_CONNECTED,						// connection established, game module not loaded
 	CA_LOADING,							// loading game module
-	CA_ACTIVE							// game views should be displayed
+	CA_ACTIVE,							// game views should be displayed
+	CA_CINEMATIC						// fullscreen video should be displayed
 } connstate_t;
 
 enum
@@ -380,7 +384,28 @@ enum
 	DROP_TYPE_TOTAL
 };
 
+enum
+{
+	DROP_REASON_CONNFAILED,
+	DROP_REASON_CONNTERMINATED,
+	DROP_REASON_CONNERROR
+};
+
 #define DROP_FLAG_AUTORECONNECT 1		// it's okay try reconnectting automatically
+
+typedef enum
+{
+	MM_LOGIN_STATE_LOGGED_OUT,
+	MM_LOGIN_STATE_IN_PROGRESS,
+	MM_LOGIN_STATE_LOGGED_IN
+} mmstate_t;
+
+typedef enum
+{
+	DOWNLOADTYPE_NONE,
+	DOWNLOADTYPE_SERVER,
+	DOWNLOADTYPE_WEB
+} downloadtype_t;
 
 //==============================================
 
@@ -410,8 +435,7 @@ typedef struct
 // to rendered a view.  There will only be 10 player_state_t sent each second,
 // but the number of pmove_state_t changes will be relative to client
 // frame rates
-#define	PS_MAX_STATS			32
-#define MAX_WEAPLIST_STATS		16	// short
+#define	PS_MAX_STATS			64
 
 typedef struct
 {

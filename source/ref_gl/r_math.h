@@ -38,6 +38,7 @@ void		Matrix4_Transpose( const mat4x4_t m, mat4x4_t out );
 void		Matrix4_Matrix( const mat4x4_t in, vec3_t out[3] );
 void		Matrix4_Multiply_Vector( const mat4x4_t m, const vec4_t v, vec4_t out );
 void		Matrix_FromQuaternion( const quat_t q, mat4x4_t out );
+void		Matrix_FromDualQuaternion( const dualquat_t dq, mat4x4_t out );
 
 void		Matrix4_Copy2D( const mat4x4_t m1, mat4x4_t m2 );
 void		Matrix4_Multiply2D( const mat4x4_t m1, const mat4x4_t m2, mat4x4_t out );

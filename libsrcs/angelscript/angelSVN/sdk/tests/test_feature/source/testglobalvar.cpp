@@ -1,7 +1,7 @@
 #include "utils.h"
 using std::string;
 
-#define TESTNAME "TestGlobalVar"
+static const char * const TESTNAME = "TestGlobalVar";
 static const char *script1 = "float global = func() * g_f * 2.0f;";
 static const char *script2 = "float global = 1.0f;";
 
@@ -11,11 +11,11 @@ static void func(asIScriptGeneric *gen)
 }
 
 static float cnst = 2.0f;
-static std::string g_str = "test";
+static CScriptString *g_str = 0;
 
 static const char *script3 =
 "float f = 2;                 \n"
-"string str = \"test\";       \n"
+"string str = 'test';         \n"
 "void TestGlobalVar()         \n"
 "{                            \n"
 "  float a = f + g_f;         \n"
@@ -85,26 +85,28 @@ void print(asIScriptGeneric *gen)
 
 bool TestGlobalVar()
 {
-	bool ret = false;
+	bool fail = false;
 	asIScriptEngine *engine;
 	COutStream out;
 	int r;
+
+	g_str = new CScriptString("test");
 
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	RegisterScriptString_Generic(engine);
 
 	engine->RegisterGlobalFunction("float func()", asFUNCTION(func), asCALL_GENERIC);
 	engine->RegisterGlobalProperty("float g_f", &cnst);
-	engine->RegisterGlobalProperty("string g_str", &g_str);
+	engine->RegisterGlobalProperty("string g_str", g_str);
 	engine->RegisterGlobalFunction("void print(string &in)", asFUNCTION(print), asCALL_GENERIC);
 
 	asIScriptModule *mod = engine->GetModule("a", asGM_ALWAYS_CREATE);
+
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
-	// This should fail, since we are trying to call a function in the initialization
-	if( mod->Build() >= 0 )
+	if( mod->Build() < 0 )
 	{
-		printf("%s: build erronously returned success\n", TESTNAME);
-		ret = true;
+		printf("%s: build failed\n", TESTNAME);
+		TEST_FAILED;
 	}
 
 	mod->AddScriptSection("script", script2, strlen(script2), 0);
@@ -112,17 +114,17 @@ bool TestGlobalVar()
 	if( mod->Build() < 0 )
 	{
 		printf("%s: build failed\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	mod->AddScriptSection("script", script3, strlen(script3), 0);
 	if( mod->Build() < 0 )
 	{
 		printf("%s: build failed\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	}
 
-	engine->ExecuteString("a", "TestGlobalVar()");
+	ExecuteString(engine, "TestGlobalVar()", mod);
 
 	float *f = (float*)mod->GetAddressOfGlobalVar(mod->GetGlobalVarIndexByDecl("float f"));
 	string *str = (string*)mod->GetAddressOfGlobalVar(mod->GetGlobalVarIndexByDecl("string str"));
@@ -138,7 +140,7 @@ bool TestGlobalVar()
 	if( !CompareDouble(*f, 2) || *str != "test" )
 	{
 		printf("%s: Failed to reset the module\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	// Use another module so that we can test that the variable id is correct even for multiple modules
@@ -147,36 +149,37 @@ bool TestGlobalVar()
 	if( mod->Build() < 0 )
 	{
 		printf("%s: build failed\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	int c = engine->GetModule("b")->GetGlobalVarCount();
-	if( c != 8 ) ret = true;
+	if( c != 8 ) TEST_FAILED;
 	double d;
 	d = *(double*)engine->GetModule("b")->GetAddressOfGlobalVar(0); 
-	if( !CompareDouble(d, 12) ) ret = true;
+	if( !CompareDouble(d, 12) ) TEST_FAILED;
 	d = *(double*)engine->GetModule("b")->GetAddressOfGlobalVar(engine->GetModule("b")->GetGlobalVarIndexByName("gcb")); 
-	if( !CompareDouble(d, 5) ) ret = true;
+	if( !CompareDouble(d, 5) ) TEST_FAILED;
 	d = *(double*)engine->GetModule("b")->GetAddressOfGlobalVar(engine->GetModule("b")->GetGlobalVarIndexByDecl("const double gcc")); 
-	if( !CompareDouble(d, 35.2) ) ret = true;
+	if( !CompareDouble(d, 35.2) ) TEST_FAILED;
 	d = *(double*)engine->GetModule("b")->GetAddressOfGlobalVar(3); 
-	if( !CompareDouble(d, 4) ) ret = true;
+	if( !CompareDouble(d, 4) ) TEST_FAILED;
 	
-	engine->ExecuteString("b", "test()");
+	ExecuteString(engine, "test()", engine->GetModule("b"));
 
 	engine->Release();
 
 	//--------------------
-
-	asIScriptArray *gPacketData = 0;
+	CScriptArray *gPacketData = 0;
 	unsigned int gPacketLength = 0;
 
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 	r = engine->RegisterGlobalProperty("uint gPacketLength", &gPacketLength); assert( r >= 0 );
 	r = engine->RegisterGlobalProperty("uint8[] @gPacketData", &gPacketData); assert( r >= 0 );
 	engine->Release();
 
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 	r = engine->RegisterGlobalProperty("uint8[] @gPacketData", &gPacketData); assert( r >= 0 );
 	r = engine->RegisterGlobalProperty("uint gPacketLength", &gPacketLength); assert( r >= 0 );
 	engine->Release();
@@ -188,7 +191,7 @@ bool TestGlobalVar()
 	mod->AddScriptSection("script", script5);
 	r = mod->Build(); 
 	if( r < 0 )
-		ret = true;
+		TEST_FAILED;
 	engine->Release();
 
 	//--------------------------
@@ -200,15 +203,15 @@ bool TestGlobalVar()
 	mod->AddScriptSection("script", script6);
 	r = mod->Build();
 	if( r < 0 )
-		ret = true;
+		TEST_FAILED;
 	else
 	{
 		CScriptString *object = (CScriptString*)engine->GetModule(0)->GetAddressOfGlobalVar(engine->GetModule(0)->GetGlobalVarIndexByName("object"));
 		CScriptString **handle = (CScriptString**)engine->GetModule(0)->GetAddressOfGlobalVar(engine->GetModule(0)->GetGlobalVarIndexByName("handle"));
 		if( *handle != object )
-			ret = true;
+			TEST_FAILED;
 		if( object->buffer != "t" )
-			ret = true;
+			TEST_FAILED;
 	}
 	engine->Release();
 
@@ -217,6 +220,7 @@ bool TestGlobalVar()
 	{
 		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 		engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+		RegisterScriptArray(engine, true);
 		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 
 		const char *script =
@@ -229,13 +233,13 @@ bool TestGlobalVar()
 		mod->AddScriptSection("script", script);
 		r = mod->Build();
 		if( r < 0 )
-			ret = true;
+			TEST_FAILED;
 		else
 		{
-			r = engine->ExecuteString(0, "assert(@a == @h); assert(v.length() == 2); assert(@v[0] == @v[1]);");
+			r = ExecuteString(engine, "assert(@a == @h); assert(v.length() == 2); assert(@v[0] == @v[1]);", mod);
 			if( r != asEXECUTION_FINISHED )
-				ret = true;
-		}		
+				TEST_FAILED;
+		}
 
 		engine->Release();
 	}
@@ -248,11 +252,12 @@ bool TestGlobalVar()
 		engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
 		int r = engine->RegisterGlobalProperty("const int value = 3345;", 0);
 		if( r >= 0 )
-			ret = true;
-		if( bout.buffer != "Property (1, 17) : Error   : Expected '<end of file>'\n" )
+			TEST_FAILED;
+		if( bout.buffer != "Property (1, 17) : Error   : Expected '<end of file>'\n"
+			               " (0, 0) : Error   : Failed in call to function 'RegisterGlobalProperty' with 'const int value = 3345;'\n" )
 		{
-			ret = true;
-			printf(bout.buffer.c_str());
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
 		}
 		engine->Release();
 	}
@@ -269,10 +274,10 @@ bool TestGlobalVar()
 		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 		mod->AddScriptSection("script", script);
 		mod->Build();
-		r = engine->ExecuteString(0, "float g = 0; g = 1; ::g = 2; assert( g == 1 ); assert( ::g == 2 );");
+		r = ExecuteString(engine, "float g = 0; g = 1; ::g = 2; assert( g == 1 ); assert( ::g == 2 );", mod);
 		if( r != asEXECUTION_FINISHED )
 		{
-			ret = true;
+			TEST_FAILED;
 		}
 		engine->Release();
 	}
@@ -293,11 +298,95 @@ bool TestGlobalVar()
 		mod->AddScriptSection("", script);
 		r = mod->Build();
 		if( r < 0 )
-			ret = true;
+			TEST_FAILED;
 
 		engine->Release();
 	}
 
-	return ret;
+	//-----------------------
+	// variables of primitive type should be initialized before variables of complex type
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+		const char *script = "class MyObj { MyObj() { a = g_a; b = g_b; } int a; int b; } \n"
+			                 "int g_a = 314 + g_b; \n" // This forces g_a to be compiled after g_b
+							 "MyObj obj(); \n"         // obj should be compiled last
+							 "int g_b = 42; \n";
+
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("", script);
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		r = ExecuteString(engine, "assert( obj.a == 314+42 ); \n"
+			                      "assert( obj.b == 42 ); \n", mod);
+		if( r != asEXECUTION_FINISHED )
+		{
+			TEST_FAILED;
+		}
+
+		engine->Release();
+	}
+
+	//-----------------------
+	// variables of object type that access other global objects in constructor will throw null-pointer exception
+	{
+		CBufferedOutStream bout;
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+		const char *script = "class A { void Access() {} } \n"
+			                 "class B { B() { g_a.Access(); g_c.Access(); } } \n"
+			                 "A g_a; \n"
+							 "B g_b; \n" // g_b accesses both g_a and g_c
+							 "A g_c; \n";
+
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("", script);
+		r = mod->Build();
+		if( r >= 0 )
+			TEST_FAILED;
+
+		if( bout.buffer != " (4, 3) : Error   : Failed to initialize global variable 'g_b'\n"
+		                   " (2, 0) : Info    : Exception 'Null pointer access' in 'B::B()'\n" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+
+		engine->Release();
+	}
+
+	// Global vars can be disabled
+	{
+		CBufferedOutStream bout;
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+		
+		engine->SetEngineProperty(asEP_DISALLOW_GLOBAL_VARS, true);
+
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("", "int var;");
+		r = mod->Build();
+		if( r >= 0 )
+			TEST_FAILED;
+
+		if( bout.buffer != " (1, 1) : Error   : Global variables have been disabled by the application\n" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+
+		engine->Release();
+	}
+
+	g_str->Release();
+	g_str = 0;
+
+	return fail;
 }
 

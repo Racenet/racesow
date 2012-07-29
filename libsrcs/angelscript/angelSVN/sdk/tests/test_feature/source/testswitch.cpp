@@ -7,7 +7,8 @@
 #include "utils.h"
 using namespace std;
 
-#define TESTNAME "TestSwitch"
+
+static const char * const TESTNAME = "TestSwitch";
 
 
 static const char *script =
@@ -122,7 +123,7 @@ bool TestSwitch()
 	if( r < 0 )
 	{
 		printf("%s: Failed to build script\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	asIScriptContext *ctx = engine->CreateContext();
@@ -132,7 +133,7 @@ bool TestSwitch()
 	if( sum != 254 )
 	{
 		printf("%s: Expected %d, got %d\n", TESTNAME, 254, sum);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	ctx->Release();
@@ -141,7 +142,7 @@ bool TestSwitch()
 	mod->AddScriptSection("switch", script2);
 	mod->Build();
 
-	engine->ExecuteString(0, "_switch2()");
+	ExecuteString(engine, "_switch2()", mod);
 
 	if( _log != "d12345\n"
 		        "It is the value we expect\n"
@@ -149,15 +150,82 @@ bool TestSwitch()
                 "It is the value we expect\n"
                 "The switch works\n" )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Switch failed. Got: %s\n", TESTNAME, _log.c_str());
 	}
  
 	CBufferedOutStream bout;
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
-	engine->ExecuteString(0, "switch(1) {}"); 
+	ExecuteString(engine, "switch(1) {}", mod); 
 	if( bout.buffer != "ExecuteString (1, 1) : Error   : Empty switch statement\n" )
-		fail = true;
+		TEST_FAILED;
+
+	// A switch case must not have duplicate cases
+	{
+		bout.buffer = "";
+		const char *script = "switch( 1 ) { case 1: case 1: }";
+		r = ExecuteString(engine, script, mod);
+		if( r >= 0 )
+			TEST_FAILED;
+
+		if( bout.buffer != "ExecuteString (1, 28) : Error   : Duplicate switch case\n" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
+	// Test to make sure assert is not failing
+	{
+		bout.buffer = "";
+		const char *script = 
+			"class Test \n"
+			"{ \n"
+			"	int8 State; \n"
+			"	void test() \n"
+			"	{ \n"
+			"		switch (State) \n"
+			"		{ \n"
+			"       case 0: \n"
+			"		} \n"
+			"	} \n"
+			"}; \n";
+
+		mod->AddScriptSection("script", script);
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+		if( bout.buffer != "" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
+
+	// Test to make sure the error message is appropriate when declaring variable in case
+	{
+		bout.buffer = "";
+		const char *script = 
+			"	void test() \n"
+			"	{ \n"
+			"		switch (0) \n"
+			"		{ \n"
+			"       case 0: \n"
+			"         int n; \n"
+			"		} \n"
+			"	} \n";
+
+		mod->AddScriptSection("script", script);
+		r = mod->Build();
+		if( r >= 0 )
+			TEST_FAILED;
+		if( bout.buffer != "script (1, 2) : Info    : Compiling void test()\n"
+		                   "script (6, 10) : Error   : Variables cannot be declared in switch cases, except inside statement blocks\n" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+	}
 
 	engine->Release();
 

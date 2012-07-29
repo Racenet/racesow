@@ -1,14 +1,24 @@
 # Test Framework GNUC makefile
 
 CXX = g++
-CXXFLAGS = -ggdb -I../../../../angelscript/include -Wno-missing-field-initializers
+CXXFLAGS += -ggdb -I../../../../angelscript/include -Wno-missing-field-initializers
 SRCDIR = ../../source
 OBJDIR = obj
+
+ifdef DONT_WAIT
+    CXXFLAGS += -DDONT_WAIT
+endif
+
 
 SRCNAMES = \
   bstr.cpp \
   main.cpp \
   test_2func.cpp \
+  test_addon_scriptarray.cpp \
+  test_addon_scriptbuilder.cpp \
+  test_addon_scripthandle.cpp \
+  test_addon_scriptmath.cpp \
+  test_addon_serializer.cpp \
   test_any.cpp \
   test_argref.cpp \
   test_array.cpp \
@@ -32,6 +42,7 @@ SRCNAMES = \
   test_conversion.cpp \
   test_custommem.cpp \
   test_debug.cpp \
+  test_defaultarg.cpp \
   test_destructor.cpp \
   test_dict.cpp \
   test_dictionary.cpp \
@@ -45,15 +56,18 @@ SRCNAMES = \
   test_float.cpp \
   test_for.cpp \
   test_funcoverload.cpp \
+  test_functionptr.cpp \
+  test_garbagecollect.cpp \
   test_generic.cpp \
   test_getargptr.cpp \
+  test_getset.cpp \
   test_implicitcast.cpp \
   test_implicithandle.cpp \
   test_import.cpp \
   test_import2.cpp \
   test_inheritance.cpp \
   test_interface.cpp \
-  test_metadata.cpp \
+  test_module.cpp \
   test_multiassign.cpp \
   test_nested.cpp \
   test_nevervisited.cpp \
@@ -64,6 +78,7 @@ SRCNAMES = \
   test_objhandle.cpp \
   test_objhandle2.cpp \
   test_objzerosize.cpp \
+  test_operator.cpp \
   test_optimize.cpp \
   test_parser.cpp \
   test_pointer.cpp \
@@ -75,8 +90,10 @@ SRCNAMES = \
   test_saveload.cpp \
   test_scriptclassmethod.cpp \
   test_scriptmath.cpp \
+  test_scriptretref.cpp \
   test_scriptstring.cpp \
   test_scriptstruct.cpp \
+  test_shared.cpp \
   test_shark.cpp \
   test_singleton.cpp \
   test_suspend.cpp \
@@ -84,6 +101,7 @@ SRCNAMES = \
   test_stdvector.cpp \
   test_stream.cpp \
   test_structintf.cpp \
+  test_template.cpp \
   test_typedef.cpp \
   test_unsaferef.cpp \
   test_vartype.cpp \
@@ -91,11 +109,11 @@ SRCNAMES = \
   test_vector3_2.cpp \
   test2modules.cpp \
   testbstr.cpp \
-  testbstr2.cpp  \
   testcdecl_class.cpp \
   testcdecl_class_a.cpp \
   testcdecl_class_c.cpp \
   testcdecl_class_d.cpp \
+  testcdecl_class_k.cpp \
   testcreateengine.cpp \
   testenumglobvar.cpp \
   testexecute.cpp \
@@ -121,9 +139,7 @@ SRCNAMES = \
   testnotcomplexthiscall.cpp \
   testoutput.cpp \
   test_registertype.cpp \
-  testreturn.cpp \
-  testreturnd.cpp \
-  testreturnf.cpp \
+  test_cdecl_return.cpp \
   test_rz.cpp \
   teststdcall4args.cpp \
   teststdstring.cpp \
@@ -133,18 +149,24 @@ SRCNAMES = \
   testvirtualinheritance.cpp \
   testvirtualmethod.cpp \
   utils.cpp \
+  scriptstring.cpp \
+  scriptstring_utils.cpp \
+  scriptmath3d.cpp \
 
 
 OBJ = $(addprefix $(OBJDIR)/, $(notdir $(SRCNAMES:.cpp=.o))) \
-  obj/scriptstring.o \
+  obj/scriptarray.o \
+  obj/scripthandle.o \
+  obj/scripthelper.o \
   obj/scriptstdstring.o \
+  obj/scriptstdstringutil.o \
   obj/scriptany.o \
-  obj/scriptstringutil.o \
   obj/scriptmath.o \
+  obj/scriptmathcomplex.o \
   obj/scriptdictionary.o \
   obj/scriptfile.o \
   obj/scriptbuilder.o \
-  obj/scriptmath3d.o  \
+  obj/serializer.o \
 
 
 BIN = ../../bin/testgnuc
@@ -153,20 +175,26 @@ DELETER = rm -f
 all: $(BIN)
 
 $(BIN): $(OBJ)
-	$(CXX) -o $(BIN) $(OBJ) -langelscript -L ../../../../angelscript/lib
+	$(CXX) $(LDFLAGS) -o $(BIN) $(OBJ) -langelscript -lpthread -L../../../../angelscript/lib
 	@echo -------------------------------------------------------------------
 	@echo Done.
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/scriptstring.o: ../../../../add_on/scriptstring/scriptstring.cpp
+obj/scriptarray.o: ../../../../add_on/scriptarray/scriptarray.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/scriptstringutil.o: ../../../../add_on/scriptstring/scriptstring_utils.cpp
+obj/scripthandle.o: ../../../../add_on/scripthandle/scripthandle.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	
+obj/scripthelper.o: ../../../../add_on/scripthelper/scripthelper.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/scriptstring.o: ../../../../add_on/scriptstdstring/scriptstdstring.cpp
+obj/scriptstdstring.o: ../../../../add_on/scriptstdstring/scriptstdstring.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/scriptstdstringutil.o: ../../../../add_on/scriptstdstring/scriptstdstring_utils.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/scriptdictionary.o: ../../../../add_on/scriptdictionary/scriptdictionary.cpp
@@ -175,18 +203,20 @@ obj/scriptdictionary.o: ../../../../add_on/scriptdictionary/scriptdictionary.cpp
 obj/scriptmath.o: ../../../../add_on/scriptmath/scriptmath.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+obj/scriptmathcomplex.o: ../../../../add_on/scriptmath/scriptmathcomplex.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
 obj/scriptany.o: ../../../../add_on/scriptany/scriptany.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/scriptfile.o: ../../../../add_on/scriptfile/scriptfile.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/scriptmath3d.o: ../../../../add_on/scriptmath3d/scriptmath3d.cpp
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
 obj/scriptbuilder.o: ../../../../add_on/scriptbuilder/scriptbuilder.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+obj/serializer.o: ../../../../add_on/serializer/serializer.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 clean:
 	$(DELETER) $(OBJ) $(BIN)

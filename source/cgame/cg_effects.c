@@ -1,33 +1,33 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // cg_effects.c -- entity effects parsing and management
 
 #include "cg_local.h"
 
 /*
-   ==============================================================
+==============================================================
 
-   LIGHT STYLE MANAGEMENT
+LIGHT STYLE MANAGEMENT
 
-   ==============================================================
- */
+==============================================================
+*/
 
 typedef struct
 {
@@ -39,9 +39,7 @@ typedef struct
 cg_lightStyle_t	cg_lightStyle[MAX_LIGHTSTYLES];
 
 /*
-================
-CG_ClearLightStyles
-================
+* CG_ClearLightStyles
 */
 static void CG_ClearLightStyles( void )
 {
@@ -49,9 +47,7 @@ static void CG_ClearLightStyles( void )
 }
 
 /*
-================
-CG_RunLightStyles
-================
+* CG_RunLightStyles
 */
 void CG_RunLightStyles( void )
 {
@@ -79,9 +75,7 @@ void CG_RunLightStyles( void )
 }
 
 /*
-================
-CG_SetLightStyle
-================
+* CG_SetLightStyle
 */
 void CG_SetLightStyle( int i )
 {
@@ -100,9 +94,7 @@ void CG_SetLightStyle( int i )
 }
 
 /*
-================
-CG_AddLightStyles
-================
+* CG_AddLightStyles
 */
 void CG_AddLightStyles( void )
 {
@@ -133,9 +125,7 @@ static cdlight_t cg_dlights[MAX_DLIGHTS];
 static int cg_numDlights;
 
 /*
-================
-CG_ClearDlights
-================
+* CG_ClearDlights
 */
 static void CG_ClearDlights( void )
 {
@@ -144,9 +134,7 @@ static void CG_ClearDlights( void )
 }
 
 /*
-===============
-CG_AllocDlight
-===============
+* CG_AllocDlight
 */
 static void CG_AllocDlight( vec3_t origin, float radius, float r, float g, float b, struct shader_s *shader )
 {
@@ -172,9 +160,7 @@ void CG_AddLightToScene( vec3_t org, float radius, float r, float g, float b, st
 }
 
 /*
-===============
-CG_AddDlights
-===============
+* CG_AddDlights
 */
 void CG_AddDlights( void )
 {
@@ -217,12 +203,10 @@ cgshadebox_t cg_shadeBoxes[MAX_CGSHADEBOXES];
 static int cg_numShadeBoxes = 0;   // cleared each frame
 
 /*
-================
-CG_AddBlobShadow
-
-Ok, to not use decals space we need these arrays to store the
-polygons info. We do not need the linked list nor registration
-================
+* CG_AddBlobShadow
+* 
+* Ok, to not use decals space we need these arrays to store the
+* polygons info. We do not need the linked list nor registration
 */
 static void CG_AddBlobShadow( vec3_t origin, vec3_t dir, float orient, float radius,
 							 float r, float g, float b, float a, cgshadebox_t *shadeBox )
@@ -267,6 +251,8 @@ static void CG_AddBlobShadow( vec3_t origin, vec3_t dir, float orient, float rad
 	VectorScale( axis[1], radius, axis[1] );
 	VectorScale( axis[2], radius, axis[2] );
 
+	memset( &poly, 0, sizeof( poly ) );
+
 	for( i = 0, nverts = 0, fr = fragments; i < numfragments; i++, fr++ )
 	{
 		if( nverts+fr->numverts > MAX_BLOBSHADOW_VERTS )
@@ -299,9 +285,7 @@ static void CG_AddBlobShadow( vec3_t origin, vec3_t dir, float orient, float rad
 }
 
 /*
-================
-CG_ClearShadeBoxes
-================
+* CG_ClearShadeBoxes
 */
 static void CG_ClearShadeBoxes( void )
 {
@@ -310,9 +294,7 @@ static void CG_ClearShadeBoxes( void )
 }
 
 /*
-===============
-CG_AllocShadeBox
-===============
+* CG_AllocShadeBox
 */
 void CG_AllocShadeBox( int entNum, const vec3_t origin, const vec3_t mins, const vec3_t maxs, struct shader_s *shader )
 {
@@ -345,11 +327,9 @@ void CG_AllocShadeBox( int entNum, const vec3_t origin, const vec3_t mins, const
 }
 
 /*
-===============
-CG_AddShadeBoxes - Which in reality means CalcBlobShadows
-Note:	This function should be called after every dynamic light has been added to the rendering list.
-ShadeBoxes exist for the solely reason of waiting until all dlights are sent before doing the shadows.
-===============
+* CG_AddShadeBoxes - Which in reality means CalcBlobShadows
+* Note:	This function should be called after every dynamic light has been added to the rendering list.
+* ShadeBoxes exist for the solely reason of waiting until all dlights are sent before doing the shadows.
 */
 #define SHADOW_PROJECTION_DISTANCE 96
 #define SHADOW_MAX_SIZE 100
@@ -412,9 +392,7 @@ TEMPORARY (ONE-FRAME) DECALS
 static int cg_numDecalVerts = 0;
 
 /*
-================
-CG_ClearFragmentedDecals
-================
+* CG_ClearFragmentedDecals
 */
 void CG_ClearFragmentedDecals( void )
 {
@@ -422,12 +400,10 @@ void CG_ClearFragmentedDecals( void )
 }
 
 /*
-================
-CG_AddFragmentedDecal
-================
+* CG_AddFragmentedDecal
 */
 void CG_AddFragmentedDecal( vec3_t origin, vec3_t dir, float orient, float radius,
-							 float r, float g, float b, float a, struct shader_s *shader )
+						   float r, float g, float b, float a, struct shader_s *shader )
 {
 	int i, j, c;
 	vec3_t axis[3];
@@ -471,6 +447,8 @@ void CG_AddFragmentedDecal( vec3_t origin, vec3_t dir, float orient, float radiu
 	radius = 0.5f / radius;
 	VectorScale( axis[1], radius, axis[1] );
 	VectorScale( axis[2], radius, axis[2] );
+
+	memset( &poly, 0, sizeof( poly ) );
 
 	for( i = 0, fr = fragments; i < numfragments; i++, fr++ )
 	{
@@ -542,9 +520,7 @@ cparticle_t particles[MAX_PARTICLES];
 int cg_numparticles;
 
 /*
-===============
-CG_ClearParticles
-===============
+* CG_ClearParticles
 */
 static void CG_ClearParticles( void )
 {
@@ -681,13 +657,10 @@ void RC_AddLinearTrail( centity_t *cent, float lifetime )
 
 // !racesow
 
-
 /*
-===============
-CG_ParticleEffect
-
-Wall impact puffs
-===============
+* CG_ParticleEffect
+* 
+* Wall impact puffs
 */
 void CG_ParticleEffect( vec3_t org, vec3_t dir, float r, float g, float b, int count )
 {
@@ -718,9 +691,7 @@ void CG_ParticleEffect( vec3_t org, vec3_t dir, float r, float g, float b, int c
 }
 
 /*
-===============
-CG_ParticleEffect2
-===============
+* CG_ParticleEffect2
 */
 void CG_ParticleEffect2( vec3_t org, vec3_t dir, float r, float g, float b, int count )
 {
@@ -751,9 +722,39 @@ void CG_ParticleEffect2( vec3_t org, vec3_t dir, float r, float g, float b, int 
 }
 
 /*
-===============
-CG_BlasterTrail
-===============
+* CG_ParticleExplosionEffect
+*/
+void CG_ParticleExplosionEffect( vec3_t org, vec3_t dir, float r, float g, float b, int count )
+{
+	int j;
+	cparticle_t *p;
+	float d;
+
+	if( !cg_particles->integer )
+		return;
+
+	if( cg_numparticles + count > MAX_PARTICLES )
+		count = MAX_PARTICLES - cg_numparticles;
+	for( p = &particles[cg_numparticles], cg_numparticles += count; count > 0; count--, p++ )
+	{
+		CG_InitParticle( p, 1, 1, r + random()*0.1, g + random()*0.1, b + random()*0.1, NULL );
+
+		d = rand() & 31;
+		for( j = 0; j < 3; j++ )
+		{
+			p->org[j] = org[j] + ( ( rand()&7 ) - 4 ) + d * dir[j];
+			p->vel[j] = crandom() * 200;
+		}
+
+		//p->accel[0] = p->accel[1] = 0;
+		p->accel[2] = -PARTICLE_GRAVITY;
+		p->alphavel = -1.0 / ( 0.7 + random() * 0.25 );
+	}
+}
+
+
+/*
+* CG_BlasterTrail
 */
 void CG_BlasterTrail( vec3_t start, vec3_t end )
 {
@@ -792,9 +793,7 @@ void CG_BlasterTrail( vec3_t start, vec3_t end )
 }
 
 /*
-===============
-CG_ElectroWeakTrail
-===============
+* CG_ElectroWeakTrail
 */
 void CG_ElectroWeakTrail( vec3_t start, vec3_t end, vec4_t color )
 {
@@ -838,10 +837,8 @@ void CG_ElectroWeakTrail( vec3_t start, vec3_t end, vec4_t color )
 }
 
 /*
-===============
-CG_ImpactPufParticles
-Wall impact puffs
-===============
+* CG_ImpactPufParticles
+* Wall impact puffs
 */
 void CG_ImpactPuffParticles( vec3_t org, vec3_t dir, int count, float scale, float r, float g, float b, float a, struct shader_s *shader )
 {
@@ -872,9 +869,7 @@ void CG_ImpactPuffParticles( vec3_t org, vec3_t dir, int count, float scale, flo
 }
 
 /*
-===============
-CG_ElectroIonsTrail
-===============
+* CG_ElectroIonsTrail
 */
 void CG_ElectroIonsTrail( vec3_t start, vec3_t end )
 {
@@ -920,9 +915,7 @@ void CG_ElectroIonsTrail( vec3_t start, vec3_t end )
 #define	BEAMLENGTH	    16
 
 /*
-===============
-CG_FlyParticles
-===============
+* CG_FlyParticles
 */
 static void CG_FlyParticles( vec3_t origin, int count )
 {
@@ -983,9 +976,7 @@ static void CG_FlyParticles( vec3_t origin, int count )
 }
 
 /*
-===============
-CG_FlyEffect
-===============
+* CG_FlyEffect
 */
 void CG_FlyEffect( centity_t *ent, vec3_t origin )
 {
@@ -1027,9 +1018,7 @@ void CG_FlyEffect( centity_t *ent, vec3_t origin )
 //============================================================
 
 /*
-===============
-CG_AddParticles
-===============
+* CG_AddParticles
 */
 void CG_AddParticles( void )
 {
@@ -1116,9 +1105,7 @@ void CG_AddParticles( void )
 }
 
 /*
-==============
-CG_ClearEffects
-==============
+* CG_ClearEffects
 */
 void CG_ClearEffects( void )
 {

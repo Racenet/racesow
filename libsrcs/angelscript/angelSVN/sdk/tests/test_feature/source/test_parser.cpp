@@ -3,7 +3,7 @@
 namespace TestParser
 {
 
-#define TESTNAME "TestParser"
+static const char * const TESTNAME = "TestParser";
 
 // Unfinished class
 const char *script1 =
@@ -31,19 +31,22 @@ bool Test()
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
 	r = mod->Build();
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 	if( bout.buffer != "TestParser (3, 1) : Error   : Expected '}'\n" )
-		fail = true;
+		TEST_FAILED;
 
 	bout.buffer = "";
 	mod->AddScriptSection(TESTNAME, script2, strlen(script2), 0);
 	r = mod->Build();
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 	if( bout.buffer != "TestParser (3, 17) : Error   : Expected ')' or ','\n"
-					   "TestParser (3, 17) : Error   : Expected method or property\n"
+					   "TestParser (3, 20) : Error   : Expected method or property\n"
 					   "TestParser (4, 1) : Error   : Unexpected token '}'\n" )
-		fail = true;
+	{
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
+	}
 
 	engine->Release();
 

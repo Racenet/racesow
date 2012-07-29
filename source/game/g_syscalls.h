@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2002-2003 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #ifdef GAME_HARD_LINKED
 #define GAME_IMPORT gi_imp_local
@@ -84,14 +84,9 @@ static inline unsigned int trap_Milliseconds( void )
 	return GAME_IMPORT.Milliseconds();
 }
 
-static inline qboolean trap_inPVS( vec3_t p1, vec3_t p2 )
+static inline qboolean trap_inPVS( const vec3_t p1, const vec3_t p2 )
 {
 	return GAME_IMPORT.inPVS( p1, p2 );
-}
-
-static inline qboolean trap_inPHS( vec3_t p1, vec3_t p2 )
-{
-	return GAME_IMPORT.inPHS( p1, p2 );
 }
 
 static inline int trap_CM_TransformedPointContents( vec3_t p, struct cmodel_s *cmodel, vec3_t origin, vec3_t angles )
@@ -127,6 +122,11 @@ static inline void trap_CM_InlineModelBounds( struct cmodel_s *cmodel, vec3_t mi
 static inline struct cmodel_s *trap_CM_ModelForBBox( vec3_t mins, vec3_t maxs )
 {
 	return GAME_IMPORT.CM_ModelForBBox( mins, maxs );
+}
+
+static inline struct cmodel_s *trap_CM_OctagonModelForBBox( vec3_t mins, vec3_t maxs )
+{
+	return GAME_IMPORT.CM_OctagonModelForBBox( mins, maxs );
 }
 
 static inline void trap_CM_SetAreaPortalState( int area, int otherarea, qboolean open )
@@ -320,6 +320,11 @@ static inline const char *trap_FS_FirstExtension( const char *filename, const ch
 	return GAME_IMPORT.FS_FirstExtension( filename, extensions, num_extensions );
 }
 
+static inline qboolean trap_FS_MoveFile( const char *src, const char *dst )
+{
+	return GAME_IMPORT.FS_MoveFile( src, dst );
+}
+
 static inline qboolean trap_ML_Update( void )
 {
 	return GAME_IMPORT.ML_Update();
@@ -375,4 +380,18 @@ static inline struct angelwrap_api_s *trap_asGetAngelExport( void )
 	return GAME_IMPORT.asGetAngelExport();
 }
 
+// Matchmaking
+static inline struct stat_query_api_s *trap_GetStatQueryAPI( void )
+{
+	return GAME_IMPORT.GetStatQueryAPI();
+}
 
+static inline void trap_MM_SendQuery( struct stat_query_s *query )
+{
+	GAME_IMPORT.MM_SendQuery( query );
+}
+
+static inline void trap_MM_GameState( qboolean state )
+{
+	GAME_IMPORT.MM_GameState( state );
+}

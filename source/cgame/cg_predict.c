@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "cg_local.h"
 
@@ -29,9 +29,9 @@ static qboolean	cg_triggersListTriggered[MAX_PARSE_ENTITIES];
 
 static qboolean ucmdReady = qfalse;
 
-//=================
-//CG_PredictedEvent - shared code can fire events during prediction
-//=================
+/*
+* CG_PredictedEvent - shared code can fire events during prediction
+*/
 void CG_PredictedEvent( int entNum, int ev, int parm )
 {
 	if( ev >= PREDICTABLE_EVENTS_MAX )
@@ -63,9 +63,9 @@ void CG_Predict_ChangeWeapon( int new_weapon )
 	}
 }
 
-//===================
-//CG_CheckPredictionError
-//===================
+/*
+* CG_CheckPredictionError
+*/
 void CG_CheckPredictionError( void )
 {
 	int delta[3];
@@ -96,9 +96,9 @@ void CG_CheckPredictionError( void )
 	}
 }
 
-//====================
-//CG_BuildSolidList
-//====================
+/*
+* CG_BuildSolidList
+*/
 void CG_BuildSolidList( void )
 {
 	int i;
@@ -144,9 +144,9 @@ void CG_BuildSolidList( void )
 	}
 }
 
-//====================
-//CG_ClipEntityContact
-//====================
+/*
+* CG_ClipEntityContact
+*/
 static qboolean CG_ClipEntityContact( vec3_t origin, vec3_t mins, vec3_t maxs, int entNum )
 {
 	centity_t *cent;
@@ -186,9 +186,9 @@ static qboolean CG_ClipEntityContact( vec3_t origin, vec3_t mins, vec3_t maxs, i
 	return tr.startsolid || tr.allsolid;
 }
 
-//====================
-//CG_Predict_TouchTriggers
-//====================
+/*
+* CG_Predict_TouchTriggers
+*/
 void CG_Predict_TouchTriggers( pmove_t *pm )
 {
 	int i;
@@ -218,9 +218,9 @@ void CG_Predict_TouchTriggers( pmove_t *pm )
 	}
 }
 
-//====================
-//CG_ClipMoveToEntities
-//====================
+/*
+* CG_ClipMoveToEntities
+*/
 static void CG_ClipMoveToEntities( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int ignore, int contentmask, trace_t *tr )
 {
 	int i, x, zd, zu;
@@ -261,7 +261,11 @@ static void CG_ClipMoveToEntities( vec3_t start, vec3_t mins, vec3_t maxs, vec3_
 
 			VectorCopy( ent->origin, origin );
 			VectorClear( angles ); // boxes don't rotate
-			cmodel = trap_CM_ModelForBBox( bmins, bmaxs );
+
+			if( ent->type == ET_PLAYER || ent->type == ET_CORPSE )
+				cmodel = trap_CM_OctagonModelForBBox( bmins, bmaxs );
+			else
+				cmodel = trap_CM_ModelForBBox( bmins, bmaxs );
 		}
 
 		trap_CM_TransformedBoxTrace( &trace, start, end, mins, maxs, cmodel, contentmask, origin, angles );
@@ -280,9 +284,9 @@ static void CG_ClipMoveToEntities( vec3_t start, vec3_t mins, vec3_t maxs, vec3_
 	}
 }
 
-//================
-//CG_Trace
-//================
+/*
+* CG_Trace
+*/
 void CG_Trace( trace_t *t, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int ignore, int contentmask )
 {
 	// check against world
@@ -295,9 +299,9 @@ void CG_Trace( trace_t *t, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, i
 	CG_ClipMoveToEntities( start, mins, maxs, end, ignore, contentmask, t );
 }
 
-//================
-//CG_PointContents
-//================
+/*
+* CG_PointContents
+*/
 int CG_PointContents( vec3_t point )
 {
 	int i;
@@ -323,9 +327,9 @@ int CG_PointContents( vec3_t point )
 
 
 static float predictedSteps[CMD_BACKUP]; // for step smoothing
-//=================
-//CG_PredictAddStep
-//=================
+/*
+* CG_PredictAddStep
+*/
 static void CG_PredictAddStep( int virtualtime, int predictiontime, float stepSize )
 {
 
@@ -343,9 +347,9 @@ static void CG_PredictAddStep( int virtualtime, int predictiontime, float stepSi
 	cg.predictedStepTime = cg.realTime - ( predictiontime - virtualtime );
 }
 
-//=================
-//CG_PredictSmoothSteps
-//=================
+/*
+* CG_PredictSmoothSteps
+*/
 static void CG_PredictSmoothSteps( void )
 {
 	int outgoing;
@@ -383,11 +387,11 @@ static void CG_PredictSmoothSteps( void )
 	}
 }
 
-//=================
-//CG_PredictMovement
-//
-//Sets cg.predictedVelocty, cg.predictedOrigin and cg.predictedAngles
-//=================
+/*
+* CG_PredictMovement
+* 
+* Sets cg.predictedVelocty, cg.predictedOrigin and cg.predictedAngles
+*/
 void CG_PredictMovement( void )
 {
 	int ucmdExecuted, ucmdHead;

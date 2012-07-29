@@ -32,77 +32,63 @@ ssl:
 
 borland:
 	cd lib
-	make -f Makefile.b32
+	$(MAKE) -f Makefile.b32
 	cd ..\src
-	make -f Makefile.b32
+	$(MAKE) -f Makefile.b32
 
 borland-ssl:
 	cd lib
-	make -f Makefile.b32 WITH_SSL=1
+	$(MAKE) -f Makefile.b32 WITH_SSL=1
 	cd ..\src
-	make -f Makefile.b32 WITH_SSL=1
+	$(MAKE) -f Makefile.b32 WITH_SSL=1
 
 borland-ssl-zlib:
 	cd lib
-	make -f Makefile.b32 WITH_SSL=1 WITH_ZLIB=1
+	$(MAKE) -f Makefile.b32 WITH_SSL=1 WITH_ZLIB=1
 	cd ..\src
-	make -f Makefile.b32 WITH_SSL=1 WITH_ZLIB=1
+	$(MAKE) -f Makefile.b32 WITH_SSL=1 WITH_ZLIB=1
 
 borland-clean:
 	cd lib
-	make -f Makefile.b32 clean
+	$(MAKE) -f Makefile.b32 clean
 	cd ..\src
-	make -f Makefile.b32 clean
+	$(MAKE) -f Makefile.b32 clean
 
 watcom: .SYMBOLIC
-	cd lib
-	wmake -u -f Makefile.Watcom
-	cd ..\src
-	wmake -u -f Makefile.Watcom
+	cd lib && $(MAKE) -u -f Makefile.Watcom
+	cd src && $(MAKE) -u -f Makefile.Watcom
 
 watcom-clean: .SYMBOLIC
-	cd lib
-	wmake -u -f Makefile.Watcom clean
-	cd ..\src
-	wmake -u -f Makefile.Watcom clean
+	cd lib && $(MAKE) -u -f Makefile.Watcom clean
+	cd src && $(MAKE) -u -f Makefile.Watcom clean
 
 watcom-vclean: .SYMBOLIC
-	cd lib
-	wmake -u -f Makefile.Watcom vclean
-	cd ..\src
-	wmake -u -f Makefile.Watcom vclean
+	cd lib && $(MAKE) -u -f Makefile.Watcom vclean
+	cd src && $(MAKE) -u -f Makefile.Watcom vclean
 
 mingw32:
 	$(MAKE) -C lib -f Makefile.m32
 	$(MAKE) -C src -f Makefile.m32
 
-mingw32-zlib:
-	$(MAKE) -C lib -f Makefile.m32 ZLIB=1
-	$(MAKE) -C src -f Makefile.m32 ZLIB=1
-
-mingw32-ssl-zlib:
-	$(MAKE) -C lib -f Makefile.m32 SSL=1 ZLIB=1
-	$(MAKE) -C src -f Makefile.m32 SSL=1 ZLIB=1
-
-mingw32-ssh2-ssl-zlib:
-	$(MAKE) -C lib -f Makefile.m32 SSH2=1 SSL=1 ZLIB=1
-	$(MAKE) -C src -f Makefile.m32 SSH2=1 SSL=1 ZLIB=1
-
-mingw32-ssh2-ssl-sspi-zlib:
-	$(MAKE) -C lib -f Makefile.m32 SSH2=1 SSL=1 SSPI=1 ZLIB=1
-	$(MAKE) -C src -f Makefile.m32 SSH2=1 SSL=1 SSPI=1 ZLIB=1
-
 mingw32-clean:
 	$(MAKE) -C lib -f Makefile.m32 clean
 	$(MAKE) -C src -f Makefile.m32 clean
 
-vc-clean:
+mingw32-vclean mingw32-distclean:
+	$(MAKE) -C lib -f Makefile.m32 vclean
+	$(MAKE) -C src -f Makefile.m32 vclean
+
+mingw32%:
+	$(MAKE) -C lib -f Makefile.m32 CFG=$@
+	$(MAKE) -C src -f Makefile.m32 CFG=$@
+
+vc-clean: $(VC)
 	cd lib
 	nmake -f Makefile.$(VC) clean
 	cd ..\src
 	nmake -f Makefile.$(VC) clean
 
-vc-all:
+vc-all: $(VC)
 	cd lib
 	nmake -f Makefile.$(VC) cfg=release
 	nmake -f Makefile.$(VC) cfg=release-ssl
@@ -127,85 +113,85 @@ vc-all:
 	nmake -f Makefile.$(VC) cfg=debug-dll-zlib-dll
 	nmake -f Makefile.$(VC) cfg=debug-dll-ssl-dll-zlib-dll
 
-vc:
+vc: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release
 	cd ..\src
 	nmake /f Makefile.$(VC)
 
-vc-x64:
+vc-x64: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) MACHINE=x64 cfg=release
 	cd ..\src
 	nmake /f Makefile.$(VC) MACHINE=x64 cfg=release
 
-vc-zlib:
+vc-zlib: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-zlib
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-zlib
 
-vc-ssl:
+vc-ssl: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-ssl
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-ssl
 
-vc-ssl-zlib:
+vc-ssl-zlib: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-ssl-zlib
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-ssl-zlib
 
-vc-x64-ssl-zlib:
+vc-x64-ssl-zlib: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) MACHINE=x64 cfg=release-ssl-zlib
 	cd ..\src
 	nmake /f Makefile.$(VC) MACHINE=x64 cfg=release-ssl-zlib
 
-vc-ssl-dll:
+vc-ssl-dll: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-ssl-dll
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-ssl-dll
 
-vc-dll-ssl-dll:
+vc-dll-ssl-dll: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-dll-ssl-dll
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-dll-ssl-dll
 
-vc-dll:
+vc-dll: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-dll
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-dll
 
-vc-dll-zlib-dll:
+vc-dll-zlib-dll: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-dll-zlib-dll
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-dll-zlib-dll
 
-vc-dll-ssl-dll-zlib-dll:
+vc-dll-ssl-dll-zlib-dll: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-dll-ssl-dll-zlib-dll
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-dll-ssl-dll-zlib-dll
 
-vc-ssl-dll-zlib-dll:
+vc-ssl-dll-zlib-dll: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-ssl-dll-zlib-dll
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-ssl-dll-zlib-dll
 
-vc-zlib-dll:
+vc-zlib-dll: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release-zlib-dll
 	cd ..\src
 	nmake /f Makefile.$(VC) cfg=release-zlib-dll
 
-vc-sspi:
+vc-sspi: $(VC)
 	cd lib
 	nmake /f Makefile.$(VC) cfg=release WINDOWS_SSPI=1
 	cd ..\src
@@ -267,6 +253,8 @@ linux: all
 
 linux-ssl: ssl
 
+# We don't need to do anything for vc6.
+vc6:
 
 vc8: lib/Makefile.vc8 src/Makefile.vc8
 
@@ -288,6 +276,17 @@ lib/Makefile.vc9: lib/Makefile.vc6
 src/Makefile.vc9: src/Makefile.vc6
 	@echo "generate $@"
 	@sed -e "s#/GX /DWIN32 /YX#/EHsc /DWIN32#" -e "s#/GZ#/RTC1#" -e "s/ws2_32.lib/ws2_32.lib/g" -e "s/vc6/vc9/g" -e "s/VC6/VC9/g" src/Makefile.vc6 > src/Makefile.vc9
+
+# VC10 makefiles are for use with VS2010
+vc10: lib/Makefile.vc10 src/Makefile.vc10
+
+lib/Makefile.vc10: lib/Makefile.vc6
+	@echo "generate $@"
+	@sed -e "s#/GX /DWIN32 /YX#/EHsc /DWIN32#" -e "s#/GZ#/RTC1#" -e "s/ws2_32.lib/ws2_32.lib/g" -e "s/vc6/vc10/g" -e "s/VC6/VC10/g" lib/Makefile.vc6 > lib/Makefile.vc10
+
+src/Makefile.vc10: src/Makefile.vc6
+	@echo "generate $@"
+	@sed -e "s#/GX /DWIN32 /YX#/EHsc /DWIN32#" -e "s#/GZ#/RTC1#" -e "s/ws2_32.lib/ws2_32.lib/g" -e "s/vc6/vc10/g" -e "s/VC6/VC10/g" src/Makefile.vc6 > src/Makefile.vc10
 
 ca-bundle: lib/mk-ca-bundle.pl
 	@echo "generate a fresh ca-bundle.crt"

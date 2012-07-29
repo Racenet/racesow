@@ -40,19 +40,17 @@ weaponinfo_t cg_pWeaponModelInfos[WEAP_TOTAL];
 static char *wmPartSufix[] = { "", "_expansion", "_barrel", "_flash", "_hand", NULL };
 
 /*
-===============
-CG_vWeap_ParseAnimationScript
-
-script:
-0 = first frame
-1 = lastframe/number of frames
-2 = looping frames
-3 = frame time
-
-keywords:
-"islastframe":Will read the second value of each animation as lastframe (usually means numframes)
-"rotationscale": value witch will scale the barrel rotation speed
-===============
+* CG_vWeap_ParseAnimationScript
+* 
+* script:
+* 0 = first frame
+* 1 = lastframe/number of frames
+* 2 = looping frames
+* 3 = frame time
+* 
+* keywords:
+* "islastframe":Will read the second value of each animation as lastframe (usually means numframes)
+* "rotationscale": value witch will scale the barrel rotation speed
 */
 static qboolean CG_vWeap_ParseAnimationScript( weaponinfo_t *weaponinfo, char *filename )
 {
@@ -86,7 +84,6 @@ static qboolean CG_vWeap_ParseAnimationScript( weaponinfo_t *weaponinfo, char *f
 	trap_FS_Read( buf, length, filenum );
 	trap_FS_FCloseFile( filenum );
 
-
 	if( !buf )
 	{
 		CG_Free( buf );
@@ -95,6 +92,8 @@ static qboolean CG_vWeap_ParseAnimationScript( weaponinfo_t *weaponinfo, char *f
 
 	if( debug )
 		CG_Printf( "%sLoading weapon animation script:%s%s\n", S_COLOR_BLUE, filename, S_COLOR_WHITE );
+
+	memset( anim_data, 0, sizeof( anim_data ) );
 
 	//proceed
 	ptr = ( char * )buf;
@@ -270,9 +269,7 @@ static qboolean CG_vWeap_ParseAnimationScript( weaponinfo_t *weaponinfo, char *f
 }
 
 /*
-===============
-CG_LoadHandAnimations
-===============
+* CG_LoadHandAnimations
 */
 static void CG_CreateHandDefaultAnimations( weaponinfo_t *weaponinfo )
 {
@@ -310,14 +307,12 @@ static void CG_CreateHandDefaultAnimations( weaponinfo_t *weaponinfo )
 }
 
 /*
-===============
-CG_BuildProjectionOrigin
-store the orientation_t closer to the tag_flash we can create,
-or create one using an offset we consider acceptable.
-NOTE: This tag will ignore weapon models animations. You'd have to
-do it in realtime to use it with animations. Or be careful on not
-moving the weapon too much
-===============
+* CG_BuildProjectionOrigin
+* store the orientation_t closer to the tag_flash we can create,
+* or create one using an offset we consider acceptable.
+* NOTE: This tag will ignore weapon models animations. You'd have to
+* do it in realtime to use it with animations. Or be careful on not
+* moving the weapon too much
 */
 static void CG_BuildProjectionOrigin( weaponinfo_t *weaponinfo )
 {
@@ -371,9 +366,7 @@ static void CG_BuildProjectionOrigin( weaponinfo_t *weaponinfo )
 }
 
 /*
-===============
-CG_WeaponModelUpdateRegistration
-===============
+* CG_WeaponModelUpdateRegistration
 */
 static qboolean CG_WeaponModelUpdateRegistration( weaponinfo_t *weaponinfo, char *filename )
 {
@@ -391,7 +384,7 @@ static qboolean CG_WeaponModelUpdateRegistration( weaponinfo_t *weaponinfo, char
 		// skm
 		if( !weaponinfo->model[p] )
 		{
-			Q_snprintfz( scratch, sizeof( scratch ), "models/weapons/%s%s.skm", filename, wmPartSufix[p] );
+			Q_snprintfz( scratch, sizeof( scratch ), "models/weapons/%s%s.iqm", filename, wmPartSufix[p] );
 			weaponinfo->model[p] = CG_RegisterModel( scratch );
 		}
 	}
@@ -425,11 +418,9 @@ static qboolean CG_WeaponModelUpdateRegistration( weaponinfo_t *weaponinfo, char
 }
 
 /*
-===============
-CG_FindWeaponModelSpot
-
-Stored names format is without extension, like this: "rocketl/rocketl"
-===============
+* CG_FindWeaponModelSpot
+* 
+* Stored names format is without extension, like this: "rocketl/rocketl"
 */
 static struct weaponinfo_s *CG_FindWeaponModelSpot( char *filename )
 {
@@ -464,9 +455,7 @@ static struct weaponinfo_s *CG_FindWeaponModelSpot( char *filename )
 }
 
 /*
-===============
-CG_RegisterWeaponModel
-===============
+* CG_RegisterWeaponModel
 */
 struct weaponinfo_s *CG_RegisterWeaponModel( char *cgs_name, int weaponTag )
 {
@@ -511,15 +500,13 @@ struct weaponinfo_s *CG_RegisterWeaponModel( char *cgs_name, int weaponTag )
 
 
 /*
-===============
-CG_CreateWeaponZeroModel
-
-we can't allow NULL weaponmodels to be passed to the viewweapon.
-They will produce crashes because the lack of animation script.
-We need to have at least one weaponinfo with a script to be used
-as a replacement, so, weapon 0 will have the animation script
-even if the registration failed
-===============
+* CG_CreateWeaponZeroModel
+* 
+* we can't allow NULL weaponmodels to be passed to the viewweapon.
+* They will produce crashes because the lack of animation script.
+* We need to have at least one weaponinfo with a script to be used
+* as a replacement, so, weapon 0 will have the animation script
+* even if the registration failed
 */
 struct weaponinfo_s *CG_CreateWeaponZeroModel( char *filename )
 {
@@ -550,9 +537,7 @@ struct weaponinfo_s *CG_CreateWeaponZeroModel( char *filename )
 //======================================================================
 
 /*
-===============
-CG_GetWeaponFromClientIndex
-===============
+* CG_GetWeaponFromClientIndex
 */
 struct weaponinfo_s *CG_GetWeaponInfo( int weapon )
 {

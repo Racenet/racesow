@@ -189,6 +189,12 @@ typedef struct
 	cgs_media_handle_t *sfxPlasmaWeakHit;
 	cgs_media_handle_t *sfxPlasmaStrongHit;
 
+	// Lasergun sounds
+	cgs_media_handle_t *sfxLasergunWeakHum;
+	cgs_media_handle_t *sfxLasergunWeakQuadHum;
+	cgs_media_handle_t *sfxLasergunStrongHum;
+	cgs_media_handle_t *sfxLasergunStrongQuadHum;
+
 	cgs_media_handle_t *sfxQuadFireSound;
 
 	// VSAY sounds
@@ -241,6 +247,7 @@ typedef struct
 	cgs_media_handle_t *shaderCartoonHit;
 	cgs_media_handle_t *shaderCartoonHit2;
 	cgs_media_handle_t *shaderCartoonHit3;
+	cgs_media_handle_t *shaderTeamMateIndicator;
 	cgs_media_handle_t *shaderTeleporterSmokePuff;
 	cgs_media_handle_t *shaderBulletMark;
 	cgs_media_handle_t *shaderExplosionMark;
@@ -270,6 +277,7 @@ typedef struct
 	cgs_media_handle_t *shaderElectroBeamBBeta;
 	cgs_media_handle_t *shaderInstaBeam;
 	cgs_media_handle_t *shaderLaserGunBeam;
+	cgs_media_handle_t *shaderLaserGunBeamOld;
 	cgs_media_handle_t *shaderElectroboltMark;
 	cgs_media_handle_t *shaderInstagunMark;
 
@@ -407,6 +415,8 @@ typedef struct
 // this is not exactly "static" but still...
 typedef struct
 {
+	const char *serverName;
+	const char *demoName;
 	unsigned int playerNum;
 
 	// shaders
@@ -444,6 +454,8 @@ typedef struct
 	// locally derived information from server state
 	//
 	char configStrings[MAX_CONFIGSTRINGS][MAX_CONFIGSTRING_CHARS];
+
+	qboolean hasGametypeMenu;
 
 	char weaponModels[WEAP_TOTAL][MAX_QPATH];
 	int numWeaponModels;
@@ -537,6 +549,7 @@ typedef struct
 	vec3_t lightingOrigin;
 
 	qboolean showScoreboard;            // demos and multipov
+	qboolean specStateChanged;
 
 	unsigned int multiviewPlayerNum;       // for multipov chasing, takes effect on next snap
 
@@ -595,6 +608,9 @@ extern cg_state_t cg;
 
 #define ISVIEWERENTITY( entNum )  ( ( cg.predictedPlayerState.POVnum > 0 ) && ( (int)cg.predictedPlayerState.POVnum == entNum ) && ( cg.view.type == VIEWDEF_PLAYERVIEW ) )
 #define ISBRUSHMODEL( x ) ( ( ( x > 0 ) && ( (int)x < trap_CM_NumInlineModels() ) ) ? qtrue : qfalse )
+
+#define ISREALSPECTATOR()		(cg.frame.playerState.stats[STAT_REALTEAM] == TEAM_SPECTATOR)
+#define SPECSTATECHANGED()		((cg.frame.playerState.stats[STAT_REALTEAM] == TEAM_SPECTATOR) != (cg.oldFrame.playerState.stats[STAT_REALTEAM] == TEAM_SPECTATOR))
 
 extern centity_t cg_entities[MAX_EDICTS];
 
@@ -716,9 +732,12 @@ int CG_ParseValue( const char **s );
 
 void CG_DrawClock( int x, int y, int align, struct mufont_s *font, vec4_t color );
 void CG_DrawPlayerNames( struct mufont_s *font, vec4_t color );
+void CG_DrawTeamMates( void );
 void CG_DrawHUDNumeric( int x, int y, int align, float *color, int charwidth, int charheight, int value );
 void CG_DrawTeamInfo( int x, int y, int align, struct mufont_s *font, vec4_t color );
 void CG_DrawNet( int x, int y, int w, int h, int align, vec4_t color );
+
+void CG_GameMenu_f( void );
 
 //
 // cg_hud.c
@@ -726,6 +745,7 @@ void CG_DrawNet( int x, int y, int w, int h, int align, vec4_t color );
 extern cvar_t *cg_showminimap;
 extern cvar_t *cg_showitemtimers;
 extern cvar_t *cg_placebo;
+extern cvar_t *cg_strafeHUD;
 
 void CG_SC_Obituary( void );
 void Cmd_CG_PrintHudHelp_f( void );
@@ -783,7 +803,6 @@ extern cvar_t *cg_rocketFireTrailAlpha;
 extern cvar_t *cg_grenadeTrailAlpha;
 extern cvar_t *cg_bloodTrailAlpha;
 
-extern cvar_t *cg_cartoonRockets;
 extern cvar_t *cg_cartoonEffects;
 extern cvar_t *cg_cartoonHitEffect;
 
@@ -833,16 +852,16 @@ extern cvar_t *cg_forceTeamPlayersTeamBeta;
 
 extern cvar_t *cg_teamColoredBeams;
 
-extern cvar_t *cg_demoname;
-
 extern cvar_t *cg_playList;
 extern cvar_t *cg_playListShuffle;
+
+extern cvar_t *cg_flashWindowCount;
 
 #define CG_Malloc( size ) trap_MemAlloc( size, __FILE__, __LINE__ )
 #define CG_Free( data ) trap_MemFree( data, __FILE__, __LINE__ )
 
 int CG_API( void );
-void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demoplaying, qboolean pure, unsigned int snapFrameTime, int protocol, int sharedSeed );
+void CG_Init( const char *serverName, unsigned int playerNum, int vidWidth, int vidHeight, qboolean demoplaying, const char *demoName, qboolean pure, unsigned int snapFrameTime, int protocol, int sharedSeed );
 void CG_Shutdown( void );
 void CG_ValidateItemDef( int tag, char *name );
 void CG_Printf( const char *format, ... );
@@ -858,7 +877,7 @@ void CG_RegisterDemoCommands( void );
 void CG_UnregisterDemoCommands( void );
 void CG_UpdateTVServerString( void );
 void CG_AddAward( const char *str );
-void CG_OverrideWeapondef( int index, char *cstring );
+void CG_OverrideWeapondef( int index, const char *cstring );
 
 void CG_StartBackgroundTrack( void );
 void CG_LocalPrint( qboolean team, const char *format, ... );
@@ -866,9 +885,9 @@ void CG_LocalPrint( qboolean team, const char *format, ... );
 //
 // cg_svcmds.c
 //
-void CG_Cmd_DemoGet_f( void );
-void CG_ConfigString( int i, char *s );
+void CG_ConfigString( int i, const char *s );
 void CG_GameCommand( const char *command );
+void CG_SC_AutoRecordAction( const char *action );
 
 //
 // cg_teams.c
@@ -962,6 +981,7 @@ extern cvar_t *cg_ebbeam_time;
 extern cvar_t *cg_instabeam_width;
 extern cvar_t *cg_instabeam_alpha;
 extern cvar_t *cg_instabeam_time;
+extern cvar_t *cg_lgbeam_old;
 
 void CG_ClearPolys( void );
 void CG_AddPolys( void );
@@ -1005,6 +1025,7 @@ void CG_AddFragmentedDecal( vec3_t origin, vec3_t dir, float orient, float radiu
 void CG_AddParticles( void );
 void CG_ParticleEffect( vec3_t org, vec3_t dir, float r, float g, float b, int count );
 void CG_ParticleEffect2( vec3_t org, vec3_t dir, float r, float g, float b, int count );
+void CG_ParticleExplosionEffect( vec3_t org, vec3_t dir, float r, float g, float b, int count );
 void CG_BlasterTrail( vec3_t start, vec3_t end );
 void CG_FlyEffect( centity_t *ent, vec3_t origin );
 void CG_ElectroIonsTrail( vec3_t start, vec3_t end );

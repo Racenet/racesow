@@ -49,6 +49,8 @@ typedef vec_t vec5_t[5];
 
 typedef vec_t quat_t[4];
 
+typedef vec_t dualquat_t[8];
+
 typedef qbyte byte_vec4_t[4];
 
 // 0-2 are axial planes
@@ -134,6 +136,8 @@ int	Q_rand( int *seed );
 float	Q_RSqrt( float number );
 int	Q_log2( int val );
 
+int Q_bitcount( int v );
+
 #define NEARESTEXPOF2(x)  ((int)floor( ( log( max( (x), 1 ) ) - log( 1.5 ) ) / log( 2 ) + 1 ))
 
 #define SQRTFAST( x ) ( ( x ) * Q_RSqrt( x ) ) // jal : //The expression a * rsqrt(b) is intended as a higher performance alternative to a / sqrt(b). The two expressions are comparably accurate, but do not compute exactly the same value in every case. For example, a * rsqrt(a*a + b*b) can be just slightly greater than 1, in rare cases.
@@ -152,7 +156,8 @@ int	Q_log2( int val );
 #define VectorAvg( a, b, c )	    ( ( c )[0] = ( ( a )[0]+( b )[0] )*0.5f, ( c )[1] = ( ( a )[1]+( b )[1] )*0.5f, ( c )[2] = ( ( a )[2]+( b )[2] )*0.5f )
 #define VectorMA( a, b, c, d )	     ( ( d )[0] = ( a )[0]+( b )*( c )[0], ( d )[1] = ( a )[1]+( b )*( c )[1], ( d )[2] = ( a )[2]+( b )*( c )[2] )
 #define VectorCompare( v1, v2 )	   ( ( v1 )[0] == ( v2 )[0] && ( v1 )[1] == ( v2 )[1] && ( v1 )[2] == ( v2 )[2] )
-#define VectorLength( v )	  ( sqrt( DotProduct( ( v ), ( v ) ) ) )
+#define VectorLengthSquared( v )	( DotProduct( ( v ), ( v ) ) )
+#define VectorLength( v )	  ( sqrt( VectorLengthSquared( v ) ) )
 #define VectorInverse( v )	  ( ( v )[0] = -( v )[0], ( v )[1] = -( v )[1], ( v )[2] = -( v )[2] )
 #define VectorLerp( a, c, b, v )     ( ( v )[0] = ( a )[0]+( c )*( ( b )[0]-( a )[0] ), ( v )[1] = ( a )[1]+( c )*( ( b )[1]-( a )[1] ), ( v )[2] = ( a )[2]+( c )*( ( b )[2]-( a )[2] ) )
 #define VectorScale( in, scale, out ) ( ( out )[0] = ( in )[0]*( scale ), ( out )[1] = ( in )[1]*( scale ), ( out )[2] = ( in )[2]*( scale ) )
@@ -168,14 +173,19 @@ int	Q_log2( int val );
 #define Vector2Avg( a, b, c )	    ( ( c )[0] = ( ( ( a[0] )+( b[0] ) )*0.5f ), ( c )[1] = ( ( ( a[1] )+( b[1] ) )*0.5f ) )
 
 #define Vector4Set( v, a, b, c, d )   ( ( v )[0] = ( a ), ( v )[1] = ( b ), ( v )[2] = ( c ), ( v )[3] = ( d ) )
+#define Vector4Clear( a )	  ( ( a )[0] = ( a )[1] = ( a )[2] = ( a )[3] = 0 )
 #define Vector4Copy( a, b )	   ( ( b )[0] = ( a )[0], ( b )[1] = ( a )[1], ( b )[2] = ( a )[2], ( b )[3] = ( a )[3] )
 #define Vector4Scale( in, scale, out )	    ( ( out )[0] = ( in )[0]*scale, ( out )[1] = ( in )[1]*scale, ( out )[2] = ( in )[2]*scale, ( out )[3] = ( in )[3]*scale )
-#define Vector4Add( a, b, c )	    ( ( c )[0] = ( ( ( a[0] )+( b[0] ) ) ), ( c )[1] = ( ( ( a[1] )+( b[1] ) ) ), ( c )[2] = ( ( ( a[2] )+( b[2] ) ) ), ( c )[3] = ( ( ( a[3] )+( b[3] ) ) ) )
-#define Vector4Avg( a, b, c )	    ( ( c )[0] = ( ( ( a[0] )+( b[0] ) )*0.5f ), ( c )[1] = ( ( ( a[1] )+( b[1] ) )*0.5f ), ( c )[2] = ( ( ( a[2] )+( b[2] ) )*0.5f ), ( c )[3] = ( ( ( a[3] )+( b[3] ) )*0.5f ) )
+#define Vector4Add( a, b, c )	    ( ( c )[0] = ( ( ( (a)[0] )+( (b)[0] ) ) ), ( c )[1] = ( ( ( (a)[1] )+( (b)[1] ) ) ), ( c )[2] = ( ( ( (a)[2] )+( (b)[2] ) ) ), ( c )[3] = ( ( ( (a)[3] )+( (b)[3] ) ) ) )
+#define Vector4Avg( a, b, c )	    ( ( c )[0] = ( ( ( (a)[0] )+( (b)[0] ) )*0.5f ), ( c )[1] = ( ( ( (a)[1] )+( (b)[1] ) )*0.5f ), ( c )[2] = ( ( ( (a)[2] )+ (b)[2] ) )*0.5f ), ( c )[3] = ( ( ( (a)[3] )+( (b)[3] ) )*0.5f ) )
+#define Vector4Negate( a, b )	   ( ( b )[0] = -( a )[0], ( b )[1] = -( a )[1], ( b )[2] = -( a )[2], ( b )[3] = -( a )[3] )
+#define Vector4Inverse( v )			( ( v )[0] = -( v )[0], ( v )[1] = -( v )[1], ( v )[2] = -( v )[2], ( v )[3] = -( v )[3] )
 
 vec_t VectorNormalize( vec3_t v );       // returns vector length
 vec_t VectorNormalize2( const vec3_t v, vec3_t out );
 void  VectorNormalizeFast( vec3_t v );
+
+vec_t Vector4Normalize( vec4_t v );      // returns vector length
 
 // just in case you do't want to use the macros
 void _VectorMA( const vec3_t veca, float scale, const vec3_t vecb, vec3_t vecc );
@@ -213,6 +223,8 @@ void BuildBoxPoints( vec3_t p[8], const vec3_t org, const vec3_t mins, const vec
 
 vec_t ColorNormalize( const vec_t *in, vec_t *out );
 
+#define ColorGrayscale(c) (0.299 * (c)[0] + 0.587 * (c)[1] + 0.114 * (c)[2])
+
 float CalcFov( float fov_x, float width, float height );
 void AdjustFov( float *fov_x, float *fov_y, float width, float height, qboolean lock_x );
 
@@ -243,9 +255,12 @@ void SnapPlane( vec3_t normal, vec_t *dist );
 	:										\
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
 
-void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
+void ProjectPointOntoPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
 void PerpendicularVector( vec3_t dst, const vec3_t src );
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
+void ProjectPointOntoVector( const vec3_t point, const vec3_t vStart, const vec3_t vDir, vec3_t vProj );
+float DistanceFromLineSquared(const vec3_t p, const vec3_t lp1, const vec3_t lp2, const vec3_t dir);
+#define DistanceFromLine(p,lp1,lp2,dir) (sqrt(DistanceFromLineSquared(p,lp1,lp2,dir)))
 
 void Matrix_Identity( vec3_t m[3] );
 void Matrix_Copy( vec3_t m1[3], vec3_t m2[3] );
@@ -259,8 +274,10 @@ void Matrix_FromPoints( vec3_t v1, vec3_t v2, vec3_t v3, vec3_t m[3] );
 
 void Quat_Identity( quat_t q );
 void Quat_Copy( const quat_t q1, quat_t q2 );
+void Quat_Quat3( const vec3_t in, quat_t out );
 qboolean Quat_Compare( const quat_t q1, const quat_t q2 );
 void Quat_Conjugate( const quat_t q1, quat_t q2 );
+vec_t Quat_DotProduct( const quat_t q1, const quat_t q2 );
 vec_t Quat_Normalize( quat_t q );
 vec_t Quat_Inverse( const quat_t q1, quat_t q2 );
 void Quat_Multiply( const quat_t q1, const quat_t q2, quat_t out );
@@ -270,6 +287,48 @@ void Quat_Matrix( const quat_t q, vec3_t m[3] );
 void Matrix_Quat( vec3_t m[3], quat_t q );
 void Quat_TransformVector( const quat_t q, const vec3_t v, vec3_t out );
 void Quat_ConcatTransforms( const quat_t q1, const vec3_t v1, const quat_t q2, const vec3_t v2, quat_t q, vec3_t v );
+
+void DualQuat_Identity( dualquat_t dq );
+void DualQuat_Copy( const dualquat_t in, dualquat_t out );
+void DualQuat_FromAnglesAndVector( const vec3_t angles, const vec3_t v, dualquat_t out );
+void DualQuat_FromMatrixAndVector( vec3_t m[3], const vec3_t v, dualquat_t out );
+void DualQuat_FromQuatAndVector( const quat_t q, const vec3_t v, dualquat_t out );
+void DualQuat_FromQuat3AndVector( const vec3_t q, const vec3_t v, dualquat_t out );
+void DualQuat_GetVector( const dualquat_t dq, vec3_t v );
+void DualQuat_ToQuatAndVector( const dualquat_t dq, quat_t q, vec3_t v );
+void DualQuat_ToMatrixAndVector( const dualquat_t dq, vec3_t m[3], vec3_t v );
+void DualQuat_Invert( dualquat_t dq );
+vec_t DualQuat_Normalize( dualquat_t dq );
+void DualQuat_Multiply( const dualquat_t dq1, const dualquat_t dq2, dualquat_t out );
+void DualQuat_Lerp( const dualquat_t dq1, const dualquat_t dq2, vec_t t, dualquat_t out );
+
+vec_t LogisticCDF( vec_t x );
+vec_t LogisticPDF( vec_t x );
+vec_t NormalCDF( vec_t x );
+vec_t NormalPDF( vec_t x );
+
+//========================================
+
+#define _double2fixmagic (double)(68719476736.0*1.5);     //2^36 * 1.5,  (52-_shiftamt=36) uses limited precisicion to floor
+#define _shiftamt        16;                    //16.16 fixed point representation,
+
+static inline long _fast_ftol( double x )
+{
+#ifdef ENDIAN_LITTLE
+	x = x + _double2fixmagic;
+	return ((long*)&x)[0] >> _shiftamt;
+#elif defined ( ENDIAN_BIG )
+	x = x + _double2fixmagic;
+	return ((long*)&x)[1] >> _shiftamt;
+#else
+	return (long)x;
+#endif
+}
+
+static inline long fast_ftol( float x )
+{
+	return _fast_ftol( (double)x );
+}
 
 #ifdef __cplusplus
 };

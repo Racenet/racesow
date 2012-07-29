@@ -6,9 +6,9 @@
  * @version 0.6.2
  */
 
-cString[] entStorage(maxEntities);
+String[] entStorage(maxEntities);
 
-void addToEntStorage( int id, cString string)
+void addToEntStorage( int id, String string)
 {
 	int i = entStorage.length();
 	if( i < id )
@@ -35,11 +35,11 @@ bool TriggerWait( cEntity @ent, cEntity @activator )
 
 void replacementItem( cEntity @oldItem )
 {
-  	cVec3 min, max;
-	cEntity @ent = @G_SpawnEntity( oldItem.getClassname() );
+  	Vec3 min, max;
+	cEntity @ent = @G_SpawnEntity( oldItem.classname );
 	cItem @item = @G_GetItem( oldItem.item.tag );
 	@ent.item = @item;
-	ent.setOrigin( oldItem.getOrigin() );
+	ent.origin = oldItem.origin;
 	oldItem.getSize( min, max );
 	ent.setSize( min, max );
 	ent.type = ET_ITEM;
@@ -49,11 +49,11 @@ void replacementItem( cEntity @oldItem )
 	ent.spawnFlags = oldItem.spawnFlags;
 	ent.svflags &= ~SVF_NOCLIENT;
 	ent.style = oldItem.style;
-	ent.setTargetString( oldItem.getTargetString() );
-	ent.setTargetnameString( oldItem.getTargetnameString() );
-    ent.setupModel( oldItem.item.getModelString(), oldItem.item.getModel2String() );
+	ent.target = oldItem.target;
+	ent.targetname = oldItem.targetname;
+    ent.setupModel( oldItem.item.model, oldItem.item.model2 );
 	oldItem.solid = SOLID_NOT;
-	oldItem.setClassname( "ASmodel_" + ent.item.getClassname() );
+	oldItem.classname = "ASmodel_" + ent.item.classname;
 	ent.wait = oldItem.wait;
 
 	if( ent.wait > 0 )
@@ -66,6 +66,9 @@ void replacementItem( cEntity @oldItem )
         ent.skinNum = oldItem.skinNum;
         oldItem.freeEntity();
 	}
+	@ent.think = replacementItem_think;
+	@ent.touch = replacementItem_touch;
+	@ent.use = replacementItem_use;
 	ent.linkEntity();
 }
 
@@ -74,6 +77,9 @@ void replacementItem_think( cEntity @ent )
     ent.respawnEffect();
 }
 
+/*
+ * Soundfix
+ */
 void replacementItem_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
     if( ent.wait > 0 )
@@ -93,16 +99,17 @@ void replacementItem_use( cEntity @ent, cEntity @other, cEntity @activator )
  */
 void trigger_push_velocity( cEntity @ent )
 {
+	@ent.think = trigger_push_velocity_think;
 
 	//@ent.enemy = @ent.findTargetEntity( ent );
-	cString speed = G_SpawnTempValue("speed");
-	cString count = G_SpawnTempValue("count");
-	addToEntStorage( ent.entNum(), speed + " " + count );
+	String speed = G_SpawnTempValue("speed");
+	String count = G_SpawnTempValue("count");
+	addToEntStorage( ent.entNum, speed + " " + count );
 	ent.solid = SOLID_TRIGGER;
 	ent.moveType = MOVETYPE_NONE;
-    ent.setupModel(ent.getModelString());
+    ent.setupModel(ent.model);
 	ent.svflags &= ~SVF_NOCLIENT;
-	ent.svflags |= SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+	ent.svflags |= SVF_TRANSMITORIGIN2/*|SVF_NOCULLATORIGIN2 Removed in Warsow 0.7*/;
 	ent.wait = 1;
 	ent.linkEntity();
 }
@@ -119,7 +126,7 @@ int BIDIRECTIONAL_XY = 5;//non-playerdir velocity pads will function in 2 direct
 int BIDIRECTIONAL_Z = 6;//non-playerdir velocity pads will function in 2 directions based on the target specified.  The chosen direction is based on the current direction of travel.  Applies to vertical direction.
 int CLAMP_NEGATIVE_ADDS = 7;//adds negative velocity will be clamped to 0, if the resultant velocity would bounce the player in the opposite direction.
 
-void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 /*
 	-------- KEYS --------
@@ -135,20 +142,20 @@ void trigger_push_velocity_touch( cEntity @ent, cEntity @other, const cVec3 @pla
 	BIDIRECTIONAL_Z: if set, non-playerdir velocity pads will function in 2 directions based on the target specified.  The chosen direction is based on the current direction of travel.  Applies to vertical direction.
 	CLAMP_NEGATIVE_ADDS: if set, then a velocity pad that adds negative velocity will be clamped to 0, if the resultant velocity would bounce the player in the opposite direction.
 */
-	cVec3 dir, velocity;
+	Vec3 dir, velocity;
 	//if(( ent.spawnFlags & 1 ) == 0 )
-	velocity = other.getVelocity();
+	velocity = other.velocity;
 	if( velocity.length() == 0 || other.type != ET_PLAYER || other.moveType != MOVETYPE_PLAYER )
 		return;
 	if(TriggerWait( @ent, @other ))
 			return;
-	int speed = entStorage[ent.entNum()].getToken(0).toInt();
+	int speed = entStorage[ent.entNum].getToken(0).toInt();
 	if(velocity.x == 0 && velocity.y == 0)
 		return;
 	velocity.x += (speed * velocity.x)/sqrt(pow(velocity.x, 2) + pow(velocity.y, 2));
 	velocity.y += (speed * velocity.y)/sqrt(pow(velocity.x, 2) + pow(velocity.y, 2));
-	velocity.z += entStorage[ent.entNum()].getToken(1).toInt();
-	other.setVelocity( velocity );
+	velocity.z += entStorage[ent.entNum].getToken(1).toInt();
+	other.velocity = velocity;
 
 }
 
@@ -161,6 +168,8 @@ void target_teleporter_think( cEntity @ent )
 
 void target_teleporter( cEntity @ent )
 {
+	@ent.think = target_teleporter_think;
+	@ent.use = target_teleporter_use;
 	ent.nextThink = levelTime + 1; //set up the targets
 	ent.wait = 1;
 }
@@ -173,7 +182,7 @@ void target_teleporter_use( cEntity @ent, cEntity @other, cEntity @activator )
 			|| @Racesow_GetPlayerByClient( activator.client ) == null || !TriggerWait(@ent, @activator)
 			|| @ent.enemy == null)
 		return;
-	Racesow_GetPlayerByClient( activator.client ).teleport(ent.enemy.getOrigin(), ent.enemy.getAngles(), true, true);
+	Racesow_GetPlayerByClient( activator.client ).teleport(ent.enemy.origin, ent.enemy.angles, true, true);
 
 }
 
@@ -194,48 +203,50 @@ void target_delay_use( cEntity @self, cEntity @other, cEntity @activator )
 
 void target_delay( cEntity @ent ) {
 
+    @ent.think = target_delay_think;
+    @ent.use = target_delay_use;
     if ( ent.wait == 0 )
     {
         ent.wait = 1;
     }
 }
 
-cVar rs_plasmaweak_speed( "rs_plasmaweak_speed", "2400", CVAR_ARCHIVE );
-cVar rs_plasmaweak_knockback( "rs_plasmaweak_knockback", "14", CVAR_ARCHIVE );
-cVar rs_plasmaweak_splash( "rs_plasmaweak_splash", "45", CVAR_ARCHIVE );
-cVar rs_rocketweak_speed( "rs_rocketweak_speed", "1150", CVAR_ARCHIVE );
-cVar rs_rocketweak_knockback( "rs_rocketweak_knockback", "100", CVAR_ARCHIVE );
-cVar rs_rocketweak_splash( "rs_rocketweak_splash", "140", CVAR_ARCHIVE );
-cVar rs_grenadeweak_speed( "rs_grenadeweak_speed", "900", CVAR_ARCHIVE );
-cVar rs_grenadeweak_knockback( "rs_grenadeweak_knockback", "90", CVAR_ARCHIVE );
-cVar rs_grenadeweak_splash( "rs_grenadeweak_splash", "160", CVAR_ARCHIVE );
+Cvar rs_plasmaweak_speed( "rs_plasmaweak_speed", "2400", CVAR_ARCHIVE );
+Cvar rs_plasmaweak_knockback( "rs_plasmaweak_knockback", "14", CVAR_ARCHIVE );
+Cvar rs_plasmaweak_splash( "rs_plasmaweak_splash", "45", CVAR_ARCHIVE );
+Cvar rs_rocketweak_speed( "rs_rocketweak_speed", "1150", CVAR_ARCHIVE );
+Cvar rs_rocketweak_knockback( "rs_rocketweak_knockback", "100", CVAR_ARCHIVE );
+Cvar rs_rocketweak_splash( "rs_rocketweak_splash", "140", CVAR_ARCHIVE );
+Cvar rs_grenadeweak_speed( "rs_grenadeweak_speed", "900", CVAR_ARCHIVE );
+Cvar rs_grenadeweak_knockback( "rs_grenadeweak_knockback", "90", CVAR_ARCHIVE );
+Cvar rs_grenadeweak_splash( "rs_grenadeweak_splash", "160", CVAR_ARCHIVE );
 
 //==============
 //RS_UseShooter
 //==============
 void RS_UseShooter( cEntity @self, cEntity @other, cEntity @activator ) {
 
-	cVec3 dir;
-	cVec3 angles;
+	Vec3 dir;
+	Vec3 angles;
 
     if ( @self.enemy != null ) {
-        dir = self.enemy.getOrigin() - self.getOrigin();
+        dir = self.enemy.origin - self.origin;
         dir.normalize();
     } else {
-        self.getMovedir( dir );
+        dir = self.movedir;
         dir.normalize();
     }
-    dir.toAngles(angles);
+    angles = dir.toAngles();
 	switch ( self.weapon )
 	{
         case WEAP_GRENADELAUNCHER:
-        	G_FireGrenade( self.getOrigin(), angles, rs_grenadeweak_speed.getInteger(), 0, 65, rs_grenadeweak_knockback.getInteger(), 0, @activator );
+        	G_FireGrenade( self.origin, angles, rs_grenadeweak_speed.integer, 0, 65, rs_grenadeweak_knockback.integer, 0, @activator );
             break;
         case WEAP_ROCKETLAUNCHER:
-        	G_FireRocket( self.getOrigin(), angles, rs_rocketweak_speed.getInteger(), rs_rocketweak_splash.getInteger(), 75, rs_rocketweak_knockback.getInteger(), 0, @activator );
+        	G_FireRocket( self.origin, angles, rs_rocketweak_speed.integer, rs_rocketweak_splash.integer, 75, rs_rocketweak_knockback.integer, 0, @activator );
             break;
         case WEAP_PLASMAGUN:
-        	G_FirePlasma( self.getOrigin(), angles, rs_plasmaweak_speed.getInteger(), rs_plasmaweak_splash.getInteger(), 15, rs_plasmaweak_knockback.getInteger(), 0, @activator );
+        	G_FirePlasma( self.origin, angles, rs_plasmaweak_speed.integer, rs_plasmaweak_splash.integer, 15, rs_plasmaweak_knockback.integer, 0, @activator );
             break;
     }
 
@@ -255,9 +266,8 @@ void RS_InitShooter_Finish( cEntity @self )
 //===============
 void RS_InitShooter( cEntity @self, int weapon ) {
     self.weapon = weapon;
-    self.setMovedir();
     // target might be a moving object, so we can't set a movedir for it
-    if ( self.getTargetnameString() != "" ) {
+    if ( self.targetname != "" ) {
         self.nextThink = levelTime + 500;
     }
     self.linkEntity();
@@ -297,6 +307,8 @@ void shooter_grenade_use( cEntity @self, cEntity @other, cEntity @activator )
 //RS_shooter_rocket
 //===============
 void shooter_rocket( cEntity @ent ) {
+    @ent.think = RS_InitShooter_Finish;
+    @ent.use = RS_UseShooter;
     RS_InitShooter( @ent, WEAP_ROCKETLAUNCHER );
 }
 
@@ -316,31 +328,33 @@ void shooter_grenade( cEntity @ent ) {
 
 void target_smallprint( cEntity @ent )
 {
-	cString message = G_SpawnTempValue("message");
+    @ent.use = target_smallprint_use;
+	String message = G_SpawnTempValue("message");
     if( message == "" )
     {
     	ent.freeEntity();
     }
     else
     {
-    	addToEntStorage( ent.entNum(), message );
+    	addToEntStorage( ent.entNum, message );
     }
 }
 
 void target_smallprint_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
 	if(@activator.client != null)
-		G_CenterPrintMsg( activator, entStorage[ent.entNum()] );
+		G_CenterPrintMsg( activator, entStorage[ent.entNum] );
 }
 
 void target_kill( cEntity @ent )
 {
+    @ent.use = target_kill_use;
 	//the rest does the use code
 }
 
 void target_kill_use( cEntity @ent, cEntity @other, cEntity @activator )
 {
-	activator.takeDamage( @activator, null, cVec3(0,0,0), 9999, 0, 0, MOD_SUICIDE );
+	activator.sustainDamage( @activator, null, Vec3(0,0,0), 9999, 0, 0, MOD_SUICIDE );
 	activator.health = 0;
 }
 
@@ -351,228 +365,13 @@ void target_relay_use( cEntity @ent, cEntity @other, cEntity @activator )
 
 void target_relay( cEntity @ent )
 {
+    @ent.use = target_relay_use;
 	//the rest does the use code
 }
 
-/*
- * Soundfix
- */
-void AS_weapon_gunblade_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_machinegun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_riotgun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_grenadelauncher_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_rocketlauncher_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_plasmagun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_lasergun_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_electrobolt_use( cEntity @ent, cEntity @other, cEntity @activator )
-{
-    replacementItem_use( @ent, @other, @activator );
-}
-
-void AS_weapon_gunblade__think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_machinegun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_riotgun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_grenadelauncher_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_rocketlauncher_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_plasmagun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_lasergun_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_electrobolt_think( cEntity @ent )
-{
-    replacementItem_think( @ent );
-}
-
-void AS_weapon_gunblade_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_machinegun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_riotgun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_grenadelauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_rocketlauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_plasmagun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_lasergun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_weapon_electrobolt_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_gunblade_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_machinegun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_riotgun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_grenadelauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_rocketlauncher_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_plasmagun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_lasergun_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_ammo_electrobolt_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_quad_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_warshell_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_ga_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_ya_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_ra_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_armor_shard_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	//we don't want to have them.
-}
-
-void AS_item_health_small_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	//we don't want to have them.
-}
-
-void AS_item_health_medium_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_health_large_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_health_mega_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void AS_item_health_ultra_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
-{
-	replacementItem_touch( @ent, @other );
-}
-
-void replacementItem_touch( cEntity @ent, cEntity @other )
+//FIXME: The touch functions for armor shards and small health explicitly weren't called before.
+//Do we still want that behaviour? If yes please add it here -K1ll
+void replacementItem_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
 	if( @other.client == null || other.moveType != MOVETYPE_PLAYER )
 		return;
@@ -641,5 +440,5 @@ void replacementItem_touch( cEntity @ent, cEntity @other )
            return;
         other.health = healthAmount;
 	}
-	G_Sound( other, CHAN_ITEM, G_SoundIndex( ent.item.getPickupSoundString() ), 0.875 );
+	G_Sound( other, CHAN_ITEM, G_SoundIndex( ent.item.pickupSound ), 0.875 );
 }

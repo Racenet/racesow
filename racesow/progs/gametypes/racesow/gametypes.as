@@ -17,13 +17,13 @@ interface Racesow_Gametype
     
     void playerRespawn( cEntity @ent, int old_team, int new_team );
     
-    void scoreEvent( cClient @client, cString &score_event, cString &args );
+    void scoreEvent( cClient @client, String &score_event, String &args );
     
-    cString @ScoreboardMessage( int maxlen );
+    String @ScoreboardMessage( uint maxlen );
     
     cEntity @SelectSpawnPoint( cEntity @self );
     
     bool UpdateBotStatus( cEntity @self );
     
-    bool Command( cClient @client, cString @cmdString, cString @argsString, int argc );
+    bool Command( cClient @client, String @cmdString, String @argsString, int argc );
 }

@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_syscalls.h"
 #include "g_gametypes.h"
 
+#include "../matchmaker/mm_rating.h"
+
 // racesow
 #include "g_racesow.h"
 #include "../gameshared/gs_racesow.h"
@@ -41,7 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // round(x)==floor(x+0.5f)
 
 // FIXME: Medar: Remove the spectator test and just make sure they always have health
-#define G_IsDead( ent )	      ( ( !ent->r.client || ent->s.team != TEAM_SPECTATOR ) && HEALTH_TO_INT( ent->health ) <= 0 )
+#define G_IsDead( ent )	      ( ( !(ent)->r.client || (ent)->s.team != TEAM_SPECTATOR ) && HEALTH_TO_INT( (ent)->health ) <= 0 )
 
 // Quad scale for damage and knockback
 #define QUAD_DAMAGE_SCALE 4
@@ -143,6 +145,9 @@ typedef struct
 {
 	edict_t	*edicts;        // [maxentities]
 	gclient_t *clients;     // [maxclients]
+	gclient_quit_t *quits;	// [dynamic] <-- MM
+	clientRating_t *ratings;	// list of ratings for current game and gametype <-- MM
+	linear_allocator_t *raceruns;	// raceRun_t <-- MM
 
 	int protocol;
 
@@ -187,9 +192,10 @@ typedef struct
 	unsigned int spawnedTimeStamp; // time when map was restarted
 
 	char level_name[MAX_CONFIGSTRING_CHARS];    // the descriptive name (Outer Base, etc)
-	char mapname[MAX_CONFIGSTRING_CHARS];           // the server name (q3dm0, etc)
-	char nextmap[MAX_CONFIGSTRING_CHARS];           // go here when match is finished
+	char mapname[MAX_CONFIGSTRING_CHARS];       // the server name (q3dm0, etc)
+	char nextmap[MAX_CONFIGSTRING_CHARS];       // go here when match is finished
 	char forcemap[MAX_CONFIGSTRING_CHARS];      // go here
+	char autorecord_name[128];
 
 	// backup entities string
 	char *mapString;
@@ -350,6 +356,8 @@ extern cvar_t *g_instashield;
 extern cvar_t *g_asGC_stats;
 extern cvar_t *g_asGC_interval;
 
+extern cvar_t *g_skillRating;
+
 #define G_IsQ1Map() ( *cm_mapHeader->string == '\0' ? qtrue : qfalse )
 #define G_IsQ2Map() ( !strcmp( cm_mapHeader->string, "IBSP" ) && cm_mapVersion->integer < 46 )
 #define G_IsQ3Map() ( !strcmp( cm_mapHeader->string, "IBSP" ) && cm_mapVersion->integer >= 46 )
@@ -457,9 +465,9 @@ void G_asCallThinkRulesScript( void );
 void G_asCallPlayerKilledScript( edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point, int mod );
 void G_asCallPlayerRespawnScript( edict_t *ent, int old_team, int new_team );
 void G_asCallScoreEventScript( gclient_t *client, const char *score_event, const char *args );
-char *G_asCallScoreboardMessage( int maxlen );
+char *G_asCallScoreboardMessage( unsigned int maxlen );
 edict_t *G_asCallSelectSpawnPointScript( edict_t *ent );
-qboolean G_asCallGameCommandScript( gclient_t *client, char *cmd, char *args, int argc );
+qboolean G_asCallGameCommandScript( gclient_t *client, const char *cmd, const char *args, int argc );
 qboolean G_asCallBotStatusScript( edict_t *ent );
 void G_asCallShutdownScript( void );
 qboolean G_asCallMapEntitySpawnScript( const char *classname, edict_t *ent );
@@ -467,8 +475,11 @@ void G_asCallMapEntityThink( edict_t *ent );
 void G_asCallMapEntityTouch( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags );
 void G_asCallMapEntityUse( edict_t *ent, edict_t *other, edict_t *activator );
 void G_asCallMapEntityPain( edict_t *ent, edict_t *other, float kick, float damage );
-void G_asCallMapEntityDie( edict_t *ent, edict_t *inflicter, edict_t *attacker );
+void G_asCallMapEntityDie( edict_t *ent, edict_t *inflicter, edict_t *attacker, int damage, const vec3_t point );
 void G_asCallMapEntityStop( edict_t *ent );
+void G_asResetEntityBehavoirs( edict_t *ent );
+void G_asClearEntityBehavoirs( edict_t *ent );
+void G_asReleaseEntityBehavoirs( edict_t *ent );
 
 void G_asGarbageCollect( qboolean force );
 void G_asDumpAPI_f( void );
@@ -585,9 +596,13 @@ void G_ProjectSource( vec3_t point, vec3_t distance, vec3_t forward, vec3_t righ
 void G_AddEvent( edict_t *ent, int event, int parm, qboolean highPriority );
 edict_t *G_SpawnEvent( int event, int parm, vec3_t origin );
 void G_TurnEntityIntoEvent( edict_t *ent, int event, int parm );
+
+void G_CallThink( edict_t *ent );
 void G_CallTouch( edict_t *self, edict_t *other, cplane_t *plane, int surfFlags );
 void G_CallUse( edict_t *self, edict_t *other, edict_t *activator );
 void G_CallStop( edict_t *self );
+void G_CallPain( edict_t *ent, edict_t *attacker, float kick, float damage );
+void G_CallDie( edict_t *ent, edict_t *inflictor, edict_t *attacker, int damage, const vec3_t point );
 
 int G_PlayerGender( edict_t *player );
 
@@ -602,6 +617,7 @@ void G_Obituary( edict_t *victim, edict_t *attacker, int mod );
 void G_Sound( edict_t *owner, int channel, int soundindex, float attenuation );
 void G_PositionedSound( vec3_t origin, int channel, int soundindex, float attenuation );
 void G_GlobalSound( int channel, int soundindex );
+void G_LocalSound( edict_t *owner, int channel, int soundindex );
 
 float vectoyaw( vec3_t vec );
 
@@ -616,6 +632,8 @@ extern game_locals_t game;
 #define G_ISGHOSTING( x ) ( ( ( x )->s.modelindex == 0 ) && ( ( x )->r.solid == SOLID_NOT ) )
 // racesow: fixing maps with many models: allows for 50 non-inline models to load
 #define ISBRUSHMODEL( x ) ( (  ( x > 0 ) && ( (int)x < trap_CM_NumInlineModels() ) && ( (int)x < MAX_MODELS-50 ) ) ? qtrue : qfalse )
+//#define ISBRUSHMODEL( x ) ( ( ( x > 0 ) && ( (int)x < trap_CM_NumInlineModels() ) ) ? qtrue : qfalse ) //racesow <- unmodified version
+// !racesow
 
 void G_TeleportEffect( edict_t *ent, qboolean in );
 void G_RespawnEffect( edict_t *ent );
@@ -639,10 +657,12 @@ void G_LoadFiredefsFromDisk( void );
 void G_PrecacheWeapondef( int weapon, firedef_t *firedef );
 
 void G_MapLocations_Init( void );
-void G_RegisterMapLocationName( char *name );
-int G_LocationTAG( char *name );
-void G_LocationName( vec3_t origin, char *buf, size_t buflen );
-void G_LocationForTAG( int tag, char *buf, size_t buflen );
+int G_RegisterMapLocationName( const char *name );
+int G_MapLocationTAGForName( const char *name );
+int G_MapLocationTAGForOrigin( const vec3_t origin );
+void G_MapLocationNameForTAG( int tag, char *buf, size_t buflen );
+
+void G_SetBoundsForSpanEntity( edict_t *ent, vec_t size );
 
 //
 // g_callvotes.c
@@ -667,7 +687,7 @@ void SP_trigger_once( edict_t *ent );
 void SP_trigger_multiple( edict_t *ent );
 void SP_trigger_relay( edict_t *ent );
 void SP_trigger_push( edict_t *ent );
-void SP_target_push( edict_t *ent );
+void SP_target_push( edict_t *ent ); //racesow
 void SP_trigger_hurt( edict_t *ent );
 void SP_trigger_key( edict_t *ent );
 void SP_trigger_counter( edict_t *ent );
@@ -702,8 +722,8 @@ void G_Killed( edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage,
 int G_ModToAmmo( int mod );
 qboolean CheckTeamDamage( edict_t *targ, edict_t *attacker );
 void G_SplashFrac( const vec3_t origin, const vec3_t mins, const vec3_t maxs, const vec3_t point, float maxradius, vec3_t pushdir, float *kickFrac, float *dmgFrac );
-void G_TakeDamage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const vec3_t pushdir, const vec3_t dmgdir, const vec3_t point, float damage, float knockback, float stun, int dflags, int mod );
-void G_TakeRadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane, edict_t *ignore, int mod );
+void G_Damage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const vec3_t pushdir, const vec3_t dmgdir, const vec3_t point, float damage, float knockback, float stun, int dflags, int mod );
+void G_RadiusDamage( edict_t *inflictor, edict_t *attacker, cplane_t *plane, edict_t *ignore, int mod );
 
 // damage flags
 #define DAMAGE_RADIUS 0x00000001  // damage was indirect
@@ -768,7 +788,7 @@ void Use_Weapon( edict_t *ent, gsitem_t *item );
 // g_chasecam	//newgametypes
 //
 void G_SpectatorMode( edict_t *ent );
-void G_ChasePlayer( edict_t *ent, char *name, qboolean teamonly, int followmode );
+void G_ChasePlayer( edict_t *ent, const char *name, qboolean teamonly, int followmode );
 void G_ChaseStep( edict_t *ent, int step );
 void Cmd_SwitchChaseCamMode_f( edict_t *ent );
 void Cmd_ChaseCam_f( edict_t *ent );
@@ -909,6 +929,7 @@ const char *G_GetEntitySpawnKey( const char *key, edict_t *self );
 //
 
 void G_PlayerAward( edict_t *ent, const char *awardMsg );
+void G_PlayerMetaAward( edict_t *ent, const char *awardMsg );
 void G_AwardPlayerHit( edict_t *targ, edict_t *attacker, int mod );
 void G_AwardPlayerMissedElectrobolt( edict_t *self, int mod );
 void G_AwardPlayerMissedLasergun( edict_t *self, int mod );
@@ -1046,7 +1067,7 @@ typedef struct
 
 typedef struct
 {
-	unsigned int timeStamp; // last time it was reset
+	unsigned int timeStamp;			// last time it was reset
 
 	unsigned int respawnCount;
 	matchmessage_t matchmessage;
@@ -1056,17 +1077,16 @@ typedef struct
 
 	score_stats_t stats;
 	qboolean showscores;
-	unsigned int scoreboard_time; // when scoreboard was last sent
-	qboolean showPLinks; // bot debug
+	unsigned int scoreboard_time;	// when scoreboard was last sent
+	qboolean showPLinks;			// bot debug
 
 	// flood protection
-	unsigned int flood_locktill;           // locked from talking
-	unsigned int flood_when[MAX_FLOOD_MESSAGES];           // when messages were said
-	int flood_whenhead;             // head pointer for when said
+	unsigned int flood_locktill;	// locked from talking
+	unsigned int flood_when[MAX_FLOOD_MESSAGES];		// when messages were said
+	int flood_whenhead;				// head pointer for when said
 	// team only
-	unsigned int flood_team_when[MAX_FLOOD_MESSAGES];              // when messages were said
-	int flood_team_whenhead;                // head pointer for when said
-
+	unsigned int flood_team_when[MAX_FLOOD_MESSAGES];	// when messages were said
+	int flood_team_whenhead;		// head pointer for when said
 } client_levelreset_t;
 
 typedef struct
@@ -1084,10 +1104,10 @@ typedef struct
 	vec3_t position_angles;
 	unsigned int position_lastcmd;
 
-	gsitem_t	*last_drop_item;
+	gsitem_t *last_drop_item;
 	vec3_t last_drop_location;
 	edict_t	*last_pickup;
-
+	edict_t *last_killer;
 } client_teamreset_t;
 
 struct gclient_s
@@ -1123,12 +1143,16 @@ struct gclient_s
 	char ip[MAX_INFO_VALUE];
 	char socket[MAX_INFO_VALUE];
 
+	int mm_session;		// 0 - invalid session, < 0 - local session, > 0 authenticated account
+	clientRating_t *ratings;	// list of ratings for gametypes
+
 	qboolean connecting;
 	qboolean multiview, tv;
 
 	byte_vec4_t color;
 	int team;
 	int hand;
+	int handicap;
 	int fov;
 	int movestyle;
 	int movestyle_latched;
@@ -1145,6 +1169,19 @@ struct gclient_s
 	pmove_state_t old_pmove;    // for detecting out-of-pmove changes
 
 	int asRefCount, asFactored;
+};
+
+// quit or teamchange data for clients (stats)
+struct gclient_quit_s
+{
+	char netname[MAX_NAME_CHARS];
+	int team;
+	int mm_session;
+
+	score_stats_t stats;
+	unsigned int timePlayed;
+	qboolean final;			// is true, player was there in the end
+	struct gclient_quit_s *next;
 };
 
 typedef struct snap_edict_s
@@ -1313,9 +1350,27 @@ struct edict_s
 
 	int asRefCount, asFactored;
 	qboolean scriptSpawned;
-	int asSpawnFuncID, asThinkFuncID, asUseFuncID, asTouchFuncID, asPainFuncID, asDieFuncID, asStopFuncID;
+	void *asSpawnFunc, *asThinkFunc, *asUseFunc, *asTouchFunc, *asPainFunc, *asDieFunc, *asStopFunc;
 };
 
 // matchmaker
+
+// legacy:
 void G_MM_Setup( const char *gametype, int scorelimit, float timelimit, qboolean falldamage );
 void G_MM_Reset( void );
+
+void G_AddPlayerReport( edict_t *ent, qboolean final );
+void G_Match_SendReport( void );
+
+void G_TransferRatings( void );
+clientRating_t *G_AddDefaultRating( edict_t *ent, const char *gametype );
+clientRating_t *G_AddRating( edict_t *ent, const char *gametype, float rating, float deviation );
+void G_RemoveRating( edict_t *ent );
+void G_ListRatings_f( void );
+
+void G_AddRaceRecords( edict_t *ent, int numSectors, unsigned int *records );
+unsigned int G_GetRaceRecord( edict_t *ent, int sector );
+raceRun_t *G_NewRaceRun( edict_t *ent, int numSectors );
+void G_SetRaceTime( edict_t *ent, int sector, unsigned int time );
+void G_ListRaces_f( void );
+

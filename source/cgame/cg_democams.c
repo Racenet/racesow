@@ -358,12 +358,7 @@ static void CG_Democam_ExecutePathAnalysis( void )
 				if( ccam->timeStamp > 0 )
 					pcam = CG_Democam_FindCurrent( ccam->timeStamp - 1 );
 
-				if( !pcam && !ncam )
-				{
-					VectorSet( ccam->tangent, 0, 0, 0 );
-					VectorSet( ccam->angles_tangent, 0, 0, 0 );
-				}
-				else if( !pcam && ncam )
+				if( !pcam )
 				{
 					VectorSubtract( ncam->origin, ccam->origin, ccam->tangent );
 					VectorScale( ccam->tangent, 1.0/4.0, ccam->tangent );
@@ -381,7 +376,7 @@ static void CG_Democam_ExecutePathAnalysis( void )
 					VectorSubtract( ncam->angles, ccam->angles, ccam->angles_tangent );
 					VectorScale( ccam->angles_tangent, 1.0/4.0, ccam->angles_tangent );
 				}
-				else if( pcam && ncam )
+				else if( pcam )
 				{
 					VectorSubtract( ncam->origin, pcam->origin, ccam->tangent );
 					VectorScale( ccam->tangent, 1.0/4.0, ccam->tangent );
@@ -408,7 +403,7 @@ static void CG_Democam_ExecutePathAnalysis( void )
 					VectorScale( ccam->angles_tangent, 1.0/4.0, ccam->angles_tangent );
 				}
 
-				if( sncam && ncam )
+				if( sncam )
 				{
 					VectorSubtract( sncam->origin, ccam->origin, ncam->tangent );
 					VectorScale( ncam->tangent, 1.0/4.0, ncam->tangent );
@@ -434,7 +429,7 @@ static void CG_Democam_ExecutePathAnalysis( void )
 					VectorSubtract( sncam->angles, ccam->angles, ncam->angles_tangent );
 					VectorScale( ncam->angles_tangent, 1.0/4.0, ncam->angles_tangent );
 				}
-				else if( !sncam && ncam )
+				else if( !sncam )
 				{
 					VectorSubtract( ncam->origin, ccam->origin, ncam->tangent );
 					VectorScale( ncam->tangent, 1.0/4.0, ncam->tangent );
@@ -697,10 +692,10 @@ static void CG_DrawEntityNumbers( void )
 				return;
 
 			trap_SCR_DrawString( coords[0]+xoffset+1,
-				( cgs.vidHeight - coords[1] )+yoffset+1,
+				coords[1]+yoffset+1,
 				ALIGN_LEFT_MIDDLE, va( "%i", cent->current.number ), cgs.fontSystemSmall, colorBlack );
 			trap_SCR_DrawString( coords[0]+xoffset,
-				( cgs.vidHeight - coords[1] )+yoffset,
+				coords[1]+yoffset,
 				ALIGN_LEFT_MIDDLE, va( "%i", cent->current.number ), cgs.fontSystemSmall, colorWhite );
 		}
 	}
@@ -808,9 +803,9 @@ void CG_DrawDemocam2D( void )
 		xpos = 8;
 		ypos = 100;
 
-		if( cg_demoname && cg_demoname->string )
+		if( *cgs.demoName )
 		{
-			trap_SCR_DrawString( xpos, ypos, ALIGN_LEFT_TOP, va( "Demo: %s", cg_demoname->string ), cgs.fontSystemSmall, colorWhite );
+			trap_SCR_DrawString( xpos, ypos, ALIGN_LEFT_TOP, va( "Demo: %s", cgs.demoName ), cgs.fontSystemSmall, colorWhite );
 			ypos += trap_SCR_strHeight( cgs.fontSystemSmall );
 		}
 
@@ -1761,14 +1756,16 @@ void CG_DemocamInit( void )
 	if( !cgs.demoPlaying )
 		return;
 
-	if( !strlen( cg_demoname->string ) )
+	if( !*cgs.demoName )
 		CG_Error( "CG_LoadRecamScriptFile: no demo name string\n" );
 
 	// see if there is any script for this demo, and load it
-	name_size = sizeof( char ) * ( strlen( cg_demoname->string ) + strlen( ".cam" ) + 1 );
+	name_size = sizeof( char ) * ( strlen( cgs.demoName ) + strlen( ".cam" ) + 1 );
 	demoscriptname = CG_Malloc( name_size );
-	Q_snprintfz( demoscriptname, name_size, "%s", cg_demoname->string );
+	Q_snprintfz( demoscriptname, name_size, "%s", cgs.demoName );
 	COM_ReplaceExtension( demoscriptname, ".cam", name_size );
+
+	CG_Printf( "cam: %s\n", demoscriptname );
 
 	// add console commands
 	trap_Cmd_AddCommand( "demoEditMode", CG_DemoEditMode_Cmd_f );
@@ -1782,7 +1779,7 @@ void CG_DemocamInit( void )
 
 	// check for a sound stream file
 	cgs.demoAudioStream = CG_Malloc( name_size );
-	Q_snprintfz( cgs.demoAudioStream, name_size, "%s", cg_demoname->string );
+	Q_snprintfz( cgs.demoAudioStream, name_size, "%s", cgs.demoName );
 	COM_ReplaceExtension( cgs.demoAudioStream, ".wav", name_size );
 	if( trap_FS_FOpenFile( cgs.demoAudioStream, NULL, FS_READ ) != -1 )
 	{

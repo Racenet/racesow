@@ -1,32 +1,32 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // g_phys.c
 
 #include "g_local.h"
 
 //================================================================================
 
-//============
-//SV_AddGravity
-//
-//============
+/*
+* SV_AddGravity
+* 
+*/
 static void SV_AddGravity( edict_t *ent )
 {
 	ent->velocity[2] -= ent->gravity * g_gravity->value * FRAMETIME;
@@ -34,22 +34,22 @@ static void SV_AddGravity( edict_t *ent )
 /*
 typedef struct
 {
-	vec3_t velocity;
-	vec3_t origin;
-	vec3_t mins, maxs;
-	float remainingTime;
+vec3_t velocity;
+vec3_t origin;
+vec3_t mins, maxs;
+float remainingTime;
 
-	vec3_t gravityDir;
-	float slideBounce;
-	int groundEntity;
+vec3_t gravityDir;
+float slideBounce;
+int groundEntity;
 
-	int passent, contentmask;
+int passent, contentmask;
 
-	int numClipPlanes;
-	vec3_t clipPlaneNormals[MAX_SLIDEMOVE_CLIP_PLANES];
+int numClipPlanes;
+vec3_t clipPlaneNormals[MAX_SLIDEMOVE_CLIP_PLANES];
 
-	int numtouch;
-	int touchents[MAXTOUCH];
+int numtouch;
+int touchents[MAXTOUCH];
 } move_t;
 */
 
@@ -70,10 +70,10 @@ void G_AddGroundFriction( edict_t *ent, float friction )
 	}
 }
 
-//============
-//G_BoxSlideMove
-// calls GS_SlideMove for edict_t and triggers touch functions of touched objects
-//============
+/*
+* G_BoxSlideMove
+* calls GS_SlideMove for edict_t and triggers touch functions of touched objects
+*/
 int G_BoxSlideMove( edict_t *ent, int contentmask, float slideBounce, float friction )
 {
 	int i;
@@ -172,10 +172,10 @@ int G_BoxSlideMove( edict_t *ent, int contentmask, float slideBounce, float fric
 
 
 
-//============
-//SV_TestEntityPosition
-//
-//============
+/*
+* SV_TestEntityPosition
+* 
+*/
 static edict_t *SV_TestEntityPosition( edict_t *ent )
 {
 	trace_t	trace;
@@ -194,9 +194,9 @@ static edict_t *SV_TestEntityPosition( edict_t *ent )
 	return NULL;
 }
 
-//================
-//SV_CheckVelocity
-//================
+/*
+* SV_CheckVelocity
+*/
 static void SV_CheckVelocity( edict_t *ent )
 {
 	float scale;
@@ -212,11 +212,11 @@ static void SV_CheckVelocity( edict_t *ent )
 	}
 }
 
-//=============
-//SV_RunThink
-//
-//Runs thinking code for this frame if necessary
-//=============
+/*
+* SV_RunThink
+* 
+* Runs thinking code for this frame if necessary
+*/
 static void SV_RunThink( edict_t *ent )
 {
 	unsigned int thinktime;
@@ -232,25 +232,14 @@ static void SV_RunThink( edict_t *ent )
 	if( ISEVENTENTITY( &ent->s ) )  // events do not think
 		return;
 
-	if( !ent->think )
-	{
-		if( ent->scriptSpawned && ent->asThinkFuncID >= 0 )
-			G_asCallMapEntityThink( ent );
-		else if( developer->integer )
-			G_Printf( "NULL ent->think in %s\n", ent->classname ? ent->classname : va( "'no classname. Entity type is %i", ent->s.type ) );
-		
-		return;
-	}
-
-	ent->think( ent );
-	return;
+	G_CallThink( ent );
 }
 
-//==================
-//SV_Impact
-//
-//Two entities have touched, so run their touch functions
-//==================
+/*
+* SV_Impact
+* 
+* Two entities have touched, so run their touch functions
+*/
 void SV_Impact( edict_t *e1, trace_t *trace )
 {
 	edict_t	*e2;
@@ -267,15 +256,15 @@ void SV_Impact( edict_t *e1, trace_t *trace )
 	}
 }
 
-//============
-//SV_FlyMove
-//
-//The basic solid body movement clip that slides along multiple planes
-//Returns the clipflags if the velocity was modified (hit something solid)
-//1 = floor
-//2 = wall / step
-//4 = dead stop
-//============
+/*
+* SV_FlyMove
+* 
+* The basic solid body movement clip that slides along multiple planes
+* Returns the clipflags if the velocity was modified (hit something solid)
+* 1 = floor
+* 2 = wall / step
+* 4 = dead stop
+*/
 #if 0
 #define	MAX_CLIP_PLANES	5
 int SV_FlyMove( edict_t *ent, float time, int mask )
@@ -372,8 +361,8 @@ int SV_FlyMove( edict_t *ent, float time, int mask )
 					if( DotProduct( new_velocity, planes[j] ) < 0 )
 						break; // not ok
 				}
-			if( j == numplanes )
-				break;
+				if( j == numplanes )
+					break;
 		}
 
 		if( i != numplanes )
@@ -415,11 +404,11 @@ int SV_FlyMove( edict_t *ent, float time, int mask )
 //===============================================================================
 
 
-//============
-//SV_PushEntity
-//
-//Does not change the entities velocity at all
-//============
+/*
+* SV_PushEntity
+* 
+* Does not change the entities velocity at all
+*/
 static trace_t SV_PushEntity( edict_t *ent, vec3_t push )
 {
 	trace_t	trace;
@@ -476,12 +465,12 @@ pushed_t pushed[MAX_EDICTS], *pushed_p;
 edict_t	*obstacle;
 
 
-//============
-//SV_Push
-//
-//Objects need to be moved back on a failed push,
-//otherwise riders would continue to slide.
-//============
+/*
+* SV_Push
+* 
+* Objects need to be moved back on a failed push,
+* otherwise riders would continue to slide.
+*/
 static qboolean SV_Push( edict_t *pusher, vec3_t move, vec3_t amove )
 {
 	int i, e;
@@ -526,9 +515,9 @@ static qboolean SV_Push( edict_t *pusher, vec3_t move, vec3_t amove )
 		if( !check->r.inuse )
 			continue;
 		if( check->movetype == MOVETYPE_PUSH
-		    || check->movetype == MOVETYPE_STOP
-		    || check->movetype == MOVETYPE_NONE
-		    || check->movetype == MOVETYPE_NOCLIP )
+			|| check->movetype == MOVETYPE_STOP
+			|| check->movetype == MOVETYPE_NONE
+			|| check->movetype == MOVETYPE_NOCLIP )
 			continue;
 
 		if( !check->r.area.prev )
@@ -539,11 +528,11 @@ static qboolean SV_Push( edict_t *pusher, vec3_t move, vec3_t amove )
 		{
 			// see if the ent needs to be tested
 			if( check->r.absmin[0] >= maxs[0]
-			    || check->r.absmin[1] >= maxs[1]
-			    || check->r.absmin[2] >= maxs[2]
-			    || check->r.absmax[0] <= mins[0]
-			    || check->r.absmax[1] <= mins[1]
-			    || check->r.absmax[2] <= mins[2] )
+			|| check->r.absmin[1] >= maxs[1]
+			|| check->r.absmin[2] >= maxs[2]
+			|| check->r.absmax[0] <= mins[0]
+			|| check->r.absmax[1] <= mins[1]
+			|| check->r.absmax[2] <= mins[2] )
 				continue;
 
 			// see if the ent's bbox is inside the pusher's final position
@@ -581,13 +570,15 @@ static qboolean SV_Push( edict_t *pusher, vec3_t move, vec3_t amove )
 
 			block = SV_TestEntityPosition( check );
 			if( !block )
-			{ // pushed ok
+			{
+				// pushed ok
 				GClip_LinkEntity( check );
 				// impact?
 				continue;
 			}
 			else
-			{ // try to fix block
+			{
+				// try to fix block
 				// if it is ok to leave in the old position, do it
 				// this is only relevant for riding entities, not pushed
 				VectorSubtract( check->s.origin, move, check->s.origin );
@@ -628,12 +619,12 @@ static qboolean SV_Push( edict_t *pusher, vec3_t move, vec3_t amove )
 	return qtrue;
 }
 
-//================
-//SV_Physics_Pusher
-//
-//Bmodel objects don't interact with each other, but
-//push all box objects
-//================
+/*
+* SV_Physics_Pusher
+* 
+* Bmodel objects don't interact with each other, but
+* push all box objects
+*/
 static void SV_Physics_Pusher( edict_t *ent )
 {
 	vec3_t move, amove;
@@ -651,9 +642,9 @@ static void SV_Physics_Pusher( edict_t *ent )
 	for( part = ent; part; part = part->teamchain )
 	{
 		if( part->velocity[0] || part->velocity[1] || part->velocity[2] ||
-		    part->avelocity[0] || part->avelocity[1] || part->avelocity[2] )
-		{ // object is moving
-
+			part->avelocity[0] || part->avelocity[1] || part->avelocity[2] )
+		{
+			// object is moving
 			VectorScale( part->velocity, FRAMETIME, move );
 			VectorScale( part->avelocity, FRAMETIME, amove );
 
@@ -687,19 +678,19 @@ static void SV_Physics_Pusher( edict_t *ent )
 
 //==================================================================
 
-//=============
-//SV_Physics_None
-// only think
-//=============
+/*
+* SV_Physics_None
+* only think
+*/
 static void SV_Physics_None( edict_t *ent )
 {
 }
 
-//=============
-//SV_Physics_Noclip
-//
-//A moving object that doesn't obey physics
-//=============
+/*
+* SV_Physics_Noclip
+* 
+* A moving object that doesn't obey physics
+*/
 #if 0
 static void SV_Physics_Noclip( edict_t *ent )
 {
@@ -716,13 +707,13 @@ static void SV_Physics_Noclip( edict_t *ent )
 //
 //==============================================================================
 
-//=============
-//SV_Physics_Toss
-//
-//Toss, bounce, and fly movement.  When onground, do nothing.
-//
-// FIXME: This function needs a serious rewrite
-//=============
+/*
+* SV_Physics_Toss
+* 
+* Toss, bounce, and fly movement.  When onground, do nothing.
+* 
+* FIXME: This function needs a serious rewrite
+*/
 static void SV_Physics_Toss( edict_t *ent )
 {
 	trace_t	trace;
@@ -732,7 +723,7 @@ static void SV_Physics_Toss( edict_t *ent )
 	qboolean wasinwater;
 	qboolean isinwater;
 	vec3_t old_origin;
-	float d, oldSpeed;
+	float oldSpeed;
 
 	// if not a team captain, so movement will be handled elsewhere
 	if( ent->flags & FL_TEAMSLAVE )
@@ -824,21 +815,21 @@ static void SV_Physics_Toss( edict_t *ent )
 
 		if( ent->movetype == MOVETYPE_BOUNCE || ent->movetype == MOVETYPE_BOUNCEGRENADE )
 		{
+			// stop dead on allsolid
+
 			// LA: hopefully will fix grenades bouncing down slopes
 			// method taken from Darkplaces sourcecode
-			if( ISWALKABLEPLANE( &trace.plane ) )
+			if( trace.allsolid || 
+				( ISWALKABLEPLANE( &trace.plane ) && 
+					fabs( DotProduct( trace.plane.normal, ent->velocity ) ) < 60 
+				)
+			)
 			{
-				d = DotProduct( trace.plane.normal, ent->velocity );
-
-				// wsw: Lardase fix for grenade bouncing in stairs
-				if( fabs( d ) < 60 )
-				{
-					ent->groundentity = &game.edicts[trace.ent];
-					ent->groundentity_linkcount = ent->groundentity->r.linkcount;
-					VectorClear( ent->velocity );
-					VectorClear( ent->avelocity );
-					G_CallStop( ent );
-				}
+				ent->groundentity = &game.edicts[trace.ent];
+				ent->groundentity_linkcount = ent->groundentity->r.linkcount;
+				VectorClear( ent->velocity );
+				VectorClear( ent->avelocity );
+				G_CallStop( ent );
 			}
 		}
 		else
@@ -850,9 +841,10 @@ static void SV_Physics_Toss( edict_t *ent )
 			if( ent->groundentity )
 			{
 #else
-			if( ISWALKABLEPLANE( &trace.plane ) )
+			// walkable or trapped inside solid brush
+			if( trace.allsolid || ISWALKABLEPLANE( &trace.plane ) )
 			{
-				ent->groundentity = &game.edicts[trace.ent];
+				ent->groundentity = trace.ent < 0 ? world : &game.edicts[trace.ent];
 				ent->groundentity_linkcount = ent->groundentity->r.linkcount;
 #endif
 				VectorClear( ent->velocity );
@@ -941,10 +933,10 @@ void SV_Physics_LinearProjectile( edict_t *ent )
 
 //============================================================================
 
-//================
-//G_RunEntity
-//
-//================
+/*
+* G_RunEntity
+* 
+*/
 void G_RunEntity( edict_t *ent )
 {
 	edict_t	*part;

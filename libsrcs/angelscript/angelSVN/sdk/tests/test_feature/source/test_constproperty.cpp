@@ -9,12 +9,13 @@
 namespace TestConstProperty
 {
 
-#define TESTNAME "TestConstProperty"
+static const char * const TESTNAME = "TestConstProperty";
 
 class CVec3
 {
 public:
 	CVec3() {}
+	CVec3(const CVec3 &o) : x(o.x), y(o.y), z(o.z) {}
 	CVec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 
 	float x,y,z;
@@ -71,18 +72,18 @@ bool Test()
 	// TEST 1
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 
-	r = engine->RegisterObjectType("CVec3", sizeof(CVec3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_C); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("CVec3", "float x", offsetof(CVec3,x)); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("CVec3", "float y", offsetof(CVec3,y)); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("CVec3", "float z", offsetof(CVec3,z)); assert( r >= 0 );
+	r = engine->RegisterObjectType("CVec3", sizeof(CVec3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CK); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("CVec3", "float x", asOFFSET(CVec3,x)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("CVec3", "float y", asOFFSET(CVec3,y)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("CVec3", "float z", asOFFSET(CVec3,z)); assert( r >= 0 );
 
-	r = engine->RegisterGlobalBehaviour(asBEHAVE_ADD, "CVec3 f(const CVec3 &in, const CVec3 &in)", asFUNCTION(vec3add), asCALL_CDECL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("CVec3", "CVec3 opAdd(const CVec3 &in) const", asFUNCTION(vec3add), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
 	r = engine->RegisterGlobalFunction("CVec3 vec3add(const CVec3 &in, const CVec3 &in)", asFUNCTION(vec3add), asCALL_CDECL); assert( r >= 0 );
 
 	r = engine->RegisterObjectType("CObj", sizeof(CObj), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CD); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("CObj", "CVec3 simplevec", offsetof(CObj,simplevec)); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("CObj", "const CVec3 constvec", offsetof(CObj,constvec)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("CObj", "CVec3 simplevec", asOFFSET(CObj,simplevec)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("CObj", "const CVec3 constvec", asOFFSET(CObj,constvec)); assert( r >= 0 );
 
 	CBufferedOutStream out;
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &out, asCALL_THISCALL);
@@ -93,7 +94,7 @@ bool Test()
 	if( !out.buffer.empty() )
 	{
 		printf("%s: Failed to pass argument as 'const type &in'\n%s", TESTNAME, out.buffer.c_str());
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
@@ -103,7 +104,7 @@ bool Test()
 
 	engine->RegisterObjectType("Obj1", sizeof(int), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE);
 	engine->RegisterObjectProperty("Obj1", "int val", 0);
-	engine->RegisterObjectBehaviour("Obj1", asBEHAVE_ASSIGNMENT, "Obj1 &f(Obj1 &in)", asFUNCTION(0), asCALL_GENERIC);
+	engine->RegisterObjectMethod("Obj1", "Obj1 &opAssign(Obj1 &in)", asFUNCTION(0), asCALL_GENERIC);
 
 	engine->RegisterObjectType("Obj2", sizeof(int), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE);
 	engine->RegisterObjectProperty("Obj2", "int val", 0);
@@ -127,7 +128,7 @@ bool Test()
 		              "TestConstProperty (5, 11) : Error   : Reference is read-only\n" )
 	{
 		printf("%s: Failed to detect all properties as constant\n%s", TESTNAME, out.buffer.c_str());
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

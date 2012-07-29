@@ -33,9 +33,7 @@ static shader_t *r_planarShadowShader;
 #define PLANAR_SHADOW_LIGHT_RADIUS	128
 
 /*
-===============
-R_InitPlanarShadows
-===============
+* R_InitPlanarShadows
 */
 static void R_InitPlanarShadows( void )
 {
@@ -43,9 +41,7 @@ static void R_InitPlanarShadows( void )
 }
 
 /*
-===============
-R_PlanarShadowShader
-===============
+* R_PlanarShadowShader
 */
 shader_t *R_PlanarShadowShader( void )
 {
@@ -53,9 +49,7 @@ shader_t *R_PlanarShadowShader( void )
 }
 
 /*
-===============
-R_GetShadowImpactAndDir
-===============
+* R_GetShadowImpactAndDir
 */
 static void R_GetShadowImpactAndDir( entity_t *e, trace_t *tr, vec3_t lightdir )
 {
@@ -71,9 +65,7 @@ static void R_GetShadowImpactAndDir( entity_t *e, trace_t *tr, vec3_t lightdir )
 }
 
 /*
-===============
-R_CullPlanarShadow
-===============
+* R_CullPlanarShadow
 */
 qboolean R_CullPlanarShadow( entity_t *e, vec3_t mins, vec3_t maxs, qboolean occlusion_query )
 {
@@ -129,40 +121,35 @@ qboolean R_CullPlanarShadow( entity_t *e, vec3_t mins, vec3_t maxs, qboolean occ
 }
 
 /*
-===============
-R_DeformVPlanarShadow
-===============
+* R_DeformVPlanarShadowParams
+* 
+* Returns true if there's a valid impact point
 */
-void R_DeformVPlanarShadow( int numV, float *v )
+qboolean R_DeformVPlanarShadowParams( vec3_t planenormal, float *planedist, vec3_t lightdir )
 {
 	entity_t *e = ri.currententity;
-	float planedist, dist;
-	vec3_t planenormal, lightdir, lightdir2, point;
+	float dist;
+	vec3_t lightdir2, point;
 	trace_t tr;
 
 	R_GetShadowImpactAndDir( e, &tr, lightdir );
+	if( tr.fraction == 1 )
+		return qfalse;
 
 	Matrix_TransformVector( e->axis, lightdir, lightdir2 );
 	Matrix_TransformVector( e->axis, tr.plane.normal, planenormal );
 	VectorScale( planenormal, e->scale, planenormal );
 
 	VectorSubtract( tr.endpos, e->origin, point );
-	planedist = DotProduct( point, tr.plane.normal ) + 1;
+	*planedist = DotProduct( point, tr.plane.normal ) + 1;
 	dist = -1.0f / DotProduct( lightdir2, planenormal );
-	VectorScale( lightdir2, dist, lightdir2 );
+	VectorScale( lightdir2, dist, lightdir );
 
-	for( ; numV > 0; numV--, v += 4 )
-	{
-		dist = DotProduct( v, planenormal ) - planedist;
-		if( dist > 0 )
-			VectorMA( v, dist, lightdir2, v );
-	}
+	return qtrue;
 }
 
 /*
-===============
-R_PlanarShadowPass
-===============
+* R_PlanarShadowPass
 */
 void R_PlanarShadowPass( int state )
 {
@@ -176,13 +163,9 @@ void R_PlanarShadowPass( int state )
 	qglColor4f( 0, 0, 0, bound( 0.0f, r_shadows_alpha->value, 1.0f ) );
 
 	qglDisable( GL_TEXTURE_2D );
-	if( glState.stencilEnabled )
-		qglEnable( GL_STENCIL_TEST );
 
 	R_FlushArrays();
 
-	if( glState.stencilEnabled )
-		qglDisable( GL_STENCIL_TEST );
 	qglEnable( GL_TEXTURE_2D );
 }
 
@@ -205,9 +188,7 @@ static shadowGroup_t *r_shadowGroups_hash[SHADOWGROUPS_HASH_SIZE];
 static qbyte r_shadowCullBits[MAX_SHADOWGROUPS/8];
 
 /*
-===============
-R_InitShadowmaps
-===============
+* R_InitShadowmaps
 */
 static void R_InitShadowmaps( void )
 {
@@ -221,9 +202,7 @@ static void R_InitShadowmaps( void )
 }
 
 /*
-===============
-R_ClearShadowmaps
-===============
+* R_ClearShadowmaps
 */
 void R_ClearShadowmaps( void )
 {
@@ -240,9 +219,7 @@ void R_ClearShadowmaps( void )
 }
 
 /*
-===============
-R_AddShadowCaster
-===============
+* R_AddShadowCaster
 */
 qboolean R_AddShadowCaster( entity_t *ent )
 {
@@ -325,11 +302,9 @@ add:
 }
 
 /*
-===============
-R_ShadowGroupSort
-
-Make sure current view cluster comes first
-===============
+* R_ShadowGroupSort
+* 
+* Make sure current view cluster comes first
 */
 /*
 static int R_ShadowGroupSort (void const *a, void const *b)
@@ -352,9 +327,7 @@ static int R_ShadowGroupSort (void const *a, void const *b)
 */
 
 /*
-===============
-R_CullShadowmapGroups
-===============
+* R_CullShadowmapGroups
 */
 void R_CullShadowmapGroups( void )
 {
@@ -371,9 +344,12 @@ void R_CullShadowmapGroups( void )
 	{
 		for( j = 0; j < 3; j++ )
 		{
-			mins[j] = group->origin[j] - group->projDist * 1.75 * 0.5 * 0.5;
-			maxs[j] = group->origin[j] + group->projDist * 1.75 * 0.5 * 0.5;
+			mins[j] = group->origin[j] - group->projDist * 1.75 * 0.5;
+			maxs[j] = group->origin[j] + group->projDist * 1.75 * 0.5;
 		}
+
+		VectorCopy( mins, group->visMins );
+		VectorCopy( maxs, group->visMaxs );
 
 		// check if view point is inside the bounding box...
 		for( j = 0; j < 3; j++ )
@@ -391,13 +367,11 @@ void R_CullShadowmapGroups( void )
 }
 
 /*
-===============
-R_DrawShadowmaps
-===============
+* R_DrawShadowmaps
 */
 void R_DrawShadowmaps( void )
 {
-	int i;
+	int i, j;
 	int activeFBO;
 	image_t *depthTexture;
 	int width, height, textureWidth, textureHeight;
@@ -475,8 +449,8 @@ void R_DrawShadowmaps( void )
 		}
 		ri.refdef.fov_x = 90;
 		ri.refdef.fov_y = CalcFov( ri.refdef.fov_x, ri.refdef.width, ri.refdef.height );
-		Vector4Set( ri.viewport, ri.refdef.x, ri.refdef.y, textureWidth, textureHeight );
-		Vector4Set( ri.scissor, ri.refdef.x, ri.refdef.y, textureWidth, textureHeight );
+		Vector4Set( ri.viewport, ri.refdef.x, glState.height - textureHeight - ri.refdef.y, textureWidth, textureHeight );
+		Vector4Set( ri.scissor, ri.refdef.x, glState.height - textureHeight - ri.refdef.y, textureWidth, textureHeight );
 
 		// set the view transformation matrix according to lightgrid
 		R_LightForOrigin( group->origin, lightdir, ambient, NULL, group->projDist * 0.5 );
@@ -485,7 +459,7 @@ void R_DrawShadowmaps( void )
 		VectorCopy( lightdir, group->direction );
 
 		// view axis are expected to be FLU (forward left up)
-		NormalVectorToAxis( lightdir, ri.refdef.viewaxis );
+		NormalVectorToAxis( group->direction, ri.refdef.viewaxis );
 		VectorInverse( ri.refdef.viewaxis[1] );
 
 		// position the light source in the opposite direction
@@ -500,6 +474,21 @@ void R_DrawShadowmaps( void )
 
 		if( !( ri.params & RP_WORLDSURFVISIBLE ) )
 			continue; // we didn't cast any shadows on opaque meshes so discard this group
+
+		// clip shadow bounds to world
+		for( j = 0; j < 3; j++ )
+		{
+			group->visMins[j] = max( group->visMins[j], ri.visMins[j] );
+			group->visMaxs[j] = min( group->visMaxs[j], ri.visMaxs[j] );
+		}
+
+		for( j = 0; j < 8; j++ )
+		{
+			vec_t *corner = group->visCorners[j];
+			corner[0] = ( ( j & 1 ) ? group->visMins[0] : group->visMaxs[0] );
+			corner[1] = ( ( j & 2 ) ? group->visMins[1] : group->visMaxs[1] );
+			corner[2] = ( ( j & 4 ) ? group->visMins[2] : group->visMaxs[2] );
+		}
 
 		if( !( prevRI.shadowBits & group->bit ) )
 		{
@@ -532,9 +521,7 @@ void R_DrawShadowmaps( void )
 //==================================================================================
 
 /*
-===============
-R_InitShadows
-===============
+* R_InitShadows
 */
 void R_InitShadows( void )
 {
@@ -544,9 +531,7 @@ void R_InitShadows( void )
 }
 
 /*
-===============
-R_ShutdownShadows
-===============
+* R_ShutdownShadows
 */
 void R_ShutdownShadows( void )
 {

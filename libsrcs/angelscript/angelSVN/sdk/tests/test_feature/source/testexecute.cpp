@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestExecute"
+static const char * const TESTNAME = "TestExecute";
 
 static bool called = false;
 
@@ -18,9 +18,15 @@ static void cfunction_generic(asIScriptGeneric *) {
 	cfunction();
 }
 
+static void cleanContext(asIScriptContext *ctx)
+{
+	assert(ctx->GetUserData() == (void*)(size_t)0xDEADF00D);
+	called = true;
+}
+
 bool TestExecute()
 {
-	bool ret = false;
+	bool fail = false;
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	if( strstr(asGetLibraryOptions(),"AS_MAX_PORTABILITY") )
@@ -31,22 +37,27 @@ bool TestExecute()
 	{
 		int r = engine->RegisterGlobalFunction("void cfunction()", asFUNCTION(cfunction), asCALL_CDECL); assert( r >= 0 );
 	}
-	engine->ExecuteString(0, "cfunction()");
+	ExecuteString(engine, "cfunction()");
 
 	if (!called) {
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	
 	asIScriptContext *ctx = engine->CreateContext();
-	assert(ctx->SetUserData((void*)(size_t)0xDEADF00D) == 0);
+	void *p = ctx->SetUserData((void*)(size_t)0xDEADF00D); assert(p == 0);
 	assert(ctx->GetUserData() == (void*)(size_t)0xDEADF00D);
-	assert(ctx->SetUserData(0) == (void*)(size_t)0xDEADF00D);
+	p = ctx->SetUserData(0); assert(p == (void*)(size_t)0xDEADF00D);
+	p = ctx->SetUserData((void*)(size_t)0xDEADF00D); assert(p == 0);
+	engine->SetContextUserDataCleanupCallback(cleanContext);
+	called = false;
 	ctx->Release();
+	if( !called )
+		TEST_FAILED;
 
 	engine->Release();
 	engine = NULL;
 
-	return ret;
+	return fail;
 }

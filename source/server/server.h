@@ -175,6 +175,9 @@ typedef struct client_s
 	netchan_t netchan;
 
 	qboolean tvclient;
+
+	int mm_session;
+	unsigned int mm_ticket;
 } client_t;
 
 // a client can leave the server in one of four ways:
@@ -207,8 +210,11 @@ typedef struct
 	int file;
 	char *filename;
 	char *tempname;
+	time_t localtime;
 	unsigned int basetime, duration;
 	client_t client;                // special client for writing the messages
+	char meta_data[SNAP_MAX_DEMO_META_DATA_SIZE];
+	size_t meta_data_realsize;
 } server_static_demo_t;
 
 typedef server_static_demo_t demorec_t;
@@ -326,6 +332,7 @@ extern cvar_t *sv_debug_serverCmd;
 extern cvar_t *sv_uploads;
 extern cvar_t *sv_uploads_from_server;
 extern cvar_t *sv_uploads_baseurl;
+extern cvar_t *sv_uploads_demos_baseurl;
 
 extern cvar_t *sv_pure;
 extern cvar_t *sv_pure_forcemodulepk3;
@@ -341,6 +348,10 @@ extern cvar_t *sv_lastAutoUpdate;
 extern cvar_t *sv_defaultmap;
 
 extern cvar_t *sv_demodir;
+
+extern cvar_t *sv_mm_authkey;
+extern cvar_t *sv_mm_loginonly;
+extern cvar_t *sv_mm_debug_reportbots;
 
 //===========================================================
 
@@ -362,7 +373,6 @@ void SV_SendServerinfo( client_t *client );
 void SV_UserinfoChanged( client_t *cl );
 
 void SV_MasterHeartbeat( void );
-void SV_MMHeartbeat( void );
 
 void SVC_MasterInfoResponse( const socket_t *socket, const netadr_t *address );
 int SVC_FakeConnect( char *fakeUserinfo, char *fakeSocketType, char *fakeIP );
@@ -423,7 +433,7 @@ typedef struct
 	const netadr_t *address;
 } flush_params_t;
 
-void SV_FlushRedirect( int sv_redirected, char *outputbuf, flush_params_t *extra );
+void SV_FlushRedirect( int sv_redirected, char *outputbuf, const void *extra );
 void SV_SendClientMessages( void );
 
 void SV_Multicast( vec3_t origin, multicast_t to );
@@ -434,7 +444,8 @@ void SV_BroadcastCommand( const char *format, ... );
 //
 void SV_ParseClientMessage( client_t *client, msg_t *msg );
 qboolean SV_ClientConnect( const socket_t *socket, const netadr_t *address, client_t *client, char *userinfo,
-                           int game_port, int challenge, qboolean fakeClient, qboolean tvClient );
+                           int game_port, int challenge, qboolean fakeClient, qboolean tvClient,
+                           unsigned int ticket_id, int session_id );
 void SV_DropClient( client_t *drop, int type, const char *format, ... );
 void SV_ExecuteClientThinks( int clientNum );
 void SV_ClientResetCommandBuffers( client_t *client );
@@ -483,6 +494,10 @@ void SV_Demo_Purge_f( void );
 void SV_DemoList_f( client_t *client );
 void SV_DemoGet_f( client_t *client );
 
+#define SV_SetDemoMetaKeyValue(k,v) svs.demo.meta_data_realsize = SNAP_SetDemoMetaKeyValue(svs.demo.meta_data, sizeof(svs.demo.meta_data), svs.demo.meta_data_realsize, k, v)
+
+qboolean SV_IsDemoDownloadRequest( const char *request );
+
 //
 // sv_motd.c
 //
@@ -497,16 +512,17 @@ void SV_MM_SetConnection( incoming_t *connection );
 #endif
 
 void SV_MM_Init( void );
-void SV_MM_Shutdown( void );
+void SV_MM_Shutdown( qboolean logout );
 void SV_MM_Frame( void );
-void SV_MM_Packet( msg_t *msg );
-
 qboolean SV_MM_Initialized( void );
 
-qboolean SV_MM_CanHost( void );
-int SV_MM_GetSlotCount( void );
-qboolean SV_MM_IsLocked( void );
-qboolean SV_MM_ClientConnect( const netadr_t *address, char *userinfo );
-qboolean SV_MM_NetAddress( netadr_t *addr );
+int SV_MM_ClientConnect( const netadr_t *address, char *userinfo, unsigned int ticket, int session );
+void SV_MM_ClientDisconnect( client_t *client );
 
-const char *SV_MM_Salt( void );
+int SV_MM_GenerateLocalSession( void );
+
+// match report
+#include "../matchmaker/mm_common.h"
+void SV_MM_SendQuery( stat_query_t *query );
+void SV_MM_GameState( qboolean state );
+void SV_MM_GetMatchUUID( void (*callback_fn)( const char *uuid ) );

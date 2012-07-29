@@ -1,11 +1,11 @@
 /**
 
-\page doc_global Globals
+\page doc_global Global script entities
 
 All global declarations share the same namespace so their names may not
-conflict. This includes extended data types and built in functions registered
+conflict. This includes extended data types and built-in functions registered
 by the host application. Also, all declarations are visible to all, e.g. a
-function to be called do not have to be declared above the function that calls
+function to be called does not have to be declared above the function that calls
 it.
 
     <ul>
@@ -16,6 +16,7 @@ it.
     <li>\ref doc_global_import
     <li>\ref doc_global_enums
     <li>\ref doc_global_typedef
+    <li>\ref doc_global_funcdef
     </ul>
 
 
@@ -37,18 +38,23 @@ good practice to declare variables that will not be changed as <code>const</code
 because it makes for more readable code and the compiler is also able to take advantage 
 of it some times. Especially for <code>const &amp;in</code> the compiler is many times able to avoid a copy of the value.
 
-Note that although functions that return types by references can't be
-declared by scripts you may still see functions like these if the host
-application defines them. In that case the returned value may also
-be used as the target in assignments.
+Parameters can have default arguments. When a function with default arguments is called, it is not necessary to explicitly inform the value of the arguments, as the compiler can automatically use the default arg. This is especially useful when functions have some arguments that rarely change.
 
 <pre>
+  // Declaration of a normal function
   int MyFunction(int a, int b)
+  {
+    return a + b;
+  }
+
+  // Declaration of a function with default argument
+  int MyFuncWithDefArg(int a, int b = 0)
   {
     return a + b;
   }
 </pre>
 
+\todo Promote to individual article, that should explain function overloading, default args, and parameter references
 
 
 
@@ -57,9 +63,6 @@ be used as the target in assignments.
 
 Global variables may be declared in the scripts, which will then be shared between 
 all contexts accessing the script module.
-
-The global variables may be initialized by simple expressions that do not require 
-any functions to be called, i.e. the value can be evaluated at compile time.
 
 Variables declared globally like this are accessible from all functions. The 
 value of the variables are initialized at compile time and any changes are 
@@ -71,103 +74,31 @@ a string, its memory is released when the module is discarded or the script engi
   const uint Flag1 = 0x01;
 </pre>
 
+Variables of primitive types are initialized before variables of non-primitive types.
+This allows class constructors to access other global variables already with their
+correct initial value. The exception is if the other global variable also is of a 
+non-primitive type, in which case there is no guarantee which variable is initialized 
+first, which may lead to null-pointer exceptions being thrown during initialization.
+
+Be careful with calling functions that may access global variables from within the 
+initialization expression of global variables. While the compiler tries to initialize the
+global variables in the order they are needed, there is no guarantee that it will always
+succeed. Should a function access a global variable that has not yet been initialized you
+will get unpredictable behaviour or a null-pointer exception.
+
+
+
 
 
 
 
 \section doc_global_class Classes
 
-In AngelScript the script writer may declare script classes. The syntax is
-similar to that of C++, except the public, protected, and private keywords are
-not available. All the class methods must be declared with their implementation, 
-like in Java.
+Script classes are declared globally and provides an
+easy way of grouping properties and methods into logical units. The syntax
+for classes is similar to C++ and Java.
 
-The default constructor and destructor are not needed, unless specific
-logic is wanted. AngelScript will take care of the proper initialization of
-members upon construction, and releasing members upon destruction, even if not 
-manually implemented.
-
-With classes the script writer can declare new data types that hold groups
-of variables and methods to manipulate them.
-
-<pre>
-  // The class declaration
-  class MyClass
-  {
-    // The default constructor
-    MyClass()
-    {
-      a = 0;
-    }
-
-    // Destructor
-    ~MyClass()
-    {
-    }
-
-    // Another constructor
-    MyClass(int a)
-    {
-      this.a = a;
-    }
-
-    // A class method
-    void DoSomething()
-    {
-      a *= 2;
-    }
-
-    // A class property
-    int a;
-  }
-</pre>
-
-AngelScript supports single inheritance, where a derived class inherits the 
-properties and methods of its base class. Multiple inheritance is not supported,
-but polymorphism is supprted by implementing \ref doc_global_interface "interfaces".
-
-All the class methods are virtual, so it is not necessary to specify this manually. 
-When a derived class overrides an implementation, it can extend 
-the original implementation by specifically calling the base class' method using the
-scope resolution operator. When implementing the constructor for a derived class
-the constructor for the base class is called using the <code>super</code> keyword. 
-If none of the base class' constructors is manually called, the compiler will 
-automatically insert a call to the default constructor in the beginning. The base class'
-destructor will always be called after the derived class' destructor, so there is no
-need to manually do this.
-
-<pre>
-  // A derived class
-  class MyDerived : MyClass
-  {
-    // The default constructor
-    MyDerived()
-    {
-      // Calling the non-default constructor of the base class
-      super(10);
-      
-      b = 0;
-    }
-    
-    // Overloading a virtual method
-    void DoSomething()
-    {
-      // Call the base class' implementation
-      MyClass::DoSomething();
-      
-      // Do something more
-      b = a;
-    }
-    
-    int b;
-  }
-</pre>
-
-Note, that since AngelScript uses \ref doc_memory "automatic memory management", it can be
-difficult to know exactly when the destructor is called, so you shouldn't rely
-on the destructor being called at a specific moment. AngelScript will also
-call the destructor only once, even if the object is resurrected by adding a
-reference to it while executing the destructor.
+\see \ref doc_script_class
 
 
 
@@ -270,5 +201,18 @@ more complete support for all kinds of types.
 </pre>
 
 
+
+\section doc_global_funcdef Funcdefs
+
+Funcdefs are used to define a function signature that will be used to store pointers to 
+functions with matching signatures. With this a function pointer can be created, which is 
+able to store dynamic pointers that can be invoked at a later time as a normal function call.
+
+<pre>
+  // Define a function signature for the function pointer
+  funcdef bool CALLBACK(int, int);
+</pre>
+
+\see \ref doc_datatypes_funcptr for more information on how to use this
 
 */

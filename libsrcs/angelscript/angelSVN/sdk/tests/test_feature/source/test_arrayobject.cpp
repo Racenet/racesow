@@ -1,11 +1,14 @@
+#include <memory>
+
 #include "stdvector.h"
 #include "utils.h"
 
+using namespace std;
 
 namespace TestArrayObject
 {
 
-#define TESTNAME "TestArrayObject"
+static const char * const TESTNAME = "TestArrayObject";
 
 class CIntArray
 {
@@ -170,8 +173,9 @@ static const char *script1 =
 "	Assert(A[1] == 20);              \n"
 "   char[] B(5);                     \n"
 "   Assert(B.size() == 5);           \n"
-"   int[] c = {2,3};                 \n"
-"   Assert(c.size() == 2);           \n"
+// TODO: Add support for initialization list for value types as well
+//"   int[] c = {2,3};                 \n"
+//"   Assert(c.size() == 2);           \n"
 "}                                   \n"
 "                                    \n"
 "void Test2D()                       \n"
@@ -207,6 +211,7 @@ bool Test()
 	int r;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 
 	// Verify that it is possible to register arrays of registered types
 	r = engine->RegisterObjectType("char", sizeof(int), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r>= 0 );
@@ -214,7 +219,7 @@ bool Test()
 	r = engine->RegisterObjectBehaviour("char[]", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(DestructIntArray), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("char[]", asBEHAVE_CONSTRUCT, "void f()", asFUNCTIONPR(ConstructIntArray, (CIntArray *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("char[]", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTIONPR(ConstructIntArray, (int, CIntArray *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("char[]", asBEHAVE_INDEX, "int &f(int)", asMETHOD(CIntArray, operator[]), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("char[]", "int &opIndex(int)", asMETHOD(CIntArray, operator[]), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("char[]", "int size()", asMETHOD(CIntArray, size), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectType("char[][]", sizeof(CIntArrayArray), asOBJ_VALUE | asOBJ_APP_CLASS_CDA); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("char[][]", asBEHAVE_CONSTRUCT, "void f()", asFUNCTIONPR(ConstructIntArrayArray, (CIntArrayArray *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
@@ -227,8 +232,8 @@ bool Test()
 	r = engine->RegisterObjectBehaviour("int[]", asBEHAVE_CONSTRUCT, "void f()", asFUNCTIONPR(ConstructIntArray, (CIntArray *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("int[]", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTIONPR(ConstructIntArray, (int, CIntArray *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("int[]", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(DestructIntArray), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("int[]", asBEHAVE_ASSIGNMENT, "int[] &f(int[]&in)", asMETHOD(CIntArray, operator=), asCALL_THISCALL); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("int[]", asBEHAVE_INDEX, "int &f(int)", asMETHOD(CIntArray, operator[]), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("int[]", "int[] &opAssign(int[]&in)", asMETHOD(CIntArray, operator=), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("int[]", "int &opIndex(int)", asMETHOD(CIntArray, operator[]), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("int[]", "int size()", asMETHOD(CIntArray, size), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("int[]", "void push_back(int &in)", asMETHOD(CIntArray, push_back), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("int[]", "int pop_back()", asMETHOD(CIntArray, pop_back), asCALL_THISCALL); assert( r >= 0 );
@@ -239,8 +244,8 @@ bool Test()
 	r = engine->RegisterObjectBehaviour("int[][]", asBEHAVE_CONSTRUCT, "void f()", asFUNCTIONPR(ConstructIntArrayArray, (CIntArrayArray *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("int[][]", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTIONPR(ConstructIntArrayArray, (int, CIntArrayArray *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("int[][]", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(DestructIntArrayArray), asCALL_CDECL_OBJLAST); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("int[][]", asBEHAVE_ASSIGNMENT, "int[][] &f(int[][]&in)", asMETHOD(CIntArrayArray, operator=), asCALL_THISCALL); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("int[][]", asBEHAVE_INDEX, "int[] &f(int)", asMETHOD(CIntArrayArray, operator[]), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("int[][]", "int[][] &opAssign(int[][]&in)", asMETHOD(CIntArrayArray, operator=), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("int[][]", "int[] &opIndex(int)", asMETHOD(CIntArrayArray, operator[]), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("int[][]", "int size()", asMETHOD(CIntArrayArray, size), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("int[][]", "void push_back(int[] &in)", asMETHOD(CIntArrayArray, push_back), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("int[][]", "int[] pop_back()", asMETHOD(CIntArrayArray, pop_back), asCALL_THISCALL); assert( r >= 0 );
@@ -256,13 +261,13 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
 
-	asIScriptContext *ctx = 0;
-	r = engine->ExecuteString(0, "Test()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "Test()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("%s: Failed to execute script\n", TESTNAME);
@@ -270,7 +275,7 @@ bool Test()
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 		
-		fail = true;
+		TEST_FAILED;
 	}
 	
 	if( ctx ) ctx->Release();
@@ -279,15 +284,15 @@ bool Test()
 	// Test a compile error, to make sure the error is reported as expected
 	CBufferedOutStream bout;
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
-	r = engine->ExecuteString(0, "char[] t; t[0][0] = 1;");
+	r = ExecuteString(engine, "char[] t; t[0][0] = 1;");
 	if( r >= 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 	if( bout.buffer != "ExecuteString (1, 15) : Error   : Type 'int&' doesn't support the indexing operator\n" )
 	{
-		printf(bout.buffer.c_str());
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 	
 
@@ -304,23 +309,31 @@ public:
 	Value() {
 		a = 4;
 	}
+	// Add copy constructor to work on gcc 64bit
+	Value(const Value &v) : a(v.a) {}
 	int a;
 };
 static Value v_static;
 class A {
 public:
+	A() {}
+	A(const A &) {}
 	Value &operator[] (int n) {
 		return v_static;
 	}
 };
 class AArray {
 public:
+	AArray() {}
+	AArray(const AArray &) {}
 	A operator[] (int n) {
 		return A();
 	}
 };
 class AArrayArray {
 public:
+	AArrayArray() {}
+	AArrayArray(const AArrayArray &) {}
 	AArray operator[] (int n) {
 		return AArray();
 	}
@@ -331,22 +344,25 @@ bool Test2()
 {
 	int nRet;
 	bool fail = false;
+	COutStream out;
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+	RegisterScriptArray(engine, true);
 
-	nRet = engine->RegisterObjectType("Value", sizeof(Value),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);	assert( nRet >= 0 );
+	nRet = engine->RegisterObjectType("Value", sizeof(Value),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CK);	assert( nRet >= 0 );
 
-	nRet = engine->RegisterObjectType("A", sizeof(A),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);	assert( nRet >= 0 );
-	nRet = engine->RegisterObjectBehaviour("A", asBEHAVE_INDEX , "Value &f(int)", asMETHODPR(A, operator[], (int ), Value &), asCALL_THISCALL); 	assert( nRet >= 0 );
-	nRet = engine->RegisterObjectType("A[]", sizeof(AArray),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);	assert( nRet >= 0 );
-	nRet = engine->RegisterObjectBehaviour("A[]", asBEHAVE_INDEX , "A f( int )", asMETHODPR(AArray, operator[], (int ), A), asCALL_THISCALL); 	assert( nRet >= 0 );
-	nRet = engine->RegisterObjectType("A[][]", sizeof(AArrayArray),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS);	assert( nRet >= 0 );
-	nRet = engine->RegisterObjectBehaviour("A[][]", asBEHAVE_INDEX , "A[] f(int)", asMETHODPR(AArrayArray, operator[], (int ), AArray), asCALL_THISCALL); 	assert( nRet >= 0 );
+	nRet = engine->RegisterObjectType("A", sizeof(A),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CK);	assert( nRet >= 0 );
+	nRet = engine->RegisterObjectMethod("A", "Value &opIndex(int)", asMETHODPR(A, operator[], (int ), Value &), asCALL_THISCALL); 	assert( nRet >= 0 );
+	nRet = engine->RegisterObjectType("A[]", sizeof(AArray),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CK);	assert( nRet >= 0 );
+	nRet = engine->RegisterObjectMethod("A[]", "A opIndex( int )", asMETHODPR(AArray, operator[], (int ), A), asCALL_THISCALL); 	assert( nRet >= 0 );
+	nRet = engine->RegisterObjectType("A[][]", sizeof(AArrayArray),    asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CK);	assert( nRet >= 0 );
+	nRet = engine->RegisterObjectMethod("A[][]", "A[] opIndex(int)", asMETHODPR(AArrayArray, operator[], (int ), AArray), asCALL_THISCALL); 	assert( nRet >= 0 );
 
-	nRet = engine->ExecuteString(NULL, "A[][] f;", NULL);	assert( nRet >= 0 );
-	nRet = engine->ExecuteString(NULL, "A[][] f; f[0];", NULL);	assert( nRet >= 0 );
-	nRet = engine->ExecuteString(NULL, "A[][] f; f[0][0];", NULL);	assert( nRet >= 0 );
-	nRet = engine->ExecuteString(NULL, "A[][] f; f[0][0][0];", NULL);	assert( nRet >= 0 );
+	nRet = ExecuteString(engine, "A[][] f;");	assert( nRet >= 0 );
+	nRet = ExecuteString(engine, "A[][] f; f[0];");	assert( nRet >= 0 );
+	nRet = ExecuteString(engine, "A[][] f; f[0][0];");	assert( nRet >= 0 );
+	nRet = ExecuteString(engine, "A[][] f; f[0][0][0];");	assert( nRet >= 0 );
 
 	engine->Release();
 

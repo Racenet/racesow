@@ -80,7 +80,7 @@ static void Irc_Rcon_CmdQuit_f(irc_command_t cmd, const char *prefix, const char
 
 static void Irc_Rcon_ProcessMsg(const char *user, const char *msg) {
 
-	char nick[IRC_SEND_BUF_SIZE];
+	static char nick[IRC_SEND_BUF_SIZE];
 	irc_nick_prefix_t prefix;
 	char *buf = (char*) Irc_MemAlloc((int) strlen(msg) + 1);
 	const char *word;

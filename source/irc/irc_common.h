@@ -46,7 +46,7 @@ typedef struct irc_chat_history_node_s {
 #	pragma warning (disable : 4125)		// decimal digit terminates octal escape sequence
 #endif
 
-#define IRC_COLOR_WHITE		"\00300"
+#define IRC_COLOR_WHITE		"\00315"//racesow: better visibility
 #define IRC_COLOR_BLACK		"\00301"
 #define IRC_COLOR_RED		"\00304"
 #define IRC_COLOR_ORANGE	"\00307"
@@ -78,6 +78,9 @@ void Irc_ColorFilter(const char *pre, irc_color_filter_t filter, char *post);
 
 // clear all lines in irc_chat_history_node_t
 void Irc_ClearHistory(void);
+
+size_t Irc_HistorySize(void);
+size_t Irc_HistoryTotalSize(void);
 
 // parses usermask for nick and chanmode prefix
 void Irc_ParseName(const char *mask, char *nick, irc_nick_prefix_t *prefix);

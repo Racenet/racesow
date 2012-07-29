@@ -22,12 +22,12 @@ The code for this might look something like this:
 // each call.
 asIScriptContext *ctx = engine->CreateContext();
 
-// Obtain the function id from the module. This value should preferrably  
+// Obtain the function from the module. This should preferrably  
 // be cached if the same function is called multiple times.
-int funcId = engine->GetModule(module_name)->GetFunctionIdByDecl(function_declaration);
+asIScriptFunction *func = engine->GetModule(module_name)->GetFunctionByDecl(function_declaration);
 
 // Prepare() must be called to allow the context to prepare the stack
-ctx->Prepare(funcId);
+ctx->Prepare(func);
 
 // Set the function arguments
 ctx->SetArgDWord(...);
@@ -43,7 +43,7 @@ if( r == asEXECUTION_FINISHED )
 ctx->Release();
 \endcode
 
-If your application allow the execution to be suspended, either by using
+If your application allows the execution to be suspended, either by using
 the callback function or registering a function that allow the script to 
 manually suspend the execution, then the execution function may return 
 before finishing with the return code asEXECUTION_SUSPENDED. In that case you
@@ -173,7 +173,7 @@ void PrintExceptionInfo(asIScriptContext *ctx)
 
   // Determine the function where the exception occurred
   int funcId = ctx->GetExceptionFunction();
-  const asIScriptFunction *function = engine->GetFunctionDescriptorById(funcId);
+  const asIScriptFunction *function = engine->GetFunctionById(funcId);
   printf("func: %s\n", function->GetDeclaration());
   printf("modl: %s\n", function->GetModuleName());
   printf("sect: %s\n", function->GetScriptSectionName());
@@ -186,7 +186,7 @@ void PrintExceptionInfo(asIScriptContext *ctx)
 If desired, it is also possible to \ref asIScriptContext::SetExceptionCallback "register a callback function" 
 that will be called at the moment the exception occurred, before the \ref asIScriptContext::Execute "Execute" method returns. 
 
-\see \ref doc_debug for information on examining the callstack
+\see \ref doc_debug for information on examining the callstack, and \ref doc_addon_helpers "PrintException" for an helper function to get information on exceptions.
 
 
 */

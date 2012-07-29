@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // cmodel_trace.c
 
 #include "qcommon.h"
@@ -40,6 +40,7 @@ void CM_InitBoxHull( cmodel_state_t *cms )
 
 	cms->box_markbrushes[0] = cms->box_brush;
 
+	cms->box_cmodel->builtin = qtrue;
 	cms->box_cmodel->nummarkfaces = 0;
 	cms->box_cmodel->markfaces = NULL;
 	cms->box_cmodel->markbrushes = cms->box_markbrushes;
@@ -72,6 +73,78 @@ void CM_InitBoxHull( cmodel_state_t *cms )
 }
 
 /*
+* CM_InitOctagonHull
+*
+* Set up the planes so that the six floats of a bounding box
+* can just be stored out and get a proper clipping hull structure.
+*/
+void CM_InitOctagonHull( cmodel_state_t *cms )
+{
+	int i;
+	cplane_t *p;
+	cbrushside_t *s;
+	const vec3_t oct_dirs[4] = {
+		{  1,  1, 0 },
+		{ -1,  1, 0 },
+		{ -1, -1, 0 },
+		{  1, -1, 0 }
+	};
+
+	cms->oct_brush->numsides = 10;
+	cms->oct_brush->brushsides = cms->oct_brushsides;
+	cms->oct_brush->contents = CONTENTS_BODY;
+
+	cms->oct_markbrushes[0] = cms->oct_brush;
+
+	cms->oct_cmodel->builtin = qtrue;
+	cms->oct_cmodel->nummarkfaces = 0;
+	cms->oct_cmodel->markfaces = NULL;
+	cms->oct_cmodel->markbrushes = cms->oct_markbrushes;
+	cms->oct_cmodel->nummarkbrushes = 1;
+
+	// axial planes
+	for( i = 0; i < 6; i++ )
+	{
+		// brush sides
+		s = cms->oct_brushsides + i;
+		s->plane = cms->oct_planes + i;
+		s->surfFlags = 0;
+
+		// planes
+		p = &cms->oct_planes[i];
+		VectorClear( p->normal );
+
+		if( ( i & 1 ) )
+		{
+			p->type = PLANE_NONAXIAL;
+			p->normal[i>>1] = -1;
+			p->signbits = ( 1 << ( i >> 1 ) );
+		}
+		else
+		{
+			p->type = i >> 1;
+			p->normal[i >> 1] = 1;
+			p->signbits = 0;
+		}
+	}
+
+	// non-axial planes
+	for( i = 6; i < 10; i++ ) {
+		// brush sides
+		s = cms->oct_brushsides + i;
+		s->plane = cms->oct_planes + i;
+		s->surfFlags = 0;
+
+		// planes
+		p = &cms->oct_planes[i];
+		VectorCopy( oct_dirs[i-6], p->normal );
+
+		p->type = PLANE_NONAXIAL;
+		p->signbits = SignbitsForPlane( p );
+	}
+}
+
+/*
 * CM_ModelForBBox
 * 
 * To keep everything totally uniform, bounding boxes are turned into inline models
@@ -92,9 +165,72 @@ cmodel_t *CM_ModelForBBox( cmodel_state_t *cms, vec3_t mins, vec3_t maxs )
 }
 
 /*
+* CM_OctagonModelForBBox
+* 
+* Same as CM_ModelForBBox with 4 additional planes at corners.
+* Internally offset to be symmetric on all sides.
+*/
+cmodel_t *CM_OctagonModelForBBox( cmodel_state_t *cms, vec3_t mins, vec3_t maxs )
+{
+	int i;
+	float a, b, d, t;
+	float sina, cosa;
+	vec3_t offset, size[2];
+
+	for( i = 0; i < 3; i++ ) {
+		offset[i] = ( mins[i] + maxs[i] ) * 0.5;
+		size[0][i] = mins[i] - offset[i];
+		size[1][i] = maxs[i] - offset[i];
+	}
+
+	VectorCopy( offset, cms->oct_cmodel->cyl_offset );
+	VectorCopy( size[0], cms->oct_cmodel->mins );
+	VectorCopy( size[1], cms->oct_cmodel->maxs );
+
+	cms->oct_planes[0].dist = size[1][0];
+	cms->oct_planes[1].dist = -size[0][0];
+	cms->oct_planes[2].dist = size[1][1];
+	cms->oct_planes[3].dist = -size[0][1];
+	cms->oct_planes[4].dist = size[1][2];
+	cms->oct_planes[5].dist = -size[0][2];
+
+	a = size[1][0]; // halfx
+	b = size[1][1]; // halfy
+	d = sqrt( a * a + b * b ); // hypothenuse
+
+	cosa = a / d;
+	sina = b / d;
+
+	// swap sin and cos, which is the same thing as adding pi/2 radians to the original angle
+	t = sina;
+	sina = cosa;
+	cosa = t;
+
+	// elleptical radius
+	d = a * b / sqrt( a * a * cosa * cosa + b * b * sina * sina );
+	//d = a * b / sqrt( a * a  + b * b ); // produces a rectangle, inscribed at middle points
+
+	// the following should match normals and signbits set in CM_InitOctagonHull
+
+	VectorSet( cms->oct_planes[6].normal, cosa, sina, 0 );
+	cms->oct_planes[6].dist = d;
+
+	VectorSet( cms->oct_planes[7].normal, -cosa, sina, 0 );
+	cms->oct_planes[7].dist = d;
+
+	VectorSet( cms->oct_planes[8].normal, -cosa, -sina, 0 );
+	cms->oct_planes[8].dist = d;
+
+	VectorSet( cms->oct_planes[9].normal, cosa, -sina, 0 );
+	cms->oct_planes[9].dist = d;
+
+	return cms->oct_cmodel;
+}
+
+/*
 * CM_PointLeafnum
 */
-int CM_PointLeafnum( cmodel_state_t *cms, vec3_t p )
+int CM_PointLeafnum( cmodel_state_t *cms, const vec3_t p )
 {
 	int num = 0;
 	cnode_t	*node;
@@ -174,7 +310,7 @@ void CM_RoundUpToHullSize( cmodel_state_t *cms, vec3_t mins, vec3_t maxs, cmodel
 		cmodel = cms->map_cmodels;
 
 	// special rounding code
-	if( cmodel != cms->box_cmodel && cms->CM_RoundUpToHullSize )
+	if( !cmodel->builtin && cms->CM_RoundUpToHullSize )
 	{
 		cms->CM_RoundUpToHullSize( cms, mins, maxs, cmodel );
 		return;
@@ -313,15 +449,15 @@ int CM_TransformedPointContents( cmodel_state_t *cms, vec3_t p, cmodel_t *cmodel
 	}
 
 	// special point contents code
-	if( cmodel != cms->box_cmodel && cms->CM_TransformedPointContents )
+	if( !cmodel->builtin && cms->CM_TransformedPointContents )
 		return cms->CM_TransformedPointContents( cms, p, cmodel, origin, angles );
 
 	// subtract origin offset
 	VectorSubtract( p, origin, p_l );
 
 	// rotate start and end into the models frame of reference
-	if( ( angles[0] || angles[1] || angles[2] )
-		&& ( cmodel != cms->box_cmodel )
+	if( ( angles[0] || angles[1] || angles[2] ) 
+		&& !cmodel->builtin	
 		)
 	{
 		vec3_t temp;
@@ -350,6 +486,7 @@ BOX TRACING
 #ifdef TRACEVICFIX
 #define FRAC_EPSILON    ( 1.0f / 1024.0f )
 #endif
+#define RADIUS_EPSILON		1.0f
 
 static vec3_t trace_start, trace_end;
 static vec3_t trace_mins, trace_maxs;
@@ -621,7 +758,7 @@ static void CM_TestBoxInBrush( cmodel_state_t *cms, cbrush_t *brush )
 * CM_CollideBox
 */
 static void CM_CollideBox( cmodel_state_t *cms, cbrush_t **markbrushes, int nummarkbrushes, cface_t **markfaces,
-                          int nummarkfaces, void ( *func )( cmodel_state_t *cms, cbrush_t *b ) )
+						  int nummarkfaces, void ( *func )( cmodel_state_t *cms, cbrush_t *b ) )
 {
 	int i, j;
 	cbrush_t *b;
@@ -670,7 +807,7 @@ static void CM_CollideBox( cmodel_state_t *cms, cbrush_t **markbrushes, int numm
 * CM_ClipBox
 */
 static inline void CM_ClipBox( cmodel_state_t *cms, cbrush_t **markbrushes, int nummarkbrushes, cface_t **markfaces,
-                               int nummarkfaces )
+							  int nummarkfaces )
 {
 	CM_CollideBox( cms, markbrushes, nummarkbrushes, markfaces, nummarkfaces, CM_ClipBoxToBrush );
 }
@@ -679,7 +816,7 @@ static inline void CM_ClipBox( cmodel_state_t *cms, cbrush_t **markbrushes, int 
 * CM_TestBox
 */
 static inline void CM_TestBox( cmodel_state_t *cms, cbrush_t **markbrushes, int nummarkbrushes, cface_t **markfaces,
-                               int nummarkfaces )
+							  int nummarkfaces )
 {
 	CM_CollideBox( cms, markbrushes, nummarkbrushes, markfaces, nummarkfaces, CM_TestBoxInBrush );
 }
@@ -737,8 +874,8 @@ loc0:
 			offset = 0;
 		else
 			offset = fabs( trace_extents[0] * plane->normal[0] ) +
-			         fabs( trace_extents[1] * plane->normal[1] ) +
-			         fabs( trace_extents[2] * plane->normal[2] );
+			fabs( trace_extents[1] * plane->normal[1] ) +
+			fabs( trace_extents[2] * plane->normal[2] );
 	}
 
 	// see which sides we need to consider
@@ -806,11 +943,11 @@ loc0:
 * CM_BoxTrace
 */
 static void CM_BoxTrace( cmodel_state_t *cms, trace_t *tr, vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs,
-                  cmodel_t *cmodel, int brushmask )
+						cmodel_t *cmodel, vec3_t origin, int brushmask )
 {
 	qboolean notworld;
-	
-	notworld = ( cmodel != cms->map_cmodels );
+
+	notworld = ( cmodel != cms->map_cmodels ? qtrue : qfalse );
 
 	cms->checkcount++;  // for multi-check avoidance
 	c_traces++;     // for statistics, may be zeroed
@@ -861,7 +998,9 @@ static void CM_BoxTrace( cmodel_state_t *cms, trace_t *tr, vec3_t start, vec3_t 
 		if( notworld )
 		{
 			if( BoundsIntersect( cmodel->mins, cmodel->maxs, trace_absmins, trace_absmaxs ) )
+			{
 				CM_TestBox( cms, cmodel->markbrushes, cmodel->nummarkbrushes, cmodel->markfaces, cmodel->nummarkfaces );
+			}
 		}
 		else
 		{
@@ -901,9 +1040,9 @@ static void CM_BoxTrace( cmodel_state_t *cms, trace_t *tr, vec3_t start, vec3_t 
 	{
 		trace_ispoint = qfalse;
 		VectorSet( trace_extents,
-		           -mins[0] > maxs[0] ? -mins[0] : maxs[0],
-		           -mins[1] > maxs[1] ? -mins[1] : maxs[1],
-		           -mins[2] > maxs[2] ? -mins[2] : maxs[2] );
+			-mins[0] > maxs[0] ? -mins[0] : maxs[0],
+			-mins[1] > maxs[1] ? -mins[1] : maxs[1],
+			-mins[2] > maxs[2] ? -mins[2] : maxs[2] );
 	}
 
 	//
@@ -938,7 +1077,7 @@ static void CM_BoxTrace( cmodel_state_t *cms, trace_t *tr, vec3_t start, vec3_t 
 * rotating entities
 */
 void CM_TransformedBoxTrace( cmodel_state_t *cms, trace_t *tr, vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs,
-                             cmodel_t *cmodel, int brushmask, vec3_t origin, vec3_t angles )
+							cmodel_t *cmodel, int brushmask, vec3_t origin, vec3_t angles )
 {
 	vec3_t start_l, end_l;
 	vec3_t a, temp;
@@ -963,22 +1102,38 @@ void CM_TransformedBoxTrace( cmodel_state_t *cms, trace_t *tr, vec3_t start, vec
 	}
 
 	// special tracing code
-	if( cmodel != cms->box_cmodel && cms->CM_TransformedPointContents )
+	if( !cmodel->builtin && cms->CM_TransformedPointContents )
 	{
 		cms->CM_TransformedBoxTrace( cms, tr, start, end, mins, maxs, cmodel, brushmask, origin, angles );
 		return;
 	}
 
+	// cylinder offset
+	if( cmodel == cms->oct_cmodel )
+	{
+		VectorSubtract( start, cmodel->cyl_offset, start_l );
+		VectorSubtract( end, cmodel->cyl_offset, end_l );
+	}
+	else
+	{
+		VectorCopy( start, start_l );
+		VectorCopy( end, end_l );
+	}
+
 	// subtract origin offset
-	VectorSubtract( start, origin, start_l );
-	VectorSubtract( end, origin, end_l );
+	VectorSubtract( start_l, origin, start_l );
+	VectorSubtract( end_l, origin, end_l );
+
+	// ch : here we could try back-rotate the vector for aabb to get
+	// 'cylinder-like' shape, ie width of the aabb is constant for all directions
+	// in this case, the orientation of vector would be ( normalize(origin-start), cross(x,z), up )
 
 	// rotate start and end into the models frame of reference
 	if( ( angles[0] || angles[1] || angles[2] ) 
 #ifndef CM_ALLOW_ROTATED_BBOXES
-		&& ( cmodel != cms->box_cmodel )
+		&& !cmodel->builtin
 #endif
-		 )
+		)
 		rotated = qtrue;
 	else
 		rotated = qfalse;
@@ -995,7 +1150,7 @@ void CM_TransformedBoxTrace( cmodel_state_t *cms, trace_t *tr, vec3_t start, vec
 	}
 
 	// sweep the box through the model
-	CM_BoxTrace( cms, tr, start_l, end_l, mins, maxs, cmodel, brushmask );
+	CM_BoxTrace( cms, tr, start_l, end_l, mins, maxs, cmodel, origin, brushmask );
 
 	if( rotated && tr->fraction != 1.0 )
 	{

@@ -30,6 +30,12 @@ typedef struct
 	shader_t *shader;
 } mshaderref_t;
 
+typedef struct
+{
+	vec3_t mins, maxs;
+	int flatness[2];
+} mpatchgroup_t;
+
 static model_t *loadmodel;
 static int loadmodel_numverts;
 static vec4_t *loadmodel_xyz_array;                       // vertexes
@@ -47,11 +53,13 @@ static mlightmapRect_t *loadmodel_lightmapRects;
 static int loadmodel_numshaderrefs;
 static mshaderref_t *loadmodel_shaderrefs;
 
+static int loadmodel_numpatchgroups;
+static int loadmodel_maxpatchgroups;
+static mpatchgroup_t *loadmodel_patchgroups;
+static int *loadmodel_patchgrouprefs;
+
 // current model format descriptor
 static const bspFormatDesc_t *mod_bspFormat;
-
-// the inline * models from the current map are kept separate
-extern model_t *mod_inline;
 
 /*
 ===============================================================================
@@ -65,9 +73,7 @@ static qbyte *mod_base;
 static mbrushmodel_t *loadbmodel;
 
 /*
-=================
-Mod_CheckDeluxemaps
-=================
+* Mod_CheckDeluxemaps
 */
 static void Mod_CheckDeluxemaps( const lump_t *l, qbyte *lmData )
 {
@@ -142,13 +148,13 @@ static void Mod_CheckDeluxemaps( const lump_t *l, qbyte *lmData )
 }
 
 /*
-=================
-Mod_LoadLighting
-=================
+* Mod_LoadLighting
 */
 static void Mod_LoadLighting( const lump_t *l, const lump_t *faces )
 {
 	int size;
+
+	R_InitLightStyles( loadmodel );
 
 	// we don't need lightmaps for vertex lighting
 	if( r_lighting_vertexlight->integer )
@@ -165,13 +171,11 @@ static void Mod_LoadLighting( const lump_t *l, const lump_t *faces )
 
 	Mod_CheckDeluxemaps( faces, mod_base + l->fileofs );
 
-	R_BuildLightmaps( loadmodel_numlightmaps, mod_bspFormat->lightmapWidth, mod_bspFormat->lightmapHeight, mod_base + l->fileofs, loadmodel_lightmapRects );
+	R_BuildLightmaps( loadmodel, loadmodel_numlightmaps, mod_bspFormat->lightmapWidth, mod_bspFormat->lightmapHeight, mod_base + l->fileofs, loadmodel_lightmapRects );
 }
 
 /*
-=================
-Mod_LoadVertexes
-=================
+* Mod_LoadVertexes
 */
 static void Mod_LoadVertexes( const lump_t *l )
 {
@@ -240,6 +244,12 @@ static void Mod_LoadVertexes( const lump_t *l )
 			color[2] = ( ( float )in->color[2] * div );
 			ColorNormalize( color, color );
 
+			// convert to grayscale if monochrome lighting is enabled
+			if( r_lighting_grayscale->integer ) {
+				vec_t grey = ColorGrayscale( color );
+				color[0] = color[1] = color[2] = bound( 0, grey, 1 );
+			}
+
 			out_colors[0] = ( qbyte )( color[0] * 255 );
 			out_colors[1] = ( qbyte )( color[1] * 255 );
 			out_colors[2] = ( qbyte )( color[2] * 255 );
@@ -249,9 +259,7 @@ static void Mod_LoadVertexes( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadVertexes_RBSP
-=================
+* Mod_LoadVertexes_RBSP
 */
 static void Mod_LoadVertexes_RBSP( const lump_t *l )
 {
@@ -323,6 +331,12 @@ static void Mod_LoadVertexes_RBSP( const lump_t *l )
 				color[2] = ( ( float )in->color[j][2] * div );
 				ColorNormalize( color, color );
 
+				// convert to grayscale if monochrome lighting is enabled
+				if( r_lighting_grayscale->integer ) {
+					vec_t grey = ColorGrayscale( color );
+					color[0] = color[1] = color[2] = bound( 0, grey, 1 );
+				}
+
 				out_colors[j][0] = ( qbyte )( color[0] * 255 );
 				out_colors[j][1] = ( qbyte )( color[1] * 255 );
 				out_colors[j][2] = ( qbyte )( color[2] * 255 );
@@ -333,9 +347,7 @@ static void Mod_LoadVertexes_RBSP( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadSubmodels
-=================
+* Mod_LoadSubmodels
 */
 static void Mod_LoadSubmodels( const lump_t *l )
 {
@@ -343,6 +355,7 @@ static void Mod_LoadSubmodels( const lump_t *l )
 	dmodel_t *in;
 	mmodel_t *out;
 	mbrushmodel_t *bmodel;
+	model_t *mod_inline;
 
 	in = ( void * )( mod_base + l->fileofs );
 	if( l->filelen % sizeof( *in ) )
@@ -356,6 +369,7 @@ static void Mod_LoadSubmodels( const lump_t *l )
 	loadbmodel = bmodel;
 	loadbmodel->submodels = out;
 	loadbmodel->numsubmodels = count;
+	loadbmodel->inlines = mod_inline;
 
 	for( i = 0; i < count; i++, in++, out++ )
 	{
@@ -375,9 +389,7 @@ static void Mod_LoadSubmodels( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadShaderrefs
-=================
+* Mod_LoadShaderrefs
 */
 static void Mod_LoadShaderrefs( const lump_t *l )
 {
@@ -407,11 +419,69 @@ static void Mod_LoadShaderrefs( const lump_t *l )
 }
 
 /*
-=================
-Mod_CreateMeshForSurface
-=================
+* Mod_AddUpdatePatchGroup
 */
-static mesh_t *Mod_CreateMeshForSurface( const rdface_t *in, msurface_t *out )
+static int Mod_AddUpdatePatchGroup( const rdface_t *in )
+{
+	int i;
+	int patch_cp[2], flatness[2];
+	float subdivLevel;
+	vec3_t lodMins, lodMaxs;
+	int inFirstVert;
+	mpatchgroup_t *group;
+
+	patch_cp[0] = LittleLong( in->patch_cp[0] );
+	patch_cp[1] = LittleLong( in->patch_cp[1] );
+	if( !patch_cp[0] || !patch_cp[1] ) {
+		return -1;
+	}
+
+	// load LOD group bounds
+	for( i = 0; i < 3; i++ ) {
+		lodMins[i] = in->mins[i];
+		lodMaxs[i] = in->maxs[i];
+	}
+
+	subdivLevel = bound( SUBDIVISIONS_MIN, r_subdivisions->value, SUBDIVISIONS_MAX );
+	inFirstVert = LittleLong( in->firstvert );
+
+	// find the degree of subdivision in the u and v directions
+	Patch_GetFlatness( subdivLevel, (vec_t *)loadmodel_xyz_array[inFirstVert], 4, patch_cp, flatness );
+
+	// track LOD bounds, which hold group of all curves that must subdivide the same to avoid cracking
+	for( i = 0, group = loadmodel_patchgroups; i < loadmodel_numpatchgroups; i++, group++ ) {
+		if( VectorCompare( group->mins, lodMins ) && VectorCompare( group->maxs, lodMaxs ) ) {
+			break;
+		}
+	}
+
+	// new group
+	if( i == loadmodel_numpatchgroups ) {
+		if( i == loadmodel_maxpatchgroups ) {
+			assert( 0 );
+			Com_Printf( S_COLOR_YELLOW "Mod_AddUpdatePatchGroup: i == loadmodel_maxpatchgroups\n" );
+			return -1;
+		}
+
+		VectorCopy( lodMins, group->mins );
+		VectorCopy( lodMaxs, group->maxs );
+		group->flatness[0] = flatness[0];
+		group->flatness[1] = flatness[1];
+
+		loadmodel_numpatchgroups++;
+	}
+	else {
+		group->flatness[0] = max( group->flatness[0], flatness[0] );
+		group->flatness[1] = max( group->flatness[1], flatness[1] );
+	}
+
+	return i;
+}
+
+/*
+* Mod_CreateMeshForSurface
+*/
+static mesh_t *Mod_CreateMeshForSurface( const rdface_t *in, msurface_t *out, int faceNum )
 {
 	mesh_t *mesh = NULL;
 	qboolean createSTverts;
@@ -446,25 +516,26 @@ static mesh_t *Mod_CreateMeshForSurface( const rdface_t *in, msurface_t *out )
 		{
 			int i, j, u, v, p;
 			int patch_cp[2], step[2], size[2], flat[2];
-			float subdivLevel, f;
+			float f;
 			int numVerts, numElems, inNumVerts, inFirstVert;
 			vec4_t tempv[MAX_ARRAY_VERTS];
 			vec4_t colors[MAX_ARRAY_VERTS];
 			elem_t *elems;
 
+			j = loadmodel_patchgrouprefs[faceNum];
+			if( j < 0 ) {
+				// not a patch at all
+				break;
+			}
+
 			patch_cp[0] = LittleLong( in->patch_cp[0] );
 			patch_cp[1] = LittleLong( in->patch_cp[1] );
 
-			if( !patch_cp[0] || !patch_cp[1] )
-				break;
-
-			subdivLevel = bound( 1, r_subdivisions->value,  16 );
+			flat[0] = loadmodel_patchgroups[j].flatness[0];
+			flat[1] = loadmodel_patchgroups[j].flatness[1];
 
 			inNumVerts = LittleLong( in->numverts );
 			inFirstVert = LittleLong( in->firstvert );
-
-			// find the degree of subdivision in the u and v directions
-			Patch_GetFlatness( subdivLevel, (vec_t *)loadmodel_xyz_array[inFirstVert], 4, patch_cp, flat );
 
 			// allocate space for mesh
 			step[0] = ( 1 << flat[0] );
@@ -631,13 +702,12 @@ static mesh_t *Mod_CreateMeshForSurface( const rdface_t *in, msurface_t *out )
 }
 
 /*
-=================
-Mod_LoadFaceCommon
-=================
+* Mod_LoadFaceCommon
 */
-static inline void Mod_LoadFaceCommon( const rdface_t *in, msurface_t *out )
+static inline void Mod_LoadFaceCommon( const rdface_t *in, msurface_t *out, int faceNum )
 {
-	int j, shaderType;
+	int j;
+	int shaderType, ignoreType;
 	mfog_t *fog;
 	mshaderref_t *shaderref;
 	int shadernum, fognum;
@@ -674,35 +744,34 @@ static inline void Mod_LoadFaceCommon( const rdface_t *in, msurface_t *out )
 	}
 
 	// add this super style
-	R_AddSuperLightStyle( lightmaps, lightmapStyles, vertexStyles, lmRects );
+	R_AddSuperLightStyle( loadmodel, lightmaps, lightmapStyles, vertexStyles, lmRects );
 
 	shadernum = LittleLong( in->shadernum );
 	if( shadernum < 0 || shadernum >= loadmodel_numshaderrefs )
 		Com_Error( ERR_DROP, "MOD_LoadBmodel: bad shader number" );
 	shaderref = loadmodel_shaderrefs + shadernum;
 
-	if( out->facetype == FACETYPE_FLARE )
+	ignoreType = SHADER_INVALID;
+	if( out->facetype == FACETYPE_FLARE ) {
 		shaderType = SHADER_BSP_FLARE;
-	else if( /*out->facetype == FACETYPE_TRISURF || */ lightmaps[0] < 0 || lightmapStyles[0] == 255 )
+	} else if( lightmaps[0] < 0 || lightmapStyles[0] == 255 ) {
 		shaderType = SHADER_BSP_VERTEX;
-	else
+		ignoreType = SHADER_BSP;
+	} else {
 		shaderType = SHADER_BSP;
+		ignoreType = SHADER_BSP_VERTEX;
+	}
 
-	if( !shaderref->shader )
-	{
-		shaderref->shader = R_LoadShader( shaderref->name, shaderType, qfalse, 0, SHADER_INVALID, NULL );
+	if( !shaderref->shader ) {
+		out->shader = shaderref->shader = R_LoadShader( shaderref->name, shaderType, qfalse, 0, ignoreType, NULL );
+	} else if( shaderref->shader->type == ignoreType ) {
+		// check whether we may need another instance of the same shader but of different type..
+		out->shader = R_LoadShader( shaderref->name, shaderType, qfalse, 0, ignoreType, NULL );
+	} else {
 		out->shader = shaderref->shader;
 	}
-	else
-	{
-		// some q3a maps specify a lightmap shader for surfaces that do not have a lightmap,
-		// workaround that... see pukka3tourney2 for example
-		if( ( shaderType == SHADER_BSP_VERTEX && ( shaderref->shader->flags & SHADER_LIGHTMAP ) &&
-			( shaderref->shader->passes[0].flags & SHADERPASS_LIGHTMAP ) ) )
-			out->shader = R_LoadShader( shaderref->name, shaderType, qfalse, 0, shaderref->shader->type, NULL );
-		else
-			out->shader = shaderref->shader;
-	}
+
+	assert( out->shader );
 
 	out->flags = shaderref->flags;
 
@@ -714,13 +783,125 @@ static inline void Mod_LoadFaceCommon( const rdface_t *in, msurface_t *out )
 			out->fog = fog;
 	}
 
-	out->mesh = Mod_CreateMeshForSurface( in, out );
+	out->mesh = Mod_CreateMeshForSurface( in, out, faceNum );
 }
 
 /*
-=================
-Mod_LoadFaces
-=================
+* Mod_FaceToRavenFace
+*/
+static void Mod_FaceToRavenFace( dface_t *in, rdface_t *rdf )
+{
+	int j;
+
+	rdf->facetype = in->facetype;
+	rdf->lm_texnum[0] = in->lm_texnum;
+	rdf->lightmapStyles[0] = rdf->vertexStyles[0] = 0;
+
+	for( j = 1; j < MAX_LIGHTMAPS; j++ )
+	{
+		rdf->lm_texnum[j] = -1;
+		rdf->lightmapStyles[j] = rdf->vertexStyles[j] = 255;
+	}
+
+	for( j = 0; j < 3; j++ )
+	{
+		rdf->origin[j] = in->origin[j];
+		rdf->normal[j] = in->normal[j];
+		rdf->mins[j] = in->mins[j];
+		rdf->maxs[j] = in->maxs[j];
+	}
+
+	rdf->shadernum = in->shadernum;
+	rdf->fognum = in->fognum;
+	rdf->numverts = in->numverts;
+	rdf->firstvert = in->firstvert;
+	rdf->patch_cp[0] = in->patch_cp[0];
+	rdf->patch_cp[1] = in->patch_cp[1];
+	rdf->firstelem = in->firstelem;
+	rdf->numelems = in->numelems;
+}
+
+/*
+* Mod_LoadPatchGroups
+*/
+static void Mod_LoadPatchGroups( const lump_t *l )
+{
+	int i, j, count;
+	dface_t	*din = NULL;
+	rdface_t *drin = NULL;
+	rdface_t rdf;
+	int *out = NULL;
+	int *patches = NULL, patchcount;
+	int facetype;
+
+#define Mod_PreloadPatches_PROLOGUE(in) \
+	in = ( void * )( mod_base + l->fileofs ); \
+	if( l->filelen % sizeof( *in ) ) \
+		Com_Error( ERR_DROP, "Mod_LoadPatchGroups: funny lump size in %s", loadmodel->name ); \
+	count = l->filelen / sizeof( *in ); \
+	out = Mod_Malloc( loadmodel, count*sizeof( *out ) ); \
+	memset( out, -1, count*sizeof( *out ) );
+
+#define Mod_PreloadPatches_COUNT(in) \
+	patchcount = 0; \
+	patches = Mod_Malloc( loadmodel, count*sizeof( *patches ) ); \
+	for( i = 0; i < count; i++ ) { \
+		facetype = LittleLong( in[i].facetype ); \
+		if( facetype != FACETYPE_PATCH ) { \
+			continue; \
+		} \
+		patches[patchcount++] = i; \
+	}
+
+	// load, count and mark patches
+	if( mod_bspFormat->flags & BSP_RAVEN ) {
+		Mod_PreloadPatches_PROLOGUE( drin );
+		Mod_PreloadPatches_COUNT( drin );
+	}
+	else {
+		Mod_PreloadPatches_PROLOGUE( din );
+		Mod_PreloadPatches_COUNT( din );
+	}
+
+	loadmodel_numpatchgroups = 0;
+	loadmodel_maxpatchgroups = 0;
+	loadmodel_patchgroups = NULL;
+	loadmodel_patchgrouprefs = out;
+
+	if( !patchcount ) {
+		Mem_Free( patches );
+		return;
+	}
+
+	// allocate patch groups to possibly hold all patches individually
+	loadmodel_maxpatchgroups = patchcount;
+	loadmodel_patchgroups = Mod_Malloc( loadmodel, loadmodel_maxpatchgroups*sizeof( *loadmodel_patchgroups ) );
+
+	// assign patches to groups based on LOD bounds
+	if( mod_bspFormat->flags & BSP_RAVEN ) {
+		for( i = 0; i < patchcount; i++ ) {
+			j = patches[i];
+			out[j] = Mod_AddUpdatePatchGroup( drin + j );
+		}
+	}
+	else {
+		for( i = 0; i < patchcount; i++ ) {
+			j = patches[i];
+			Mod_FaceToRavenFace( din + j, &rdf );
+			out[j] = Mod_AddUpdatePatchGroup( &rdf );
+		}
+	}
+
+	Mem_Free( patches );
+
+	Com_DPrintf( "Mod_LoadPatchGroups: count (%i), groups(%i)\n", patchcount, loadmodel_numpatchgroups );
+
+#undef Mod_PreloadPatches_PROLOGUE
+#undef Mod_PreloadPatches_COUNT
+}
+
+/*
+* Mod_LoadFaces
 */
 static void Mod_LoadFaces( const lump_t *l )
 {
@@ -744,37 +925,13 @@ static void Mod_LoadFaces( const lump_t *l )
 
 	for( i = 0; i < count; i++, in++, out++ )
 	{
-		rdf.facetype = in->facetype;
-		rdf.lm_texnum[0] = in->lm_texnum;
-		rdf.lightmapStyles[0] = rdf.vertexStyles[0] = 0;
-		for( j = 1; j < MAX_LIGHTMAPS; j++ )
-		{
-			rdf.lm_texnum[j] = -1;
-			rdf.lightmapStyles[j] = rdf.vertexStyles[j] = 255;
-		}
-		for( j = 0; j < 3; j++ )
-		{
-			rdf.origin[j] = in->origin[j];
-			rdf.normal[j] = in->normal[j];
-			rdf.mins[j] = in->mins[j];
-			rdf.maxs[j] = in->maxs[j];
-		}
-		rdf.shadernum = in->shadernum;
-		rdf.fognum = in->fognum;
-		rdf.numverts = in->numverts;
-		rdf.firstvert = in->firstvert;
-		rdf.patch_cp[0] = in->patch_cp[0];
-		rdf.patch_cp[1] = in->patch_cp[1];
-		rdf.firstelem = in->firstelem;
-		rdf.numelems = in->numelems;
-		Mod_LoadFaceCommon( &rdf, out );
+		Mod_FaceToRavenFace( in, &rdf );
+		Mod_LoadFaceCommon( &rdf, out, i );
 	}
 }
 
 /*
-=================
-Mod_LoadFaces_RBSP
-=================
+* Mod_LoadFaces_RBSP
 */
 static void Mod_LoadFaces_RBSP( const lump_t *l )
 {
@@ -805,14 +962,12 @@ static void Mod_LoadFaces_RBSP( const lump_t *l )
 				in->lightmapStyles[j] = in->vertexStyles[j] = 255;
 			}
 		}
-		Mod_LoadFaceCommon( in, out );
+		Mod_LoadFaceCommon( in, out, i );
 	}
 }
 
 /*
-=================
-Mod_LoadNodes
-=================
+* Mod_LoadNodes
 */
 static void Mod_LoadNodes( const lump_t *l )
 {
@@ -862,9 +1017,7 @@ static void Mod_LoadNodes( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadFogs
-=================
+* Mod_LoadFogs
 */
 static void Mod_LoadFogs( const lump_t *l, const lump_t *brLump, const lump_t *brSidesLump )
 {
@@ -872,6 +1025,7 @@ static void Mod_LoadFogs( const lump_t *l, const lump_t *brLump, const lump_t *b
 	dfog_t *in;
 	mfog_t *out;
 	dbrush_t *inbrushes, *brush;
+	int brushplanes[6];
 	dbrushside_t *inbrushsides = NULL, *brushside = NULL;
 	rdbrushside_t *inrbrushsides = NULL, *rbrushside = NULL;
 
@@ -909,10 +1063,18 @@ static void Mod_LoadFogs( const lump_t *l, const lump_t *brLump, const lump_t *b
 			continue;
 
 		brush = inbrushes + p;
-		p = LittleLong( brush->firstside );
-		if( p == -1 )
-		{
+
+		p = LittleLong( brush->numsides );
+		if( p < 6 ) {
 			out->shader = NULL;
+			Com_DPrintf( S_COLOR_YELLOW "WARNING: missing fog brush sides\n" );
+			continue;
+		}
+
+		p = LittleLong( brush->firstside );
+		if( p == -1 ) {
+			out->shader = NULL;
+			Com_DPrintf( S_COLOR_YELLOW "WARNING: bad fog brush side\n" );
 			continue;
 		}
 
@@ -922,30 +1084,38 @@ static void Mod_LoadFogs( const lump_t *l, const lump_t *brLump, const lump_t *b
 			brushside = inbrushsides + p;
 
 		p = LittleLong( in->visibleside );
-		out->numplanes = LittleLong( brush->numsides );
-		out->planes = Mod_Malloc( loadmodel, out->numplanes * sizeof( cplane_t ) );
-
 		if( mod_bspFormat->flags & BSP_RAVEN )
 		{
 			if( p != -1 )
 				out->visibleplane = loadbmodel->planes + LittleLong( rbrushside[p].planenum );
-			for( j = 0; j < out->numplanes; j++ )
-				out->planes[j] = *( loadbmodel->planes + LittleLong( rbrushside[j].planenum ) );
+			for( j = 0; j < 6; j++ )
+				brushplanes[j] = LittleLong( rbrushside[j].planenum );
 		}
 		else
 		{
 			if( p != -1 )
 				out->visibleplane = loadbmodel->planes + LittleLong( brushside[p].planenum );
-			for( j = 0; j < out->numplanes; j++ )
-				out->planes[j] = *( loadbmodel->planes + LittleLong( brushside[j].planenum ) );
+			for( j = 0; j < 6; j++ )
+				brushplanes[j] = LittleLong( brushside[j].planenum );
 		}
+
+		// brushes are always sorted with the axial sides first
+
+		VectorSet( out->mins, 
+			-loadbmodel->planes[brushplanes[0]].dist,
+			-loadbmodel->planes[brushplanes[2]].dist,
+			-loadbmodel->planes[brushplanes[4]].dist
+			);
+		VectorSet( out->maxs, 
+			 loadbmodel->planes[brushplanes[1]].dist,
+			 loadbmodel->planes[brushplanes[3]].dist,
+			 loadbmodel->planes[brushplanes[5]].dist
+			);
 	}
 }
 
 /*
-=================
-Mod_LoadLeafs
-=================
+* Mod_LoadLeafs
 */
 static void Mod_LoadLeafs( const lump_t *l, const lump_t *msLump )
 {
@@ -1038,9 +1208,7 @@ static void Mod_LoadLeafs( const lump_t *l, const lump_t *msLump )
 }
 
 /*
-=================
-Mod_LoadElems
-=================
+* Mod_LoadElems
 */
 static void Mod_LoadElems( const lump_t *l )
 {
@@ -1062,9 +1230,7 @@ static void Mod_LoadElems( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadPlanes
-=================
+* Mod_LoadPlanes
 */
 static void Mod_LoadPlanes( const lump_t *l )
 {
@@ -1100,9 +1266,7 @@ static void Mod_LoadPlanes( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadLightgrid
-=================
+* Mod_LoadLightgrid
 */
 static void Mod_LoadLightgrid( const lump_t *l )
 {
@@ -1136,9 +1300,7 @@ static void Mod_LoadLightgrid( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadLightgrid_RBSP
-=================
+* Mod_LoadLightgrid_RBSP
 */
 static void Mod_LoadLightgrid_RBSP( const lump_t *l )
 {
@@ -1160,9 +1322,7 @@ static void Mod_LoadLightgrid_RBSP( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadLightArray
-=================
+* Mod_LoadLightArray
 */
 static void Mod_LoadLightArray( void )
 {
@@ -1180,14 +1340,13 @@ static void Mod_LoadLightArray( void )
 }
 
 /*
-=================
-Mod_LoadLightArray_RBSP
-=================
+* Mod_LoadLightArray_RBSP
 */
 static void Mod_LoadLightArray_RBSP( const lump_t *l )
 {
 	int i, count;
-	short *in;
+	unsigned index;
+	unsigned short *in;
 	mgridlight_t **out;
 
 	in = ( void * )( mod_base + l->fileofs );
@@ -1200,13 +1359,17 @@ static void Mod_LoadLightArray_RBSP( const lump_t *l )
 	loadbmodel->numlightarrayelems = count;
 
 	for( i = 0; i < count; i++, in++, out++ )
-		*out = loadbmodel->lightgrid + LittleShort( *in );
+	{
+		index = LittleShort( *in );
+		if( index >= (unsigned)loadbmodel->numlightgridelems ) {
+			Com_Error( ERR_DROP, "Mod_LoadLightArray_RBSP: funny grid index(%i):%i in %s", i, index, loadmodel->name );
+		}
+		*out = loadbmodel->lightgrid + index;
+	}
 }
 
 /*
-=================
-Mod_LoadEntities
-=================
+* Mod_LoadEntities
 */
 static void Mod_LoadEntities( const lump_t *l, vec3_t gridSize, vec3_t ambient, vec3_t outline )
 {
@@ -1265,31 +1428,27 @@ static void Mod_LoadEntities( const lump_t *l, vec3_t gridSize, vec3_t ambient, 
 			}
 			else if( !strcmp( key, "gridsize" ) )
 			{
-				n = sscanf( value, "%f %f %f", &gridsizef[0], &gridsizef[1], &gridsizef[2] );
-				if( n != 3 )
-				{
-					int gridsizei[3] = { 0, 0, 0 };
-					sscanf( value, "%i %i %i", &gridsizei[0], &gridsizei[1], &gridsizei[2] );
-					VectorCopy( gridsizei, gridsizef );
-				}
+				int gridsizei[3] = { 0, 0, 0 };
+				sscanf( value, "%4i %4i %4i", &gridsizei[0], &gridsizei[1], &gridsizei[2] );
+				VectorCopy( gridsizei, gridsizef );
 			}
 			else if( !strcmp( key, "_ambient" ) || ( !strcmp( key, "ambient" ) && ambientf == 0.0f ) )
 			{
-				sscanf( value, "%f", &ambientf );
-				if( !ambientf )
+				n = sscanf( value, "%8f", &ambientf );
+				if( n != 1 )
 				{
 					int ia = 0;
-					n = sscanf( value, "%i", &ia );
+					n = sscanf( value, "%3i", &ia );
 					ambientf = ia;
 				}
 			}
 			else if( !strcmp( key, "_color" ) )
 			{
-				n = sscanf( value, "%f %f %f", &colorf[0], &colorf[1], &colorf[2] );
+				n = sscanf( value, "%8f %8f %8f", &colorf[0], &colorf[1], &colorf[2] );
 				if( n != 3 )
 				{
 					int colori[3] = { 0, 0, 0 };
-					sscanf( value, "%i %i %i", &colori[0], &colori[1], &colori[2] );
+					sscanf( value, "%3i %3i %3i", &colori[0], &colori[1], &colori[2] );
 					VectorCopy( colori, colorf );
 				}
 			}
@@ -1303,10 +1462,15 @@ static void Mod_LoadEntities( const lump_t *l, vec3_t gridSize, vec3_t ambient, 
 				if( !r_fullbright->integer )
 				{
 					// non power of two intensity scale for lighting
-					sscanf( value, "%f", &mapConfig.lightingIntensity );
-					if( mapConfig.lightingIntensity <= 0 )
+					sscanf( value, "%8f", &mapConfig.lightingIntensity );
+					if( mapConfig.lightingIntensity <= 0 ) {
 						mapConfig.lightingIntensity = 0;
+					}
+
 					mapConfig.overbrightBits -= ( mapConfig.lightingIntensity ? atoi( r_mapoverbrightbits->dvalue ) : 0);
+					if( mapConfig.overbrightBits < 0 ) {
+						mapConfig.overbrightBits = 0;
+					}
 
 					// compensate the the lack of real non-pow-of-2 multiplier with
 					// a rounded overbrightBits value for lighting data when GLSL is not available
@@ -1320,11 +1484,11 @@ static void Mod_LoadEntities( const lump_t *l, vec3_t gridSize, vec3_t ambient, 
 #ifdef HARDWARE_OUTLINES
 			else if( !strcmp( key, "_outlinecolor" ) )
 			{
-				n = sscanf( value, "%f %f %f", &celcolorf[0], &celcolorf[1], &celcolorf[2] );
+				n = sscanf( value, "%8f %8f %8f", &celcolorf[0], &celcolorf[1], &celcolorf[2] );
 				if( n != 3 )
 				{
 					int celcolori[3] = { 0, 0, 0 };
-					sscanf( value, "%i %i %i", &celcolori[0], &celcolori[1], &celcolori[2] );
+					sscanf( value, "%3i %3i %3i", &celcolori[0], &celcolori[1], &celcolori[2] );
 					VectorCopy( celcolori, celcolorf );
 				}
 			}
@@ -1350,9 +1514,7 @@ static void Mod_LoadEntities( const lump_t *l, vec3_t gridSize, vec3_t ambient, 
 }
 
 /*
-=================
-Mod_ApplySuperStylesToFace
-=================
+* Mod_ApplySuperStylesToFace
 */
 static void Mod_ApplySuperStylesToFace( const rdface_t *in, msurface_t *out )
 {
@@ -1393,13 +1555,11 @@ static void Mod_ApplySuperStylesToFace( const rdface_t *in, msurface_t *out )
 		}
 		vertexStyles[j] = in->vertexStyles[j];
 	}
-	out->superLightStyle = R_AddSuperLightStyle( lightmaps, lightmapStyles, vertexStyles, lmRects );
+	out->superLightStyle = R_AddSuperLightStyle( loadmodel, lightmaps, lightmapStyles, vertexStyles, lmRects );
 }
 
 /*
-=================
-Mod_Finish
-=================
+* Mod_Finish
 */
 static void Mod_Finish( const lump_t *faces, const lump_t *light, vec3_t gridSize, vec3_t ambient, vec3_t outline )
 {
@@ -1438,7 +1598,7 @@ static void Mod_Finish( const lump_t *faces, const lump_t *light, vec3_t gridSiz
 	mapConfig.outlineColor[3] = 255;
 #endif
 
-	R_SortSuperLightStyles();
+	R_SortSuperLightStyles( loadmodel );
 
 	for( i = 0, testFog = loadbmodel->fogs; i < loadbmodel->numfogs; testFog++, i++ )
 	{
@@ -1509,45 +1669,49 @@ static void Mod_Finish( const lump_t *faces, const lump_t *light, vec3_t gridSiz
 		}
 	}
 
-	if( globalFog )
-	{
+	if( globalFog ) {
 		loadbmodel->globalfog = testFog;
 		Com_DPrintf( "Global fog detected: %s\n", testFog->shader->name );
 	}
 
-	if( loadmodel_xyz_array )
-	{
-		Mod_Free( loadmodel_xyz_array );
+	if( loadmodel_xyz_array ) {
+		Mod_MemFree( loadmodel_xyz_array );
 		loadmodel_xyz_array = NULL;
 	}
 	loadmodel_numverts = 0;
 
-	if( loadmodel_surfelems )
-	{
-		Mod_Free( loadmodel_surfelems );
+	if( loadmodel_surfelems ) {
+		Mod_MemFree( loadmodel_surfelems );
 		loadmodel_surfelems = NULL;
 	}
 	loadmodel_numsurfelems = 0;
 
-	if( loadmodel_lightmapRects )
-	{
-		Mod_Free( loadmodel_lightmapRects );
+	if( loadmodel_lightmapRects ) {
+		Mod_MemFree( loadmodel_lightmapRects );
 		loadmodel_lightmapRects = NULL;
 	}
 	loadmodel_numlightmaps = 0;
 
-	if( loadmodel_shaderrefs )
-	{
-		Mod_Free( loadmodel_shaderrefs );
+	if( loadmodel_shaderrefs ) {
+		Mod_MemFree( loadmodel_shaderrefs );
 		loadmodel_shaderrefs = NULL;
 	}
 	loadmodel_numshaderrefs = 0;
+
+	if( loadmodel_patchgrouprefs ) {
+		Mod_MemFree( loadmodel_patchgrouprefs );
+		loadmodel_patchgrouprefs = NULL;
+	}
+
+	if( loadmodel_patchgroups ) {
+		Mod_MemFree( loadmodel_patchgroups );
+		loadmodel_patchgroups = NULL;
+	}
+	loadmodel_numpatchgroups = loadmodel_maxpatchgroups = 0;
 }
 
 /*
-=================
-Mod_LoadQ3BrushModel
-=================
+* Mod_LoadQ3BrushModel
 */
 void Mod_LoadQ3BrushModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *format )
 {
@@ -1556,6 +1720,7 @@ void Mod_LoadQ3BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 	vec3_t gridSize, ambient, outline;
 
 	mod->type = mod_brush;
+	mod->registration_sequence = r_front.registration_sequence;
 	if( r_worldmodel != NULL )
 		Com_Error( ERR_DROP, "Loaded a brush model after the world" );
 
@@ -1586,6 +1751,7 @@ void Mod_LoadQ3BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 	Mod_LoadShaderrefs( &header->lumps[LUMP_SHADERREFS] );
 	Mod_LoadPlanes( &header->lumps[LUMP_PLANES] );
 	Mod_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
+	Mod_LoadPatchGroups( &header->lumps[LUMP_FACES] );
 	if( mod_bspFormat->flags & BSP_RAVEN )
 		Mod_LoadFaces_RBSP( &header->lumps[LUMP_FACES] );
 	else

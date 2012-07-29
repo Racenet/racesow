@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "cg_local.h"
 
@@ -35,9 +35,9 @@ static char *cg_defaultSexedSounds[] =
 };
 
 
-//================
-//CG_RegisterPmodelSexedSound
-//================
+/*
+* CG_RegisterPmodelSexedSound
+*/
 static struct sfx_s *CG_RegisterPmodelSexedSound( pmodelinfo_t *pmodelinfo, char *name )
 {
 	char *p, *s, model[MAX_QPATH];
@@ -88,8 +88,8 @@ static struct sfx_s *CG_RegisterPmodelSexedSound( pmodelinfo_t *pmodelinfo, char
 	Q_snprintfz( sexedFilename, sizeof( sexedFilename ), "sounds/players/%s/%s", model, oname+1 );
 
 	if( ( !COM_FileExtension( sexedFilename ) &&
-	     trap_FS_FirstExtension( sexedFilename, SOUND_EXTENSIONS, NUM_SOUND_EXTENSIONS ) ) ||
-	   trap_FS_FOpenFile( sexedFilename, NULL, FS_READ ) != -1 )
+		trap_FS_FirstExtension( sexedFilename, SOUND_EXTENSIONS, NUM_SOUND_EXTENSIONS ) ) ||
+		trap_FS_FOpenFile( sexedFilename, NULL, FS_READ ) != -1 )
 	{
 		sexedSfx->sfx = trap_S_RegisterSound( sexedFilename );
 	}
@@ -110,9 +110,9 @@ static struct sfx_s *CG_RegisterPmodelSexedSound( pmodelinfo_t *pmodelinfo, char
 	return sexedSfx->sfx;
 }
 
-//================
-//CG_UpdateSexedSoundsRegistration
-//================
+/*
+* CG_UpdateSexedSoundsRegistration
+*/
 void CG_UpdateSexedSoundsRegistration( pmodelinfo_t *pmodelinfo )
 {
 	cg_sexedSfx_t *sexedSfx, *next;
@@ -150,9 +150,9 @@ void CG_UpdateSexedSoundsRegistration( pmodelinfo_t *pmodelinfo )
 	}
 }
 
-//================
-//CG_RegisterSexedSound
-//================
+/*
+* CG_RegisterSexedSound
+*/
 struct sfx_s *CG_RegisterSexedSound( int entnum, char *name )
 {
 	if( entnum < 0 || entnum >= MAX_EDICTS )
@@ -160,9 +160,9 @@ struct sfx_s *CG_RegisterSexedSound( int entnum, char *name )
 	return CG_RegisterPmodelSexedSound( cg_entPModels[entnum].pmodelinfo, name );
 }
 
-//================
-//CG_SexedSound
-//================
+/*
+* CG_SexedSound
+*/
 void CG_SexedSound( int entnum, int entchannel, char *name, float fvol )
 {
 	qboolean fixed;
@@ -179,9 +179,9 @@ void CG_SexedSound( int entnum, int entchannel, char *name, float fvol )
 }
 
 
-//================
-//CG_LoadClientInfo
-//================
+/*
+* CG_LoadClientInfo
+*/
 void CG_LoadClientInfo( cg_clientInfo_t *ci, char *info, int client )
 {
 	char *s;
@@ -201,10 +201,10 @@ void CG_LoadClientInfo( cg_clientInfo_t *ci, char *info, int client )
 	ci->hand = s && s[0] ? atoi( s ) : 2;
 
 	s = Info_ValueForKey( info, "fov" );
-	if( !(s && s[0]) || sscanf( s, "%i %i", &ci->fov, &ci->zoomfov ) != 2 )
+	if( !(s && s[0]) || sscanf( s, "%3i %3i", &ci->fov, &ci->zoomfov ) != 2 )
 	{
-		ci->fov = 100;
-		ci->zoomfov = 40;
+		ci->fov = DEFAULT_FOV;
+		ci->zoomfov = DEFAULT_ZOOMFOV;
 	}
 
 	// color

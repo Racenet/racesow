@@ -32,6 +32,7 @@ cvar_t *model;
 cvar_t *skin;
 cvar_t *hand;
 cvar_t *clan;
+cvar_t *handicap;
 
 cvar_t *cg_addDecals;
 
@@ -102,7 +103,6 @@ cvar_t *cg_chatBeep;
 cvar_t *cg_chatFilter;
 cvar_t *cg_chatFilterTV;
 
-cvar_t *cg_cartoonRockets;
 cvar_t *cg_cartoonEffects;
 cvar_t *cg_cartoonHitEffect;
 
@@ -151,11 +151,12 @@ cvar_t *cg_ebbeam_time;
 cvar_t *cg_instabeam_width;
 cvar_t *cg_instabeam_alpha;
 cvar_t *cg_instabeam_time;
-
-cvar_t *cg_demoname;
+cvar_t *cg_lgbeam_old;
 
 cvar_t *cg_playList;
 cvar_t *cg_playListShuffle;
+
+cvar_t *cg_flashWindowCount;
 
 /*
 * CG_API
@@ -532,14 +533,14 @@ static void CG_RegisterLightStyles( void )
 */
 static void CG_RegisterVariables( void )
 {
-  //racesow
-  rc_showPlayerTrails = trap_Cvar_Get( "rc_showPlayerTrails", "0", CVAR_ARCHIVE );
-  rc_playerTrailsColor = trap_Cvar_Get( "rc_playerTrailsColor", "0.0 1.0 0.0", CVAR_ARCHIVE );
-  rc_playerTrailsAlpha = trap_Cvar_Get( "rc_playerTrailsAlpha", "1.0", CVAR_ARCHIVE );
-  rc_playerTrailsSize = trap_Cvar_Get( "rc_playerTrailsSize", "1.5", CVAR_ARCHIVE );
-  rs_autoRaceDemo = trap_Cvar_Get( "rs_autoRaceDemo", "0", CVAR_ARCHIVE );
-  rs_autoRaceScreenshot = trap_Cvar_Get( "rs_autoRaceScreenshot", "0", CVAR_ARCHIVE );
-  //!racesow
+	//racesow
+	rc_showPlayerTrails = trap_Cvar_Get( "rc_showPlayerTrails", "0", CVAR_ARCHIVE );
+	rc_playerTrailsColor = trap_Cvar_Get( "rc_playerTrailsColor", "0.0 1.0 0.0", CVAR_ARCHIVE );
+	rc_playerTrailsAlpha = trap_Cvar_Get( "rc_playerTrailsAlpha", "1.0", CVAR_ARCHIVE );
+	rc_playerTrailsSize = trap_Cvar_Get( "rc_playerTrailsSize", "1.5", CVAR_ARCHIVE );
+	rs_autoRaceDemo = trap_Cvar_Get( "rs_autoRaceDemo", "0", CVAR_ARCHIVE );
+	rs_autoRaceScreenshot = trap_Cvar_Get( "rs_autoRaceScreenshot", "0", CVAR_ARCHIVE );
+//!racesow
 
 	cg_predict =	    trap_Cvar_Get( "cg_predict", "1", 0 );
 	cg_predict_optimize = trap_Cvar_Get( "cg_predict_optimize", "1", 0 );
@@ -551,6 +552,7 @@ static void CG_RegisterVariables( void )
 	model =		    trap_Cvar_Get( "model", DEFAULT_PLAYERMODEL, CVAR_USERINFO | CVAR_ARCHIVE );
 	skin =		    trap_Cvar_Get( "skin", DEFAULT_PLAYERSKIN, CVAR_USERINFO | CVAR_ARCHIVE );
 	hand =		    trap_Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE );
+	handicap =		trap_Cvar_Get( "handicap", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	clan =		    trap_Cvar_Get( "clan", "", CVAR_USERINFO | CVAR_ARCHIVE );
 	cg_oldMovement =	trap_Cvar_Get( "cg_oldMovement", "1", CVAR_USERINFO | CVAR_ARCHIVE ); //racesow, old movement ftw!
 	cg_noAutohop =	trap_Cvar_Get( "cg_noAutohop", "0", CVAR_USERINFO | CVAR_ARCHIVE );
@@ -590,7 +592,7 @@ static void CG_RegisterVariables( void )
 	cg_grenadeTrailAlpha =	trap_Cvar_Get( "cg_grenadeTrailAlpha", "0.5", CVAR_ARCHIVE );
 	cg_bloodTrailAlpha =	trap_Cvar_Get( "cg_bloodTrailAlpha", "1.0", CVAR_ARCHIVE );
 	cg_explosionsRing =	trap_Cvar_Get( "cg_explosionsRing", "0", CVAR_ARCHIVE );
-	cg_explosionsDust =    trap_Cvar_Get( "cg_explosionsDust", "1", CVAR_ARCHIVE );
+	cg_explosionsDust =    trap_Cvar_Get( "cg_explosionsDust", "0", CVAR_ARCHIVE );
 	cg_gibs =		trap_Cvar_Get( "cg_gibs", "1", CVAR_ARCHIVE );
 	cg_outlineModels =	trap_Cvar_Get( "cg_outlineModels", "1", CVAR_ARCHIVE );
 	cg_outlineWorld =	trap_Cvar_Get( "cg_outlineWorld", "0", CVAR_ARCHIVE );
@@ -608,7 +610,6 @@ static void CG_RegisterVariables( void )
 	cg_predictLaserBeam =	trap_Cvar_Get( "cg_predictLaserBeam", "1", CVAR_ARCHIVE );
 	cg_showSelfShadow =	trap_Cvar_Get( "cg_showSelfShadow", "0", CVAR_ARCHIVE );
 
-	cg_cartoonRockets =	trap_Cvar_Get( "cg_cartoonRockets", "0", CVAR_ARCHIVE );
 	cg_cartoonEffects =		trap_Cvar_Get( "cg_cartoonEffects", "7", CVAR_ARCHIVE );
 	cg_cartoonHitEffect =	trap_Cvar_Get( "cg_cartoonHitEffect", "0", CVAR_ARCHIVE );
 
@@ -672,19 +673,21 @@ static void CG_RegisterVariables( void )
 	cg_ebbeam_width = trap_Cvar_Get( "cg_ebbeam_width", "64", CVAR_ARCHIVE );
 	cg_ebbeam_alpha = trap_Cvar_Get( "cg_ebbeam_alpha", "0.4", CVAR_ARCHIVE );
 	cg_ebbeam_time = trap_Cvar_Get( "cg_ebbeam_time", "0.6", CVAR_ARCHIVE );
+	cg_lgbeam_old = trap_Cvar_Get( "cg_lgbeam_old", "0", CVAR_ARCHIVE );
 
 	cg_instabeam_width = trap_Cvar_Get( "cg_instabeam_width", "7", CVAR_ARCHIVE );
 	cg_instabeam_alpha = trap_Cvar_Get( "cg_instabeam_alpha", "0.4", CVAR_ARCHIVE );
 	cg_instabeam_time = trap_Cvar_Get( "cg_instabeam_time", "0.4", CVAR_ARCHIVE );
 
-	cg_showminimap = trap_Cvar_Get( "cg_showMiniMap", "1", CVAR_ARCHIVE );
+	cg_showminimap = trap_Cvar_Get( "cg_showMiniMap", "0", CVAR_ARCHIVE );
 	cg_showitemtimers = trap_Cvar_Get( "cg_showItemTimers", "3", CVAR_ARCHIVE );
 	cg_placebo =  trap_Cvar_Get( "cg_placebo", "0", CVAR_ARCHIVE );
-
-	cg_demoname = trap_Cvar_Get( "demoname", "", 0 );
+	cg_strafeHUD = trap_Cvar_Get( "cg_strafeHUD", "0", CVAR_ARCHIVE );
 
 	cg_playList = trap_Cvar_Get( "cg_playList", S_PLAYLIST_MATCH, CVAR_ARCHIVE );
 	cg_playListShuffle = trap_Cvar_Get( "cg_playListShuffle", "1", CVAR_ARCHIVE );
+
+	cg_flashWindowCount = trap_Cvar_Get( "cg_flashWindowCount", "4", CVAR_ARCHIVE );
 }
 
 /*
@@ -709,7 +712,7 @@ void CG_ValidateItemDef( int tag, char *name )
 *
 * Compares name and tag against the itemlist to make sure cgame and game lists match
 */
-void CG_OverrideWeapondef( int index, char *cstring )
+void CG_OverrideWeapondef( int index, const char *cstring )
 {
 	int weapon, i;
 	int firemode = FIRE_MODE_WEAK;
@@ -729,7 +732,7 @@ void CG_OverrideWeapondef( int index, char *cstring )
 
 	firedef = ( firemode == FIRE_MODE_STRONG ) ? &weapondef->firedef : &weapondef->firedef_weak;
 
-	i = sscanf( cstring, "%i %i %u %u %u %u %u %i %i",
+	i = sscanf( cstring, "%7i %7i %7u %7u %7u %7u %7u %7i %7i",
 		&firedef->usage_count,
 		&firedef->projectile_count,
 		&firedef->weaponup_time,
@@ -820,6 +823,8 @@ static void CG_RegisterConfigStrings( void )
 	GS_SetGametypeName( cgs.configStrings[CS_GAMETYPENAME] );
 
 	trap_Cmd_ExecuteText( EXEC_NOW, va( "exec configs/client/%s.cfg silent", gs.gametypeName ) );
+
+	CG_SC_AutoRecordAction( cgs.configStrings[i] );
 }
 
 /*
@@ -872,8 +877,9 @@ void CG_Reset( void )
 /*
 * CG_Init
 */
-void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demoplaying,
-              qboolean pure, unsigned int snapFrameTime, int protocol, int sharedSeed )
+void CG_Init( const char *serverName, unsigned int playerNum, int vidWidth, int vidHeight, 
+			 qboolean demoplaying, const char *demoName, qboolean pure, 
+			 unsigned int snapFrameTime, int protocol, int sharedSeed )
 {
 	CG_InitGameShared();
 
@@ -885,6 +891,9 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 	CG_Printf( S_COLOR_MAGENTA"Hi, I'm an unpure bitch 7\n" );
 #endif
 
+	// save server name
+	cgs.serverName = CG_CopyString( serverName );
+
 	// save local player number
 	cgs.playerNum = playerNum;
 
@@ -894,6 +903,7 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 
 	// demo
 	cgs.demoPlaying = demoplaying;
+	cgs.demoName = demoName;
 
 	// whether to only allow pure files
 	cgs.pure = pure;
@@ -909,6 +919,8 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 	cgs.initialSharedSeed = sharedSeed;
 	cg.sharedSeed = cgs.initialSharedSeed;
 
+	cgs.hasGametypeMenu = qfalse; // this will update as soon as we receive configstrings
+
 	CG_RegisterVariables();
 	CG_InitTemporaryBoneposesCache();
 	CG_PModelsInit();
@@ -920,7 +932,7 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 
 	// register fonts here so loading screen works
 	CG_RegisterFonts();
-	cgs.shaderWhite = trap_R_RegisterPic( "gfx/ui/white" );
+	cgs.shaderWhite = trap_R_RegisterPic( "$whiteimage" );
 
 	CG_RegisterLevelMinimap();
 
@@ -952,7 +964,7 @@ void CG_Init( unsigned int playerNum, int vidWidth, int vidHeight, qboolean demo
 
 	cgs.precacheDone = qtrue;
 
-	cgs.demoTutorial = cgs.demoPlaying && (strstr( cg_demoname->string, "tutorials/" ) != NULL);
+	cgs.demoTutorial = cgs.demoPlaying && (strstr( cgs.demoName, "tutorials/" ) != NULL);
 
 	// now that we're done with precaching, let the autorecord actions do something
 	CG_ConfigString( CS_AUTORECORDSTATE, cgs.configStrings[CS_AUTORECORDSTATE] );

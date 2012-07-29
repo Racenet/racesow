@@ -3,7 +3,7 @@
 namespace TestExceptionMemory
 {
 
-#define TESTNAME "TestExceptionMemory"
+static const char * const TESTNAME = "TestExceptionMemory";
 
 static const char *script1 =
 "void Test1()                   \n"
@@ -58,8 +58,18 @@ static const char *script3 =
 class CObject
 {
 public:
-	CObject() {val = ('C' | ('O'<<8) | ('b'<<16) | ('j'<<24)); mem = new int[1]; *mem = ('M' | ('e'<<8) | ('m'<<16) | (' '<<24)); /*printf("C: %x\n", this);*/ }
-	~CObject() {delete[] mem; /*printf("D: %x\n", this);*/}
+	CObject() 
+	{
+		val = ('C' | ('O'<<8) | ('b'<<16) | ('j'<<24)); 
+		mem = new int[1]; 
+		*mem = ('M' | ('e'<<8) | ('m'<<16) | (' '<<24)); 
+		//printf("C: %x\n", this);
+	}
+	~CObject() 
+	{
+		delete[] mem; 
+		//printf("D: %x\n", this);
+	}
 	int val;
 	int *mem;
 };
@@ -195,6 +205,7 @@ bool Test()
 
 	bool fail = false;
 	int r;
+	int suspendId, exceptionId;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 
@@ -205,13 +216,13 @@ bool Test()
 		engine->RegisterObjectBehaviour("Object", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTION(Construct2), asCALL_GENERIC);
 		engine->RegisterObjectBehaviour("Object", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Construct_gen), asCALL_GENERIC);
 		engine->RegisterObjectBehaviour("Object", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Destruct_gen), asCALL_GENERIC);
-		engine->RegisterObjectBehaviour("Object", asBEHAVE_ASSIGNMENT, "Object &f(const Object &in)", asFUNCTION(Assign_gen), asCALL_GENERIC);
+		engine->RegisterObjectMethod("Object", "Object &opAssign(const Object &in)", asFUNCTION(Assign_gen), asCALL_GENERIC);
 		r = engine->RegisterObjectBehaviour("RefObj", asBEHAVE_FACTORY, "RefObj@ f()", asFUNCTION(RefObjFactory_gen), asCALL_GENERIC); assert(r >= 0);
 		r = engine->RegisterObjectBehaviour("RefObj", asBEHAVE_ADDREF, "void f()", asFUNCTION(AddRef_gen), asCALL_GENERIC); assert(r >= 0);
 		r = engine->RegisterObjectBehaviour("RefObj", asBEHAVE_RELEASE, "void f()", asFUNCTION(Release_gen), asCALL_GENERIC); assert(r >= 0);
 		engine->RegisterGlobalFunction("void RaiseException()", asFUNCTION(RaiseException), asCALL_GENERIC);
-		engine->RegisterGlobalFunction("Object SuspendObj()", asFUNCTION(SuspendObj_gen), asCALL_GENERIC);
-		engine->RegisterGlobalFunction("Object ExceptionObj()", asFUNCTION(ExceptionObj_gen), asCALL_GENERIC);
+		suspendId   = engine->RegisterGlobalFunction("Object SuspendObj()", asFUNCTION(SuspendObj_gen), asCALL_GENERIC);
+		exceptionId = engine->RegisterGlobalFunction("Object ExceptionObj()", asFUNCTION(ExceptionObj_gen), asCALL_GENERIC);
 		engine->RegisterGlobalFunction("RefObj@ ExceptionHandle()", asFUNCTION(ExceptionHandle_gen), asCALL_GENERIC);
 	}
 	else
@@ -219,13 +230,13 @@ bool Test()
 		engine->RegisterObjectBehaviour("Object", asBEHAVE_CONSTRUCT, "void f(int)", asFUNCTION(Construct2), asCALL_GENERIC);
 		engine->RegisterObjectBehaviour("Object", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Construct), asCALL_CDECL_OBJLAST);
 		engine->RegisterObjectBehaviour("Object", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Destruct), asCALL_CDECL_OBJLAST);
-		engine->RegisterObjectBehaviour("Object", asBEHAVE_ASSIGNMENT, "Object &f(const Object &in)", asFUNCTION(Assign_gen), asCALL_GENERIC);
+		engine->RegisterObjectMethod("Object", "Object &opAssign(const Object &in)", asFUNCTION(Assign_gen), asCALL_GENERIC);
 		r = engine->RegisterObjectBehaviour("RefObj", asBEHAVE_FACTORY, "RefObj@ f()", asFUNCTION(RefObjFactory), asCALL_CDECL); assert(r >= 0);
 		r = engine->RegisterObjectBehaviour("RefObj", asBEHAVE_ADDREF, "void f()", asMETHOD(CRefObject, AddRef), asCALL_THISCALL); assert(r >= 0);
 		r = engine->RegisterObjectBehaviour("RefObj", asBEHAVE_RELEASE, "void f()", asMETHOD(CRefObject, Release), asCALL_THISCALL); assert(r >= 0);
 		engine->RegisterGlobalFunction("void RaiseException()", asFUNCTION(RaiseException), asCALL_CDECL);
-		engine->RegisterGlobalFunction("Object SuspendObj()", asFUNCTION(SuspendObj), asCALL_CDECL);
-		engine->RegisterGlobalFunction("Object ExceptionObj()", asFUNCTION(ExceptionObj), asCALL_CDECL);
+		suspendId   = engine->RegisterGlobalFunction("Object SuspendObj()", asFUNCTION(SuspendObj), asCALL_CDECL);
+		exceptionId = engine->RegisterGlobalFunction("Object ExceptionObj()", asFUNCTION(ExceptionObj), asCALL_CDECL);
 		engine->RegisterGlobalFunction("RefObj@ ExceptionHandle()", asFUNCTION(ExceptionHandle), asCALL_CDECL);
 	}
 
@@ -240,87 +251,132 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "Test1()");
+	// The object has been initialized
+	r = ExecuteString(engine, "Test1()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
-//	printf("---\n");
-
-	r = engine->ExecuteString(0, "Test2()");
+	// The object has not yet been initialized
+	r = ExecuteString(engine, "Test2()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
- //	printf("---\n");
-
-	r = engine->ExecuteString(0, "Test3()");
+	// An object has been initialized and passed by value to function that throws exception
+	r = ExecuteString(engine, "Test3()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
-//	printf("---\n");
-
+	// An object has been initialized and passed by value to a function, but 
+	// the function cannot be called due to the stack being full
 	engine->SetEngineProperty(asEP_MAX_STACK_SIZE, 4);
-	r = engine->ExecuteString(0, "Test3()");
+	r = ExecuteString(engine, "Test3()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
-//	printf("---\n");
-
-	asIScriptContext *ctx;
+	// An object is allocated and initialized with a call to 
+	// a function that returns an object by value. The function 
+	// suspends the thread. The context is then aborted.
+	asIScriptContext *ctx = engine->CreateContext();
 	engine->SetEngineProperty(asEP_MAX_STACK_SIZE, 0);
-	r = engine->ExecuteString(0, "Test4()", &ctx);
+	r = ExecuteString(engine, "Test4()", mod, ctx);
 	if( r != asEXECUTION_SUSPENDED )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	ctx->Abort();
 	ctx->Release();
 
-//	printf("---\n");
-
-	r = engine->ExecuteString(0, "Test5()");
+	// An object is allocated and initialized with a call to 
+	// a function that returns an object by value. The function 
+	// sets a script exception.
+	r = ExecuteString(engine, "Test5()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
-//	printf("---\n");
-
-	r = engine->ExecuteString(0, "Test6()");
+	// The object constructor sets the exception
+	r = ExecuteString(engine, "Test6()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
-//	printf("---\n");
+	// A function that is supposed to return a handle sets an exception
+	r = ExecuteString(engine, "Test7()", mod);
+	if( r != asEXECUTION_EXCEPTION )
+	{
+		printf("%s: Failed\n", TESTNAME);
+		TEST_FAILED;
+	}
 
+    // Attempt to call method on null class pointer
 	mod->AddScriptSection("script", script3, strlen(script3));
 	r = mod->Build();
-	if( r < 0 ) fail = true;
-	r = engine->ExecuteString(0, "calc()");
+	if( r < 0 ) TEST_FAILED;
+	r = ExecuteString(engine, "calc()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: Failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
+
+	// Exception happens after value object has already been destroyed
+	r = ExecuteString(engine, "{\n"
+		                      "  Object o;\n"
+                              "}\n"
+							  "RaiseException();");
+	if( r != asEXECUTION_EXCEPTION )
+		TEST_FAILED;
+
+	// Exception happens after the value object has been destroyed and, 
+	// the same position would also be used again after the exception
+	r = ExecuteString(engine, "{ Object o; } \n"
+		                      "RaiseException(); \n"
+							  "Object o; \n");
+	if( r != asEXECUTION_EXCEPTION )
+		TEST_FAILED;
+
+	// The code has two places where the object is destroyed, one in the if case, and 
+	// and one at the end of the function. If the code doesn't go in to the if case,
+	// and the exception happens afterwards, the exception handler must not think the
+	// object was already destroyed.
+	r = ExecuteString(engine, "Object o; bool a = false; \n"
+		                      "if( a ) return; \n"
+							  "RaiseException(); \n");
+	if( r != asEXECUTION_EXCEPTION )
+		TEST_FAILED;
+
+	// Calling a function that returns an object directly must release the object upon releasing the context
+	ctx = engine->CreateContext();
+	ctx->Prepare(suspendId);
+	ctx->Execute();
+	ctx->Release();
+
+	// Calling a function that returns an object but raised an exception shouldn't try to destroy the object
+	ctx = engine->CreateContext();
+	ctx->Prepare(exceptionId);
+	ctx->Execute();
+	ctx->Release();
 
  	engine->Release();
 

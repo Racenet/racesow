@@ -25,9 +25,9 @@ class Racesow_Map_HighScore
 	uint64 timeStamp;
 	
 	/**
-	 * @var cString
+	 * @var String
 	 */
-    cString playerName;
+    String playerName;
 	
 	/**
 	 * Overloaded operator =
@@ -47,9 +47,9 @@ class Racesow_Map_HighScore
 	
 	/**
 	 * getPlayerName
-	 * @return cString
+	 * @return String
 	 */
-	cString getPlayerName()
+	String getPlayerName()
 	{
 		return this.playerName;
 	}
@@ -122,7 +122,7 @@ class Racesow_Map_HighScore
 	void fromRace( Racesow_Player_Race &race )
 	{
 		this.finishTime = race.getTime();
-		this.playerName = race.getPlayer().getClient().getName();
+		this.playerName = race.getPlayer().getClient().name;
 		this.timeStamp = race.getTimeStamp();
 		this.checkPoints.resize( numCheckpoints );
 		for ( int i = 0; i < numCheckpoints; i++ )

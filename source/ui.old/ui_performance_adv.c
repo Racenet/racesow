@@ -1,21 +1,21 @@
 /*
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "ui_local.h"
 
@@ -43,7 +43,7 @@ static void PortalMapsMaxTexSizeControl( menucommon_t *unused )
 static void ShadowsControl( menucommon_t *s )
 {
 	menucommon_t *menuitem, *slider;
-	
+
 	menuitem = UI_MenuItemByName( "m_performanceadv_shadowmap_maxtexsize" );
 	menuitem->disabled = s->curvalue != 3;
 
@@ -66,7 +66,7 @@ static void ShadowMapMaxTexSizeControl( menucommon_t *unused )
 static void OffsetMappingControl( menucommon_t *s )
 {
 	menucommon_t *menuitem;
-	
+
 	menuitem = UI_MenuItemByName( "m_performanceadv_reliefmapping" );
 	menuitem->disabled = (s->curvalue == 0);
 }
@@ -136,7 +136,7 @@ static void ApplyButton( menucommon_t *unused )
 	trap_Cvar_SetValue( "cg_cartoonRockets", (menuitem->curvalue & 1 ? 1 : 0) );
 	trap_Cvar_SetValue( "cg_dashEffect", (menuitem->curvalue & 2 ? 1 : 0) );
 	trap_Cvar_SetValue( "cg_fallEffect", (menuitem->curvalue & 2 ? 1 : 0) );
-	
+
 	menuitem = UI_MenuItemByName( "m_performanceadv_cartoonhitfx" );
 	trap_Cvar_SetValue( "cg_cartoonHitEffect", menuitem->curvalue );	
 
@@ -221,7 +221,7 @@ static void PerformanceAdv_Init( void )
 	Menu_AddItem( &s_performanceadv_menu, menuitem );
 	UI_SetupSpinControl( menuitem, cartoonfx_names, spinindex );
 	yoffset += trap_SCR_strHeight( menuitem->font );
-	
+
 	menuitem = UI_InitMenuItem( "m_performanceadv_cartoonhitfx", "cartoon hit effects", 0, yoffset, MTYPE_SPINCONTROL, ALIGN_RIGHT_TOP, uis.fontSystemSmall, NULL );
 	Menu_AddItem( &s_performanceadv_menu, menuitem );
 	UI_SetupSpinControl( menuitem, noyes_names, trap_Cvar_Value( "cg_cartoonHitEffect" ) );

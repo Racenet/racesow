@@ -1,55 +1,55 @@
 /*
-   Copyright (C) 1999, 2000, 2002 Aladdin Enterprises.  All rights reserved.
+Copyright (C) 1999, 2000, 2002 Aladdin Enterprises.  All rights reserved.
 
-   This software is provided 'as-is', without any express or implied
-   warranty.  In no event will the authors be held liable for any damages
-   arising from the use of this software.
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
 
-   Permission is granted to anyone to use this software for any purpose,
-   including commercial applications, and to alter it and redistribute it
-   freely, subject to the following restrictions:
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
 
-   1. The origin of this software must not be misrepresented; you must not
-     claim that you wrote the original software. If you use this software
-     in a product, an acknowledgment in the product documentation would be
-     appreciated but is not required.
-   2. Altered source versions must be plainly marked as such, and must not be
-     misrepresented as being the original software.
-   3. This notice may not be removed or altered from any source distribution.
+1. The origin of this software must not be misrepresented; you must not
+claim that you wrote the original software. If you use this software
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
 
-   L. Peter Deutsch
-   ghost@aladdin.com
+L. Peter Deutsch
+ghost@aladdin.com
 
- */
+*/
 /* $Id: md5.c,v 1.6 2002/04/13 19:20:28 lpd Exp $ */
 /*
-   Independent implementation of MD5 (RFC 1321).
+Independent implementation of MD5 (RFC 1321).
 
-   This code implements the MD5 Algorithm defined in RFC 1321, whose
-   text is available at
-    http://www.ietf.org/rfc/rfc1321.txt
-   The code is derived from the text of the RFC, including the test suite
-   (section A.5) but excluding the rest of Appendix A.  It does not include
-   any code or documentation that is identified in the RFC as being
-   copyrighted.
+This code implements the MD5 Algorithm defined in RFC 1321, whose
+text is available at
+http://www.ietf.org/rfc/rfc1321.txt
+The code is derived from the text of the RFC, including the test suite
+(section A.5) but excluding the rest of Appendix A.  It does not include
+any code or documentation that is identified in the RFC as being
+copyrighted.
 
-   The original and principal author of md5.c is L. Peter Deutsch
-   <ghost@aladdin.com>.  Other authors are noted in the change history
-   that follows (in reverse chronological order):
+The original and principal author of md5.c is L. Peter Deutsch
+<ghost@aladdin.com>.  Other authors are noted in the change history
+that follows (in reverse chronological order):
 
-   2002-04-13 lpd Clarified derivation from RFC 1321; now handles byte order
-    either statically or dynamically; added missing #include <string.h>
-    in library.
-   2002-03-11 lpd Corrected argument list for main(), and added int return
-    type, in test program and T value program.
-   2002-02-21 lpd Added missing #include <stdio.h> in test program.
-   2000-07-03 lpd Patched to eliminate warnings about "constant is
-    unsigned in ANSI C, signed in traditional"; made test program
-    self-checking.
-   1999-11-04 lpd Edited comments slightly for automatic TOC extraction.
-   1999-10-18 lpd Fixed typo in header comment (ansi2knr rather than md5).
-   1999-05-03 lpd Original version.
- */
+2002-04-13 lpd Clarified derivation from RFC 1321; now handles byte order
+either statically or dynamically; added missing #include <string.h>
+in library.
+2002-03-11 lpd Corrected argument list for main(), and added int return
+type, in test program and T value program.
+2002-02-21 lpd Added missing #include <stdio.h> in test program.
+2000-07-03 lpd Patched to eliminate warnings about "constant is
+unsigned in ANSI C, signed in traditional"; made test program
+self-checking.
+1999-11-04 lpd Edited comments slightly for automatic TOC extraction.
+1999-10-18 lpd Fixed typo in header comment (ansi2knr rather than md5).
+1999-05-03 lpd Original version.
+*/
 
 #include "md5.h"
 #include <string.h>
@@ -132,8 +132,8 @@ static void
 md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 {
 	md5_word_t
-	a = pms->abcd[0], b = pms->abcd[1],
-	c = pms->abcd[2], d = pms->abcd[3];
+		a = pms->abcd[0], b = pms->abcd[1],
+		c = pms->abcd[2], d = pms->abcd[3];
 	md5_word_t t;
 #if BYTE_ORDER > 0
 	/* Define storage only for big-endian CPUs. */
@@ -147,10 +147,10 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 	{
 #if BYTE_ORDER == 0
 		/*
-		 * Determine dynamically whether this is a big-endian or
-		 * little-endian machine, since we can use a more efficient
-		 * algorithm on the latter.
-		 */
+		* Determine dynamically whether this is a big-endian or
+		* little-endian machine, since we can use a more efficient
+		* algorithm on the latter.
+		*/
 		static const int w = 1;
 
 		if( *( (const md5_byte_t *)&w ) )/* dynamic little-endian */
@@ -158,9 +158,9 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 #if BYTE_ORDER <= 0	/* little-endian */
 		{
 			/*
-			 * On little-endian machines, we can process properly aligned
-			 * data without copying it.
-			 */
+			* On little-endian machines, we can process properly aligned
+			* data without copying it.
+			*/
 			if( !( ( data - (const md5_byte_t *)0 ) & 3 ) )
 			{
 				/* data are properly aligned */
@@ -180,9 +180,9 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 #if BYTE_ORDER >= 0	/* big-endian */
 		{
 			/*
-			 * On big-endian machines, we must arrange the bytes in the
-			 * right order.
-			 */
+			* On big-endian machines, we must arrange the bytes in the
+			* right order.
+			*/
 			const md5_byte_t *xp = data;
 			int i;
 
@@ -201,7 +201,7 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 
 	/* Round 1. */
 	/* Let [abcd k s i] denote the operation
-	   a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s). */
+	a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s). */
 #define F( x, y, z ) ( ( ( x ) & ( y ) ) | ( ~( x ) & ( z ) ) )
 #define SET( a, b, c, d, k, s, Ti )\
 	t = a + F( b, c, d ) + X[k] + Ti; \
@@ -227,7 +227,7 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 
 	/* Round 2. */
 	/* Let [abcd k s i] denote the operation
-	     a = b + ((a + G(b,c,d) + X[k] + T[i]) <<< s). */
+	a = b + ((a + G(b,c,d) + X[k] + T[i]) <<< s). */
 #define G( x, y, z ) ( ( ( x ) & ( z ) ) | ( ( y ) & ~( z ) ) )
 #define SET( a, b, c, d, k, s, Ti )\
 	t = a + G( b, c, d ) + X[k] + Ti; \
@@ -253,7 +253,7 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 
 	/* Round 3. */
 	/* Let [abcd k s t] denote the operation
-	     a = b + ((a + H(b,c,d) + X[k] + T[i]) <<< s). */
+	a = b + ((a + H(b,c,d) + X[k] + T[i]) <<< s). */
 #define H( x, y, z ) ( ( x ) ^ ( y ) ^ ( z ) )
 #define SET( a, b, c, d, k, s, Ti )\
 	t = a + H( b, c, d ) + X[k] + Ti; \
@@ -279,7 +279,7 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 
 	/* Round 4. */
 	/* Let [abcd k s t] denote the operation
-	     a = b + ((a + I(b,c,d) + X[k] + T[i]) <<< s). */
+	a = b + ((a + I(b,c,d) + X[k] + T[i]) <<< s). */
 #define I( x, y, z ) ( ( y ) ^ ( ( x ) | ~( z ) ) )
 #define SET( a, b, c, d, k, s, Ti )\
 	t = a + I( b, c, d ) + X[k] + Ti; \
@@ -304,12 +304,31 @@ md5_process( md5_state_t *pms, const md5_byte_t *data /*[64]*/ )
 #undef SET
 
 	/* Then perform the following additions. (That is increment each
-	   of the four registers by the value it had before this block
-	   was started.) */
+	of the four registers by the value it had before this block
+	was started.) */
 	pms->abcd[0] += a;
 	pms->abcd[1] += b;
 	pms->abcd[2] += c;
 	pms->abcd[3] += d;
+}
+
+void
+md5_digest( const void *data, int nbytes, md5_byte_t digest[16] )
+{
+	md5_state_t state;
+
+	md5_init( &state );
+	md5_append( &state, (md5_byte_t *)data, nbytes );
+	md5_finish( &state, digest );
+}
+
+unsigned int
+md5_digest32( const void *data, int nbytes )
+{
+	md5_byte_t digest[16];
+	
+	md5_digest( data, nbytes, digest );
+	return md5_reduce( digest );
 }
 
 void
@@ -382,4 +401,19 @@ md5_finish( md5_state_t *pms, md5_byte_t digest[16] )
 	md5_append( pms, data, 8 );
 	for( i = 0; i < 16; ++i )
 		digest[i] = (md5_byte_t)( pms->abcd[i >> 2] >> ( ( i & 3 ) << 3 ) );
+}
+
+/**
+* Checksum utility function that uses libmd5-rfc in order to produce
+* correct results on little and big endian machines.
+* @author Michael P. Jung
+* @date: 2006-06-24
+*/
+unsigned int
+md5_reduce( md5_byte_t digest[16] )
+{
+	return	( ( digest[ 0] << 24 | digest[ 1] << 16 | digest[ 2] << 8 | digest[ 3] ) ^
+			  ( digest[ 4] << 24 | digest[ 5] << 16 | digest[ 6] << 8 | digest[ 7] ) ^
+			  ( digest[ 8] << 24 | digest[ 9] << 16 | digest[10] << 8 | digest[11] ) ^
+			  ( digest[12] << 24 | digest[13] << 16 | digest[14] << 8 | digest[15] ) );
 }

@@ -1,27 +1,27 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-   --------------------------------------------------------------
-   The ACE Bot is a product of Steve Yeager, and is available from
-   the ACE Bot homepage, at http://www.axionfx.com/ace.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+--------------------------------------------------------------
+The ACE Bot is a product of Steve Yeager, and is available from
+the ACE Bot homepage, at http://www.axionfx.com/ace.
 
-   This program is a modification of the ACE Bot, and is therefore
-   in NO WAY supported by Steve Yeager.
- */
+This program is a modification of the ACE Bot, and is therefore
+in NO WAY supported by Steve Yeager.
+*/
 
 #include "../g_local.h"
 #include "ai_local.h"
@@ -78,6 +78,8 @@ void AITools_DrawLine( vec3_t origin, vec3_t dest )
 	event = G_SpawnEvent( EV_GREEN_LASER, 0, origin );
 	event->r.svflags = SVF_TRANSMITORIGIN2;
 	VectorCopy( dest, event->s.origin2 );
+	G_SetBoundsForSpanEntity( event, 8 );
+	GClip_LinkEntity( event );
 }
 
 //==========================================
@@ -89,10 +91,11 @@ void AITools_DrawColorLine( vec3_t origin, vec3_t dest, int color, int parm )
 	edict_t	*event;
 
 	event = G_SpawnEvent( EV_PNODE, parm, origin );
+	event->s.colorRGBA = color;
 	event->r.svflags = SVF_TRANSMITORIGIN2;
 	VectorCopy( dest, event->s.origin2 );
-
-	event->s.colorRGBA = color;
+	G_SetBoundsForSpanEntity( event, 8 );
+	GClip_LinkEntity( event );
 }
 
 void AITools_DrawAxis( vec3_t origin, int color )
@@ -142,6 +145,8 @@ void AITools_DrawPath( edict_t *self, int node_to )
 		event = G_SpawnEvent( EV_GREEN_LASER, 0, nodes[self->ai.path.nodes[pos]].origin );
 		event->r.svflags = SVF_TRANSMITORIGIN2;
 		VectorCopy( nodes[self->ai.path.nodes[pos-1]].origin, event->s.origin2 );
+		G_SetBoundsForSpanEntity( event, 8 );
+		GClip_LinkEntity( event );
 
 		pos--;
 		count++;
@@ -200,13 +205,13 @@ static void AITools_ShowPlinks( edict_t *target )
 		plink_node = pLinks[current_node].nodes[i];
 		if( pLinks[current_node].moveType[i] == LINK_ROCKETJUMP )
 			AITools_DrawColorLine( nodes[current_node].origin,
-			                       nodes[plink_node].origin, COLOR_RGBA( 0xff, 0x00, 0x00, 0x80 ), 0 );
+			nodes[plink_node].origin, COLOR_RGBA( 0xff, 0x00, 0x00, 0x80 ), 0 );
 		else if( pLinks[current_node].moveType[i] == LINK_JUMP )
 			AITools_DrawColorLine( nodes[current_node].origin,
-			                       nodes[plink_node].origin, COLOR_RGBA( 0x00, 0x00, 0xff, 0x80 ), 0 );
+			nodes[plink_node].origin, COLOR_RGBA( 0x00, 0x00, 0xff, 0x80 ), 0 );
 		else
 			AITools_DrawColorLine( nodes[current_node].origin,
-			                       nodes[plink_node].origin, COLOR_RGBA( 0x00, 0xff, 0x00, 0x80 ), 0 );
+			nodes[plink_node].origin, COLOR_RGBA( 0x00, 0xff, 0x00, 0x80 ), 0 );
 	}
 }
 

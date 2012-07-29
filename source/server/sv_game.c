@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // sv_game.c -- interface to the game dll
 
 #include "server.h"
@@ -40,7 +40,7 @@ static inline int PF_CM_TransformedPointContents( vec3_t p, struct cmodel_s *cmo
 }
 
 static inline void PF_CM_TransformedBoxTrace( trace_t *tr, vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs,
-	struct cmodel_s *cmodel, int brushmask, vec3_t origin, vec3_t angles ) {
+struct cmodel_s *cmodel, int brushmask, vec3_t origin, vec3_t angles ) {
 	CM_TransformedBoxTrace( svs.cms, tr, start, end, mins, maxs, cmodel, brushmask, origin, angles );
 }
 
@@ -62,6 +62,10 @@ static inline void PF_CM_InlineModelBounds( struct cmodel_s *cmodel, vec3_t mins
 
 static inline struct cmodel_s *PF_CM_ModelForBBox( vec3_t mins, vec3_t maxs ) {
 	return CM_ModelForBBox( svs.cms, mins, maxs );
+}
+
+static inline struct cmodel_s *PF_CM_OctagonModelForBBox( vec3_t mins, vec3_t maxs ) {
+	return CM_OctagonModelForBBox( svs.cms, mins, maxs );
 }
 
 static inline qboolean PF_CM_AreasConnected( int area1, int area2 ) {
@@ -341,8 +345,8 @@ static void SV_AddPureBSP( void )
 	// maps use too many duplicate textures so we don't want pure check
 	// for each one of them
 	if ( !( sv_pure->integer & 2 ) )
-		for( i = 0; ( shader = CM_ShaderrefName( svs.cms, i ) ); i++ )
-			SV_AddPureShader( shader );
+	for( i = 0; ( shader = CM_ShaderrefName( svs.cms, i ) ); i++ )
+		SV_AddPureShader( shader );
 }
 
 /*
@@ -371,7 +375,7 @@ static void PF_PureModel( const char *name )
 *
 * Also checks portalareas so that doors block sight
 */
-static qboolean PF_inVisSet( vec3_t p1, vec3_t p2, qbyte *( *vis )( cmodel_state_t *, int ) )
+static qboolean PF_inVisSet( const vec3_t p1, const vec3_t p2, qbyte *( *vis )( cmodel_state_t *, int ) )
 {
 	int leafnum;
 	int cluster;
@@ -399,15 +403,8 @@ static qboolean PF_inVisSet( vec3_t p1, vec3_t p2, qbyte *( *vis )( cmodel_state
 /*
 * PF_inPVS
 */
-static qboolean PF_inPVS( vec3_t p1, vec3_t p2 ) {
+static qboolean PF_inPVS( const vec3_t p1, const vec3_t p2 ) {
 	return PF_inVisSet( p1, p2, CM_ClusterPVS );
-}
-
-/*
-* PF_inPHS
-*/
-static qboolean PF_inPHS( vec3_t p1, vec3_t p2 ) {
-	return PF_inVisSet( p1, p2, CM_ClusterPHS );
 }
 
 /*
@@ -460,98 +457,6 @@ static void SV_LocateEntities( struct edict_s *edicts, int edict_size, int num_e
 }
 
 /*
-* SV_InitGameProgsImportStruct
-*/
-#define SV_InitGameProgsImportStruct( import ) \
-	( \
-	import.Print = PF_dprint, \
-	import.Error = PF_error, \
-	import.GameCmd = PF_GameCmd, \
-	\
-	import.inPVS = PF_inPVS, \
-	import.inPHS = PF_inPHS, \
-	\
-	import.CM_TransformedPointContents = PF_CM_TransformedPointContents, \
-	import.CM_TransformedBoxTrace = PF_CM_TransformedBoxTrace, \
-	import.CM_RoundUpToHullSize = PF_CM_RoundUpToHullSize, \
-	import.CM_NumInlineModels = PF_CM_NumInlineModels, \
-	import.CM_InlineModel = PF_CM_InlineModel, \
-	import.CM_InlineModelBounds = PF_CM_InlineModelBounds, \
-	import.CM_ModelForBBox = PF_CM_ModelForBBox, \
-	import.CM_AreasConnected = PF_CM_AreasConnected, \
-	import.CM_SetAreaPortalState = PF_CM_SetAreaPortalState, \
-	import.CM_BoxLeafnums = PF_CM_BoxLeafnums, \
-	import.CM_LeafCluster = PF_CM_LeafCluster, \
-	import.CM_LeafArea = PF_CM_LeafArea, \
-	\
-	import.Milliseconds = Sys_Milliseconds, \
-	\
-	import.ModelIndex = SV_ModelIndex, \
-	import.SoundIndex = SV_SoundIndex, \
-	import.ImageIndex = SV_ImageIndex, \
-	import.SkinIndex = SV_SkinIndex, \
-	\
-	import.ConfigString = PF_ConfigString, \
-	import.GetConfigString = PF_GetConfigString, \
-	import.PureSound = PF_PureSound, \
-	import.PureModel = PF_PureModel, \
-	\
-	import.FS_FOpenFile = FS_FOpenFile, \
-	import.FS_Read = FS_Read, \
-	import.FS_Write = FS_Write, \
-	import.FS_Print = FS_Print, \
-	import.FS_Tell = FS_Tell, \
-	import.FS_Seek = FS_Seek, \
-	import.FS_Eof = FS_Eof, \
-	import.FS_Flush = FS_Flush, \
-	import.FS_FCloseFile = FS_FCloseFile, \
-	import.FS_RemoveFile = FS_RemoveFile, \
-	import.FS_GetFileList = FS_GetFileList, \
-	import.FS_FirstExtension = FS_FirstExtension, \
-	\
-	import.Mem_Alloc = PF_MemAlloc, \
-	import.Mem_Free = PF_MemFree, \
-	\
-	import.Dynvar_Create = Dynvar_Create, \
-	import.Dynvar_Destroy = Dynvar_Destroy, \
-	import.Dynvar_Lookup = Dynvar_Lookup, \
-	import.Dynvar_GetName = Dynvar_GetName, \
-	import.Dynvar_GetValue = Dynvar_GetValue, \
-	import.Dynvar_SetValue = Dynvar_SetValue, \
-	import.Dynvar_AddListener = Dynvar_AddListener, \
-	import.Dynvar_RemoveListener = Dynvar_RemoveListener, \
-	\
-	import.Cvar_Get = Cvar_Get, \
-	import.Cvar_Set = Cvar_Set, \
-	import.Cvar_SetValue = Cvar_SetValue, \
-	import.Cvar_ForceSet = Cvar_ForceSet, \
-	import.Cvar_Value = Cvar_Value, \
-	import.Cvar_String = Cvar_String, \
-	\
-	import.Cmd_Argc = Cmd_Argc, \
-	import.Cmd_Argv = Cmd_Argv, \
-	import.Cmd_Args = Cmd_Args, \
-	import.Cmd_AddCommand = Cmd_AddCommand, \
-	import.Cmd_RemoveCommand = Cmd_RemoveCommand, \
-	\
-	import.ML_Update = ML_Update, \
-	import.ML_GetMapByNum = ML_GetMapByNum, \
-	import.ML_FilenameExists = ML_FilenameExists, \
-	\
-	import.Cmd_ExecuteText = Cbuf_ExecuteText, \
-	import.Cbuf_Execute = Cbuf_Execute, \
-	\
-	import.FakeClientConnect = SVC_FakeConnect, \
-	import.DropClient = PF_DropClient, \
-	import.GetClientState = PF_GetClientState, \
-	import.ExecuteClientThinks = SV_ExecuteClientThinks, \
-	\
-	import.LocateEntities = SV_LocateEntities, \
-	\
-	import.asGetAngelExport = Com_asGetAngelExport \
-	)
-
-/*
 * SV_InitGameProgs
 *
 * Init the game subsystem for a new map
@@ -574,7 +479,99 @@ void SV_InitGameProgs( void )
 	sv_gameprogspool = _Mem_AllocPool( NULL, "Game Progs", MEMPOOL_GAMEPROGS, __FILE__, __LINE__ );
 
 	// load a new game dll
-	SV_InitGameProgsImportStruct( import );
+	import.Print = PF_dprint;
+	import.Error = PF_error;
+	import.GameCmd = PF_GameCmd;
+
+	import.inPVS = PF_inPVS;
+
+	import.CM_TransformedPointContents = PF_CM_TransformedPointContents;
+	import.CM_TransformedBoxTrace = PF_CM_TransformedBoxTrace;
+	import.CM_RoundUpToHullSize = PF_CM_RoundUpToHullSize;
+	import.CM_NumInlineModels = PF_CM_NumInlineModels;
+	import.CM_InlineModel = PF_CM_InlineModel;
+	import.CM_InlineModelBounds = PF_CM_InlineModelBounds;
+	import.CM_ModelForBBox = PF_CM_ModelForBBox;
+	import.CM_OctagonModelForBBox = PF_CM_OctagonModelForBBox;
+	import.CM_AreasConnected = PF_CM_AreasConnected;
+	import.CM_SetAreaPortalState = PF_CM_SetAreaPortalState;
+	import.CM_BoxLeafnums = PF_CM_BoxLeafnums;
+	import.CM_LeafCluster = PF_CM_LeafCluster;
+	import.CM_LeafArea = PF_CM_LeafArea;
+
+	import.Milliseconds = Sys_Milliseconds;
+
+	import.ModelIndex = SV_ModelIndex;
+	import.SoundIndex = SV_SoundIndex;
+	import.ImageIndex = SV_ImageIndex;
+	import.SkinIndex = SV_SkinIndex;
+
+	import.ConfigString = PF_ConfigString;
+	import.GetConfigString = PF_GetConfigString;
+	import.PureSound = PF_PureSound;
+	import.PureModel = PF_PureModel;
+
+	import.FS_FOpenFile = FS_FOpenFile;
+	import.FS_Read = FS_Read;
+	import.FS_Write = FS_Write;
+	import.FS_Print = FS_Print;
+	import.FS_Tell = FS_Tell;
+	import.FS_Seek = FS_Seek;
+	import.FS_Eof = FS_Eof;
+	import.FS_Flush = FS_Flush;
+	import.FS_FCloseFile = FS_FCloseFile;
+	import.FS_RemoveFile = FS_RemoveFile;
+	import.FS_GetFileList = FS_GetFileList;
+	import.FS_FirstExtension = FS_FirstExtension;
+	import.FS_MoveFile = FS_MoveFile;
+	import.FS_IsUrl = FS_IsUrl;
+	import.FS_FileMTime = FS_BaseFileMTime;
+	import.FS_RemoveDirectory = FS_RemoveDirectory;
+
+	import.Mem_Alloc = PF_MemAlloc;
+	import.Mem_Free = PF_MemFree;
+
+	import.Dynvar_Create = Dynvar_Create;
+	import.Dynvar_Destroy = Dynvar_Destroy;
+	import.Dynvar_Lookup = Dynvar_Lookup;
+	import.Dynvar_GetName = Dynvar_GetName;
+	import.Dynvar_GetValue = Dynvar_GetValue;
+	import.Dynvar_SetValue = Dynvar_SetValue;
+	import.Dynvar_AddListener = Dynvar_AddListener;
+	import.Dynvar_RemoveListener = Dynvar_RemoveListener;
+
+	import.Cvar_Get = Cvar_Get;
+	import.Cvar_Set = Cvar_Set;
+	import.Cvar_SetValue = Cvar_SetValue;
+	import.Cvar_ForceSet = Cvar_ForceSet;
+	import.Cvar_Value = Cvar_Value;
+	import.Cvar_String = Cvar_String;
+
+	import.Cmd_Argc = Cmd_Argc;
+	import.Cmd_Argv = Cmd_Argv;
+	import.Cmd_Args = Cmd_Args;
+	import.Cmd_AddCommand = Cmd_AddCommand;
+	import.Cmd_RemoveCommand = Cmd_RemoveCommand;
+
+	import.ML_Update = ML_Update;
+	import.ML_GetMapByNum = ML_GetMapByNum;
+	import.ML_FilenameExists = ML_FilenameExists;
+
+	import.Cmd_ExecuteText = Cbuf_ExecuteText;
+	import.Cbuf_Execute = Cbuf_Execute;
+
+	import.FakeClientConnect = SVC_FakeConnect;
+	import.DropClient = PF_DropClient;
+	import.GetClientState = PF_GetClientState;
+	import.ExecuteClientThinks = SV_ExecuteClientThinks;
+
+	import.LocateEntities = SV_LocateEntities;
+
+	import.asGetAngelExport = Com_asGetAngelExport;
+
+	import.GetStatQueryAPI = StatQuery_GetAPI;
+	import.MM_SendQuery = SV_MM_SendQuery;
+	import.MM_GameState = SV_MM_GameState;
 
 	// clear module manifest string
 	assert( sizeof( manifest ) >= MAX_INFO_STRING );

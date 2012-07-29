@@ -51,16 +51,15 @@ typedef struct
 {
 	shader_t		*shader;
 	cplane_t		*visibleplane;
-
-	int				numplanes;
-	cplane_t		*planes;
+	vec3_t			mins, maxs;
 } mfog_t;
 
 typedef struct msurface_s
 {
 	unsigned int	visframe;			// should be drawn when node is crossed
 	unsigned int	facetype, flags;
-	unsigned short	numVertexes, numElems;
+	unsigned short	numVerts, numElems;
+	unsigned int	firstVBOVert, firstVBOElem;
 
 	shader_t		*shader;
 	mesh_t			*mesh;
@@ -137,10 +136,11 @@ typedef struct
 {
 	const bspFormatDesc_t *format;
 
-	dvis_t			*pvs, *phs;
+	dvis_t			*pvs;
 
 	int				numsubmodels;
 	mmodel_t		*submodels;
+	struct model_s  *inlines;
 
 	int				nummodelsurfaces;
 	msurface_t		*firstmodelsurface;
@@ -173,6 +173,12 @@ typedef struct
 	vec3_t			gridSize;
 	vec3_t			gridMins;
 	int				gridBounds[4];
+
+	int				numLightmapImages;
+	struct image_s	**lightmapImages;
+
+	int				numSuperLightStyles;
+	struct superLightStyle_s *superLightStyles;
 } mbrushmodel_t;
 
 /*
@@ -209,6 +215,7 @@ typedef struct
 
 typedef struct
 {
+	char			name[MD3_MAX_PATH];
 	shader_t		*shader;
 } maliasskin_t;
 
@@ -229,6 +236,8 @@ typedef struct
 
 	int				numskins;
 	maliasskin_t	*skins;
+
+	mesh_vbo_t		*vbo;
 } maliasmesh_t;
 
 typedef struct
@@ -264,15 +273,22 @@ SKELETAL MODELS
 //
 typedef struct
 {
+	char			*name;
 	shader_t		*shader;
 } mskskin_t;
 
 typedef struct
 {
-	char			name[SKM_MAX_NAME];
+	qbyte			indices[SKM_MAX_WEIGHTS];
+	qbyte			weights[SKM_MAX_WEIGHTS];
+} mskblend_t;
 
-	float			*influences;
-	unsigned int	*bones;
+typedef struct
+{
+	char			*name;
+
+	qbyte			*blendIndices;
+	qbyte			*blendWeights;
 
 	unsigned int	numverts;
 	vec4_t			*xyzArray;
@@ -280,25 +296,28 @@ typedef struct
 	vec2_t			*stArray;
 	vec4_t			*sVectorsArray;
 
+	unsigned int	*vertexBlends;	// [0..numbones-1] reference directly to bones
+									// [numbones..numbones+numblendweights-1] reference to model blendweights
+
+	unsigned int	maxWeights;		// the maximum number of bones, affecting a single vertex in the mesh
+
 	unsigned int	numtris;
 	elem_t			*elems;
 
-	unsigned int	numreferences;
-	unsigned int	*references;
-
 	mskskin_t		skin;
+
+	mesh_vbo_t		*vbo;
 } mskmesh_t;
 
 typedef struct
 {
-	char			name[SKM_MAX_NAME];
+	char			*name;
 	signed int		parent;
 	unsigned int	flags;
 } mskbone_t;
 
 typedef struct
 {
-	char			name[SKM_MAX_NAME];
 	vec3_t			mins, maxs;
 	float			radius;
 	bonepose_t		*boneposes;
@@ -312,43 +331,26 @@ typedef struct
 	unsigned int	nummeshes;
 	mskmesh_t		*meshes;
 
+	unsigned int	numtris;
+	elem_t			*elems;
+
+	unsigned int	numverts;
+	vec4_t			*xyzArray;
+	vec4_t			*normalsArray;
+	vec2_t			*stArray;
+	vec4_t			*sVectorsArray;
+	qbyte			*blendIndices;
+	qbyte			*blendWeights;
+
+	unsigned int	numblends;
+	mskblend_t		*blends;
+	unsigned int	*vertexBlends;	// [0..numbones-1] reference directly to bones
+									// [numbones..numbones+numblendweights-1] reference to blendweights
+
 	unsigned int	numframes;
 	mskframe_t		*frames;
 	bonepose_t		*invbaseposes;
 } mskmodel_t;
-
-/*
-==============================================================================
-
-SPRITE MODELS
-
-==============================================================================
-*/
-
-#ifdef QUAKE2_JUNK
-
-//
-// in memory representation
-//
-typedef struct
-{
-	int				width, height;
-	int				origin_x, origin_y;             // raster coordinates inside pic
-
-	char			name[SPRITE_MAX_NAME];
-	shader_t		*shader;
-
-	float			mins[3], maxs[3];
-	float			radius;
-} sframe_t;
-
-typedef struct
-{
-	int				numframes;
-	sframe_t		*frames;
-} smodel_t;
-
-#endif
 
 //===================================================================
 
@@ -356,13 +358,16 @@ typedef struct
 // Whole model
 //
 
-typedef enum { mod_bad, mod_brush, mod_sprite, mod_alias, mod_skeletal } modtype_t;
+typedef enum { mod_bad, mod_brush, mod_alias, mod_skeletal } modtype_t;
+typedef void ( *mod_touch_t )( struct model_s *model );
 
 #define MOD_MAX_LODS	4
 
 typedef struct model_s
 {
 	char			*name;
+	int				registration_sequence;
+	mod_touch_t		touch;		// touching a model updates registration sequence, images and VBO's
 
 	modtype_t		type;
 
@@ -377,6 +382,7 @@ typedef struct model_s
 	//
 	void			*extradata;
 
+	int				lodnum;		// LOD index, 0 for parent model, 1..MOD_MAX_LODS for LOD models
 	int				numlods;
 	struct model_s	*lods[MOD_MAX_LODS];
 
@@ -387,23 +393,22 @@ typedef struct model_s
 
 void		R_InitModels( void );
 void		R_ShutdownModels( void );
+void		R_FreeUnusedModels( void );
 
 void		Mod_ClearAll( void );
 model_t		*Mod_ForName( const char *name, qboolean crash );
 mleaf_t		*Mod_PointInLeaf( float *p, model_t *model );
 qbyte		*Mod_ClusterPVS( int cluster, model_t *model );
-qbyte		*Mod_ClusterPHS( int cluster, model_t *model );
 
 unsigned int Mod_Handle( model_t *mod );
 model_t		*Mod_ForHandle( unsigned int elem );
 
-#define		Mod_Malloc( mod, size ) Mem_Alloc( ( mod )->mempool, size )
-#define		Mod_Free( data ) Mem_Free( data )
+// force 16-bytes alignment for all memory chunks allocated for model data
+#define		Mod_Malloc( mod, size ) _Mem_AllocExt( ( mod )->mempool, size, 16, 1, 0, 0, __FILE__, __LINE__ )
+#define		Mod_MemFree( data ) Mem_Free( data )
 
 void		Mod_StripLODSuffix( char *name );
 
 void		Mod_Modellist_f( void );
-
-void		R_Skm2Iqe_f( void );
 
 #endif /*__R_MODEL_H__*/

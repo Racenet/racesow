@@ -5,7 +5,7 @@ using namespace std;
 namespace TestDict
 {
 
-#define TESTNAME "TestDict"
+static const char * const TESTNAME = "TestDict";
 
 
 
@@ -62,28 +62,28 @@ bool Test()
 	engine->RegisterObjectType("Dict", sizeof(CDict), asOBJ_VALUE | asOBJ_APP_CLASS_CDA);	
 	engine->RegisterObjectBehaviour("Dict", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Construct), asCALL_CDECL_OBJLAST);
 	engine->RegisterObjectBehaviour("Dict", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(Destruct), asCALL_CDECL_OBJLAST);
-	engine->RegisterObjectBehaviour("Dict", asBEHAVE_ASSIGNMENT, "Dict &f(const Dict &in)", asMETHOD(CDict,operator=), asCALL_THISCALL);
+	engine->RegisterObjectMethod("Dict", "Dict &opAssign(const Dict &in)", asMETHOD(CDict,operator=), asCALL_THISCALL);
 
-	engine->RegisterObjectBehaviour("Dict", asBEHAVE_INDEX, "Dict &f(string)", asMETHOD(CDict, operator[]), asCALL_THISCALL);
+	engine->RegisterObjectMethod("Dict", "Dict &opIndex(string)", asMETHOD(CDict, operator[]), asCALL_THISCALL);
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	asIScriptContext *ctx;
-	r = engine->ExecuteString(0, "TestDict()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestDict()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
 		printf("%s: Failed to execute script\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( ctx ) ctx->Release();
 

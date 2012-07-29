@@ -25,9 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //=========================================================
 
 /*
-=================
-CMod_SurfaceFlags
-=================
+* CMod_SurfaceFlags
 */
 static int CMod_SurfaceFlags( int oldflags, int oldcontents )
 {
@@ -50,9 +48,7 @@ static int CMod_SurfaceFlags( int oldflags, int oldcontents )
 }
 
 /*
-=================
-CMod_SurfaceContents
-=================
+* CMod_SurfaceContents
 */
 static int CMod_SurfaceContents( int oldcontents )
 {
@@ -456,14 +452,9 @@ static void CMod_LoadVisibility( cmodel_state_t *cms, lump_t *l )
 	cms->map_pvs->numclusters = numclusters;
 	cms->map_pvs->rowsize = rowsize;
 
-	cms->map_phs = Mem_Alloc( cms->mempool, cms->map_visdatasize );
-	cms->map_phs->numclusters = numclusters;
-	cms->map_phs->rowsize = rowsize;
-
 	for( i = 0; i < numclusters; i++ )
 	{
 		CM_DecompressVis( ( qbyte * )in + LittleLong( in->bitofs[i][0] ), rowsize, cms->map_pvs->data + i * rowsize );
-		CM_DecompressVis( ( qbyte * )in + LittleLong( in->bitofs[i][1] ), rowsize, cms->map_phs->data + i * rowsize );
 	}
 }
 

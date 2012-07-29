@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestExecute2Args"
+static const char * const TESTNAME = "TestExecute2Args";
 
 static int testVal = 0;
 static bool called = false;
@@ -25,7 +25,7 @@ static void cfunction_gen(asIScriptGeneric *gen)
 
 bool TestExecute2Args()
 {
-	bool ret = false;
+	bool fail = false;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
@@ -33,23 +33,23 @@ bool TestExecute2Args()
 	else
 		engine->RegisterGlobalFunction("void cfunction(int, int)", asFUNCTION(cfunction), asCALL_CDECL);
 
-	engine->ExecuteString(0, "cfunction(5, 9)");
+	ExecuteString(engine, "cfunction(5, 9)");
 
 	if( !called ) 
 	{
 		// failure
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	} 
 	else if( testVal != (5 + 9) ) 
 	{
 		// failure
 		printf("\n%s: testVal is not of expected value. Got %d, expected %d\n\n", TESTNAME, testVal, (5 + 9));
-		ret = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
 	
 	// Success
-	return ret;
+	return fail;
 }

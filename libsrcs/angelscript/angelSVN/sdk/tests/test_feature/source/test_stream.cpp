@@ -5,7 +5,7 @@ using namespace std;
 namespace TestStream
 {
 
-#define TESTNAME "TestStream"
+static const char * const TESTNAME = "TestStream";
 
 stringstream stream;
 
@@ -116,9 +116,9 @@ bool Test()
 	engine->RegisterObjectBehaviour("stream", asBEHAVE_FACTORY, "stream@ f()", asFUNCTION(CScriptStream_Factory), asCALL_CDECL);
 	engine->RegisterObjectBehaviour("stream", asBEHAVE_ADDREF, "void f()", asMETHOD(CScriptStream,AddRef), asCALL_THISCALL);
 	engine->RegisterObjectBehaviour("stream", asBEHAVE_RELEASE, "void f()", asMETHOD(CScriptStream,Release), asCALL_THISCALL);
-	engine->RegisterObjectBehaviour("stream", asBEHAVE_ASSIGNMENT, "stream &f(const stream &in)", asMETHOD(CScriptStream, operator=), asCALL_THISCALL);
-	engine->RegisterGlobalBehaviour(asBEHAVE_BIT_SLL, "stream &f(stream &inout, const string &in)", asFUNCTIONPR(operator<<, (CScriptStream &s, const string &other), CScriptStream &), asCALL_CDECL);
-	engine->RegisterGlobalBehaviour(asBEHAVE_BIT_SRL, "stream &f(stream &inout, string &out)", asFUNCTIONPR(operator>>, (CScriptStream &s, string &other), CScriptStream &), asCALL_CDECL);
+	engine->RegisterObjectMethod("stream", "stream &opAssign(const stream &in)", asMETHOD(CScriptStream, operator=), asCALL_THISCALL);
+	engine->RegisterObjectMethod("stream", "stream &opShl(const string &in)", asFUNCTIONPR(operator<<, (CScriptStream &s, const string &other), CScriptStream &), asCALL_CDECL_OBJFIRST);
+	engine->RegisterObjectMethod("stream", "stream &opShr(string &out)", asFUNCTIONPR(operator>>, (CScriptStream &s, string &other), CScriptStream &), asCALL_CDECL_OBJFIRST);
 
 	COutStream out;
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
@@ -127,26 +127,26 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	asIScriptContext *ctx;
-	r = engine->ExecuteString(0, "Test()", &ctx);
+	asIScriptContext *ctx = engine->CreateContext();
+	r = ExecuteString(engine, "Test()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
 		printf("%s: Failed to execute script\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( ctx ) ctx->Release();
 
 	if( stream.str() != "abc" )
 	{
 		printf("%s: Failed to create the correct stream\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	stream.clear();
@@ -155,14 +155,15 @@ bool Test()
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script2, strlen(script2), 0);
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
-	r = engine->ExecuteString(0, "Test2()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "Test2()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( ctx ) ctx->Release();
 

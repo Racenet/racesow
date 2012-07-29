@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include "g_local.h"
 
 /*
@@ -36,7 +36,7 @@ static qboolean G_Chase_IsValidTarget( edict_t *ent, edict_t *target, qboolean t
 	if( !ent || !target )
 		return qfalse;
 
-	if( !target->r.inuse || trap_GetClientState( PLAYERNUM( target ) ) < CS_SPAWNED )
+	if( !target->r.inuse || !target->r.client || trap_GetClientState( PLAYERNUM( target ) ) < CS_SPAWNED )
 		return qfalse;
 
 	if( target->s.team < TEAM_PLAYERS || target->s.team >= GS_MAX_TEAMS || target == ent )
@@ -57,7 +57,7 @@ static qboolean G_Chase_IsValidTarget( edict_t *ent, edict_t *target, qboolean t
 static int G_Chase_FindFollowPOV( edict_t *ent )
 {
 	int i, j;
-	int quad, warshell, scorelead;
+	int quad, warshell, regen, scorelead;
 	int maxteam;
 	int flags[GS_MAX_TEAMS];
 	int newctfpov, newpoweruppov;
@@ -72,9 +72,26 @@ static int G_Chase_FindFollowPOV( edict_t *ent )
 	if( !ent->r.client || !ent->r.client->resp.chase.active || !ent->r.client->resp.chase.followmode )
 		return newpov;
 
+	// follow killer, with a small delay
+	if( ( ent->r.client->resp.chase.followmode & 8 ) ) {
+		edict_t *targ;
+
+		targ = &game.edicts[ent->r.client->resp.chase.target];
+		if( G_IsDead( targ ) && targ->deathTimeStamp + 400 < level.time ) {
+			edict_t *attacker = targ->r.client->teamstate.last_killer;
+
+			// ignore world and team kills
+			if( attacker && attacker->r.client && !GS_IsTeamDamage( &targ->s, &attacker->s ) ) {
+				newpov = ENTNUM( attacker );
+			}
+		}
+
+		return newpov;
+	}
+
 	// find what players have what
 	score_max = -999999999;
-	quad = warshell = scorelead = -1;
+	quad = warshell = regen = scorelead = -1;
 	memset( flags, -1, sizeof( flags ) );
 	newctfpov = newpoweruppov = -1;
 	maxteam = 0;
@@ -101,6 +118,8 @@ static int G_Chase_FindFollowPOV( edict_t *ent )
 			quad = ENTNUM( target );
 		if( target->s.effects & EF_SHELL )
 			warshell = ENTNUM( target );
+		if( target->s.effects & EF_REGEN )
+			regen = ENTNUM( target );
 
 		if( target->s.team && (target->s.effects & EF_CARRIER) )
 		{
@@ -196,6 +215,8 @@ static int G_Chase_FindFollowPOV( edict_t *ent )
 			newpoweruppov = quad;
 		else if( warshell != -1 )
 			newpoweruppov = warshell;
+		else if( regen != -1 )
+			newpoweruppov = regen;
 
 		poweruppov = newpoweruppov;
 		pwupswitchTime = 0;
@@ -333,7 +354,7 @@ void G_EndServerFrames_UpdateChaseCam( void )
 /*
 * G_ChasePlayer
 */
-void G_ChasePlayer( edict_t *ent, char *name, qboolean teamonly, int followmode )
+void G_ChasePlayer( edict_t *ent, const char *name, qboolean teamonly, int followmode )
 {
 	int i;
 	edict_t *e;
@@ -491,6 +512,7 @@ void G_ChaseStep( edict_t *ent, int step )
 void Cmd_ChaseCam_f( edict_t *ent )
 {
 	qboolean team_only;
+	const char *arg1;
 
 	if( ent->s.team != TEAM_SPECTATOR && !ent->r.client->teamstate.is_coach )
 	{
@@ -501,43 +523,51 @@ void Cmd_ChaseCam_f( edict_t *ent )
 
 	// & 1 = scorelead
 	// & 2 = powerups
-	// & 4 = flags
+	// & 4 = objectives
+	// & 8 = fragger
 
 	if( ent->r.client->teamstate.is_coach && GS_TeamBasedGametype() )
 		team_only = qtrue;
 	else 
 		team_only = qfalse;
 
+	arg1 = trap_Cmd_Argv( 1 );
+
 	if( trap_Cmd_Argc() < 2 )
 	{
 		G_ChasePlayer( ent, NULL, team_only, 0 );
 	}
-	else if( !Q_stricmp( trap_Cmd_Argv( 1 ), "auto" ) )
+	else if( !Q_stricmp( arg1, "auto" ) )
 	{
 		G_PrintMsg( ent, "Chasecam mode is 'auto'. It will follow the score leader when no powerup nor flag is carried.\n" );
 		G_ChasePlayer( ent, NULL, team_only, 7 );
 	}
-	else if( !Q_stricmp( trap_Cmd_Argv( 1 ), "carriers" ) )
+	else if( !Q_stricmp( arg1, "carriers" ) )
 	{
 		G_PrintMsg( ent, "Chasecam mode is 'carriers'. It will switch to flag or powerup carriers when any of these items is picked up.\n" );
 		G_ChasePlayer( ent, NULL, team_only, 6 );
 	}
-	else if( !Q_stricmp( trap_Cmd_Argv( 1 ), "powerups" ) )
+	else if( !Q_stricmp( arg1, "powerups" ) )
 	{
 		G_PrintMsg( ent, "Chasecam mode is 'powerups'. It will switch to powerup carriers when any of these items is picked up.\n" );
 		G_ChasePlayer( ent, NULL, team_only, 2 );
 	}
-	else if( !Q_stricmp( trap_Cmd_Argv( 1 ), "objectives" ) )
+	else if( !Q_stricmp( arg1, "objectives" ) )
 	{
 		G_PrintMsg( ent, "Chasecam mode is 'objectives'. It will switch to objectives carriers when any of these items is picked up.\n" );
 		G_ChasePlayer( ent, NULL, team_only, 4 );
 	}
-	else if( !Q_stricmp( trap_Cmd_Argv( 1 ), "score" ) )
+	else if( !Q_stricmp( arg1, "score" ) )
 	{
 		G_PrintMsg( ent, "Chasecam mode is 'score'. It will always follow the highest fragger.\n" );
 		G_ChasePlayer( ent, NULL, team_only, 1 );
 	}
-	else if( !Q_stricmp( trap_Cmd_Argv( 1 ), "help" ) )
+	else if( !Q_stricmp( arg1, "fragger" ) )
+	{
+		G_PrintMsg( ent, "Chasecam mode is 'fragger'. The last fragging player will be followed.\n" );
+		G_ChasePlayer( ent, NULL, team_only, 8 );
+	}
+	else if( !Q_stricmp( arg1, "help" ) )
 	{
 		G_PrintMsg( ent, "Chasecam modes:\n" );
 		G_PrintMsg( ent, "- 'auto': Chase the score leader unless there's an objective carrier or a powerup carrier.\n" );
@@ -550,7 +580,7 @@ void Cmd_ChaseCam_f( edict_t *ent )
 	}
 	else
 	{
-		G_ChasePlayer( ent, trap_Cmd_Argv( 1 ), team_only, 0 );
+		G_ChasePlayer( ent, arg1, team_only, 0 );
 	}
 
 	G_Teams_LeaveChallengersQueue( ent );

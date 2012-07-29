@@ -7,7 +7,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestStdcall4Args"
+static const char * const TESTNAME = "TestStdcall4Args";
 
 static bool testVal = false;
 static bool called = false;
@@ -37,23 +37,23 @@ bool TestStdcall4Args()
 		return false;
 	}
 
-	bool ret = false;
+	bool fail = false;
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	engine->RegisterGlobalFunction("void cfunction(int, float, double, int)", asFUNCTION(cfunction), asCALL_STDCALL);
 
-	engine->ExecuteString(0, "cfunction(10, 1.92f, 3.88, 97)");
+	ExecuteString(engine, "cfunction(10, 1.92f, 3.88, 97)");
 
 	if (!called) {
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	} else if (!testVal) {
 		printf("\n%s: testVal is not of expected value. Got (%d, %f, %f, %c), expected (%d, %f, %f, %c)\n\n", TESTNAME, t1, t2, t3, t4, 10, 1.92f, 3.88, 97);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
 	engine = NULL;
 
-	return ret;
+	return fail;
 }

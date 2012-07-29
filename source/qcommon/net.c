@@ -1,30 +1,26 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "qcommon.h"
 
 #include "sys_net.h"
-
-#if defined __FreeBSD__
-#include <sys/socket.h>
-#endif
 
 #ifdef _WIN32
 #include "../win32/winquake.h"
@@ -34,6 +30,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
 #endif
 
 #define	MAX_LOOPBACK	4
@@ -74,16 +71,14 @@ static int numIP;
 static qbyte localIP[MAX_IPS][4];
 
 /*
-   =============================================================================
-   PRIVATE FUNCTIONS
-   =============================================================================
- */
+=============================================================================
+PRIVATE FUNCTIONS
+=============================================================================
+*/
 
 /*
-   ====================
-   GetLastErrorString
-   ====================
- */
+* GetLastErrorString
+*/
 static const char *GetLastErrorString( void )
 {
 	switch( Sys_NET_GetLastError() )
@@ -101,10 +96,8 @@ static const char *GetLastErrorString( void )
 }
 
 /*
-   ==================
-   GetLocalAddress
-   ==================
- */
+* GetLocalAddress
+*/
 static void GetLocalAddress( void )
 {
 	struct hostent *hostInfo;
@@ -144,10 +137,8 @@ static void GetLocalAddress( void )
 }
 
 /*
-   =============
-   AddressToSockaddress
-   =============
- */
+* AddressToSockaddress
+*/
 static qboolean AddressToSockaddress( const netadr_t *address, struct sockaddr_storage *sadr )
 {
 	assert( address );
@@ -187,10 +178,8 @@ static qboolean AddressToSockaddress( const netadr_t *address, struct sockaddr_s
 }
 
 /*
-   =============
-   SockaddressToAddress
-   =============
- */
+* SockaddressToAddress
+*/
 static qboolean SockaddressToAddress( const struct sockaddr *s, netadr_t *address )
 {
 	assert( s );
@@ -228,10 +217,8 @@ static qboolean SockaddressToAddress( const struct sockaddr *s, netadr_t *addres
 }
 
 /*
-   ====================
-   BindSocket
-   ====================
- */
+* BindSocket
+*/
 static qboolean BindSocket( socket_handle_t handle, const netadr_t *address )
 {
 	struct sockaddr_storage sockaddress;
@@ -251,12 +238,10 @@ static qboolean BindSocket( socket_handle_t handle, const netadr_t *address )
 }
 
 /*
-   ====================
-   OpenSocket
-
-   returns handle or INVALID_SOCKET for error
-   ====================
- */
+* OpenSocket
+* 
+* returns handle or INVALID_SOCKET for error
+*/
 static socket_handle_t OpenSocket( socket_type_t type, qboolean ipv6 )
 {
 	socket_handle_t handle;
@@ -302,8 +287,8 @@ static socket_handle_t OpenSocket( socket_type_t type, qboolean ipv6 )
 		return INVALID_SOCKET;
 	}
 
-// Win32's API only defines the IPV6_V6ONLY option since Windows Vista, but fortunately
-// the default value is what we want on Win32 anyway (IPV6_V6ONLY = true)
+	// Win32's API only defines the IPV6_V6ONLY option since Windows Vista, but fortunately
+	// the default value is what we want on Win32 anyway (IPV6_V6ONLY = true)
 #ifdef IPV6_V6ONLY
 	if( ipv6 )
 	{
@@ -316,10 +301,8 @@ static socket_handle_t OpenSocket( socket_type_t type, qboolean ipv6 )
 }
 
 /*
-   ====================
-   NET_SocketMakeBroadcastCapable
-   ====================
- */
+* NET_SocketMakeBroadcastCapable
+*/
 static qboolean NET_SocketMakeBroadcastCapable( socket_handle_t handle )
 {
 	int num = 1;
@@ -334,10 +317,8 @@ static qboolean NET_SocketMakeBroadcastCapable( socket_handle_t handle )
 }
 
 /*
-   ====================
-   NET_SocketMakeNonBlocking
-   ====================
- */
+* NET_SocketMakeNonBlocking
+*/
 static qboolean NET_SocketMakeNonBlocking( socket_handle_t handle )
 {
 	ioctl_param_t _true = 1;
@@ -352,10 +333,8 @@ static qboolean NET_SocketMakeNonBlocking( socket_handle_t handle )
 }
 
 /*
-   ==================
-   NET_UDP_GetPacket
-   ==================
- */
+* NET_UDP_GetPacket
+*/
 static int NET_UDP_GetPacket( const socket_t *socket, netadr_t *address, msg_t *message )
 {
 	struct sockaddr_storage from;
@@ -399,10 +378,8 @@ static int NET_UDP_GetPacket( const socket_t *socket, netadr_t *address, msg_t *
 }
 
 /*
-   =====================
-   NET_UDP_SendPacket
-   =====================
- */
+* NET_UDP_SendPacket
+*/
 static qboolean NET_UDP_SendPacket( const socket_t *socket, const void *data, size_t length, const netadr_t *address )
 {
 	struct sockaddr_storage addr;
@@ -427,10 +404,8 @@ static qboolean NET_UDP_SendPacket( const socket_t *socket, const void *data, si
 }
 
 /*
-   ====================
-   NET_IP_OpenSocket
-   ====================
- */
+* NET_IP_OpenSocket
+*/
 static qboolean NET_IP_OpenSocket( socket_t *sock, const netadr_t *address, socket_type_t socktype, qboolean server )
 {
 	int newsocket;
@@ -470,7 +445,7 @@ static qboolean NET_IP_OpenSocket( socket_t *sock, const netadr_t *address, sock
 		Com_Printf( "Opening %s/%s socket: %s\n", stype, proto, NET_AddressToString( address ) );
 	}
 
-	if( ( newsocket = OpenSocket( socktype, address->type == NA_IP6 ) ) == INVALID_SOCKET )
+	if( ( newsocket = OpenSocket( socktype, ( address->type == NA_IP6 ? qtrue : qfalse ) ) ) == INVALID_SOCKET )
 		return qfalse;
 
 	// make it non-blocking
@@ -492,9 +467,9 @@ static qboolean NET_IP_OpenSocket( socket_t *sock, const netadr_t *address, sock
 
 	// wsw : pb : make it reusable (fast release of port when quit)
 	/*if( setsockopt(newsocket, SOL_SOCKET, SO_REUSEADDR, (char *)&i, sizeof(i)) == -1 ) {
-	    SetErrorStringFromErrno( "setsockopt" );
-	    return 0;
-	   }*/
+	SetErrorStringFromErrno( "setsockopt" );
+	return 0;
+	}*/
 
 	if( !BindSocket( newsocket, address ) )
 	{
@@ -512,10 +487,8 @@ static qboolean NET_IP_OpenSocket( socket_t *sock, const netadr_t *address, sock
 }
 
 /*
-   ====================
-   NET_UDP_CloseSocket
-   ====================
- */
+* NET_UDP_CloseSocket
+*/
 static void NET_UDP_CloseSocket( socket_t *socket )
 {
 	assert( socket && socket->type == SOCKET_UDP );
@@ -532,10 +505,8 @@ static void NET_UDP_CloseSocket( socket_t *socket )
 
 #ifdef TCP_SUPPORT
 /*
-   ==================
-   NET_TCP_Get
-   ==================
- */
+* NET_TCP_Get
+*/
 static int NET_TCP_Get( const socket_t *socket, netadr_t *address, void *data, size_t length )
 {
 	int ret;
@@ -560,10 +531,8 @@ static int NET_TCP_Get( const socket_t *socket, netadr_t *address, void *data, s
 }
 
 /*
-   ==================
-   NET_TCP_GetPacket
-   ==================
- */
+* NET_TCP_GetPacket
+*/
 static int NET_TCP_GetPacket( const socket_t *socket, netadr_t *address, msg_t *message )
 {
 	int ret;
@@ -630,10 +599,8 @@ static int NET_TCP_GetPacket( const socket_t *socket, netadr_t *address, msg_t *
 
 
 /*
-   ====================
-   NET_TCP_Send
-   ====================
- */
+* NET_TCP_Send
+*/
 static qboolean NET_TCP_Send( const socket_t *socket, const void *data, size_t length )
 {
 #ifdef USE_TCP_NOSIGPIPE
@@ -675,10 +642,8 @@ static qboolean NET_TCP_Send( const socket_t *socket, const void *data, size_t l
 }
 
 /*
-   ====================
-   NET_TCP_Listen
-   ====================
- */
+* NET_TCP_Listen
+*/
 static qboolean NET_TCP_Listen( const socket_t *socket )
 {
 	assert( socket && socket->open && socket->type == SOCKET_TCP && socket->handle );
@@ -693,10 +658,8 @@ static qboolean NET_TCP_Listen( const socket_t *socket )
 }
 
 /*
-   ====================
-   NET_TCP_Connect
-   ====================
- */
+* NET_TCP_Connect
+*/
 static connection_status_t NET_TCP_Connect( socket_t *socket, const netadr_t *address )
 {
 	struct sockaddr_storage sockaddress;
@@ -733,10 +696,8 @@ static connection_status_t NET_TCP_Connect( socket_t *socket, const netadr_t *ad
 }
 
 /*
-   ====================
-   NET_TCP_CheckConnect
-   ====================
- */
+* NET_TCP_CheckConnect
+*/
 static connection_status_t NET_TCP_CheckConnect( socket_t *socket )
 {
 	struct timeval timeout = { 0, 0 };
@@ -789,10 +750,8 @@ static connection_status_t NET_TCP_CheckConnect( socket_t *socket )
 }
 
 /*
-   ====================
-   NET_TCP_Accept
-   ====================
- */
+* NET_TCP_Accept
+*/
 static int NET_TCP_Accept( const socket_t *socket, socket_t *newsocket, netadr_t *address )
 {
 	struct sockaddr sockaddress;
@@ -834,10 +793,8 @@ static int NET_TCP_Accept( const socket_t *socket, socket_t *newsocket, netadr_t
 }
 
 /*
-   ====================
-   NET_TCP_CloseSocket
-   ====================
- */
+* NET_TCP_CloseSocket
+*/
 static void NET_TCP_CloseSocket( socket_t *socket )
 {
 	assert( socket && socket->type == SOCKET_TCP );
@@ -858,10 +815,8 @@ static void NET_TCP_CloseSocket( socket_t *socket )
 
 
 /*
-   ===================
-   NET_Loopback_GetPacket
-   ===================
- */
+* NET_Loopback_GetPacket
+*/
 static int NET_Loopback_GetPacket( const socket_t *socket, netadr_t *address, msg_t *net_message )
 {
 	int i;
@@ -889,12 +844,10 @@ static int NET_Loopback_GetPacket( const socket_t *socket, netadr_t *address, ms
 }
 
 /*
-   ===================
-   NET_SendLoopbackPacket
-   ===================
- */
+* NET_SendLoopbackPacket
+*/
 static qboolean NET_Loopback_SendPacket( const socket_t *socket, const void *data, size_t length,
-                                         const netadr_t *address )
+										const netadr_t *address )
 {
 	int i;
 	loopback_t *loop;
@@ -922,10 +875,8 @@ static qboolean NET_Loopback_SendPacket( const socket_t *socket, const void *dat
 }
 
 /*
-   ===================
-   NET_Loopback_OpenSocket
-   ===================
- */
+* NET_Loopback_OpenSocket
+*/
 static qboolean NET_Loopback_OpenSocket( socket_t *socket, const netadr_t *address, qboolean server )
 {
 	int i;
@@ -963,10 +914,8 @@ static qboolean NET_Loopback_OpenSocket( socket_t *socket, const netadr_t *addre
 }
 
 /*
-   ===================
-   NET_Loopback_CloseSocket
-   ===================
- */
+* NET_Loopback_CloseSocket
+*/
 static void NET_Loopback_CloseSocket( socket_t *socket )
 {
 	assert( socket->type == SOCKET_LOOPBACK );
@@ -983,10 +932,8 @@ static void NET_Loopback_CloseSocket( socket_t *socket )
 
 #ifdef TCP_SUPPORT
 /*
-   ===================
-   NET_TCP_SendPacket
-   ===================
- */
+* NET_TCP_SendPacket
+*/
 static qboolean NET_TCP_SendPacket( const socket_t *socket, const void *data, size_t length )
 {
 	int len;
@@ -1007,20 +954,18 @@ static qboolean NET_TCP_SendPacket( const socket_t *socket, const void *data, si
 #endif
 
 /*
-   =============================================================================
-   PUBLIC FUNCTIONS
-   =============================================================================
- */
+=============================================================================
+PUBLIC FUNCTIONS
+=============================================================================
+*/
 
 /*
-   ===================
-   NET_GetPacket
-
-   1	ok
-   0	not ready
-   -1	error
-   ===================
- */
+* NET_GetPacket
+* 
+* 1	ok
+* 0	not ready
+* -1	error
+*/
 int NET_GetPacket( const socket_t *socket, netadr_t *address, msg_t *message )
 {
 	assert( socket->open );
@@ -1049,14 +994,12 @@ int NET_GetPacket( const socket_t *socket, netadr_t *address, msg_t *message )
 }
 
 /*
-   ===================
-   NET_Get
-
-   1	ok
-   0	no data ready
-   -1	error
-   ===================
- */
+* NET_Get
+* 
+* 1	ok
+* 0	no data ready
+* -1	error
+*/
 int NET_Get( const socket_t *socket, netadr_t *address, void *data, size_t length )
 {
 	assert( socket->open );
@@ -1084,10 +1027,8 @@ int NET_Get( const socket_t *socket, netadr_t *address, void *data, size_t lengt
 }
 
 /*
-   ===================
-   NET_SendPacket
-   ===================
- */
+* NET_SendPacket
+*/
 qboolean NET_SendPacket( const socket_t *socket, const void *data, size_t length, const netadr_t *address )
 {
 	assert( socket->open );
@@ -1119,10 +1060,8 @@ qboolean NET_SendPacket( const socket_t *socket, const void *data, size_t length
 }
 
 /*
-   ===================
-   NET_Send
-   ===================
- */
+* NET_Send
+*/
 qboolean NET_Send( const socket_t *socket, const void *data, size_t length, const netadr_t *address )
 {
 	assert( socket->open );
@@ -1153,10 +1092,8 @@ qboolean NET_Send( const socket_t *socket, const void *data, size_t length, cons
 }
 
 /*
-   ===================
-   NET_AddressToString
-   ===================
- */
+* NET_AddressToString
+*/
 char *NET_AddressToString( const netadr_t *a )
 {
 	static char s[64];
@@ -1179,9 +1116,9 @@ char *NET_AddressToString( const netadr_t *a )
 		{
 			const netadr_ipv6_t *adr6 = &a->address.ipv6;
 			Q_snprintfz( s, sizeof( s ), "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%hu",
-							adr6->ip[ 0], adr6->ip[ 1], adr6->ip[ 2], adr6->ip[ 3], adr6->ip[ 4], adr6->ip[ 5], adr6->ip[ 6], adr6->ip[ 7],
-							adr6->ip[ 8], adr6->ip[ 9], adr6->ip[10], adr6->ip[11], adr6->ip[12], adr6->ip[13], adr6->ip[14], adr6->ip[15],
-							BigShort( adr6->port ) );
+				adr6->ip[ 0], adr6->ip[ 1], adr6->ip[ 2], adr6->ip[ 3], adr6->ip[ 4], adr6->ip[ 5], adr6->ip[ 6], adr6->ip[ 7],
+				adr6->ip[ 8], adr6->ip[ 9], adr6->ip[10], adr6->ip[11], adr6->ip[12], adr6->ip[13], adr6->ip[14], adr6->ip[15],
+				BigShort( adr6->port ) );
 			break;
 		}
 	default:
@@ -1194,12 +1131,10 @@ char *NET_AddressToString( const netadr_t *a )
 }
 
 /*
-   ===================
-   NET_CompareBaseAddress
-
-   Compares without the port
-   ===================
- */
+* NET_CompareBaseAddress
+* 
+* Compares without the port
+*/
 qboolean NET_CompareBaseAddress( const netadr_t *a, const netadr_t *b )
 {
 	if( a->type != b->type )
@@ -1223,7 +1158,7 @@ qboolean NET_CompareBaseAddress( const netadr_t *a, const netadr_t *b )
 		{
 			const netadr_ipv6_t *addr1 = &a->address.ipv6;
 			const netadr_ipv6_t *addr2 = &b->address.ipv6;
-			return ( memcmp( addr1->ip, addr2->ip, sizeof( addr1->ip ) ) == 0 && addr1->scope_id == addr2->scope_id );
+			return ( ( memcmp( addr1->ip, addr2->ip, sizeof( addr1->ip ) ) == 0 && addr1->scope_id == addr2->scope_id ) ? qtrue : qfalse );
 		}
 
 	default:
@@ -1233,12 +1168,10 @@ qboolean NET_CompareBaseAddress( const netadr_t *a, const netadr_t *b )
 }
 
 /*
-   ===================
-   NET_GetAddressPort
-
-   Return the port of the network address (if relevant), or 0
-   ===================
- */
+* NET_GetAddressPort
+* 
+* Return the port of the network address (if relevant), or 0
+*/
 unsigned short NET_GetAddressPort( const netadr_t *address )
 {
 	switch( address->type )
@@ -1255,12 +1188,10 @@ unsigned short NET_GetAddressPort( const netadr_t *address )
 }
 
 /*
-   ===================
-   NET_SetAddressPort
-
-   Set the port of the network address
-   ===================
- */
+* NET_SetAddressPort
+* 
+* Set the port of the network address
+*/
 void NET_SetAddressPort( netadr_t *address, unsigned short port )
 {
 	switch( address->type )
@@ -1279,12 +1210,10 @@ void NET_SetAddressPort( netadr_t *address, unsigned short port )
 }
 
 /*
-   ===================
-   NET_CompareAddress
-
-   Compares with the port
-   ===================
- */
+* NET_CompareAddress
+* 
+* Compares with the port
+*/
 qboolean NET_CompareAddress( const netadr_t *a, const netadr_t *b )
 {
 	if( a->type != b->type )
@@ -1330,10 +1259,8 @@ qboolean NET_CompareAddress( const netadr_t *a, const netadr_t *b )
 }
 
 /*
-   ===================
-   NET_InitAddress
-   ===================
- */
+* NET_InitAddress
+*/
 void NET_InitAddress( netadr_t *address, netadrtype_t type )
 {
 	memset( address, 0, sizeof( *address ) );
@@ -1341,23 +1268,19 @@ void NET_InitAddress( netadr_t *address, netadrtype_t type )
 }
 
 /*
-   ===================
-   NET_BroadcastAddress
-   ===================
- */
+* NET_BroadcastAddress
+*/
 void NET_BroadcastAddress( netadr_t *address, int port )
 {
-	memset( address, 0, sizeof( address ) );
+	memset( address, 0, sizeof( *address ) );
 	address->type = NA_IP;
 	*(int*)address->address.ipv4.ip = htonl( INADDR_BROADCAST );
 	address->address.ipv4.port = BigShort( port );
 }
 
 /*
-   =============
-   ParseAddressString
-   =============
- */
+* ParseAddressString
+*/
 static qboolean ParseAddressString( const char *str, char* addr_buff, size_t addr_buff_size, char* port_buff, size_t port_buff_size, int *addr_family  )
 {
 	const char* addr_start;
@@ -1430,10 +1353,8 @@ static qboolean ParseAddressString( const char *str, char* addr_buff, size_t add
 }
 
 /*
-   =============
-   StringToSockaddress
-   =============
- */
+* StringToSockaddress
+*/
 static qboolean StringToSockaddress( const char *s, struct sockaddr_storage *sadr )
 {
 	char addr_copy [128];
@@ -1485,10 +1406,8 @@ static qboolean StringToSockaddress( const char *s, struct sockaddr_storage *sad
 }
 
 /*
-   =============
-   NET_StringToAddress
-   =============
- */
+* NET_StringToAddress
+*/
 qboolean NET_StringToAddress( const char *s, netadr_t *address )
 {
 	struct sockaddr_storage sadr;
@@ -1510,10 +1429,8 @@ qboolean NET_StringToAddress( const char *s, netadr_t *address )
 }
 
 /*
-   ===================
-   NET_IsLocalAddress
-   ===================
- */
+* NET_IsLocalAddress
+*/
 qboolean NET_IsLocalAddress( const netadr_t *address )
 {
 	switch( address->type )
@@ -1528,7 +1445,7 @@ qboolean NET_IsLocalAddress( const netadr_t *address )
 		return qfalse;
 
 	case NA_IP6:
-		return ( memcmp( address->address.ipv6.ip, &in6addr_loopback.s6_addr, sizeof( address->address.ipv6.ip ) ) == 0 );
+		return ( memcmp( address->address.ipv6.ip, &in6addr_loopback.s6_addr, sizeof( address->address.ipv6.ip ) ) == 0 ) ? qtrue : qfalse;
 
 	default:
 		return qfalse;
@@ -1536,19 +1453,17 @@ qboolean NET_IsLocalAddress( const netadr_t *address )
 }
 
 /*
-   ===================
-   NET_IsAnyAddress
-   ===================
- */
+* NET_IsAnyAddress
+*/
 qboolean NET_IsAnyAddress( const netadr_t *address )
 {
 	switch( address->type )
 	{
 	case NA_IP:
-		return ( *(unsigned int*)address->address.ipv4.ip == htonl( INADDR_ANY ) );
+		return ( *(unsigned int*)address->address.ipv4.ip == htonl( INADDR_ANY ) ? qtrue : qfalse );
 
 	case NA_IP6:
-		return ( memcmp( address->address.ipv6.ip, &in6addr_any.s6_addr, sizeof( address->address.ipv6.ip ) ) == 0 );
+		return ( memcmp( address->address.ipv6.ip, &in6addr_any.s6_addr, sizeof( address->address.ipv6.ip ) ) == 0 ) ? qtrue : qfalse;
 
 	default:
 		return qfalse;
@@ -1556,10 +1471,8 @@ qboolean NET_IsAnyAddress( const netadr_t *address )
 }
 
 /*
-   ==================
-   NET_IsLANAddress
-   ==================
- */
+* NET_IsLANAddress
+*/
 qboolean NET_IsLANAddress( const netadr_t *address )
 {
 	if( NET_IsLocalAddress( address ) )
@@ -1589,7 +1502,7 @@ qboolean NET_IsLANAddress( const netadr_t *address )
 			const netadr_ipv6_t *addr6 = &address->address.ipv6;
 
 			// Local addresses are either the loopback adress (tested earlier), or fe80::/10
-			return ( addr6->ip[0] == 0xFE && ( addr6->ip[1] & 0xC0 ) == 0x80 );
+			return ( addr6->ip[0] == 0xFE && ( addr6->ip[1] & 0xC0 ) == 0x80 ) ? qtrue : qfalse;
 		}
 
 	default:
@@ -1598,20 +1511,16 @@ qboolean NET_IsLANAddress( const netadr_t *address )
 }
 
 /*
-   =====================
-   NET_AsyncResolveHostname
-   =====================
- */
+* NET_AsyncResolveHostname
+*/
 void NET_AsyncResolveHostname( const char *hostname )
 {
 	Sys_NET_AsyncResolveHostname( hostname );
 }
 
 /*
-   ===================
-   NET_ShowIP
-   ===================
- */
+* NET_ShowIP
+*/
 void NET_ShowIP( void )
 {
 	int i;
@@ -1621,20 +1530,16 @@ void NET_ShowIP( void )
 }
 
 /*
-   ===================
-   NET_ErrorString
-   ===================
- */
+* NET_ErrorString
+*/
 const char *NET_ErrorString( void )
 {
 	return errorstring;
 }
 
 /*
-   ===================
-   NET_SetErrorString
-   ===================
- */
+* NET_SetErrorString
+*/
 void NET_SetErrorString( const char *format, ... )
 {
 	va_list	argptr;
@@ -1649,17 +1554,15 @@ void NET_SetErrorString( const char *format, ... )
 		if( errorstring )
 			Mem_ZoneFree( errorstring );
 		errorstring_size = strlen( msg ) + 1 + 64;
-		errorstring = Mem_ZoneMalloc( errorstring_size );
+		errorstring = ( char* )Mem_ZoneMalloc( errorstring_size );
 	}
 
 	Q_strncpyz( errorstring, msg, errorstring_size );
 }
 
 /*
-   ====================
-   NET_SetErrorStringFromLastError
-   ====================
- */
+* NET_SetErrorStringFromLastError
+*/
 void NET_SetErrorStringFromLastError( const char *function )
 {
 	const char* errorstring = GetLastErrorString();
@@ -1674,10 +1577,8 @@ void NET_SetErrorStringFromLastError( const char *function )
 }
 
 /*
-   ===============
-   NET_SocketTypeToString
-   ================
- */
+* NET_SocketTypeToString
+*/
 const char *NET_SocketTypeToString( socket_type_t type )
 {
 	switch( type )
@@ -1699,10 +1600,8 @@ const char *NET_SocketTypeToString( socket_type_t type )
 }
 
 /*
-   ===============
-   NET_SocketToString
-   ================
- */
+* NET_SocketToString
+*/
 const char *NET_SocketToString( const socket_t *socket )
 {
 	return va( "%s %s", NET_SocketTypeToString( socket->type ), ( socket->server ? "server" : "client" ) );
@@ -1710,10 +1609,8 @@ const char *NET_SocketToString( const socket_t *socket )
 
 #ifdef TCP_SUPPORT
 /*
-   ===================
-   NET_Listen
-   ===================
- */
+* NET_Listen
+*/
 qboolean NET_Listen( const socket_t *socket )
 {
 	assert( socket->open );
@@ -1733,10 +1630,8 @@ qboolean NET_Listen( const socket_t *socket )
 }
 
 /*
-   ===================
-   NET_Connect
-   ===================
- */
+* NET_Connect
+*/
 connection_status_t NET_Connect( socket_t *socket, const netadr_t *address )
 {
 	assert( socket->open && !socket->connected );
@@ -1757,10 +1652,8 @@ connection_status_t NET_Connect( socket_t *socket, const netadr_t *address )
 }
 
 /*
-   ===================
-   NET_CheckConnect
-   ===================
- */
+* NET_CheckConnect
+*/
 connection_status_t NET_CheckConnect( socket_t *socket )
 {
 	assert( socket->open );
@@ -1783,10 +1676,8 @@ connection_status_t NET_CheckConnect( socket_t *socket )
 }
 
 /*
-   ===================
-   NET_Accept
-   ===================
- */
+* NET_Accept
+*/
 int NET_Accept( const socket_t *socket, socket_t *newsocket, netadr_t *address )
 {
 	assert( socket && socket->open );
@@ -1809,10 +1700,8 @@ int NET_Accept( const socket_t *socket, socket_t *newsocket, netadr_t *address )
 #endif
 
 /*
-   ===================
-   NET_OpenSocket
-   ===================
- */
+* NET_OpenSocket
+*/
 qboolean NET_OpenSocket( socket_t *socket, socket_type_t type, const netadr_t *address, qboolean server )
 {
 	assert( !socket->open );
@@ -1837,10 +1726,8 @@ qboolean NET_OpenSocket( socket_t *socket, socket_type_t type, const netadr_t *a
 }
 
 /*
-   ===================
-   NET_CloseSocket
-   ===================
- */
+* NET_CloseSocket
+*/
 void NET_CloseSocket( socket_t *socket )
 {
 	if( !socket->open )
@@ -1870,10 +1757,8 @@ void NET_CloseSocket( socket_t *socket )
 }
 
 /*
-   ===================
-   NET_Sleep
-   ===================
- */
+* NET_Sleep
+*/
 void NET_Sleep( int msec, socket_t *sockets[] )
 {
 	struct timeval timeout;
@@ -1911,16 +1796,14 @@ void NET_Sleep( int msec, socket_t *sockets[] )
 }
 
 /*
-   ===================
-   NET_Monitor
-   Monitors the given sockets with the given timeout in milliseconds
-   It ignores closed and loopback sockets.
-   Calls the callback function read_cb(socket_t *) with the socket as parameter the socket when incoming data was detected on it
-   Calls the callback function exception_cb(socket_t *) with the socket as parameter when a socket exception was detected on that socket
-   For both callbacks, NULL can be passed. When NULL is passed for the exception_cb, no exception detection is performed
-   Incoming data is always detected, even if the 'read_cb' callback was NULL.
-   ===================
- */
+* NET_Monitor
+* Monitors the given sockets with the given timeout in milliseconds
+* It ignores closed and loopback sockets.
+* Calls the callback function read_cb(socket_t *) with the socket as parameter the socket when incoming data was detected on it
+* Calls the callback function exception_cb(socket_t *) with the socket as parameter when a socket exception was detected on that socket
+* For both callbacks, NULL can be passed. When NULL is passed for the exception_cb, no exception detection is performed
+* Incoming data is always detected, even if the 'read_cb' callback was NULL.
+*/
 int NET_Monitor( int msec, socket_t *sockets[], void (*read_cb)(socket_t *socket), void (*exception_cb)(socket_t *socket) )
 {
 	struct timeval timeout;
@@ -1989,10 +1872,8 @@ int NET_Monitor( int msec, socket_t *sockets[], void (*read_cb)(socket_t *socket
 }
 
 /*
-   ===================
-   NET_Init
-   ===================
- */
+* NET_Init
+*/
 void NET_Init( void )
 {
 	assert( !net_initialized );
@@ -2005,10 +1886,8 @@ void NET_Init( void )
 }
 
 /*
-   ===================
-   NET_Shutdown
-   ===================
- */
+* NET_Shutdown
+*/
 void NET_Shutdown( void )
 {
 	if( !net_initialized )

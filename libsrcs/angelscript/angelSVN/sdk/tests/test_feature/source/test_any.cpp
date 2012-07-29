@@ -1,10 +1,9 @@
 #include "utils.h"
 #include "../../../add_on/scriptany/scriptany.h"
+#include "scriptmath3d.h"
 
 namespace TestAny
 {
-
-#define TESTNAME "TestAny"
 
 // Normal functionality
 static const char *script1 =
@@ -108,28 +107,30 @@ bool Test()
 
 	// ---------------------------------------------
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 	RegisterScriptString_Generic(engine);
 	RegisterScriptAny(engine);
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 	r = engine->RegisterGlobalFunction("void SetMyAny(any@)", asFUNCTION(SetMyAny), asCALL_GENERIC); assert( r >= 0 );
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
+	mod->AddScriptSection("TestAny", script1, strlen(script1), 0);
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
-		printf("%s: Failed to compile the script\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s: Failed to compile the script\n", "TestAny");
 	}
-	r = engine->ExecuteString(0, "TestAny()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestAny()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
-		fail = true;
-		printf("%s: Execution failed\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s: Execution failed\n", "TestAny");
 	}
 	if( ctx ) ctx->Release();
 	engine->Release();
@@ -137,28 +138,30 @@ bool Test()
 	//--------------------------------------------------
 	// Verify that the GC can handle circles with any structures
  	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 	RegisterScriptString_Generic(engine);
 	RegisterScriptAny(engine);
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 	r = engine->RegisterGlobalFunction("void SetMyAny(any@)", asFUNCTION(SetMyAny), asCALL_GENERIC); assert( r >= 0 );
 
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME, script2, strlen(script2), 0);
+	mod->AddScriptSection("TestAny", script2, strlen(script2), 0);
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
-		printf("%s: Failed to compile the script\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s: Failed to compile the script\n", "TestAny");
 	}
-	r = engine->ExecuteString(0, "TestAny()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestAny()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
-		fail = true;
-		printf("%s: Execution failed\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s: Execution failed\n", "TestAny");
 	}
 	if( ctx ) ctx->Release();
 	
@@ -168,31 +171,33 @@ bool Test()
 	engine->GetGCStatistics(&gcCurrentSize, &gcTotalDestroyed, &gcTotalDetected);
 
 	if( !fail )
-		assert( gcCurrentSize == 0 && gcTotalDestroyed == 7 && gcTotalDetected == 7 );
+		assert( gcCurrentSize == 8 && gcTotalDestroyed == 8 && gcTotalDetected == 7 );
 
 	engine->Release();
 
 	//-------------------------------------------------------
 	// Don't allow const handle to retrieve()
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 	RegisterScriptString_Generic(engine);
 	RegisterScriptAny(engine);
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 	r = engine->RegisterGlobalFunction("void SetMyAny(any@)", asFUNCTION(SetMyAny), asCALL_GENERIC); assert( r >= 0 );
 
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME, script3, strlen(script3), 0);
+	mod->AddScriptSection("TestAny", script3, strlen(script3), 0);
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
-		printf("%s: Failed to Build()\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s: Failed to Build()\n", "TestAny");
 	}
 	if( bout.buffer != "TestAny (5, 1) : Info    : Compiling void TestAny()\n"
-	                   "TestAny (9, 14) : Warning : Argument cannot be assigned. Output will be discarded.\n" )
+	                   "TestAny (9, 15) : Warning : Argument cannot be assigned. Output will be discarded.\n" )
 	{
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	engine->Release();
@@ -200,26 +205,27 @@ bool Test()
 	//--------------------------------------------------------
 	// Make sure it is possible to pass any to the application
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 	RegisterScriptString_Generic(engine);
 	RegisterScriptAny(engine);
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
 	r = engine->RegisterGlobalFunction("void SetMyAny(any@)", asFUNCTION(SetMyAny), asCALL_GENERIC); assert( r >= 0 );
 
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME, script4, strlen(script4), 0);
+	mod->AddScriptSection("TestAny", script4, strlen(script4), 0);
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
-		printf("%s: Failed to compile\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s: Failed to compile\n", "TestAny");
 	}
 	
-	r = engine->ExecuteString(0, "TestAny()");
+	r = ExecuteString(engine, "TestAny()", mod);
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
-		printf("%s: Failed to execute\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s: Failed to execute\n", "TestAny");
 	}
 
 	if( myAny )
@@ -227,22 +233,22 @@ bool Test()
 		int typeId = myAny->GetTypeId();
 
 		if( !(typeId & asTYPEID_OBJHANDLE) )
-			fail = true;
+			TEST_FAILED;
 		if( (typeId & asTYPEID_MASK_OBJECT) != asTYPEID_APPOBJECT )
-			fail = true;
+			TEST_FAILED;
 
 		const char *decl = engine->GetTypeDeclaration(typeId);
 		if( (decl == 0) || (strcmp(decl, "string@") != 0) )
 		{
-			fail = true;
-			printf("%s: Failed to return the correct type\n", TESTNAME);
+			TEST_FAILED;
+			printf("%s: Failed to return the correct type\n", "TestAny");
 		}
 
 		int typeId2 = engine->GetTypeIdByDecl("string@");
 		if( typeId != typeId2 )
 		{
-			fail = true;
-			printf("%s: Failed to return the correct type\n", TESTNAME);
+			TEST_FAILED;
+			printf("%s: Failed to return the correct type\n", "TestAny");
 		}
 
 		CScriptString *str = 0;
@@ -250,8 +256,8 @@ bool Test()
 
 		if( str->buffer != "test" )
 		{
-			fail = true;
-			printf("%s: Failed to set the string correctly\n", TESTNAME);
+			TEST_FAILED;
+			printf("%s: Failed to set the string correctly\n", "TestAny");
 		}
 
 		if( str ) str->Release();
@@ -260,15 +266,52 @@ bool Test()
 		myAny = 0;
 	}
 	else
-		fail = true;
+		TEST_FAILED;
 
 	//--------------------------------------
 	// Make sure the any type can store primitives as well
-	r = engine->ExecuteString(0, "any a; a.store(1); int b; a.retrieve(b); Assert(b == 1);");
+	r = ExecuteString(engine, "any a; a.store(1); int b; a.retrieve(b); Assert(b == 1);");
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
+
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+
+		engine->SetMessageCallback(asMETHOD(COutStream, Callback), &out, asCALL_THISCALL);
+
+		RegisterScriptMath3D(engine);
+		RegisterScriptAny(engine);
+
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+
+		mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+	
+		const char *script =
+			"void main() \n"
+			"{ \n"
+			" any storage; \n"
+			" storage.store(vector3(1,1,1)); \n"
+			"} \n";
+
+		mod->AddScriptSection("script", script);
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		ctx = engine->CreateContext();
+		r = ExecuteString(engine, "main()", mod, ctx);
+		if( r != asEXECUTION_FINISHED )
+		{
+			if( r == asEXECUTION_EXCEPTION )
+				PrintException(ctx);
+			TEST_FAILED;
+		}
+		ctx->Release();
+
+		engine->Release();
+	}
 
 	// Success
  	return fail;

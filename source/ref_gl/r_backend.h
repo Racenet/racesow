@@ -40,7 +40,7 @@ enum
 
 extern ALIGN( 16 ) vec4_t inVertsArray[MAX_ARRAY_VERTS];
 extern ALIGN( 16 ) vec4_t inNormalsArray[MAX_ARRAY_VERTS];
-extern vec4_t inSVectorsArray[MAX_ARRAY_VERTS];
+extern ALIGN( 16 ) vec4_t inSVectorsArray[MAX_ARRAY_VERTS];
 extern elem_t inElemsArray[MAX_ARRAY_ELEMENTS];
 extern vec2_t inCoordsArray[MAX_ARRAY_VERTS];
 extern vec2_t inLightmapCoordsArray[MAX_LIGHTMAPS][MAX_ARRAY_VERTS];
@@ -55,9 +55,6 @@ extern vec2_t *lightmapCoordsArray[MAX_LIGHTMAPS];
 extern byte_vec4_t *colorArray;
 extern byte_vec4_t colorArrayCopy[MAX_ARRAY_VERTS];
 
-extern int r_numVertexBufferObjects;
-extern GLuint r_vertexBufferObjects[MAX_VERTEX_BUFFER_OBJECTS];
-
 extern int r_features;
 
 //===================================================================
@@ -65,11 +62,20 @@ extern int r_features;
 typedef struct
 {
 	unsigned int numVerts, numElems, numColors;
-	unsigned int c_totalVerts, c_totalTris, c_totalVboVerts, c_totalVboTris, c_totalDraws, c_totalKeptLocks;
+	unsigned int c_totalVerts, c_totalTris, c_totalVboVerts, c_totalVboTris, c_totalDraws;
 	size_t c_totalMemCpy;
 } rbackacc_t;
 
 extern rbackacc_t r_backacc;
+
+//===================================================================
+
+typedef struct
+{
+	unsigned int numBones;
+	dualquat_t *dualQuats;
+	unsigned int maxWeights;
+} rbackAnimData_t;
 
 //===================================================================
 
@@ -87,12 +93,8 @@ void R_BackendCleanUpTextureUnits( void );
 void R_BackendSetPassMask( int mask );
 void R_BackendResetPassMask( void );
 
-void R_LockArrays( int numverts );
-void R_UnlockArrays( void );
-void R_UnlockArrays( void );
 void R_DrawElements( void );
 void R_FlushArrays( void );
-void R_FlushArraysMtex( void );
 void R_ClearArrays( void );
 
 static inline qboolean R_MeshOverflow( const mesh_t *mesh )
@@ -105,6 +107,7 @@ static inline qboolean R_MeshOverflow2( const meshbuffer_t *mb, const meshbuffer
 {
 	return ( r_backacc.numVerts + mb->numVerts + nextmb->numVerts > MAX_ARRAY_VERTS ||
 		r_backacc.numElems + mb->numElems + nextmb->numElems > MAX_ARRAY_ELEMENTS );
+	return qfalse;
 }
 
 static inline qboolean R_InvalidMesh( const mesh_t *mesh )
@@ -113,7 +116,7 @@ static inline qboolean R_InvalidMesh( const mesh_t *mesh )
 		mesh->numVerts > MAX_ARRAY_VERTS || mesh->numElems > MAX_ARRAY_ELEMENTS );
 }
 
-void R_PushMesh( const mesh_vbo_t *vbo, const mesh_t *mesh, int features );
-void R_RenderMeshBuffer( const meshbuffer_t *mb );
+void R_PushMesh( const mesh_t *mesh, qboolean vbo, int features );
+void R_RenderMeshBuffer( const meshbuffer_t *mb, const rbackAnimData_t *animData );
 
 #endif /*__R_BACKEND_H__*/

@@ -1,5 +1,5 @@
-#ifndef __CONNECT_H
-#define __CONNECT_H
+#ifndef HEADER_CURL_CONNECT_H
+#define HEADER_CURL_CONNECT_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -21,6 +21,7 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
+#include "setup.h"
 
 #include "nonblock.h" /* for curlx_nonblock(), formerly Curl_nonblock() */
 
@@ -37,7 +38,7 @@ CURLcode Curl_connecthost(struct connectdata *conn,
 
 /* generic function that returns how much time there's left to run, according
    to the timeouts set */
-long Curl_timeleft(struct connectdata *conn,
+long Curl_timeleft(struct SessionHandle *data,
                    struct timeval *nowp,
                    bool duringconnect);
 
@@ -47,13 +48,12 @@ long Curl_timeleft(struct connectdata *conn,
  * Used to extract socket and connectdata struct for the most recent
  * transfer on the given SessionHandle.
  *
- * The socket 'long' will be -1 in case of failure!
+ * The returned socket will be CURL_SOCKET_BAD in case of failure!
  */
-CURLcode Curl_getconnectinfo(struct SessionHandle *data,
-                             long *param_longp,
-                             struct connectdata **connp);
+curl_socket_t Curl_getconnectinfo(struct SessionHandle *data,
+                                  struct connectdata **connp);
 
-#ifdef WIN32
+#ifdef USE_WINSOCK
 /* When you run a program that uses the Windows Sockets API, you may
    experience slow performance when you copy data to a TCP server.
 
@@ -65,9 +65,11 @@ CURLcode Curl_getconnectinfo(struct SessionHandle *data,
 */
 void Curl_sndbufset(curl_socket_t sockfd);
 #else
-#define Curl_sndbufset(y)
+#define Curl_sndbufset(y) Curl_nop_stmt
 #endif
 
 void Curl_updateconninfo(struct connectdata *conn, curl_socket_t sockfd);
+void Curl_persistconninfo(struct connectdata *conn);
+int Curl_closesocket(struct connectdata *conn, curl_socket_t sock);
 
-#endif
+#endif /* HEADER_CURL_CONNECT_H */

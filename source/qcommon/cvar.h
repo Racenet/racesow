@@ -114,11 +114,11 @@ static inline qboolean Cvar_IsModified( const cvar_t *var )
 }
 static inline void Cvar_SetModified( cvar_t *var )
 {
-	var->modified = 1;
+	var->modified = ( qboolean )1;
 }
 static inline void Cvar_UnsetModified( cvar_t *var )
 {
-	var->modified = 0;
+	var->modified = ( qboolean )0;
 }
 
 static inline cvar_flag_t Cvar_FlagSet( cvar_flag_t *flags, cvar_flag_t flag )
@@ -135,7 +135,7 @@ static inline cvar_flag_t Cvar_FlagsClear( cvar_flag_t *flags )
 }
 static inline qboolean Cvar_FlagIsSet( cvar_flag_t flags, cvar_flag_t flag )
 {
-	return ( flags & flag ) != 0;
+	return ( qboolean )( ( flags & flag ) != 0 );
 }
 
 #endif      // CVAR_H

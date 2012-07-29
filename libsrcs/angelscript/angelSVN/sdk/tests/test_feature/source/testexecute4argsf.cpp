@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestExecute4Argsf"
+static const char * const TESTNAME = "TestExecute4Argsf";
 
 static bool testVal = false;
 static bool called  = false;
@@ -39,7 +39,7 @@ static void cfunction_gen(asIScriptGeneric *gen)
 
 bool TestExecute4Argsf()
 {
-	bool ret = false;
+	bool fail = false;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	if( strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
@@ -49,23 +49,23 @@ bool TestExecute4Argsf()
 
 	COutStream out;
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
-	engine->ExecuteString(0, "cfunction(9.2f, 13.3f, 18.8, 3.1415f)");
+	ExecuteString(engine, "cfunction(9.2f, 13.3f, 18.8, 3.1415f)");
 
 	if( !called ) 
 	{
 		// failure
 		printf("\n%s: cfunction not called from script\n\n", TESTNAME);
-		ret = true;
+		TEST_FAILED;
 	} 
 	else if( !testVal ) 
 	{
 		// failure
 		printf("\n%s: testVal is not of expected value. Got (%f, %f, %f, %f), expected (%f, %f, %f, %f)\n\n", TESTNAME, t1, t2, t3, t4, 9.2f, 13.3f, 18.8, 3.1415f);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();
 	
 	// Success
-	return ret;
+	return fail;
 }

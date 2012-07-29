@@ -1,23 +1,22 @@
 /*
-   Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
-   and German Garcia Fernandez ("Jal") for Chasseur de bots association.
+Copyright (C) 2006 Pekka Lampila ("Medar"), Damien Deville ("Pb")
+and German Garcia Fernandez ("Jal") for Chasseur de bots association.
 
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
 
-   See the GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 #include "webdownload.h"
 #include "qcommon.h"
@@ -31,10 +30,9 @@ static void Web_Cleanup( void );
 // to get the size and mime type before the download we can use that
 // http://curl.haxx.se/mail/lib-2002-05/0036.html
 
-
 static CURL *curl = NULL;
 static char curl_err[1024];
-static int ( *progress )(double)= NULL;
+static int ( *progress )(float)= NULL;
 
 static size_t Write( void *ptr, size_t size, size_t nmemb, void *stream )
 {
@@ -80,6 +78,10 @@ static int Web_Init( void )
 {
 	CURLcode code;
 	static char useragent[256];
+	cvar_t *http_proxy = Cvar_Get( "http_proxy", "", CVAR_ARCHIVE );
+	cvar_t *http_proxyuserpwd = Cvar_Get( "http_proxyuserpwd", "", CVAR_ARCHIVE );
+	const char *proxy = http_proxy->string;
+	const char *proxy_userpwd = http_proxyuserpwd->string;
 
 	if( curl != NULL )
 	{
@@ -164,10 +166,36 @@ static int Web_Init( void )
 		return 0;
 	}
 
+	// HTTP proxy settings
+	if( proxy && *proxy ) {
+		code = curl_easy_setopt( curl, CURLOPT_PROXYTYPE, CURLPROXY_HTTP );
+		if( code != CURLE_OK )
+		{
+			Com_Printf( "Failed to set proxy type to http\n" );
+			return 0;
+		}
+
+		code = curl_easy_setopt( curl, CURLOPT_PROXY, proxy );
+		if( code != CURLE_OK )
+		{
+			Com_Printf( "Failed to set proxy\n" );
+			return 0;
+		}
+
+		if( proxy_userpwd && *proxy_userpwd ) {
+			code = curl_easy_setopt( curl, CURLOPT_PROXY, proxy_userpwd );
+			if( code != CURLE_OK )
+			{
+				Com_Printf( "Failed to set proxy password\n" );
+				return 0;
+			}
+		}
+	}
+
 	return 1;
 }
 
-int Web_Get( const char *url, const char *referer, const char *name, int resume, int max_downloading_time, int timeout, int ( *_progress )(double), int noreuse )
+int Web_Get( const char *url, const char *referer, const char *name, int resume, int max_downloading_time, int timeout, int ( *_progress )(float), int noreuse )
 {
 	CURLcode code;
 	int fsize;

@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "server.h"
 #include "../qcommon/webdownload.h"
@@ -84,6 +84,8 @@ found_player:
 
 //=========================================================
 
+// FIXME: rewrite this to use AsyncStream!
+
 /*
 * SV_WebDownloadProgress
 * Callback function for webdownloads.
@@ -91,7 +93,7 @@ found_player:
 static int webDownloadPercentPrint;
 static qboolean webDownloadPercentStarted;
 
-static int SV_WebDownloadProgress( double percent )
+static int SV_WebDownloadProgress( float percent )
 {
 	int shortPercent = (int)( 100 * percent );
 
@@ -378,7 +380,7 @@ void SV_AutoUpdateFromWeb( qboolean checkOnly )
 			Com_Printf( "File update available : %s\n", path );
 			continue;
 		}
-		
+
 		if( developer->integer )
 			Com_Printf( "Downloading update of %s (checksum %s local checksum %s)\n", path, checksumString1, checksumString2 );
 		else
@@ -862,6 +864,7 @@ void SV_ShutdownOperatorCommands( void )
 	{
 		Cmd_RemoveCommand( "download" );
 		Cmd_RemoveCommand( "autoupdate" );
+		Cmd_RemoveCommand( "autoupdatecheck" );
 	}
 
 	Cmd_RemoveCommand( "cvarcheck" );

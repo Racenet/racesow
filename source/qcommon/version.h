@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 2007 Victor Luchits
+Copyright (C) 2007 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #ifndef APPLICATION
 #define APPLICATION						"Warsow"
@@ -27,15 +27,15 @@
 #endif
 
 #ifndef APP_VERSION_MAJOR
-#define APP_VERSION_MAJOR				0
+#define APP_VERSION_MAJOR				1
 #endif
 
 #ifndef APP_VERSION_MINOR
-#define APP_VERSION_MINOR				6
+#define APP_VERSION_MINOR				0
 #endif
 
 #ifndef APP_VERSION_UPDATE
-#define APP_VERSION_UPDATE				2
+#define APP_VERSION_UPDATE				0
 #endif
 
 #ifndef APP_VERSION
@@ -43,9 +43,9 @@
 #endif
 
 #ifdef PUBLIC_BUILD
-#define APP_PROTOCOL_VERSION			12
+#define APP_PROTOCOL_VERSION			15
 #else
-#define APP_PROTOCOL_VERSION			6091	// we're using revision number as protocol version for internal builds
+#define APP_PROTOCOL_VERSION			6095	// we're using revision number as protocol version for internal builds
 #endif
 
 #ifndef APP_URL
@@ -86,6 +86,14 @@
 #define APP_SERVER_UPDATE_FILE			"filelist.txt"
 #define APP_CLIENT_UPDATE_FILE			"warsow_last_version.txt"
 #define APP_CLIENT_ANNOUNCEMENT_FILE	"warsow_announcement.txt"
+#endif
+
+#ifdef PUBLIC_BUILD
+#define APP_MATCHMAKER_URL				"http://mm.warsow.net:1337"
+#define APP_MATCHMAKER_WEB_URL			"http://www.warsow.net/wmm/"
+#else
+#define APP_MATCHMAKER_URL				"http://mm-dev.warsow.net:1337"
+#define APP_MATCHMAKER_WEB_URL			"http://www-dev.warsow.net/wmm/"
 #endif
 
 //

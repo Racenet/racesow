@@ -9,7 +9,7 @@
 namespace TestSuspend
 {
 
-#define TESTNAME "TestSuspend"
+static const char * const TESTNAME = "TestSuspend";
 
 static int loopCount = 0;
 
@@ -42,6 +42,14 @@ void Suspend(asIScriptGeneric * /*gen*/)
 	doSuspend = true;
 }
 
+bool doAbort = true;
+void Abort(asIScriptGeneric *)
+{
+	asIScriptContext *ctx = asGetActiveContext();
+	if( ctx ) ctx->Abort();
+	doAbort = true;
+}
+
 void STDCALL LineCallback(asIScriptContext *ctx, void * /*param*/)
 {
 	// Suspend immediately
@@ -62,11 +70,12 @@ bool Test()
 	RegisterScriptString_Generic(engine);
 	
 	engine->RegisterGlobalFunction("void Suspend()", asFUNCTION(Suspend), asCALL_GENERIC);
+	engine->RegisterGlobalFunction("void Abort()", asFUNCTION(Abort), asCALL_GENERIC);
 	engine->RegisterGlobalProperty("int loopCount", &loopCount);
 
 	COutStream out;
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME ":1", script1);
+	mod->AddScriptSection(":1", script1);
 
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	mod->Build();
@@ -79,7 +88,14 @@ bool Test()
 			ctx->Execute();
 	}
 	else
-		fail = true;
+		TEST_FAILED;
+
+	// Make sure the Execute method returns proper status on abort
+	int r = ExecuteString(engine, "Abort()", 0, 0);
+	if( r != asEXECUTION_ABORTED )
+	{
+		TEST_FAILED;
+	}
 
 	// Release the engine first
 	engine->Release();
@@ -92,7 +108,7 @@ bool Test()
 	engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	engine->RegisterGlobalProperty("int loopCount", &loopCount);
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
-	mod->AddScriptSection(TESTNAME ":2", script2);
+	mod->AddScriptSection(":2", script2);
 	mod->Build();
 
 	ctx = engine->CreateContext();
@@ -104,7 +120,7 @@ bool Test()
 	if( loopCount != 3 )
 	{
 		printf("%s: failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	ctx->Prepare(asPREPARE_PREVIOUS);
@@ -114,7 +130,7 @@ bool Test()
 	if( loopCount != 3 )
 	{
 		printf("%s: failed\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	ctx->Release();

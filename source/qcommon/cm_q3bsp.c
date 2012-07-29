@@ -825,8 +825,6 @@ static void CMod_LoadVisibility( cmodel_state_t *cms, lump_t *l )
 
 	cms->map_pvs->numclusters = LittleLong( cms->map_pvs->numclusters );
 	cms->map_pvs->rowsize = LittleLong( cms->map_pvs->rowsize );
-
-	CM_CalcPHS( cms );
 }
 
 /*

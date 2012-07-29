@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 #include <string>
@@ -11,8 +12,21 @@
 
 #include <angelscript.h>
 
-#include "../../../add_on/scriptstring/scriptstring.h"
+#include "../../../add_on/scriptarray/scriptarray.h"
+#include "scriptstring.h"
 #include "../../../add_on/scriptstdstring/scriptstdstring.h"
+#include "../../../add_on/scripthelper/scripthelper.h"
+
+#ifdef __BORLANDC__
+// C++Builder doesn't define most of the non-standard float-specific math functions with
+// "*f" suffix; instead it provides overloads for the standard math functions which take
+// "float" arguments.
+inline float fabsf (float arg) { return std::fabs (arg); }
+
+// C++Builder 2006 and earlier don't pull "memcpy" into the global namespace.
+using std::memcpy; 
+#endif
+
 
 #ifdef AS_USE_NAMESPACE
 using namespace AngelScript;
@@ -20,7 +34,7 @@ using namespace AngelScript;
 
 #if defined(__GNUC__) && !(defined(__ppc__) || defined(__PPC__))
 #define STDCALL __attribute__((stdcall))
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) || defined(__BORLANDC__)
 #define STDCALL __stdcall
 #else
 #define STDCALL
@@ -112,22 +126,41 @@ class CBytecodeStream : public asIBinaryStream
 public:
 	CBytecodeStream(const char *name) {wpointer = 0;rpointer = 0;}
 
-	void Write(const void *ptr, asUINT size) {if( size == 0 ) return; buffer.resize(buffer.size() + size); memcpy(&buffer[wpointer], ptr, size); wpointer += size;}
-	void Read(void *ptr, asUINT size) {memcpy(ptr, &buffer[rpointer], size); rpointer += size;}
+	void Write(const void *ptr, asUINT size) 
+	{
+		if( size == 0 ) return; 
+		buffer.resize(buffer.size() + size);
+		memcpy(&buffer[wpointer], ptr, size); 
+		wpointer += size;
+		// Are we writing zeroes?
+		for( asUINT n = 0; n < size; n++ )
+			if( *(asBYTE*)ptr == 0 )
+			{
+				n = n; // <== Set break point here
+				break;
+			}
+	}
+	void Read(void *ptr, asUINT size) 
+	{
+		memcpy(ptr, &buffer[rpointer], size); 
+		rpointer += size;
+	}
 	void Restart() {rpointer = 0;}
+
+	asUINT CountZeroes() { asUINT z = 0; for( asUINT n = 0; n < buffer.size(); n++ ) if( buffer[n] == 0 ) z++; return z; }
+	std::vector<asBYTE> buffer;
 
 protected:
 	int rpointer;
 	int wpointer;
-	std::vector<asBYTE> buffer;
 };
 #endif
 
-void PrintException(asIScriptContext *ctx);
 void Assert(asIScriptGeneric *gen);
 
 void InstallMemoryManager();
 void RemoveMemoryManager();
+int  GetNumAllocs();
 
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200 // MSVC++ 6
@@ -153,4 +186,6 @@ inline bool CompareFloat(float a,float b)
 }
 
 #define UNUSED_VAR(x) ((void)(x))
+
+#define TEST_FAILED do { fail = true; printf("Failed on line %d in %s\n", __LINE__, __FILE__); } while(0)
 
