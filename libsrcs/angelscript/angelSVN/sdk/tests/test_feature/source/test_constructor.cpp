@@ -1,7 +1,9 @@
 #include "utils.h"
+#include "scriptmath3d.h"
+
 using namespace std;
 
-#define TESTNAME "TestConstructor"
+static const char * const TESTNAME = "TestConstructor";
 
 static const char *script1 =
 "obj g_obj1 = g_obj2;                      \n"
@@ -87,8 +89,8 @@ bool TestConstructor()
 		r = engine->RegisterObjectBehaviour("obj", asBEHAVE_CONSTRUCT, "void f(int,int)", asFUNCTIONPR(ConstrObj, (int, int, CTestConstructor *), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	}
 
-	r = engine->RegisterObjectProperty("obj", "int a", offsetof(CTestConstructor, a)); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("obj", "int b", offsetof(CTestConstructor, b)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("obj", "int a", asOFFSET(CTestConstructor, a)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("obj", "int b", asOFFSET(CTestConstructor, b)); assert( r >= 0 );
 
 	int a, b;
 	r = engine->RegisterGlobalProperty("int a", &a); assert( r >= 0 );
@@ -101,28 +103,18 @@ bool TestConstructor()
 	mod->Build();
 
 	if( out.buffer != "" )
-	{
-		fail = true;
-		printf("%s: Failed to compile global constructors\n", TESTNAME);
-	}
+		TEST_FAILED;
 
 	mod->AddScriptSection(TESTNAME, script2, strlen(script2));
 	mod->Build();
 
 	if( out.buffer != "" )
-	{
-		fail = true;
-		printf("%s: Failed to compile local constructors\n", TESTNAME);
-	}
+		TEST_FAILED;
 
-
-	engine->ExecuteString(0, "TestConstructor()");
+	ExecuteString(engine, "TestConstructor()", mod);
 
 	if( a != 8 || b != 11 )
-	{
-		printf("%s: Values are not what were expected\n", TESTNAME);
-		fail = false;
-	}
+		TEST_FAILED;
 
 /*
 	mod->AddScriptSection(0, TESTNAME, script3, strlen(script3));
@@ -130,10 +122,7 @@ bool TestConstructor()
 
 	if( out.buffer != "TestConstructor (1, 12) : Info    : Compiling obj* g_obj4\n"
 	                  "TestConstructor (1, 12) : Error   : Only objects have constructors\n" )
-	{
-		fail = true;
-		printf("%s: Failed to compile global constructors\n", TESTNAME);
-	}
+		TEST_FAILED;
 */
 	out.buffer = "";
 	mod->AddScriptSection(TESTNAME, script4, strlen(script4));
@@ -141,20 +130,60 @@ bool TestConstructor()
 
 	if( out.buffer != "" ) 
 	{
-		fail = true;
-		printf(out.buffer.c_str());
-		printf("%s: Failed to compile constructor in expression\n", TESTNAME);
+		TEST_FAILED;
+		printf("%s", out.buffer.c_str());
 	}
 
-	engine->ExecuteString(0, "TestConstructor2()");
+	ExecuteString(engine, "TestConstructor2()", mod);
 
 	if( a != 11 || b != 13 )
-	{
-		printf("%s: Values are not what were expected\n", TESTNAME);
-		fail = false;
-	}
+		TEST_FAILED;		
 
 	engine->Release();
+
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		
+		RegisterScriptMath3D(engine);
+
+		const char *script = 
+			"class Obj \n"
+			"{  \n"
+			"   Obj(const vector3 &in v) \n"
+			"   { \n"
+			"     pos = v; \n"
+			"   } \n"
+			"   vector3 pos; \n"
+			"} \n";
+
+		asIScriptModule *mod = engine->GetModule("mod", asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		int typeId = mod->GetTypeIdByDecl("Obj");
+		asIObjectType *type = engine->GetObjectTypeById(typeId);
+		int funcId = type->GetFactoryIdByDecl("Obj @Obj(const vector3 &in)");
+		if( funcId < 0 )
+			TEST_FAILED;
+
+		asIScriptContext *ctx = engine->CreateContext();
+		ctx->Prepare(funcId);
+		Vector3 pos(1,2,3);
+		*(Vector3**)ctx->GetAddressOfArg(0) = &pos;
+		r = ctx->Execute();
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+		asIScriptObject *obj = *(asIScriptObject**)ctx->GetAddressOfReturnValue();
+		Vector3 pos2 = *(Vector3*)obj->GetAddressOfProperty(0);
+		if( pos2 != pos )
+			TEST_FAILED;
+
+		ctx->Release();
+
+		engine->Release();
+	}
 
 	// Success
 	return fail;

@@ -1,33 +1,33 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include <string.h>
 #include "ui_local.h"
 
 /*
-   =============================================================================
+=============================================================================
 
-   DEMOS MENU
+DEMOS MENU
 
-   =============================================================================
- */
+=============================================================================
+*/
 
 static menuframework_s s_mods_menu;
 
@@ -42,9 +42,9 @@ static int MAX_MENU_LIST_ITEMS = 0;
 m_itemslisthead_t modsItemsList;
 
 
-//==================
-//M_Mods_CreateFolderList
-//==================
+/*
+* M_Mods_CreateFolderList
+*/
 static void M_Mods_CreateFolderList( void )
 {
 	const char *s;
@@ -64,9 +64,9 @@ static void M_Mods_CreateFolderList( void )
 	}
 }
 
-//==================
-//M_Mods_CreateItemList
-//==================
+/*
+* M_Mods_CreateItemList
+*/
 static void M_Mods_CreateItemList( void )
 {
 	// first free the current list
@@ -84,9 +84,9 @@ static void M_Mods_CreateItemList( void )
 static int scrollbar_curvalue = 0;
 static int scrollbar_id = 0;
 
-//==================
-//M_Mods_UpdateScrollbar
-//==================
+/*
+* M_Mods_UpdateScrollbar
+*/
 static void M_Mods_UpdateScrollbar( menucommon_t *menuitem )
 {
 	menuitem->maxvalue = max( 0, modsItemsList.numItems - MAX_MENU_LIST_ITEMS );
@@ -96,9 +96,9 @@ static void M_Mods_UpdateScrollbar( menucommon_t *menuitem )
 	scrollbar_curvalue = menuitem->curvalue;
 }
 
-//==================
-//M_Mods_LoadMod
-//==================
+/*
+* M_Mods_LoadMod
+*/
 static void M_Mods_LoadMod( menucommon_t *menuitem )
 {
 	m_listitem_t *item;
@@ -112,9 +112,9 @@ static void M_Mods_LoadMod( menucommon_t *menuitem )
 	}
 }
 
-//==================
-//M_Mods_DemoButton
-//==================
+/*
+* M_Mods_DemoButton
+*/
 static void M_Mods_UpdateButton( menucommon_t *menuitem )
 {
 	m_listitem_t *item;
@@ -129,9 +129,9 @@ static void M_Mods_UpdateButton( menucommon_t *menuitem )
 		Q_snprintfz( menuitem->title, MAX_STRING_CHARS, NO_ITEM_STRING );
 }
 
-//==================
-//Mods_MenuInit
-//==================
+/*
+* Mods_MenuInit
+*/
 static void Mods_MenuInit( void )
 {
 	menucommon_t *menuitem;
@@ -151,7 +151,7 @@ static void Mods_MenuInit( void )
 	M_Mods_CreateItemList();
 
 	/*This is a hack, but utilizes the most room at low resolutions
-	   while leaving room so that the logo does not interfere. */
+	while leaving room so that the logo does not interfere. */
 	if( uis.vidHeight < 768 )
 		yoffset = uis.vidHeight * 0.07;
 	else
@@ -229,7 +229,7 @@ static const char *Mods_MenuKey( int key )
 	item = Menu_ItemAtCursor( &s_mods_menu );
 
 	if( key == K_ESCAPE || ( ( key == K_MOUSE2 ) && ( item->type != MTYPE_SPINCONTROL ) &&
-	                        ( item->type != MTYPE_SLIDER ) ) )
+		( item->type != MTYPE_SLIDER ) ) )
 	{
 		UI_FreeScrollItemList( &modsItemsList );
 	}

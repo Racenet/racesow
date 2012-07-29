@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O2 /I "../../../../angelscript/include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GR /GX /I "../../../../angelscript/include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x416 /d "NDEBUG"
 # ADD RSC /l 0x416 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -99,6 +99,26 @@ SOURCE=..\..\source\test_2func.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\source\test_addon_scriptarray.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_addon_scriptbuilder.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_addon_scripthandle.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_addon_scriptmath.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_addon_serializer.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\source\test_any.cpp
 # End Source File
 # Begin Source File
@@ -140,6 +160,10 @@ SOURCE=..\..\source\test_bool.cpp
 # Begin Source File
 
 SOURCE=..\..\source\test_castop.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_cdecl_return.cpp
 # End Source File
 # Begin Source File
 
@@ -192,6 +216,10 @@ SOURCE=..\..\source\test_custommem.cpp
 # Begin Source File
 
 SOURCE=..\..\source\test_debug.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_defaultarg.cpp
 # End Source File
 # Begin Source File
 
@@ -251,11 +279,23 @@ SOURCE=..\..\source\test_funcoverload.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\source\test_functionptr.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_garbagecollect.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\source\test_generic.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\source\test_getargptr.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_getset.cpp
 # End Source File
 # Begin Source File
 
@@ -287,7 +327,7 @@ SOURCE=..\..\source\test_interface.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\source\test_metadata.cpp
+SOURCE=..\..\source\test_module.cpp
 # End Source File
 # Begin Source File
 
@@ -328,6 +368,10 @@ SOURCE=..\..\source\test_objhandle2.cpp
 # Begin Source File
 
 SOURCE=..\..\source\test_objzerosize.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_operator.cpp
 # End Source File
 # Begin Source File
 
@@ -383,11 +427,19 @@ SOURCE=..\..\source\test_scriptmath.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\source\test_scriptretref.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\source\test_scriptstring.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\source\test_scriptstruct.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_shared.cpp
 # End Source File
 # Begin Source File
 
@@ -419,6 +471,10 @@ SOURCE=..\..\source\test_suspend.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\source\test_template.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\source\test_typedef.cpp
 # End Source File
 # Begin Source File
@@ -443,10 +499,6 @@ SOURCE=..\..\source\testbstr.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\source\testbstr2.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\source\testcdecl_class.cpp
 # End Source File
 # Begin Source File
@@ -460,6 +512,10 @@ SOURCE=..\..\source\testcdecl_class_c.cpp
 # Begin Source File
 
 SOURCE=..\..\source\testcdecl_class_d.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\testcdecl_class_k.cpp
 # End Source File
 # Begin Source File
 
@@ -551,18 +607,6 @@ SOURCE=..\..\source\testoutput.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\source\testreturn.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\source\testreturnd.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\source\testreturnf.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\source\teststack.cpp
 # End Source File
 # Begin Source File
@@ -597,10 +641,6 @@ SOURCE=..\..\source\testvirtualmethod.cpp
 
 SOURCE=..\..\..\..\angelscript\include\angelscript.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\..\source\cstring.h
-# End Source File
 # End Group
 # Begin Group "Resource Files"
 
@@ -623,11 +663,31 @@ SOURCE=..\..\source\bstr.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\add_on\contextmgr\contextmgr.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\contextmgr\contextmgr.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\cstring.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\add_on\scriptany\scriptany.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\..\add_on\scriptany\scriptany.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scriptarray\scriptarray.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scriptarray\scriptarray.h
 # End Source File
 # Begin Source File
 
@@ -655,6 +715,22 @@ SOURCE=..\..\..\..\add_on\scriptfile\scriptfile.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\add_on\scripthandle\scripthandle.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scripthandle\scripthandle.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scripthelper\scripthelper.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scripthelper\scripthelper.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\add_on\scriptmath\scriptmath.cpp
 # End Source File
 # Begin Source File
@@ -663,11 +739,19 @@ SOURCE=..\..\..\..\add_on\scriptmath\scriptmath.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptmath3d\scriptmath3d.cpp
+SOURCE=..\..\source\scriptmath3d.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptmath3d\scriptmath3d.h
+SOURCE=..\..\source\scriptmath3d.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scriptmath\scriptmathcomplex.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scriptmath\scriptmathcomplex.h
 # End Source File
 # Begin Source File
 
@@ -679,15 +763,27 @@ SOURCE=..\..\..\..\add_on\scriptstdstring\scriptstdstring.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptstring\scriptstring.cpp
+SOURCE=..\..\..\..\add_on\scriptstdstring\scriptstdstring_utils.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptstring\scriptstring.h
+SOURCE=..\..\source\scriptstring.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptstring\scriptstring_utils.cpp
+SOURCE=..\..\source\scriptstring.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\scriptstring_utils.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\serializer\serializer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\serializer\serializer.h
 # End Source File
 # Begin Source File
 

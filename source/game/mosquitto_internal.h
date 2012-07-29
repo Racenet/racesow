@@ -39,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <winsock2.h>
 #endif
 
-#include <mosquitto.h>
+#include "mosquitto.h"
 #ifdef WITH_BROKER
 struct _mosquitto_client_msg;
 #endif

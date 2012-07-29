@@ -1,27 +1,27 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-   --------------------------------------------------------------
-   The ACE Bot is a product of Steve Yeager, and is available from
-   the ACE Bot homepage, at http://www.axionfx.com/ace.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+--------------------------------------------------------------
+The ACE Bot is a product of Steve Yeager, and is available from
+the ACE Bot homepage, at http://www.axionfx.com/ace.
 
-   This program is a modification of the ACE Bot, and is therefore
-   in NO WAY supported by Steve Yeager.
- */
+This program is a modification of the ACE Bot, and is therefore
+in NO WAY supported by Steve Yeager.
+*/
 
 #include "../g_local.h"
 #include "ai_local.h"
@@ -107,36 +107,36 @@ static const char * const LocalBotNames[] =
 /*
 typedef struct
 {
-	const char *name;
-	float default_yaw_speed;
-	float reaction_time;		
-	float combatmove_timeout;
-	float yaw_accel;
-	float offensiveness;
-	float campiness;
-	float firerate;
-	float armor_grabber;
-	float health_grabber;
+const char *name;
+float default_yaw_speed;
+float reaction_time;		
+float combatmove_timeout;
+float yaw_accel;
+float offensiveness;
+float campiness;
+float firerate;
+float armor_grabber;
+float health_grabber;
 
-	float weapon_affinity[WEAP_TOTAL];
+float weapon_affinity[WEAP_TOTAL];
 } ai_character;
 */
 static const ai_character bot_personalities[] = {
-              // yaw  reac comb  yacc off  camp fire armor health weapon affinities
-																//	no gb mg   rg   gl   rl   pg   lg   eb   ig
-    { "JoeB",    750, 600, 800,  95,  1.0, 1.0, 1.0, 1.0,  1.0,   { 0, 1, 1,   1,   1,   1,   1,   1,   1,   1} },
-    { "Rock",    950, 700, 600,  95,  1.2, 4.0, 0.6, 1.0,  1.0,   { 0, 1, 1,   1.4, 1,   1,   1.4, 1,   1,   1} },
-    { "PGuy",    800, 500,1200,  100,  0.7, 4.0, 0.4, 1.0,  1.0,   { 0, 1, 1.2, 2,   1,   1,   1.2, 1.6, 1.2, 1} },
-    { "proBot",  600, 600, 300,  90,  0.8, 4.0, 1.0, 1.2,  1.2,   { 0, 1, 1.2, 1.6, 1,   1,   1.2, 1.2, 1.2, 1} },
-    { "Baas",    700, 500, 800,  95,  0.9, 0.1, 0.5, 1.0,  1.0,   { 0, 1, 1,   1.2, 1,   1,   1,   1.2, 1.6, 1} },
-    { "camB",    650, 800, 700,  90,  0.8, 0.1, 1.2, 1.0,  1.0,   { 0, 1, 1,   1.2, 1.2, 1,   1,   1,   1,   1} },
-    { "Ovot",    750, 650, 800,  110,  0.9, 2.5, 0.1, 1.0,  1.0,   { 0, 1, 1,   1,   1,   1,   1,   1,   1,   1} },
-    { "Bumm",    650, 500, 600,  90,  1.1, 1.5, 1.0, 1.0,  1.1,   { 0, 1, 1,   1.2, 1.6, 1.2, 1,   1.2, 1,   1} },
-    { "Gran",    700, 800, 600,  115,  1.3, 1.5, 1.0, 1.0,  1.0,   { 0, 1, 1,   1,   1,   1.6, 1,   1,   1,   1} },
-    { "Laaz",    600, 500, 600,  85,  1.2, 1.5, 0.6, 1.0,  1.0,   { 0, 1, 1,   1,   1.2, 1,   1,   1,   1.6, 1} },
-    { "Peacy",   900, 800, 1300, 110, 0.8, 2.0, 1.0, 0.9,  0.9,   { 0, 1, 1,   1.6, 1,   1.2, 1.2, 1.2, 1,   1} },
-    { "m-sook",  650, 500, 400,  95,  0.8, 2.0, 0.7, 1.0,  1.0,   { 0, 1, 1,   1,   1.2, 1.6, 1,   1,   1,   1} },
-    { "boom",    800, 400, 200,  90,  1.2, 1.0, 1.0, 1.0,  1.0,   { 0, 1, 1,   1.2, 1.2, 1.2, 1,   1.6, 1.6, 1} }
+	// yaw  reac comb  yacc off  camp fire armor health weapon affinities
+	//	no gb mg   rg   gl   rl   pg   lg   eb   ig
+	{ "JoeB",    750, 600, 800,  95,  1.0, 1.0, 1.0, 1.0,  1.0,   { 0, 1, 1,   1,   1,   1,   1,   1,   1,   1} },
+	{ "Rock",    950, 700, 600,  95,  1.2, 4.0, 0.6, 1.0,  1.0,   { 0, 1, 1,   1.4, 1,   1,   1.4, 1,   1,   1} },
+	{ "PGuy",    800, 500,1200,  100,  0.7, 4.0, 0.4, 1.0,  1.0,   { 0, 1, 1.2, 2,   1,   1,   1.2, 1.6, 1.2, 1} },
+	{ "proBot",  600, 600, 300,  90,  0.8, 4.0, 1.0, 1.2,  1.2,   { 0, 1, 1.2, 1.6, 1,   1,   1.2, 1.2, 1.2, 1} },
+	{ "Baas",    700, 500, 800,  95,  0.9, 0.1, 0.5, 1.0,  1.0,   { 0, 1, 1,   1.2, 1,   1,   1,   1.2, 1.6, 1} },
+	{ "camB",    650, 800, 700,  90,  0.8, 0.1, 1.2, 1.0,  1.0,   { 0, 1, 1,   1.2, 1.2, 1,   1,   1,   1,   1} },
+	{ "Ovot",    750, 650, 800,  110,  0.9, 2.5, 0.1, 1.0,  1.0,   { 0, 1, 1,   1,   1,   1,   1,   1,   1,   1} },
+	{ "Bumm",    650, 500, 600,  90,  1.1, 1.5, 1.0, 1.0,  1.1,   { 0, 1, 1,   1.2, 1.6, 1.2, 1,   1.2, 1,   1} },
+	{ "Gran",    700, 800, 600,  115,  1.3, 1.5, 1.0, 1.0,  1.0,   { 0, 1, 1,   1,   1,   1.6, 1,   1,   1,   1} },
+	{ "Laaz",    600, 500, 600,  85,  1.2, 1.5, 0.6, 1.0,  1.0,   { 0, 1, 1,   1,   1.2, 1,   1,   1,   1.6, 1} },
+	{ "Peacy",   900, 800, 1300, 110, 0.8, 2.0, 1.0, 0.9,  0.9,   { 0, 1, 1,   1.6, 1,   1.2, 1.2, 1.2, 1,   1} },
+	{ "m-sook",  650, 500, 400,  95,  0.8, 2.0, 0.7, 1.0,  1.0,   { 0, 1, 1,   1,   1.2, 1.6, 1,   1,   1,   1} },
+	{ "boom",    800, 400, 200,  90,  1.2, 1.0, 1.0, 1.0,  1.0,   { 0, 1, 1,   1.2, 1.2, 1.2, 1,   1.6, 1.6, 1} }
 };
 
 #define BOT_NUMCHARACTERS 13
@@ -345,6 +345,8 @@ void BOT_Respawn( edict_t *self )
 	self->ai.combatmovepush_timeout = 0;
 	self->ai.state_combat_timeout = 0;
 	self->ai.enemyReactionDelay = 0;
+
+	VectorClear( self->r.client->ps.pmove.delta_angles );
 
 	AI_ResetNavigation( self );
 }

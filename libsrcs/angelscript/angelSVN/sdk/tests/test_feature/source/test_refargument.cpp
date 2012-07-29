@@ -3,7 +3,7 @@
 namespace TestRefArgument
 {
 
-#define TESTNAME "TestRefArgument"
+static const char * const TESTNAME = "TestRefArgument";
 
 static const char *script1 =
 "void TestObjHandle(refclass &in ref)   \n"
@@ -110,14 +110,14 @@ bool Test()
 	}
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-
-	RegisterScriptString_Generic(engine);
+	RegisterScriptArray(engine, true);
+	RegisterScriptString(engine);
 	r = engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC); assert( r >= 0 );
 
 
 	r = engine->RegisterObjectType("refclass", sizeof(CRefClass), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CDA); assert(r >= 0);
-	r = engine->RegisterObjectProperty("refclass", "int id", offsetof(CRefClass, id)); assert(r >= 0);
-	r = engine->RegisterObjectBehaviour("refclass", asBEHAVE_ASSIGNMENT, "refclass &f(refclass &in)", asFUNCTION(Assign), asCALL_GENERIC); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("refclass", "int id", asOFFSET(CRefClass, id)); assert(r >= 0);
+	r = engine->RegisterObjectMethod("refclass", "refclass &opAssign(refclass &in)", asFUNCTION(Assign), asCALL_GENERIC); assert( r >= 0 );
 
 
 	if( testNative )
@@ -132,7 +132,7 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 	asIScriptContext *ctx = engine->CreateContext();
@@ -146,7 +146,7 @@ bool Test()
 
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Execution failed: %d\n", TESTNAME, r);
 	}
 	if( ctx ) ctx->Release();
@@ -160,17 +160,17 @@ bool Test()
 	r = mod->Build();
 	if( !engine->GetEngineProperty(asEP_ALLOW_UNSAFE_REFERENCES) )
 	{
-		if( r >= 0 ) fail = true;
+		if( r >= 0 ) TEST_FAILED;
 		if( bout.buffer != "TestRefArgument (6, 18) : Error   : Only object types that support object handles can use &inout. Use &in or &out instead\n"
 			               "TestRefArgument (6, 1) : Info    : Compiling void Testf(float&inout)\n"
 						   "TestRefArgument (6, 18) : Error   : Only object types that support object handles can use &inout. Use &in or &out instead\n" )
 		{
-			printf(bout.buffer.c_str());
-			fail = true;
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
 		}
 	}
 	else
-		if( r != 0 ) fail = true;
+		if( r != 0 ) TEST_FAILED;
 
 	//----------------------
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
@@ -178,10 +178,10 @@ bool Test()
 	mod->AddScriptSection(TESTNAME, script3, strlen(script3), 0);
 	r = mod->Build();
 	if( r < 0 ) 
-		fail = true;
-	r = engine->ExecuteString(0, "Test()");
-	if( r != asEXECUTION_FINISHED ) 
-		fail = true;
+		TEST_FAILED;
+	r = ExecuteString(engine, "Test()", mod);
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
 
 	//-------------------
 	if( testNative )
@@ -191,10 +191,10 @@ bool Test()
 		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 		mod->AddScriptSection(TESTNAME, script4, strlen(script4), 0);
 		r = mod->Build();
-		if( r < 0 ) fail = true;
-		r = engine->ExecuteString(0, "Test()");
-		if( r != asEXECUTION_FINISHED ) fail = true;
-		if( NativeTestFail ) fail = true;
+		if( r < 0 ) TEST_FAILED;
+		r = ExecuteString(engine, "Test()", mod);
+		if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+		if( NativeTestFail ) TEST_FAILED;
 	}
 
 	engine->Release();
@@ -208,14 +208,71 @@ bool Test()
 
 		r = engine->RegisterGlobalFunction("void func(float &)", asFUNCTION(0), asCALL_GENERIC);
 		if( r >= 0 )
-			fail = true;
+			TEST_FAILED;
 
-		if( bout.buffer != "System function (1, 17) : Error   : Only object types that support object handles can use &inout. Use &in or &out instead\n" )
-			fail = true;
+		if( bout.buffer != "System function (1, 17) : Error   : Only object types that support object handles can use &inout. Use &in or &out instead\n" 
+		                   " (0, 0) : Error   : Failed in call to function 'RegisterGlobalFunction' with 'void func(float &)'\n" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
 
 		engine->Release();
 	}
-	
+
+	//---------------------
+	// Test passing 0 to out ref
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+
+		CBufferedOutStream bout;
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+
+		const char *script = 
+			"void f(float &out d) {}";
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		r = ExecuteString(engine, "f(0);", mod);
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+
+		engine->Release();
+	}	
+
+	//------------------------
+	{
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetEngineProperty(asEP_ALLOW_UNSAFE_REFERENCES, true);
+
+		CBufferedOutStream bout;
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
+
+		const char *script = 
+			"void f(uint & d) {d = 1;}";
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", script);
+
+		r = mod->Build();
+		if( r < 0 )
+			TEST_FAILED;
+
+		r = ExecuteString(engine, "f(0);", mod);
+		if( r > 0 )
+			TEST_FAILED;
+
+		if( bout.buffer != "ExecuteString (1, 3) : Error   : Not a valid reference\n" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+
+		engine->Release();	
+	}
 
 	// Success
 	return fail;

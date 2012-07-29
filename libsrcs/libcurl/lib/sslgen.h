@@ -1,5 +1,5 @@
-#ifndef __SSLGEN_H
-#define __SSLGEN_H
+#ifndef HEADER_CURL_SSLGEN_H
+#define HEADER_CURL_SSLGEN_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2008, 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -21,6 +21,7 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
+#include "setup.h"
 
 bool Curl_ssl_config_matches(struct ssl_config_data* data,
                              struct ssl_config_data* needle);
@@ -71,13 +72,13 @@ void Curl_ssl_delsessionid(struct connectdata *conn, void *ssl_sessionid);
 #else
 /* When SSL support is not present, just define away these function calls */
 #define Curl_ssl_init() 1
-#define Curl_ssl_cleanup() do { } while (0)
-#define Curl_ssl_connect(x,y) CURLE_FAILED_INIT
-#define Curl_ssl_close_all(x)
-#define Curl_ssl_close(x,y)
-#define Curl_ssl_shutdown(x,y) CURLE_FAILED_INIT
-#define Curl_ssl_set_engine(x,y) CURLE_FAILED_INIT
-#define Curl_ssl_set_engine_default(x) CURLE_FAILED_INIT
+#define Curl_ssl_cleanup() Curl_nop_stmt
+#define Curl_ssl_connect(x,y) CURLE_NOT_BUILT_IN
+#define Curl_ssl_close_all(x) Curl_nop_stmt
+#define Curl_ssl_close(x,y) Curl_nop_stmt
+#define Curl_ssl_shutdown(x,y) CURLE_NOT_BUILT_IN
+#define Curl_ssl_set_engine(x,y) CURLE_NOT_BUILT_IN
+#define Curl_ssl_set_engine_default(x) CURLE_NOT_BUILT_IN
 #define Curl_ssl_engines_list(x) NULL
 #define Curl_ssl_send(a,b,c,d,e) -1
 #define Curl_ssl_recv(a,b,c,d,e) -1
@@ -85,8 +86,8 @@ void Curl_ssl_delsessionid(struct connectdata *conn, void *ssl_sessionid);
 #define Curl_ssl_version(x,y) 0
 #define Curl_ssl_data_pending(x,y) 0
 #define Curl_ssl_check_cxn(x) 0
-#define Curl_ssl_free_certinfo(x)
-
+#define Curl_ssl_free_certinfo(x) Curl_nop_stmt
+#define Curl_ssl_connect_nonblocking(x,y,z) CURLE_NOT_BUILT_IN
 #endif
 
-#endif /* USE_SSL */
+#endif /* HEADER_CURL_SSLGEN_H */

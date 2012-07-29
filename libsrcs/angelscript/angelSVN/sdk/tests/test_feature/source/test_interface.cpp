@@ -3,7 +3,7 @@
 namespace TestInterface
 {
 
-#define TESTNAME "TestInterface"
+static const char * const TESTNAME = "TestInterface";
 
 // Test implementing multiple interfaces
 // Test implicit conversion from class to interface
@@ -99,10 +99,10 @@ bool Test()
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
-	r = engine->ExecuteString(0, "test()");
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	r = ExecuteString(engine, "test()", mod);
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 
 	// Test calling the interface method from the application
 	int typeId = engine->GetModule(0)->GetTypeIdByDecl("myclass");
@@ -113,22 +113,22 @@ bool Test()
 	int funcId = type->GetMethodIdByDecl("void test()");
 	asIScriptContext *ctx = engine->CreateContext();
 	r = ctx->Prepare(funcId);
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 	ctx->SetObject(obj);
 	ctx->Execute();
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	intfTypeId = engine->GetTypeIdByDecl("appintf");
 	type = engine->GetObjectTypeById(intfTypeId);
 	funcId = type->GetMethodIdByDecl("void test()");
 
 	r = ctx->Prepare(funcId);
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 	ctx->SetObject(obj);
 	ctx->Execute();
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	if( ctx ) ctx->Release();
 	if( obj ) obj->Release();
@@ -143,21 +143,66 @@ bool Test()
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script2, strlen(script2), 0);
 	r = mod->Build();
-	if( r >= 0 ) fail = true;
-	if( bout.buffer != "TestInterface (5, 7) : Error   : Missing implementation of 'void intf::test()'\n"
-					   "TestInterface (5, 23) : Warning : The interface 'intf' is already implemented\n"
+	if( r >= 0 ) TEST_FAILED;
+	if( bout.buffer != "TestInterface (5, 23) : Warning : The interface 'intf' is already implemented\n"
+					   "TestInterface (5, 7) : Error   : Missing implementation of 'void intf::test()'\n"
 					   "TestInterface (9, 1) : Info    : Compiling void test(intf&inout)\n"
 					   "TestInterface (11, 9) : Error   : Data type can't be 'intf'\n"
-					   "TestInterface (13, 8) : Error   : There is no copy operator for this type available.\n"
-					   "TestInterface (13, 6) : Error   : There is no copy operator for this type available.\n"
+					   "TestInterface (13, 6) : Error   : There is no copy operator for the type 'intf' available.\n"
 					   "TestInterface (15, 16) : Error   : Can't implicitly convert from 'myclass&' to 'nointf@&'.\n"
 					   "TestInterface (16, 16) : Error   : Can't implicitly convert from 'intf@&' to 'myclass@&'.\n" )
 	{
-		printf(bout.buffer.c_str());
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	engine->Release();
+
+	// Test cast for both temporary handle and non-temporary handle
+	{
+		const char *script = 
+			"interface ScriptLogic {} \n"
+			"class PlayerLogic : ScriptLogic {} \n"
+			"ScriptLogic @getScriptObject() { return PlayerLogic(); } \n";
+
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+		RegisterStdString(engine);
+		mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection(TESTNAME, script);
+		r = mod->Build();
+		if( r < 0 ) TEST_FAILED;
+
+		// Non-temporary handle
+		r = ExecuteString(engine, "ScriptLogic @c = getScriptObject(); cast<PlayerLogic>(c);", mod);
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+
+		// Temporary handle
+		r = ExecuteString(engine, "cast<PlayerLogic>(getScriptObject());", mod);
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+
+		engine->Release();			
+	}
+
+	// It should be possible to inherit the implementation of an interface method
+	{
+		const char *script = 
+			"interface I { void method(); } \n"
+			"class B { void method() {} } \n"
+			"class D : B, I {} \n"
+			"D d; \n";
+
+		engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+		mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection(TESTNAME, script);
+		r = mod->Build();
+		if( r < 0 ) TEST_FAILED;
+
+		engine->Release();			
+	}
 
 	// Success
 	return fail;
@@ -180,30 +225,30 @@ bool Test2()
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	mod = engine->GetModule("b", asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	int typeA = engine->GetModule("a")->GetTypeIdByDecl("Simple");
 	int typeB = engine->GetModule("b")->GetTypeIdByDecl("Simple");
 
 	if( typeA != typeB )
-		fail = true;
+		TEST_FAILED;
 
 	// Test recompiling a module
 	mod = engine->GetModule("a", asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", script, strlen(script));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	typeA = engine->GetModule("a")->GetTypeIdByDecl("Simple");
 	if( typeA != typeB )
-		fail = true;
+		TEST_FAILED;
 
 	// Test interface that references itself
 	const char *script1 = "interface A { A@ f(); }";
@@ -211,19 +256,19 @@ bool Test2()
 	mod->AddScriptSection("script", script1, strlen(script1));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	mod = engine->GetModule("b", asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", script1, strlen(script1));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	int typeAA = engine->GetModule("a")->GetTypeIdByDecl("A");
 	int typeBA = engine->GetModule("b")->GetTypeIdByDecl("A");
 
 	if( typeAA != typeBA )
-		fail = true;
+		TEST_FAILED;
 
 
 	// Test with more complex interfaces
@@ -232,13 +277,13 @@ bool Test2()
 	mod->AddScriptSection("script", script2, strlen(script2));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	mod = engine->GetModule("b", asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", script2, strlen(script2));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	typeAA = engine->GetModule("a")->GetTypeIdByDecl("A");
 	int typeAB = engine->GetModule("a")->GetTypeIdByDecl("B");
@@ -251,7 +296,7 @@ bool Test2()
 	if( typeAA != typeBA ||
 		typeAB != typeBB ||
 		typeAC != typeBC )
-		fail = true;
+		TEST_FAILED;
 
 	// Test interfaces that are not equal
 	const char *script3 = "interface A { B@ f(); } interface B { int f(); }";
@@ -261,13 +306,13 @@ bool Test2()
 	mod->AddScriptSection("script", script3, strlen(script3));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	mod = engine->GetModule("b", asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", script4, strlen(script4));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	typeAA = engine->GetModule("a")->GetTypeIdByDecl("A");
 	typeAB = engine->GetModule("a")->GetTypeIdByDecl("B");
@@ -277,7 +322,7 @@ bool Test2()
 
 	if( typeAA == typeBA ||
 		typeAB == typeBB )
-		fail = true;
+		TEST_FAILED;
 
 	// Interfaces that uses the interfaces that are substituted must be updated
 	const char *script5 = "interface A { float f(); }";
@@ -286,21 +331,21 @@ bool Test2()
 	mod->AddScriptSection("script5", script5, strlen(script5));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	mod = engine->GetModule("b", asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script5", script5, strlen(script5));
 	mod->AddScriptSection("script6", script6, strlen(script6));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	typeBA = engine->GetModule("b")->GetTypeIdByDecl("A@");
 	typeBB = engine->GetModule("b")->GetTypeIdByDecl("B");
 	asIObjectType *objType = engine->GetObjectTypeById(typeBB);
-	asIScriptFunction *func = objType->GetMethodDescriptorByIndex(0);
+	asIScriptFunction *func = objType->GetMethodByIndex(0);
 	if( func->GetReturnTypeId() != typeBA )
-		fail = true;
+		TEST_FAILED;
 
 	// This must work for pre-compiled byte code as well, i.e. when loading the byte code 
 	// the interface ids must be resolved in the same way it is for compiled scripts
@@ -308,7 +353,7 @@ bool Test2()
 	mod->AddScriptSection("script", script1, strlen(script1));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	CBytecodeStream stream(__FILE__"1");
 	asIScriptModule *module = engine->GetModule("a");
@@ -316,13 +361,13 @@ bool Test2()
 	module = engine->GetModule("b", asGM_CREATE_IF_NOT_EXISTS);
 	r = module->LoadByteCode(&stream);
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	typeAA = engine->GetModule("a")->GetTypeIdByDecl("A");
 	typeBA = engine->GetModule("b")->GetTypeIdByDecl("A");
 
 	if( typeAA != typeBA )
-		fail = true;
+		TEST_FAILED;
 
 	// TODO: The interfaces should be equal if they use enums declared in the 
 	// scripts as well (we don't bother checking the enum values)

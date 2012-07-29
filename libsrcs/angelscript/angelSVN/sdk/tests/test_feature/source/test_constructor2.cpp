@@ -6,7 +6,7 @@ using namespace std;
 namespace TestConstructor2
 {
 
-#define TESTNAME "TestConstructor2"
+static const char * const TESTNAME = "TestConstructor2";
 
 class CMyObj {
 public :
@@ -94,7 +94,7 @@ bool Test()
 	r = engine->RegisterObjectBehaviour("MySecondObj", asBEHAVE_CONSTRUCT, "void f(MyObj &in)", asFUNCTIONPR(ConstrMySecondObj, (CMyObj &, CMySecondObj &), void), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("MySecondObj", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(DestrMySecondObj), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 
-	engine->ExecuteString(0, "MyObj obj; {MySecondObj secObj(obj);}");
+	ExecuteString(engine, "MyObj obj; {MySecondObj secObj(obj);}");
 	engine->Release();
 
 
@@ -108,14 +108,14 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "{ MyClass test; test.Test(); }");
+	r = ExecuteString(engine, "{ MyClass test; test.Test(); }", mod);
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

@@ -1,31 +1,31 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
-//===============
-//G_TriggerWait
-//
-//Called always when using a trigger that supports wait flag
-//Returns true if the trigger shouldn't be activated
-//===============
+/*
+* G_TriggerWait
+* 
+* Called always when using a trigger that supports wait flag
+* Returns true if the trigger shouldn't be activated
+*/
 static qboolean G_TriggerWait( edict_t *ent, edict_t *other )
 {
 	if( GS_RaceGametype() )
@@ -454,7 +454,7 @@ void SP_trigger_push( edict_t *self )
 	self->nextThink = level.time + 1;
 	self->r.svflags &= ~SVF_NOCLIENT;
 	self->s.type = ET_PUSH_TRIGGER;
-	self->r.svflags |= SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+	self->r.svflags |= SVF_TRANSMITORIGIN2;
 	GClip_LinkEntity( self ); // ET_PUSH_TRIGGER gets exceptions at linking so it's added for prediction
 	self->timeStamp = level.time;
 	if( !self->wait )
@@ -501,7 +501,7 @@ void SP_target_push( edict_t *self ) {
 	if ( self->target ) {
 		VectorCopy( self->s.origin, self->r.absmin );
 		VectorCopy( self->s.origin, self->r.absmax );
-		self->r.svflags |= SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2;
+		self->r.svflags |= SVF_TRANSMITORIGIN2; //|SVF_NOCULLATORIGIN2; //TODO: This was removed from warsow 0.7. I don't know what it did so i don't know if it's necessary either -K1ll
 		self->think = trigger_push_setup;
 		self->nextThink = level.time + 1;
 	}
@@ -557,7 +557,7 @@ static void hurt_delayer_think( edict_t *self )
 	if( target->r.client && target->r.client->resp.timeStamp == self->deathTimeStamp )
 	{
 		target->takedamage = qtrue;
-		G_TakeDamage( target, target, world, vec3_origin, vec3_origin, target->s.origin, damage, 0, 0, DAMAGE_NO_PROTECTION, MOD_TRIGGER_HURT );
+		G_Damage( target, target, world, vec3_origin, vec3_origin, target->s.origin, damage, 0, 0, DAMAGE_NO_PROTECTION, MOD_TRIGGER_HURT );
 	}
 
 	G_FreeEdict( self );
@@ -632,7 +632,7 @@ static void hurt_touch( edict_t *self, edict_t *other, cplane_t *plane, int surf
 			G_Sound( other, CHAN_AUTO|CHAN_FIXED, self->noise_index, ATTN_NORM );
 	}
 
-	G_TakeDamage( other, self, world, vec3_origin, vec3_origin, other->s.origin, damage, damage, 0, dflags, MOD_TRIGGER_HURT );
+	G_Damage( other, self, world, vec3_origin, vec3_origin, other->s.origin, damage, damage, 0, dflags, MOD_TRIGGER_HURT );
 }
 
 void SP_trigger_hurt( edict_t *self )

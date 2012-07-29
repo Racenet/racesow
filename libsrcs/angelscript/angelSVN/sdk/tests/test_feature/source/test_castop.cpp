@@ -3,8 +3,6 @@
 namespace TestCastOp
 {
 
-#define TESTNAME "TestCastOp"
-
 const char *script = "\
 interface intf1            \n\
 {                          \n\
@@ -100,43 +98,54 @@ bool Test()
 	int res = 0;
 	engine->RegisterGlobalProperty("int res", &res);
 
-	engine->ExecuteString(0, "res = int(2342.4)");
+	ExecuteString(engine, "res = int(2342.4)");
 	if( res != 2342 ) 
-		fail = true;
+		TEST_FAILED;
 
-	engine->ExecuteString(0, "double tmp = 3452.4; res = int(tmp)");
+	ExecuteString(engine, "double tmp = 3452.4; res = int(tmp)");
 	if( res != 3452 ) 
-		fail = true;
+		TEST_FAILED;
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("script", script, strlen(script));
 	mod->Build();
 
-	r = engine->ExecuteString(0, "clss c; cast<intf1>(c); cast<intf2>(c);");
+	r = ExecuteString(engine, "clss c; cast<intf1>(c); cast<intf2>(c);", mod);
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	r = engine->ExecuteString(0, "intf1 @a = clss(); cast<clss>(a).Test2(); cast<intf2>(a).Test2();");
+	r = ExecuteString(engine, "intf1 @a = clss(); cast<clss>(a).Test2(); cast<intf2>(a).Test2();", mod);
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	// Test use of handle after invalid cast (should throw a script exception)
-	r = engine->ExecuteString(0, "intf1 @a = clss(); cast<intf3>(a).Test3();");
+	r = ExecuteString(engine, "intf1 @a = clss(); cast<intf3>(a).Test3();", mod);
 	if( r != asEXECUTION_EXCEPTION )
-		fail = true;
+		TEST_FAILED;
 
 	// Don't permit cast operator to remove constness
 	bout.buffer = "";
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
-	r = engine->ExecuteString(0, "const intf1 @a = clss(); cast<intf2>(a).Test2();");
+	r = ExecuteString(engine, "const intf1 @a = clss(); cast<intf2>(a).Test2();", mod);
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 
 	if( bout.buffer != "ExecuteString (1, 26) : Error   : No conversion from 'const intf2@' to 'intf2@' available.\n"
 					   "ExecuteString (1, 40) : Error   : Illegal operation on 'const int'\n" )
 	{
-		fail = true;
-		printf(bout.buffer.c_str());
+		TEST_FAILED;
+		printf("%s", bout.buffer.c_str());
+	}
+
+	// It should be allowed to cast null to an interface
+	bout.buffer = "";
+	r = ExecuteString(engine, "intf1 @a = cast<intf1>(null);", mod);
+	if( r != asEXECUTION_FINISHED )
+		TEST_FAILED;
+	if( bout.buffer != "" )
+	{
+		TEST_FAILED;
+		printf("%s", bout.buffer.c_str());
 	}
 
 	//--------------
@@ -146,17 +155,17 @@ bool Test()
 	engine->AddScriptSection(0, "Test2", script2, strlen(script2));
 	r = mod->Build(0);
 	if( r < 0 )
-		fail = true;
-	r = engine->ExecuteString(0, "Test()");
+		TEST_FAILED;
+	r = ExecuteString(engine, "Test()");
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 */
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection("Test3", script3, strlen(script3));
 	r = mod->Build();
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 
 	//-------------
 	// "test" + string(type) + "\n"
@@ -165,18 +174,21 @@ bool Test()
 	r = engine->RegisterObjectType("type", 4, asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE); assert( r >= 0 );
 	RegisterScriptString(engine);
 	r = engine->RegisterObjectBehaviour("string", asBEHAVE_FACTORY, "string@ f(const type &in)", asFUNCTION(TypeToString), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->ExecuteString(0, "type t; string a = \"a\" + string(t) + \"b\";"); 
+	r = ExecuteString(engine, "type t; string a = \"a\" + string(t) + \"b\";"); 
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 		
 	// Use of constructor is not permitted to implicitly cast to a reference type 
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream, Callback), &bout, asCALL_THISCALL);
 	bout.buffer = "";
-	r = engine->ExecuteString(0, "type t; string a = \"a\" + t + \"b\";"); 
+	r = ExecuteString(engine, "type t; string a = \"a\" + t + \"b\";"); 
 	if( r >= 0 )
-		fail = true;
-	if( bout.buffer != "ExecuteString (1, 24) : Error   : No matching operator that takes the types 'string@&' and 'type&' found\n" )
-		fail = true;
+		TEST_FAILED;
+	if( bout.buffer != "ExecuteString (1, 24) : Error   : No matching operator that takes the types 'string@&' and 'type' found\n" )
+	{
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
+	}
 
 	// Try using the asMETHOD macro with a cast operator
 	// The first option fail to compile on MSVC2005 (Thanks Jeff Slutter)
@@ -191,13 +203,13 @@ bool Test()
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
 	bout.buffer = "";
 
-	r = engine->ExecuteString(0, "uint8 a=0x80; int j=int();");
+	r = ExecuteString(engine, "uint8 a=0x80; int j=int();");
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 	if( bout.buffer != "ExecuteString (1, 24) : Error   : A cast operator has one argument\n" )
 	{
-		printf(bout.buffer.c_str());
-		fail = true;
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
 	}
 
 	engine->Release();

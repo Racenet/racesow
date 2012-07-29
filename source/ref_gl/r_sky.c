@@ -50,9 +50,20 @@ static void Gen_Box( skydome_t *skydome, float skyheight );
 void MakeSkyVec( float x, float y, float z, int axis, vec3_t v );
 
 /*
-==============
-R_CreateSkydome
-==============
+* R_CreateSkydome
+*/
+static void R_AddSkydomeToFarclip( const skydome_t *skydome )
+{
+	const float skyheight = skydome->skyheight;
+
+//	if( skyheight*sqrt(3) > r_farclip_min )
+//		r_farclip_min = skyheight*sqrt(3);
+	if( skyheight*2 > r_farclip_min )
+		r_farclip_min = skyheight*2;
+}
+
+/*
+* R_CreateSkydome
 */
 skydome_t *R_CreateSkydome( float skyheight, shader_t **farboxShaders, shader_t	**nearboxShaders )
 {
@@ -70,6 +81,7 @@ skydome_t *R_CreateSkydome( float skyheight, shader_t **farboxShaders, shader_t	
 	memcpy( skydome->nearboxShaders, nearboxShaders, sizeof( shader_t * ) * 6 );
 	buffer += sizeof( skydome_t );
 
+	skydome->skyheight = skyheight;
 	skydome->meshes = ( mesh_t * )buffer;
 	buffer += sizeof( mesh_t ) * 6;
 
@@ -90,13 +102,32 @@ skydome_t *R_CreateSkydome( float skyheight, shader_t **farboxShaders, shader_t	
 
 	Gen_Box( skydome, skyheight );
 
+	R_AddSkydomeToFarclip( skydome );
+
 	return skydome;
 }
 
 /*
-==============
-R_FreeSkydome
-==============
+* R_TouchSkydome
+*/
+void R_TouchSkydome( skydome_t *skydome )
+{
+	int i;
+
+	for( i = 0; i < 6; i++ ) {
+		if( skydome->farboxShaders[i] ) {
+			R_TouchShader( skydome->farboxShaders[i] );
+		}
+		if( skydome->nearboxShaders[i] ) {
+			R_TouchShader( skydome->nearboxShaders[i] );
+		}
+	}
+
+	R_AddSkydomeToFarclip( skydome );
+}
+
+/*
+* R_FreeSkydome
 */
 void R_FreeSkydome( skydome_t *skydome )
 {
@@ -104,9 +135,7 @@ void R_FreeSkydome( skydome_t *skydome )
 }
 
 /*
-==============
-Gen_Box
-==============
+* Gen_Box
 */
 static void Gen_Box( skydome_t *skydome, float skyheight )
 {
@@ -124,15 +153,13 @@ static void Gen_Box( skydome_t *skydome, float skyheight )
 }
 
 /*
-================
-Gen_BoxSide
-
-I don't know exactly what Q3A does for skybox texturing, but
-this is at least fairly close.  We tile the texture onto the
-inside of a large sphere, and put the camera near the top of
-the sphere. We place the box around the camera, and cast rays
-through the box verts to the sphere to find the texture coordinates.
-================
+* Gen_BoxSide
+* 
+* I don't know exactly what Q3A does for skybox texturing, but
+* this is at least fairly close.  We tile the texture onto the
+* inside of a large sphere, and put the camera near the top of
+* the sphere. We place the box around the camera, and cast rays
+* through the box verts to the sphere to find the texture coordinates.
 */
 static void Gen_BoxSide( skydome_t *skydome, int side, vec3_t orig, vec3_t drow, vec3_t dcol, float skyheight )
 {
@@ -207,9 +234,7 @@ static void Gen_BoxSide( skydome_t *skydome, int side, vec3_t orig, vec3_t drow,
 }
 
 /*
-==============
-R_DrawSkySide
-==============
+* R_DrawSkySide
 */
 static void R_DrawSkySide( skydome_t *skydome, int side, shader_t *shader, int features )
 {
@@ -224,14 +249,12 @@ static void R_DrawSkySide( skydome_t *skydome, int side, shader_t *shader, int f
 	mbuffer->sortkey = MB_FOG2NUM( r_skyfog );
 
 	skydome->meshes[side].stArray = skydome->linearStCoords[side];
-	R_PushMesh( NULL, &skydome->meshes[side], features );
-	R_RenderMeshBuffer( mbuffer );
+	R_PushMesh( &skydome->meshes[side], qfalse, features );
+	R_RenderMeshBuffer( mbuffer, NULL );
 }
 
 /*
-==============
-R_DrawSkyBox
-==============
+* R_DrawSkyBox
 */
 static void R_DrawSkyBox( skydome_t *skydome, shader_t **shaders )
 {
@@ -239,19 +262,14 @@ static void R_DrawSkyBox( skydome_t *skydome, shader_t **shaders )
 	const int skytexorder[6] = { SKYBOX_RIGHT, SKYBOX_FRONT, SKYBOX_LEFT, SKYBOX_BACK, SKYBOX_TOP, SKYBOX_BOTTOM };
 
 	features = shaders[0]->features;
-	if( r_shownormals->integer )
-		features |= MF_NORMALS;
-
 	for( i = 0; i < 6; i++ )
 		R_DrawSkySide( skydome, i, shaders[skytexorder[i]], features );
 }
 
 /*
-==============
-R_DrawBlackBottom
-
-Draw dummy skybox side to prevent the HOM effect
-==============
+* R_DrawBlackBottom
+* 
+* Draw dummy skybox side to prevent the HOM effect
 */
 static void R_DrawBlackBottom( skydome_t *skydome )
 {
@@ -262,8 +280,6 @@ static void R_DrawBlackBottom( skydome_t *skydome )
 	shader = R_OcclusionShader ();
 
 	features = shader->features;
-	if( r_shownormals->integer )
-		features |= MF_NORMALS;
 
 	// HACK HACK HACK
 	// skies ought not to write to depth buffer
@@ -275,9 +291,7 @@ static void R_DrawBlackBottom( skydome_t *skydome )
 }
 
 /*
-==============
-R_DrawSky
-==============
+* R_DrawSky
 */
 qboolean R_DrawSky( shader_t *shader )
 {
@@ -375,9 +389,6 @@ qboolean R_DrawSky( shader_t *shader )
 		qboolean flush = qfalse;
 		int features = shader->features;
 
-		if( r_shownormals->integer )
-			features |= MF_NORMALS;
-
 		for( i = 0; i < 5; i++ )
 		{
 			if( ri.skyMins[0][i] >= ri.skyMaxs[0][i] ||
@@ -390,11 +401,11 @@ qboolean R_DrawSky( shader_t *shader )
 			mbuffer->sortkey = MB_FOG2NUM( r_skyfog );
 
 			skydome->meshes[i].stArray = skydome->sphereStCoords[i];
-			R_PushMesh( NULL, &skydome->meshes[i], features );
+			R_PushMesh( &skydome->meshes[i], qfalse, features );
 		}
 
 		if( flush )
-			R_RenderMeshBuffer( mbuffer );
+			R_RenderMeshBuffer( mbuffer, NULL );
 	}
 
 	if( skydome->nearboxShaders[0] )
@@ -451,9 +462,7 @@ int vec_to_st[6][3] =
 };
 
 /*
-==============
-DrawSkyPolygon
-==============
+* DrawSkyPolygon
 */
 void DrawSkyPolygon( int nump, vec3_t vecs )
 {
@@ -515,9 +524,7 @@ void DrawSkyPolygon( int nump, vec3_t vecs )
 #define	MAX_CLIP_VERTS	64
 
 /*
-==============
-ClipSkyPolygon
-==============
+* ClipSkyPolygon
 */
 void ClipSkyPolygon( int nump, vec3_t vecs, int stage )
 {
@@ -615,9 +622,7 @@ loc1:
 }
 
 /*
-=================
-R_AddSkySurface
-=================
+* R_AddSkySurface
 */
 qboolean R_AddSkySurface( msurface_t *fa )
 {
@@ -646,9 +651,7 @@ qboolean R_AddSkySurface( msurface_t *fa )
 }
 
 /*
-==============
-R_ClearSky
-==============
+* R_ClearSky
 */
 void R_ClearSky( void )
 {

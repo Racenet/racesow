@@ -1,12 +1,24 @@
-/*****************************************************************************
+/***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
  *                             / __| | | | |_) | |
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- */
-
+ * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ *
+ * This software is licensed as described in the file COPYING, which
+ * you should have received as part of this distribution. The terms
+ * are also available at http://curl.haxx.se/docs/copyright.html.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the COPYING file.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/
 /*
  * This code sets up multiple easy handles that transfer a single file from
  * the same URL, in a serial manner after each other. Due to the connection
@@ -28,11 +40,10 @@
 
 #include "test.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 
 #include "testutil.h"
+#include "warnless.h"
 #include "memdebug.h"
 
 #define MAIN_LOOP_HANG_TIMEOUT     90 * 1000
@@ -136,50 +147,47 @@ int test(char *URL)
     mp_timedout = FALSE;
     mp_start = tutil_tvnow();
 
-    while (res == CURLM_CALL_MULTI_PERFORM) {
-      res = (int)curl_multi_perform(m, &running);
-      if (tutil_tvdiff(tutil_tvnow(), mp_start) >
-          MULTI_PERFORM_HANG_TIMEOUT) {
-        mp_timedout = TRUE;
-        break;
-      }
-      if (running <= 0) {
+    res = (int)curl_multi_perform(m, &running);
+    if (tutil_tvdiff(tutil_tvnow(), mp_start) >
+        MULTI_PERFORM_HANG_TIMEOUT) {
+      mp_timedout = TRUE;
+      break;
+    }
+    if (running <= 0) {
 #ifdef LIB527
-        /* NOTE: this code does not remove the handle from the multi handle
-           here, which would be the nice, sane and documented way of working.
-           This however tests that the API survives this abuse gracefully. */
-        curl_easy_cleanup(curl[current]);
+      /* NOTE: this code does not remove the handle from the multi handle
+         here, which would be the nice, sane and documented way of working.
+         This however tests that the API survives this abuse gracefully. */
+      curl_easy_cleanup(curl[current]);
 #endif
-        if(++current < NUM_HANDLES) {
-          fprintf(stderr, "Advancing to URL %d\n", current);
+      if(++current < NUM_HANDLES) {
+        fprintf(stderr, "Advancing to URL %d\n", current);
 #ifdef LIB532
-          /* first remove the only handle we use */
-          curl_multi_remove_handle(m, curl[0]);
+        /* first remove the only handle we use */
+        curl_multi_remove_handle(m, curl[0]);
 
-          /* make us re-use the same handle all the time, and try resetting
-             the handle first too */
-          curl_easy_reset(curl[0]);
-          test_setopt(curl[0], CURLOPT_URL, URL);
-          test_setopt(curl[0], CURLOPT_VERBOSE, 1L);
+        /* make us re-use the same handle all the time, and try resetting
+           the handle first too */
+        curl_easy_reset(curl[0]);
+        test_setopt(curl[0], CURLOPT_URL, URL);
+        test_setopt(curl[0], CURLOPT_VERBOSE, 1L);
 
-          /* re-add it */
-          res = (int)curl_multi_add_handle(m, curl[0]);
+        /* re-add it */
+        res = (int)curl_multi_add_handle(m, curl[0]);
 #else
-          res = (int)curl_multi_add_handle(m, curl[current]);
+        res = (int)curl_multi_add_handle(m, curl[current]);
 #endif
-          if(res) {
-            fprintf(stderr, "add handle failed: %d.\n", res);
-            res = 243;
-            break;
-          }
+        if(res) {
+          fprintf(stderr, "add handle failed: %d.\n", res);
+          res = 243;
+          break;
         }
-        else
-          done = TRUE; /* bail out */
+      }
+      else {
+        done = TRUE; /* bail out */
         break;
       }
     }
-    if (mp_timedout || done)
-      break;
 
     if (res != CURLM_OK) {
       fprintf(stderr, "not okay???\n");
@@ -202,8 +210,6 @@ int test(char *URL)
       res = 195;
       break;
     }
-
-    res = CURLM_CALL_MULTI_PERFORM;
   }
 
   if (ml_timedout || mp_timedout) {

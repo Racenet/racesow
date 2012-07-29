@@ -4,6 +4,7 @@
 
 #include <iostream>  // cout
 #include <assert.h>  // assert()
+#include <string.h>  // strstr()
 #ifdef _LINUX_
 	#include <sys/time.h>
 	#include <stdio.h>
@@ -16,7 +17,7 @@
 #include <set>
 #include <angelscript.h>
 
-#include "../../../add_on/scriptstring/scriptstring.h"
+#include "../../../add_on/scriptstdstring/scriptstdstring.h"
 #include "../../../add_on/scriptbuilder/scriptbuilder.h"
 
 using namespace std;
@@ -183,8 +184,7 @@ int RunApplication()
 			cout << "The script ended with an exception." << endl;
 
 			// Write some information about the script exception
-			int funcID = ctx->GetExceptionFunction();
-			asIScriptFunction *func = engine->GetFunctionDescriptorById(funcID);
+			asIScriptFunction *func = ctx->GetExceptionFunction();
 			cout << "func: " << func->GetDeclaration() << endl;
 			cout << "modl: " << func->GetModuleName() << endl;
 			cout << "sect: " << func->GetScriptSectionName() << endl;
@@ -215,8 +215,7 @@ void ConfigureEngine(asIScriptEngine *engine)
 	// Register the script string type
 	// Look at the implementation for this function for more information  
 	// on how to register a custom string type, and other object types.
-	// The implementation is in "/add_on/scriptstring/scriptstring.cpp"
-	RegisterScriptString(engine);
+	RegisterStdString(engine);
 
 	if( !strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY") )
 	{
@@ -256,10 +255,22 @@ int CompileScript(asIScriptEngine *engine)
 	// be written to the message stream that we set right after creating the 
 	// script engine. If there are no errors, and no warnings, nothing will
 	// be written to the stream.
-	r = builder.BuildScriptFromFile(engine, 0, "script.as");
+	r = builder.StartNewModule(engine, 0);
 	if( r < 0 )
 	{
-		cout << "Build failed" << endl;
+		cout << "Failed to start new module" << endl;
+		return r;
+	}
+	r = builder.AddSectionFromFile("script.as");
+	if( r < 0 )
+	{
+		cout << "Failed to add script file" << endl;
+		return r;
+	}
+	r = builder.BuildModule();
+	if( r < 0 )
+	{
+		cout << "Failed to build the module" << endl;
 		return r;
 	}
 	

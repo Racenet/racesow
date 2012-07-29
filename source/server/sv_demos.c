@@ -23,11 +23,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SV_DEMO_DIR va( "demos/server%s%s", sv_demodir->string[0] ? "/" : "", sv_demodir->string[0] ? sv_demodir->string : "" )
 
 /*
-==================
-SV_Demo_WriteMessage
-
-Writes given message to the demofile
-==================
+* SV_Demo_WriteMessage
+* 
+* Writes given message to the demofile
 */
 static void SV_Demo_WriteMessage( msg_t *msg )
 {
@@ -38,18 +36,21 @@ static void SV_Demo_WriteMessage( msg_t *msg )
 	SNAP_RecordDemoMessage( svs.demo.file, msg, 0 );
 }
 
-//================
-//SV_Demo_WriteStartMessages
-//================
+/*
+* SV_Demo_WriteStartMessages
+*/
 static void SV_Demo_WriteStartMessages( void )
 {
+	// clear demo meta data, we'll write some keys later
+	svs.demo.meta_data_realsize = SNAP_ClearDemoMeta( svs.demo.meta_data, sizeof( svs.demo.meta_data ) );
+
 	SNAP_BeginDemoRecording( svs.demo.file, svs.spawncount, svc.snapFrameTime, sv.mapname, SV_BITFLAGS_RELIABLE, 
-		svs.purelist, sv.configstrings[0], sv.baselines );
+		svs.purelist, sv.configstrings[0], sv.baselines, svs.demo.basetime );
 }
 
-//================
-//SV_Demo_WriteSnap
-//================
+/*
+* SV_Demo_WriteSnap
+*/
 void SV_Demo_WriteSnap( void )
 {
 	int i;
@@ -86,9 +87,9 @@ void SV_Demo_WriteSnap( void )
 	svs.demo.client.lastframe = sv.framenum; // FIXME: is this needed?
 }
 
-//================
-//SV_Demo_InitClient
-//================
+/*
+* SV_Demo_InitClient
+*/
 static void SV_Demo_InitClient( void )
 {
 	memset( &svs.demo.client, 0, sizeof( svs.demo.client ) );
@@ -106,11 +107,9 @@ static void SV_Demo_InitClient( void )
 }
 
 /*
-==============
-SV_Demo_Start_f
-
-Begins server demo recording.
-==============
+* SV_Demo_Start_f
+* 
+* Begins server demo recording.
 */
 void SV_Demo_Start_f( void )
 {
@@ -152,13 +151,10 @@ void SV_Demo_Start_f( void )
 
 	// real name
 	demofilename_size =
-		sizeof( char ) * ( strlen( SV_DEMO_DIR ) + 1 + strlen( Cmd_Argv( 1 ) ) + strlen( "_auto" ) + 4 + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
+		sizeof( char ) * ( strlen( SV_DEMO_DIR ) + 1 + strlen( Cmd_Args() ) + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
 	svs.demo.filename = Mem_ZoneMalloc( demofilename_size );
 
-	Q_snprintfz( svs.demo.filename, demofilename_size, "%s/%s", SV_DEMO_DIR, Cmd_Argv( 1 ) );
-
-	if( Cmd_Argc() == 3 && atoi( Cmd_Argv( 2 ) ) > 0 )
-		Q_strncatz( svs.demo.filename, va( "_auto%4i", atoi( Cmd_Argv( 2 ) ) ), demofilename_size );
+	Q_snprintfz( svs.demo.filename, demofilename_size, "%s/%s", SV_DEMO_DIR, Cmd_Args() );
 
 	COM_SanitizeFilePath( svs.demo.filename );
 
@@ -195,6 +191,7 @@ void SV_Demo_Start_f( void )
 	// write serverdata, configstrings and baselines
 	svs.demo.duration = 0;
 	svs.demo.basetime = svs.gametime;
+	svs.demo.localtime = time( NULL );
 	SV_Demo_WriteStartMessages();
 
 	// write one nodelta frame
@@ -204,15 +201,15 @@ void SV_Demo_Start_f( void )
 }
 
 /*
-==============
-SV_Demo_Stop
-==============
+* SV_Demo_Stop
 */
-void SV_Demo_Stop( qboolean cancel )
+static void SV_Demo_Stop( qboolean cancel, qboolean silent )
 {
 	if( !svs.demo.file )
 	{
-		Com_Printf( "No server demo recording in progress\n" );
+		if( !silent ) {
+			Com_Printf( "No server demo recording in progress\n" );
+		}
 		return;
 	}
 
@@ -222,12 +219,25 @@ void SV_Demo_Stop( qboolean cancel )
 	}
 	else
 	{
-		SNAP_StopDemoRecording( svs.demo.file, svs.demo.basetime, svs.demo.duration );
+		// write some meta information about the match/demo
+		SV_SetDemoMetaKeyValue( "hostname", sv.configstrings[CS_HOSTNAME] );
+		SV_SetDemoMetaKeyValue( "localtime", va( "%u", svs.demo.localtime ) );
+		SV_SetDemoMetaKeyValue( "multipov", "1" );
+		SV_SetDemoMetaKeyValue( "duration", va( "%u", (int)ceil( svs.demo.duration/1000.0f ) ) );
+		SV_SetDemoMetaKeyValue( "mapname", sv.configstrings[CS_MAPNAME] );
+		SV_SetDemoMetaKeyValue( "gametype", sv.configstrings[CS_GAMETYPENAME] );
+		SV_SetDemoMetaKeyValue( "levelname", sv.configstrings[CS_MESSAGE] );
+		SV_SetDemoMetaKeyValue( "matchname", sv.configstrings[CS_MATCHNAME] );
+		SV_SetDemoMetaKeyValue( "matchscore", sv.configstrings[CS_MATCHSCORE] );
+		SV_SetDemoMetaKeyValue( "matchuuid", sv.configstrings[CS_MATCHUUID] );
+
+		SNAP_StopDemoRecording( svs.demo.file, svs.demo.meta_data, svs.demo.meta_data_realsize );
 		Com_Printf( "Stopped server demo recording: %s\n", svs.demo.filename );
 	}
 
 	FS_FCloseFile( svs.demo.file );
 	svs.demo.file = 0;
+	svs.demo.localtime = 0;
 	svs.demo.basetime = svs.demo.duration = 0;
 
 	if( cancel )
@@ -250,35 +260,29 @@ void SV_Demo_Stop( qboolean cancel )
 }
 
 /*
-==============
-SV_Demo_Stop_f
-
-Console command for stopping server demo recording.
-==============
+* SV_Demo_Stop_f
+* 
+* Console command for stopping server demo recording.
 */
 void SV_Demo_Stop_f( void )
 {
-	SV_Demo_Stop( qfalse );
+	SV_Demo_Stop( qfalse, atoi( Cmd_Argv( 1 ) ) != 0 );
 }
 
 /*
-==============
-SV_Demo_Cancel_f
-
-Cancels the server demo recording (stop, remove file)
-==============
+* SV_Demo_Cancel_f
+* 
+* Cancels the server demo recording (stop, remove file)
 */
 void SV_Demo_Cancel_f( void )
 {
-	SV_Demo_Stop( qtrue );
+	SV_Demo_Stop( qtrue, atoi( Cmd_Argv( 1 ) ) != 0 );
 }
 
 /*
-==============
-SV_Demo_Purge_f
-
-Removes the server demo files
-==============
+* SV_Demo_Purge_f
+* 
+* Removes the server demo files
 */
 void SV_Demo_Purge_f( void )
 {
@@ -296,11 +300,7 @@ void SV_Demo_Purge_f( void )
 
 	maxautodemos = 0;
 	if( Cmd_Argc() == 2 )
-	{
 		maxautodemos = atoi( Cmd_Argv( 1 ) );
-		if( maxautodemos < 0 )
-			maxautodemos = 0;
-	}
 
 	numdemos = FS_GetFileListExt( SV_DEMO_DIR, APP_DEMO_EXTENSION_STR, NULL, &bufSize, 0, 0 );
 	if( !numdemos )
@@ -367,9 +367,9 @@ void SV_Demo_Purge_f( void )
 	Mem_TempFree( buffer );
 }
 
-//=================
-//SV_DemoList_f
-//=================
+/*
+* SV_DemoList_f
+*/
 #define DEMOS_PER_VIEW	30
 void SV_DemoList_f( client_t *client )
 {
@@ -475,12 +475,12 @@ void SV_DemoList_f( client_t *client )
 	SV_AddGameCommand( client, message );
 }
 
-//=================
-//SV_DemoGet_f
-//
-// Responds to clients demoget request with: demoget "filename"
-// If nothing is found, responds with demoget without filename, so client knowns it wasn't found
-//=================
+/*
+* SV_DemoGet_f
+* 
+* Responds to clients demoget request with: demoget "filename"
+* If nothing is found, responds with demoget without filename, so client knowns it wasn't found
+*/
 void SV_DemoGet_f( client_t *client )
 {
 	int num, numdemos;
@@ -541,4 +541,35 @@ void SV_DemoGet_f( client_t *client )
 	message[pos] = '\0';
 
 	SV_AddGameCommand( client, message );
+}
+
+/*
+* SV_IsDemoDownloadRequest
+*/
+qboolean SV_IsDemoDownloadRequest( const char *request )
+{
+	const char *ext;
+	const char *demoDir = SV_DEMO_DIR;
+	const size_t demoDirLen = strlen( demoDir );
+
+	if( !request ) { 
+		return qfalse;
+	}
+	if( strlen( request ) <= demoDirLen + 1 + strlen( APP_DEMO_EXTENSION_STR ) ) {
+		// should at least contain demo dir name and demo file extension
+		return qfalse;
+	}
+
+	if( Q_strnicmp( request, demoDir, demoDirLen ) || request[demoDirLen] != '/' ) {
+		// nah, wrong dir
+		return qfalse;
+	}
+
+	ext = COM_FileExtension( request );
+	if( !ext || !*ext || Q_stricmp( ext, APP_DEMO_EXTENSION_STR ) ) {
+		// wrong extension
+		return qfalse;
+	}
+
+	return qtrue;
 }

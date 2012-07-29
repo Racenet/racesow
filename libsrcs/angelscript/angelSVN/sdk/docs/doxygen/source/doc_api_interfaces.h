@@ -12,9 +12,9 @@
  
  - \ref asIScriptGeneric
  - \ref asIScriptObject
- - \ref asIScriptArray
  - \ref asIObjectType
  - \ref asIScriptFunction
+ - \ref asIJITCompiler
  
 \section doc_api_intf_3 Auxiliary interfaces
  

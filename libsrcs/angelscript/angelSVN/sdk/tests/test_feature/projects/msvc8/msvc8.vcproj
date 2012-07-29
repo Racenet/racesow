@@ -191,7 +191,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\add_on\scriptstring\scriptstring.cpp"
+				RelativePath="..\..\source\scriptstring.cpp"
 				>
 			</File>
 			<File
@@ -451,10 +451,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\testbstr2.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\testcdecl_class.cpp"
 				>
 			</File>
@@ -559,15 +555,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\testreturn.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\testreturnd.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\testreturnf.cpp"
+				RelativePath="..\..\source\test_cdecl_return.cpp"
 				>
 			</File>
 			<File
@@ -617,7 +605,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\add_on\scriptstring\scriptstring.h"
+				RelativePath="..\..\source\scriptstring.h"
 				>
 			</File>
 			<File

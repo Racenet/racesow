@@ -54,7 +54,7 @@ class Racesow_Adapter_Abstract
      * @param ...
 	 * @return void
 	 */
-	void playerDisappear(Racesow_Player @player, cString nickName, bool threaded)
+	void playerDisappear(Racesow_Player @player, String nickName, bool threaded)
 	{
 	}
     
@@ -75,7 +75,7 @@ class Racesow_Adapter_Abstract
     void thinkCallbackQueue()
     {
         int command, playerNum, arg2, arg3, arg4, arg5, arg6, arg7;
-        cString result;
+        String result;
         Racesow_Player @player;
         
         if( !RS_PopCallbackQueue( command, playerNum, arg2, arg3, arg4, arg5, arg6, arg7 ) )

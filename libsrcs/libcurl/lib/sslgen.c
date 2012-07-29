@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -32,6 +32,7 @@
    Curl_gtls_ - prefix for GnuTLS ones
    Curl_nss_ - prefix for NSS ones
    Curl_polarssl_ - prefix for PolarSSL ones
+   Curl_cyassl_ - prefix for CyaSSL ones
 
    Note that this source code uses curlssl_* functions, and they are all
    defines/macros #defined by the lib-specific header files.
@@ -42,9 +43,6 @@
 
 #include "setup.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -57,6 +55,8 @@
 #include "nssg.h"   /* NSS versions */
 #include "qssl.h"   /* QSOSSL versions */
 #include "polarssl.h" /* PolarSSL versions */
+#include "axtls.h"  /* axTLS versions */
+#include "cyassl.h"  /* CyaSSL versions */
 #include "sendf.h"
 #include "rawstr.h"
 #include "url.h"
@@ -69,10 +69,10 @@ static bool safe_strequal(char* str1, char* str2)
 {
   if(str1 && str2)
     /* both pointers point to something then compare them */
-    return (bool)(0 != Curl_raw_equal(str1, str2));
+    return (0 != Curl_raw_equal(str1, str2)) ? TRUE : FALSE;
   else
     /* if both pointers are NULL then treat them as equal */
-    return (bool)(!str1 && !str2);
+    return (!str1 && !str2) ? TRUE : FALSE;
 }
 
 bool
@@ -210,7 +210,7 @@ Curl_ssl_connect_nonblocking(struct connectdata *conn, int sockindex,
   /* mark this is being ssl requested from here on. */
   conn->ssl[sockindex].use = TRUE;
   res = curlssl_connect_nonblocking(conn, sockindex, done);
-  if(!res && *done == TRUE)
+  if(!res && *done)
     Curl_pgrsTime(conn->data, TIMER_APPCONNECT); /* SSL is connected */
   return res;
 #else
@@ -291,7 +291,7 @@ void Curl_ssl_delsessionid(struct connectdata *conn, void *ssl_sessionid)
   for(i=0; i< conn->data->set.ssl.numsessions; i++) {
     struct curl_ssl_session *check = &conn->data->state.session[i];
 
-    if (check->sessionid == ssl_sessionid) {
+    if(check->sessionid == ssl_sessionid) {
       kill_session(check);
       break;
     }
@@ -343,14 +343,17 @@ CURLcode Curl_ssl_addsessionid(struct connectdata *conn,
   store->sessionid = ssl_sessionid;
   store->idsize = idsize;
   store->age = data->state.sessionage;    /* set current age */
-  if (store->name)
+  if(store->name)
     /* free it if there's one already present */
     free(store->name);
   store->name = clone_host;               /* clone host name */
   store->remote_port = conn->remote_port; /* port number */
 
-  if(!Curl_clone_ssl_config(&conn->ssl_config, &store->ssl_config))
+  if(!Curl_clone_ssl_config(&conn->ssl_config, &store->ssl_config)) {
+    store->sessionid = NULL; /* let caller free sessionid */
+    free(clone_host);
     return CURLE_OUT_OF_MEMORY;
+  }
 
   return CURLE_OK;
 }
@@ -386,6 +389,9 @@ CURLcode Curl_ssl_shutdown(struct connectdata *conn, int sockindex)
 
   conn->ssl[sockindex].use = FALSE; /* get back to ordinary socket usage */
   conn->ssl[sockindex].state = ssl_connection_none;
+
+  conn->recv[sockindex] = Curl_recv_plain;
+  conn->send[sockindex] = Curl_send_plain;
 
   return CURLE_OK;
 }

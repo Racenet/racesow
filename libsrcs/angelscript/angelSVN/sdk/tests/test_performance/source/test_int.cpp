@@ -75,7 +75,12 @@ void Test()
 {
 	printf("---------------------------------------------\n");
 	printf("%s\n\n", TESTNAME);
-	printf("AngelScript 2.15.0             : 0.4222 secs\n");
+	printf("AngelScript 2.15.0             : .422 secs\n");
+	printf("AngelScript 2.18.0             : .397 secs\n");
+	printf("AngelScript 2.18.1 WIP         : .338 secs\n");
+	printf("AngelScript 2.19.1 WIP         : .348 secs\n");
+	printf("AS 2.20.0 (home)               : .265 secs\n");
+	printf("AS 2.20.3 (home)               : .252 secs\n");
 
 	printf("\nBuilding...\n");
 
@@ -87,6 +92,7 @@ void Test()
 
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script, strlen(script), 0);
+	engine->SetEngineProperty(asEP_BUILD_WITHOUT_LINE_CUES, true);
 	mod->Build();
 
 	asIScriptContext *ctx = engine->CreateContext();

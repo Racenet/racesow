@@ -1,29 +1,29 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include "client.h"
 
 /*
 
-   key up events are sent even if in console mode
+key up events are sent even if in console mode
 
- */
+*/
 
 #define SEMICOLON_BINDNAME	"SEMICOLON"
 
@@ -39,6 +39,8 @@ static qboolean	key_initialized = qfalse;
 
 static char alt_color_escape = '$';
 static dynvar_t *key_colorEscape = NULL;
+
+static cvar_t *in_debug;
 
 static dynvar_get_status_t Key_GetColorEscape_f( void **key )
 {
@@ -204,15 +206,13 @@ static void Key_DelegateCallCharDel( qwchar key );
 static int consolebinded = 0;
 
 /*
-   ===================
-   Key_StringToKeynum
-
-   Returns a key number to be used to index keybindings[] by looking at
-   the given string.  Single ascii characters return themselves, while
-   the K_* names are matched up.
-   ===================
- */
-int Key_StringToKeynum( char *str )
+* Key_StringToKeynum
+* 
+* Returns a key number to be used to index keybindings[] by looking at
+* the given string.  Single ascii characters return themselves, while
+* the K_* names are matched up.
+*/
+int Key_StringToKeynum( const char *str )
 {
 	const keyname_t *kn;
 
@@ -230,14 +230,12 @@ int Key_StringToKeynum( char *str )
 }
 
 /*
-   ===================
-   Key_KeynumToString
-
-   Returns a string (either a single ascii char, or a K_* name) for the
-   given keynum.
-   FIXME: handle quote special (general escape sequence?)
-   ===================
- */
+* Key_KeynumToString
+* 
+* Returns a string (either a single ascii char, or a K_* name) for the
+* given keynum.
+* FIXME: handle quote special (general escape sequence?)
+*/
 const char *Key_KeynumToString( int keynum )
 {
 	const keyname_t *kn;
@@ -261,11 +259,9 @@ const char *Key_KeynumToString( int keynum )
 
 
 /*
-   ===================
-   Key_SetBinding
-   ===================
- */
-void Key_SetBinding( int keynum, char *binding )
+* Key_SetBinding
+*/
+void Key_SetBinding( int keynum, const char *binding )
 {
 	if( keynum == -1 )
 		return;
@@ -291,10 +287,8 @@ void Key_SetBinding( int keynum, char *binding )
 }
 
 /*
-   ===================
-   Key_Unbind_f
-   ===================
- */
+* Key_Unbind_f
+*/
 static void Key_Unbind_f( void )
 {
 	int b;
@@ -328,10 +322,8 @@ static void Key_Unbindall( void )
 
 
 /*
-   ===================
-   Key_Bind_f
-   ===================
- */
+* Key_Bind_f
+*/
 static void Key_Bind_f( void )
 {
 	int i, c, b;
@@ -373,12 +365,10 @@ static void Key_Bind_f( void )
 }
 
 /*
-   ============
-   Key_WriteBindings
-
-   Writes lines containing "bind key value"
-   ============
- */
+* Key_WriteBindings
+* 
+* Writes lines containing "bind key value"
+*/
 void Key_WriteBindings( int file )
 {
 	int i;
@@ -392,11 +382,8 @@ void Key_WriteBindings( int file )
 
 
 /*
-   ============
-   Key_Bindlist_f
-
-   ============
- */
+* Key_Bindlist_f
+*/
 static void Key_Bindlist_f( void )
 {
 	int i;
@@ -407,13 +394,11 @@ static void Key_Bindlist_f( void )
 }
 
 /*
-   ===================
-   Key_IsToggleConsole
-
-   If nothing is bound to toggleconsole, we use default key for it
-   Also toggleconsole is specially handled, so it's never outputed to the console or so
-   ===================
- */
+* Key_IsToggleConsole
+* 
+* If nothing is bound to toggleconsole, we use default key for it
+* Also toggleconsole is specially handled, so it's never outputed to the console or so
+*/
 static qboolean Key_IsToggleConsole( int key )
 {
 	if( key == -1 )
@@ -436,13 +421,11 @@ static qboolean Key_IsToggleConsole( int key )
 }
 
 /*
-   ===================
-   Key_IsNonPrintable
-
-   Called by sys code to avoid garbage if the toggleconsole
-   key happens to be a dead key (like in the German layout)
-   ===================
- */
+* Key_IsNonPrintable
+* 
+* Called by sys code to avoid garbage if the toggleconsole
+* key happens to be a dead key (like in the German layout)
+*/
 qboolean Key_IsNonPrintable (int key)
 {
 	// This may be called before client is initialized. Shouldn't be a problem
@@ -454,10 +437,8 @@ qboolean Key_IsNonPrintable (int key)
 }
 
 /*
-   ===================
-   Key_Init
-   ===================
- */
+* Key_Init
+*/
 void Key_Init( void )
 {
 	int i;
@@ -530,6 +511,8 @@ void Key_Init( void )
 	// wsw : aiwa : create dynvar for alternative color escape character
 	key_colorEscape = Dynvar_Create( "key_colorEscape", qtrue, Key_GetColorEscape_f, Key_SetColorEscape_f );
 
+	in_debug = Cvar_Get( "in_debug", "0", 0 );
+
 	key_initialized = qtrue;
 }
 
@@ -547,13 +530,11 @@ void Key_Shutdown( void )
 }
 
 /*
-   ===================
-   Key_CharEvent
-
-   Called by the system between frames for key down events for standard characters
-   Should NOT be called during an interrupt!
-   ===================
- */
+* Key_CharEvent
+* 
+* Called by the system between frames for key down events for standard characters
+* Should NOT be called during an interrupt!
+*/
 void Key_CharEvent( int key, qwchar charkey )
 {
 	if( Key_IsToggleConsole( key ) )
@@ -583,29 +564,27 @@ void Key_CharEvent( int key, qwchar charkey )
 }
 
 /*
-   ===================
-   Key_MouseEvent
-
-   A wrapper around Key_Event to generate double click events
-   A typical sequence of events will look like this:
-   +MOUSE1 - user pressed button
-   -MOUSE1 - user released button
-   +MOUSE1 - user pressed button  (must be within 480 ms or so of the previous down event)
-   +MOUSE1DBLCLK - inserted by Key_MouseEvent
-   -MOUSE1DBLCLK - inserted by Key_MouseEvent
-   -MOUSE1 - user released button
-   (This order is not final! We might want to suppress the second pair of 
-   mouse1 down/up events, or make +MOUSE1DBLCLK come before +MOUSE1)
-   ===================
+* Key_MouseEvent
+* 
+* A wrapper around Key_Event to generate double click events
+* A typical sequence of events will look like this:
+* +MOUSE1 - user pressed button
+* -MOUSE1 - user released button
+* +MOUSE1 - user pressed button  (must be within 480 ms or so of the previous down event)
+* +MOUSE1DBLCLK - inserted by Key_MouseEvent
+* -MOUSE1DBLCLK - inserted by Key_MouseEvent
+* -MOUSE1 - user released button
+* (This order is not final! We might want to suppress the second pair of 
+* mouse1 down/up events, or make +MOUSE1DBLCLK come before +MOUSE1)
 */
 void Key_MouseEvent( int key, qboolean down, unsigned time )
 {
 	static unsigned int last_button1_click = 0;
 	// use a lower delay than XP default (480 ms) because we don't support width/height yet
 	const unsigned int doubleclick_time = 350;	// milliseconds
-//	static int last_button1_x, last_button1_y; // TODO
-//	const int doubleclick_width = 4;	// TODO
-//	const int doubleclick_height = 4;	// TODO
+	//	static int last_button1_x, last_button1_y; // TODO
+	//	const int doubleclick_width = 4;	// TODO
+	//	const int doubleclick_height = 4;	// TODO
 
 	if( key == K_MOUSE1 )
 	{
@@ -634,13 +613,11 @@ void Key_MouseEvent( int key, qboolean down, unsigned time )
 }
 
 /*
-   ===================
-   Key_Event
-
-   Called by the system between frames for both key up and key down events
-   Should NOT be called during an interrupt!
-   ===================
- */
+* Key_Event
+* 
+* Called by the system between frames for both key up and key down events
+* Should NOT be called during an interrupt!
+*/
 void Key_Event( int key, qboolean down, unsigned time )
 {
 	char *kb;
@@ -654,10 +631,10 @@ void Key_Event( int key, qboolean down, unsigned time )
 		if( key_repeats[key] > 1 )
 		{
 			if( ( key != K_BACKSPACE && key != K_DEL
-			     && key != K_LEFTARROW && key != K_RIGHTARROW
-			     && key != K_UPARROW && key != K_DOWNARROW
-			     && key != K_PGUP && key != K_PGDN && ( key < 32 || key > 126 || key == '`' ) )
-			   || cls.key_dest == key_game )
+				&& key != K_LEFTARROW && key != K_RIGHTARROW
+				&& key != K_UPARROW && key != K_DOWNARROW
+				&& key != K_PGUP && key != K_PGDN && ( key < 32 || key > 126 || key == '`' ) )
+				|| cls.key_dest == key_game )
 				return;
 		}
 	}
@@ -674,7 +651,7 @@ void Key_Event( int key, qboolean down, unsigned time )
 		return;
 	}
 #endif
-	
+
 #if defined ( __MACOSX__ )
 	// quit the game when Control + q is pressed
 	if( key == 'q' && down && keydown[K_COMMAND] )
@@ -737,14 +714,18 @@ void Key_Event( int key, qboolean down, unsigned time )
 	// if not a consolekey, send to the interpreter no matter what mode is
 	//
 	if( ( cls.key_dest == key_menu && menubound[key] )
-	   || ( cls.key_dest == key_console && !consolekeys[key] )
-	   || ( cls.key_dest == key_game && ( cls.state == CA_ACTIVE || !consolekeys[key] ) )
-	   || ( cls.key_dest == key_message && ( key >= K_F1 && key <= K_F15 ) ) )
+		|| ( cls.key_dest == key_console && !consolekeys[key] )
+		|| ( cls.key_dest == key_game && ( cls.state == CA_ACTIVE || !consolekeys[key] ) )
+		|| ( cls.key_dest == key_message && ( key >= K_F1 && key <= K_F15 ) ) )
 	{
 		kb = keybindings[key];
 
 		if( kb )
 		{
+			if( in_debug && in_debug->integer ) {
+				Com_Printf( "key:%i down:%i time:%i %s\n", key, down, time, kb );
+			}
+
 			if( kb[0] == '+' )
 			{ // button commands add keynum and time as a parm
 				if( down )
@@ -811,10 +792,8 @@ void Key_Event( int key, qboolean down, unsigned time )
 }
 
 /*
-   ===================
-   Key_ClearStates
-   ===================
- */
+* Key_ClearStates
+*/
 void Key_ClearStates( void )
 {
 	int i;
@@ -832,20 +811,16 @@ void Key_ClearStates( void )
 
 
 /*
-   ===================
-   Key_GetBindingBuf
-   ===================
- */
+* Key_GetBindingBuf
+*/
 const char *Key_GetBindingBuf( int binding )
 {
 	return keybindings[binding];
 }
 
 /*
-   ===================
-   Key_IsDown
-   ===================
- */
+* Key_IsDown
+*/
 qboolean Key_IsDown( int keynum )
 {
 	if( keynum < 0 || keynum > 255 )
@@ -863,10 +838,8 @@ static key_delegates_t key_delegate_stack[32];
 static int key_delegate_stack_index = 0;
 
 /*
-   ===================
-   Key_DelegatePush
-   ===================
- */
+* Key_DelegatePush
+*/
 keydest_t Key_DelegatePush( key_delegate_f key_del, key_char_delegate_f char_del )
 {
 	assert( key_delegate_stack_index < sizeof( key_delegate_stack ) / sizeof( key_delegate_f ) );
@@ -884,10 +857,8 @@ keydest_t Key_DelegatePush( key_delegate_f key_del, key_char_delegate_f char_del
 }
 
 /*
-   ===================
-   Key_DelegatePop
-   ===================
- */
+* Key_DelegatePop
+*/
 void Key_DelegatePop( keydest_t next_dest )
 {
 	assert( key_delegate_stack_index > 0 );
@@ -896,10 +867,8 @@ void Key_DelegatePop( keydest_t next_dest )
 }
 
 /*
-   ===================
-   Key_DelegateCallKeyDel
-   ===================
- */
+* Key_DelegateCallKeyDel
+*/
 static void Key_DelegateCallKeyDel( int key )
 {
 	assert( key_delegate_stack_index > 0 );
@@ -907,10 +876,8 @@ static void Key_DelegateCallKeyDel( int key )
 }
 
 /*
-   ===================
-   Key_DelegateCallCharDel
-   ===================
- */
+* Key_DelegateCallCharDel
+*/
 static void Key_DelegateCallCharDel( qwchar key )
 {
 	assert( key_delegate_stack_index > 0 );

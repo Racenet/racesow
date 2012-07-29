@@ -42,18 +42,6 @@ static int GLimp_InitGL( void );
 
 glwstate_t glw_state;
 
-static qboolean VerifyDriver( void )
-{
-	char buffer[1024];
-
-	Q_strncpyz( buffer, (const char *) qglGetString( GL_RENDERER ), sizeof( buffer ) );
-	Q_strlwr( buffer );
-	if( strcmp( buffer, "gdi generic" ) == 0 )
-		if( !glw_state.mcd_accelerated )
-			return qfalse;
-	return qtrue;
-}
-
 /*
 ** VID_CreateWindow
 */
@@ -61,26 +49,86 @@ static qboolean VerifyDriver( void )
 
 #pragma warning( disable : 4055 )
 
-static qboolean VID_CreateWindow( int *width, int *height, qboolean fullscreen )
+static void VID_SetWindowSize( qboolean fullscreen )
 {
 	RECT r;
-	cvar_t *vid_xpos, *vid_ypos;
 	int stylebits;
-	int x, y, w, h;
 	int exstyle;
+	int x = glw_state.win_x, y = glw_state.win_y;
+	int width = glState.width, height = glState.height;
+	HWND parentHWND = glw_state.parenthWnd;
+
+	if( fullscreen )
+	{
+		exstyle = WS_EX_TOPMOST;
+		stylebits = ( WS_POPUP|WS_VISIBLE );
+		parentHWND = NULL;
+	}
+	else if( parentHWND )
+	{
+		exstyle = 0;
+		stylebits = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
+	}
+	else
+	{
+		exstyle = 0;
+		stylebits = WINDOW_STYLE;
+	}
+
+	r.left = 0;
+	r.top = 0;
+	r.right  = width;
+	r.bottom = height;
+
+	AdjustWindowRect( &r, stylebits, FALSE );
+
+	width = r.right - r.left;
+	height = r.bottom - r.top;
+
+	if( fullscreen )
+	{
+		x = 0;
+		y = 0;
+	}
+	else if( parentHWND )
+	{
+		RECT parentWindowRect;
+
+		GetWindowRect( parentHWND, &parentWindowRect );
+
+		// share centre with the parent window
+		x = (parentWindowRect.right - parentWindowRect.left - width) / 2;
+		y = (parentWindowRect.bottom - parentWindowRect.top - height) / 2;
+	}
+
+	SetActiveWindow( glw_state.hWnd );
+
+	SetWindowLong( glw_state.hWnd, GWL_EXSTYLE, exstyle );
+	SetWindowLong( glw_state.hWnd, GWL_STYLE, stylebits );
+
+	SetWindowPos( glw_state.hWnd, HWND_TOP, x, y, width, height, SWP_FRAMECHANGED );
+
+	ShowWindow( glw_state.hWnd, SW_SHOW );
+	UpdateWindow( glw_state.hWnd );
+
+	SetForegroundWindow( glw_state.hWnd );
+	SetFocus( glw_state.hWnd );
+}
+
+static qboolean VID_CreateWindow( void )
+{
 #define WITH_UTF8 // FIXME: turn non-Unicode code into a runtime fallback for Win9x
 #ifndef WITH_UTF8
 	WNDCLASS  wc;
 #else
 	WNDCLASSW wc;
+	qboolean fullscreen = glState.fullScreen;
 	HWND parentHWND = glw_state.parenthWnd;
 
 	/* determine buffer size required for the unicode string */
 	WCHAR windowClassName[sizeof(WINDOW_CLASS_NAME)] = L"";
 	MultiByteToWideChar( CP_ACP, 0, WINDOW_CLASS_NAME, -1, windowClassName, sizeof( windowClassName )-1 );
 #endif
-
-	assert( width && height );
 
 	/* Register the frame class */
 	wc.style         = 0;
@@ -101,74 +149,12 @@ static qboolean VID_CreateWindow( int *width, int *height, qboolean fullscreen )
 #endif
 		Com_Error( ERR_FATAL, "Couldn't register window class" );
 
-	r.left = 0;
-	r.top = 0;
-	r.right  = *width;
-	r.bottom = *height;
-
-	if( fullscreen )
-	{
-		exstyle = WS_EX_TOPMOST;
-		stylebits = ( WS_POPUP|WS_VISIBLE );
-		parentHWND = NULL;
-	}
-	else if( parentHWND )
-	{
-		RECT parentWindowRect;
-
-		GetWindowRect( parentHWND, &parentWindowRect );
-		r.right = /*min( *width, (parentWindowRect.right - parentWindowRect.left) )*/parentWindowRect.right - parentWindowRect.left;
-		r.bottom = /*min( *height, (parentWindowRect.bottom - parentWindowRect.top) )*/parentWindowRect.bottom - parentWindowRect.top;
-
-		exstyle = 0;
-		stylebits = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
-	}
-	else
-	{
-		exstyle = 0;
-		stylebits = WINDOW_STYLE;
-	}
-
-	AdjustWindowRect( &r, stylebits, FALSE );
-
-	w = r.right - r.left;
-	h = r.bottom - r.top;
-
-	if( fullscreen )
-	{
-		x = 0;
-		y = 0;
-	}
-	else if( parentHWND )
-	{
-		RECT parentWindowRect;
-
-		*width = w;
-		*height = h;
-
-		GetWindowRect( parentHWND, &parentWindowRect );
-
-		// share centre with the parent window
-		x = (parentWindowRect.right - parentWindowRect.left - w) / 2;
-		y = (parentWindowRect.bottom - parentWindowRect.top - h) / 2;
-
-		Cvar_ForceSet( "vid_xpos", va( "%i", x ) );
-		Cvar_ForceSet( "vid_ypos", va( "%y", y ) );
-	}
-	else
-	{
-		vid_xpos = Cvar_Get( "vid_xpos", "0", 0 );
-		vid_ypos = Cvar_Get( "vid_ypos", "0", 0 );
-		x = vid_xpos->integer;
-		y = vid_ypos->integer;
-	}
-
 	glw_state.hWnd = CreateWindowEx(
-	        exstyle,
+	        0,
 	        WINDOW_CLASS_NAME,
 	        APPLICATION,
-	        stylebits,
-	        x, y, w, h,
+			0,
+	        0, 0, 0, 0,
 	        parentHWND,
 	        NULL,
 	        glw_state.hInstance,
@@ -177,8 +163,7 @@ static qboolean VID_CreateWindow( int *width, int *height, qboolean fullscreen )
 	if( !glw_state.hWnd )
 		Com_Error( ERR_FATAL, "Couldn't create window" );
 
-	ShowWindow( glw_state.hWnd, SW_SHOW );
-	UpdateWindow( glw_state.hWnd );
+	VID_SetWindowSize( fullscreen );
 
 	// init all the gl stuff for the window
 	if( !GLimp_InitGL() )
@@ -187,57 +172,168 @@ static qboolean VID_CreateWindow( int *width, int *height, qboolean fullscreen )
 		return qfalse;
 	}
 
-	SetForegroundWindow( glw_state.hWnd );
-	SetFocus( glw_state.hWnd );
-
 	if( glw_state.parenthWnd )
 		PostMessage( glw_state.parenthWnd, UWM_APPACTIVE, WA_ACTIVE, 0 );
-
-	// let the sound and input subsystems know about the new window
-	VID_NewWindow( *width, *height );
 
 	return qtrue;
 }
 
-
 /*
-** GLimp_GetCurrentMode
+** VID_SetFullscreenMode
 */
-int GLimp_GetCurrentMode( void )
+qboolean VID_SetFullscreenMode( qboolean fullscreen )
 {
-	DEVMODE dm;
-		
-	memset( &dm, 0, sizeof( dm ) );
-	dm.dmSize = sizeof( dm );
+	// do a CDS if needed
+	if( fullscreen )
+	{
+		int a;
+		DEVMODE dm;
 
-	EnumDisplaySettings( NULL, ENUM_CURRENT_SETTINGS, &dm );
+		Com_DPrintf( "...attempting fullscreen\n" );
 
-	return VID_GetModeNum( dm.dmPelsWidth, dm.dmPelsHeight );
+		memset( &dm, 0, sizeof( dm ) );
+
+		dm.dmSize = sizeof( dm );
+
+		dm.dmPelsWidth  = glState.width;
+		dm.dmPelsHeight = glState.height;
+		dm.dmFields     = DM_PELSWIDTH | DM_PELSHEIGHT;
+
+		if( r_colorbits->integer != 0 )
+		{
+			dm.dmBitsPerPel = r_colorbits->integer;
+			dm.dmFields |= DM_BITSPERPEL;
+			Com_DPrintf( "...using r_bitdepth of %d\n", dm.dmBitsPerPel );
+		}
+		else
+		{
+			HDC hdc = GetDC( NULL );
+			int bitspixel = GetDeviceCaps( hdc, BITSPIXEL );
+
+			Com_DPrintf( "...using desktop display depth of %d\n", bitspixel );
+
+			ReleaseDC( 0, hdc );
+		}
+
+		if( vid_displayfrequency->integer > 0 )
+		{
+			dm.dmFields |= DM_DISPLAYFREQUENCY;
+			dm.dmDisplayFrequency = vid_displayfrequency->integer;
+			Com_DPrintf( "...using display frequency %i\n", dm.dmDisplayFrequency );
+		}
+
+		Com_DPrintf( "...calling CDS: " );
+		a = ChangeDisplaySettings( &dm, CDS_FULLSCREEN );
+		if( a == DISP_CHANGE_SUCCESSFUL )
+		{
+			Com_DPrintf( "ok\n" );
+
+			if( glw_state.hWnd ) {
+				VID_SetWindowSize( qtrue );
+			}
+			return qtrue;
+		}
+		else
+		{
+			Com_DPrintf( "failed: %i\n", a );
+
+			Com_DPrintf( "...calling CDS assuming dual monitors:" );
+
+			dm.dmPelsWidth = glState.width * 2;
+			dm.dmPelsHeight = glState.height;
+			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
+
+			if( r_colorbits->integer != 0 )
+			{
+				dm.dmBitsPerPel = r_colorbits->integer;
+				dm.dmFields |= DM_BITSPERPEL;
+				Com_DPrintf( "...using r_bitdepth of %d\n", dm.dmBitsPerPel );
+			}
+
+			if( vid_displayfrequency->integer > 0 )
+			{
+				dm.dmFields |= DM_DISPLAYFREQUENCY;
+				dm.dmDisplayFrequency = vid_displayfrequency->integer;
+				Com_DPrintf( "...using display frequency %i\n", dm.dmDisplayFrequency );
+			}
+
+			/*
+			** our first CDS failed, so maybe we're running on some weird dual monitor
+			** system
+			*/
+			if( ChangeDisplaySettings( &dm, CDS_FULLSCREEN ) != DISP_CHANGE_SUCCESSFUL )
+			{
+				Com_DPrintf( " failed\n" );
+
+				Com_DPrintf( "...setting windowed mode\n" );
+
+				ChangeDisplaySettings( 0, 0 );
+
+				if( glw_state.hWnd ) {
+					VID_SetWindowSize( qfalse );
+				}
+				return qfalse;
+			}
+			else
+			{
+				Com_DPrintf( " ok\n" );
+
+				if( glw_state.hWnd ) {
+					VID_SetWindowSize( qtrue );
+				}
+				return qtrue;
+			}
+		}
+	}
+	else
+	{
+		Com_DPrintf( "...setting windowed mode\n" );
+
+		ChangeDisplaySettings( 0, 0 );
+
+		if( glw_state.hWnd ) {
+			VID_SetWindowSize( qfalse );
+		}
+	}
+
+	return qfalse;
 }
 
 /*
 ** GLimp_SetMode
 */
-int GLimp_SetMode( int mode, qboolean fullscreen )
+rserr_t GLimp_SetMode( int x, int y, int width, int height, qboolean fullscreen, qboolean wideScreen )
 {
-	int width, height;
 	const char *win_fs[] = { "W", "FS" };
-	qboolean wideScreen;
 
-	// disable fullscreen if rendering to a parent window
-	if( glw_state.parenthWnd )
-	{
-		fullscreen = qfalse;
+	// check whether we can toggle fullscreen without a vid_restart
+	if( glw_state.hWnd ) {
+		if( glState.width == width && glState.height == height && fullscreen != glState.fullScreen ) {
+			glState.fullScreen = VID_SetFullscreenMode( fullscreen );
+
+			if( glState.fullScreen == fullscreen ) {
+				VID_SetWindowSize( fullscreen );
+				return rserr_ok;
+			}
+
+			return rserr_restart_required;
+		}
 	}
 
 	Com_Printf( "Initializing OpenGL display\n" );
 
-	Com_Printf( "...setting mode %d:", mode );
+	Com_Printf( "...setting mode:" );
 
-	if( !VID_GetModeInfo( &width, &height, &wideScreen, mode ) )
-	{
-		Com_Printf( " invalid mode\n" );
-		return rserr_invalid_mode;
+	// disable fullscreen if rendering to a parent window
+	if( glw_state.parenthWnd ) {
+		RECT parentWindowRect;
+
+		fullscreen = qfalse;
+		wideScreen = qfalse;
+
+		GetWindowRect( glw_state.parenthWnd, &parentWindowRect );
+		width = parentWindowRect.right - parentWindowRect.left;
+		height = parentWindowRect.bottom - parentWindowRect.top;
 	}
 
 	Com_Printf( " %d %d %s\n", width, height, win_fs[fullscreen] );
@@ -248,123 +344,19 @@ int GLimp_SetMode( int mode, qboolean fullscreen )
 		GLimp_Shutdown();
 	}
 
+	glw_state.win_x = x;
+	glw_state.win_y = y;
+
 	glState.width = width;
 	glState.height = height;
 	glState.wideScreen = wideScreen;
-	glState.fullScreen = fullscreen;
+	glState.fullScreen = VID_SetFullscreenMode( fullscreen );
 
-	// do a CDS if needed
-	if( fullscreen )
-	{
-		DEVMODE dm;
-
-		Com_Printf( "...attempting fullscreen\n" );
-
-		memset( &dm, 0, sizeof( dm ) );
-
-		dm.dmSize = sizeof( dm );
-
-		dm.dmPelsWidth  = width;
-		dm.dmPelsHeight = height;
-		dm.dmFields     = DM_PELSWIDTH | DM_PELSHEIGHT;
-
-		if( r_colorbits->integer != 0 )
-		{
-			dm.dmBitsPerPel = r_colorbits->integer;
-			dm.dmFields |= DM_BITSPERPEL;
-			Com_Printf( "...using r_bitdepth of %d\n", dm.dmBitsPerPel );
-		}
-		else
-		{
-			HDC hdc = GetDC( NULL );
-			int bitspixel = GetDeviceCaps( hdc, BITSPIXEL );
-
-			Com_Printf( "...using desktop display depth of %d\n", bitspixel );
-
-			ReleaseDC( 0, hdc );
-		}
-
-		if( vid_displayfrequency->integer > 0 )
-		{
-			dm.dmFields |= DM_DISPLAYFREQUENCY;
-			dm.dmDisplayFrequency = vid_displayfrequency->integer;
-			Com_Printf( "...using display frequency %i\n", dm.dmDisplayFrequency );
-		}
-
-		Com_Printf( "...calling CDS: " );
-		if( ChangeDisplaySettings( &dm, CDS_FULLSCREEN ) == DISP_CHANGE_SUCCESSFUL )
-		{
-			Com_Printf( "ok\n" );
-
-			if( !VID_CreateWindow( &glState.width, &glState.height, qtrue ) )
-				return rserr_invalid_mode;
-
-			return rserr_ok;
-		}
-		else
-		{
-			Com_Printf( "failed\n" );
-
-			Com_Printf( "...calling CDS assuming dual monitors:" );
-
-			dm.dmPelsWidth = width * 2;
-			dm.dmPelsHeight = height;
-			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
-
-			if( r_colorbits->integer != 0 )
-			{
-				dm.dmBitsPerPel = r_colorbits->integer;
-				dm.dmFields |= DM_BITSPERPEL;
-				Com_Printf( "...using r_bitdepth of %d\n", dm.dmBitsPerPel );
-			}
-
-			if( vid_displayfrequency->integer > 0 )
-			{
-				dm.dmFields |= DM_DISPLAYFREQUENCY;
-				dm.dmDisplayFrequency = vid_displayfrequency->integer;
-				Com_Printf( "...using display frequency %i\n", dm.dmDisplayFrequency );
-			}
-
-			/*
-			** our first CDS failed, so maybe we're running on some weird dual monitor
-			** system
-			*/
-			if( ChangeDisplaySettings( &dm, CDS_FULLSCREEN ) != DISP_CHANGE_SUCCESSFUL )
-			{
-				Com_Printf( " failed\n" );
-
-				Com_Printf( "...setting windowed mode\n" );
-
-				ChangeDisplaySettings( 0, 0 );
-
-				glState.fullScreen = qfalse;
-
-				if( !VID_CreateWindow( &glState.width, &glState.height, qfalse ) )
-					return rserr_invalid_mode;
-				return rserr_invalid_fullscreen;
-			}
-			else
-			{
-				Com_Printf( " ok\n" );
-				if( !VID_CreateWindow( &glState.width, &glState.height, qtrue ) )
-					return rserr_invalid_mode;
-
-				return rserr_ok;
-			}
-		}
-	}
-	else
-	{
-
-		Com_Printf( "...setting windowed mode\n" );
-
-		ChangeDisplaySettings( 0, 0 );
-
-		if( !VID_CreateWindow( &glState.width, &glState.height, qfalse ) )
-			return rserr_invalid_mode;
+	if( !VID_CreateWindow() ) {
+		return rserr_invalid_mode;
 	}
 
-	return rserr_ok;
+	return ( fullscreen == glState.fullScreen ? rserr_ok : rserr_invalid_fullscreen );
 }
 
 /*
@@ -409,6 +401,12 @@ void GLimp_Shutdown( void )
 		ChangeDisplaySettings( 0, 0 );
 		glState.fullScreen = qfalse;
 	}
+
+	glw_state.win_x = 0;
+	glw_state.win_y = 0;
+
+	glState.width = 0;
+	glState.height = 0;
 }
 
 
@@ -421,42 +419,6 @@ void GLimp_Shutdown( void )
 */
 int GLimp_Init( void *hinstance, void *wndproc, void *parenthWnd )
 {
-#define OSR2_BUILD_NUMBER 1111
-
-	OSVERSIONINFO vinfo;
-
-	vinfo.dwOSVersionInfoSize = sizeof( vinfo );
-
-	glw_state.allowdisplaydepthchange = qfalse;
-
-	if( GetVersionEx( &vinfo ) )
-	{
-		if( vinfo.dwMajorVersion > 4 )
-		{
-			glw_state.allowdisplaydepthchange = qtrue;
-		}
-		else if( vinfo.dwMajorVersion == 4 )
-		{
-			if( vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT )
-			{
-				glw_state.allowdisplaydepthchange = qtrue;
-			}
-			else if( vinfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS )
-			{
-				if( LOWORD( vinfo.dwBuildNumber ) >= OSR2_BUILD_NUMBER )
-				{
-					glw_state.allowdisplaydepthchange = qtrue;
-				}
-			}
-		}
-	}
-	else
-	{
-		Com_Printf( "GLimp_Init() - GetVersionEx failed\n" );
-		MessageBox( NULL, "GLimp_Init() - GetVersionEx failed\n", "Error", 0 /* MB_OK */ );
-		return qfalse;
-	}
-
 	// save off hInstance and wndproc
 	glw_state.hInstance = ( HINSTANCE ) hinstance;
 	glw_state.wndproc = wndproc;
@@ -505,7 +467,7 @@ static int GLimp_InitGL( void )
 	*/
 	if( stereo->integer != 0 )
 	{
-		Com_Printf( "...attempting to use stereo\n" );
+		Com_DPrintf( "...attempting to use stereo\n" );
 		pfd.dwFlags |= PFD_STEREO;
 		glState.stereoEnabled = qtrue;
 	}
@@ -513,14 +475,6 @@ static int GLimp_InitGL( void )
 	{
 		glState.stereoEnabled = qfalse;
 	}
-
-	/*
-	** figure out if we're running on a minidriver or not
-	*/
-	if( strstr( gl_driver->string, "opengl32" ) != 0 )
-		glw_state.minidriver = qfalse;
-	else
-		glw_state.minidriver = qtrue;
 
 	/*
 	** Get a DC for the specified window
@@ -534,48 +488,17 @@ static int GLimp_InitGL( void )
 		return qfalse;
 	}
 
-	if( glw_state.minidriver )
+	if( ( pixelformat = ChoosePixelFormat( glw_state.hDC, &pfd ) ) == 0 )
 	{
-		if( ( pixelformat = qwglChoosePixelFormat( glw_state.hDC, &pfd ) ) == 0 )
-		{
-			Com_Printf( "GLimp_Init() - qwglChoosePixelFormat failed\n" );
-			return qfalse;
-		}
-		if( qwglSetPixelFormat( glw_state.hDC, pixelformat, &pfd ) == FALSE )
-		{
-			Com_Printf( "GLimp_Init() - qwglSetPixelFormat failed\n" );
-			return qfalse;
-		}
-		qwglDescribePixelFormat( glw_state.hDC, pixelformat, sizeof( pfd ), &pfd );
+		Com_Printf( "GLimp_Init() - ChoosePixelFormat failed\n" );
+		return qfalse;
 	}
-	else
+	if( SetPixelFormat( glw_state.hDC, pixelformat, &pfd ) == FALSE )
 	{
-		if( ( pixelformat = ChoosePixelFormat( glw_state.hDC, &pfd ) ) == 0 )
-		{
-			Com_Printf( "GLimp_Init() - ChoosePixelFormat failed\n" );
-			return qfalse;
-		}
-		if( SetPixelFormat( glw_state.hDC, pixelformat, &pfd ) == FALSE )
-		{
-			Com_Printf( "GLimp_Init() - SetPixelFormat failed\n" );
-			return qfalse;
-		}
-		DescribePixelFormat( glw_state.hDC, pixelformat, sizeof( pfd ), &pfd );
-
-		if( !( pfd.dwFlags & PFD_GENERIC_ACCELERATED ) )
-		{
-			extern cvar_t *r_allow_software;
-
-			if( r_allow_software->integer )
-				glw_state.mcd_accelerated = qtrue;
-			else
-				glw_state.mcd_accelerated = qfalse;
-		}
-		else
-		{
-			glw_state.mcd_accelerated = qtrue;
-		}
+		Com_Printf( "GLimp_Init() - SetPixelFormat failed\n" );
+		return qfalse;
 	}
+	DescribePixelFormat( glw_state.hDC, pixelformat, sizeof( pfd ), &pfd );
 
 	/*
 	** report if stereo is desired but unavailable
@@ -600,12 +523,6 @@ static int GLimp_InitGL( void )
 	if( !qwglMakeCurrent( glw_state.hDC, glw_state.hGLRC ) )
 	{
 		Com_Printf( "GLimp_Init() - qwglMakeCurrent failed\n" );
-		goto fail;
-	}
-
-	if( !VerifyDriver() )
-	{
-		Com_Printf( "GLimp_Init() - no hardware acceleration detected\n" );
 		goto fail;
 	}
 
@@ -664,16 +581,6 @@ void GLimp_SetGammaRamp( size_t stride, unsigned short *ramp )
 */
 void GLimp_BeginFrame( void )
 {
-	if( r_colorbits->modified )
-	{
-		if( r_colorbits->integer != 0 && !glw_state.allowdisplaydepthchange )
-		{
-			Cvar_SetValue( "r_colorbits", 0 );
-			Com_Printf( "r_colorbits requires Win95 OSR2.x or WinNT 4.x\n" );
-		}
-		r_colorbits->modified = qfalse;
-	}
-
 	if( glState.cameraSeparation < 0 && glState.stereoEnabled )
 	{
 		qglDrawBuffer( GL_BACK_LEFT );
@@ -722,7 +629,7 @@ void GLimp_AppActivate( qboolean active, qboolean destroy )
 	}
 	else
 	{
-		if( vid_fullscreen->integer )
+		if( glState.fullScreen )
 		{
 			Cvar_Set( "gl_drawbuffer", "GL_NONE" );
 			ShowWindow( glw_state.hWnd, SW_MINIMIZE );

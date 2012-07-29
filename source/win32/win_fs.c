@@ -1,21 +1,21 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 #include "../qcommon/qcommon.h"
 
@@ -35,10 +35,8 @@ static size_t findpath_size = 0;
 static int findhandle = -1;
 
 /*
-   =================
-   CompareAttributes
-   =================
- */
+* CompareAttributes
+*/
 static qboolean CompareAttributes( unsigned found, unsigned musthave, unsigned canthave )
 {
 	if( ( found & _A_RDONLY ) && ( canthave & SFF_RDONLY ) )
@@ -67,10 +65,8 @@ static qboolean CompareAttributes( unsigned found, unsigned musthave, unsigned c
 }
 
 /*
-   =================
-   Sys_FS_FindFirst
-   =================
- */
+* Sys_FS_FindFirst
+*/
 const char *Sys_FS_FindFirst( const char *path, unsigned musthave, unsigned canthave )
 {
 	size_t size;
@@ -93,7 +89,7 @@ const char *Sys_FS_FindFirst( const char *path, unsigned musthave, unsigned cant
 		return NULL;
 
 	if( strcmp( findinfo.name, "." ) && strcmp( findinfo.name, ".." ) &&
-	   CompareAttributes( findinfo.attrib, musthave, canthave ) )
+		CompareAttributes( findinfo.attrib, musthave, canthave ) )
 	{
 		size = sizeof( char ) * ( strlen( findbase ) + 1 + strlen( findinfo.name ) + 1 );
 		if( findpath_size < size )
@@ -112,10 +108,8 @@ const char *Sys_FS_FindFirst( const char *path, unsigned musthave, unsigned cant
 }
 
 /*
-   =================
-   Sys_FS_FindNext
-   =================
- */
+* Sys_FS_FindNext
+*/
 const char *Sys_FS_FindNext( unsigned musthave, unsigned canthave )
 {
 	size_t size;
@@ -130,7 +124,7 @@ const char *Sys_FS_FindNext( unsigned musthave, unsigned canthave )
 	while( _findnext( findhandle, &findinfo ) != -1 )
 	{
 		if( strcmp( findinfo.name, "." ) && strcmp( findinfo.name, ".." ) &&
-		   CompareAttributes( findinfo.attrib, musthave, canthave ) )
+			CompareAttributes( findinfo.attrib, musthave, canthave ) )
 		{
 			size = sizeof( char ) * ( strlen( findbase ) + 1 + strlen( findinfo.name ) + 1 );
 			if( findpath_size < size )
@@ -150,10 +144,8 @@ const char *Sys_FS_FindNext( unsigned musthave, unsigned canthave )
 }
 
 /*
-   =================
-   Sys_FS_FindClose
-   =================
- */
+* Sys_FS_FindClose
+*/
 void Sys_FS_FindClose( void )
 {
 	assert( findbase );
@@ -176,18 +168,16 @@ void Sys_FS_FindClose( void )
 }
 
 /*
-   =================
-   Sys_FS_GetHomeDirectory
-   =================
- */
+* Sys_FS_GetHomeDirectory
+*/
 const char *Sys_FS_GetHomeDirectory( void )
 {
 	static char home[MAX_PATH] = { '\0' };
 #ifndef SHGetFolderPath
 	HINSTANCE shFolderDll = LoadLibrary( "shfolder.dll" );
 
-    if( !shFolderDll )
-	    shFolderDll = LoadLibrary( "shell32.dll" );
+	if( !shFolderDll )
+		shFolderDll = LoadLibrary( "shell32.dll" );
 
 	SHGetFolderPath = GetProcAddress( shFolderDll, "SHGetFolderPathA" );
 	if( SHGetFolderPath )
@@ -195,16 +185,14 @@ const char *Sys_FS_GetHomeDirectory( void )
 
 	FreeLibrary( shFolderDll );
 #else
-    SHGetFolderPath( 0, CSIDL_APPDATA, 0, 0, home );
+	SHGetFolderPath( 0, CSIDL_APPDATA, 0, 0, home );
 #endif
 	return (home[0] == '\0' ? NULL : COM_SanitizeFilePath( home ) );
 }
 
 /*
-   =================
-   Sys_FS_LockFile
-   =================
- */
+* Sys_FS_LockFile
+*/
 void *Sys_FS_LockFile( const char *path )
 {
 	HANDLE handle;
@@ -216,31 +204,57 @@ void *Sys_FS_LockFile( const char *path )
 }
 
 /*
-   =================
-   Sys_FS_UnlockFile
-   =================
- */
+* Sys_FS_UnlockFile
+*/
 void Sys_FS_UnlockFile( void *handle )
 {
 	CloseHandle( (HANDLE)handle );
 }
 
 /*
-   =================
-   Sys_FS_CreateDirectory
-   =================
- */
+* Sys_FS_CreateDirectory
+*/
 qboolean Sys_FS_CreateDirectory( const char *path )
 {
 	return ( !_mkdir( path ) );
 }
 
 /*
-   =================
-   Sys_FS_RemoveDirectory
-   =================
- */
+* Sys_FS_RemoveDirectory
+*/
 qboolean Sys_FS_RemoveDirectory( const char *path )
 {
 	return ( !_rmdir( path ) );
+}
+
+/*
+* Sys_FS_FileMTime
+*/
+time_t Sys_FS_FileMTime( const char *filename )
+{
+	HANDLE hFile;
+	FILETIME ft;
+	time_t time = 0;
+
+	hFile = CreateFile( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+	if( hFile == INVALID_HANDLE_VALUE ) {
+		// the file doesn't exist
+		return 0;
+	}
+
+    // retrieve the last-write file time for the file
+	if( GetFileTime( hFile, NULL, NULL, &ft ) ) {
+		ULARGE_INTEGER ull;
+
+		// FILETIME is the number of 100-nanosecond intervals since January 1, 1601.
+		// time_t is the number of 1-second intervals since January 1, 1970.
+
+		ull.LowPart = ft.dwLowDateTime;
+		ull.HighPart = ft.dwHighDateTime;
+		time = ull.QuadPart / 10000000ULL - 11644473600ULL;
+	}
+
+	CloseHandle( hFile );
+
+	return time;
 }

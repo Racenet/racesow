@@ -1,5 +1,22 @@
 /*
- */
+Copyright (C) 2007 German Garcia
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
 
 // gs_players.c	-	player model animations
 
@@ -32,9 +49,9 @@ typedef struct
 	int animState[PMODEL_PARTS];
 } pm_anim_t;
 
-//=================
-//GS_SetBaseAnimUpper
-//=================
+/*
+* GS_SetBaseAnimUpper
+*/
 static void GS_SetBaseAnimUpper( pm_anim_t *pmanim, int carried_weapon )
 {
 	//SWIMMING
@@ -71,9 +88,9 @@ static void GS_SetBaseAnimUpper( pm_anim_t *pmanim, int carried_weapon )
 	}
 }
 
-//=================
-//GS_SetBaseAnimLower
-//=================
+/*
+* GS_SetBaseAnimLower
+*/
 static void GS_SetBaseAnimLower( pm_anim_t *pmanim )
 {
 	//SWIMMING
@@ -163,9 +180,9 @@ static void GS_SetBaseAnimLower( pm_anim_t *pmanim )
 	}
 }
 
-//=================
-//GS_SetBaseAnims
-//=================
+/*
+* GS_SetBaseAnims
+*/
 static void GS_SetBaseAnims( pm_anim_t *pmanim, int carried_weapon )
 {
 	int part;
@@ -190,9 +207,9 @@ static void GS_SetBaseAnims( pm_anim_t *pmanim, int carried_weapon )
 	}
 }
 
-//=================
-//GS_UpdateBaseAnims
-//=================
+/*
+* GS_UpdateBaseAnims
+*/
 int GS_UpdateBaseAnims( entity_state_t *state, vec3_t velocity )
 {
 	pm_anim_t pmanim;
@@ -351,9 +368,9 @@ void GS_PModel_AnimToFrame( unsigned int curTime, gs_pmodel_animationset_t *anim
 	}
 }
 
-//=================
-//GS_PModel_ClearEventAnimations
-//=================
+/*
+* GS_PModel_ClearEventAnimations
+*/
 void GS_PlayerModel_ClearEventAnimations( gs_pmodel_animationset_t *animSet, gs_pmodel_animationstate_t *animState )
 {
 	int i;
@@ -365,9 +382,9 @@ void GS_PlayerModel_ClearEventAnimations( gs_pmodel_animationset_t *animSet, gs_
 	}
 }
 
-//=================
-//GS_PModel_AddAnimation
-//=================
+/*
+* GS_PModel_AddAnimation
+*/
 void GS_PlayerModel_AddAnimation( gs_pmodel_animationstate_t *animState, int loweranim, int upperanim, int headanim, int channel )
 {
 	int i;

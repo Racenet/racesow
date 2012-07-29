@@ -1,6 +1,6 @@
 #include "utils.h"
 
-#define TESTNAME "TestFuncOverload"
+static const char * const TESTNAME = "TestFuncOverload";
 
 static const char *script1 =
 "void Test()                               \n"
@@ -9,7 +9,7 @@ static const char *script1 =
 "}                                         \n";
 
 static const char *script2 =
-"void ScriptFunc(void)                     \n"
+"void ScriptFunc(void m)                   \n"
 "{                                         \n"
 "}                                         \n";
 
@@ -63,9 +63,9 @@ bool TestFuncOverload()
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
 	int r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
-	engine->ExecuteString(0, "func(func(3));");
+	ExecuteString(engine, "func(func(3));", mod);
 
 	CBufferedOutStream bout;
 	engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
@@ -73,13 +73,19 @@ bool TestFuncOverload()
 	mod->AddScriptSection(TESTNAME, script2, strlen(script2), 0);
 	r = mod->Build();
 	if( r >= 0 )
-		fail = true;
+		TEST_FAILED;
 	if( bout.buffer != "TestFuncOverload (1, 1) : Info    : Compiling void ScriptFunc(void)\n"
                        "TestFuncOverload (1, 17) : Error   : Parameter type can't be 'void'\n" )
-		fail = true;
+	{
+		printf("%s", bout.buffer.c_str());
+		TEST_FAILED;
+	}
+
+	// Permit void parameter list
+	r = engine->RegisterGlobalFunction("void func2(void)", asFUNCTION(FuncVoid), asCALL_CDECL); assert( r >= 0 );
 
 	// Don't permit void parameters
-	r = engine->RegisterGlobalFunction("void func2(void)", asFUNCTION(FuncVoid), asCALL_CDECL); assert( r < 0 );
+	r = engine->RegisterGlobalFunction("void func3(void n)", asFUNCTION(FuncVoid), asCALL_CDECL); assert( r < 0 );
 
 	engine->Release();
 
@@ -117,7 +123,7 @@ bool Test2()
 	r = mod->AddScriptSection("test", script1, strlen(script1));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	const char *script2 =
 		"class A{}  \n"
@@ -134,7 +140,7 @@ bool Test2()
 	r = mod->AddScriptSection("test", script2, strlen(script2));
 	r = mod->Build();
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
 

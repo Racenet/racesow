@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // console.c
 
 #include "client.h"
@@ -32,7 +32,7 @@ typedef struct
 	int numlines;		// non-empty lines in console scrollback
 
 	float times[NUM_CON_TIMES]; // cls.realtime time the line was generated
-								// for transparent notify lines
+	// for transparent notify lines
 } console_t;
 
 static console_t con;
@@ -70,9 +70,9 @@ static void Con_ClearTyping( void )
 	key_linepos = 1;
 }
 
-//================
-//Con_Close
-//================
+/*
+* Con_Close
+*/
 void Con_Close( void )
 {
 	scr_con_current = 0;
@@ -82,14 +82,14 @@ void Con_Close( void )
 	Key_ClearStates();
 }
 
-//================
-//Con_ToggleConsole_f
-//================
+/*
+* Con_ToggleConsole_f
+*/
 void Con_ToggleConsole_f( void )
 {
 	SCR_EndLoadingPlaque(); // get rid of loading plaque
 
-	if( cls.state == CA_CONNECTING || cls.state == CA_CONNECTED )
+	if( cls.state == CA_GETTING_TICKET || cls.state == CA_CONNECTING || cls.state == CA_CONNECTED )
 		return;
 
 	Con_ClearTyping();
@@ -106,9 +106,9 @@ void Con_ToggleConsole_f( void )
 	}
 }
 
-//================
-//Con_Clear_f
-//================
+/*
+* Con_Clear_f
+*/
 void Con_Clear_f( void )
 {
 	int i;
@@ -158,11 +158,11 @@ static size_t Con_BufferText( char *buffer, const char *delim )
 	return length;
 }
 
-//================
-//Con_Dump_f
-//
-//Save the console contents out to a file
-//================
+/*
+* Con_Dump_f
+* 
+* Save the console contents out to a file
+*/
 static void Con_Dump_f( void )
 {
 	int file;
@@ -217,9 +217,9 @@ static void Con_Dump_f( void )
 	Mem_TempFree( name );
 }
 
-//================
-//Con_ClearNotify
-//================
+/*
+* Con_ClearNotify
+*/
 void Con_ClearNotify( void )
 {
 	int i;
@@ -228,11 +228,11 @@ void Con_ClearNotify( void )
 		con.times[i] = 0;
 }
 
-//================
-//Con_SetMessageModeCvar
-//
-// Called from CL_SetKeyDest
-//================
+/*
+* Con_SetMessageModeCvar
+* 
+* Called from CL_SetKeyDest
+*/
 void Con_SetMessageModeCvar( void )
 {
 	if( cls.key_dest == key_message )
@@ -241,9 +241,9 @@ void Con_SetMessageModeCvar( void )
 		Cvar_ForceSet( "con_messageMode", "0" );
 }
 
-//================
-//Con_MessageMode_f
-//================
+/*
+* Con_MessageMode_f
+*/
 static void Con_MessageMode_f( void )
 {
 	chat_team = qfalse;
@@ -251,9 +251,9 @@ static void Con_MessageMode_f( void )
 		CL_SetKeyDest( key_message );
 }
 
-//================
-//Con_MessageMode2_f
-//================
+/*
+* Con_MessageMode2_f
+*/
 static void Con_MessageMode2_f( void )
 {
 	chat_team = Cmd_Exists( "say_team" ); // if not, make it a normal "say: "
@@ -261,11 +261,11 @@ static void Con_MessageMode2_f( void )
 		CL_SetKeyDest( key_message );
 }
 
-//================
-//Con_CheckResize
-//
-//If the line width has changed, reformat the buffer.
-//================
+/*
+* Con_CheckResize
+* 
+* If the line width has changed, reformat the buffer.
+*/
 void Con_CheckResize( void )
 {
 	int width = viddef.width / SMALL_CHAR_WIDTH - 2;
@@ -279,9 +279,9 @@ void Con_CheckResize( void )
 		con.linewidth = width;
 }
 
-//================
-//Con_Init
-//================
+/*
+* Con_Init
+*/
 void Con_Init( void )
 {
 	int i;
@@ -325,9 +325,9 @@ void Con_Init( void )
 	con_initialized = qtrue;
 }
 
-//================
-//Con_Shutdown
-//================
+/*
+* Con_Shutdown
+*/
 void Con_Shutdown( void )
 {
 	if( !con_initialized )
@@ -344,9 +344,9 @@ void Con_Shutdown( void )
 	con_initialized = qfalse;
 }
 
-//===============
-//Con_Linefeed
-//===============
+/*
+* Con_Linefeed
+*/
 static void Con_Linefeed( void )
 {
 	// shift scrollback text up in the buffer to make room for a new line
@@ -368,13 +368,13 @@ static void Con_Linefeed( void )
 	clamp_high( con.numlines, con.totallines );
 }
 
-//================
-//Con_Print
-//
-//Handles cursor positioning, line wrapping, etc
-//All console printing must go through this in order to be logged to disk
-//If no console is visible, the text will appear at the top of the game window
-//================
+/*
+* Con_Print
+* 
+* Handles cursor positioning, line wrapping, etc
+* All console printing must go through this in order to be logged to disk
+* If no console is visible, the text will appear at the top of the game window
+*/
 static void addchartostr( char **s, int c ) {
 	int len = *s ? strlen( *s ) : 0;
 	char *newstr = Q_realloc( *s, len + 2 );
@@ -471,7 +471,7 @@ void Con_PrintSilent( const char *txt )
 /*
 ==============================================================================
 
-   DRAWING
+DRAWING
 
 ==============================================================================
 */
@@ -543,11 +543,11 @@ static int Q_ColorStrLastColor( const char *s, int byteofs )
 }
 #endif
 
-//================
-//Con_DrawInput
-//
-//The input line scrolls horizontally if typing goes beyond the right edge
-//================
+/*
+* Con_DrawInput
+* 
+* The input line scrolls horizontally if typing goes beyond the right edge
+*/
 static void Con_DrawInput( int vislines )
 {
 	char *text = key_lines[edit_line];
@@ -575,14 +575,14 @@ static void Con_DrawInput( int vislines )
 
 	if( (int)( cls.realtime>>8 )&1 )
 		SCR_DrawRawChar( left_margin + prewidth - input_prestep, text_y, '_',
-										cls.fontSystemSmall, colorWhite );
+		cls.fontSystemSmall, colorWhite );
 }
 
-//================
-//Con_DrawNotify
-//
-//Draws the last few lines of output transparently over the game top
-//================
+/*
+* Con_DrawNotify
+* 
+* Draws the last few lines of output transparently over the game top
+*/
 void Con_DrawNotify( void )
 {
 	int v;
@@ -623,7 +623,7 @@ void Con_DrawNotify( void )
 
 			font = SCR_RegisterFont( con_chatFont->string );
 			if( !font )
-				 font = cls.fontSystemSmall;
+				font = cls.fontSystemSmall;
 
 			x = con_chatX->integer;
 			y = con_chatY->integer;
@@ -635,7 +635,7 @@ void Con_DrawNotify( void )
 			y = v;
 			font = cls.fontSystemSmall;
 		}
-		
+
 		// 48 is an arbitrary offset for not overlapping the FPS and clock prints
 		width -= 48;
 		cursorwidth = SCR_strWidth( "_", font, 0 );
@@ -666,15 +666,15 @@ void Con_DrawNotify( void )
 
 		if( (int)( cls.realtime>>8 )&1 )
 			SCR_DrawRawChar( x + promptwidth + prewidth - chat_prestep, y, '_',
-										font, colorWhite );
+			font, colorWhite );
 	}
 }
 
-//================
-//Con_DrawConsole
-//
-//Draws the console with the solid background
-//================
+/*
+* Con_DrawConsole
+* 
+* Draws the console with the solid background
+*/
 void Con_DrawConsole( float frac )
 {
 	int i, x, y;
@@ -704,14 +704,14 @@ void Con_DrawConsole( float frac )
 
 #ifdef PUBLIC_BUILD
 	Q_snprintfz( version, sizeof( version ), "%02d:%02d %s v%4.2f", newtime->tm_hour, newtime->tm_min,
-	             APPLICATION, APP_VERSION );
+		APPLICATION, APP_VERSION );
 #else
 	Q_snprintfz( version, sizeof( version ), "%02d:%02d %s v%4.2f rev:%s", newtime->tm_hour, newtime->tm_min,
-	             APPLICATION, APP_VERSION, revisioncvar->string );
+		APPLICATION, APP_VERSION, revisioncvar->string );
 #endif
 
 	SCR_DrawString( viddef.width-SCR_strWidth( version, cls.fontSystemSmall, 0 )-4, lines-20, ALIGN_LEFT_TOP, version,
-	                cls.fontSystemSmall, colorRed );
+		cls.fontSystemSmall, colorRed );
 
 	// prepare to draw the text
 	rows = ( lines-smallCharHeight-14 ) / smallCharHeight;  // rows of text to draw
@@ -746,13 +746,13 @@ void Con_DrawConsole( float frac )
 }
 
 
-//================
-//Con_DisplayList
+/*
+* Con_DisplayList
 
-//New function for tab-completion system
-//Added by EvilTypeGuy
-//MEGA Thanks to Taniwha
-//================
+* New function for tab-completion system
+* Added by EvilTypeGuy
+* MEGA Thanks to Taniwha
+*/
 static void Con_DisplayList( char **list )
 {
 	int i = 0;
@@ -793,14 +793,14 @@ static void Con_DisplayList( char **list )
 		Com_Printf( "\n\n" );
 }
 
-//================
-//Con_CompleteCommandLine
+/*
+* Con_CompleteCommandLine
 
-//New function for tab-completion system
-//Added by EvilTypeGuy
-//Thanks to Fett erich@heintz.com
-//Thanks to taniwha
-//================
+* New function for tab-completion system
+* Added by EvilTypeGuy
+* Thanks to Fett erich@heintz.com
+* Thanks to taniwha
+*/
 static void Con_CompleteCommandLine( void )
 {
 	char *cmd = "";
@@ -981,19 +981,17 @@ static void Con_CompleteCommandLine( void )
 /*
 ==============================================================================
 
-    LINE TYPING INTO THE CONSOLE
+LINE TYPING INTO THE CONSOLE
 
 ==============================================================================
 */
 
 
 /*
-====================
-Con_Key_Copy
-
-Copies console text to clipboard
-Should be Con_Copy prolly
-====================
+* Con_Key_Copy
+* 
+* Copies console text to clipboard
+* Should be Con_Copy prolly
 */
 static void Con_Key_Copy( void )
 {
@@ -1012,12 +1010,10 @@ static void Con_Key_Copy( void )
 }
 
 /*
-====================
-Con_Key_Paste
-
-Inserts stuff from clipboard to console
-Should be Con_Paste prolly
-====================
+* Con_Key_Paste
+* 
+* Inserts stuff from clipboard to console
+* Should be Con_Paste prolly
 */
 static void Con_Key_Paste( qboolean primary )
 {
@@ -1069,18 +1065,16 @@ static void Con_Key_Paste( qboolean primary )
 }
 
 /*
-====================
-Con_CharEvent
-
-Interactive line editing and console scrollback only for (Unicode) chars
-====================
+* Con_CharEvent
+* 
+* Interactive line editing and console scrollback only for (Unicode) chars
 */
 void Con_CharEvent( qwchar key )
 {
 	if( !con_initialized )
 		return;
 
-	if( cls.state == CA_CONNECTING || cls.state == CA_CONNECTED )
+	if( cls.state == CA_GETTING_TICKET || cls.state == CA_CONNECTING || cls.state == CA_CONNECTED )
 		return;
 
 	switch( key )
@@ -1093,19 +1087,19 @@ void Con_CharEvent( qwchar key )
 		Cbuf_AddText( "clear\n" );
 		return;
 
-/*
-	case 8: // CTRL+H or Backspace
+		/*
+		case 8: // CTRL+H or Backspace
 		if (key_linepos > 1)
 		{
-			// skip to the end of color sequence
-			while (Q_IsColorString(key_lines[edit_line] + key_linepos))
-			key_linepos += 2;
+		// skip to the end of color sequence
+		while (Q_IsColorString(key_lines[edit_line] + key_linepos))
+		key_linepos += 2;
 
-			strcpy (key_lines[edit_line] + key_linepos - 1, key_lines[edit_line] + key_linepos);
-			key_linepos--;
+		strcpy (key_lines[edit_line] + key_linepos - 1, key_lines[edit_line] + key_linepos);
+		key_linepos--;
 		}
 		return;
-*/
+		*/
 
 	case 16: // CTRL+P : history prev
 		do
@@ -1206,8 +1200,8 @@ static void Con_Key_Enter( qboolean ignore_ctrl )
 	char *p;
 	int chatmode = con_chatmode ? con_chatmode->integer : 3;
 	/* 1 = always chat unless with a slash;  non-1 = smart: unknown commands are chat.
-		0 used to be the NetQuake way (always a command),
-		but no one will probably want it in now */
+	0 used to be the NetQuake way (always a command),
+	but no one will probably want it in now */
 
 	// decide whether to treat the text as chat or command
 	p = key_lines[edit_line] + 1;
@@ -1254,22 +1248,20 @@ static void Con_Key_Enter( qboolean ignore_ctrl )
 	key_linepos = 1;
 	if( cls.state == CA_DISCONNECTED )
 		SCR_UpdateScreen(); // force an update, because the command
-	                            // may take some time
+	// may take some time
 }
 
 /*
-====================
-Con_KeyDown
-
-Interactive line editing and console scrollback except for ascii char
-====================
+* Con_KeyDown
+* 
+* Interactive line editing and console scrollback except for ascii char
 */
 void Con_KeyDown( int key )
 {
 	if( !con_initialized )
 		return;
 
-	if( cls.state == CA_CONNECTING || cls.state == CA_CONNECTED )
+	if( cls.state == CA_GETTING_TICKET || cls.state == CA_CONNECTING || cls.state == CA_CONNECTED )
 		return;
 
 	switch( key )

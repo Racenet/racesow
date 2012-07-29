@@ -21,7 +21,6 @@
 #define CELLSHADEDMATERIAL
 #define HALFLAMBERTLIGHTING
 #define AREAPORTALS_MATRIX
-//#define QUAKE2_JUNK
 #define PUTCPU2SLEEP
 
 // collision config
@@ -35,11 +34,11 @@
 //#define ANTICHEAT_MODULE
 //#define ALLOWBYNNY_VOTE
 
-//#define MATCHMAKER_SUPPORT
+#define MATCHMAKER_SUPPORT
 
 //#define UCMDTIMENUDGE
 #ifdef MATCHMAKER_SUPPORT
-# define TCP_SUPPORT
+// # define TCP_SUPPORT
 #endif
 //#define TCP_ALLOW_CONNECT
 
@@ -58,8 +57,3 @@
 // symbol address retrieval
 //==============================================
 // #define SYS_SYMBOL		// adds "sys_symbol" command and symbol exports to binary release
-#if defined ( SYS_SYMBOL ) && defined ( _WIN32 )
-#define SYMBOL_EXPORT __declspec( dllexport )
-#else
-#define SYMBOL_EXPORT
-#endif

@@ -70,58 +70,25 @@ extern cvar_t *gl_driver;
 
 //====================================================================
 
-/*
-** GL config stuff
-*/
-#define GL_RENDERER_VOODOO			0x00000001
-#define GL_RENDERER_VOODOO2			0x00000002
-#define GL_RENDERER_VOODOO_RUSH		0x00000004
-#define GL_RENDERER_BANSHEE			0x00000008
-#define	GL_RENDERER_3DFX			0x0000000F
-
-#define GL_RENDERER_PCX1			0x00000010
-#define GL_RENDERER_PCX2			0x00000020
-#define GL_RENDERER_PMX				0x00000040
-#define	GL_RENDERER_POWERVR			0x00000070
-
-#define GL_RENDERER_PERMEDIA2		0x00000100
-#define GL_RENDERER_GLINT_MX		0x00000200
-#define GL_RENDERER_GLINT_TX		0x00000400
-#define GL_RENDERER_3DLABS_MISC		0x00000800
-#define	GL_RENDERER_3DLABS			0x00000F00
-
-#define GL_RENDERER_REALIZM			0x00001000
-#define GL_RENDERER_REALIZM2		0x00002000
-#define	GL_RENDERER_INTERGRAPH		0x00003000
-
-#define GL_RENDERER_3DPRO			0x00004000
-#define GL_RENDERER_REAL3D			0x00008000
-#define GL_RENDERER_RIVA128			0x00010000
-#define GL_RENDERER_DYPIC			0x00020000
-
-#define GL_RENDERER_V1000			0x00040000
-#define GL_RENDERER_V2100			0x00080000
-#define GL_RENDERER_V2200			0x00100000
-#define	GL_RENDERER_RENDITION		0x001C0000
-
-#define GL_RENDERER_O2				0x00100000
-#define GL_RENDERER_IMPACT			0x00200000
-#define GL_RENDERER_RE				0x00400000
-#define GL_RENDERER_IR				0x00800000
-#define	GL_RENDERER_SGI				0x00F00000
-
-#define GL_RENDERER_MCD				0x01000000
-#define GL_RENDERER_OTHER			0x80000000
-
-enum
+typedef enum glsl_attribute_e
 {
-	rserr_ok,
-
-	rserr_invalid_fullscreen,
-	rserr_invalid_mode,
-
-	rserr_unknown
-} rserr_t;
+	GLSL_ATTRIB_POSITION	= 0,
+	GLSL_ATTRIB_BONESINDICES= 1,
+	GLSL_ATTRIB_NORMAL		= 2,
+	GLSL_ATTRIB_COLOR		= 3,
+//	GLSL_ATTRIB_UNUSED0		= 4,
+//	GLSL_ATTRIB_UNUSED1		= 5,
+//	GLSL_ATTRIB_UNUSED2		= 6,
+	GLSL_ATTRIB_BONESWEIGHTS= 7,
+	GLSL_ATTRIB_TEXCOORD0	= 8,
+	GLSL_ATTRIB_TEXCOORD1	= 9,
+	GLSL_ATTRIB_TEXCOORD2	= 10,
+	GLSL_ATTRIB_TEXCOORD3	= 11,
+	GLSL_ATTRIB_TEXCOORD4	= 12,
+	GLSL_ATTRIB_TEXCOORD5	= 13,
+	GLSL_ATTRIB_TEXCOORD6	= 14,
+	GLSL_ATTRIB_TEXCOORD7	= 15
+} glsl_attribute_t;
 
 typedef struct
 {
@@ -148,34 +115,39 @@ typedef struct
 				,shadow
 				,occlusion_query
 				,framebuffer_object
-				,generate_mipmap
 				,vertex_shader
 				,fragment_shader
 				,shader_objects
 				,shading_language_100
 				,bgra
 				,gamma_control
-				,swap_control;
+				,swap_control
+				,draw_instanced
+				,gpu_memory_info
+				,meminfo
+				;
 } glextinfo_t;
 
 typedef struct
 {
-	int				renderer;
 	const char		*rendererString;
 	const char		*vendorString;
 	const char		*versionString;
 	const char		*extensionsString;
 	const char		*glwExtensionsString;
+	const char		*shadingLanguageVersionString;
 
-	qboolean		allowCDS;
+	int				shadingLanguageVersion100;
 
 	int				maxTextureSize
 					,maxTextureUnits
 					,maxTextureCubemapSize
 					,maxTextureSize3D
 					,maxTextureFilterAnisotropic
-					,maxVaryingFloats;
-
+					,maxVaryingFloats
+					,maxVertexUniformComponents
+					,maxFragmentUniformComponents;
+	unsigned int	maxGLSLBones;	// the maximum amount of bones we can handle in a vertex shader
 	glextinfo_t ext;
 } glconfig_t;
 
@@ -190,8 +162,6 @@ typedef struct
 	qboolean		warmupRenderer;
 	qboolean		initializedMedia;
 
-	int				previousMode;
-
 	int				currentTMU;
 	GLuint			*currentTextures;
 	int				*currentEnvModes;
@@ -201,8 +171,14 @@ typedef struct
 	int 			currentArrayVBO;
 	int 			currentElemArrayVBO;
 
+	qbyte			texture2DEnabled;
+	qbyte			texture3DEnabled;
+
 	int				faceCull;
 	int				frontFace;
+
+	int				scissorX, scissorY;
+	int				scissorW, scissorH;
 
 	float			cameraSeparation;
 	qboolean		stereoEnabled;
@@ -213,6 +189,8 @@ typedef struct
 
 	qboolean		hwGamma;
 	unsigned short	orignalGammaRamp[3*256];
+
+	unsigned int	vertexAttribEnabled;
 } glstate_t;
 
 extern glconfig_t	glConfig;
@@ -230,14 +208,9 @@ void		GLimp_BeginFrame( void );
 void		GLimp_EndFrame( void );
 int			GLimp_Init( void *hinstance, void *wndproc, void *parenthWnd );
 void	    GLimp_Shutdown( void );
-int			GLimp_SetMode( int mode, qboolean fullscreen );
-int			GLimp_GetCurrentMode( void );
+rserr_t		GLimp_SetMode( int x, int y, int width, int height, qboolean fullscreen, qboolean wideScreen );
 void	    GLimp_AppActivate( qboolean active, qboolean destroy );
 qboolean	GLimp_GetGammaRamp( size_t stride, unsigned short *ramp );
 void		GLimp_SetGammaRamp( size_t stride, unsigned short *ramp );
-
-void		VID_NewWindow( int width, int height );
-qboolean	VID_GetModeInfo( int *width, int *height, qboolean *wideScreen, int mode );
-int			VID_GetModeNum( int width, int height );
 
 #endif /*__R_GLIMP_H__*/

@@ -3,7 +3,7 @@
 namespace TestArray
 {
 
-#define TESTNAME "TestArray"
+static const char * const TESTNAME = "TestArray";
 
 static const char *script1 =
 "string[] b;                                     \n"
@@ -135,7 +135,7 @@ static const char *script7 =
 "{                                               \n"
 "  TestC t;                                      \n"
 "  Assert(count == 1);                           \n"
-"  TestC[] array(5);                             \n"
+"  TestC[] arr(5);                               \n"
 "  Assert(count == 6);                           \n"
 "}                                               \n";
 
@@ -151,6 +151,7 @@ bool Test()
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
+	RegisterScriptArray(engine, true);
 
 	RegisterScriptString_Generic(engine);
 	engine->RegisterGlobalFunction("void Assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
@@ -161,18 +162,19 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "TestArray()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestArray()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
 
 		printf("%s: Failed to execute script\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( ctx ) ctx->Release();
 
@@ -181,15 +183,15 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "TestArrayException()");
+	r = ExecuteString(engine, "TestArrayException()", mod);
 	if( r != asEXECUTION_EXCEPTION )
 	{
 		printf("%s: No exception\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
@@ -197,15 +199,16 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
 
-	r = engine->ExecuteString(0, "TestArrayMulti()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestArrayMulti()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("%s: Failure\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( r == asEXECUTION_EXCEPTION )
 	{
@@ -219,14 +222,15 @@ bool Test()
 	r = mod->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 		printf("%s: Failed to compile the script\n", TESTNAME);
 	}
-	r = engine->ExecuteString(0, "TestArrayChar()", &ctx);
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestArrayChar()", mod, ctx);
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("%s: Failure\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	if( r == asEXECUTION_EXCEPTION )
 	{
@@ -238,9 +242,10 @@ bool Test()
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script5, strlen(script5), 0);
 	r = mod->Build();
-	if( r < 0 ) fail = true;
-	r = engine->ExecuteString(0, "TestArrayInitList()", &ctx);
-	if( r != asEXECUTION_FINISHED ) fail = true;
+	if( r < 0 ) TEST_FAILED;
+	ctx = engine->CreateContext();
+	r = ExecuteString(engine, "TestArrayInitList()", mod, ctx);
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
 	if( r == asEXECUTION_EXCEPTION )
 		PrintException(ctx);
 
@@ -251,11 +256,11 @@ bool Test()
 	mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script6, strlen(script6), 0);
 	r = mod->Build();
-	if( r >= 0 ) fail = true;
+	if( r >= 0 ) TEST_FAILED;
 	if( bout.buffer != "TestArray (1, 1) : Info    : Compiling void Test()\n"
 	                   "TestArray (3, 15) : Error   : Initialization lists cannot be used with 'int[]@'\n"
 	                   "TestArray (4, 16) : Error   : Initialization lists cannot be used with 'int'\n" )
-		fail = true;
+		TEST_FAILED;
 
 	// Array object must call default constructor of the script classes
 	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
@@ -263,10 +268,10 @@ bool Test()
 	mod->AddScriptSection(TESTNAME, script7, strlen(script7), 0);
 	r = mod->Build();
 	if( r < 0 ) 
-		fail = true;
-	r = engine->ExecuteString(0, "Test()");
+		TEST_FAILED;
+	r = ExecuteString(engine, "Test()", mod);
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 		
 	// Test bool[] on Mac OS X with PPC CPU
 	// Submitted by Edward Rudd
@@ -281,16 +286,74 @@ bool Test()
 	"Assert(f[0] == true);      \n"
 	"Assert(f[1] == false);     \n";
 	
-	r = engine->ExecuteString(0, script8);
+	r = ExecuteString(engine, script8);
 	if( r != asEXECUTION_FINISHED )
-		fail = true;
+		TEST_FAILED;
 
 	// Make sure it is possible to do multiple assignments with the array type
-	r = engine->ExecuteString(0, "int[] a, b, c; a = b = c;");
+	r = ExecuteString(engine, "int[] a, b, c; a = b = c;");
 	if( r < 0 )
-		fail = true;
+		TEST_FAILED;
 
 	engine->Release();
+
+	// Test circular reference between types
+	{
+		// Create the script engine
+		asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		RegisterScriptArray(engine, true);
+
+		// Compile
+		asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
+		mod->AddScriptSection("script", 
+			"class Hoge"
+			"{"
+			"    Hoge(){}"
+			"    Hoge(HogeManager&){}"
+			"};"
+			"class HogeManager"
+			"{"
+			"    Hoge[] hoges;"
+			"};"
+			, 0);
+		mod->Build();
+
+		// Release engine
+		engine->Release();
+	}
+
+	// Test multidimensional array initialization
+	{
+		// Create the script engine
+		asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		engine->RegisterGlobalFunction("void assert(bool)", asFUNCTION(Assert), asCALL_GENERIC);
+		RegisterScriptArray(engine, true);
+
+		r = ExecuteString(engine, "int[][] a(2, int[](2)); assert(a[1].length() == 2);\n");
+		if( r != asEXECUTION_FINISHED )
+			TEST_FAILED;
+
+		// Release engine
+		engine->Release();
+	}
+
+	// Test array of void
+	{
+		asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+		CBufferedOutStream bout;
+		engine->SetMessageCallback(asMETHOD(CBufferedOutStream,Callback), &bout, asCALL_THISCALL);
+		RegisterScriptArray(engine, false);
+		r = ExecuteString(engine, "array<void> a;");
+		if( r != -1 )
+			TEST_FAILED;
+		if( bout.buffer != "ExecuteString (1, 7) : Error   : Can't instanciate template 'array' with subtype 'void'\n" )
+		{
+			printf("%s", bout.buffer.c_str());
+			TEST_FAILED;
+		}
+
+		engine->Release();
+	}
 
 	// Success
 	return fail;
@@ -321,6 +384,7 @@ bool Test2()
 	"sum(As);      \n";
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	RegisterScriptArray(engine, true);
 
 	asIScriptModule *module = engine->GetModule("module", asGM_ALWAYS_CREATE);
 
@@ -328,13 +392,13 @@ bool Test2()
 	int r = module->Build();
 	if( r < 0 )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
-	r = engine->ExecuteString("module", exec);
+	r = ExecuteString(engine, exec, module);
 	if( r != asEXECUTION_FINISHED )
 	{
-		fail = true;
+		TEST_FAILED;
 	}
 
 	engine->Release();

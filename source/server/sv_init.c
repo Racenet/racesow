@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "server.h"
 
@@ -26,9 +26,9 @@ server_constant_t svc;              // constant server info (trully persistant s
 server_static_t	svs;                // persistant server info
 server_t sv;                 // local server
 
-//================
-//SV_FindIndex
-//================
+/*
+* SV_FindIndex
+*/
 static int SV_FindIndex( const char *name, int start, int max, qboolean create )
 {
 	int i;
@@ -81,13 +81,13 @@ int SV_SkinIndex( const char *name )
 	return SV_FindIndex( name, CS_SKINFILES, MAX_SKINFILES, qtrue );
 }
 
-//================
-//SV_CreateBaseline
-//
-//Entity baselines are used to compress the update messages
-//to the clients -- only the fields that differ from the
-//baseline will be transmitted
-//================
+/*
+* SV_CreateBaseline
+* 
+* Entity baselines are used to compress the update messages
+* to the clients -- only the fields that differ from the
+* baseline will be transmitted
+*/
 static void SV_CreateBaseline( void )
 {
 	edict_t	*svent;
@@ -113,9 +113,9 @@ static void SV_CreateBaseline( void )
 	}
 }
 
-//=================
-//SV_PureList_f
-//=================
+/*
+* SV_PureList_f
+*/
 void SV_PureList_f( void )
 {
 	purelist_t *purefile;
@@ -129,18 +129,18 @@ void SV_PureList_f( void )
 	}
 }
 
-//=================
-//SV_AddPurePak
-//=================
+/*
+* SV_AddPurePak
+*/
 static void SV_AddPurePak( const char *pakname )
 {
 	if( !Com_FindPakInPureList( svs.purelist, pakname ) )
 		Com_AddPakToPureList( &svs.purelist, pakname, FS_ChecksumBaseFile( pakname ), NULL );
 }
 
-//=================
-//SV_AddPureFile
-//=================
+/*
+* SV_AddPureFile
+*/
 void SV_AddPureFile( const char *filename )
 {
 	const char *pakname;
@@ -157,9 +157,9 @@ void SV_AddPureFile( const char *filename )
 	}
 }
 
-//=================
-//SV_ReloadPureList
-//=================
+/*
+* SV_ReloadPureList
+*/
 static void SV_ReloadPureList( void )
 {
 	char **paks;
@@ -171,7 +171,7 @@ static void SV_ReloadPureList( void )
 	if( sv_pure_forcemodulepk3->string[0] )
 	{
 		if( Q_strnicmp( COM_FileBase( sv_pure_forcemodulepk3->string ), "modules", strlen( "modules" ) ) ||
-		   !FS_IsPakValid( sv_pure_forcemodulepk3->string, NULL ) )
+			!FS_IsPakValid( sv_pure_forcemodulepk3->string, NULL ) )
 		{
 			Com_Printf( "Warning: Invalid value for sv_pure_forcemodulepk3, disabling\n" );
 			Cvar_ForceSet( "sv_pure_forcemodulepk3", "" );
@@ -234,10 +234,10 @@ void SV_SetServerConfigStrings( void )
 	Q_strncpyz( sv.configstrings[CS_MODMANIFEST], Cvar_String( "sv_modmanifest" ), sizeof( sv.configstrings[0] ) );
 }
 
-//================
-//SV_SpawnServer
-//Change the server to a new map, taking all connected clients along with it.
-//================
+/*
+* SV_SpawnServer
+* Change the server to a new map, taking all connected clients along with it.
+*/
 static void SV_SpawnServer( const char *server, qboolean devmap )
 {
 	unsigned checksum;
@@ -274,8 +274,8 @@ static void SV_SpawnServer( const char *server, qboolean devmap )
 
 	// reserve the first modelIndexes for inline models
 	// racesow: allow 50 models to be loaded
-	    for( i = 1; (i < CM_NumInlineModels( svs.cms )) && (i < MAX_MODELS-50); i++ )
-	        Q_snprintfz( sv.configstrings[CS_MODELS + i], sizeof( sv.configstrings[CS_MODELS + i] ), "*%i", i );
+	for( i = 1; (i < CM_NumInlineModels( svs.cms )) && (i < MAX_MODELS-50); i++ )
+		Q_snprintfz( sv.configstrings[CS_MODELS + i], sizeof( sv.configstrings[CS_MODELS + i] ), "*%i", i );
 
 	// set serverinfo variable
 	Cvar_FullSet( "mapname", sv.mapname, CVAR_SERVERINFO | CVAR_READONLY, qtrue );
@@ -308,10 +308,10 @@ static void SV_SpawnServer( const char *server, qboolean devmap )
 	Com_Printf( "-------------------------------------\n" );
 }
 
-//==============
-//SV_InitGame
-//A brand new game has been started
-//==============
+/*
+* SV_InitGame
+* A brand new game has been started
+*/
 void SV_InitGame( void )
 {
 	int i;
@@ -372,7 +372,7 @@ void SV_InitGame( void )
 			Com_Printf( "Error: Couldn't open UDP socket: %s\n", NET_ErrorString() );
 		else
 			socket_opened = qtrue;
-		
+
 		// IPv6
 		NET_StringToAddress( sv_ip6->string, &address );
 		if( address.type == NA_IP6 )
@@ -411,7 +411,7 @@ void SV_InitGame( void )
 #endif
 
 	// init mm
-	SV_MM_Init();
+	// SV_MM_Init();
 
 	// init game
 	SV_InitGameProgs();
@@ -427,15 +427,15 @@ void SV_InitGame( void )
 	svs.cms = CM_New( NULL );
 }
 
-//==================
-//SV_FinalMessage
-//
-//Used by SV_ShutdownGame to send a final message to all
-//connected clients before the server goes down.  The messages are sent immediately,
-//not just stuck on the outgoing message list, because the server is going
-//to totally exit after returning from this function.
-//==================
-static void SV_FinalMessage( char *message, qboolean reconnect )
+/*
+* SV_FinalMessage
+* 
+* Used by SV_ShutdownGame to send a final message to all
+* connected clients before the server goes down.  The messages are sent immediately,
+* not just stuck on the outgoing message list, because the server is going
+* to totally exit after returning from this function.
+*/
+static void SV_FinalMessage( const char *message, qboolean reconnect )
 {
 	int i, j;
 	client_t *cl;
@@ -461,12 +461,12 @@ static void SV_FinalMessage( char *message, qboolean reconnect )
 	}
 }
 
-//================
-//SV_ShutdownGame
-//
-//Called when each game quits
-//================
-void SV_ShutdownGame( char *finalmsg, qboolean reconnect )
+/*
+* SV_ShutdownGame
+* 
+* Called when each game quits
+*/
+void SV_ShutdownGame( const char *finalmsg, qboolean reconnect )
 {
 	if( !svs.initialized )
 		return;
@@ -479,7 +479,7 @@ void SV_ShutdownGame( char *finalmsg, qboolean reconnect )
 
 	SV_ShutdownGameProgs();
 
-	SV_MM_Shutdown();
+	// SV_MM_Shutdown();
 
 	NET_CloseSocket( &svs.socket_loopback );
 	NET_CloseSocket( &svs.socket_udp );
@@ -529,10 +529,10 @@ void SV_ShutdownGame( char *finalmsg, qboolean reconnect )
 	svs.initialized = qfalse;
 }
 
-//======================
-//SV_Map
-// command from the console or progs.
-//======================
+/*
+* SV_Map
+* command from the console or progs.
+*/
 void SV_Map( const char *level, qboolean devmap )
 {
 	client_t *cl;

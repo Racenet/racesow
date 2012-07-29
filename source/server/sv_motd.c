@@ -1,33 +1,31 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "server.h"
 #include "../qcommon/qcommon.h"
 
 /*
-   ==================
-   SV_MOTD_SetMOTD
-
-   Helper to set svs.motd
-   ==================
- */
+* SV_MOTD_SetMOTD
+* 
+* Helper to set svs.motd
+*/
 void SV_MOTD_SetMOTD( char *motd )
 {
 	char *pos;
@@ -56,13 +54,11 @@ void SV_MOTD_SetMOTD( char *motd )
 }
 
 /*
-   ==================
-   SV_MOTD_LoadFromFile
-
-   Attempts to load the MOTD from sv_MOTDFile, on success sets
-   sv_MOTDString.
-   ==================
- */
+* SV_MOTD_LoadFromFile
+* 
+* Attempts to load the MOTD from sv_MOTDFile, on success sets
+* sv_MOTDString.
+*/
 void SV_MOTD_LoadFromFile( void )
 {
 	char *f;
@@ -91,12 +87,10 @@ void SV_MOTD_LoadFromFile( void )
 }
 
 /*
-   ==================
-   SV_MOTD_Update
-
-   set the motd to the correct value depending on sv_MOTDString and sv_MOTDFile
-   ==================
- */
+* SV_MOTD_Update
+* 
+* set the motd to the correct value depending on sv_MOTDString and sv_MOTDFile
+*/
 void SV_MOTD_Update( void )
 {
 	if( !sv_MOTD->integer )
@@ -117,12 +111,10 @@ void SV_MOTD_Update( void )
 }
 
 /*
-   ==================
-   SV_MOTD_Get_f
-
-   Comand to return MOTD
-   ==================
- */
+* SV_MOTD_Get_f
+* 
+* Comand to return MOTD
+*/
 void SV_MOTD_Get_f( client_t *client )
 {
 	int flag = ( Cmd_Argc() > 1 ? 1 : 0 );

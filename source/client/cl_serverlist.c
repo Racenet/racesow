@@ -22,6 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "client.h"
 #include "../qcommon/trie.h"
 
+#ifdef PUBLIC_BUILD
+#define SERVERBROWSER_PROTOCOL_VERSION		APP_PROTOCOL_VERSION
+#else
+#define SERVERBROWSER_PROTOCOL_VERSION		APP_PROTOCOL_VERSION
+//#define SERVERBROWSER_PROTOCOL_VERSION	12
+#endif
+
 //=========================================================
 
 typedef struct serverlist_s
@@ -29,6 +36,8 @@ typedef struct serverlist_s
 	char address[48];
 	unsigned int pingTimeStamp;
 	unsigned int lastValidPing;
+	unsigned int lastUpdatedByMasterServer;
+	unsigned int masterServerUpdateSeq;
 	struct serverlist_s *pnext;
 } serverlist_t;
 
@@ -46,6 +55,8 @@ static masteradrcache_t *serverlist_masters_head = NULL;
 
 static qboolean filter_allow_full = qfalse;
 static qboolean filter_allow_empty = qfalse;
+
+static unsigned int masterServerUpdateSeq;
 
 //=========================================================
 
@@ -97,8 +108,17 @@ static qboolean CL_AddServerToList( serverlist_t **serversList, char *adr, unsig
 	if( !NET_StringToAddress( adr, &nadr ) )
 		return qfalse;
 
-	if( CL_ServerFindInList( *serversList, adr ) )
+	newserv = CL_ServerFindInList( *serversList, adr );
+	if( newserv ) {
+		// ignore excessive updates for about a second or so, which may happen
+		// when we're querying multiple master servers at once
+		if( !newserv->masterServerUpdateSeq ||
+			newserv->lastUpdatedByMasterServer + 1000 < cls.realtime ) {
+			newserv->lastUpdatedByMasterServer = cls.realtime;
+			newserv->masterServerUpdateSeq = masterServerUpdateSeq;
+		}
 		return qfalse;
+	}
 
 	newserv = (serverlist_t *)Mem_ZoneMalloc( sizeof( serverlist_t ) );
 	Q_strncpyz( newserv->address, adr, sizeof( newserv->address ) );
@@ -107,6 +127,8 @@ static qboolean CL_AddServerToList( serverlist_t **serversList, char *adr, unsig
 		newserv->lastValidPing = Com_DaysSince1900();
 	else
 		newserv->lastValidPing = days;
+	newserv->lastUpdatedByMasterServer = cls.realtime;
+	newserv->masterServerUpdateSeq = masterServerUpdateSeq;
 	newserv->pnext = *serversList;
 	*serversList = newserv;
 
@@ -341,7 +363,7 @@ void CL_PingServer_f( void )
 
 	pingserver->pingTimeStamp = cls.realtime;
 
-	Q_snprintfz( requestString, sizeof( requestString ), "info %i %s %s", APP_PROTOCOL_VERSION,
+	Q_snprintfz( requestString, sizeof( requestString ), "info %i %s %s", SERVERBROWSER_PROTOCOL_VERSION,
 		filter_allow_full ? "full" : "",
 		filter_allow_empty ? "empty" : "" );
 
@@ -462,74 +484,29 @@ void CL_ParseGetServersResponse( const socket_t *socket, const netadr_t *address
 	serverlist_t *server;
 	netadr_t adr;
 
-	CL_ReadServerCache();
+//	CL_ReadServerCache();
 
 	// add the new server addresses to the local addresses list
+	masterServerUpdateSeq++;
+	if( !masterServerUpdateSeq ) {
+		// wrapped
+		masterServerUpdateSeq = 1;
+	}
 	CL_ParseGetServersResponseMessage( msg, extended );
 
-	CL_WriteServerCache();
+//	CL_WriteServerCache();
 
-	// dump the whole list to the ui
+	// dump servers we just received an update on from the master server
 	server = masterList;
 	while( server )
 	{
-		if( NET_StringToAddress( server->address, &adr ) )
+		if( server->masterServerUpdateSeq == masterServerUpdateSeq 
+			&& NET_StringToAddress( server->address, &adr ) )
 			CL_UIModule_AddToServerList( server->address, "\\\\EOT" );
 
 		server = server->pnext;
 	}
 }
-
-/*
-//jal: I will remove this function soon
-//jal: the browser bug was the response string being parsed by
-//jal: using MSG_ParseStringLine instead of using MSG_ParseString.
-//jal: MSG_ParseStringLine cut off the string when it found
-//jal: a line ending, a zero or a -1.
-void CL_ParseGetServersResponse( const socket_t *socket, const netadr_t *address, msg_t *msg )
-{
-	CL_FreeServerlist( &masterList );
-	CL_ParseGetServersResponseMessage( msg );
-	//	CL_LoadServerList(); //jal: tmp
-	//	CL_WriteServerList();
-#if 1
-	//send the servers to the ui
-	{
-		serverlist_t *server;
-		netadr_t adr;
-
-		server = masterList;
-		while( server )
-		{
-			if( NET_StringToAddress( server->address, &adr ) )
-			{
-				CL_UIModule_AddToServerList( server->address, "\\\\EOT" );
-			}
-			server = server->pnext;
-		}
-	}
-#else
-	{
-		serverlist_t *server;
-		char requestString[32];
-		netadr_t adr;
-
-		Q_snprintfz( requestString, sizeof( requestString ), "info %i %s %s", APP_PROTOCOL_VERSION,
-			filter_allow_full ? "full" : "",
-			filter_allow_empty ? "empty" : "" );
-
-		server = masterList;
-		while( server )
-		{
-			if( NET_StringToAddress( server->address, &adr ) )
-				Netchan_OutOfBandPrint( &cls.socket_udp, &adr, requestString );
-			server = server->pnext;
-		}
-	}
-#endif
-	CL_FreeServerlist( &masterList );
-}
-*/
 
 /*
 * CL_ResolveMasterAddress
@@ -612,7 +589,7 @@ void CL_GetServers_f( void )
 
 	filter_allow_full = qfalse;
 	filter_allow_empty = qfalse;
-	for( i = 0; i < Cmd_Argc(); i++ )
+	for( i = 2; i < Cmd_Argc(); i++ )
 	{
 		if( !Q_stricmp( "full", Cmd_Argv( i ) ) )
 			filter_allow_full = qtrue;
@@ -628,7 +605,7 @@ void CL_GetServers_f( void )
 
 		// erm... modname isn't sent in local queries?
 
-		requeststring = va( "info %i %s %s", APP_PROTOCOL_VERSION,
+		requeststring = va( "info %i %s %s", SERVERBROWSER_PROTOCOL_VERSION,
 			filter_allow_full ? "full" : "",
 			filter_allow_empty ? "empty" : "" );
 
@@ -672,7 +649,7 @@ void CL_GetServers_f( void )
 		}
 
 		// create the message
-		requeststring = va( "%s %c%s %i %s %s", cmdname, toupper( modname[0] ), modname+1, APP_PROTOCOL_VERSION,
+		requeststring = va( "%s %c%s %i %s %s", cmdname, toupper( modname[0] ), modname+1, SERVERBROWSER_PROTOCOL_VERSION,
 			filter_allow_full ? "full" : "",
 			filter_allow_empty ? "empty" : "" );
 
@@ -697,7 +674,7 @@ void CL_InitServerList( void )
 	CL_FreeServerlist( &masterList );
 	CL_FreeServerlist( &favoritesList );
 
-	CL_ReadServerCache();
+//	CL_ReadServerCache();
 
 	CL_MasterAddressCache_Init();
 }
@@ -707,7 +684,7 @@ void CL_InitServerList( void )
 */
 void CL_ShutDownServerList( void )
 {
-	CL_WriteServerCache();
+//	CL_WriteServerCache();
 
 	CL_FreeServerlist( &masterList );
 	CL_FreeServerlist( &favoritesList );

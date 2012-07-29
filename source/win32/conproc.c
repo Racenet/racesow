@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 // conproc.c -- support for qhost
 
 #include <stdio.h>
@@ -60,13 +60,11 @@ int ccom_argc;
 char **ccom_argv;
 
 /*
-   ================
-   CCheckParm
-
-   Returns the position (1 to argc-1) in the program's argument list
-   where the given parameter apears, or 0 if not present
-   ================
- */
+* CCheckParm
+* 
+* Returns the position (1 to argc-1) in the program's argument list
+* where the given parameter apears, or 0 if not present
+*/
 static int CCheckParm( char *parm )
 {
 	int i;
@@ -202,7 +200,7 @@ static unsigned _stdcall RequestProc( void *arg )
 			iBeginLine = pBuffer[1];
 			iEndLine = pBuffer[2];
 			pBuffer[0] = ReadText( (LPTSTR) ( pBuffer + 1 ), iBeginLine,
-			                      iEndLine );
+				iEndLine );
 			break;
 
 		case CCOM_GET_SCR_LINES:
@@ -231,7 +229,7 @@ static LPVOID GetMappedBuffer( HANDLE hfileBuffer )
 	LPVOID pBuffer;
 
 	pBuffer = MapViewOfFile( hfileBuffer,
-	                         FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0 );
+		FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0 );
 
 	return pBuffer;
 }
@@ -274,11 +272,11 @@ static BOOL ReadText( LPTSTR pszText, int iBeginLine, int iEndLine )
 	coord.Y = (short)iBeginLine;
 
 	bRet = ReadConsoleOutputCharacter(
-	        hStdout,
-	        pszText,
-	        80 * ( iEndLine - iBeginLine + 1 ),
-	        coord,
-	        &dwRead );
+		hStdout,
+		pszText,
+		80 * ( iEndLine - iBeginLine + 1 ),
+		coord,
+		&dwRead );
 
 	// Make sure it's null terminated.
 	if( bRet )
@@ -314,18 +312,18 @@ static BOOL WriteText( LPCTSTR szText )
 		rec.Event.KeyEvent.dwControlKeyState = isupper( *sz ) ? 0x80 : 0x0;
 
 		WriteConsoleInput(
-		        hStdin,
-		        &rec,
-		        1,
-		        &dwWritten );
+			hStdin,
+			&rec,
+			1,
+			&dwWritten );
 
 		rec.Event.KeyEvent.bKeyDown = FALSE;
 
 		WriteConsoleInput(
-		        hStdin,
-		        &rec,
-		        1,
-		        &dwWritten );
+			hStdin,
+			&rec,
+			1,
+			&dwWritten );
 
 		sz++;
 	}

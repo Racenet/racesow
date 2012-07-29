@@ -126,11 +126,19 @@ int _mosquitto_fix_sub_topic(char **subtopic)
 	if((*subtopic)[0] == '/'){
 		fixed[0] = '/';
 	}
+#ifdef __MINGW32__
+	token = strtok(*subtopic, "/");
+#else
 	token = strtok_r(*subtopic, "/", &saveptr);
+#endif
 	while(token){
 		strcat(fixed, token);
 		strcat(fixed, "/");
+#ifdef __MINGW32__
+		token = strtok(NULL, "/");
+#else
 		token = strtok_r(NULL, "/", &saveptr);
+#endif
 	}
 
 	fixed[strlen(fixed)-1] = '\0';

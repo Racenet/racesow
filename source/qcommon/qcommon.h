@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 // qcommon.h -- definitions common between client and server, but not game.dll
 
@@ -130,6 +130,11 @@ void Com_FreePureList( purelist_t **purelist );
 
 //============================================================================
 
+#define SNAP_INVENTORY_LONGS			((MAX_ITEMS + 31) / 32)
+#define SNAP_STATS_LONGS				((PS_MAX_STATS + 31) / 32)
+
+#define SNAP_MAX_DEMO_META_DATA_SIZE	16*1024
+
 void SNAP_ParseBaseline( msg_t *msg, entity_state_t *baselines );
 void SNAP_SkipFrame( msg_t *msg, struct snapshot_s *header );
 struct snapshot_s *SNAP_ParseFrame( msg_t *msg, struct snapshot_s *lastFrame, int *suppressCount, struct snapshot_s *backup, entity_state_t *baselines, int showNet );
@@ -147,13 +152,19 @@ void SNAP_FreeClientFrames( struct client_s *client );
 
 void SNAP_RecordDemoMessage( int demofile, msg_t *msg, int offset );
 int SNAP_ReadDemoMessage( int demofile, msg_t *msg );
-void SNAP_BeginDemoRecording( int demofile, unsigned int spawncount, unsigned int snapFrameTime, const char *sv_name, unsigned int sv_bitflags, purelist_t *purelist, char *configstrings, entity_state_t *baselines );
-void SNAP_StopDemoRecording( int demofile, unsigned int basetime, unsigned int duration );
+void SNAP_BeginDemoRecording( int demofile, unsigned int spawncount, unsigned int snapFrameTime, 
+								const char *sv_name, unsigned int sv_bitflags, purelist_t *purelist, 
+								char *configstrings, entity_state_t *baselines, unsigned int baseTime );
+void SNAP_StopDemoRecording( int demofile, const char *meta_data, size_t meta_data_realsize );
+size_t SNAP_ClearDemoMeta( char *meta_data, size_t meta_data_max_size );
+size_t SNAP_SetDemoMetaKeyValue( char *meta_data, size_t meta_data_max_size, size_t meta_data_realsize,
+							  const char *key, const char *value );
+size_t SNAP_ReadDemoMetaData( int demofile, char *meta_data, size_t meta_data_size );
 
 //============================================================================
 
 int COM_Argc( void );
-char *COM_Argv( int arg );  // range and null checked
+const char *COM_Argv( int arg );  // range and null checked
 void COM_ClearArgv( int arg );
 int COM_CheckParm( char *parm );
 void COM_AddParm( char *parm );
@@ -225,12 +236,12 @@ const bspFormatDesc_t *Com_FindBSPFormat( const bspFormatDesc_t *formats, const 
 const modelFormatDescr_t *Com_FindFormatDescriptor( const modelFormatDescr_t *formats, const qbyte *buf, const bspFormatDesc_t **bspFormat );
 
 /*
-   ==============================================================
+==============================================================
 
-   PROTOCOL
+PROTOCOL
 
-   ==============================================================
- */
+==============================================================
+*/
 
 // protocol.h -- communications protocols
 
@@ -401,14 +412,14 @@ enum clc_ops_e
 #define	U_TEAM		( 1<<30 )     // gameteam. Will rarely change
 
 /*
-   ==============================================================
+==============================================================
 
-   Library
+Library
 
-   Dynamic library loading
+Dynamic library loading
 
-   ==============================================================
- */
+==============================================================
+*/
 
 #ifdef __cplusplus
 #define EXTERN_API_FUNC	   extern "C"
@@ -417,7 +428,7 @@ enum clc_ops_e
 #endif
 
 // qcommon/library.c
-typedef struct { char *name; void **funcPointer; } dllfunc_t;
+typedef struct { const char *name; void **funcPointer; } dllfunc_t;
 
 void Com_UnloadLibrary( void **lib );
 void *Com_LoadLibrary( const char *name, dllfunc_t *funcs ); // NULL-terminated array of functions
@@ -427,23 +438,23 @@ void *Com_LoadGameLibrary( const char *basename, const char *apifuncname, void *
 void Com_UnloadGameLibrary( void **handle );
 
 /*
-   ==============================================================
+==============================================================
 
-   CMD
+CMD
 
-   Command text buffering and command execution
+Command text buffering and command execution
 
-   ==============================================================
- */
+==============================================================
+*/
 
 /*
 
-   Any number of commands can be added in a frame, from several different sources.
-   Most commands come from either keybindings or console line input, but remote
-   servers can also send across commands and entire text files can be execed.
+Any number of commands can be added in a frame, from several different sources.
+Most commands come from either keybindings or console line input, but remote
+servers can also send across commands and entire text files can be execed.
 
-   The + command line options are also added to the command buffer.
- */
+The + command line options are also added to the command buffer.
+*/
 
 void	    Cbuf_Init( void );
 void	    Cbuf_Shutdown( void );
@@ -459,10 +470,10 @@ void	    Cbuf_Execute( void );
 
 /*
 
-   Command execution takes a null terminated string, breaks it into tokens,
-   then searches for a command or variable that matches the first token.
+Command execution takes a null terminated string, breaks it into tokens,
+then searches for a command or variable that matches the first token.
 
- */
+*/
 
 typedef void ( *xcommand_t )( void );
 typedef char ** ( *xcompletionf_t )( const char *partial );
@@ -488,56 +499,64 @@ void	    Cmd_ExecuteString( const char *text );
 void		Cmd_SetCompletionFunc( const char *cmd_name, xcompletionf_t completion_func );
 
 /*
-   ==============================================================
+==============================================================
 
-   CVAR
+CVAR
 
-   ==============================================================
- */
+==============================================================
+*/
 
 #include "cvar.h"
 
 /*
-   ==========================================================
+==========================================================
 
-   DYNVAR
+DYNVAR
 
-   ==========================================================
- */
+==========================================================
+*/
 
 #include "dynvar.h"
 
 /*
-   ==============================================================
+==============================================================
 
-   IRC
+IRC
 
-   ==============================================================
- */
+==============================================================
+*/
+struct irc_chat_history_node_s;
 
 void Irc_Connect_f( void );
 void Irc_Disconnect_f( void );
 dynvar_get_status_t Irc_GetConnected_f( void **connected );
 dynvar_set_status_t Irc_SetConnected_f( void *connected );
+qboolean Irc_IsConnected( void );
+size_t Irc_HistorySize( void );
+size_t Irc_HistoryTotalSize( void );
+const struct irc_chat_history_node_s *Irc_GetHistoryHeadNode(void);
+const struct irc_chat_history_node_s *Irc_GetNextHistoryNode(const struct irc_chat_history_node_s *n);
+const struct irc_chat_history_node_s *Irc_GetPrevHistoryNode(const struct irc_chat_history_node_s *n);
+const char *Irc_GetHistoryNodeLine(const struct irc_chat_history_node_s *n);
 
 /*
-   ==============================================================
+==============================================================
 
-   SVN
+SVN INTEGRATION
 
-   ==============================================================
- */
+==============================================================
+*/
 
 int SVN_RevNumber( void );
 const char *SVN_RevString( void );
 
 /*
-   ==============================================================
+==============================================================
 
-   NET
+NET
 
-   ==============================================================
- */
+==============================================================
+*/
 
 // net.h -- quake's interface to the networking layer
 
@@ -553,10 +572,10 @@ const char *SVN_RevString( void );
 
 typedef enum
 {
-        NA_NOTRANSMIT,      // wsw : jal : fakeclients
-        NA_LOOPBACK,
-        NA_IP,
-        NA_IP6,
+	NA_NOTRANSMIT,      // wsw : jal : fakeclients
+	NA_LOOPBACK,
+	NA_IP,
+	NA_IP6,
 } netadrtype_t;
 
 typedef struct netadr_ipv4_s
@@ -584,34 +603,34 @@ typedef struct netadr_s
 
 typedef enum
 {
-        SOCKET_LOOPBACK,
-        SOCKET_UDP
+	SOCKET_LOOPBACK,
+	SOCKET_UDP
 #ifdef TCP_SUPPORT
-        , SOCKET_TCP
+	, SOCKET_TCP
 #endif
 } socket_type_t;
 
 typedef struct
 {
-        qboolean open;
+	qboolean open;
 
-        socket_type_t type;
-        netadr_t address;
-        qboolean server;
+	socket_type_t type;
+	netadr_t address;
+	qboolean server;
 
 #ifdef TCP_SUPPORT
-        qboolean connected;
+	qboolean connected;
 #endif
-        netadr_t remoteAddress;
+	netadr_t remoteAddress;
 
-        socket_handle_t handle;
+	socket_handle_t handle;
 } socket_t;
 
 typedef enum
 {
-        CONNECTION_FAILED = -1,
-        CONNECTION_INPROGRESS = 0,
-        CONNECTION_SUCCEEDED = 1
+	CONNECTION_FAILED = -1,
+	CONNECTION_INPROGRESS = 0,
+	CONNECTION_SUCCEEDED = 1
 } connection_status_t;
 
 typedef enum
@@ -639,10 +658,10 @@ qboolean				NET_Listen( const socket_t *socket );
 int						NET_Accept( const socket_t *socket, socket_t *newsocket, netadr_t *address );
 #endif
 
-int	    NET_GetPacket( const socket_t *socket, netadr_t *address, msg_t *message );
+int			NET_GetPacket( const socket_t *socket, netadr_t *address, msg_t *message );
 qboolean    NET_SendPacket( const socket_t *socket, const void *data, size_t length, const netadr_t *address );
 
-int	    NET_Get( const socket_t *socket, netadr_t *address, void *data, size_t length );
+int			NET_Get( const socket_t *socket, netadr_t *address, void *data, size_t length );
 qboolean    NET_Send( const socket_t *socket, const void *data, size_t length, const netadr_t *address );
 
 void	    NET_Sleep( int msec, socket_t *sockets[] );
@@ -654,7 +673,7 @@ void	    NET_ShowIP( void );
 
 const char *NET_SocketTypeToString( socket_type_t type );
 const char *NET_SocketToString( const socket_t *socket );
-char *NET_AddressToString( const netadr_t *address );
+char	   *NET_AddressToString( const netadr_t *address );
 qboolean    NET_StringToAddress( const char *s, netadr_t *address );
 qboolean    NET_StringToBaseAddress( const char *s, netadr_t *address );
 void		NET_AsyncResolveHostname( const char *hostname );
@@ -674,32 +693,32 @@ void	    NET_BroadcastAddress( netadr_t *address, int port );
 
 typedef struct
 {
-        const socket_t *socket;
+	const socket_t *socket;
 
-        int dropped;                // between last packet and previous
+	int dropped;                // between last packet and previous
 
-        netadr_t remoteAddress;
-        int game_port;              // game port value to write when transmitting
+	netadr_t remoteAddress;
+	int game_port;              // game port value to write when transmitting
 
-        // sequencing variables
-        int incomingSequence;
-        int incoming_acknowledged;
-        int outgoingSequence;
+	// sequencing variables
+	int incomingSequence;
+	int incoming_acknowledged;
+	int outgoingSequence;
 
-        // incoming fragment assembly buffer
-        int fragmentSequence;
-        size_t fragmentLength;
-        qbyte fragmentBuffer[MAX_MSGLEN];
+	// incoming fragment assembly buffer
+	int fragmentSequence;
+	size_t fragmentLength;
+	qbyte fragmentBuffer[MAX_MSGLEN];
 
-        // outgoing fragment buffer
-        // we need to space out the sending of large fragmented messages
-        qboolean unsentFragments;
-        size_t unsentFragmentStart;
-        size_t unsentLength;
-        qbyte unsentBuffer[MAX_MSGLEN];
-        qboolean unsentIsCompressed;
+	// outgoing fragment buffer
+	// we need to space out the sending of large fragmented messages
+	qboolean unsentFragments;
+	size_t unsentFragmentStart;
+	size_t unsentLength;
+	qbyte unsentBuffer[MAX_MSGLEN];
+	qboolean unsentIsCompressed;
 
-        qboolean fatal_error;
+	qboolean fatal_error;
 } netchan_t;
 
 extern netadr_t	net_from;
@@ -727,6 +746,9 @@ FILESYSTEM
 */
 
 #define FS_NOTIFT_NEWPAKS	0x01
+
+typedef void (*fs_read_cb)(int filenum, const void *buf, size_t numb, float progress, void *customp);
+typedef void (*fs_done_cb)(int filenum, int status, void *customp);
 
 void	    FS_Init( void );
 int			FS_Rescan( void );
@@ -761,6 +783,7 @@ int	    FS_Tell( int file );
 int	    FS_Seek( int file, int offset, int whence );
 int	    FS_Eof( int file );
 int	    FS_Flush( int file );
+qboolean FS_IsUrl( const char *url );
 
 // file loading
 int	    FS_LoadFileExt( const char *path, void **buffer, void *stack, size_t stackSize, const char *filename, int fileline );
@@ -788,6 +811,9 @@ unsigned    FS_ChecksumAbsoluteFile( const char *filename );
 unsigned    FS_ChecksumBaseFile( const char *filename );
 qboolean	FS_CheckPakExtension( const char *filename );
 
+time_t		FS_FileMTime( const char *filename );
+time_t		FS_BaseFileMTime( const char *filename );
+
 // // only for game files
 const char *FS_FirstExtension( const char *filename, const char *extensions[], int num_extensions );
 const char *FS_PakNameForFile( const char *filename );
@@ -795,8 +821,8 @@ qboolean    FS_IsPureFile( const char *pakname );
 const char *FS_FileManifest( const char *filename );
 const char *FS_BaseNameForFile( const char *filename );
 
-int	    FS_GetFileList( const char *dir, const char *extension, char *buf, size_t bufsize, int start, int end );
-int	    FS_GetFileListExt( const char *dir, const char *extension, char *buf, size_t *bufsize, int start, int end );
+int			FS_GetFileList( const char *dir, const char *extension, char *buf, size_t bufsize, int start, int end );
+int			FS_GetFileListExt( const char *dir, const char *extension, char *buf, size_t *bufsize, int start, int end );
 
 // // only for base files
 qboolean    FS_IsPakValid( const char *filename, unsigned *checksum );
@@ -804,41 +830,41 @@ qboolean    FS_AddPurePak( unsigned checksum );
 void	    FS_RemovePurePaks( void );
 
 /*
-   ==============================================================
+==============================================================
 
-   MISC
+MISC
 
-   ==============================================================
- */
-
+==============================================================
+*/
 
 #define	ERR_FATAL	0       // exit the entire game with a popup window
 #define	ERR_DROP	1       // print to console and disconnect from game
 
 #define MAX_PRINTMSG	3072
 
-void	    Com_BeginRedirect( int target, char *buffer, int buffersize, void ( *flush ), const void *extra );
+void	    Com_BeginRedirect( int target, char *buffer, int buffersize, void ( *flush )(int, char*, const void*), const void *extra );
 void	    Com_EndRedirect( void );
 void	    Com_Printf( const char *format, ... );
 void	    Com_DPrintf( const char *format, ... );
 void	    Com_Error( int code, const char *format, ... );
 void	    Com_Quit( void );
 
-int	    Com_ClientState( void );        // this should have just been a cvar...
+int			Com_ClientState( void );        // this should have just been a cvar...
 void	    Com_SetClientState( int state );
 
 qboolean    Com_DemoPlaying( void );
 void	    Com_SetDemoPlaying( qboolean state );
 
-int	    Com_ServerState( void );        // this should have just been a cvar...
+int			Com_ServerState( void );        // this should have just been a cvar...
 void	    Com_SetServerState( int state );
-
-unsigned    Com_BlockChecksum( void *buffer, size_t length );
-qbyte	    COM_BlockSequenceCRCByte( qbyte *base, size_t length, int sequence );
 
 void	    Com_PageInMemory( qbyte *buffer, int size );
 
 unsigned int Com_HashKey( const char *name, int hashsize );
+unsigned int Com_SuperFastHash( const qbyte * data, size_t len, unsigned int hash );
+unsigned int Com_SuperFastHash64BitInt( quint64 data );
+
+unsigned int Com_MD5Digest32( const qbyte * data, size_t len );
 
 unsigned int Com_DaysSince1900( void );
 
@@ -857,141 +883,32 @@ extern unsigned int time_after_game;
 extern unsigned int time_before_ref;
 extern unsigned int time_after_ref;
 
+/*
+==============================================================
 
-//#define MEMCLUMPING
-//#define MEMTRASH
+MEMORY MANAGEMENT
 
-#define POOLNAMESIZE 128
+==============================================================
+*/
 
-#ifdef MEMCLUMPING
+struct mempool_s;
+typedef struct mempool_s mempool_t;
 
-// give malloc padding so we can't waste most of a page at the end
-#define MEMCLUMPSIZE ( 65536 - 1536 )
-
-// smallest unit we care about is this many bytes
-#define MEMUNIT 8
-#define MEMBITS ( MEMCLUMPSIZE / MEMUNIT )
-#define MEMBITINTS ( MEMBITS / 32 )
-#define MEMCLUMP_SENTINEL 0xABADCAFE
-
-#endif
-
-#define MEMHEADER_SENTINEL1 0xDEADF00D
-#define MEMHEADER_SENTINEL2 0xDF
-
-typedef struct memheader_s
-{
-        // next and previous memheaders in chain belonging to pool
-        struct memheader_s *next;
-        struct memheader_s *prev;
-
-        // pool this memheader belongs to
-        struct mempool_s *pool;
-
-#ifdef MEMCLUMPING
-        // clump this memheader lives in, NULL if not in a clump
-        struct memclump_s *clump;
-#endif
-
-        // size of the memory after the header (excluding header and sentinel2)
-        size_t size;
-
-        // file name and line where Mem_Alloc was called
-        const char *filename;
-        int fileline;
-
-        // should always be MEMHEADER_SENTINEL1
-        unsigned int sentinel1;
-        // immediately followed by data, which is followed by a MEMHEADER_SENTINEL2 byte
-} memheader_t;
-
-#ifdef MEMCLUMPING
-
-typedef struct memclump_s
-{
-        // contents of the clump
-        qbyte block[MEMCLUMPSIZE];
-
-        // should always be MEMCLUMP_SENTINEL
-        unsigned int sentinel1;
-
-        // if a bit is on, it means that the MEMUNIT bytes it represents are
-        // allocated, otherwise free
-        int bits[MEMBITINTS];
-
-        // should always be MEMCLUMP_SENTINEL
-        unsigned int sentinel2;
-
-        // if this drops to 0, the clump is freed
-        int blocksinuse;
-
-        // largest block of memory available (this is reset to an optimistic
-        // number when anything is freed, and updated when alloc fails the clump)
-        int largestavailable;
-
-        // next clump in the chain
-        struct memclump_s *chain;
-} memclump_t;
-
-#endif
-
-#define MEMPOOL_TEMPORARY	1
-#define MEMPOOL_GAMEPROGS	2
-#define MEMPOOL_USERINTERFACE	4
-#define MEMPOOL_CLIENTGAME	8
-#define MEMPOOL_SOUND		16
-#define MEMPOOL_DB        32
-#define MEMPOOL_ANGELSCRIPT		64
-
-typedef struct mempool_s
-{
-        // should always be MEMHEADER_SENTINEL1
-        unsigned int sentinel1;
-
-        // chain of individual memory allocations
-        struct memheader_s *chain;
-
-#ifdef MEMCLUMPING
-        // chain of clumps (if any)
-        struct memclump_s *clumpchain;
-#endif
-
-        // temporary, etc
-        int flags;
-
-        // total memory allocated in this pool (inside memheaders)
-        int totalsize;
-
-        // total memory allocated in this pool (actual malloc total)
-        int realsize;
-
-        // updated each time the pool is displayed by memlist, shows change from previous time (unless pool was freed)
-        int lastchecksize;
-
-        // name of the pool
-        char name[POOLNAMESIZE];
-
-        // linked into global mempool list or parent's children list
-        struct mempool_s *next;
-
-        struct mempool_s *parent;
-        struct mempool_s *child;
-
-        // file name and line where Mem_AllocPool was called
-        const char *filename;
-
-        int fileline;
-
-        // should always be MEMHEADER_SENTINEL1
-        unsigned int sentinel2;
-} mempool_t;
+#define MEMPOOL_TEMPORARY			1
+#define MEMPOOL_GAMEPROGS			2
+#define MEMPOOL_USERINTERFACE		4
+#define MEMPOOL_CLIENTGAME			8
+#define MEMPOOL_SOUND				16
+#define MEMPOOL_DB					32
+#define MEMPOOL_ANGELSCRIPT			64
+#define MEMPOOL_CINMODULE			128
 
 void Memory_Init( void );
 void Memory_InitCommands( void );
 void Memory_Shutdown( void );
 void Memory_ShutdownCommands( void );
 
-void *_Mem_AllocExt( mempool_t *pool, size_t size, int z, int musthave, int canthave, const char *filename, int fileline );
+void *_Mem_AllocExt( mempool_t *pool, size_t size, size_t aligment, int z, int musthave, int canthave, const char *filename, int fileline );
 void *_Mem_Alloc( mempool_t *pool, size_t size, int musthave, int canthave, const char *filename, int fileline );
 void *_Mem_Realloc( void *data, size_t size, const char *filename, int fileline );
 void _Mem_Free( void *data, int musthave, int canthave, const char *filename, int fileline );
@@ -1003,7 +920,9 @@ void _Mem_EmptyPool( mempool_t *pool, int musthave, int canthave, const char *fi
 void _Mem_CheckSentinels( void *data, const char *filename, int fileline );
 void _Mem_CheckSentinelsGlobal( const char *filename, int fileline );
 
-#define Mem_AllocExt( pool, size, z ) _Mem_AllocExt( pool, size, z, 0, 0, __FILE__, __LINE__ )
+size_t Mem_PoolTotalSize( mempool_t *pool );
+
+#define Mem_AllocExt( pool, size, z ) _Mem_AllocExt( pool, size, 0, z, 0, 0, __FILE__, __LINE__ )
 #define Mem_Alloc( pool, size ) _Mem_Alloc( pool, size, 0, 0, __FILE__, __LINE__ )
 #define Mem_Realloc( data, size ) _Mem_Realloc( data, size, __FILE__, __LINE__ )
 #define Mem_Free( mem ) _Mem_Free( mem, 0, 0, __FILE__, __LINE__ )
@@ -1036,12 +955,12 @@ void Qcommon_Frame( unsigned int realmsec );
 void Qcommon_Shutdown( void );
 
 /*
-   ==============================================================
+==============================================================
 
-   NON-PORTABLE SYSTEM SERVICES
+NON-PORTABLE SYSTEM SERVICES
 
-   ==============================================================
- */
+==============================================================
+*/
 
 // directory searching
 #define SFF_ARCH    0x01
@@ -1059,7 +978,7 @@ unsigned int	Sys_Milliseconds( void );
 quint64		Sys_Microseconds( void );
 void		Sys_Sleep( unsigned int millis );
 
-char *Sys_ConsoleInput( void );
+char	*Sys_ConsoleInput( void );
 void	Sys_ConsoleOutput( char *string );
 void	Sys_SendKeyEvents( void );
 void	Sys_Error( const char *error, ... );
@@ -1067,6 +986,8 @@ void	Sys_Quit( void );
 char	*Sys_GetClipboardData( qboolean primary );
 qboolean Sys_SetClipboardData( char *data );
 void	Sys_FreeClipboardData( char *data );
+
+void	Sys_OpenURLInBrowser( const char *url );
 
 // wsw : aiwa : get symbol address in executable
 #ifdef SYS_SYMBOL
@@ -1110,8 +1031,8 @@ void Con_Print( const char *text );
 void SCR_BeginLoadingPlaque( void );
 
 void SV_Init( void );
-void SV_Shutdown( char *finalmsg );
-void SV_ShutdownGame( char *finalmsg, qboolean reconnect );
+void SV_Shutdown( const char *finalmsg );
+void SV_ShutdownGame( const char *finalmsg, qboolean reconnect );
 void SV_Frame( int realmsec, int gamemsec );
 qboolean SV_SendMessageToClient( struct client_s *client, msg_t *msg );
 void SV_ParseClientMessage( struct client_s *client, msg_t *msg );
@@ -1142,33 +1063,22 @@ void Com_ScriptModule_Shutdown( void );
 struct angelwrap_api_s *Com_asGetAngelExport( void );
 
 /*
-   ==============================================================
+==============================================================
 
-   WSW MATCHMAKER SYSTEMS
+ANTICHEAT SYSTEMS
 
-   ==============================================================
- */
-void MM_Init( void );
-void MM_Shutdown( void );
-void MM_Frame( const int realmsec );
-
-/*
-   ==============================================================
-
-   ANTICHEAT SYSTEMS
-
-   ==============================================================
- */
+==============================================================
+*/
 qboolean AC_LoadServerLibrary( void *exports, void *imports );
 qboolean AC_LoadClientLibrary( void *exports, void *imports );
 
 /*
-   ==============================================================
+==============================================================
 
-   MAPLIST SUBSYSTEM
+MAPLIST SUBSYSTEM
 
-   ==============================================================
- */
+==============================================================
+*/
 void ML_Init( void );
 void ML_Shutdown( void );
 void ML_Restart( qboolean forcemaps );

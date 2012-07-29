@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "../../../../angelscript/include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /Ob2 /I "../../../../angelscript/include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x416 /d "NDEBUG"
 # ADD RSC /l 0x416 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -91,7 +91,23 @@ SOURCE=..\..\source\main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\add_on\scriptstring\scriptstring.cpp
+SOURCE=..\..\..\..\add_on\scriptmath3d\scriptmath3d.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scriptstdstring\scriptstdstring.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\scriptstring.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\scriptstring.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_assign.cpp
 # End Source File
 # Begin Source File
 
@@ -108,6 +124,10 @@ SOURCE=..\..\source\test_call.cpp
 # Begin Source File
 
 SOURCE=..\..\source\test_call2.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_fib.cpp
 # End Source File
 # Begin Source File
 
@@ -131,6 +151,18 @@ SOURCE=..\..\source\test_string2.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\source\test_string_pooled.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_thisprop.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\source\test_vector3.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\source\utils.cpp
 # End Source File
 # End Group
@@ -140,6 +172,10 @@ SOURCE=..\..\source\utils.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\angelscript\include\angelscript.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\add_on\scriptstdstring\scriptstdstring.h
 # End Source File
 # Begin Source File
 

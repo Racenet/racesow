@@ -59,6 +59,6 @@ qboolean Irc_Proto_PollServerMsg(irc_server_msg_t *msg, qboolean *msg_complete);
 qboolean Irc_Proto_ProcessServerMsg(const irc_server_msg_t *msg);
 
 static const qboolean IRC_INVISIBLE = qtrue;
-static const char IRC_QUIT_MSG[] = "www.warsow.net";
+static const char IRC_QUIT_MSG[] = APP_URL;
 
 #endif

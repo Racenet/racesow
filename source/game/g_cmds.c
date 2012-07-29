@@ -1,30 +1,30 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include "g_local.h"
 
-//==================
-//G_Teleport
-//
-//Teleports client to specified position
-//If client is not spectator teleporting is only done if position is free and teleport effects are drawn.
-//==================
+/*
+* G_Teleport
+* 
+* Teleports client to specified position
+* If client is not spectator teleporting is only done if position is free and teleport effects are drawn.
+*/
 static qboolean G_Teleport( edict_t *ent, vec3_t origin, vec3_t angles )
 {
 	int i;
@@ -69,11 +69,11 @@ static qboolean G_Teleport( edict_t *ent, vec3_t origin, vec3_t angles )
 
 //=================================================================================
 
-//==================
-//Cmd_Give_f
-//
-//Give items to a client
-//==================
+/*
+* Cmd_Give_f
+* 
+* Give items to a client
+*/
 static void Cmd_Give_f( edict_t *ent )
 {
 	char *name;
@@ -207,11 +207,11 @@ static void Cmd_Give_f( edict_t *ent )
 	}
 }
 
-//==================
-//Cmd_God_f
-//Sets client to godmode
-//argv(0) god
-//==================
+/*
+* Cmd_God_f
+* Sets client to godmode
+* argv(0) god
+*/
 static void Cmd_God_f( edict_t *ent )
 {
 	char *msg;
@@ -231,11 +231,11 @@ static void Cmd_God_f( edict_t *ent )
 	G_PrintMsg( ent, msg );
 }
 
-//==================
-//Cmd_Noclip_f
-//
-//argv(0) noclip
-//==================
+/*
+* Cmd_Noclip_f
+* 
+* argv(0) noclip
+*/
 static void Cmd_Noclip_f( edict_t *ent )
 {
 	char *msg;
@@ -289,10 +289,10 @@ static void Cmd_GameOperator_f( edict_t *ent )
 	G_PrintMsg( ent, "Incorrect operator password.\n" );
 }
 
-//==================
-//Cmd_Use_f
-//Use an inventory item
-//==================
+/*
+* Cmd_Use_f
+* Use an inventory item
+*/
 static void Cmd_Use_f( edict_t *ent )
 {
 	gsitem_t	*it;
@@ -306,9 +306,9 @@ static void Cmd_Use_f( edict_t *ent )
 	G_UseItem( ent, it );
 }
 
-//=================
-//Cmd_Kill_f
-//=================
+/*
+* Cmd_Kill_f
+*/
 static void Cmd_Kill_f( edict_t *ent )
 {
 	if( ent->r.solid == SOLID_NOT )
@@ -336,17 +336,17 @@ void Cmd_ChasePrev_f( edict_t *ent )
 	G_ChaseStep( ent, -1 );
 }
 
-//=================
-//Cmd_PutAway_f
-//=================
+/*
+* Cmd_PutAway_f
+*/
 static void Cmd_PutAway_f( edict_t *ent )
 {
 	ent->r.client->level.showscores = qfalse;
 }
 
-//==================
-//Cmd_Score_f
-//==================
+/*
+* Cmd_Score_f
+*/
 static void Cmd_Score_f( edict_t *ent )
 {
 	qboolean newvalue;
@@ -359,9 +359,9 @@ static void Cmd_Score_f( edict_t *ent )
 	ent->r.client->level.showscores = newvalue;
 }
 
-//==================
-//Cmd_CvarInfo_f - Contains a cvar name and string provided by the client
-//==================
+/*
+* Cmd_CvarInfo_f - Contains a cvar name and string provided by the client
+*/
 static void Cmd_CvarInfo_f( edict_t *ent )
 {
 	if( trap_Cmd_Argc() < 2 )
@@ -378,9 +378,9 @@ static void Cmd_CvarInfo_f( edict_t *ent )
 	}
 }
 
-//==================
-//Cmd_Position_f
-//==================
+/*
+* Cmd_Position_f
+*/
 static void Cmd_Position_f( edict_t *ent )
 {
 	char *action;
@@ -451,14 +451,14 @@ static void Cmd_Position_f( edict_t *ent )
 		Q_strncatz( msg, "position load - Teleport to saved position\n", sizeof( msg ) );
 		Q_strncatz( msg, "position set <x> <y> <z> <pitch> <yaw> - Teleport to specified position\n", sizeof( msg ) );
 		Q_strncatz( msg, va( "Current position: %.4f %.4f %.4f %.4f %.4f\n", ent->s.origin[0], ent->s.origin[1],
-		                     ent->s.origin[2], ent->s.angles[0], ent->s.angles[1] ), sizeof( msg ) );
+			ent->s.origin[2], ent->s.angles[0], ent->s.angles[1] ), sizeof( msg ) );
 		G_PrintMsg( ent, msg );
 	}
 }
 
-//=================
-//Cmd_PlayersExt_f
-//=================
+/*
+* Cmd_PlayersExt_f
+*/
 static void Cmd_PlayersExt_f( edict_t *ent, qboolean onlyspecs )
 {
 	int i;
@@ -511,17 +511,17 @@ static void Cmd_PlayersExt_f( edict_t *ent, qboolean onlyspecs )
 		G_PrintMsg( ent, "Type '%s %i' for more %s\n", trap_Cmd_Argv( 0 ), i, trap_Cmd_Argv( 0 ) );
 }
 
-//=================
-//Cmd_Players_f
-//=================
+/*
+* Cmd_Players_f
+*/
 static void Cmd_Players_f( edict_t *ent )
 {
 	Cmd_PlayersExt_f( ent, qfalse );
 }
 
-//=================
-//Cmd_Spectators_f
-//=================
+/*
+* Cmd_Spectators_f
+*/
 static void Cmd_Spectators_f( edict_t *ent )
 {
 	Cmd_PlayersExt_f( ent, qtrue );
@@ -530,9 +530,12 @@ static void Cmd_Spectators_f( edict_t *ent )
 qboolean CheckFlood( edict_t *ent, qboolean teamonly )
 {
 	int i;
-	gclient_t *client = ent->r.client;
+	gclient_t *client;
 
-	assert( ent && client );
+	assert( ent != NULL );
+
+	client = ent->r.client;
+	assert( client != NULL );
 
 	if( g_floodprotection_messages->modified )
 	{
@@ -661,9 +664,9 @@ static void Cmd_CoinToss_f( edict_t *ent )
 	G_PrintMsg( NULL, S_COLOR_YELLOW "COINTOSS %s: " S_COLOR_WHITE "It was %s! %s " S_COLOR_WHITE "tossed a coin and " S_COLOR_RED "lost!\n", upper, qtails ? "heads" : "tails", ent->r.client->netname );
 }
 
-//==================
-//Cmd_Say_f
-//==================
+/*
+* Cmd_Say_f
+*/
 void Cmd_Say_f( edict_t *ent, qboolean arg0, qboolean checkflood )
 {
 	char *p;
@@ -708,22 +711,23 @@ void Cmd_Say_f( edict_t *ent, qboolean arg0, qboolean checkflood )
 
 	G_ChatMsg( NULL, ent, qfalse, "%s", text );
 
-    RS_ircSendMessage( va( "%s", COM_RemoveColorTokens(( ent->r.client->netname ) )),
-            va( "%s", COM_RemoveColorTokens(( text)) ) );//racesow
-
+	// racesow
+	RS_ircSendMessage( va( "%s", COM_RemoveColorTokens(( ent->r.client->netname ) )),
+			va( "%s", COM_RemoveColorTokens(( text)) ) );
+	// !racesow
 }
 
-//==================
-//Cmd_SayCmd_f
-//==================
+/*
+* Cmd_SayCmd_f
+*/
 static void Cmd_SayCmd_f( edict_t *ent )
 {
 	Cmd_Say_f( ent, qfalse, qtrue );
 }
 
-//==================
-//Cmd_SayTeam_f
-//==================
+/*
+* Cmd_SayTeam_f
+*/
 static void Cmd_SayTeam_f( edict_t *ent )
 {
 	G_Say_Team( ent, trap_Cmd_Args(), qtrue );
@@ -809,9 +813,9 @@ void G_BOTvsay_f( edict_t *ent, char *msg, qboolean team )
 	}
 }
 
-//==================
-//G_vsay_f
-//==================
+/*
+* G_vsay_f
+*/
 static void G_vsay_f( edict_t *ent, qboolean team )
 {
 	edict_t	*event = NULL;
@@ -883,7 +887,7 @@ static void G_vsay_f( edict_t *ent, qboolean team )
 
 		// print information
 		string[0] = 0;
-		if( msg && strlen( msg ) > 0 )
+		if( msg && msg[0] != '\0' )
 			Q_strncatz( string, va( "%sUnknown vsay token%s \"%s\"\n", S_COLOR_YELLOW, S_COLOR_WHITE, msg ), sizeof( string ) );
 		Q_strncatz( string, va( "%svsays:%s\n", S_COLOR_YELLOW, S_COLOR_WHITE ), sizeof( string ) );
 		for( vsay = g_vsays; vsay->name; vsay++ )
@@ -898,25 +902,25 @@ static void G_vsay_f( edict_t *ent, qboolean team )
 	}
 }
 
-//==================
-//G_vsay_Cmd
-//==================
+/*
+* G_vsay_Cmd
+*/
 static void G_vsay_Cmd( edict_t *ent )
 {
 	G_vsay_f( ent, qfalse );
 }
 
-//==================
-//G_Teams_vsay_Cmd
-//==================
+/*
+* G_Teams_vsay_Cmd
+*/
 static void G_Teams_vsay_Cmd( edict_t *ent )
 {
 	G_vsay_f( ent, qtrue );
 }
 
-//==================
-//Cmd_Join_f
-//==================
+/*
+* Cmd_Join_f
+*/
 static void Cmd_Join_f( edict_t *ent )
 {
 	if( CheckFlood( ent, qfalse ) )
@@ -925,9 +929,9 @@ static void Cmd_Join_f( edict_t *ent )
 	G_Teams_Join_Cmd( ent );
 }
 
-//====================
-//Cmd_Timeout_f
-//====================
+/*
+* Cmd_Timeout_f
+*/
 static void Cmd_Timeout_f( edict_t *ent )
 {
 	int num;
@@ -968,9 +972,9 @@ static void Cmd_Timeout_f( edict_t *ent )
 	level.timeout.endtime = level.timeout.time + TIMEOUT_TIME + FRAMETIME;
 }
 
-//====================
-//Cmd_Timeout_f
-//====================
+/*
+* Cmd_Timeout_f
+*/
 static void Cmd_Timein_f( edict_t *ent )
 {
 	int num;
@@ -1011,13 +1015,40 @@ static void Cmd_Timein_f( edict_t *ent )
 	G_PrintMsg( NULL, "%s%s called a timein\n", ent->r.client->netname, S_COLOR_WHITE );
 }
 
-//====================
-//G_StatsMessage
-//
-// Generates stats message for the entity
-// The returned string must be freed by the caller using G_Free
-// Note: This string must never contain " characters
-//====================
+/*
+* Cmd_Awards_f
+*/
+static void Cmd_Awards_f ( edict_t *ent )
+{
+	gclient_t *client;
+	gameaward_t *ga;
+	int i, size;
+	static char entry[MAX_TOKEN_CHARS];
+
+	assert( ent && ent->r.client );
+	client = ent->r.client;
+
+	Q_snprintfz ( entry, sizeof( entry ), "Awards for %s \n", client->netname );
+
+	if ( client->level.stats.awardAllocator )
+	{
+		size = LA_Size( client->level.stats.awardAllocator );
+		for( i = 0; i < size; i++ )
+		{
+			ga = LA_Pointer( client->level.stats.awardAllocator, i );
+			Q_strncatz( entry, va( "\t%dx %s\n", ga->count, ga->name ), sizeof( entry ) );
+		}
+		G_PrintMsg( ent, entry );
+	}
+}
+
+/*
+* G_StatsMessage
+* 
+* Generates stats message for the entity
+* The returned string must be freed by the caller using G_Free
+* Note: This string must never contain " characters
+*/
 char *G_StatsMessage( edict_t *ent )
 {
 	gclient_t *client;
@@ -1074,9 +1105,9 @@ char *G_StatsMessage( edict_t *ent )
 	return entry;
 }
 
-//=================
-//Cmd_ShowStats_f
-//=================
+/*
+* Cmd_ShowStats_f
+*/
 static void Cmd_ShowStats_f( edict_t *ent )
 {
 	edict_t *target;
@@ -1113,6 +1144,51 @@ static void Cmd_ShowStats_f( edict_t *ent )
 	trap_GameCmd( ent, va( "plstats 1 \"%s\"", G_StatsMessage( target ) ) );
 }
 
+/*
+* Cmd_Whois_f
+*/
+static void Cmd_Whois_f( edict_t *ent )
+{
+	edict_t *target;
+	gclient_t *cl;
+	const char *login;
+
+	if( trap_Cmd_Argc() > 2 )
+	{
+		G_PrintMsg( ent, "Usage: whois [player]\n" );
+		return;
+	}
+
+	if( trap_Cmd_Argc() == 2 )
+	{
+		target = G_PlayerForText( trap_Cmd_Argv( 1 ) );
+		if( target == NULL )
+		{
+			G_PrintMsg( ent, "No such player\n" );
+			return;
+		}
+	}
+	else
+	{
+		if( ent->r.client->resp.chase.active && game.edicts[ent->r.client->resp.chase.target].r.client )
+			target = &game.edicts[ent->r.client->resp.chase.target];
+		else
+			target = ent;
+	}
+
+	cl = target->r.client;
+
+	if( cl->mm_session <= 0 )
+	{
+		G_PrintMsg( ent, "Unregistered player\n" );
+		return;
+	}
+
+	login = Info_ValueForKey( cl->userinfo, "cl_mm_login" );
+
+	G_PrintMsg( ent, "%s is %s\n", cl->netname, login );
+}
+
 //===========================================================
 //	client commands
 //===========================================================
@@ -1139,9 +1215,9 @@ void G_PrecacheGameCommands( void )
 		trap_ConfigString( CS_GAMECOMMANDS + i, g_Commands[i].name );
 }
 
-//==================
-//G_AddCommand
-//==================
+/*
+* G_AddCommand
+*/
 void G_AddCommand( char *name, void *callback )
 {
 	int i;
@@ -1225,6 +1301,7 @@ void G_InitGameCommands( void )
 	G_AddCommand( "timeout", Cmd_Timeout_f );
 	G_AddCommand( "timein", Cmd_Timein_f );
 	G_AddCommand( "cointoss", Cmd_CoinToss_f );
+	G_AddCommand( "whois", Cmd_Whois_f );
 
 	// callvotes commands
 	G_AddCommand( "callvote", G_CallVote_Cmd );
@@ -1254,11 +1331,14 @@ void G_InitGameCommands( void )
 	G_AddCommand( "showclosestnode", Cmd_ShowPLinks_f );
 	G_AddCommand( "deleteclosestnode", Cmd_deleteClosestNode_f );
 	G_AddCommand( "botnotarget", AI_Cheat_NoTarget );
+
+	// ch : added awards
+	G_AddCommand ( "awards", Cmd_Awards_f );
 }
 
-//=================
-//ClientCommand
-//=================
+/*
+* ClientCommand
+*/
 void ClientCommand( edict_t *ent )
 {
 	char *cmd;

@@ -1,23 +1,23 @@
 /*
-   Copyright (C) 2006-2007 Benjamin Litzelmann ("Kurim")
-   for Chasseur de bots association.
+Copyright (C) 2006-2007 Benjamin Litzelmann ("Kurim")
+for Chasseur de bots association.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
@@ -31,6 +31,9 @@
 void G_PlayerAward( edict_t *ent, const char *awardMsg )
 {
 	edict_t *other, *third;
+	gameaward_t *ga;
+	int i, size;
+	score_stats_t *stats;
 
 	if( !awardMsg || !awardMsg[0] || !ent->r.client )
 		return;
@@ -44,6 +47,35 @@ void G_PlayerAward( edict_t *ent, const char *awardMsg )
 	teamlist[ent->s.team].stats.awards++;
 	G_Gametype_ScoreEvent( ent->r.client, "award", awardMsg );
 
+	stats = &ent->r.client->level.stats;
+	if( !stats->awardAllocator )
+		stats->awardAllocator = LinearAllocator( sizeof( gameaward_t ), 0, _G_LevelMalloc, _G_LevelFree );
+
+	// ch : this doesnt work for race right?
+	if( GS_MatchState() == MATCH_STATE_PLAYTIME )
+	{
+		// ch : we store this locally to send to MM
+		// first check if we already have this one on the clients list
+		size = LA_Size( stats->awardAllocator );
+		ga = NULL;
+		for( i = 0; i < size; i++ )
+		{
+			ga = LA_Pointer( stats->awardAllocator, i );
+			if( !strncmp( ga->name, awardMsg, sizeof(ga->name)-1 ) )
+				break;
+		}
+
+		if( i >= size )
+		{
+			ga = LA_Alloc( stats->awardAllocator );
+			memset( ga, 0, sizeof(*ga) );
+			ga->name = G_RegisterLevelString( awardMsg );
+		}
+
+		if( ga )
+			ga->count++;
+	}
+
 	// add it to every player who's chasing this player
 	for( other = game.edicts + 1; PLAYERNUM( other ) < gs.maxclients; other++ )
 	{
@@ -53,7 +85,7 @@ void G_PlayerAward( edict_t *ent, const char *awardMsg )
 		if( other->r.client->resp.chase.target == ent->s.number )
 		{
 			trap_GameCmd( other, va( "aw \"%s\"", awardMsg ) );
-			
+
 			// someone could also be chase-caming the guy in the chasecam
 			for( third = game.edicts + 1; PLAYERNUM( third ) < gs.maxclients; third++ )
 			{
@@ -64,6 +96,50 @@ void G_PlayerAward( edict_t *ent, const char *awardMsg )
 					trap_GameCmd( third, va( "aw \"%s\"", awardMsg ) );
 			}
 		}
+	}
+}
+
+void G_PlayerMetaAward( edict_t *ent, const char *awardMsg )
+{
+	int i, size;
+	gameaward_t *ga;
+	score_stats_t *stats;
+
+	/*
+	* ch : meta-award is an award that isn't announced but
+	* it is sent to MM
+	*/
+
+	if( !awardMsg || !awardMsg[0] || !ent->r.client )
+		return;
+
+	stats = &ent->r.client->level.stats;
+	if( !stats->awardAllocator )
+		stats->awardAllocator = LinearAllocator( sizeof( gameaward_t ), 0, _G_LevelMalloc, _G_LevelFree );
+
+	// ch : this doesnt work for race right?
+	if( GS_MatchState() == MATCH_STATE_PLAYTIME )
+	{
+		// ch : we store this locally to send to MM
+		// first check if we already have this one on the clients list
+		size = LA_Size( stats->awardAllocator );
+		ga = NULL;
+		for( i = 0; i < size; i++ )
+		{
+			ga = LA_Pointer( stats->awardAllocator, i );
+			if( !strncmp( ga->name, awardMsg, sizeof(ga->name)-1 ) )
+				break;
+		}
+
+		if( i >= size )
+		{
+			ga = LA_Alloc( stats->awardAllocator );
+			memset( ga, 0, sizeof(*ga) );
+			ga->name = G_RegisterLevelString( awardMsg );
+		}
+
+		if( ga )
+			ga->count++;
 	}
 }
 
@@ -148,12 +224,12 @@ void G_AwardPlayerHit( edict_t *targ, edict_t *attacker, int mod )
 				G_PlayerAward( attacker, S_COLOR_BLUE "RL to LG!" );
 			else if( flag == COMBO_FLAG( WEAP_RIOTGUN ) )  // to RG
 				G_PlayerAward( attacker, S_COLOR_BLUE "RL to RG!" );
-			else if( flag == COMBO_FLAG( WEAP_GRENADELAUNCHER ) )  // to GL 
+			else if( flag == COMBO_FLAG( WEAP_GRENADELAUNCHER ) )  // to GL
 				G_PlayerAward( attacker, S_COLOR_BLUE "RL to GL!" );
 			//else if( flag == COMBO_FLAG( WEAP_ROCKETLAUNCHER ) )  // to RL
 			//	G_PlayerAward( attacker, S_COLOR_BLUE "RL to RL!" );
 		}
-		else if( attacker->r.client->resp.awardInfo.combo[PLAYERNUM( targ )] == COMBO_FLAG( WEAP_ROCKETLAUNCHER ) && G_IsDead( targ ) ) // GL...
+		else if( attacker->r.client->resp.awardInfo.combo[PLAYERNUM( targ )] == COMBO_FLAG( WEAP_GRENADELAUNCHER ) && G_IsDead( targ ) ) // GL...
 		{
 			if( flag == COMBO_FLAG( WEAP_ELECTROBOLT ) )  // to EB
 				G_PlayerAward( attacker, S_COLOR_BLUE "GL to EB!" );
@@ -217,6 +293,8 @@ void G_AwardPlayerMissedLasergun( edict_t *self, int mod )
 void G_AwardPlayerKilled( edict_t *self, edict_t *inflictor, edict_t *attacker, int mod )
 {
 	trace_t trace;
+	score_stats_t *stats;
+	loggedFrag_t *lfrag;
 
 	if( self->r.svflags & SVF_CORPSE )
 		return;
@@ -351,11 +429,29 @@ void G_AwardPlayerKilled( edict_t *self, edict_t *inflictor, edict_t *attacker, 
 
 		G_PlayerAward( attacker, s );
 	}
+
+	// ch : weapon specific frags
+	if ( G_ModToAmmo( mod ) != AMMO_NONE )
+		attacker->r.client->level.stats.accuracy_frags[G_ModToAmmo( mod )-AMMO_GUNBLADE]++;
+
+	if( GS_MatchState() == MATCH_STATE_PLAYTIME /* && !strcmp( "duel", gs.gametypeName ) */)
+	{
+		// ch : frag log
+		stats = &attacker->r.client->level.stats;
+		if( !stats->fragAllocator )
+			stats->fragAllocator = LinearAllocator( sizeof( loggedFrag_t ), 0, _G_LevelMalloc, _G_LevelFree );
+
+		lfrag = LA_Alloc( stats->fragAllocator );
+		lfrag->mm_attacker = attacker->r.client->mm_session;
+		lfrag->mm_victim = self->r.client->mm_session;
+		lfrag->weapon = G_ModToAmmo( mod ) - AMMO_GUNBLADE;
+		lfrag->time = ( game.serverTime - GS_MatchStartTime() ) / 1000;
+	}
 }
 
 void G_AwardPlayerPickup( edict_t *self, edict_t *item )
 {
-    if( GS_RaceGametype() ) //racesow: no awards for item timings; will be included in basewsw
+    if( GS_RaceGametype() ) //racesow: no awards for item timings; will be included in basewsw //FIXME: Doesn't seem like it was included ... -K1ll
         return;
 
 	if( !item )
@@ -364,26 +460,41 @@ void G_AwardPlayerPickup( edict_t *self, edict_t *item )
 	// MH control
 	if( item->item->tag == HEALTH_MEGA )
 	{
+		self->r.client->level.stats.mh_taken++;
 		self->r.client->resp.awardInfo.mh_control_award++;
 		if( self->r.client->resp.awardInfo.mh_control_award % 5 == 0 )
 			G_PlayerAward( self, S_COLOR_CYAN "Mega-Health Control!" );
 	}
 
 	// UH control
-	if( item->item->tag == HEALTH_ULTRA )
+	else if( item->item->tag == HEALTH_ULTRA )
 	{
+		self->r.client->level.stats.uh_taken++;
 		self->r.client->resp.awardInfo.uh_control_award++;
 		if( self->r.client->resp.awardInfo.uh_control_award % 5 == 0 )
 			G_PlayerAward( self, S_COLOR_CYAN "Ultra-Health Control!" );
 	}
 
 	// RA control
-	if( item->item->tag == ARMOR_RA )
+	else if( item->item->tag == ARMOR_RA )
 	{
+		self->r.client->level.stats.ra_taken++;
 		self->r.client->resp.awardInfo.ra_control_award++;
 		if( self->r.client->resp.awardInfo.ra_control_award % 5 == 0 )
 			G_PlayerAward( self, S_COLOR_CYAN "Red Armor Control!" );
 	}
+
+	// Other items counts
+	else if( item->item->tag == ARMOR_GA )
+		self->r.client->level.stats.ga_taken++;
+	else if( item->item->tag == ARMOR_YA )
+		self->r.client->level.stats.ya_taken++;
+	else if( item->item->tag == POWERUP_QUAD )
+		self->r.client->level.stats.quads_taken++;
+	else if( item->item->tag == POWERUP_REGEN )
+		self->r.client->level.stats.regens_taken++;
+	else if( item->item->tag == POWERUP_SHELL )
+		self->r.client->level.stats.shells_taken++;
 }
 
 void G_AwardRaceRecord( edict_t *self )

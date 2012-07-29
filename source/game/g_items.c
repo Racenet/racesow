@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 #include "g_local.h"
 
 #define HEALTH_IGNORE_MAX   1
@@ -24,6 +24,7 @@
 
 #define SHELL_TIMEOUT	30000
 #define QUAD_TIMEOUT	30000
+#define REGEN_TIMEOUT	30000
 
 //======================================================================
 
@@ -59,6 +60,8 @@ void DoRespawn( edict_t *ent )
 			G_GlobalSound( CHAN_AUTO, trap_SoundIndex( S_ITEM_QUAD_RESPAWN ) );
 		if( ent->item->tag == POWERUP_SHELL )
 			G_GlobalSound( CHAN_AUTO, trap_SoundIndex( S_ITEM_WARSHELL_RESPAWN ) );
+		if( ent->item->tag == POWERUP_REGEN )
+			G_GlobalSound( CHAN_AUTO, trap_SoundIndex( S_ITEM_REGEN_RESPAWN ) );
 	}
 }
 
@@ -343,7 +346,7 @@ qboolean Add_Armor( edict_t *ent, edict_t *other, qboolean pick_it )
 		client->level.stats.armor_taken += ent->item->quantity;
 		teamlist[other->s.team].stats.armor_taken += ent->item->quantity;
 	}
-	
+
 	return qtrue;
 }
 
@@ -367,9 +370,9 @@ void Touch_ItemSound( edict_t *other, gsitem_t *item )
 	}
 }
 
-//===============
-//Touch_Item
-//===============
+/*
+* Touch_Item
+*/
 void Touch_Item( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags )
 {
 	qboolean taken;
@@ -476,7 +479,7 @@ edict_t *Drop_Item( edict_t *ent, gsitem_t *item )
 		VectorSet( offset, 24, 0, -16 );
 		G_ProjectSource( ent->s.origin, offset, forward, right, dropped->s.origin );
 		G_Trace( &trace, ent->s.origin, dropped->r.mins, dropped->r.maxs,
-		         dropped->s.origin, ent, CONTENTS_SOLID );
+			dropped->s.origin, ent, CONTENTS_SOLID );
 		VectorCopy( trace.endpos, dropped->s.origin );
 
 		dropped->spawnflags |= DROPPED_PLAYER_ITEM;
@@ -499,7 +502,7 @@ edict_t *Drop_Item( edict_t *ent, gsitem_t *item )
 						anything = qtrue;
 					}
 				}
-				
+
 				if( item->tag == AMMO_PACK_STRONG || item->tag == AMMO_PACK )
 				{
 					int strongTag = GS_FindItemByTag( w )->ammo_tag;
@@ -584,9 +587,9 @@ edict_t *Drop_Item( edict_t *ent, gsitem_t *item )
 
 //======================================================================
 
-//================
-//G_PickupItem
-//================
+/*
+* G_PickupItem
+*/
 qboolean G_PickupItem( edict_t *ent, edict_t *other )
 {
 	gsitem_t	*it;
@@ -637,9 +640,9 @@ static void Drop_General( edict_t *ent, gsitem_t *item )
 		ent->r.client->ps.inventory[item->tag]--;
 }
 
-//================
-//G_DropItem
-//================
+/*
+* G_DropItem
+*/
 void G_DropItem( edict_t *ent, gsitem_t *it )
 {
 	if( !it || !( it->flags & ITFLAG_DROPABLE ) )
@@ -662,9 +665,9 @@ void G_DropItem( edict_t *ent, gsitem_t *it )
 	}
 }
 
-//================
-//G_UseItem
-//================
+/*
+* G_UseItem
+*/
 void G_UseItem( edict_t *ent, gsitem_t *it )
 {
 	if( !it || !( it->flags & ITFLAG_USABLE ) )
@@ -751,9 +754,9 @@ static qboolean G_ItemTimerUnimportant( gsitem_t *it )
 	return qfalse;
 }
 
-//================
-//item_timer_think
-//================
+/*
+* item_timer_think
+*/
 void item_timer_think( edict_t *ent )
 {
 	edict_t *owner;
@@ -770,11 +773,11 @@ void item_timer_think( edict_t *ent )
 		// megahealth is special
 		if( owner->style & HEALTH_TIMED && owner->r.owner )
 		{
-/*			if( owner->r.owner->r.inuse && owner->r.owner->s.team != TEAM_SPECTATOR &&
-				HEALTH_TO_INT( owner->r.owner->health ) > owner->r.owner->max_health )
-				ent->s.frame = HEALTH_TO_INT( owner->r.owner->health ) - owner->r.owner->max_health;
+			/*			if( owner->r.owner->r.inuse && owner->r.owner->s.team != TEAM_SPECTATOR &&
+			HEALTH_TO_INT( owner->r.owner->health ) > owner->r.owner->max_health )
+			ent->s.frame = HEALTH_TO_INT( owner->r.owner->health ) - owner->r.owner->max_health;
 			else*/
-				ent->s.frame = 0;
+			ent->s.frame = 0;
 			ent->s.frame += G_Gametype_RespawnTimeForItem( owner->item ) / 1000;
 		}
 		else
@@ -793,16 +796,16 @@ void item_timer_think( edict_t *ent )
 	ent->nextThink = level.time + 1000;
 }
 
-//================
-//Spawn_ItemTimer
-//================
+/*
+* Spawn_ItemTimer
+*/
 static edict_t *Spawn_ItemTimer( edict_t *ent )
 {
 	edict_t *timer;
-	char location[MAX_CONFIGSTRING_CHARS];
+	int locationTag;
 
 	// location tag
-	G_LocationName( ent->s.origin, location, sizeof( location ) );
+	locationTag = G_MapLocationTAGForOrigin( ent->s.origin );
 
 	// item timer is a special entity type, carrying information about its parent item entity
 	// which is only visible to spectators
@@ -813,7 +816,7 @@ static edict_t *Spawn_ItemTimer( edict_t *ent )
 	timer->r.svflags = SVF_ONLYTEAM | SVF_BROADCAST;
 	timer->r.owner = ent;
 	timer->s.modelindex = 0;
-	timer->s.modelindex2 = G_LocationTAG( location );
+	timer->s.modelindex2 = locationTag;
 	timer->nextThink = level.time + 250;
 	timer->think = item_timer_think;
 	VectorCopy( ent->s.origin, timer->s.origin ); // for z-sorting
@@ -834,9 +837,9 @@ static edict_t *Spawn_ItemTimer( edict_t *ent )
 	return timer;
 }
 
-//================
-//Finish_SpawningItem
-//================
+/*
+* Finish_SpawningItem
+*/
 static void Finish_SpawningItem( edict_t *ent )
 {
 	trace_t	tr;
@@ -957,8 +960,7 @@ void G_Items_FinishSpawningItems( void )
 		if( !ent->r.inuse )
 			continue;
 
-		if( G_ItemTimerNeeded( ent->item ) && !GS_RaceGametype() )
-		    //racesow: no item timers; will be included in basewsw if not, use the AS fix from ticket #246#comment:6
+		if( G_ItemTimerNeeded( ent->item ) && !GS_RaceGametype() ) //racesow: no item timers; will be included in basewsw if not, use the AS fix from ticket #246#comment:6
 		{
 			if( Spawn_ItemTimer( ent ) )
 				num_timers++;
@@ -973,21 +975,21 @@ void G_Items_FinishSpawningItems( void )
 
 	// if there are less timers than MAX_IMPORTANT_ITEMS_THRESHOLD, spawn
 	// timers for less important items
-	if( num_timers < MAX_IMPORTANT_ITEMS_THRESHOLD && !GS_RaceGametype() )//racesow: no item timers; will be included in basewsw
+	if( num_timers < MAX_IMPORTANT_ITEMS_THRESHOLD && !GS_RaceGametype() ) //racesow: no item timers; will be included in basewsw
 	{
 		for( ; num_opts > 0; num_opts-- )
 			Spawn_ItemTimer( ops[num_opts-1] );
 	}
 }
 
-//============
-//SpawnItem
-//
-//Sets the clipping size and plants the object on the floor.
-//
-//Items can't be immediately dropped to floor, because they might
-//be on an entity that hasn't spawned yet.
-//============
+/*
+* SpawnItem
+* 
+* Sets the clipping size and plants the object on the floor.
+* 
+* Items can't be immediately dropped to floor, because they might
+* be on an entity that hasn't spawned yet.
+*/
 void SpawnItem( edict_t *ent, gsitem_t *item )
 {
 	// set items as ET_ITEM for simpleitems
@@ -998,13 +1000,13 @@ void SpawnItem( edict_t *ent, gsitem_t *item )
 }
 
 
-//===============
-//PrecacheItem
-//
-//Precaches all data needed for a given item.
-//This will be called for each item spawned in a level,
-//and for each item in each client's inventory.
-//===============
+/*
+* PrecacheItem
+* 
+* Precaches all data needed for a given item.
+* This will be called for each item spawned in a level,
+* and for each item in each client's inventory.
+*/
 void PrecacheItem( gsitem_t *it )
 {
 	int i;
@@ -1074,11 +1076,11 @@ void PrecacheItem( gsitem_t *it )
 
 //======================================================================
 
-//===============
-//SetItemNames
-//
-//Called by worldspawn
-//===============
+/*
+* SetItemNames
+* 
+* Called by worldspawn
+*/
 void G_PrecacheItems( void )
 {
 	int i;

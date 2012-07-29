@@ -18,7 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include "q_arch.h"
 #include "q_math.h"
 #include "q_shared.h"
 #include "q_collision.h"
@@ -102,9 +101,9 @@ vec4_t color_table[MAX_S_COLORS] =
 	{ 0.5, 0.5, 0.5, 1.0 }, // grey
 };
 
-//===============
-//ColorNormalize
-//===============
+/*
+* ColorNormalize
+*/
 vec_t ColorNormalize( const vec_t *in, vec_t *out )
 {
 	vec_t f = max( max( in[0], in[1] ), in[2] );
@@ -308,7 +307,7 @@ void BuildBoxPoints( vec3_t p[8], const vec3_t org, const vec3_t mins, const vec
 	VectorSet( p[7], p[1][0], p[0][1], p[0][2] );
 }
 
-void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal )
+void ProjectPointOntoPlane( vec3_t dst, const vec3_t p, const vec3_t normal )
 {
 	float d;
 	vec3_t n;
@@ -354,12 +353,52 @@ void PerpendicularVector( vec3_t dst, const vec3_t src )
 	//
 	// project the point onto the plane defined by src
 	//
-	ProjectPointOnPlane( dst, tempvec, src );
+	ProjectPointOntoPlane( dst, tempvec, src );
 
 	//
 	// normalize the result
 	//
 	VectorNormalize( dst );
+}
+
+/*
+* ProjectPointOntoVector
+*/
+void ProjectPointOntoVector( const vec3_t point, const vec3_t vStart, const vec3_t vDir, vec3_t vProj )
+{
+	vec3_t pVec;
+
+	VectorSubtract( point, vStart, pVec );
+	// project onto the directional vector for this segment
+	VectorMA( vStart, DotProduct( pVec, vDir ), vDir, vProj );
+}
+
+/*
+* DistanceFromLineSquared
+*/
+float DistanceFromLineSquared(const vec3_t p, const vec3_t lp1, const vec3_t lp2, const vec3_t dir)
+{
+	vec3_t proj, t;
+	int j;
+
+	ProjectPointOntoVector(p, lp1, dir, proj);
+
+	for (j = 0; j < 3; j++) {
+		if ((proj[j] > lp1[j] && proj[j] > lp2[j]) ||
+			(proj[j] < lp1[j] && proj[j] < lp2[j]))
+			break;
+	}
+
+	if (j < 3) {
+		if (fabs(proj[j] - lp1[j]) < fabs(proj[j] - lp2[j]))
+			VectorSubtract(p, lp1, t);
+		else
+			VectorSubtract(p, lp2, t);
+		return VectorLengthSquared(t);
+	}
+
+	VectorSubtract(p, proj, t);
+	return VectorLengthSquared(t);
 }
 
 //============================================================================
@@ -388,11 +427,22 @@ int Q_rand( int *seed )
 	return ( (unsigned int)( *seed / 65536 ) % 32768 );
 }
 
+// found here: http://graphics.stanford.edu/~seander/bithacks.html
+int Q_bitcount( int v )
+{
+	int c;
 
-//===============
-//LerpAngle
-//
-//===============
+	v = v - ((v >> 1) & 0x55555555);                    // reuse input as temporary
+	v = (v & 0x33333333) + ((v >> 2) & 0x33333333);     // temp
+	c = (((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24; // count
+
+	return c;
+}
+
+/*
+* LerpAngle
+* 
+*/
 float LerpAngle( float a2, float a1, const float frac )
 {
 	if( a1 - a2 > 180 )
@@ -402,11 +452,11 @@ float LerpAngle( float a2, float a1, const float frac )
 	return a2 + frac * ( a1 - a2 );
 }
 
-//=================
-//AngleSubtract
-//
-//Always returns a value from -180 to 180
-//=================
+/*
+* AngleSubtract
+* 
+* Always returns a value from -180 to 180
+*/
 float AngleSubtract( float a1, float a2 )
 {
 	float a;
@@ -423,11 +473,11 @@ float AngleSubtract( float a1, float a2 )
 	return a;
 }
 
-//=================
-//AnglesSubtract
-//
-//Always returns a value from -180 to 180
-//=================
+/*
+* AnglesSubtract
+* 
+* Always returns a value from -180 to 180
+*/
 void AnglesSubtract( vec3_t v1, vec3_t v2, vec3_t v3 )
 {
 	v3[0] = AngleSubtract( v1[0], v2[0] );
@@ -435,21 +485,21 @@ void AnglesSubtract( vec3_t v1, vec3_t v2, vec3_t v3 )
 	v3[2] = AngleSubtract( v1[2], v2[2] );
 }
 
-//=================
-//AngleNormalize360
-//
-//returns angle normalized to the range [0 <= angle < 360]
-//=================
+/*
+* AngleNormalize360
+* 
+* returns angle normalized to the range [0 <= angle < 360]
+*/
 float AngleNormalize360( float angle )
 {
 	return ( 360.0 / 65536 ) * ( (int)( angle * ( 65536 / 360.0 ) ) & 65535 );
 }
 
-//=================
-//AngleNormalize180
-//
-//returns angle normalized to the range [-180 < angle <= 180]
-//=================
+/*
+* AngleNormalize180
+* 
+* returns angle normalized to the range [-180 < angle <= 180]
+*/
 float AngleNormalize180( float angle )
 {
 	angle = AngleNormalize360( angle );
@@ -460,28 +510,28 @@ float AngleNormalize180( float angle )
 	return angle;
 }
 
-//=================
-//AngleDelta
-//
-//returns the normalized delta from angle1 to angle2
-//=================
+/*
+* AngleDelta
+* 
+* returns the normalized delta from angle1 to angle2
+*/
 float AngleDelta( float angle1, float angle2 )
 {
 	return AngleNormalize180( angle1 - angle2 );
 }
 
-//=================
-//anglemod
-//=================
+/*
+* anglemod
+*/
 float anglemod( float a )
 {
 	a = ( 360.0/65536 ) * ( (int)( a*( 65536/360.0 ) ) & 65535 );
 	return a;
 }
 
-//====================
-//CalcFov
-//====================
+/*
+* CalcFov
+*/
 float CalcFov( float fov_x, float width, float height )
 {
 	float x;
@@ -494,9 +544,9 @@ float CalcFov( float fov_x, float width, float height )
 	return atan( height/x )*360/M_PI;
 }
 
-//====================
-//AdjustFov
-//====================
+/*
+* AdjustFov
+*/
 void AdjustFov( float *fov_x, float *fov_y, float width, float height, qboolean lock_x )
 {
 	float x, y;
@@ -522,11 +572,11 @@ void AdjustFov( float *fov_x, float *fov_y, float width, float height, qboolean 
 		*fov_y = y;
 }
 
-//==================
-//BoxOnPlaneSide
-//
-//Returns 1, 2, or 1 + 2
-//==================
+/*
+* BoxOnPlaneSide
+* 
+* Returns 1, 2, or 1 + 2
+*/
 int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const struct cplane_s *p )
 {
 	float dist1, dist2;
@@ -586,9 +636,9 @@ int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const struct cplane_
 	return sides;
 }
 
-//=================
-//SignbitsForPlane
-//=================
+/*
+* SignbitsForPlane
+*/
 int SignbitsForPlane( const cplane_t *out )
 {
 	int bits, j;
@@ -604,9 +654,9 @@ int SignbitsForPlane( const cplane_t *out )
 	return bits;
 }
 
-//=================
-//PlaneTypeForNormal
-//=================
+/*
+* PlaneTypeForNormal
+*/
 int PlaneTypeForNormal( const vec3_t normal )
 {
 	// NOTE: should these have an epsilon around 1.0?
@@ -620,12 +670,12 @@ int PlaneTypeForNormal( const vec3_t normal )
 	return PLANE_NONAXIAL;
 }
 
-//=================
-//CategorizePlane
-//
-//A slightly more complex version of SignbitsForPlane and PlaneTypeForNormal,
-//which also tries to fix possible floating point glitches (like -0.00000 cases)
-//=================
+/*
+* CategorizePlane
+* 
+* A slightly more complex version of SignbitsForPlane and PlaneTypeForNormal,
+* which also tries to fix possible floating point glitches (like -0.00000 cases)
+*/
 void CategorizePlane( cplane_t *plane )
 {
 	int i;
@@ -656,9 +706,9 @@ void CategorizePlane( cplane_t *plane )
 	}
 }
 
-//=================
-//PlaneFromPoints
-//=================
+/*
+* PlaneFromPoints
+*/
 void PlaneFromPoints( vec3_t verts[3], cplane_t *plane )
 {
 	vec3_t v1, v2;
@@ -673,9 +723,9 @@ void PlaneFromPoints( vec3_t verts[3], cplane_t *plane )
 #define	PLANE_NORMAL_EPSILON	0.00001
 #define	PLANE_DIST_EPSILON	0.01
 
-//=================
-//ComparePlanes
-//=================
+/*
+* ComparePlanes
+*/
 qboolean ComparePlanes( const vec3_t p1normal, vec_t p1dist, const vec3_t p2normal, vec_t p2dist )
 {
 	if( fabs( p1normal[0] - p2normal[0] ) < PLANE_NORMAL_EPSILON
@@ -687,9 +737,9 @@ qboolean ComparePlanes( const vec3_t p1normal, vec_t p1dist, const vec3_t p2norm
 	return qfalse;
 }
 
-//==============
-//SnapVector
-//==============
+/*
+* SnapVector
+*/
 void SnapVector( vec3_t normal )
 {
 	int i;
@@ -711,9 +761,9 @@ void SnapVector( vec3_t normal )
 	}
 }
 
-//==============
-//SnapPlane
-//==============
+/*
+* SnapPlane
+*/
 void SnapPlane( vec3_t normal, vec_t *dist )
 {
 	SnapVector( normal );
@@ -770,9 +820,9 @@ void AddPointToBounds( const vec3_t v, vec3_t mins, vec3_t maxs )
 	}
 }
 
-//=================
-//RadiusFromBounds
-//=================
+/*
+* RadiusFromBounds
+*/
 float RadiusFromBounds( const vec3_t mins, const vec3_t maxs )
 {
 	int i;
@@ -821,6 +871,25 @@ vec_t VectorNormalize2( const vec3_t v, vec3_t out )
 	else
 	{
 		VectorClear( out );
+	}
+
+	return length;
+}
+
+vec_t Vector4Normalize( vec4_t v )
+{
+	float length, ilength;
+
+	length = v[0]*v[0] + v[1]*v[1] + v[2]*v[2] + v[3]*v[3];
+
+	if( length )
+	{
+		length = sqrt( length ); // FIXME
+		ilength = 1.0/length;
+		v[0] *= ilength;
+		v[1] *= ilength;
+		v[2] *= ilength;
+		v[3] *= ilength;
 	}
 
 	return length;
@@ -1038,6 +1107,14 @@ void Quat_Copy( const quat_t q1, quat_t q2 )
 	q2[3] = q1[3];
 }
 
+void Quat_Quat3( const vec3_t in, quat_t out )
+{
+	out[0] = in[0];
+	out[1] = in[1];
+	out[2] = in[2];
+	out[3] = -sqrt(max(1 - in[0]*in[0] - in[1]*in[1] - in[2]*in[2], 0.0f));
+}
+
 qboolean Quat_Compare( const quat_t q1, const quat_t q2 )
 {
 	if( q1[0] != q2[0] || q1[1] != q2[1] || q1[2] != q2[2] || q1[3] != q2[3] )
@@ -1051,6 +1128,11 @@ void Quat_Conjugate( const quat_t q1, quat_t q2 )
 	q2[1] = -q1[1];
 	q2[2] = -q1[2];
 	q2[3] = q1[3];
+}
+
+vec_t Quat_DotProduct( const quat_t q1, const quat_t q2 )
+{
+	return (q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3]);
 }
 
 vec_t Quat_Normalize( quat_t q )
@@ -1206,4 +1288,213 @@ void Quat_ConcatTransforms( const quat_t q1, const vec3_t v1, const quat_t q2, c
 	Quat_Multiply( q1, q2, q );
 	Quat_TransformVector( q1, v2, v );
 	v[0] += v1[0]; v[1] += v1[1]; v[2] += v1[2];
+}
+
+//============================================================================
+
+void DualQuat_Identity( dualquat_t dq )
+{
+	Vector4Set( &dq[0], 0, 0, 0, 1 );
+	Vector4Set( &dq[4], 0, 0, 0, 0 );
+}
+
+void DualQuat_Copy( const dualquat_t in, dualquat_t out )
+{
+	Quat_Copy( &in[0], &out[0] );
+	Quat_Copy( &in[4], &out[4] );
+}
+
+static inline void DualQuat_SetVector( dualquat_t dq, const vec3_t v )
+{
+	// convert translation vector to dual part
+	Vector4Set( &dq[4], 0.5f * (v[0]*dq[3] + v[1]*dq[2] - v[2]*dq[1]),
+               0.5f*(-v[0]*dq[2] + v[1]*dq[3] + v[2]*dq[0]),
+               0.5f*( v[0]*dq[1] - v[1]*dq[0] + v[2]*dq[3]),
+              -0.5f*( v[0]*dq[0] + v[1]*dq[1] + v[2]*dq[2]) );
+}
+
+void DualQuat_FromAnglesAndVector( const vec3_t angles, const vec3_t v, dualquat_t out )
+{
+	vec3_t axis[3];
+
+	AnglesToAxis( angles, axis );
+	DualQuat_FromMatrixAndVector( axis, v, out );
+}
+
+void DualQuat_FromMatrixAndVector( vec3_t m[3], const vec3_t v, dualquat_t out )
+{
+	// regular matrix to a quaternion
+	Matrix_Quat( m, &out[0] );
+
+	// convert translation vector to dual part
+	DualQuat_SetVector( out, v );
+}
+
+void DualQuat_FromQuatAndVector( const quat_t q, const vec3_t v, dualquat_t out )
+{
+	// regular quaternion, copy
+	Quat_Copy( q, &out[0] );
+
+	// convert translation vector to dual part
+	DualQuat_SetVector( out, v );
+}
+
+void DualQuat_FromQuat3AndVector( const vec3_t q, const vec3_t v, dualquat_t out )
+{
+	// regular quaternion, copy
+	Quat_Quat3( q, &out[0] );
+
+	// convert translation vector to dual part
+	DualQuat_SetVector( out, v );
+}
+
+void DualQuat_GetVector( const dualquat_t dq, vec3_t v )
+{
+	const vec_t *const real = &dq[0], *const dual = &dq[4];
+
+	// translation vector
+	CrossProduct( real, dual, v );
+	VectorMA( v,  real[3], dual, v );
+	VectorMA( v, -dual[3], real, v );
+	VectorScale( v, 2, v );
+}
+
+void DualQuat_ToQuatAndVector( const dualquat_t dq, quat_t q, vec3_t v )
+{
+	// regular quaternion, copy
+	Quat_Copy( &dq[0], q );
+
+	// translation vector
+	DualQuat_GetVector( dq, v );
+}
+
+void DualQuat_ToMatrixAndVector( const dualquat_t dq, vec3_t m[3], vec3_t v )
+{
+	// convert quaternion to matrix
+	Quat_Matrix( &dq[0], m );
+
+	// translation vector
+	DualQuat_GetVector( dq, v );
+}
+
+void DualQuat_Invert( dualquat_t dq )
+{
+	vec_t s;
+	vec_t *const real = &dq[0], *const dual = &dq[4];
+
+	Quat_Conjugate( real, real );
+	Quat_Conjugate( dual, dual );
+
+	s = 2 * Quat_DotProduct( real, dual );
+	dual[0] -= real[0] * s;
+	dual[1] -= real[1] * s;
+	dual[2] -= real[2] * s;
+	dual[3] -= real[3] * s;
+}
+
+vec_t DualQuat_Normalize( dualquat_t dq )
+{
+	vec_t length;
+	vec_t *const real = &dq[0], *const dual = &dq[4];
+
+	length = real[0] * real[0] + real[1] * real[1] + real[2] * real[2] + real[3] * real[3];
+	if( length != 0 )
+	{
+		vec_t ilength = 1.0 / sqrt( length );
+		Vector4Scale( real, ilength, real );
+		Vector4Scale( dual, ilength, dual );
+	}
+
+	return length;
+}
+
+void DualQuat_Multiply( const dualquat_t dq1, const dualquat_t dq2, dualquat_t out )
+{
+	quat_t tq1, tq2;
+
+	Quat_Multiply( &dq1[0], &dq2[4], tq1 );
+	Quat_Multiply( &dq1[4], &dq2[0], tq2 );
+
+	Quat_Multiply( &dq1[0], &dq2[0], &out[0] );
+	Vector4Set( &out[4], tq1[0] + tq2[0], tq1[1] + tq2[1], tq1[2] + tq2[2], tq1[3] + tq2[3] );
+}
+
+void DualQuat_Lerp( const dualquat_t dq1, const dualquat_t dq2, vec_t t, dualquat_t out )
+{
+	Quat_Lerp( &dq1[0], &dq2[0], t, &out[0] );
+	Quat_Lerp( &dq1[4], &dq2[4], t, &out[4] );
+}
+
+/*
+ * Distribution functions
+ * Standard distribution is expected with mean=0, deviation=1
+ */
+
+vec_t LogisticCDF( vec_t x )
+{
+	return 1.0 / ( 1.0 + exp( -x ) );
+}
+
+vec_t LogisticPDF( vec_t x )
+{
+	float e;
+	e = exp( -x );
+	return e / ( (1.0+e) * (1.0+e) );
+}
+
+// closer approximation from
+// http://www.wilmott.com/pdfs/090721_west.pdf
+vec_t NormalCDF( vec_t x )
+{
+	float cumnorm = 0.0;
+	float sign = 1.0;
+	float build = 0;
+	float e = 0.0;
+
+	if ( x < 0.0 )
+		sign = -1.0;
+	x = abs(x);
+	if( x > 37.0 )
+		cumnorm = 0.0;
+	else
+	{
+		e = expf( -(x*x) * 0.5 );
+		if( x < 7.07106781186547 )
+		{
+			build = 3.52624965998911e-02 * x + 0.700383064443688;
+			build = build * x + 6.37396220353165;
+			build = build * x + 33.912866078383;
+			build = build * x + 112.079291497871;
+			build = build * x + 221.213596169931;
+			build = build * x + 220.206867912376;
+			cumnorm = e * build;
+			build = 8.8388347683184e-02;
+			build = build * x + 16.064177579207;
+			build = build * x + 86.7807322029461;
+			build = build * x + 296.564248779674;
+			build = build * x + 637.333633378831;
+			build = build * x + 793.826512519948;
+			build = build * x + 440.413735824752;
+			cumnorm /= build;
+		}
+		else
+		{
+			build = x + 0.65;
+			build = x + 4 / build;
+			build = x + 3 / build;
+			build = x + 2 / build;
+			build = x + 1 / build;
+			cumnorm = e / build / 2.506628274631;
+		}
+	}
+
+	if( sign > 0 )
+		cumnorm = 1 - cumnorm;
+
+	return cumnorm;
+}
+
+vec_t NormalPDF( vec_t x )
+{
+	return exp( (-x*x) / 2 ) / sqrt( 2.0 * M_PI );
 }

@@ -230,11 +230,9 @@ static DIDATAFORMAT df = {
 };
 
 /*
-===========
-IN_ActivateMouse
-
-Called when the window gains focus or changes in some way
-===========
+* IN_ActivateMouse
+* 
+* Called when the window gains focus or changes in some way
 */
 static void IN_ActivateMouse( void )
 {
@@ -311,11 +309,9 @@ static void IN_ActivateMouse( void )
 
 
 /*
-===========
-IN_DeactivateMouse
-
-Called when the window loses focus
-===========
+* IN_DeactivateMouse
+* 
+* Called when the window loses focus
 */
 static void IN_DeactivateMouse( void )
 {
@@ -358,9 +354,7 @@ static void IN_DeactivateMouse( void )
 
 
 /*
-===========
-IN_InitDInput
-===========
+* IN_InitDInput
 */
 static qboolean IN_InitDInput( void )
 {
@@ -448,9 +442,7 @@ static qboolean IN_InitDInput( void )
 }
 
 /*
-===========
-IN_ShutdownDInput
-===========
+* IN_ShutdownDInput
 */
 static void IN_ShutdownDInput( void )
 {
@@ -805,9 +797,7 @@ void IN_RawInput_MouseRead( HANDLE in_device_handle )
 }
 
 /*
-===========
-IN_StartupMouse
-===========
+* IN_StartupMouse
 */
 static void IN_StartupMouse( void )
 {
@@ -845,9 +835,7 @@ static void IN_StartupMouse( void )
 }
 
 /*
-===========
-IN_MouseEvent
-===========
+* IN_MouseEvent
 */
 void IN_MouseEvent( int mstate )
 {
@@ -874,9 +862,7 @@ void IN_MouseEvent( int mstate )
 }
 
 /*
-===========
-IN_MouseMove
-===========
+* IN_MouseMove
 */
 void IN_MouseMove( usercmd_t *cmd )
 {
@@ -1004,9 +990,7 @@ cvar_t *v_centermove;
 cvar_t *v_centerspeed;
 
 /*
-===========
-Joystick looking
-===========
+* Joystick looking
 */
 static void Joy_JLookDown( void )
 {
@@ -1022,9 +1006,7 @@ static void Joy_JLookUp( void )
 
 
 /*
-===========
-IN_Init
-===========
+* IN_Init
 */
 void IN_Init( void )
 {
@@ -1069,9 +1051,7 @@ void IN_Init( void )
 }
 
 /*
-===========
-IN_Shutdown
-===========
+* IN_Shutdown
 */
 void IN_Shutdown( void )
 {
@@ -1091,9 +1071,7 @@ void IN_Shutdown( void )
 }
 
 /*
-===========
-IN_Restart
-===========
+* IN_Restart
 */
 void IN_Restart( void )
 {
@@ -1102,13 +1080,11 @@ void IN_Restart( void )
 }
 
 /*
-===========
-IN_Activate
-
-Called when the main window gains or loses focus.
-The window may have been destroyed and recreated
-between a deactivate and an activate.
-===========
+* IN_Activate
+* 
+* Called when the main window gains or loses focus.
+* The window may have been destroyed and recreated
+* between a deactivate and an activate.
 */
 void IN_Activate( qboolean active )
 {
@@ -1118,11 +1094,9 @@ void IN_Activate( qboolean active )
 
 
 /*
-==================
-IN_Frame
-
-Called every frame, even if not generating commands
-==================
+* IN_Frame
+* 
+* Called every frame, even if not generating commands
 */
 void IN_Frame( void )
 {
@@ -1172,9 +1146,7 @@ JOYSTICK
 */
 
 /*
-===============
-IN_StartupJoystick
-===============
+* IN_StartupJoystick
 */
 static void IN_StartupJoystick( void )
 {
@@ -1243,9 +1215,7 @@ static void IN_StartupJoystick( void )
 
 
 /*
-===========
-RawValuePointer
-===========
+* RawValuePointer
 */
 static PDWORD RawValuePointer( int axis )
 {
@@ -1270,9 +1240,7 @@ static PDWORD RawValuePointer( int axis )
 
 
 /*
-===========
-Joy_AdvancedUpdate_f
-===========
+* Joy_AdvancedUpdate_f
 */
 static void Joy_AdvancedUpdate_f( void )
 {
@@ -1339,9 +1307,7 @@ static void Joy_AdvancedUpdate_f( void )
 
 
 /*
-===========
-IN_Commands
-===========
+* IN_Commands
 */
 void IN_Commands( void )
 {
@@ -1403,9 +1369,7 @@ void IN_Commands( void )
 
 
 /*
-===============
-IN_ReadJoystick
-===============
+* IN_ReadJoystick
 */
 static qboolean IN_ReadJoystick( void )
 {
@@ -1431,9 +1395,7 @@ static qboolean IN_ReadJoystick( void )
 #define JOY_SPEED_KEY 400
 
 /*
-===========
-IN_JoyMove
-===========
+* IN_JoyMove
 */
 void IN_JoyMove( usercmd_t *cmd )
 {

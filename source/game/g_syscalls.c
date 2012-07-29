@@ -1,33 +1,33 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2002-2003 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
 game_import_t GAME_IMPORT;
 
-//=================
-//GetGameAPI
-//
-//Returns a pointer to the structure with all entry points
-//=================
-game_export_t *GetGameAPI( game_import_t *import )
+/*
+* GetGameAPI
+* 
+* Returns a pointer to the structure with all entry points
+*/
+QF_DLL_EXPORT game_export_t *GetGameAPI( game_import_t *import )
 {
 	static game_export_t globals;
 
@@ -58,6 +58,10 @@ game_export_t *GetGameAPI( game_import_t *import )
 
 	globals.MM_Setup = G_MM_Setup;
 	globals.MM_Reset = G_MM_Reset;
+
+	globals.AddDefaultRating = G_AddDefaultRating;
+	globals.AddRating = G_AddRating;
+	globals.RemoveRating = G_RemoveRating;
 
 	return &globals;
 }

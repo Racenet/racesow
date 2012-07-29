@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 2007 Will Franklin
+Copyright (C) 2007 Will Franklin
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 // MAPLIST FUNCTIONS
 
@@ -50,11 +50,11 @@ static void ML_InitFromMaps( void );
 static void ML_GetFullnameFromMap( const char *filename, char *fullname, size_t len );
 static qboolean ML_FilenameExistsExt( const char *filename, qboolean quick );
 
-//=================
-// ML_AddMap
-// Handles assigning memory for map and adding it to the list
-// in alphabetical order
-//=================
+/*
+* ML_AddMap
+* Handles assigning memory for map and adding it to the list
+* in alphabetical order
+*/
 static void ML_AddMap( const char *filename, const char *fullname )
 {
 	mapinfo_t *map;
@@ -74,7 +74,7 @@ static void ML_AddMap( const char *filename, const char *fullname )
 		return;
 
 	ml_flush = qtrue;	// tell everyone that maplist has changed
-	buffer = Mem_ZoneMalloc( sizeof( mapinfo_t ) + strlen( filename ) + 1 + strlen( fullname ) + 1 );
+	buffer = ( char* )Mem_ZoneMalloc( sizeof( mapinfo_t ) + strlen( filename ) + 1 + strlen( fullname ) + 1 );
 
 	map = ( mapinfo_t * )buffer;
 	buffer += sizeof( mapinfo_t );
@@ -96,10 +96,10 @@ static void ML_AddMap( const char *filename, const char *fullname )
 	maplist = map;
 }
 
-//=================
-// ML_BuildCache
-// Write the map data to a cache file
-//=================
+/*
+* ML_BuildCache
+* Write the map data to a cache file
+*/
 static void ML_BuildCache( void )
 {
 	int filenum;
@@ -131,10 +131,10 @@ typedef struct mapdir_s
 	struct mapdir_s *prev, *next;
 } mapdir_t;
 
-//=================
-// ML_InitFromCache
-// Fills map list array from cache, much faster
-//=================
+/*
+* ML_InitFromCache
+* Fills map list array from cache, much faster
+*/
 static void ML_InitFromCache( void )
 {
 	int count, i, total, len;
@@ -151,7 +151,7 @@ static void ML_InitFromCache( void )
 		return;
 
 	// load maps from directory reading into a list
-	maps = temp = Mem_TempMalloc( size + sizeof( mapdir_t ) * total );
+	maps = temp = ( char* )Mem_TempMalloc( size + sizeof( mapdir_t ) * total );
 	temp += size;
 	FS_GetFileList( "maps", ".bsp", maps, size, 0, 0 );
 	len = 0;
@@ -245,11 +245,11 @@ static void ML_InitFromCache( void )
 	FS_FreeFile( buffer );
 }
 
-//=================
-// ML_InitFromMaps
-// Fills map list array from each map file. Very slow
-// and should only be called if cache doesnt exist
-//=================
+/*
+* ML_InitFromMaps
+* Fills map list array from each map file. Very slow
+* and should only be called if cache doesnt exist
+*/
 static void ML_InitFromMaps( void )
 {
 	int i, j, total, len;
@@ -301,10 +301,10 @@ static int ML_PatternMatchesMap( void *map, void *pattern )
 	return !pattern || Com_GlobMatch( (const char *) pattern, ( (mapinfo_t *) map )->filename, qfalse );
 }
 
-//=================
-// ML_MapListCmd
-// Handler for console command "maplist"
-//=================
+/*
+* ML_MapListCmd
+* Handler for console command "maplist"
+*/
 static void ML_MapListCmd( void )
 {
 	char *pattern;
@@ -351,9 +351,9 @@ static void ML_MapListCmd( void )
 	Com_Printf( "%d map(s) %s\n", i, pattern ? "matching" : "total" );
 }
 
-//=================
-// ML_CompleteBuildList
-//=================
+/*
+* ML_CompleteBuildList
+*/
 char **ML_CompleteBuildList( const char *partial )
 {
 	struct trie_dump_s *dump;
@@ -374,10 +374,10 @@ char **ML_CompleteBuildList( const char *partial )
 	return buf;
 }
 
-//=================
-// ML_Init
-// Initialize map list. Check if cache file exists, if not create it
-//=================
+/*
+* ML_Init
+* Initialize map list. Check if cache file exists, if not create it
+*/
 void ML_Init( void )
 {
 	if( ml_initialized )
@@ -399,16 +399,18 @@ void ML_Init( void )
 	ml_flush = qtrue;
 }
 
-//=================
-// ML_Shutdown
-// Free map list memory
-//=================
+/*
+* ML_Shutdown
+* Free map list memory
+*/
 void ML_Shutdown( void )
 {
 	mapinfo_t *map;
 
 	if( !ml_initialized )
 		return;
+
+	ml_initialized = qfalse;
 
 	Cmd_RemoveCommand( "maplist" );
 
@@ -424,14 +426,13 @@ void ML_Shutdown( void )
 		Mem_ZoneFree( map );
 	}
 
-	ml_initialized = qfalse;
 	ml_flush = qtrue;
 }
 
-//=================
-// ML_Restart
-// Restart map list stuff
-//=================
+/*
+* ML_Restart
+* Restart map list stuff
+*/
 void ML_Restart( qboolean forcemaps )
 {
 	ML_Shutdown();
@@ -441,9 +442,9 @@ void ML_Restart( qboolean forcemaps )
 	ML_Init();
 }
 
-//=================
-// ML_Update
-//=================
+/*
+* ML_Update
+*/
 qboolean ML_Update( void )
 {
 	int i, len, total, newpaks;
@@ -457,7 +458,7 @@ qboolean ML_Update( void )
 	total = FS_GetFileListExt( "maps", ".bsp", NULL, &size, 0, 0 );
 	if( size )
 	{
-		maps = Mem_TempMalloc( size );
+		maps = ( char* )Mem_TempMalloc( size );
 		FS_GetFileList( "maps", ".bsp", maps, size, 0, 0 );
 		for( i = 0, len = 0; i < total; i++ )
 		{
@@ -477,10 +478,10 @@ qboolean ML_Update( void )
 	return qtrue;
 }
 
-//=================
-// ML_GetFilename
-// Returns the filename for the map with the corresponding fullname
-//=================
+/*
+* ML_GetFilename
+* Returns the filename for the map with the corresponding fullname
+*/
 const char *ML_GetFilenameExt( const char *fullname, qboolean recursive )
 {
 	mapinfo_t *map;
@@ -493,7 +494,7 @@ const char *ML_GetFilenameExt( const char *fullname, qboolean recursive )
 	if( !ML_ValidateFullname( fullname ) )
 		return MLIST_NULL;
 
-	fullname2 = Mem_TempMalloc( strlen( fullname ) + 1 );
+	fullname2 = ( char* )Mem_TempMalloc( strlen( fullname ) + 1 );
 	strcpy( fullname2, fullname );
 	Q_strlwr( fullname2 );
 
@@ -507,29 +508,29 @@ const char *ML_GetFilenameExt( const char *fullname, qboolean recursive )
 	// maybe the mapper has changed the fullname of the map
 	// or the user has tampered with the mapcache
 	// we need to reload the whole cache from file if we get here
-/*
+	/*
 	if( !recursive )
 	{
-		ML_Restart( qtrue );
-		return ML_GetFilenameExt( fullname, qtrue );
+	ML_Restart( qtrue );
+	return ML_GetFilenameExt( fullname, qtrue );
 	}
-*/
+	*/
 	return MLIST_NULL;
 }
 
-//=================
-// ML_GetFilename
-// Returns the filename for the map with the corresponding fullname
-//=================
+/*
+* ML_GetFilename
+* Returns the filename for the map with the corresponding fullname
+*/
 const char *ML_GetFilename( const char *fullname )
 {
 	return ML_GetFilenameExt( fullname, qfalse );
 }
 
-//=================
-// ML_FilenameExists
-// Checks to see if a filename is present in the map list
-//=================
+/*
+* ML_FilenameExists
+* Checks to see if a filename is present in the map list
+*/
 static qboolean ML_FilenameExistsExt( const char *filename, qboolean quick )
 {
 	mapinfo_t *map;
@@ -553,19 +554,19 @@ static qboolean ML_FilenameExistsExt( const char *filename, qboolean quick )
 	return qfalse;
 }
 
-//=================
-// ML_FilenameExists
-// Checks to see if a filename is present in the map list
-//=================
+/*
+* ML_FilenameExists
+* Checks to see if a filename is present in the map list
+*/
 qboolean ML_FilenameExists( const char *filename )
 {
 	return ML_FilenameExistsExt( filename, qfalse );
 }
 
-//=================
-// ML_GetFullname
-// Returns the fullname for the map with the corresponding filename
-//=================
+/*
+* ML_GetFullname
+* Returns the fullname for the map with the corresponding filename
+*/
 const char *ML_GetFullname( const char *filename )
 {
 	mapinfo_t *map;
@@ -579,10 +580,10 @@ const char *ML_GetFullname( const char *filename )
 
 	if( !ML_ValidateFilename( filepath ) )
 		return MLIST_NULL;
-/*
+	/*
 	if( FS_FOpenFile( filepath, NULL, FS_READ ) == -1 )
-		return MLIST_NULL;
-*/
+	return MLIST_NULL;
+	*/
 
 	if( Trie_Find( mlist_filenames_trie, filename, TRIE_EXACT_MATCH, (void **)&map ) == TRIE_OK )
 		return map->fullname;
@@ -593,10 +594,10 @@ const char *ML_GetFullname( const char *filename )
 	return MLIST_NULL;
 }
 
-//=================
-// ML_GetFullnameFromMap
-// Get fullname of map from file or worldspawn (slow)
-//=================
+/*
+* ML_GetFullnameFromMap
+* Get fullname of map from file or worldspawn (slow)
+*/
 static void ML_GetFullnameFromMap( const char *filename, char *fullname, size_t len )
 {
 	char *buffer;
@@ -618,10 +619,10 @@ static void ML_GetFullnameFromMap( const char *filename, char *fullname, size_t 
 	COM_RemoveColorTokens( fullname );
 }
 
-//=================
-// ML_ValidateFilename
-// Checks that the filename provided is valid
-//=================
+/*
+* ML_ValidateFilename
+* Checks that the filename provided is valid
+*/
 qboolean ML_ValidateFilename( const char *filename )
 {
 	if( !filename || !*filename )
@@ -646,10 +647,10 @@ qboolean ML_ValidateFilename( const char *filename )
 	return qtrue;
 }
 
-//=================
-// ML_ValidateFullname
-// Checks that the fullname provided is valid
-//=================
+/*
+* ML_ValidateFullname
+* Checks that the fullname provided is valid
+*/
 qboolean ML_ValidateFullname( const char *fullname )
 {
 	if( !fullname || !*fullname )
@@ -661,11 +662,11 @@ qboolean ML_ValidateFullname( const char *fullname )
 	return qtrue;
 }
 
-//=================
-// ML_GetMapByNum
-// Prints map infostring in "mapname\0fullname" format into "out" string,
-// returns fullsize (so that out can be reallocated if there's not enough space)
-//=================
+/*
+* ML_GetMapByNum
+* Prints map infostring in "mapname\0fullname" format into "out" string,
+* returns fullsize (so that out can be reallocated if there's not enough space)
+*/
 size_t ML_GetMapByNum( int num, char *out, size_t size )
 {
 	static int i = 0;

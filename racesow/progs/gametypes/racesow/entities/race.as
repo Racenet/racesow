@@ -33,6 +33,16 @@ void practice_respawner_think( cEntity @practiceRespawner )
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
 // and classname->function is case sensitive so we need some shadow functions
 
+void race_respawner( cEntity @self )
+{
+    @self.think = race_respawner_think;
+}
+
+void practice_respawner( cEntity @self )
+{
+    @self.think = practice_respawner_think;
+}
+
 /**
  * Cgg - defrag support
  * target_init are meant to reset the player hp, armor and inventory.
@@ -99,6 +109,7 @@ void target_init_use( cEntity @self, cEntity @other, cEntity @activator )
  */
 void target_init( cEntity @self )
 {
+    @self.use = target_init_use;
 }
 
 /**
@@ -126,6 +137,7 @@ void target_checkpoint_use( cEntity @self, cEntity @other, cEntity @activator )
  */
 void target_checkpoint( cEntity @self )
 {
+    @self.use = target_checkpoint_use;
     self.count = numCheckpoints;
     numCheckpoints++;
 }
@@ -165,6 +177,7 @@ void target_stopTimer_use( cEntity @self, cEntity @other, cEntity @activator )
  */
 void target_stoptimer( cEntity @self )
 {
+    @self.use = target_stoptimer_use;
 }
 
 /**
@@ -175,6 +188,7 @@ void target_stoptimer( cEntity @self )
  */
 void target_stopTimer( cEntity @self )
 {
+    @self.use = target_stopTimer_use;
 }
 
 /**
@@ -213,6 +227,7 @@ void target_startTimer_use( cEntity @self, cEntity @other, cEntity @activator )
  */
 void target_starttimer( cEntity @self )
 {
+    @self.use = target_starttimer_use;
 }
 
 /**

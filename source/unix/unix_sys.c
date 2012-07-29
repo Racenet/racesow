@@ -1,26 +1,26 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
 
 /* we need __APPLE__ here because __MACOSX__ is defined in ../game/q_shared.h from ../qcommon/qcommon.h
-   which defines HAVE_STRCASECMP if SDL.h isn't called first, causing a bunch of warnings
-   FIXME:  This will be remidied once a native Mac port is complete
- */
+which defines HAVE_STRCASECMP if SDL.h isn't called first, causing a bunch of warnings
+FIXME:  This will be remidied once a native Mac port is complete
+*/
 #if defined ( __APPLE__ ) && !defined ( DEDICATED_ONLY )
 #include <SDL/SDL.h>
 #endif
@@ -50,6 +50,7 @@
 #include "glob.h"
 
 cvar_t *nostdout;
+static qboolean nostdout_backup_val = qfalse;
 
 unsigned sys_frame_time;
 
@@ -133,7 +134,7 @@ static void Sys_AnsiColorPrint( const char *msg )
 
 	while( *msg )
 	{
-		char c;
+		char c = *msg;
 		int colorindex;
 
 		int gc = Q_GrabCharFromColorString( &msg, &c, &colorindex );
@@ -181,6 +182,8 @@ void Sys_ConsoleOutput( char *string )
 {
 	if( nostdout && nostdout->integer )
 		return;
+	if( nostdout_backup_val )
+		return;
 
 #if 0
 	fputs( string, stdout );
@@ -190,42 +193,39 @@ void Sys_ConsoleOutput( char *string )
 }
 
 /*
-   =================
-   Sys_Quit
-   =================
- */
+* Sys_Quit
+*/
 void Sys_Quit( void )
 {
+	// Qcommon_Shutdown is going destroy the cvar, so backup its value now
+	// and invalidate the pointer
+	nostdout_backup_val = (nostdout && nostdout->integer ? qtrue : qfalse);
+	nostdout = NULL;
+
 	fcntl( 0, F_SETFL, fcntl( 0, F_GETFL, 0 ) & ~FNDELAY );
 
 	Qcommon_Shutdown();
 
-	_exit( 0 );
+	exit( 0 );
 }
 
 /*
-   =================
-   Sys_Init
-   =================
- */
+* Sys_Init
+*/
 void Sys_Init( void )
 {
 }
 
 /*
-   ================
-   Sys_InitDynvars
-   ================
- */
+* Sys_InitDynvars
+*/
 void Sys_InitDynvars( void )
 {
 }
 
 /*
-   =================
-   Sys_Error
-   =================
- */
+* Sys_Error
+*/
 void Sys_Error( const char *format, ... )
 {
 	static qboolean	recursive = qfalse;
@@ -256,10 +256,8 @@ void Sys_Error( const char *format, ... )
 }
 
 /*
-   ================
-   Sys_Microseconds
-   ================
- */
+* Sys_Microseconds
+*/
 static unsigned long sys_secbase;
 quint64 Sys_Microseconds( void )
 {
@@ -279,22 +277,18 @@ quint64 Sys_Microseconds( void )
 }
 
 /*
-================
-Sys_Milliseconds
-================
- */
+* Sys_Milliseconds
+*/
 unsigned int Sys_Milliseconds( void )
 {
 	return Sys_Microseconds() / 1000;
 }
 
 /*
-================
-Sys_XTimeToSysTime
-
-Sub-frame timing of events returned by X
-Ported from Quake III Arena source code.
-================
+* Sys_XTimeToSysTime
+* 
+* Sub-frame timing of events returned by X
+* Ported from Quake III Arena source code.
 */
 int Sys_XTimeToSysTime( unsigned long xtime )
 {
@@ -313,10 +307,17 @@ int Sys_XTimeToSysTime( unsigned long xtime )
 }
 
 /*
-   ================
-   Sys_Sleep
-   ================
- */
+* Sys_EvdevTimeToSysTime
+* 
+* Sub-frame timing of events returned by evdev.
+*/
+int Sys_EvdevTimeToSysTime( struct timeval *tp )
+{
+	return ( ( tp->tv_sec - sys_secbase )*1000000 + tp->tv_usec ) / 1000;
+}
+/*
+* Sys_Sleep
+*/
 void Sys_Sleep( unsigned int millis )
 {
 	usleep( millis * 1000 );
@@ -364,10 +365,8 @@ char *Sys_ConsoleInput( void )
 }
 
 /*
-   =================
-   Sys_GetSymbol
-   =================
- */
+* Sys_GetSymbol
+*/
 #ifdef SYS_SYMBOL
 void *Sys_GetSymbol( const char *moduleName, const char *symbolName )
 {
@@ -387,19 +386,15 @@ void *Sys_GetSymbol( const char *moduleName, const char *symbolName )
 //===============================================================================
 
 /*
-   =================
-   Sys_AppActivate
-   =================
- */
+* Sys_AppActivate
+*/
 void Sys_AppActivate( void )
 {
 }
 
 /*
-   =================
-   Sys_SendKeyEvents
-   =================
- */
+* Sys_SendKeyEvents
+*/
 void Sys_SendKeyEvents( void )
 {
 	// grab frame time

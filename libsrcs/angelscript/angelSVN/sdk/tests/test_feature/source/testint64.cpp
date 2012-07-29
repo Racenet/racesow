@@ -6,25 +6,16 @@
 
 #include "utils.h"
 
-#define TESTNAME "TestInt64"
+static const char * const TESTNAME = "TestInt64";
 
-static char *script = 
+static const char *script = 
 "int Main()\n"
 "{\n"
 "    // Call test\n"
 "    foo();\n"
-
-"    // WHEN THE ABOVE 'foo' IS CALLED, THE SCRIPT JUST BAILS ONCE IT HAS RETURNED\n"
-"    // AND NOTHING AFTER THIS POINT IS EVER EXECUTED. IF WE CALL 'BAR' DIRECTLY\n"
-"    // FROM HERE, BYPASSING 'foo' AS BELOW, IT CONTINUES ON WITHOUT ISSUE.\n"
-
-"    // I added some debug output here to a 'MessageBox' call, but it too was never\n"
-"    // executed.\n"
 "    cfunction();\n"
-
 "    Int64 var;\n"
 "    bar( var );\n"
-    
 "    // Some value we'll know when we return\n"
 "    return 31337;\n"
 "}\n"
@@ -37,12 +28,6 @@ static char *script =
 
 "void bar( Int64 )\n"
 "{\n"
-"    // If any of the three cases are satisfied, the code works as expected.\n"
-"    // --------------------------------------------------------------------\n"
-"    // 1) We bypass the outer 'foo' function, and call 'bar' directly.\n"
-"    // 2) We change the size of the user defined type to be 4 bytes.\n"
-"    // 3) We make the parameter a reference of the user defined type.\n"
-"    // --------------------------------------------------------------------\n"
 "    cfunction();\n"
 "}\n";
 
@@ -54,7 +39,7 @@ static void cfunction(asIScriptGeneric *) {
 
 bool TestInt64()
 {
-	bool ret = false;
+	bool fail = false;
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	engine->RegisterObjectType("Int64", 8, asOBJ_VALUE | asOBJ_POD | asOBJ_APP_PRIMITIVE);
@@ -73,7 +58,7 @@ bool TestInt64()
 	if( r != asEXECUTION_FINISHED )
 	{
 		printf("\n%s: The execution didn't finish correctly (code %d)\n", TESTNAME, r);
-		ret = true;
+		TEST_FAILED;
 
 		if( r == asEXECUTION_EXCEPTION )
 			PrintException(ctx);
@@ -82,11 +67,11 @@ bool TestInt64()
     if( called != 3 ) 
 	{
 		printf("\n%s: cfunction called %d times. Expected 3 times\n", TESTNAME, called);
-		ret = true;
+		TEST_FAILED;
 	}
 
 	ctx->Release();
 	engine->Release();
 
-	return ret;
+	return fail;
 }

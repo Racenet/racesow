@@ -76,6 +76,13 @@ extern "C"
 {
 #endif
 
+/* Compute the MD5 digest of a buffer. */
+void md5_digest( const void *data, int nbytes, md5_byte_t digest[16] );
+
+/* Compute a reduced digest of a buffer. */
+unsigned int md5_digest32( const void *data, int nbytes );
+
+
 /* Initialize the algorithm. */
 void md5_init( md5_state_t *pms );
 
@@ -84,6 +91,9 @@ void md5_append( md5_state_t *pms, const md5_byte_t *data, int nbytes );
 
 /* Finish the message and return the digest. */
 void md5_finish( md5_state_t *pms, md5_byte_t digest[16] );
+
+/* Reduce the 128-bit digest to a 32-bit value. */
+unsigned int md5_reduce( md5_byte_t digest[16] );
 
 #ifdef __cplusplus
 }  /* end extern "C" */

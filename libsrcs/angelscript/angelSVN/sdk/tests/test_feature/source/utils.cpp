@@ -8,17 +8,7 @@
 using namespace std;
 
 
-void PrintException(asIScriptContext *ctx)
-{
-	asIScriptEngine *engine = ctx->GetEngine();
-	int funcId = ctx->GetExceptionFunction();
-	const asIScriptFunction *function = engine->GetFunctionDescriptorById(funcId);
-	printf("func: %s\n", function->GetDeclaration());
-	printf("modl: %s\n", function->GetModuleName());
-	printf("sect: %s\n", function->GetScriptSectionName());
-	printf("line: %d\n", ctx->GetExceptionLineNumber());
-	printf("desc: %s\n", ctx->GetExceptionString());
-}
+
 
 void Assert(asIScriptGeneric *gen)
 {
@@ -33,16 +23,14 @@ void Assert(asIScriptGeneric *gen)
 		asIScriptContext *ctx = asGetActiveContext();
 		if( ctx )
 		{
-			asIScriptEngine *engine = ctx->GetEngine();
-			int funcID = ctx->GetCurrentFunction();
-			const asIScriptFunction *function = engine->GetFunctionDescriptorById(funcID);
+			const asIScriptFunction *function = ctx->GetFunction();
 			if( function != 0 )
 			{
 				printf("func: %s\n", function->GetDeclaration());
 				printf("mdle: %s\n", function->GetModuleName());
 				printf("sect: %s\n", function->GetScriptSectionName());
 			}
-			printf("line: %d\n", ctx->GetCurrentLineNumber());
+			printf("line: %d\n", ctx->GetLineNumber());
 			ctx->SetException("Assert failed");
 			printf("---------------------\n");
 		}
@@ -189,8 +177,8 @@ void RemoveMemoryManager()
 
 	PrintAllocIndices();
 
-	assert( numAllocs == numFrees );
-	assert( currentMemAlloc == 0 );
+//	assert( numAllocs == numFrees );
+//	assert( currentMemAlloc == 0 );
 
 	printf("---------\n");
 	printf("MEMORY STATISTICS\n");
@@ -246,3 +234,9 @@ void RemoveMemoryManager()
 
 	asResetGlobalMemoryFunctions();
 }
+
+int GetNumAllocs()
+{
+	return numAllocs;
+}
+

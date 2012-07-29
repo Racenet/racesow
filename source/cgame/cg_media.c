@@ -1,32 +1,30 @@
 /*
-   Copyright (C) 2002-2003 Victor Luchits
+Copyright (C) 2002-2003 Victor Luchits
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "cg_local.h"
 
 cgs_media_handle_t *sfx_headnode;
 
 /*
-   =================
-   CG_RegisterMediaSfx
-   =================
- */
+* CG_RegisterMediaSfx
+*/
 static cgs_media_handle_t *CG_RegisterMediaSfx( char *name, qboolean precache )
 {
 	cgs_media_handle_t *mediasfx;
@@ -49,10 +47,8 @@ static cgs_media_handle_t *CG_RegisterMediaSfx( char *name, qboolean precache )
 }
 
 /*
-   =================
-   CG_MediaSfx
-   =================
- */
+* CG_MediaSfx
+*/
 struct sfx_s *CG_MediaSfx( cgs_media_handle_t *mediasfx )
 {
 	if( !mediasfx->data )
@@ -61,10 +57,8 @@ struct sfx_s *CG_MediaSfx( cgs_media_handle_t *mediasfx )
 }
 
 /*
-   =================
-   CG_RegisterMediaSounds
-   =================
- */
+* CG_RegisterMediaSounds
+*/
 void CG_RegisterMediaSounds( void )
 {
 	int i;
@@ -77,7 +71,7 @@ void CG_RegisterMediaSounds( void )
 	cgs.media.sfxTimerPloink = CG_RegisterMediaSfx( S_TIMER_PLOINK, qtrue );
 
 	for( i = 0; i < 3; i++ )
-		cgs.media.sfxRic[i] = CG_RegisterMediaSfx( va( "sounds/weapons/ric%i", i+1 ), qfalse );
+		cgs.media.sfxRic[i] = CG_RegisterMediaSfx( va( "sounds/weapons/ric%i", i+1 ), qtrue );
 
 	// weapon
 	for( i = 0; i < 4; i++ )
@@ -120,6 +114,12 @@ void CG_RegisterMediaSounds( void )
 	// Plasmagun sounds :
 	cgs.media.sfxPlasmaWeakHit = CG_RegisterMediaSfx( S_WEAPON_PLASMAGUN_W_HIT, qtrue );
 	cgs.media.sfxPlasmaStrongHit = CG_RegisterMediaSfx( S_WEAPON_PLASMAGUN_S_HIT, qtrue );
+
+	// Lasergun sounds
+	cgs.media.sfxLasergunWeakHum = CG_RegisterMediaSfx( S_WEAPON_LASERGUN_W_HUM, qtrue );
+	cgs.media.sfxLasergunWeakQuadHum = CG_RegisterMediaSfx( S_WEAPON_LASERGUN_W_QUAD_HUM, qtrue );
+	cgs.media.sfxLasergunStrongHum = CG_RegisterMediaSfx( S_WEAPON_LASERGUN_S_HUM, qtrue );
+	cgs.media.sfxLasergunStrongQuadHum = CG_RegisterMediaSfx( S_WEAPON_LASERGUN_S_QUAD_HUM, qtrue );
 
 	cgs.media.sfxQuadFireSound = CG_RegisterMediaSfx( S_QUAD_FIRE, qtrue );
 
@@ -178,10 +178,8 @@ struct model_s *CG_RegisterModel( const char *name )
 }
 
 /*
-   =================
-   CG_RegisterMediaModel
-   =================
- */
+* CG_RegisterMediaModel
+*/
 static cgs_media_handle_t *CG_RegisterMediaModel( char *name, qboolean precache )
 {
 	cgs_media_handle_t *mediamodel;
@@ -204,10 +202,8 @@ static cgs_media_handle_t *CG_RegisterMediaModel( char *name, qboolean precache 
 }
 
 /*
-   =================
-   CG_MediaModel
-   =================
- */
+* CG_MediaModel
+*/
 struct model_s *CG_MediaModel( cgs_media_handle_t *mediamodel )
 {
 	if( !mediamodel )
@@ -219,10 +215,8 @@ struct model_s *CG_MediaModel( cgs_media_handle_t *mediamodel )
 }
 
 /*
-   =================
-   CG_RegisterMediaModels
-   =================
- */
+* CG_RegisterMediaModels
+*/
 void CG_RegisterMediaModels( void )
 {
 	int i;
@@ -258,10 +252,8 @@ void CG_RegisterMediaModels( void )
 cgs_media_handle_t *shader_headnode;
 
 /*
-   =================
-   CG_RegisterMediaShader
-   =================
- */
+* CG_RegisterMediaShader
+*/
 static cgs_media_handle_t *CG_RegisterMediaShader( char *name, qboolean precache )
 {
 	cgs_media_handle_t *mediashader;
@@ -284,10 +276,8 @@ static cgs_media_handle_t *CG_RegisterMediaShader( char *name, qboolean precache
 }
 
 /*
-   =================
-   CG_MediaShader
-   =================
- */
+* CG_MediaShader
+*/
 struct shader_s *CG_MediaShader( cgs_media_handle_t *mediashader )
 {
 	if( !mediashader->data )
@@ -307,10 +297,8 @@ char *sb_nums[11] =
 
 
 /*
-   =================
-   CG_RegisterMediaShaders
-   =================
- */
+* CG_RegisterMediaShaders
+*/
 void CG_RegisterMediaShaders( void )
 {
 	int i;
@@ -323,7 +311,7 @@ void CG_RegisterMediaShaders( void )
 	cgs.media.shaderBackTile = CG_RegisterMediaShader( "gfx/ui/backtile", qtrue );
 	cgs.media.shaderSelect = CG_RegisterMediaShader( "gfx/hud/select", qtrue );
 	cgs.media.shaderChatBalloon = CG_RegisterMediaShader( PATH_BALLONCHAT_ICON, qtrue );
-	cgs.media.shaderDownArrow = CG_RegisterMediaShader( "gfx/ui/arrow_down", qtrue );
+	cgs.media.shaderDownArrow = CG_RegisterMediaShader( "gfx/2d/arrow_down", qtrue );
 
 	cgs.media.shaderPlayerShadow = CG_RegisterMediaShader( "gfx/decals/shadow", qtrue );
 
@@ -345,6 +333,7 @@ void CG_RegisterMediaShaders( void )
 	cgs.media.shaderCartoonHit = CG_RegisterMediaShader( "gfx/misc/cartoonhit", qtrue );
 	cgs.media.shaderCartoonHit2 = CG_RegisterMediaShader( "gfx/misc/cartoonhit2", qtrue );
 	cgs.media.shaderCartoonHit3 = CG_RegisterMediaShader( "gfx/misc/cartoonhit3", qtrue );
+	cgs.media.shaderTeamMateIndicator = CG_RegisterMediaShader( "gfx/misc/teammate_indicator", qtrue );
 
 	cgs.media.shaderAdditiveParticleShine = CG_RegisterMediaShader( "additiveParticleShine", qtrue );
 
@@ -366,6 +355,7 @@ void CG_RegisterMediaShaders( void )
 	cgs.media.shaderElectroBeamBBeta = CG_RegisterMediaShader( "gfx/misc/electro2b_beta", qtrue );
 	cgs.media.shaderInstaBeam = CG_RegisterMediaShader( "gfx/misc/instagun", qtrue );
 	cgs.media.shaderLaserGunBeam = CG_RegisterMediaShader( "gfx/misc/laserbeam", qtrue );
+	cgs.media.shaderLaserGunBeamOld = CG_RegisterMediaShader( "gfx/misc/laserbeam_old", qtrue );
 	cgs.media.shaderRocketExplosion = CG_RegisterMediaShader( PATH_ROCKET_EXPLOSION_SPRITE, qtrue );
 	cgs.media.shaderRocketExplosionRing = CG_RegisterMediaShader( PATH_ROCKET_EXPLOSION_RING_SPRITE, qtrue );
 

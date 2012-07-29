@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 /*
 ** GLW_IMP.C
 **
@@ -50,7 +50,11 @@
 #define DISPLAY_MASK ( VisibilityChangeMask | StructureNotifyMask | ExposureMask | PropertyChangeMask )
 #define INIT_MASK ( KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask | DISPLAY_MASK )
 
+// use experimental Xrandr resolution?
+#define _XRANDR_OVER_VIDMODE_
+
 x11display_t x11display;
+x11wndproc_t x11wndproc;
 
 glwstate_t glw_state;
 
@@ -273,6 +277,167 @@ static void _xf86_VidmodesFindBest( int *mode, int *pwidth, int *pheight, qboole
 	*mode = best_fit;
 }
 
+#ifdef _XRANDR_OVER_VIDMODE_
+// XRANDR
+qboolean _xrandr_supported = qfalse;
+qboolean _xrandr_active = qfalse;
+int _xrandr_eventbase;
+int _xrandr_errorbase;
+// list of resolutions
+XRRScreenConfiguration *_xrandr_config = 0;
+XRRScreenSize *_xrandr_sizes = 0;
+int _xrandr_numsizes = 0;
+// original rate and resolution
+short _xrandr_default_rate;
+Rotation _xrandr_default_rotation;
+SizeID _xrandr_default_size;
+
+static void _xf86_XrandrInit( void )
+{
+	int MajorVersion = 0, MinorVersion = 0;
+
+	// Already initialized?
+	if( _xrandr_supported )
+		return;
+
+	// Check extension
+	if( XRRQueryExtension( x11display.dpy, &_xrandr_eventbase, &_xrandr_errorbase ) &&
+		XRRQueryVersion( x11display.dpy, &MajorVersion, &MinorVersion ) )
+	{
+		Com_Printf( "..Xrandr Extension Version %d.%d\n", MajorVersion, MinorVersion );
+
+		// Get current resolution
+		_xrandr_config = XRRGetScreenInfo( x11display.dpy, x11display.root );
+		_xrandr_default_rate = XRRConfigCurrentRate( _xrandr_config );
+		_xrandr_default_size = XRRConfigCurrentConfiguration( _xrandr_config, &_xrandr_default_rotation );
+
+		// Get a list of resolutions (first here is actually the current resolution too ^^)
+		_xrandr_sizes = XRRSizes( x11display.dpy, 0, &_xrandr_numsizes );
+		_xrandr_supported = qtrue;
+	}
+	else
+	{
+		Com_Printf( "..Xrandr Extension not available\n" );
+		_xrandr_supported = qfalse;
+	}
+}
+
+static void _xf86_XrandrFree( void )
+{
+	if( _xrandr_supported )
+		XRRFreeScreenConfigInfo( _xrandr_config );
+
+	_xrandr_config = 0;
+	_xrandr_supported = qfalse;
+	_xrandr_active = qfalse;
+}
+
+static short _xf86_XrandrClosestRate( int mode, short preferred_rate )
+{
+	short *rates, delta, min, best;
+	int i, numrates;
+
+	// fetch the rates for given resolution
+	rates = XRRRates( x11display.dpy, x11display.scr, mode, &numrates );
+
+	min = 0x7fff;
+	best = 0;
+	for( i = 0; i < numrates; i++ )
+	{
+		if( rates[i] > preferred_rate )
+			continue;
+		delta = preferred_rate - rates[i];
+		if( delta < min )
+		{
+			best = rates[i];
+			min = delta;
+		}
+
+		Com_Printf("  rate %i -> %i: %i\n", preferred_rate, rates[i], delta );
+	}
+
+	Com_Printf("_xf86_XrandrClosestRate found %i for %i\n", best, preferred_rate );
+	return best;
+}
+
+static void _xf86_XrandrSwitch( int mode )
+{
+	if( _xrandr_supported )
+	{
+		short rate;
+
+		// prefer user defined rate
+		rate = vid_displayfrequency->integer ? vid_displayfrequency->integer : _xrandr_default_rate;
+		// find the closest rate on this resolution
+		rate = _xf86_XrandrClosestRate( mode, rate );
+
+		/* CHANGE RESOLUTION */
+		XRRSetScreenConfigAndRate( x11display.dpy, _xrandr_config, x11display.root, mode, RR_Rotate_0, rate, CurrentTime );
+
+		// "Clients must call back into Xlib using XRRUpdateConfiguration when screen configuration change notify events are generated"
+		// ??
+	}
+
+	_xrandr_active = qtrue;
+}
+
+static void _xf86_XrandrSwitchBack( void )
+{
+	if( _xrandr_supported && _xrandr_active )
+	{
+		XRRSetScreenConfigAndRate( x11display.dpy, _xrandr_config, x11display.root, _xrandr_default_size, _xrandr_default_rotation, _xrandr_default_rate, CurrentTime );
+	}
+
+	_xrandr_active = qfalse;
+}
+
+static void _xf86_XrandrFindBest( int *mode, int *pwidth, int *pheight, qboolean silent )
+{
+	int i, best_fit, best_dist, dist, x, y;
+
+	best_fit = -1;
+	best_dist = 999999999;
+
+	if( _xrandr_supported )
+	{
+		for( i = 0; i < _xrandr_numsizes; i++ )
+		{
+			if( _xrandr_sizes[i].width < *pwidth || _xrandr_sizes[i].height < *pheight )
+				continue;
+
+			x = _xrandr_sizes[i].width - *pwidth;
+			y = _xrandr_sizes[i].height - *pheight;
+
+			if( x > y ) dist = y;
+			else dist = x;
+
+			if( dist < 0 ) dist = -dist; // Only positive number please
+
+			if( dist < best_dist )
+			{
+				best_dist = dist;
+				best_fit = i;
+			}
+
+			if( !silent )
+				Com_Printf( "%ix%i -> %ix%i: %i\n", *pwidth, *pheight, _xrandr_sizes[i].width, _xrandr_sizes[i].height, dist );
+		}
+
+		if( best_fit >= 0 )
+		{
+			if( !silent )
+				Com_Printf( "%ix%i selected\n", _xrandr_sizes[best_fit].width, _xrandr_sizes[best_fit].height );
+
+			*pwidth = _xrandr_sizes[best_fit].width;
+			*pheight = _xrandr_sizes[best_fit].height;
+		}
+	}
+
+	*mode = best_fit;
+}
+
+#endif
+
 static void _x11_SetNoResize( Window w, int width, int height )
 {
 	XSizeHints *hints;
@@ -297,13 +462,11 @@ static void _x11_SetNoResize( Window w, int width, int height )
 /*****************************************************************************/
 
 /*
-   =================
-   Sys_GetClipboardData
-
-   Orginally from EzQuake
-   There should be a smarter place to put this
-   =================
- */
+* Sys_GetClipboardData
+*
+* Orginally from EzQuake
+* There should be a smarter place to put this
+*/
 char *Sys_GetClipboardData( qboolean primary )
 {
 	Window win;
@@ -336,12 +499,12 @@ char *Sys_GetClipboardData( qboolean primary )
 	XFlush( x11display.dpy );
 
 	XGetWindowProperty( x11display.dpy, win, atom, 0, 0, False, AnyPropertyType, &type, &format, &nitems, &bytes_left,
-	                    &data );
+		&data );
 	if( bytes_left <= 0 )
 		return NULL;
 
 	ret = XGetWindowProperty( x11display.dpy, win, atom, 0, bytes_left, False, AnyPropertyType, &type,
-	                          &format, &nitems, &bytes_after, &data );
+		&format, &nitems, &bytes_after, &data );
 	if( ret == Success )
 	{
 		buffer = Q_malloc( bytes_left + 1 );
@@ -367,10 +530,8 @@ qboolean Sys_SetClipboardData( char *data )
 }
 
 /*
-   =================
-   Sys_FreeClipboardData
-   =================
- */
+* Sys_FreeClipboardData
+*/
 void Sys_FreeClipboardData( char *data )
 {
 	Q_free( data );
@@ -420,7 +581,6 @@ static qboolean _NET_WM_STATE_FULLSCREEN_SUPPORTED( void )
 {
 	Atom _NET_WM_STATE_FULLSCREEN = XInternAtom( x11display.dpy, "_NET_WM_STATE_FULLSCREEN", 0 );
 	return _NET_WM_CHECK_SUPPORTED( _NET_WM_STATE_FULLSCREEN );
-
 }
 
 /*
@@ -437,6 +597,7 @@ qboolean _NETWM_CHECK_FULLSCREEN( void )
 	int result = 1;
 	Atom _NET_WM_STATE;
 	Atom _NET_WM_STATE_FULLSCREEN;
+	cvar_t *vid_fullscreen;
 
 	if( !x11display.features.wmStateFullscreen )
 		return qfalse;
@@ -461,14 +622,17 @@ qboolean _NETWM_CHECK_FULLSCREEN( void )
 		}
 	}
 
+	vid_fullscreen = Cvar_Get( "vid_fullscreen", "0", CVAR_ARCHIVE );
 	if( isfullscreen )
 	{
-		Cvar_SetValue( "vid_fullscreen", 1 );
+		glState.fullScreen = qtrue;
+		Cvar_SetValue( vid_fullscreen->name, 1 );
 		vid_fullscreen->modified = qfalse;
 	}
 	else
 	{
-		Cvar_SetValue( "vid_fullscreen", 0 );
+		glState.fullScreen = qfalse;
+		Cvar_SetValue( vid_fullscreen->name, 0 );
 		vid_fullscreen->modified = qfalse;
 	}
 
@@ -506,6 +670,21 @@ void _NETWM_SET_FULLSCREEN( qboolean fullscreen )
 		SubstructureNotifyMask, &xev );
 }
 
+/*
+* Sys_OpenURLInBrowser
+*/
+void Sys_OpenURLInBrowser( const char *url )
+{
+    int r;
+
+    r = system( va( "xdg-open \"%s\"", url ) );
+    if( r == 0 ) {
+		// FIXME: XIconifyWindow does minimize the window, however
+		// it seems that FocusIn even which follows grabs the input afterwards
+		// XIconifyWindow( x11display.dpy, x11display.win, x11display.scr );
+    }
+}
+
 /*****************************************************************************/
 
 static void GLimp_SetXPMIcon( const int *xpm_icon )
@@ -517,7 +696,7 @@ static void GLimp_SetXPMIcon( const int *xpm_icon )
 	Atom CARDINAL;
 
 	// allocate memory for icon data: width + height + width * height pixels
-	 // note: sizeof(long) shall be used according to XChangeProperty() man page
+	// note: sizeof(long) shall be used according to XChangeProperty() man page
 	width = xpm_icon[0];
 	height = xpm_icon[1];
 	cardinalSize = width * height + 2;
@@ -538,7 +717,7 @@ int *parse_xpm_icon ( int num_xpm_elements, char *xpm_data[] );
 
 static void GLimp_SetApplicationIcon( void )
 {
-	#include "warsow128x128.xpm"
+#include "warsow128x128.xpm"
 
 	const int *xpm_icon;
 
@@ -556,20 +735,12 @@ static void GLimp_SetApplicationIcon( void )
 ** GLimp_SetMode_Real
 * Hack to get rid of the prints when toggling fullscreen
 */
-int GLimp_SetMode_Real( int mode, qboolean fullscreen, qboolean silent )
+static rserr_t GLimp_SetMode_Real( int width, int height, qboolean fullscreen, qboolean wideScreen, qboolean silent )
 {
-	int width, height, screen_x, screen_y, screen_width, screen_height, screen_mode;
+	int screen_x, screen_y, screen_width, screen_height, screen_mode;
 	float ratio;
 	XSetWindowAttributes wa;
 	unsigned long mask;
-	qboolean wideScreen;
-
-	if( !VID_GetModeInfo( &width, &height, &wideScreen, mode ) )
-	{
-		if( !silent )
-			Com_Printf( " invalid mode\n" );
-		return rserr_invalid_mode;
-	}
 
 	screen_mode = -1;
 	screen_x = screen_y = 0;
@@ -581,9 +752,13 @@ int GLimp_SetMode_Real( int mode, qboolean fullscreen, qboolean silent )
 	if( fullscreen )
 	{
 		if( !_xf86_xinerama_supported ||
-		   !_xf86_XineramaFindBest( &screen_x, &screen_y, &screen_width, &screen_height, silent ) )
+			!_xf86_XineramaFindBest( &screen_x, &screen_y, &screen_width, &screen_height, silent ) )
 		{
+#ifdef _XRANDR_OVER_VIDMODE_
+			_xf86_XrandrFindBest( &screen_mode, &screen_width, &screen_height, silent );
+#else
 			_xf86_VidmodesFindBest( &screen_mode, &screen_width, &screen_height, silent );
+#endif
 			if( screen_mode < 0 )
 			{
 				if( !silent )
@@ -609,7 +784,7 @@ int GLimp_SetMode_Real( int mode, qboolean fullscreen, qboolean silent )
 		}
 
 		if( !silent )
-			Com_Printf( "...setting fullscreen mode %d:\n", mode );
+			Com_Printf( "...setting fullscreen mode %ix%i:\n", width, height );
 
 		/* Create fulscreen window */
 		wa.background_pixel = 0;
@@ -629,12 +804,14 @@ int GLimp_SetMode_Real( int mode, qboolean fullscreen, qboolean silent )
 			mask = CWBackPixel | CWBorderPixel | CWEventMask | CWSaveUnder | CWBackingStore | CWOverrideRedirect;
 		}
 
+		x11display.wa = wa;
+
 		x11display.win = XCreateWindow( x11display.dpy, x11display.root, screen_x, screen_y, screen_width, screen_height,
-		                                0, CopyFromParent, InputOutput, CopyFromParent, mask, &wa );
+			0, CopyFromParent, InputOutput, CopyFromParent, mask, &wa );
 
 		XResizeWindow( x11display.dpy, x11display.gl_win, width, height );
 		XReparentWindow( x11display.dpy, x11display.gl_win, x11display.win, ( screen_width/2 )-( width/2 ),
-		                ( screen_height/2 )-( height/2 ) );
+			( screen_height/2 )-( height/2 ) );
 
 		x11display.modeset = qtrue;
 
@@ -647,21 +824,28 @@ int GLimp_SetMode_Real( int mode, qboolean fullscreen, qboolean silent )
 			_NETWM_SET_FULLSCREEN( qtrue );
 
 		if( screen_mode != -1 )
+		{
+#ifdef _XRANDR_OVER_VIDMODE_
+			_xf86_XrandrSwitch( screen_mode );
+#else
 			_xf86_VidmodesSwitch( screen_mode );
+#endif
+		}
 	}
 	else
 	{
 		if( !silent )
-			Com_Printf( "...setting mode %d:\n", mode );
+			Com_Printf( "...setting mode %ix%i:\n", width, height );
 
 		/* Create managed window */
 		wa.background_pixel = 0;
 		wa.border_pixel = 0;
 		wa.event_mask = INIT_MASK;
 		mask = CWBackPixel | CWBorderPixel | CWEventMask;
+		x11display.wa = wa;
 
 		x11display.win = XCreateWindow( x11display.dpy, x11display.root, 0, 0, screen_width, screen_height,
-		                                0, CopyFromParent, InputOutput, CopyFromParent, mask, &wa );
+			0, CopyFromParent, InputOutput, CopyFromParent, mask, &wa );
 		x11display.wmDeleteWindow = XInternAtom( x11display.dpy, "WM_DELETE_WINDOW", False );
 		XSetWMProtocols( x11display.dpy, x11display.win, &x11display.wmDeleteWindow, 1 );
 
@@ -676,7 +860,11 @@ int GLimp_SetMode_Real( int mode, qboolean fullscreen, qboolean silent )
 		if( !x11display.features.wmStateFullscreen )
 			_x11_SetNoResize( x11display.win, width, height );
 
+#ifdef _XRANDR_OVER_VIDMODE_
+		_xf86_XrandrSwitchBack();
+#else
 		_xf86_VidmodesSwitchBack();
+#endif
 	}
 
 	XSetStandardProperties( x11display.dpy, x11display.win, APPLICATION, None, None, NULL, 0, NULL );
@@ -703,35 +891,15 @@ int GLimp_SetMode_Real( int mode, qboolean fullscreen, qboolean silent )
 	glState.fullScreen = fullscreen;
 	glState.wideScreen = wideScreen;
 
-	// let the sound and input subsystems know about the new window
-	VID_NewWindow( width, height );
-
 	return rserr_ok;
 }
 
 /*
 ** GLimp_SetMode
 */
-int GLimp_SetMode( int mode, qboolean fullscreen )
+rserr_t GLimp_SetMode( int x, int y, int width, int height, qboolean fullscreen, qboolean wideScreen )
 {
-	return GLimp_SetMode_Real( mode, fullscreen, qfalse );
-}
-
-/*
-** GLimp_GetCurrentMode
-*/
-int GLimp_GetCurrentMode( void )
-{
-	if( x11display.dpy )
-	{
-		int width, height;
-		
-		width = DisplayWidth( x11display.dpy, x11display.scr );
-		height = DisplayHeight( x11display.dpy, x11display.scr );
-		return VID_GetModeNum( width, height );
-	}
-
-	return -1;
+	return GLimp_SetMode_Real( width, height, fullscreen, wideScreen, qfalse );
 }
 
 /*
@@ -741,8 +909,13 @@ void GLimp_Shutdown( void )
 {
 	if( x11display.dpy )
 	{
+#ifdef _XRANDR_OVER_VIDMODE_
+		_xf86_XrandrSwitchBack();
+		_xf86_XrandrFree();
+#else
 		_xf86_VidmodesSwitchBack();
 		_xf86_VidmodesFree();
+#endif
 		_xf86_XineramaFree();
 
 		if( x11display.cmap ) XFreeColormap( x11display.dpy, x11display.cmap );
@@ -761,6 +934,10 @@ void GLimp_Shutdown( void )
 	x11display.gl_win = 0;
 	x11display.win = 0;
 	x11display.dpy = NULL;
+
+	if( x11wndproc ) {
+		x11wndproc( NULL, 0, 0, 0 );
+	}
 }
 
 static qboolean gotstencil = qfalse; // evil hack!
@@ -809,10 +986,7 @@ int GLimp_Init( void *hinstance, void *wndproc, void *parenthWnd )
 	unsigned long mask;
 
 	hinstance = NULL;
-	wndproc = NULL;
-
-	// on unix we can change to fullscreen on fly
-	vid_fullscreen->flags &= ~( CVAR_LATCH_VIDEO );
+	x11wndproc = (x11wndproc_t )wndproc;
 
 	if( x11display.dpy )
 		GLimp_Shutdown();
@@ -835,7 +1009,11 @@ int GLimp_Init( void *hinstance, void *wndproc, void *parenthWnd )
 	x11display.wmState = XInternAtom( x11display.dpy, "WM_STATE", False );
 	x11display.features.wmStateFullscreen = _NET_WM_STATE_FULLSCREEN_SUPPORTED();
 
+#ifdef _XRANDR_OVER_VIDMODE_
+	_xf86_XrandrInit();
+#else
 	_xf86_VidmodesInit();
+#endif
 	_xf86_XineramaInit();
 
 	if( r_colorbits->integer == 16 || r_colorbits->integer == 24 ) colorbits = r_colorbits->integer;
@@ -881,10 +1059,14 @@ int GLimp_Init( void *hinstance, void *wndproc, void *parenthWnd )
 	mask = CWBorderPixel | CWColormap | ExposureMask;
 
 	x11display.gl_win = XCreateWindow( x11display.dpy, x11display.root, 0, 0, 1, 1, 0,
-	                                   x11display.visinfo->depth, InputOutput, x11display.visinfo->visual, mask, &attr );
+		x11display.visinfo->depth, InputOutput, x11display.visinfo->visual, mask, &attr );
 	qglXMakeCurrent( x11display.dpy, x11display.gl_win, x11display.ctx );
 
 	XSync( x11display.dpy, False );
+	
+	if( x11wndproc ) {
+		x11wndproc( &x11display, 0, 0, 0 );
+	}
 
 	return 1;
 }
@@ -907,10 +1089,9 @@ void GLimp_EndFrame( void )
 {
 	qglXSwapBuffers( x11display.dpy, x11display.gl_win );
 
-	if( vid_fullscreen->modified || ( vid_fullscreen->integer && vid_multiscreen_head->modified ) )
+	if( glState.fullScreen && vid_multiscreen_head->modified )
 	{
-		GLimp_SetMode_Real( r_mode->integer, vid_fullscreen->integer, qtrue );
-		vid_fullscreen->modified = qfalse;
+		GLimp_SetMode_Real( glState.width, glState.height, qtrue, glState.wideScreen, qtrue );
 		vid_multiscreen_head->modified = qfalse;
 	}
 }

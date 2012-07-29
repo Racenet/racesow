@@ -1,6 +1,7 @@
 /*
  * Fastcap
  */
+//FIXME: Due to the change in the entitiy event behaviour most of this doesn't work right now. We should be good by just porting the warsow ctf changes though.
 float CTF_UNLOCK_TIME = 2.0f;
 float CTF_UNLOCK_RADIUS = 128.0f;
 float CTF_CAPTURE_RADIUS = 40.0f;
@@ -29,7 +30,7 @@ class cFlagBase
         else if( this.owner.team == TEAM_BETA )
             @betaFlagBase = @this;
         
-        cVec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+        Vec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
 
         this.owner.type = ET_FLAG_BASE;
         this.owner.effects = EF_CARRIER|EF_FLAG_TRAIL;
@@ -46,19 +47,19 @@ class cFlagBase
 
         // drop to floor
         cTrace tr;
-        tr.doTrace( spawner.getOrigin(), vec3Origin, vec3Origin, spawner.getOrigin() - cVec3( 0.0f, 0.0f, 128.0f ), 0, MASK_DEADSOLID );
+        tr.doTrace( spawner.origin, vec3Origin, vec3Origin, spawner.origin - Vec3( 0.0f, 0.0f, 128.0f ), 0, MASK_DEADSOLID );
 
         cEntity @decal = @G_SpawnEntity( "flag_indicator_decal" );
         @this.decal = @decal;
         decal.type = ET_DECAL;
         decal.solid = SOLID_NOT;
-        decal.setOrigin( tr.getEndPos() + cVec3( 0.0f, 0.0f, 2.0f ) );
-        decal.setOrigin2( cVec3( 0.0f, 0.0f, 1.0f ) );
+        decal.origin = tr.endPos + Vec3( 0.0f, 0.0f, 2.0f );
+        decal.origin2 = Vec3( 0.0f, 0.0f, 1.0f );
         decal.modelindex = G_ImageIndex( "gfx/indicators/radar_decal" );
         decal.modelindex2 = 0; // rotation angle for ET_DECAL       
         decal.team = spawner.team;
         decal.frame = CTF_UNLOCK_RADIUS; // radius in case of ET_DECAL
-        decal.svflags = spawner.svflags | (SVF_TRANSMITORIGIN2|SVF_NOCULLATORIGIN2);
+        decal.svflags = spawner.svflags | (SVF_TRANSMITORIGIN2/*|SVF_NOCULLATORIGIN2 //FIXME: Removed in warsow 0.7*/);
         decal.linkEntity();
     }
 
@@ -80,14 +81,14 @@ class cFlagBase
     {
         ent.effects &= ~uint( EF_CARRIER|EF_FLAG_TRAIL );
         ent.effects |= EF_CARRIER|EF_FLAG_TRAIL;
-        unlockTimes[ent.client.playerNum()] = 0;
+        unlockTimes[ent.client.playerNum] = 0;
         ent.linkEntity();
     }
 
     void resetCarrier( cEntity @ent )
     {
         ent.effects &= ~uint( EF_CARRIER|EF_FLAG_TRAIL );
-        unlockTimes[ent.client.playerNum()] = 0;
+        unlockTimes[ent.client.playerNum] = 0;
         ent.linkEntity();
     }
     
@@ -112,7 +113,7 @@ class cFlagBase
 
         if ( !(( activator.effects & EF_CARRIER ) == 0) && this.owner.team == TEAM_BETA )
         {
-            unlockTimes[activator.client.playerNum()] = 0;
+            unlockTimes[activator.client.playerNum] = 0;
             this.flagCaptured( activator );
             this.owner.linkEntity();
 
@@ -121,7 +122,7 @@ class cFlagBase
 
         if ( (( activator.effects & EF_CARRIER ) == 0) && this.owner.team == TEAM_ALPHA )
         {
-            if ( unlockTimes[activator.client.playerNum()] < int( CTF_UNLOCK_TIME * 1000 ) )
+            if ( unlockTimes[activator.client.playerNum] < int( CTF_UNLOCK_TIME * 1000 ) )
                 return;
             this.flagStolen( activator );
             this.owner.linkEntity();
@@ -142,10 +143,10 @@ class cFlagBase
         
         // find players around
         cTrace tr;
-        cVec3 center, mins, maxs;
+        Vec3 center, mins, maxs;
         cEntity @target = null;
         cEntity @stop = null;
-        cVec3 origin = this.owner.getOrigin();
+        Vec3 origin = this.owner.origin;
 
         bool[] unlockTimeUpdated( maxClients );
         @target = G_GetEntity( 0 );
@@ -170,10 +171,10 @@ class cFlagBase
             
             // check if the player is visible from the base
             target.getSize( mins, maxs );
-            center = target.getOrigin() + ( 0.5 * ( maxs + mins ) );
+            center = target.origin + ( 0.5 * ( maxs + mins ) );
             mins = 0;
             maxs = 0;
-            int clientNum = target.client.playerNum();
+            int clientNum = target.client.playerNum;
             if( unlockTimes[clientNum] == 0 )
             {
                 target.client.armor = 0;
@@ -183,7 +184,7 @@ class cFlagBase
                 target.client.selectWeapon( WEAP_GUNBLADE );
                 removeProjectiles( target );
             }
-            if ( !tr.doTrace( origin, mins, maxs, center, target.entNum(), MASK_SOLID ) )
+            if ( !tr.doTrace( origin, mins, maxs, center, target.entNum, MASK_SOLID ) )
             {
                 unlockTimes[clientNum] += frameTime;
                 if ( unlockTimes[clientNum] > int( CTF_UNLOCK_TIME * 1000 ) )
@@ -222,7 +223,7 @@ void ctf_flag_die( cEntity @ent, cEntity @inflicter, cEntity @attacker )
     ctf_flag_think( ent );
 }
 
-void ctf_flag_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void ctf_flag_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
     if ( @other.client == null )
         return;
@@ -246,14 +247,14 @@ void CTF_ResetFlags()
     betaFlagBase.resetFlag();
 }
 
-void team_CTF_betaflag_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void team_CTF_betaflag_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
     cFlagBase @flagBase = @betaFlagBase;
     if ( @flagBase != null )
         flagBase.touch( other );
 }
 
-void team_CTF_alphaflag_touch( cEntity @ent, cEntity @other, const cVec3 @planeNormal, int surfFlags )
+void team_CTF_alphaflag_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )
 {
     cFlagBase @flagBase = @alphaFlagBase;
     if ( @flagBase != null )
@@ -283,27 +284,27 @@ void team_CTF_teamflag( cEntity @ent, int team )
 {
     ent.team = team;
 
-    cVec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+    Vec3 mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
 
     // check for spawning inside solid, and try to avoid at least the case of shared leaf
     cTrace trace;
-    trace.doTrace( ent.getOrigin(), mins, maxs, ent.getOrigin(), 0, MASK_DEADSOLID );
+    trace.doTrace( ent.origin, mins, maxs, ent.origin, 0, MASK_DEADSOLID );
     if ( trace.startSolid || trace.allSolid )
     {
         // try to resolve the shared leaf case by moving it up by a little
-        cVec3 start = ent.getOrigin();
+        Vec3 start = ent.origin;
         start.z += 16;
         trace.doTrace( start, mins, maxs, start, 0, MASK_DEADSOLID );
         if ( trace.startSolid || trace.allSolid )
         {
-            G_Print( ent.getClassname() + " starts inside solid. Inhibited\n" );
+            G_Print( ent.classname + " starts inside solid. Inhibited\n" );
             ent.freeEntity();
             return;
         }
     }
 
-    ent.setOrigin( trace.getEndPos() );
-    ent.setOrigin2( trace.getEndPos() );
+    ent.origin = trace.endPos;
+    ent.origin2 = trace.endPos;
 
     cFlagBase thisFlagBase( ent ); // spawn a local holder
 }
@@ -324,28 +325,28 @@ void team_CTF_genericSpawnpoint( cEntity @ent, int team )
 
     // drop to floor
     cTrace tr;
-    cVec3 start, end, mins( -16.0f, -16.0f, -24.0f ), maxs( 16.0f, 16.0f, 40.0f );
+    Vec3 start, end, mins( -16.0f, -16.0f, -24.0f ), maxs( 16.0f, 16.0f, 40.0f );
 
-    end = start = ent.getOrigin();
+    end = start = ent.origin;
     end.z -= 1024;
     start.z += 16;
 
     // check for starting inside solid
-    tr.doTrace( start, mins, maxs, start, ent.entNum(), MASK_DEADSOLID );
+    tr.doTrace( start, mins, maxs, start, ent.entNum, MASK_DEADSOLID );
     if ( tr.startSolid || tr.allSolid )
     {
-        G_Print( ent.getClassname() + " starts inside solid. Inhibited\n" );
+        G_Print( ent.classname + " starts inside solid. Inhibited\n" );
         ent.freeEntity();
         return;
     }
 
     if ( ( ent.spawnFlags & 1 ) == 0 ) // do not drop if having the float flag
     {
-        if ( tr.doTrace( start, mins, maxs, end, ent.entNum(), MASK_DEADSOLID ) )
+        if ( tr.doTrace( start, mins, maxs, end, ent.entNum, MASK_DEADSOLID ) )
         {
-            start = tr.getEndPos() + tr.getPlaneNormal();
-            ent.setOrigin( start );
-            ent.setOrigin2( start );
+            start = tr.endPos + tr.planeNormal;
+            ent.origin = start;
+            ent.origin2 = start;
         }
     }
 }
@@ -375,8 +376,8 @@ cEntity @bestFastcapSpawnpoint()
     if( @bestFastcapSpawnPoint != null && !noBestFastcapPosition )
         return @bestFastcapSpawnPoint;
     cTrace tr;
-    cVec3 center, mins, maxs;
-    cVec3 flagOrigin = alphaFlagBase.owner.getOrigin();
+    Vec3 center, mins, maxs;
+    Vec3 flagOrigin = alphaFlagBase.owner.origin;
 
     cEntity @closestSpawn = null;
     cEntity @currentSpawnpoint;
@@ -384,7 +385,7 @@ cEntity @bestFastcapSpawnpoint()
     
     for ( int i = 0; i < 3; i++ )
     {
-        cString classname;
+        String classname;
         switch( i )
         {
         case 0:
@@ -402,11 +403,11 @@ cEntity @bestFastcapSpawnpoint()
         {
             do
             {
-                float currentDistance = currentSpawnpoint.getOrigin().distance( alphaFlagBase.owner.getOrigin() );
+                float currentDistance = currentSpawnpoint.origin.distance( alphaFlagBase.owner.origin );
                 currentSpawnpoint.getSize( mins, maxs );
-                center = currentSpawnpoint.getOrigin() + ( 0.5 * ( maxs + mins ) );
+                center = currentSpawnpoint.origin + ( 0.5 * ( maxs + mins ) );
                 if( currentDistance < closestDistance && currentDistance > ( CTF_UNLOCK_RADIUS + 1 ) && 
-                        !tr.doTrace( flagOrigin, vec3Origin, vec3Origin, center, currentSpawnpoint.entNum(), MASK_SOLID ) )
+                        !tr.doTrace( flagOrigin, vec3Origin, vec3Origin, center, currentSpawnpoint.entNum, MASK_SOLID ) )
                 {
                     
                     @closestSpawn = @currentSpawnpoint;
@@ -419,51 +420,51 @@ cEntity @bestFastcapSpawnpoint()
     
     if( @closestSpawn == null )
     {
-        cVec3 flagOrigin = alphaFlagBase.owner.getOrigin();
-        cVec3 center, mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
+        Vec3 flagOrigin = alphaFlagBase.owner.origin;
+        Vec3 center, mins( -16.0, -16.0, -16.0 ), maxs( 16.0, 16.0, 40.0 );
         center = flagOrigin + ( 0.5 * ( maxs + mins ) );
         for ( int i = 0; i < 8; i++ )
         {
-            cVec3 addVector, newOrigin;
+            Vec3 addVector, newOrigin;
             switch( i )
             {
             case 0:
-                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x , 0, 0);
+                addVector = Vec3( CTF_UNLOCK_RADIUS + 1 + maxs.x , 0, 0);
                 break;
             case 1:
-                addVector = cVec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x) , 0, 0);
+                addVector = Vec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x) , 0, 0);
                 break;
             case 2:
-                addVector = cVec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
+                addVector = Vec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
                 break;
             case 3:
-                addVector = cVec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
+                addVector = Vec3( 0, -(CTF_UNLOCK_RADIUS + 1 + maxs.y) , 0);
                 break;
             case 4:
-                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
+                addVector = Vec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
                 break;
             case 5:
-                addVector = cVec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x), -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
+                addVector = Vec3( -(CTF_UNLOCK_RADIUS + 1 + maxs.x), -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
                 break;
             case 6:
-                addVector = cVec3( -( CTF_UNLOCK_RADIUS + 1 + maxs.x ), CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
+                addVector = Vec3( -( CTF_UNLOCK_RADIUS + 1 + maxs.x ), CTF_UNLOCK_RADIUS + 1 + maxs.y, 0);
                 break;
             case 7:
-                addVector = cVec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
+                addVector = Vec3( CTF_UNLOCK_RADIUS + 1 + maxs.x, -(CTF_UNLOCK_RADIUS + 1 + maxs.y), 0);
                 break;
             }
             newOrigin = flagOrigin + addVector;
-            if( !tr.doTrace( newOrigin, mins, maxs, center, alphaFlagBase.owner.entNum(), MASK_SOLID ) )
+            if( !tr.doTrace( newOrigin, mins, maxs, center, alphaFlagBase.owner.entNum, MASK_SOLID ) )
             {
                 @currentSpawnpoint = @G_SpawnEntity( "info_player_start" );
-                currentSpawnpoint.setOrigin( cVec3( newOrigin.x, newOrigin.y, newOrigin.z + 8 ));
+                currentSpawnpoint.origin = Vec3( newOrigin.x, newOrigin.y, newOrigin.z + 8 );
                 cTrace drop;
-                cVec3 start, end;
+                Vec3 start, end;
                 end = start = newOrigin;
                 start.z += 16;
                 end.z -= 1024;
-                drop.doTrace( start, mins, maxs, end, currentSpawnpoint.entNum(), MASK_SOLID );
-                if( drop.getEndPos().z < ( flagOrigin.z ) - 20.0 )
+                drop.doTrace( start, mins, maxs, end, currentSpawnpoint.entNum, MASK_SOLID );
+                if( drop.endPos.z < ( flagOrigin.z ) - 20.0 )
                 {
                     currentSpawnpoint.freeEntity();
                 }
@@ -482,10 +483,10 @@ cEntity @bestFastcapSpawnpoint()
     if( @bestFastcapSpawnPoint != null )
     {
         //look at flag
-        cVec3 angles;
-        cVec3 dir = flagOrigin - bestFastcapSpawnPoint.getOrigin();
-        dir.toAngles( angles );
-        bestFastcapSpawnPoint.setAngles( angles );
+        Vec3 angles;
+        Vec3 dir = flagOrigin - bestFastcapSpawnPoint.origin;
+        angles = dir.toAngles();
+        bestFastcapSpawnPoint.angles = angles;
         bestFastcapSpawnPoint.linkEntity();
     }
     noBestFastcapPosition = ( @bestFastcapSpawnPoint == null ) ? true : false;
@@ -496,6 +497,6 @@ void addFastcapHUDStats( cClient @client )
 {
     if( ( client.getEnt().effects & EF_FLAG_TRAIL ) != 0 )
         client.setHUDStat( STAT_IMAGE_SELF, prcFlagIconStolen );
-    if( unlockTimes[client.playerNum()] > 0 )
-        client.setHUDStat( STAT_PROGRESS_OTHER, ( unlockTimes[client.playerNum()]  / ( CTF_UNLOCK_TIME * 10 ) ) );//*10 because of 1000/100
+    if( unlockTimes[client.playerNum] > 0 )
+        client.setHUDStat( STAT_PROGRESS_OTHER, ( unlockTimes[client.playerNum]  / ( CTF_UNLOCK_TIME * 10 ) ) );//*10 because of 1000/100
 }

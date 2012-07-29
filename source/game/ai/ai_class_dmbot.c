@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "../g_local.h"
 #include "ai_local.h"
@@ -137,7 +137,7 @@ qboolean AI_NodeReached_Generic( edict_t *self )
 			reached = ( DistanceFast( self->s.origin, nodes[self->ai.next_node].origin ) < RADIUS );
 		}
 	}
-	
+
 	return reached;
 }
 
@@ -281,7 +281,7 @@ void BOT_DMclass_Move( edict_t *self, usercmd_t *ucmd )
 	}
 
 	linkType = AI_CurrentLinkType( self );
-	
+
 	specialMovement = ( self->ai.path.numNodes >= MIN_BUNNY_NODES );
 
 	if( AI_GetNodeFlags( self->ai.next_node ) & (NODEFLAGS_REACHATTOUCH|NODEFLAGS_ENTITYREACH) )
@@ -522,12 +522,15 @@ void BOT_DMclass_MoveWander( edict_t *self, usercmd_t *ucmd )
 
 	if( self->deadflag )
 		return;
+	if( !self->r.client->ps.pmove.stats[PM_STAT_MAXSPEED] ) {
+		return;
+	}
 
 	// Special check for elevators, stand still until the ride comes to a complete stop.
 	if( self->groundentity && self->groundentity->use == Use_Plat )
 	{
-		if( self->groundentity->moveinfo.state != STATE_UP ||
-		    self->groundentity->moveinfo.state != STATE_DOWN )
+		if( self->groundentity->moveinfo.state != STATE_UP &&
+			self->groundentity->moveinfo.state != STATE_DOWN )
 		{
 			self->velocity[0] = 0;
 			self->velocity[1] = 0;
@@ -608,6 +611,7 @@ static qboolean BOT_DMclass_FindRocket( edict_t *self, vec3_t away_from_rocket )
 #define AI_ROCKET_DANGER_RADIUS 200
 	edict_t *target = findradius( NULL, NULL, self->s.origin, AI_ROCKET_DETECT_RADIUS );
 	float min_roxx_time = 1.0f;
+	qboolean any_rocket = qfalse;
 
 	while( target )
 	{
@@ -624,6 +628,8 @@ static qboolean BOT_DMclass_FindRocket( edict_t *self, vec3_t away_from_rocket )
 				if( trace.fraction < min_roxx_time )
 				{
 					vec_t l;
+
+					any_rocket = qtrue;
 					min_roxx_time = trace.fraction;
 					VectorSubtract( trace.endpos, self->s.origin, end );
 					// ok... end is where the impact will be.
@@ -648,7 +654,8 @@ static qboolean BOT_DMclass_FindRocket( edict_t *self, vec3_t away_from_rocket )
 		}
 		target = findradius( target, NULL, self->s.origin, AI_ROCKET_DETECT_RADIUS );
 	}
-	return min_roxx_time != 1.0f;
+
+	return any_rocket;
 
 #undef AI_ROCKET_DETECT_RADIUS
 #undef AI_ROCKET_DANGER_RADIUS
@@ -665,7 +672,7 @@ void BOT_DMclass_CombatMovement( edict_t *self, usercmd_t *ucmd )
 	float c;
 	float dist;
 	qboolean rocket = qfalse;
-	vec3_t away_from_rocket;
+	vec3_t away_from_rocket = { 0, 0, 0 };
 
 	if( !self->enemy || self->ai.rush_item )
 	{
@@ -674,7 +681,7 @@ void BOT_DMclass_CombatMovement( edict_t *self, usercmd_t *ucmd )
 	}
 
 	if( self->ai.pers.skillLevel >= 0.25f ) 
-	    rocket = BOT_DMclass_FindRocket( self, away_from_rocket );
+		rocket = BOT_DMclass_FindRocket( self, away_from_rocket );
 
 	dist = DistanceFast( self->s.origin, self->enemy->s.origin );
 	c = random();
@@ -712,21 +719,44 @@ void BOT_DMclass_CombatMovement( edict_t *self, usercmd_t *ucmd )
 			ucmd->buttons |= BUTTON_SPECIAL;
 		}
 		else
-		if( dist < 150 ) // range = AIWEAP_MELEE_RANGE;
-		{
-			if( self->s.weapon == WEAP_GUNBLADE ) // go into him!
+			if( dist < 150 ) // range = AIWEAP_MELEE_RANGE;
 			{
-				ucmd->buttons &= ~BUTTON_ATTACK; // remove pressing fire
-				if( canMOVEFRONT )  // move to your enemy
-					self->ai.combatmovepushes[0] = 1;
-				else if( c <= 0.5 && canMOVELEFT )
-					self->ai.combatmovepushes[1] = -1;
-				else if( canMOVERIGHT )
-					self->ai.combatmovepushes[1] = 1;
+				if( self->s.weapon == WEAP_GUNBLADE ) // go into him!
+				{
+					ucmd->buttons &= ~BUTTON_ATTACK; // remove pressing fire
+					if( canMOVEFRONT )  // move to your enemy
+						self->ai.combatmovepushes[0] = 1;
+					else if( c <= 0.5 && canMOVELEFT )
+						self->ai.combatmovepushes[1] = -1;
+					else if( canMOVERIGHT )
+						self->ai.combatmovepushes[1] = 1;
+				}
+				else
+				{
+					//priorize sides
+					if( canMOVELEFT || canMOVERIGHT )
+					{
+						if( canMOVELEFT && canMOVERIGHT )
+						{
+							self->ai.combatmovepushes[1] = c < 0.5 ? -1 : 1;
+						}
+						else if( canMOVELEFT )
+						{
+							self->ai.combatmovepushes[1] = -1;
+						}
+						else
+						{
+							self->ai.combatmovepushes[1] = 1;
+						}
+					}
+
+					if( c < 0.3 && canMOVEBACK )
+						self->ai.combatmovepushes[0] = -1;
+				}
+
 			}
-			else
+			else if( dist < 500 ) //AIWEAP_SHORT_RANGE limit is Grenade Laucher range
 			{
-				//priorize sides
 				if( canMOVELEFT || canMOVERIGHT )
 				{
 					if( canMOVELEFT && canMOVERIGHT )
@@ -743,71 +773,48 @@ void BOT_DMclass_CombatMovement( edict_t *self, usercmd_t *ucmd )
 					}
 				}
 
-				if( c < 0.3 && canMOVEBACK )
-					self->ai.combatmovepushes[0] = -1;
-			}
+				if( c < 0.3 && canMOVEFRONT )
+				{
+					self->ai.combatmovepushes[0] = 1;
+				}
 
-		}
-		else if( dist < 500 ) //AIWEAP_SHORT_RANGE limit is Grenade Laucher range
-		{
-			if( canMOVELEFT || canMOVERIGHT )
+			}
+			else if( dist < 900 )
 			{
-				if( canMOVELEFT && canMOVERIGHT )
+				if( canMOVELEFT || canMOVERIGHT )
 				{
-					self->ai.combatmovepushes[1] = c < 0.5 ? -1 : 1;
-				}
-				else if( canMOVELEFT )
-				{
-					self->ai.combatmovepushes[1] = -1;
-				}
-				else
-				{
-					self->ai.combatmovepushes[1] = 1;
+					if( canMOVELEFT && canMOVERIGHT )
+					{
+						self->ai.combatmovepushes[1] = c < 0.5 ? -1 : 1;
+					}
+					else if( canMOVELEFT )
+					{
+						self->ai.combatmovepushes[1] = -1;
+					}
+					else
+					{
+						self->ai.combatmovepushes[1] = 1;
+					}
 				}
 			}
-
-			if( c < 0.3 && canMOVEFRONT )
+			else //range = AIWEAP_LONG_RANGE;
 			{
-				self->ai.combatmovepushes[0] = 1;
-			}
-
-		}
-		else if( dist < 900 )
-		{
-			if( canMOVELEFT || canMOVERIGHT )
-			{
-				if( canMOVELEFT && canMOVERIGHT )
+				if( c < 0.75 && ( canMOVELEFT || canMOVERIGHT ) )
 				{
-					self->ai.combatmovepushes[1] = c < 0.5 ? -1 : 1;
-				}
-				else if( canMOVELEFT )
-				{
-					self->ai.combatmovepushes[1] = -1;
-				}
-				else
-				{
-					self->ai.combatmovepushes[1] = 1;
+					if( canMOVELEFT && canMOVERIGHT )
+					{
+						self->ai.combatmovepushes[1] = c < 0.5 ? -1 : 1;
+					}
+					else if( canMOVELEFT )
+					{
+						self->ai.combatmovepushes[1] = -1;
+					}
+					else
+					{
+						self->ai.combatmovepushes[1] = 1;
+					}
 				}
 			}
-		}
-		else //range = AIWEAP_LONG_RANGE;
-		{
-			if( c < 0.75 && ( canMOVELEFT || canMOVERIGHT ) )
-			{
-				if( canMOVELEFT && canMOVERIGHT )
-				{
-					self->ai.combatmovepushes[1] = c < 0.5 ? -1 : 1;
-				}
-				else if( canMOVELEFT )
-				{
-					self->ai.combatmovepushes[1] = -1;
-				}
-				else
-				{
-					self->ai.combatmovepushes[1] = 1;
-				}
-			}
-		}
 	}
 
 	if( !rocket && ( self->health < 25 || ( dist >= 500 && c < 0.2 ) || ( dist >= 1000 && c < 0.5 ) ) )
@@ -837,7 +844,9 @@ void BOT_DMclass_FindEnemy( edict_t *self )
 	float dist, weight, bestWeight = 9999999;
 	int i;
 
-	if( G_ISGHOSTING( self ) || GS_MatchState() == MATCH_STATE_COUNTDOWN )
+	if( G_ISGHOSTING( self ) 
+		|| GS_MatchState() == MATCH_STATE_COUNTDOWN
+		|| GS_ShootingDisabled() )
 	{
 		self->ai.enemyReactionDelay = 0;
 		self->enemy = self->ai.latched_enemy = NULL;
@@ -968,7 +977,7 @@ static float BOT_DMclass_ChooseWeapon( edict_t *self )
 
 		rangeWeight = AIWeapons[i].RangeWeight[weapon_range] * self->ai.pers.cha.weapon_affinity[i - ( WEAP_GUNBLADE - 1 )];
 
-		 // weigh up if having strong ammo
+		// weigh up if having strong ammo
 		if( self->r.client->ps.inventory[weaponItem->ammo_tag] )
 			rangeWeight *= 1.25;
 
@@ -1000,7 +1009,7 @@ static qboolean BOT_DMclass_CheckShot( edict_t *ent, vec3_t point )
 	vec3_t start, forward, right, offset;
 
 	if( random() > ent->ai.pers.cha.firerate )
-	    return qfalse;
+		return qfalse;
 
 	AngleVectors( ent->r.client->ps.viewangles, forward, right, NULL );
 
@@ -1126,9 +1135,9 @@ static qboolean BOT_DMclass_FireWeapon( edict_t *self, usercmd_t *ucmd )
 		{
 			vec3_t checktarget;
 			VectorSet( checktarget,
-			           self->enemy->s.origin[0],
-			           self->enemy->s.origin[1],
-			           self->enemy->s.origin[2] + self->enemy->r.mins[2] + 4 );
+				self->enemy->s.origin[0],
+				self->enemy->s.origin[1],
+				self->enemy->s.origin[2] + self->enemy->r.mins[2] + 4 );
 
 			G_Trace( &trace, fire_origin, vec3_origin, vec3_origin, checktarget, self, MASK_SHOT );
 			if( trace.fraction == 1.0f || ( trace.ent > 0 && game.edicts[trace.ent].takedamage ) )
@@ -1191,13 +1200,13 @@ static qboolean BOT_DMclass_FireWeapon( edict_t *self, usercmd_t *ucmd )
 				self->r.client->ps.weaponState == WEAPON_STATE_REFIRESTRONG )
 			{
 				if( (self->s.weapon == WEAP_LASERGUN) || (self->s.weapon == WEAP_PLASMAGUN) ) {
-				    target[0] += sinf( (float)level.time/100.0) * wfac;
-				    target[1] += cosf( (float)level.time/100.0) * wfac;
+					target[0] += sinf( (float)level.time/100.0) * wfac;
+					target[1] += cosf( (float)level.time/100.0) * wfac;
 				}
 				else
 				{
-				    target[0] += ( random()-0.5f ) * wfac;
-				    target[1] += ( random()-0.5f ) * wfac;
+					target[0] += ( random()-0.5f ) * wfac;
+					target[1] += ( random()-0.5f ) * wfac;
 				}
 			}
 		}

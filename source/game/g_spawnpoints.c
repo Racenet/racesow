@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 1997-2001 Id Software, Inc.
+Copyright (C) 1997-2001 Id Software, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-   See the GNU General Public License for more details.
+See the GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
- */
+*/
 
 #include "g_local.h"
 
@@ -48,11 +48,11 @@ void SP_info_player_intermission( edict_t *ent )
 //=======================================================================
 
 
-//================
-//PlayersRangeFromSpot
-//
-//Returns the distance to the nearest player from the given spot
-//================
+/*
+* PlayersRangeFromSpot
+* 
+* Returns the distance to the nearest player from the given spot
+*/
 float PlayersRangeFromSpot( edict_t *spot, int ignore_team )
 {
 	edict_t	*player;
@@ -83,11 +83,11 @@ float PlayersRangeFromSpot( edict_t *spot, int ignore_team )
 }
 
 
-//===========
-// G_SelectIntermissionSpawnPoint
-// Returns a intermission spawnpoint, or a deathmatch spawnpoint if
-// no info_player_intermission was found.
-//============
+/*
+* G_SelectIntermissionSpawnPoint
+* Returns a intermission spawnpoint, or a deathmatch spawnpoint if
+* no info_player_intermission was found.
+*/
 edict_t *G_SelectIntermissionSpawnPoint( void )
 {
 	edict_t *ent;
@@ -116,12 +116,12 @@ edict_t *G_SelectIntermissionSpawnPoint( void )
 	return ent;
 }
 
-//================
-//SelectRandomDeathmatchSpawnPoint
-//
-//go to a random point, but NOT the two points closest
-//to other players
-//================
+/*
+* SelectRandomDeathmatchSpawnPoint
+* 
+* go to a random point, but NOT the two points closest
+* to other players
+*/
 static edict_t *SelectRandomDeathmatchSpawnPoint( edict_t *ent )
 {
 	edict_t	*spot, *spot1, *spot2;
@@ -190,9 +190,9 @@ edict_t *SelectDeathmatchSpawnPoint( edict_t *ent )
 	return SelectRandomDeathmatchSpawnPoint( ent );
 }
 
-//===========
-//G_OffsetSpawnPoint - use a grid of player boxes to offset the spawn point
-//============
+/*
+* G_OffsetSpawnPoint - use a grid of player boxes to offset the spawn point
+*/
 qboolean G_OffsetSpawnPoint( vec3_t origin, vec3_t box_mins, vec3_t box_maxs, float radius, qboolean checkground )
 {
 	trace_t	trace;
@@ -243,8 +243,8 @@ qboolean G_OffsetSpawnPoint( vec3_t origin, vec3_t box_mins, vec3_t box_maxs, fl
 		column = Q_brandom( &columnseed, -columns, columns );
 
 		VectorSet( virtualorigin, origin[0] + ( row * playerbox_rowwidth ),
-		           origin[1] + ( column * playerbox_columnwidth ),
-		           origin[2] );
+			origin[1] + ( column * playerbox_columnwidth ),
+			origin[2] );
 
 		VectorAdd( virtualorigin, box_mins, absmins );
 		VectorAdd( virtualorigin, box_maxs, absmaxs );
@@ -316,11 +316,11 @@ qboolean G_OffsetSpawnPoint( vec3_t origin, vec3_t box_mins, vec3_t box_maxs, fl
 }
 
 
-//===========
-//SelectSpawnPoint
-//
-//Chooses a player start, deathmatch start, etc
-//============
+/*
+* SelectSpawnPoint
+* 
+* Chooses a player start, deathmatch start, etc
+*/
 void SelectSpawnPoint( edict_t *ent, edict_t **spawnpoint, vec3_t origin, vec3_t angles )
 {
 	edict_t	*spot = NULL;

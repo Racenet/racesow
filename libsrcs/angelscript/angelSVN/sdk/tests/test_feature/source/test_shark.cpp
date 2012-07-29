@@ -3,7 +3,7 @@
 namespace TestShark
 {
 
-#define TESTNAME "TestShark"
+static const char * const TESTNAME = "TestShark";
 
 class Point
 {
@@ -71,7 +71,7 @@ void Point_Release(Point &point)
 }
 
 
-static char *script =
+static const char *script =
 "Point AddPoints(Point p1, Point p2) \n"
 "{                                   \n"
 "Point p3 = p1;                      \n"
@@ -93,12 +93,12 @@ bool Test()
 
 	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	r = engine->RegisterObjectType("Point", sizeof(Point), asOBJ_REF); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("Point", "int x", offsetof(Point, x)); assert( r >= 0 );
-	r = engine->RegisterObjectProperty("Point", "int y", offsetof(Point, y)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("Point", "int x", asOFFSET(Point, x)); assert( r >= 0 );
+	r = engine->RegisterObjectProperty("Point", "int y", asOFFSET(Point, y)); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("Point", "void Add(Point&in)", asFUNCTION(Point_Add), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("Point", asBEHAVE_FACTORY, "Point@ f()", asFUNCTION(Point_Factory), asCALL_CDECL); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("Point", asBEHAVE_ASSIGNMENT, "Point &f(Point &in)", asFUNCTION(Point_Assign), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("Point", asBEHAVE_INDEX, "int &f(int)", asFUNCTION(Point_Index), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("Point", "Point &opAssign(Point &in)", asFUNCTION(Point_Assign), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("Point", "int &opIndex(int)", asFUNCTION(Point_Index), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("Point", asBEHAVE_ADDREF, "void f()", asFUNCTION(Point_AddRef), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("Point", asBEHAVE_RELEASE, "void f()", asFUNCTION(Point_Release), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 
@@ -110,7 +110,7 @@ bool Test()
 	if( r < 0 )
 	{
 		printf("%s: Failed to build\n", TESTNAME);
-		fail = true;
+		TEST_FAILED;
 	}
 	else
 	{
@@ -125,7 +125,7 @@ bool Test()
 		ctx->SetArgObject(1, &b);
 		r = ctx->Execute();
 		if( r != asEXECUTION_FINISHED )
-			fail = true;
+			TEST_FAILED;
 		Point *ret = (Point*)ctx->GetReturnObject();
 		c = *ret;
 		ctx->Release();

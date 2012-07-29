@@ -30,11 +30,11 @@ static const char *G_PlayerStatsMessage( edict_t *ent );
 //
 //======================================================================
 
-//==================
-//G_ClientUpdateScoreBoardMessage
-//
-//Show the scoreboard messages if the scoreboards are active
-//==================
+/*
+* G_ClientUpdateScoreBoardMessage
+* 
+* Show the scoreboard messages if the scoreboards are active
+*/
 void G_UpdateScoreBoardMessages( void )
 {
 	static int nexttime = 0;
@@ -99,10 +99,10 @@ update:
 	}
 }
 
-//==================
-//G_ScoreboardMessage_AddSpectators
-//generic one to add the same spectator entries to all scoreboards
-//==================
+/*
+* G_ScoreboardMessage_AddSpectators
+* generic one to add the same spectator entries to all scoreboards
+*/
 #define ADD_SCOREBOARD_ENTRY(scoreboardString,len,entry) \
 	\
 	if( SCOREBOARD_MSG_MAXSIZE - len > strlen( entry ) )\
@@ -184,10 +184,10 @@ void G_ScoreboardMessage_AddSpectators( void )
 	}
 }
 
-//==================
-//G_PlayerStatsMessage
-//generic one to add the stats of the current player into the scoreboard message at cgame
-//==================
+/*
+* G_PlayerStatsMessage
+* generic one to add the stats of the current player into the scoreboard message at cgame
+*/
 static const char *G_PlayerStatsMessage( edict_t *ent )
 {
 	gsitem_t *it;
@@ -311,9 +311,9 @@ static unsigned int G_FindPointedPlayer( edict_t *self )
 	return bestNum;
 }
 
-//===============
-//G_SetClientStats
-//===============
+/*
+* G_SetClientStats
+*/
 void G_SetClientStats( edict_t *ent )
 {
 	gclient_t *client = ent->r.client;
@@ -456,5 +456,17 @@ void G_SetClientStats( edict_t *ent )
 				client->ps.stats[STAT_POINTED_TEAMPLAYER] |= 0x20;
 			}
 		}
+	}
+
+	// last killer. ignore world and team kills
+	if( client->teamstate.last_killer )
+	{
+		edict_t *targ = ent, *attacker = client->teamstate.last_killer;
+		client->ps.stats[STAT_LAST_KILLER] = (attacker->r.client && !GS_IsTeamDamage( &targ->s, &attacker->s ) ? 
+			ENTNUM( attacker ) : 0);
+	}
+	else
+	{
+		client->ps.stats[STAT_LAST_KILLER] = 0;
 	}
 }

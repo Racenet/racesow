@@ -3,7 +3,7 @@
 namespace TestArrayIntf
 {
 
-#define TESTNAME "TestArrayIntf"
+static const char * const TESTNAME = "TestArrayIntf";
 
 // Normal structure
 static const char *script1 =
@@ -19,63 +19,65 @@ static const char *script1 =
 "}                            \n";
 
 
-asIScriptArray *floatArray = 0;
-asIScriptArray *stringArray = 0;
+CScriptArray *floatArray = 0;
+CScriptArray *stringArray = 0;
 
 bool Test()
 {
 	bool fail = false;
 	int r;
+	COutStream out;
 
  	asIScriptEngine *engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 
-	RegisterScriptString_Generic(engine);
+	RegisterScriptArray(engine, true);
+	RegisterScriptString(engine);
 
 	engine->RegisterGlobalProperty("float[] @floatArray", &floatArray);
 	engine->RegisterGlobalProperty("string[] @stringArray", &stringArray);
 
-	COutStream out;
-
 	asIScriptModule *mod = engine->GetModule(0, asGM_ALWAYS_CREATE);
 	mod->AddScriptSection(TESTNAME, script1, strlen(script1), 0);
-	engine->SetMessageCallback(asMETHOD(COutStream,Callback), &out, asCALL_THISCALL);
 	r = mod->Build();
-	if( r < 0 ) fail = true;
+	if( r < 0 ) TEST_FAILED;
 
-	r = engine->ExecuteString(0, "Test()");
+	r = ExecuteString(engine, "Test()", mod);
 	if( r != asEXECUTION_FINISHED ) 
-		fail = true;
+	{
+		TEST_FAILED;
+	}
 	else
 	{
-		if( (floatArray->GetArrayTypeId() & asTYPEID_MASK_OBJECT) != asTYPEID_SCRIPTARRAY )
-			fail = true;
+		if( (floatArray->GetArrayTypeId() & asTYPEID_MASK_OBJECT) != asTYPEID_TEMPLATE )
+			TEST_FAILED;
 
 		if( floatArray->GetArrayTypeId() != engine->GetTypeIdByDecl("float[]") )
-			fail = true;
+			TEST_FAILED;
 
 		if( floatArray->GetElementTypeId() != engine->GetTypeIdByDecl("float") )
-			fail = true;
+			TEST_FAILED;
 
-		if( floatArray->GetElementCount() != 2 )
-			fail = true;
+		if( floatArray->GetSize() != 2 )
+			TEST_FAILED;
 
-		if( *(float*)floatArray->GetElementPointer(0) != 1.1f )
-			fail = true;
+		if( *(float*)floatArray->At(0) != 1.1f )
+			TEST_FAILED;
 
-		if( *(float*)floatArray->GetElementPointer(1) != 1.2f )
-			fail = true;
+		if( *(float*)floatArray->At(1) != 1.2f )
+			TEST_FAILED;
 
 		if( stringArray->GetArrayTypeId() != engine->GetTypeIdByDecl("string[]") )
-			fail = true;
+			TEST_FAILED;
 
 		if( stringArray->GetElementTypeId() != engine->GetTypeIdByDecl("string") )
-			fail = true;
+			TEST_FAILED;
 
-		if( stringArray->GetElementCount() != 1 )
-			fail = true;
+		if( stringArray->GetSize() != 1 )
+			TEST_FAILED;
 
-		if( ((CScriptString*)stringArray->GetElementPointer(0))->buffer != "test" )
-			fail = true;
+		if( ((CScriptString*)stringArray->At(0))->buffer != "test" )
+			TEST_FAILED;
 
 		stringArray->Resize(2);
 	}

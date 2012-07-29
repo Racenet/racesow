@@ -166,12 +166,6 @@ static void CM_Clear( cmodel_state_t *cms )
 		cms->map_entitystring = &cms->map_entitystring_empty;
 	}
 
-	if( cms->map_phs )
-	{
-		Mem_Free( cms->map_phs );
-		cms->map_phs = NULL;
-	}
-
 	if( cms->map_clipnodes )
 	{
 		Mem_Free( cms->map_clipnodes );
@@ -254,7 +248,7 @@ cmodel_t *CM_LoadMap( cmodel_state_t *cms, const char *name, qboolean clientload
 	if( !buf )
 		Com_Error( ERR_DROP, "Couldn't load %s", name );
 
-	cms->checksum = Com_BlockChecksum( buf, length );
+	cms->checksum = Com_MD5Digest32( ( const qbyte * )buf, length );
 	*checksum = cms->checksum;
 
 	// call the apropriate loader
@@ -279,6 +273,7 @@ cmodel_t *CM_LoadMap( cmodel_state_t *cms, const char *name, qboolean clientload
 	descr->loader( cms, NULL, buf, bspFormat );
 
 	CM_InitBoxHull( cms );
+	CM_InitOctagonHull( cms );
 
 	if( cms->numareas )
 	{
@@ -485,7 +480,7 @@ int CM_LeafArea( cmodel_state_t *cms, int leafnum )
 /*
 ===============================================================================
 
-PVS / PHS
+PVS
 
 ===============================================================================
 */
@@ -493,7 +488,7 @@ PVS / PHS
 /*
 * CM_DecompressVis
 *
-* Decompresses RLE-compressed PVS/PHS data
+* Decompresses RLE-compressed PVS data
 */
 qbyte *CM_DecompressVis( const qbyte *in, int rowsize, qbyte *decompressed )
 {
@@ -530,84 +525,6 @@ qbyte *CM_DecompressVis( const qbyte *in, int rowsize, qbyte *decompressed )
 }
 
 /*
-* CM_CalcPHS
-*/
-void CM_CalcPHS( cmodel_state_t *cms )
-{
-	int i, j, k, l, index;
-	int rowbytes, rowwords;
-	int numclusters;
-	int bitbyte;
-	unsigned int *dest, *src;
-	qbyte *scan;
-	int count, vcount;
-
-	if( !cms->map_pvs )
-	{
-		cms->map_phs = NULL;
-		return;
-	}
-
-	Com_DPrintf( "Building PHS...\n" );
-
-	rowbytes = CM_ClusterRowSize( cms );
-	rowwords = CM_ClusterRowLongs( cms );
-	numclusters = CM_NumClusters( cms );
-
-	cms->map_phs = Mem_Alloc( cms->mempool, cms->map_visdatasize );
-	cms->map_phs->rowsize = rowbytes;
-	cms->map_phs->numclusters = numclusters;
-
-	vcount = 0;
-	for( i = 0; i < numclusters; i++ )
-	{
-		scan = CM_ClusterPVS( cms, i );
-		for( j = 0; j < numclusters; j++ )
-		{
-			if( scan[j>>3] & ( 1<<( j&7 ) ) )
-				vcount++;
-		}
-	}
-
-	count = 0;
-	for( i = 0; i < numclusters; i++ )
-	{
-		dest = ( unsigned int * )CM_ClusterPHS( cms, i );
-		scan = CM_ClusterPVS( cms, i );
-		memcpy( dest, scan, rowbytes );
-
-		for( j = 0; j < rowbytes; j++ )
-		{
-			bitbyte = scan[j];
-			if( !bitbyte )
-				continue;
-
-			for( k = 0; k < 8; k++ )
-			{
-				if( !( bitbyte & ( 1<<k ) ) )
-					continue;
-
-				// OR this pvs row into the phs
-				index = ( j << 3 ) + k;
-				if( index >= numclusters )
-					Com_Error( ERR_DROP, "CM_CalcPHS: Bad bit in PVS" ); // pad bits should be 0
-
-				src = ( unsigned int * )CM_ClusterPVS( cms, index );
-				for( l = 0; l < rowwords; l++ )
-					dest[l] |= src[l];
-			}
-		}
-
-		for( j = 0; j < numclusters; j++ )
-			if( ( ( qbyte * )dest )[j>>3] & ( 1<<( j&7 ) ) )
-				count++;
-	}
-
-	Com_DPrintf( "Average clusters visible / hearable / total: %i / %i / %i\n", vcount/numclusters,
-		count/numclusters, numclusters );
-}
-
-/*
 * CM_ClusterRowSize
 */
 int CM_ClusterRowSize( cmodel_state_t *cms )
@@ -640,14 +557,6 @@ dvis_t *CM_PVSData( cmodel_state_t *cms )
 }
 
 /*
-* CM_PHSData
-*/
-dvis_t *CM_PHSData( cmodel_state_t *cms )
-{
-	return cms->map_phs;
-}
-
-/*
 * CM_ClusterVS
 */
 static inline qbyte *CM_ClusterVS( int cluster, dvis_t *vis, qbyte *nullrow )
@@ -663,14 +572,6 @@ static inline qbyte *CM_ClusterVS( int cluster, dvis_t *vis, qbyte *nullrow )
 qbyte *CM_ClusterPVS( cmodel_state_t *cms, int cluster )
 {
 	return CM_ClusterVS( cluster, cms->map_pvs, cms->nullrow );
-}
-
-/*
-* CM_ClusterPHS
-*/
-qbyte *CM_ClusterPHS( cmodel_state_t *cms, int cluster )
-{
-	return CM_ClusterVS( cluster, cms->map_phs, cms->nullrow );
 }
 
 /*
@@ -975,36 +876,18 @@ void CM_MergePVS( cmodel_state_t *cms, vec3_t org, qbyte *out )
 }
 
 /*
-* CM_MergePHS
-*/
-void CM_MergePHS( cmodel_state_t *cms, int cluster, qbyte *out )
-{
-	int i, longs;
-	qbyte *src;
-
-	longs = CM_ClusterRowLongs( cms );
-
-	// or in all the other leaf bits
-	src = CM_ClusterPHS( cms, cluster );
-	for( i = 0; i < longs; i++ )
-		( (int *)out )[i] |= ( (int *)src )[i];
-}
-
-/*
 * CM_MergeVisSets
 */
-int CM_MergeVisSets( cmodel_state_t *cms, vec3_t org, qbyte *pvs, qbyte *phs, qbyte *areabits )
+int CM_MergeVisSets( cmodel_state_t *cms, vec3_t org, qbyte *pvs, qbyte *areabits )
 {
 	int area;
 
-	assert( pvs || phs || areabits );
+	assert( pvs || areabits );
 
 	if( pvs )
 		CM_MergePVS( cms, org, pvs );
 
 	area = CM_PointLeafnum( cms, org );
-	if( phs )
-		CM_MergePHS( cms, CM_LeafCluster( cms, area ), phs );
 
 	area = CM_LeafArea( cms, area );
 	if( areabits && area > -1 )

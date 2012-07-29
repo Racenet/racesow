@@ -1,26 +1,39 @@
 /*
-* AngelWrap is a C wrapper for AngelScript. (c) German Garcia 2008 
+Copyright (C) 2008 German Garcia
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
 */
 
-#if defined ( _WIN32 ) || ( _WIN64 )
-#include <string.h>
-#endif
-
-#if defined ( __APPLE__ )
-#include <angelscript/angelscript.h>	
-#else
-#include <angelscript.h>
-#endif
-
 #include "qas_local.h"
+#include "addon/addon_math.h"
+#include "addon/addon_scriptarray.h"
+#include "addon/addon_string.h"
+#include "addon/addon_dictionary.h"
+#include "addon/addon_time.h"
+#include "addon/addon_any.h"
+#include "addon/addon_vec3.h"
+#include "addon/addon_cvar.h"
+#include "addon/addon_stringutils.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define QASINVALIDHANDLE -127
-
-#define asFUNCTION_GENERIC(f) asFUNCTION( (void (qcdecl *)(asIScriptGeneric *))f )
 
 typedef struct enginehandle_s 
 {
@@ -29,10 +42,7 @@ typedef struct enginehandle_s
 	qboolean max_portability;
 	asIScriptEngine *engine;
 	struct enginehandle_s *next;
-}enginehandle_t;
-
-static enginehandle_t *engineHandlesHead = NULL;
-static int numRegisteredEngines = 0;
+} enginehandle_t;
 
 typedef struct contexthandle_s 
 {
@@ -41,7 +51,10 @@ typedef struct contexthandle_s
 	asIScriptContext *ctx;
 	asDWORD timeOut;
 	struct contexthandle_s *next;
-}contexthandle_t;
+} contexthandle_t;
+
+static enginehandle_t *engineHandlesHead = NULL;
+static int numRegisteredEngines = 0;
 
 static contexthandle_t *contextHandlesHead = NULL;
 static int numRegisteredContexts = 0;
@@ -83,7 +96,7 @@ static inline contexthandle_t *qasGetContextHandle( int handle )
 	return NULL;
 }
 
-void qasGenericLineCallback( asIScriptContext *ctx, asDWORD *timeOut )
+static void qasGenericLineCallback( asIScriptContext *ctx, asDWORD *timeOut )
 {
 	// If the time out is reached we abort the script
 	asDWORD curTicks =  trap_Milliseconds();
@@ -108,8 +121,6 @@ static void qasGenericMessageCallback( const struct asSMessageInfo *msg, void *p
 
 	QAS_Printf( "\n%s : %s (line %d, column %d) :\n %s\n", type, msg->section, msg->row, msg->col, msg->message );
 }
-
-void qasRegisterMathAddon( enginehandle_t *eh );
 
 int qasCreateScriptEngine( qboolean *as_max_portability )
 {
@@ -146,7 +157,25 @@ int qasCreateScriptEngine( qboolean *as_max_portability )
 	// The script compiler will write any compiler messages to the callback.
 	eh->engine->SetMessageCallback( asFUNCTION( qasGenericMessageCallback ), 0, asCALL_CDECL );
 
-	qasRegisterMathAddon( eh );
+	PreRegisterMathAddon( engine );
+	PreRegisterScriptArrayAddon( engine, true );
+	PreRegisterStringAddon( engine );
+	PreRegisterDictionaryAddon( engine );
+	PreRegisterTimeAddon( engine );
+	PreRegisterScriptAny( engine );
+	PreRegisterVec3Addon( engine );
+	PreRegisterCvarAddon( engine );
+	PreRegisterStringUtilsAddon( engine );
+
+	RegisterMathAddon( engine );
+	RegisterScriptArrayAddon( engine, true );
+	RegisterStringAddon( engine );
+	RegisterDictionaryAddon( engine );
+	RegisterTimeAddon( engine );
+	RegisterScriptAny( engine );
+	RegisterVec3Addon( engine );
+	RegisterCvarAddon( engine );
+	RegisterStringUtilsAddon( engine );
 
 	return eh->handle;
 }
@@ -359,7 +388,7 @@ int qasRegisterObjectMethod( int engineHandle, const char *objname, const char *
 		return QASINVALIDHANDLE;
 
 	if( eh->max_portability )
-		error = eh->engine->RegisterObjectMethod( objname, declaration, asFUNCTION_GENERIC(funcPointer), (asDWORD)callConv );
+		return QASINVALIDHANDLE;
 	else
 		error = eh->engine->RegisterObjectMethod( objname, declaration, asFUNCTION(funcPointer), (asDWORD)callConv );
 	
@@ -379,7 +408,7 @@ int qasRegisterObjectBehaviour( int engineHandle, const char *objname, unsigned 
 		return QASINVALIDHANDLE;
 
 	if( eh->max_portability )
-		error = eh->engine->RegisterObjectBehaviour( objname, (asEBehaviours)behavior, declaration, asFUNCTION_GENERIC(funcPointer), (asDWORD)callConv );
+		return QASINVALIDHANDLE;
 	else
 		error = eh->engine->RegisterObjectBehaviour( objname, (asEBehaviours)behavior, declaration, asFUNCTION(funcPointer), (asDWORD)callConv );
 
@@ -417,7 +446,7 @@ int qasRegisterGlobalFunction( int engineHandle, const char *declaration, const 
 		return QASINVALIDHANDLE;
 
 	if( eh->max_portability )
-		error = eh->engine->RegisterGlobalFunction( declaration, asFUNCTION_GENERIC(funcPointer), (asDWORD)callConv );
+		return QASINVALIDHANDLE;
 	else
 		error = eh->engine->RegisterGlobalFunction( declaration, asFUNCTION(funcPointer), (asDWORD)callConv );
 
@@ -427,24 +456,16 @@ int qasRegisterGlobalFunction( int engineHandle, const char *declaration, const 
 	return error;
 }
 
-int qasRegisterGlobalBehaviour( int engineHandle, unsigned int behavior, const char *declaration, const void *funcPointer, int callConv )
+void *qasGetGlobalFunctionByDecl( int engineHandle, const char *declaration )
 {
 	enginehandle_t *eh;
-	int error;
 
 	eh = qasGetEngineHandle( engineHandle );
 	if( !eh )
-		return QASINVALIDHANDLE;
+		return NULL;
 
-	if( eh->max_portability )
-		error = eh->engine->RegisterGlobalBehaviour( (asEBehaviours)behavior, declaration, asFUNCTION_GENERIC(funcPointer), (asDWORD)callConv );
-	else
-		error = eh->engine->RegisterGlobalBehaviour( (asEBehaviours)behavior, declaration, asFUNCTION(funcPointer), (asDWORD)callConv );
-
-	if( error < 0 )
-		QAS_Printf( "WARNING: AScript GlobalBehavior '%s' failed to register with error %i\n", declaration, error );
-
-	return error;
+	asIScriptFunction *f = eh->engine->GetGlobalFunctionByDecl( declaration );
+	return static_cast<void*>( f );
 }
 
 int qasRegisterInterface( int engineHandle, const char *name )
@@ -511,9 +532,23 @@ int qasRegisterStringFactory( int engineHandle, const char *datatype, const void
 		return QASINVALIDHANDLE;
 
 	if( eh->max_portability )
-		return eh->engine->RegisterStringFactory( datatype, asFUNCTION_GENERIC(factoryFunc), (asDWORD)callConv );
+		return QASINVALIDHANDLE;
 
 	return eh->engine->RegisterStringFactory( datatype, asFUNCTION(factoryFunc), (asDWORD)callConv );
+}
+
+int qasRegisterFuncdef( int engineHandle, const char *decl )
+{
+	enginehandle_t *eh;
+
+	eh = qasGetEngineHandle( engineHandle );
+	if( !eh )
+		return QASINVALIDHANDLE;
+
+	if( eh->max_portability )
+		return QASINVALIDHANDLE;
+
+	return eh->engine->RegisterFuncdef( decl );
 }
 
 int qasBeginConfigGroup( int engineHandle, const char *groupName )
@@ -549,7 +584,7 @@ int qasRemoveConfigGroup( int engineHandle, const char *groupName )
 	return eh->engine->RemoveConfigGroup( groupName );
 }
 
-int qasSetConfigGroupModuleAccess( int engineHandle, const char *groupName, const char *module, int hasAccess )
+int qasSetDefaultAccessMask( int engineHandle, int defaultMask )
 {
 	enginehandle_t *eh;
 
@@ -557,7 +592,7 @@ int qasSetConfigGroupModuleAccess( int engineHandle, const char *groupName, cons
 	if( !eh )
 		return QASINVALIDHANDLE;
 
-	return eh->engine->SetConfigGroupModuleAccess( groupName, module, (hasAccess != 0) );
+	return eh->engine->SetDefaultAccessMask( (asDWORD)defaultMask );
 }
 
 // Type identification (engine)
@@ -606,6 +641,18 @@ int qasGetSizeOfPrimitiveType( int engineHandle, int typeId )
 	return eh->engine->GetSizeOfPrimitiveType( typeId );
 }
 
+const char *qasGetFunctionSection( void *fptr )
+{
+	asIScriptFunction *f;
+
+	if( !fptr ) {
+		return NULL;
+	}
+	f = static_cast<asIScriptFunction *>( fptr );
+
+	return f->GetScriptSectionName();
+}
+
 // Not added
 //virtual asIObjectType *GetObjectTypeById(int typeId) = 0;
 //virtual asIObjectType *GetObjectTypeByIndex(asUINT index) = 0;
@@ -647,6 +694,21 @@ int qasBuildModule( int engineHandle, const char *module )
 	return mod->Build();
 }
 
+int qasSetAccessMask( int engineHandle, const char *module, int accessMask )
+{
+	enginehandle_t *eh;
+
+	eh = qasGetEngineHandle( engineHandle );
+	if( !eh )
+		return QASINVALIDHANDLE;
+
+	asIScriptModule *mod = eh->engine->GetModule( module, asGM_ONLY_IF_EXISTS );
+	if( !mod )
+		return QASINVALIDHANDLE;
+
+	return mod->SetAccessMask( (asDWORD)accessMask );
+}
+
 // Script functions
 int qasGetFunctionCount( int engineHandle, const char *module )
 {
@@ -663,54 +725,7 @@ int qasGetFunctionCount( int engineHandle, const char *module )
 	return mod->GetFunctionCount();
 }
 
-int qasGetFunctionIDByIndex( int engineHandle, const char *module, int index )
-{
-	enginehandle_t *eh;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return QASINVALIDHANDLE;
-
-	asIScriptModule *mod = eh->engine->GetModule( module, asGM_ONLY_IF_EXISTS );
-	if( !mod )
-		return QASINVALIDHANDLE;
-
-	
-	return mod->GetFunctionIdByIndex( index );
-}
-
-int qasGetFunctionIDByName( int engineHandle, const char *module, const char *name )
-{
-	enginehandle_t *eh;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return QASINVALIDHANDLE;
-
-	asIScriptModule *mod = eh->engine->GetModule( module, asGM_ONLY_IF_EXISTS );
-	if( !mod )
-		return QASINVALIDHANDLE;
-
-	return mod->GetFunctionIdByName( name );
-}
-
-int qasGetFunctionIDByDecl( int engineHandle, const char *module, const char *decl )
-{
-	enginehandle_t *eh;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return QASINVALIDHANDLE;
-
-	asIScriptModule *mod = eh->engine->GetModule( module, asGM_ONLY_IF_EXISTS );
-	if( !mod )
-		return QASINVALIDHANDLE;
-
-	return mod->GetFunctionIdByDecl( decl );
-}
-
-// THESE TWO ARE NOT PART OF ANGELSCRIPT API ANYMORE
-const char *qasGetFunctionDeclaration( int engineHandle, const char *module, int funcId )
+void *qasGetFunctionByDecl( int engineHandle, const char *module, const char *decl )
 {
 	enginehandle_t *eh;
 
@@ -722,32 +737,13 @@ const char *qasGetFunctionDeclaration( int engineHandle, const char *module, int
 	if( !mod )
 		return NULL;
 
-	asIScriptFunction *desc = mod->GetFunctionDescriptorById( funcId );
-	if( !desc )
+	asIScriptFunction *f = mod->GetFunctionByDecl( decl );
+	if( !f )
 		return NULL;
 
-	return desc->GetDeclaration();
+	return static_cast<void*>( f );
 }
 
-const char *qasGetFunctionSection( int engineHandle, const char *module, int funcId )
-{
-	enginehandle_t *eh;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return NULL;
-
-	asIScriptModule *mod = eh->engine->GetModule( module, asGM_ONLY_IF_EXISTS );
-	if( !mod )
-		return NULL;
-
-	asIScriptFunction *desc = mod->GetFunctionDescriptorById( funcId );
-	if( !desc )
-		return NULL;
-
-	return desc->GetScriptSectionName();
-}
-// THESE TWO ARE NOT PART OF ANGELSCRIPT API ANYMORE [end]
 
 // Script global variables
 
@@ -809,36 +805,6 @@ const char *qasGetGlobalVarDeclaration( int engineHandle, const char *module, in
 		return NULL;
 
 	return mod->GetGlobalVarDeclaration( index );
-}
-
-const char *qasGetGlobalVarName( int engineHandle, const char *module, int index )
-{
-	enginehandle_t *eh;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return NULL;
-
-	asIScriptModule *mod = eh->engine->GetModule( module, asGM_ONLY_IF_EXISTS );
-	if( !mod )
-		return NULL;
-
-	return mod->GetGlobalVarName( index );
-}
-
-int qasGetGlobalVarTypeId( int engineHandle, const char *module, int index )
-{
-	enginehandle_t *eh;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return QASINVALIDHANDLE;
-
-	asIScriptModule *mod = eh->engine->GetModule( module, asGM_ONLY_IF_EXISTS );
-	if( !mod )
-		return QASINVALIDHANDLE;
-
-	return mod->GetGlobalVarTypeId( index );
 }
 
 void *qasGetAddressOfGlobalVar( int engineHandle, const char *module, int index )
@@ -1054,20 +1020,6 @@ int qasIsHandleCompatibleWithObject( int engineHandle, void *obj, int objTypeId,
 	return (int)eh->engine->IsHandleCompatibleWithObject( obj, objTypeId, handleTypeId );
 }
 
-int qasCompareScriptObjects( int engineHandle, int *result, int behaviour, void *leftObj, void *rightObj, int typeId )
-{
-	enginehandle_t *eh;
-	bool bresult = 0;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh || !result )
-		return QASINVALIDHANDLE;
-
-	int ret = eh->engine->CompareScriptObjects( bresult, behaviour, leftObj, rightObj, typeId );
-	*result = (int)bresult;
-	return ret;
-}
-
 // String interpretation
 // not added
 //virtual asETokenClass ParseToken(const char *string, size_t stringLength = 0, int *tokenLength = 0) = 0;
@@ -1095,17 +1047,6 @@ void qasGetGCStatistics( int engineHandle, unsigned int *currentSize, unsigned i
 		return;
 
 	eh->engine->GetGCStatistics( (asUINT *)currentSize, (asUINT *)totalDestroyed, (asUINT *)totalDetected );
-}
-
-void qasNotifyGarbageCollectorOfNewObject( int engineHandle, void *obj, int typeId )
-{
-	enginehandle_t *eh;
-
-	eh = qasGetEngineHandle( engineHandle );
-	if( !eh )
-		return;
-
-	eh->engine->NotifyGarbageCollectorOfNewObject( obj, typeId );
 }
 
 void qasGCEnumCallback( int engineHandle, void *reference )
@@ -1176,14 +1117,20 @@ int qasGetState( int contextHandle )
 	return (int)ch->ctx->GetState();
 }
 
-int qasPrepare( int contextHandle, int funcId )
+int qasPrepare( int contextHandle, void *fptr )
 {
+	asIScriptFunction *f;
+
 	int error;
 	contexthandle_t *ch = qasGetContextHandle( contextHandle );
 	if( !ch )
 		return QASINVALIDHANDLE;
+	if( !fptr ) {
+		return QASINVALIDHANDLE;
+	}
 
-	error = ch->ctx->Prepare( funcId );
+	f = static_cast<asIScriptFunction *>( fptr );
+	error = ch->ctx->Prepare( f );
 	//if( error < 0 )
 	//	QAS_Printf( "WARNING: AScript failed to prepare a context for '%s' with error %i\n", qasGetFunctionDeclaration( ch->owner, funcId ), error );
 
@@ -1273,13 +1220,13 @@ int qasSetArgObject( int contextHandle, unsigned int arg, void *obj )
 	return ch->ctx->SetArgObject( (asUINT)arg, obj );
 }
 
-void *qasGetArgPointer( int contextHandle, unsigned int arg )
+void *qasGetAddressOfArg( int contextHandle, unsigned int arg )
 {
 	contexthandle_t *ch = qasGetContextHandle( contextHandle );
 	if( !ch )
 		return NULL;
 
-	return ch->ctx->GetArgPointer( (asUINT)arg );
+	return ch->ctx->GetAddressOfArg( (asUINT)arg );
 }
 
 int qasSetObject( int contextHandle, void *obj )
@@ -1296,6 +1243,15 @@ unsigned char qasGetReturnByte( int contextHandle )
 	contexthandle_t *ch = qasGetContextHandle( contextHandle );
 	if( !ch )
 		QAS_Error( "qasGetReturnByte: invalid context\n" );
+
+	return (unsigned char)ch->ctx->GetReturnByte();
+}
+
+unsigned int qasGetReturnBool( int contextHandle )
+{
+	contexthandle_t *ch = qasGetContextHandle( contextHandle );
+	if( !ch )
+		QAS_Error( "qasGetReturnBool: invalid context\n" );
 
 	return (unsigned char)ch->ctx->GetReturnByte();
 }
@@ -1378,7 +1334,7 @@ int qasExecute( int contextHandle )
 	if( !ch )
 		return QASINVALIDHANDLE;
 
-	ch->timeOut = trap_Milliseconds() + 500;
+	//ch->timeOut = trap_Milliseconds() + 500;
 	ch->timeOut = 0;
 	return ch->ctx->Execute();
 }
@@ -1401,24 +1357,6 @@ int qasSuspend( int contextHandle )
 	return ch->ctx->Suspend();
 }
 
-int qasGetCurrentLineNumber( int contextHandle )
-{
-	contexthandle_t *ch = qasGetContextHandle( contextHandle );
-	if( !ch )
-		return QASINVALIDHANDLE;
-
-	return ch->ctx->GetCurrentLineNumber();
-}
-
-int qasGetCurrentFunction( int contextHandle )
-{
-	contexthandle_t *ch = qasGetContextHandle( contextHandle );
-	if( !ch )
-		return QASINVALIDHANDLE;
-
-	return ch->ctx->GetCurrentFunction();
-}
-
 // Exception handling
 
 int qasSetException( int contextHandle, const char *string )
@@ -1439,13 +1377,13 @@ int qasGetExceptionLineNumber( int contextHandle )
 	return ch->ctx->GetExceptionLineNumber();
 }
 
-int qasGetExceptionFunction( int contextHandle )
+void *qasGetExceptionFunction( int contextHandle )
 {
 	contexthandle_t *ch = qasGetContextHandle( contextHandle );
 	if( !ch )
-		return QASINVALIDHANDLE;
+		return NULL;
 
-	return ch->ctx->GetExceptionFunction();
+	return static_cast<void*>( ch->ctx->GetExceptionFunction() );
 }
 
 const char *qasGetExceptionString( int contextHandle )
@@ -1460,33 +1398,6 @@ const char *qasGetExceptionString( int contextHandle )
 // missing
 //virtual int  SetExceptionCallback(asSFuncPtr callback, void *obj, int callConv) = 0;
 //virtual void ClearExceptionCallback() = 0;
-
-int qasGetCallstackSize( int contextHandle )
-{
-	contexthandle_t *ch = qasGetContextHandle( contextHandle );
-	if( !ch )
-		return QASINVALIDHANDLE;
-
-	return ch->ctx->GetCallstackSize();
-}
-
-int qasGetCallstackFunction( int contextHandle, int index )
-{
-	contexthandle_t *ch = qasGetContextHandle( contextHandle );
-	if( !ch )
-		return QASINVALIDHANDLE;
-
-	return ch->ctx->GetCallstackFunction( index );
-}
-
-int qasGetCallstackLineNumber( int contextHandle, int index )
-{
-	contexthandle_t *ch = qasGetContextHandle( contextHandle );
-	if( !ch )
-		return QASINVALIDHANDLE;
-
-	return ch->ctx->GetCallstackLineNumber( index );
-}
 
 int qasGetVarCount( int contextHandle )
 {
@@ -1551,332 +1462,177 @@ void *qasGetThisPointer( int contextHandle )
 	return ch->ctx->GetThisPointer();
 }
 
-void *qasIScriptGeneric_GetObject( const void *gen )
+/*************************************
+* C++ Objects
+**************************************/
+
+void *qasGetEngineCpp( int engineHandle )
 {
-	return (gen ? ((asIScriptGeneric *)gen)->GetObject() : NULL);
+	enginehandle_t *eh;
+
+	eh = qasGetEngineHandle( engineHandle );
+	if( !eh )
+		return 0;
+
+	return static_cast<void*>( eh->engine );
 }
 
-qas_argument_t *qasIScriptGeneric_GetArg( const void *gen, unsigned int arg, int type )
+void *qasGetContextCpp( int contextHandle )
 {
-	static qas_argument_t argument;
+	contexthandle_t *ch;
 
-	argument.type = -1;
+	ch = qasGetContextHandle( contextHandle );
+	if( !ch )
+		return 0;
 
-	if( gen )
-	{
-		switch( type )
-		{
-		case QAS_ARG_UINT8:
-			argument.type = type;
-			argument.integer = (unsigned char)((asIScriptGeneric *)gen)->GetArgByte( arg );
-			break;
-
-		case QAS_ARG_UINT16:
-			argument.type = type;
-			argument.integer = (unsigned short)((asIScriptGeneric *)gen)->GetArgWord( arg );
-			break;
-
-		case QAS_ARG_UINT:
-			argument.type = type;
-			argument.integer = (unsigned int)((asIScriptGeneric *)gen)->GetArgDWord( arg );
-			break;
-
-		case QAS_ARG_UINT64:
-			argument.type = type;
-			argument.integer64 = (quint64)((asIScriptGeneric *)gen)->GetArgQWord( arg );
-			break;
-
-		case QAS_ARG_FLOAT:
-			argument.type = type;
-			argument.value = (float)((asIScriptGeneric *)gen)->GetArgFloat( arg );
-			break;
-
-		case QAS_ARG_DOUBLE:
-			argument.type = type;
-			argument.dvalue = (double)((asIScriptGeneric *)gen)->GetArgDouble( arg );
-			break;
-
-		case QAS_ARG_OBJECT:
-			argument.type = type;
-			argument.ptr = ((asIScriptGeneric *)gen)->GetArgObject( arg );
-			break;
-
-		case QAS_ARG_ADDRESS:
-			argument.type = type;
-			argument.ptr = ((asIScriptGeneric *)gen)->GetArgAddress( arg );
-			break;
-
-		case QAS_ARG_POINTER:
-			argument.type = type;
-			argument.ptr = ((asIScriptGeneric *)gen)->GetAddressOfArg( arg );
-			break;
-
-		default:
-			QAS_Error( "qasIScriptGeneric_GetArg: Invalid argument type\n" );
-			break;
-		}
-	}
-
-	return &argument;
+	return static_cast<void*>( ch->ctx );
 }
 
-int qasIScriptGeneric_SetReturn( const void *gen, qas_argument_t *argument )
+void *qasGetActiveContext( void )
 {
-	int error = -1;
-
-	if( gen && argument )
-	{
-		switch( argument->type )
-		{
-		case QAS_ARG_UINT8:
-			error = ((asIScriptGeneric *)gen)->SetReturnByte( (asBYTE)argument->integer );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_UINT16:
-			error = ((asIScriptGeneric *)gen)->SetReturnWord( (asWORD)argument->integer );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_UINT:
-			error = ((asIScriptGeneric *)gen)->SetReturnDWord( (asDWORD)argument->integer );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_UINT64:
-			error = ((asIScriptGeneric *)gen)->SetReturnQWord( (asQWORD)argument->integer64 );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_FLOAT:
-			error = ((asIScriptGeneric *)gen)->SetReturnFloat( argument->value );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_DOUBLE:
-			error = ((asIScriptGeneric *)gen)->SetReturnDouble( argument->dvalue );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_OBJECT:
-			error = ((asIScriptGeneric *)gen)->SetReturnObject( argument->ptr );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_ADDRESS:
-			error = ((asIScriptGeneric *)gen)->SetReturnAddress( argument->ptr );
-			assert( error >= 0 );
-			break;
-
-		case QAS_ARG_POINTER:
-			*(void**)((asIScriptGeneric *)gen)->GetAddressOfReturnLocation() = argument->ptr;
-			assert( error >= 0 );
-			break;
-
-		default:
-			error = -1;
-			break;
-		}
-	}
-
-	return error;
+	return static_cast<void*>( asGetActiveContext() );
 }
 
 /*************************************
-* MATHS ADDON
+* Function pointers
 **************************************/
 
-static int asFunc_abs( int x )
+int qasGetFunctionType( void *fptr )
 {
-	return abs( x );
-}
+	asIScriptFunction *f;
 
-static void asFunc_asGeneric_abs( asIScriptGeneric *gen )
-{
-	gen->SetReturnDWord( (unsigned int)asFunc_abs( (int)gen->GetArgDWord( 0 ) ) );
-}
-
-static float asFunc_fabs( float x )
-{
-	return fabs( x );
-}
-
-static void asFunc_asGeneric_fabs( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_fabs( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_log( float x )
-{
-	return (float)log( x );
-}
-
-static void asFunc_asGeneric_log( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_log( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_pow( float x, float y )
-{
-	return (float)pow( x, y );
-}
-
-static void asFunc_asGeneric_pow( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_pow( gen->GetArgFloat( 0 ), gen->GetArgFloat( 1 ) ) );
-}
-
-static float asFunc_cos( float x )
-{
-	return (float)cos( x );
-}
-
-static void asFunc_asGeneric_cos( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_cos( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_sin( float x )
-{
-	return (float)sin( x );
-}
-
-static void asFunc_asGeneric_sin( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_sin( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_tan( float x )
-{
-	return (float)tan( x );
-}
-
-static void asFunc_asGeneric_tan( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_tan( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_acos( float x )
-{
-	return (float)acos( x );
-}
-
-static void asFunc_asGeneric_acos( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_acos( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_asin( float x )
-{
-	return (float)asin( x );
-}
-
-static void asFunc_asGeneric_asin( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_asin( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_atan( float x )
-{
-	return (float)atan( x );
-}
-
-static void asFunc_asGeneric_atan( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_atan( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_atan2( float x, float y )
-{
-	return (float)atan2( x, y );
-}
-
-static void asFunc_asGeneric_atan2( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_atan2( gen->GetArgFloat( 0 ), gen->GetArgFloat( 1 ) ) );
-}
-
-static float asFunc_sqrt( float x )
-{
-	return (float)sqrt( x );
-}
-
-static void asFunc_asGeneric_sqrt( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_sqrt( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_ceil( float x )
-{
-	return (float)ceil( x );
-}
-
-static void asFunc_asGeneric_ceil( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_ceil( gen->GetArgFloat( 0 ) ) );
-}
-
-static float asFunc_floor( float x )
-{
-	return (float)floor( x );
-}
-
-static void asFunc_asGeneric_floor( asIScriptGeneric *gen )
-{
-	gen->SetReturnFloat( asFunc_floor( gen->GetArgFloat( 0 ) ) );
-}
-
-void qasRegisterMathAddon( enginehandle_t *eh )
-{
-	int error;
-	int count = 0, failedcount = 0;
-
-	typedef struct
-	{
-		const char *declaration;
-		void *pointer;
-		void *pointer_asGeneric;
-	} asglobfuncs_t;
-
-	static asglobfuncs_t math_asGlobFuncs[] =
-	{
-		{ "int abs( int x )", (void *)asFunc_abs, (void *)asFunc_asGeneric_abs },
-		{ "float abs( float x )", (void *)asFunc_fabs, (void *)asFunc_asGeneric_fabs },
-		{ "float log( float x )", (void *)asFunc_log, (void *)asFunc_asGeneric_log },
-		{ "float pow( float x, float y )", (void *)asFunc_pow, (void *)asFunc_asGeneric_pow },
-		{ "float cos( float x )", (void *)asFunc_cos, (void *)asFunc_asGeneric_cos },
-		{ "float sin( float x )", (void *)asFunc_sin, (void *)asFunc_asGeneric_sin },
-		{ "float tan( float x )", (void *)asFunc_tan, (void *)asFunc_asGeneric_tan },
-		{ "float acos( float x )", (void *)asFunc_acos, (void *)asFunc_asGeneric_acos },
-		{ "float asin( float x )", (void *)asFunc_asin, (void *)asFunc_asGeneric_asin },
-		{ "float atan( float x )", (void *)asFunc_atan, (void *)asFunc_asGeneric_atan },
-		{ "float atan2( float x, float y )", (void *)asFunc_atan2, (void *)asFunc_asGeneric_atan2 },
-		{ "float sqrt( float x )", (void *)asFunc_sqrt, (void *)asFunc_asGeneric_sqrt },
-		{ "float ceil( float x )", (void *)asFunc_ceil, (void *)asFunc_asGeneric_ceil },
-		{ "float floor( float x )", (void *)asFunc_floor, (void *)asFunc_asGeneric_floor },
-
-		{ NULL, NULL, NULL }
-	};
-
-	{
-		asglobfuncs_t *func;
-
-		for( func = math_asGlobFuncs; func->declaration; func++ )
-		{
-			if( eh->max_portability )
-				error = qasRegisterGlobalFunction( eh->handle, func->declaration, func->pointer_asGeneric, asCALL_GENERIC );
-			else
-				error = qasRegisterGlobalFunction( eh->handle, func->declaration, func->pointer, asCALL_CDECL );
-
-			if( error < 0 )
-			{
-				failedcount++;
-				continue;
-			}
-
-			count++;
-		}
+	if( !fptr ) {
+		return (int)asFUNC_DUMMY;
 	}
+	f = static_cast<asIScriptFunction *>( fptr );
+	return (int)f->GetFuncType();
+}
+
+const char *qasGetFunctionName( void *fptr )
+{
+	asIScriptFunction *f;
+
+	if( !fptr ) {
+		return NULL;
+	}
+	f = static_cast<asIScriptFunction *>( fptr );
+	return f->GetName();
+}
+
+const char *qasGetFunctionDeclaration( void *fptr, qboolean includeObjectName )
+{
+	asIScriptFunction *f;
+
+	if( !fptr ) {
+		return NULL;
+	}
+	f = static_cast<asIScriptFunction *>( fptr );
+	return f->GetDeclaration( includeObjectName == qtrue );
+}
+
+unsigned int qasGetFunctionParamCount( void *fptr )
+{
+	asIScriptFunction *f;
+
+	if( !fptr ) {
+		return 0;
+	}
+	f = static_cast<asIScriptFunction *>( fptr );
+	return f->GetParamCount();
+}
+
+int qasGetFunctionReturnTypeId( void *fptr )
+{
+	asIScriptFunction *f;
+
+	if( !fptr ) {
+		return 0;
+	}
+	f = static_cast<asIScriptFunction *>( fptr );
+	return f->GetReturnTypeId();
+}
+
+void qasAddFunctionReference( void *fptr )
+{
+	asIScriptFunction *f;
+
+	if( !fptr ) {
+		return;
+	}
+	f = static_cast<asIScriptFunction *>( fptr );
+	f->AddRef();
+}
+
+void qasReleaseFunction( void *fptr )
+{
+	asIScriptFunction *f;
+
+	if( !fptr ) {
+		return;
+	}
+	f = static_cast<asIScriptFunction *>( fptr );
+	f->Release();
+}
+
+/*************************************
+* Array tools
+**************************************/
+
+void *qasCreateArrayCpp( unsigned int length, void *ot )
+{
+	return static_cast<void*>( QAS_NEW(CScriptArray)( length, static_cast<asIObjectType *>( ot ) ) );
+}
+
+void qasReleaseArrayCpp( void *arr )
+{
+	(static_cast<CScriptArray*>(arr))->Release();
+}
+
+/*************************************
+* Strings
+**************************************/
+
+asstring_t *qasStringFactoryBuffer( const char *buffer, unsigned int length )
+{
+	return objectString_FactoryBuffer( buffer, length );
+}
+
+void qasStringRelease( asstring_t *str )
+{
+	objectString_Release( str );
+}
+
+asstring_t *qasStringAssignString( asstring_t *self, const char *string, unsigned int strlen )
+{
+	return objectString_AssignString( self, string, strlen );
+}
+
+/*************************************
+* Dictionary
+**************************************/
+
+void *qasCreateDictionaryCpp( void *engine )
+{
+	return static_cast<void*>( QAS_NEW(CScriptDictionary)( static_cast<asIScriptEngine *>( engine ) ) );
+}
+
+void qasReleaseDictionaryCpp( void *dict )
+{
+	(static_cast<CScriptDictionary*>(dict))->Release();
+}
+
+/*************************************
+* Any
+**************************************/
+
+void *qasCreateAnyCpp( void *engine )
+{
+	return static_cast<void*>( QAS_NEW(CScriptAny)( static_cast<asIScriptEngine *>( engine ) ) );
+}
+
+void qasReleaseAnyCpp( void *any )
+{
+	(static_cast<CScriptAny*>(any))->Release();
 }
 
 #ifdef __cplusplus

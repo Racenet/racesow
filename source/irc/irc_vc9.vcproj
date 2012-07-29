@@ -45,6 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\win32\include\msvc;..\win32\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -80,7 +81,7 @@
 				SuppressStartupBanner="true"
 				ManifestFile=".\Debug\x86\$(TargetFileName).intermediate.manifest"
 				IgnoreDefaultLibraryNames="libcmt"
-				ModuleDefinitionFile=".\irc.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug\x86\irc_x86.pdb"
 				GenerateMapFile="true"
@@ -142,6 +143,7 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
+				AdditionalIncludeDirectories="..\win32\include\msvc;..\win32\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -176,7 +178,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ManifestFile=".\Release\x86\$(TargetFileName).intermediate.manifest"
-				ModuleDefinitionFile=".\irc.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile=".\Release\x86\irc_x86.pdb"
 				SubSystem="2"
@@ -665,10 +667,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\irc.def"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
@@ -677,6 +675,10 @@
 			>
 			<File
 				RelativePath=".\irc_common.c"
+				>
+			</File>
+			<File
+				RelativePath="..\gameshared\q_shared.c"
 				>
 			</File>
 			<Filter

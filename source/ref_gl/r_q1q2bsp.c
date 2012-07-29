@@ -105,9 +105,6 @@ static q2lighthash_t **loadmodel_lighthash_table;
 // current model format descriptor
 static const bspFormatDesc_t *mod_bspFormat;
 
-// the inline * models from the current map are kept separate
-extern model_t *mod_inline;
-
 /*
 =============================================================================
 
@@ -159,10 +156,10 @@ static void LM_Stop( void )
 	LM_UploadBlock ();
 
 	loadmodel_lightmapRects = Mod_Malloc( loadmodel, lms.last_lmnum * sizeof( *loadmodel_lightmapRects ) );
-	R_BuildLightmaps( lms.last_lmnum, BLOCK_WIDTH, BLOCK_HEIGHT, lms.lightmap_buffer, loadmodel_lightmapRects );
+	R_BuildLightmaps( loadmodel, lms.last_lmnum, BLOCK_WIDTH, BLOCK_HEIGHT, lms.lightmap_buffer, loadmodel_lightmapRects );
 
-	Mod_Free( lms.allocated );
-	Mod_Free( lms.lightmap_buffer );
+	Mod_MemFree( lms.allocated );
+	Mod_MemFree( lms.lightmap_buffer );
 }
 
 // returns a texture number and the position inside it
@@ -203,11 +200,9 @@ static qboolean LM_AllocBlock( int w, int h, int *x, int *y )
 //=================================================
 
 /*
-===============
-Mod_BuildLightMap
-
-Combine and scale multiple lightmaps into the floating format in blocklights
-===============
+* Mod_BuildLightMap
+* 
+* Combine and scale multiple lightmaps into the floating format in blocklights
 */
 static void Mod_BuildLightMap( const q2msurface_t *surf, int style, qbyte *dest, int stride )
 {
@@ -237,9 +232,7 @@ static void Mod_BuildLightMap( const q2msurface_t *surf, int style, qbyte *dest,
 }
 
 /*
-========================
-Mod_CreateSurfaceLightmaps
-========================
+* Mod_CreateSurfaceLightmaps
 */
 static void Mod_CreateSurfaceLightmaps( q2msurface_t *surf )
 {
@@ -276,11 +269,9 @@ static void Mod_CreateSurfaceLightmaps( q2msurface_t *surf )
 //=======================================================
 
 /*
-================
-Mod_CalcSurfaceExtents
-
-Fills in s->texturemins[] and s->extents[]
-================
+* Mod_CalcSurfaceExtents
+* 
+* Fills in s->texturemins[] and s->extents[]
 */
 static void Mod_CalcSurfaceExtents( q2msurface_t *s )
 {
@@ -326,9 +317,7 @@ static void Mod_CalcSurfaceExtents( q2msurface_t *s )
 }
 
 /*
-================
-Mod_GetBaseImage
-================
+* Mod_GetBaseImage
 */
 static image_t *Mod_GetBaseImage( q2mtexinfo_t *texinfo )
 {
@@ -346,11 +335,9 @@ static image_t *Mod_GetBaseImage( q2mtexinfo_t *texinfo )
 }
 
 /*
-================
-Mod_GetWALInfo
-
-Fills in s->texturemins[] and s->extents[]
-================
+* Mod_GetWALInfo
+* 
+* Fills in s->texturemins[] and s->extents[]
 */
 static qboolean Mod_GetWALInfo( q2mtexinfo_t *texinfo )
 {
@@ -392,9 +379,7 @@ static qboolean Mod_GetWALInfo( q2mtexinfo_t *texinfo )
 }
 
 /*
-================
-Mod_BuildMeshForSurface
-================
+* Mod_BuildMeshForSurface
 */
 static mesh_t *Mod_BuildMeshForSurface( q2msurface_t *fa )
 {
@@ -523,6 +508,12 @@ static mesh_t *Mod_BuildMeshForSurface( q2msurface_t *fa )
 					lightmap[2] * cscale );
 				ColorNormalize( c1, c2 );
 
+				// convert to grayscale if monochrome lighting is enabled
+				if( r_lighting_grayscale->integer ) {
+					vec_t grey = ColorGrayscale( c2 );
+					c2[0] = c2[1] = c2[2] = bound( 0, grey, 1 );
+				}
+
 				Vector4Set( mesh->colorsArray[j][i],
 					( qbyte )( c2[0] * 255 ),
 					( qbyte )( c2[1] * 255 ),
@@ -559,9 +550,7 @@ typedef struct q2mwarppoly_s
 static q2mwarppoly_t *loadbmodel_warppoly;
 
 /*
-================
-Mod_BoundPoly
-================
+* Mod_BoundPoly
 */
 static void Mod_BoundPoly( int numverts, const float *verts, vec3_t mins, vec3_t maxs )
 {
@@ -574,9 +563,7 @@ static void Mod_BoundPoly( int numverts, const float *verts, vec3_t mins, vec3_t
 }
 
 /*
-================
-Mod_SubdividePolygon
-================
+* Mod_SubdividePolygon
 */
 static void Mod_SubdividePolygon( int numverts, float *verts )
 {
@@ -654,12 +641,10 @@ static void Mod_SubdividePolygon( int numverts, float *verts )
 }
 
 /*
-================
-Mod_BuildMeshForWarpSurface
-
-Breaks a polygon up along axial 64 unit boundaries so
-that turbulent and sky warps can be done reasonably.
-================
+* Mod_BuildMeshForWarpSurface
+* 
+* Breaks a polygon up along axial 64 unit boundaries so
+* that turbulent and sky warps can be done reasonably.
 */
 static mesh_t *Mod_BuildMeshForWarpSurface( q2msurface_t *fa )
 {
@@ -782,11 +767,9 @@ static mesh_t *Mod_BuildMeshForWarpSurface( q2msurface_t *fa )
 //=======================================================
 
 /*
-=================
-Mod_SurfaceFlags
-
-Convert Q2 surface bitflags to Q3 bitflags
-=================
+* Mod_SurfaceFlags
+* 
+* Convert Q2 surface bitflags to Q3 bitflags
 */
 static int Mod_SurfaceFlags( int oldflags )
 {
@@ -806,9 +789,7 @@ static int Mod_SurfaceFlags( int oldflags )
 //=======================================================
 
 /*
-=================
-Mod_ApplySuperStylesToFace
-=================
+* Mod_ApplySuperStylesToFace
 */
 static void Mod_ApplySuperStylesToFace( const q2msurface_t *in, msurface_t *out )
 {
@@ -849,13 +830,11 @@ static void Mod_ApplySuperStylesToFace( const q2msurface_t *in, msurface_t *out 
 		}
 	}
 
-	out->superLightStyle = R_AddSuperLightStyle( lightmaps, lightmapStyles, vertexStyles, lmRects );
+	out->superLightStyle = R_AddSuperLightStyle( loadmodel, lightmaps, lightmapStyles, vertexStyles, lmRects );
 }
 
 /*
-=================
-Mod_CreateFaces
-=================
+* Mod_CreateFaces
 */
 static void Mod_CreateFaces( void )
 {
@@ -870,7 +849,7 @@ static void Mod_CreateFaces( void )
 	loadbmodel->surfaces = out;
 	loadbmodel->numsurfaces = count;
 
-	R_SortSuperLightStyles();
+	R_SortSuperLightStyles( loadmodel );
 
 	for( i = 0; i < count; i++, in++, out++ )
 	{
@@ -1026,9 +1005,7 @@ static qboolean Mod_RecursiveLightPoint_r( mnode_t *node, vec3_t start, vec3_t e
 }
 
 /*
-=================
-Mod_RecursiveLightPoint
-=================
+* Mod_RecursiveLightPoint
 */
 static size_t Mod_RecursiveLightPoint( vec3_t start, vec3_t lightpoint )
 {
@@ -1047,9 +1024,7 @@ static size_t Mod_RecursiveLightPoint( vec3_t start, vec3_t lightpoint )
 }
 
 /*
-=================
-Mod_PointCluster
-=================
+* Mod_PointCluster
 */
 static int Mod_PointCluster( vec3_t point )
 {
@@ -1062,9 +1037,7 @@ static int Mod_PointCluster( vec3_t point )
 }
 
 /*
-=================
-Mod_TraceLightGrid
-=================
+* Mod_TraceLightGrid
 */
 static void Mod_TraceLightGrid( void )
 {
@@ -1154,9 +1127,7 @@ static void Mod_TraceLightGrid( void )
 }
 
 /*
-=================
-Mod_BuildLightGrid
-=================
+* Mod_BuildLightGrid
 */
 static void Mod_BuildLightGrid( vec3_t gridSize )
 {
@@ -1230,9 +1201,7 @@ static void Mod_BuildLightGrid( vec3_t gridSize )
 }
 
 /*
-=================
-Mod_Finish
-=================
+* Mod_Finish
 */
 static void Mod_Finish( void )
 {
@@ -1266,35 +1235,35 @@ static void Mod_Finish( void )
 
 	if( loadmodel_surfaces )
 	{
-		Mod_Free( loadmodel_surfaces );
+		Mod_MemFree( loadmodel_surfaces );
 		loadmodel_surfaces = NULL;
 	}
 	loadmodel_numsurfaces = 0;
 
 	if( loadmodel_vertexes )
 	{
-		Mod_Free( loadmodel_vertexes );
+		Mod_MemFree( loadmodel_vertexes );
 		loadmodel_vertexes = NULL;
 	}
 	loadmodel_numvertexes = 0;
 
 	if( loadmodel_edges )
 	{
-		Mod_Free( loadmodel_edges );
+		Mod_MemFree( loadmodel_edges );
 		loadmodel_edges = NULL;
 	}
 	loadmodel_numedges = 0;
 
 	if( loadmodel_texinfo )
 	{
-		Mod_Free( loadmodel_texinfo );
+		Mod_MemFree( loadmodel_texinfo );
 		loadmodel_texinfo = NULL;
 	}
 	loadmodel_numtexinfo = 0;
 
 	if( loadmodel_surfedges )
 	{
-		Mod_Free( loadmodel_surfedges );
+		Mod_MemFree( loadmodel_surfedges );
 		loadmodel_surfedges = NULL;
 	}
 	loadmodel_numsurfedges = 0;
@@ -1324,12 +1293,12 @@ Q2 BRUSHMODEL LOADING
 */
 
 /*
-=================
-Mod_Q2LoadLighting
-=================
+* Mod_Q2LoadLighting
 */
 static void Mod_Q2LoadLighting( const lump_t *l )
 {
+	R_InitLightStyles( loadmodel );
+
 	if( !l->filelen )
 	{
 		loadmodel_lightdatasize = 0;
@@ -1343,9 +1312,7 @@ static void Mod_Q2LoadLighting( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadSubmodels
-=================
+* Mod_Q2LoadSubmodels
 */
 static void Mod_Q2LoadSubmodels ( const lump_t *l )
 {
@@ -1353,6 +1320,7 @@ static void Mod_Q2LoadSubmodels ( const lump_t *l )
 	q2dmodel_t *in;
 	mmodel_t *out;
 	mbrushmodel_t *bmodel;
+	model_t *mod_inline;
 
 	in = ( void * )( mod_base + l->fileofs );
 	if( l->filelen % sizeof( *in ) )
@@ -1366,6 +1334,7 @@ static void Mod_Q2LoadSubmodels ( const lump_t *l )
 	loadbmodel = bmodel;
 	loadbmodel->submodels = out;
 	loadbmodel->numsubmodels = count;
+	loadbmodel->inlines = mod_inline;
 
 	for( i = 0; i < count; i++, in++, out++ )
 	{
@@ -1385,9 +1354,7 @@ static void Mod_Q2LoadSubmodels ( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadPlanes
-=================
+* Mod_Q2LoadPlanes
 */
 static void Mod_Q2LoadPlanes( const lump_t *l )
 {
@@ -1423,9 +1390,7 @@ static void Mod_Q2LoadPlanes( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadVertexes
-=================
+* Mod_Q2LoadVertexes
 */
 static void Mod_Q2LoadVertexes( const lump_t *l )
 {
@@ -1451,9 +1416,7 @@ static void Mod_Q2LoadVertexes( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadEdges
-=================
+* Mod_Q2LoadEdges
 */
 static void Mod_Q2LoadEdges( const lump_t *l )
 {
@@ -1478,9 +1441,7 @@ static void Mod_Q2LoadEdges( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadTexinfo
-=================
+* Mod_Q2LoadTexinfo
 */
 static void Mod_Q2LoadTexinfo( const lump_t *l )
 {
@@ -1578,7 +1539,7 @@ static void Mod_Q2LoadTexinfo( const lump_t *l )
 
 			if( out->flags & Q2_SURF_TRANS33 )
 				Q_strncatz( rawtext, "0.33 ", sizeof( rawtext ) );
-			else if( out->flags & Q2_SURF_TRANS33 )
+			else if( out->flags & Q2_SURF_TRANS66 )
 				Q_strncatz( rawtext, "0.66 ", sizeof( rawtext ) );
 			else
 				Q_strncatz( rawtext, "1 ", sizeof( rawtext ) );
@@ -1592,9 +1553,7 @@ static void Mod_Q2LoadTexinfo( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadFaces
-=================
+* Mod_Q2LoadFaces
 */
 static void Mod_Q2LoadFaces( const lump_t *l )
 {
@@ -1701,16 +1660,14 @@ static void Mod_Q2LoadFaces( const lump_t *l )
 			}
 		}
 
-		R_AddSuperLightStyle( lightmaps, lightmapStyles, vertexStyles, NULL );
+		R_AddSuperLightStyle( loadmodel, lightmaps, lightmapStyles, vertexStyles, NULL );
 	}
 
 	Mod_CreateFaces();
 }
 
 /*
-=================
-Mod_Q2LoadNodes
-=================
+* Mod_Q2LoadNodes
 */
 static void Mod_Q2LoadNodes( const lump_t *l )
 {
@@ -1753,9 +1710,7 @@ static void Mod_Q2LoadNodes( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadSurfedges
-=================
+* Mod_Q2LoadSurfedges
 */
 static void Mod_Q2LoadSurfedges( const lump_t *l )
 {
@@ -1776,9 +1731,7 @@ static void Mod_Q2LoadSurfedges( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q2LoadLeafs
-=================
+* Mod_Q2LoadLeafs
 */
 static void Mod_Q2LoadLeafs( const lump_t *l, const lump_t *msLump )
 {
@@ -1875,9 +1828,7 @@ static void Mod_Q2LoadLeafs( const lump_t *l, const lump_t *msLump )
 }
 
 /*
-=================
-Mod_Q2LoadEntities
-=================
+* Mod_Q2LoadEntities
 */
 static void Mod_Q2LoadEntities( const lump_t *l )
 {
@@ -1947,9 +1898,7 @@ static void Mod_Q2LoadEntities( const lump_t *l )
 }
 
 /*
-=================
-Mod_LoadQ2BrushModel
-=================
+* Mod_LoadQ2BrushModel
 */
 void Mod_LoadQ2BrushModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *format )
 {
@@ -1957,6 +1906,7 @@ void Mod_LoadQ2BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 	q2dheader_t *header;
 
 	mod->type = mod_brush;
+	mod->registration_sequence = r_front.registration_sequence;
 	if( r_worldmodel != NULL )
 		Com_Error( ERR_DROP, "Loaded a brush model after the world" );
 
@@ -1964,6 +1914,7 @@ void Mod_LoadQ2BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 	loadmodel_skyshader = NULL;
 
 	mapConfig.checkWaterCrossing = qtrue;
+	mapConfig.depthWritingSky = qtrue;
 
 	mod_bspFormat = format;
 
@@ -1971,7 +1922,7 @@ void Mod_LoadQ2BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 	mod_base = ( qbyte * )header;
 
 	// swap all the lumps
-	for( i = 0; i < sizeof( header )/4; i++ )
+	for( i = 0; i < sizeof( *header )/4; i++ )
 		( (int *)header )[i] = LittleLong( ( (int *)header )[i] );
 
 	// load into heap
@@ -2016,9 +1967,7 @@ static int loadmodel_nummiptex;
 static q1mmiptex_t *loadmodel_miptex;
 
 /*
-=================
-Mod_Q1LoadLighting
-=================
+* Mod_Q1LoadLighting
 */
 static void Mod_Q1LoadLighting( const lump_t *l )
 {
@@ -2027,6 +1976,8 @@ static void Mod_Q1LoadLighting( const lump_t *l )
 	char	*tempname;
 	size_t	 tempname_size;
 	qbyte	*litdata = NULL;
+
+	R_InitLightStyles( loadmodel );
 
 	if( !l->filelen )
 	{
@@ -2064,9 +2015,7 @@ static void Mod_Q1LoadLighting( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadSubmodels
-=================
+* Mod_Q1LoadSubmodels
 */
 static int Mod_Q1LoadSubmodels ( const lump_t *l )
 {
@@ -2075,6 +2024,7 @@ static int Mod_Q1LoadSubmodels ( const lump_t *l )
 	q1dmodel_t		*in;
 	mmodel_t		*out;
 	mbrushmodel_t	*bmodel;
+	model_t			*mod_inline;
 
 	in = ( void * )( mod_base + l->fileofs );
 	if( l->filelen % sizeof( *in ) )
@@ -2088,6 +2038,7 @@ static int Mod_Q1LoadSubmodels ( const lump_t *l )
 	loadbmodel = bmodel;
 	loadbmodel->submodels = out;
 	loadbmodel->numsubmodels = count;
+	loadbmodel->inlines = mod_inline;
 
 	numvisleafs = LittleLong( in->visleafs );
 	for( i = 0; i < count; i++, in++, out++ )
@@ -2110,9 +2061,7 @@ static int Mod_Q1LoadSubmodels ( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadPlanes
-=================
+* Mod_Q1LoadPlanes
 */
 static void Mod_Q1LoadPlanes( const lump_t *l )
 {
@@ -2156,9 +2105,7 @@ static void Mod_Q1LoadPlanes( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadVertexes
-=================
+* Mod_Q1LoadVertexes
 */
 static void Mod_Q1LoadVertexes( const lump_t *l )
 {
@@ -2184,9 +2131,7 @@ static void Mod_Q1LoadVertexes( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadEdges
-=================
+* Mod_Q1LoadEdges
 */
 static void Mod_Q1LoadEdges( const lump_t *l )
 {
@@ -2211,9 +2156,7 @@ static void Mod_Q1LoadEdges( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1FixUpMiptexShader
-=================
+* Mod_Q1FixUpMiptexShader
 */
 static void Mod_Q1FixUpMiptexShader( q1mmiptex_t *miptex )
 {
@@ -2265,9 +2208,7 @@ static void Mod_Q1FixUpMiptexShader( q1mmiptex_t *miptex )
 }
 
 /*
-=================
-Mod_Q1LoadMiptex
-=================
+* Mod_Q1LoadMiptex
 */
 static void Mod_Q1LoadMiptex( const lump_t *l )
 {
@@ -2452,9 +2393,7 @@ static void Mod_Q1LoadMiptex( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadTexinfo
-=================
+* Mod_Q1LoadTexinfo
 */
 static void Mod_Q1LoadTexinfo( const lump_t *l )
 {
@@ -2498,9 +2437,7 @@ static void Mod_Q1LoadTexinfo( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadFaces
-=================
+* Mod_Q1LoadFaces
 */
 static void Mod_Q1LoadFaces( const lump_t *l )
 {
@@ -2607,16 +2544,14 @@ static void Mod_Q1LoadFaces( const lump_t *l )
 			}
 		}
 
-		R_AddSuperLightStyle( lightmaps, lightmapStyles, vertexStyles, NULL );
+		R_AddSuperLightStyle( loadmodel, lightmaps, lightmapStyles, vertexStyles, NULL );
 	}
 
 	Mod_CreateFaces();
 }
 
 /*
-=================
-Mod_Q1LoadNodes
-=================
+* Mod_Q1LoadNodes
 */
 static void Mod_Q1LoadNodes( const lump_t *l )
 {
@@ -2660,9 +2595,7 @@ static void Mod_Q1LoadNodes( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadSurfedges
-=================
+* Mod_Q1LoadSurfedges
 */
 static void Mod_Q1LoadSurfedges( const lump_t *l )
 {
@@ -2683,9 +2616,7 @@ static void Mod_Q1LoadSurfedges( const lump_t *l )
 }
 
 /*
-=================
-Mod_Q1LoadLeafs
-=================
+* Mod_Q1LoadLeafs
 */
 static void Mod_Q1LoadLeafs( const lump_t *l, const lump_t *msLump, int numvisleafs )
 {
@@ -2780,9 +2711,7 @@ static void Mod_Q1LoadLeafs( const lump_t *l, const lump_t *msLump, int numvisle
 }
 
 /*
-=================
-Mod_LoadQ1BrushModel
-=================
+* Mod_LoadQ1BrushModel
 */
 void Mod_LoadQ1BrushModel( model_t *mod, model_t *parent, void *buffer, bspFormatDesc_t *format )
 {
@@ -2791,6 +2720,7 @@ void Mod_LoadQ1BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 	q1dheader_t *header;
 
 	mod->type = mod_brush;
+	mod->registration_sequence = r_front.registration_sequence;
 	if( r_worldmodel != NULL )
 		Com_Error( ERR_DROP, "Loaded a brush model after the world" );
 

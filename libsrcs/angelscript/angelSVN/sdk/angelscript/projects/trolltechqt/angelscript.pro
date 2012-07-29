@@ -15,7 +15,6 @@ win32: LIBS += -lwinmm
 
 HEADERS += ../../include/angelscript.h \
            ../../source/as_array.h \
-           ../../source/as_arrayobject.h \
            ../../source/as_builder.h \
            ../../source/as_bytecode.h \
            ../../source/as_bytecodedef.h \
@@ -39,7 +38,7 @@ HEADERS += ../../include/angelscript.h \
            ../../source/as_scriptengine.h \
            ../../source/as_scriptfunction.h \
            ../../source/as_scriptnode.h \
-           ../../source/as_scriptstruct.h \
+           ../../source/as_scriptobject.h \
            ../../source/as_string.h \
            ../../source/as_string_util.h \
            ../../source/as_texts.h \
@@ -49,8 +48,7 @@ HEADERS += ../../include/angelscript.h \
            ../../source/as_typeinfo.h \
            ../../source/as_variablescope.h
 
-SOURCES += ../../source/as_arrayobject.cpp \
-           ../../source/as_atomic.cpp \
+SOURCES += ../../source/as_atomic.cpp \
            ../../source/as_builder.cpp \
            ../../source/as_bytecode.cpp \
            ../../source/as_callfunc.cpp \
@@ -63,6 +61,7 @@ SOURCES += ../../source/as_arrayobject.cpp \
            ../../source/as_datatype.cpp \
            ../../source/as_gc.cpp \
            ../../source/as_generic.cpp \
+           ../../source/as_globalproperty.cpp \
            ../../source/as_memory.cpp \
            ../../source/as_module.cpp \
            ../../source/as_objecttype.cpp \
@@ -73,7 +72,7 @@ SOURCES += ../../source/as_arrayobject.cpp \
            ../../source/as_scriptengine.cpp \
            ../../source/as_scriptfunction.cpp \
            ../../source/as_scriptnode.cpp \
-           ../../source/as_scriptstruct.cpp \
+           ../../source/as_scriptobject.cpp \
            ../../source/as_string.cpp \
            ../../source/as_string_util.cpp \
            ../../source/as_thread.cpp \

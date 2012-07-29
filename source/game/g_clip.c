@@ -239,10 +239,10 @@ static void GClip_InsertLinkBefore( link_t *l, link_t *before, int entNum )
 	l->entNum = entNum;
 }
 
-//===============
-//GClip_CreateAreaNode
-//Builds a uniformly subdivided tree for the given world size
-//===============
+/*
+* GClip_CreateAreaNode
+* Builds a uniformly subdivided tree for the given world size
+*/
 static areanode_t *GClip_CreateAreaNode( int depth, vec3_t mins, vec3_t maxs )
 {
 	areanode_t *anode;
@@ -280,10 +280,10 @@ static areanode_t *GClip_CreateAreaNode( int depth, vec3_t mins, vec3_t maxs )
 	return anode;
 }
 
-//===============
-//GClip_ClearWorld
-// called after the world model has been loaded, before linking any entities
-//===============
+/*
+* GClip_ClearWorld
+* called after the world model has been loaded, before linking any entities
+*/
 void GClip_ClearWorld( void )
 {
 	vec3_t mins, maxs;
@@ -298,11 +298,11 @@ void GClip_ClearWorld( void )
 }
 
 
-//===============
-//GClip_UnlinkEntity
-// call before removing an entity, and before trying to move one,
-// so it doesn't clip against itself
-//===============
+/*
+* GClip_UnlinkEntity
+* call before removing an entity, and before trying to move one,
+* so it doesn't clip against itself
+*/
 void GClip_UnlinkEntity( edict_t *ent )
 {
 	if( !ent->r.area.prev )
@@ -313,14 +313,14 @@ void GClip_UnlinkEntity( edict_t *ent )
 }
 
 
-//===============
-//GClip_LinkEntity
-// Needs to be called any time an entity changes origin, mins, maxs,
-// or solid.  Automatically unlinks if needed.
-// sets ent->v.absmin and ent->v.absmax
-// sets ent->leafnums[] for pvs determination even if the entity
-// is not solid
-//===============
+/*
+* GClip_LinkEntity
+* Needs to be called any time an entity changes origin, mins, maxs,
+* or solid.  Automatically unlinks if needed.
+* sets ent->v.absmin and ent->v.absmax
+* sets ent->leafnums[] for pvs determination even if the entity
+* is not solid
+*/
 #define MAX_TOTAL_ENT_LEAFS	128
 void GClip_LinkEntity( edict_t *ent )
 {
@@ -461,7 +461,8 @@ void GClip_LinkEntity( edict_t *ent )
 			if( j == i )
 			{
 				if( ent->r.num_clusters == MAX_ENT_CLUSTERS )
-				{ // assume we missed some leafs, and mark by headnode
+				{
+					// assume we missed some leafs, and mark by headnode
 					ent->r.num_clusters = -1;
 					ent->r.headnode = topnode;
 					break;
@@ -505,13 +506,13 @@ void GClip_LinkEntity( edict_t *ent )
 		GClip_InsertLinkBefore( &ent->r.area, &node->solid_edicts, NUM_FOR_EDICT( ent ) );
 }
 
-//================
-//GClip_SetAreaPortalState
-//
-//Finds an areaportal leaf entity is connected with,
-//and also finds two leafs from different areas connected
-//with the same entity.
-//================
+/*
+* GClip_SetAreaPortalState
+* 
+* Finds an areaportal leaf entity is connected with,
+* and also finds two leafs from different areas connected
+* with the same entity.
+*/
 void GClip_SetAreaPortalState( edict_t *ent, qboolean open )
 {
 	// entity must touch at least two areas
@@ -523,15 +524,15 @@ void GClip_SetAreaPortalState( edict_t *ent, qboolean open )
 }
 
 
-//================
-//GClip_AreaEdicts
-// fills in a table of edict ids with edicts that have bounding boxes
-// that intersect the given area.  It is possible for a non-axial bmodel
-// to be returned that doesn't actually intersect the area on an exact
-// test.
-// returns the number of pointers filled in
-// ??? does this always return the world?
-//================
+/*
+* GClip_AreaEdicts
+* fills in a table of edict ids with edicts that have bounding boxes
+* that intersect the given area.  It is possible for a non-axial bmodel
+* to be returned that doesn't actually intersect the area on an exact
+* test.
+* returns the number of pointers filled in
+* ??? does this always return the world?
+*/
 static int GClip_AreaEdicts( vec3_t mins, vec3_t maxs, int *list, int maxcount, int areatype, int timeDelta )
 {
 	link_t *l, *start;
@@ -595,12 +596,12 @@ checkstack:
 	return count;
 }
 
-//================
-//GClip_CollisionModelForEntity
-//
-//Returns a collision model that can be used for testing or clipping an
-//object of mins/maxs size.
-//================
+/*
+* GClip_CollisionModelForEntity
+* 
+* Returns a collision model that can be used for testing or clipping an
+* object of mins/maxs size.
+*/
 static struct cmodel_s *GClip_CollisionModelForEntity( entity_state_t *s, entity_shared_t *r )
 {
 	struct cmodel_s	*model;
@@ -616,15 +617,18 @@ static struct cmodel_s *GClip_CollisionModelForEntity( entity_state_t *s, entity
 	}
 
 	// create a temp hull from bounding box sizes
-	return trap_CM_ModelForBBox( r->mins, r->maxs );
+	if( s->type == ET_PLAYER || s->type == ET_CORPSE )
+		return trap_CM_OctagonModelForBBox( r->mins, r->maxs );
+	else
+		return trap_CM_ModelForBBox( r->mins, r->maxs );
 }
 
 
-//=============
-//G_PointContents
-// returns the CONTENTS_* value from the world at the given point.
-// Quake 2 extends this to also check entities, to allow moving liquids
-//=============
+/*
+* G_PointContents
+* returns the CONTENTS_* value from the world at the given point.
+* Quake 2 extends this to also check entities, to allow moving liquids
+*/
 static int GClip_PointContents( vec3_t p, int timeDelta )
 {
 	c4clipedict_t *clipEnt;
@@ -682,9 +686,9 @@ typedef struct
 	int contentmask;
 } moveclip_t;
 
-//====================
-//GClip_ClipMoveToEntities
-//====================
+/*
+* GClip_ClipMoveToEntities
+*/
 /*static*/ void GClip_ClipMoveToEntities( moveclip_t *clip, int timeDelta )
 {
 	int i, num;
@@ -744,9 +748,9 @@ typedef struct
 }
 
 
-//==================
-//GClip_TraceBounds
-//==================
+/*
+* GClip_TraceBounds
+*/
 static void GClip_TraceBounds( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, vec3_t boxmins, vec3_t boxmaxs )
 {
 	int i;
@@ -766,23 +770,23 @@ static void GClip_TraceBounds( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t en
 	}
 }
 
-//==================
-//G_Trace
-//
-//Moves the given mins/maxs volume through the world from start to end.
-//
-//Passedict and edicts owned by passedict are explicitly not checked.
-//------------------------------------------------------------------
-// mins and maxs are relative
+/*
+* G_Trace
+* 
+* Moves the given mins/maxs volume through the world from start to end.
+* 
+* Passedict and edicts owned by passedict are explicitly not checked.
+* ------------------------------------------------------------------
+* mins and maxs are relative
 
-// if the entire move stays in a solid volume, trace.allsolid will be set,
-// trace.startsolid will be set, and trace.fraction will be 0
+* if the entire move stays in a solid volume, trace.allsolid will be set,
+* trace.startsolid will be set, and trace.fraction will be 0
 
-// if the starting point is in a solid, it will be allowed to move out
-// to an open area
+* if the starting point is in a solid, it will be allowed to move out
+* to an open area
 
-// passedict is explicitly excluded from clipping checks (normally NULL)
-//==================
+* passedict is explicitly excluded from clipping checks (normally NULL)
+*/
 static void GClip_Trace( trace_t *tr, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passedict, int contentmask, int timeDelta )
 {
 	moveclip_t clip;
@@ -841,11 +845,11 @@ void G_Trace4D( trace_t *tr, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 //===========================================================================
 
 
-//=================
-//GClip_SetBrushModel
-//
-//Also sets mins and maxs for inline bmodels
-//=================
+/*
+* GClip_SetBrushModel
+* 
+* Also sets mins and maxs for inline bmodels
+*/
 void GClip_SetBrushModel( edict_t *ent, char *name )
 {
 	struct cmodel_s *cmodel;
@@ -883,21 +887,21 @@ void GClip_SetBrushModel( edict_t *ent, char *name )
 		return;
 	}
 
-	// brush model
-	//ent->s.modelindex = trap_ModelIndex( name );
-
 	// racesow: THIS IS A VERY DIRTY "FIX": it assigns normally unreachable models (the ones over MAX_MODELS) to unrelated models..
 	// normally this only affects buggy maps that otherwise wouldn't load (like amt-freestyle3)
+	// brush model
+	//ent->s.modelindex = trap_ModelIndex( name ); // <- This is the unmodified version 
 	ent->s.modelindex = atoi( name+1 );
+	// !racesow
 	assert( ent->s.modelindex == (unsigned int)atoi( name + 1 ) );
 	cmodel = trap_CM_InlineModel( ent->s.modelindex );
 	trap_CM_InlineModelBounds( cmodel, ent->r.mins, ent->r.maxs );
 	GClip_LinkEntity( ent );
 }
 
-//===============
-//GClip_EntityContact
-//===============
+/*
+* GClip_EntityContact
+*/
 static qboolean GClip_EntityContact( vec3_t mins, vec3_t maxs, edict_t *ent )
 {
 	trace_t tr;
@@ -923,9 +927,9 @@ static qboolean GClip_EntityContact( vec3_t mins, vec3_t maxs, edict_t *ent )
 }
 
 
-//============
-//GClip_TouchTriggers
-//============
+/*
+* GClip_TouchTriggers
+*/
 void GClip_TouchTriggers( edict_t *ent )
 {
 	int i, num;
@@ -954,7 +958,7 @@ void GClip_TouchTriggers( edict_t *ent )
 		if( !hit->r.inuse )
 			continue;
 
-		if( !hit->touch && hit->asTouchFuncID < 0 )
+		if( !hit->touch && !hit->asTouchFunc )
 			continue;
 
 		if( !hit->item && !GClip_EntityContact( mins, maxs, hit ) )
@@ -1017,7 +1021,7 @@ void G_PMoveTouchTriggers( pmove_t *pm )
 		if( !hit->r.inuse )
 			continue;
 
-		if( !hit->touch && hit->asTouchFuncID < 0 )
+		if( !hit->touch && !hit->asTouchFunc )
 			continue;
 
 		if( !hit->item && !GClip_EntityContact( mins, maxs, hit ) )
@@ -1027,10 +1031,10 @@ void G_PMoveTouchTriggers( pmove_t *pm )
 	}
 }
 
-//=================
-//GClip_FindBoxInRadius
-//Returns entities that have their boxes within a spherical area
-//=================
+/*
+* GClip_FindBoxInRadius
+* Returns entities that have their boxes within a spherical area
+*/
 edict_t *GClip_FindBoxInRadius4D( edict_t *from, vec3_t org, float rad, int timeDelta )
 {
 	int i, j;

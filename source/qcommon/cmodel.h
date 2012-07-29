@@ -42,6 +42,7 @@ const char *CM_ShaderrefName( cmodel_state_t *cms, int ref );
 
 // creates a clipping hull for an arbitrary bounding box
 struct cmodel_s *CM_ModelForBBox( cmodel_state_t *cms, vec3_t mins, vec3_t maxs );
+struct cmodel_s *CM_OctagonModelForBBox( cmodel_state_t *cms, vec3_t mins, vec3_t maxs );
 void CM_InlineModelBounds( cmodel_state_t *cms, struct cmodel_s *cmodel, vec3_t mins, vec3_t maxs );
 
 // returns an ORed contents mask
@@ -57,7 +58,7 @@ qbyte *CM_ClusterPHS( cmodel_state_t *cms, int cluster );
 int CM_ClusterRowSize( cmodel_state_t *cms );
 int CM_ClusterRowLongs( cmodel_state_t *cms );
 int CM_AreaRowSize( cmodel_state_t *cms );
-int CM_PointLeafnum( cmodel_state_t *cms, vec3_t p );
+int CM_PointLeafnum( cmodel_state_t *cms, const vec3_t p );
 
 // call with topnode set to the headnode, returns with topnode
 // set to the first node that splits the box
@@ -78,7 +79,7 @@ void CM_ReadPortalState( cmodel_state_t *cms, int file );
 
 void CM_MergePVS( cmodel_state_t *cms, vec3_t org, qbyte *out );
 void CM_MergePHS( cmodel_state_t *cms, int cluster, qbyte *out );
-int CM_MergeVisSets( cmodel_state_t *cms, vec3_t org, qbyte *pvs, qbyte *phs, qbyte *areabits );
+int CM_MergeVisSets( cmodel_state_t *cms, vec3_t org, qbyte *pvs, qbyte *areabits );
 
 //
 cmodel_state_t *CM_New( void *mempool );

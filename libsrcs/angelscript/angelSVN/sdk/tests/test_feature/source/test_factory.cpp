@@ -3,7 +3,7 @@
 
 namespace TestFactory
 {
-#define TESTNAME "TestFactory"
+static const char * const TESTNAME = "TestFactory";
 
 
 class MyFactory
@@ -108,23 +108,23 @@ bool Test()
 
 	// test 1
 	MyFactory::Get().Reset();
-	r = engine->ExecuteString(0, "int x = 20; int x2 = 30; int y = 50; myFactory.Test(\"testing\", x - -x2, y, 0x000000FF);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
-	if( MyFactory::Get().IsError() ) fail = true;
+	r = ExecuteString(engine, "int x = 20; int x2 = 30; int y = 50; myFactory.Test(\"testing\", x - -x2, y, 0x000000FF);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+	if( MyFactory::Get().IsError() ) TEST_FAILED;
 
 	// test 2 - without bytecode optimization
 	engine->SetEngineProperty(asEP_OPTIMIZE_BYTECODE, false);
 	MyFactory::Get().Reset();
-	r = engine->ExecuteString(0, "int x = 20; int x2 = 30; int y = 50; myFactory.Test(\"testing\", x + x2, y, 0x000000FF);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
-	if( MyFactory::Get().IsError() ) fail = true;
+	r = ExecuteString(engine, "int x = 20; int x2 = 30; int y = 50; myFactory.Test(\"testing\", x + x2, y, 0x000000FF);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+	if( MyFactory::Get().IsError() ) TEST_FAILED;
 
 	// test 3 - with bytecode optimization 
 	engine->SetEngineProperty(asEP_OPTIMIZE_BYTECODE, true);
 	MyFactory::Get().Reset();
-	r = engine->ExecuteString(0, "int x = 20; int x2 = 30; int y = 50; myFactory.Test(\"testing\", x + x2, y, 0x000000FF);");
-	if( r != asEXECUTION_FINISHED ) fail = true;
-	if( MyFactory::Get().IsError() ) fail = true;
+	r = ExecuteString(engine, "int x = 20; int x2 = 30; int y = 50; myFactory.Test(\"testing\", x + x2, y, 0x000000FF);");
+	if( r != asEXECUTION_FINISHED ) TEST_FAILED;
+	if( MyFactory::Get().IsError() ) TEST_FAILED;
 
 	// release the engine
 	engine->Release();

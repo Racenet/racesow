@@ -112,7 +112,7 @@ int mumble_link(const char* name)
 	close(shmfd);
 #endif
 	memset(lm, 0, sizeof(LinkedMem));
-	mbstowcs(lm->name, name, sizeof(lm->name));
+	mbstowcs(lm->name, name, sizeof(lm->name) / sizeof(lm->name[0]));
 
 	return 0;
 }
@@ -143,7 +143,8 @@ void mumble_set_identity(const char* identity)
 	size_t len;
 	if (!lm)
 		return;
-	len = MIN(sizeof(lm->identity), strlen(identity)+1);
+	len = mblen(identity, sizeof(lm->identity))+1;
+	len = MIN(sizeof(lm->identity) / sizeof(lm->identity[0]), len);
 	mbstowcs(lm->identity, identity, len);
 }
 
@@ -161,7 +162,8 @@ void mumble_set_description(const char* description)
 	size_t len;
 	if (!lm)
 		return;
-	len = MIN(sizeof(lm->description), strlen(description)+1);
+	len = mblen(description, sizeof(lm->description))+1;
+	len = MIN(sizeof(lm->description) / sizeof(lm->description[0]), len);
 	mbstowcs(lm->description, description, len);
 }
 
