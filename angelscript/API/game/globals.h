@@ -10,7 +10,7 @@ typedef enum
 	CS_HOSTNAME = 0x0,
 	CS_TVSERVER = 0x1,
 	CS_SKYBOX = 0x8,
-	CS_SCORESTATNUMS = 0x9,
+	CS_STATNUMS = 0x9,
 	CS_POWERUPEFFECTS = 0xa,
 	CS_GAMETYPETITLE = 0xb,
 	CS_GAMETYPENAME = 0xc,
@@ -24,6 +24,7 @@ typedef enum
 	CS_MAXCLIENTS = 0x2,
 	CS_MAPCHECKSUM = 0x1f,
 	CS_MATCHNAME = 0x16,
+	CS_MATCHSCORE = 0x17,
 	CS_MODELS = 0x20,
 	CS_SOUNDS = 0x120,
 	CS_IMAGES = 0x220,
@@ -42,6 +43,7 @@ typedef enum
 	EF_SHELL = 0x2,
 	EF_STRONG_WEAPON = 0x4,
 	EF_QUAD = 0x8,
+	EF_REGEN = 0x1000,
 	EF_CARRIER = 0x10,
 	EF_BUSYICON = 0x20,
 	EF_FLAG_TRAIL = 0x40,
@@ -49,9 +51,10 @@ typedef enum
 	EF_TEAMCOLOR_TRANSITION = 0x100,
 	EF_EXPIRING_QUAD = 0x200,
 	EF_EXPIRING_SHELL = 0x400,
+	EF_EXPIRING_REGEN = 0x2000,
 	EF_GODMODE = 0x800,
-	EF_PLAYER_STUNNED = 0x1, //racesow
-	EF_PLAYER_HIDENAME = 0x100, //racesow
+	EF_PLAYER_STUNNED = 0x1,
+	EF_PLAYER_HIDENAME = 0x100,
 } state_effects_e;
 
 typedef enum
@@ -72,23 +75,23 @@ typedef enum
 
 typedef enum
 {
-	STAT_PROGRESS_SELF = 0xf,
-	STAT_PROGRESS_OTHER = 0x10,
-	STAT_PROGRESS_ALPHA = 0x11,
-	STAT_PROGRESS_BETA = 0x12,
-	STAT_IMAGE_SELF = 0x13,
-	STAT_IMAGE_OTHER = 0x14,
-	STAT_IMAGE_ALPHA = 0x15,
-	STAT_IMAGE_BETA = 0x16,
-	STAT_TIME_SELF = 0x17,
-	STAT_TIME_BEST = 0x18,
-	STAT_TIME_RECORD = 0x19,
-	STAT_TIME_ALPHA = 0x1a,
-	STAT_TIME_BETA = 0x1b,
-	STAT_MESSAGE_SELF = 0x1c,
-	STAT_MESSAGE_OTHER = 0x1d,
-	STAT_MESSAGE_ALPHA = 0x1e,
-	STAT_MESSAGE_BETA = 0x1f,
+	STAT_PROGRESS_SELF = 0x20,
+	STAT_PROGRESS_OTHER = 0x21,
+	STAT_PROGRESS_ALPHA = 0x22,
+	STAT_PROGRESS_BETA = 0x23,
+	STAT_IMAGE_SELF = 0x24,
+	STAT_IMAGE_OTHER = 0x25,
+	STAT_IMAGE_ALPHA = 0x26,
+	STAT_IMAGE_BETA = 0x27,
+	STAT_TIME_SELF = 0x28,
+	STAT_TIME_BEST = 0x29,
+	STAT_TIME_RECORD = 0x2a,
+	STAT_TIME_ALPHA = 0x2b,
+	STAT_TIME_BETA = 0x2c,
+	STAT_MESSAGE_SELF = 0x2d,
+	STAT_MESSAGE_OTHER = 0x2e,
+	STAT_MESSAGE_ALPHA = 0x2f,
+	STAT_MESSAGE_BETA = 0x30,
 } hudstats_e;
 
 typedef enum
@@ -121,8 +124,9 @@ typedef enum
 	ET_FLAG_BASE = 0x10,
 	ET_MINIMAP_ICON = 0x11,
 	ET_DECAL = 0x12,
-	ET_ITEM_TIMER = 0x13, //racesow
-	ET_PARTICLES = 0x14, //racesow
+	ET_ITEM_TIMER = 0x13,
+	ET_PARTICLES = 0x14,
+	ET_SPAWN_INDICATOR = 0x15,
 	ET_EVENT = 0x60,
 	ET_SOUNDEVENT = 0x61,
 } entitytype_e;
@@ -137,7 +141,7 @@ typedef enum
 typedef enum
 {
 	MOVETYPE_NONE = 0x0,
-	MOVETYPE_PLAYER = 0x1, //racesow
+	MOVETYPE_PLAYER = 0x1,
 	MOVETYPE_NOCLIP = 0x2,
 	MOVETYPE_PUSH = 0x3,
 	MOVETYPE_STOP = 0x4,
@@ -146,7 +150,7 @@ typedef enum
 	MOVETYPE_LINEARPROJECTILE = 0x7,
 	MOVETYPE_BOUNCE = 0x8,
 	MOVETYPE_BOUNCEGRENADE = 0x9,
-	MOVETYPE_TOSSSLIDE = 0xa, //racesow
+	MOVETYPE_TOSSSLIDE = 0xa,
 } movetype_e;
 
 typedef enum
@@ -162,8 +166,8 @@ typedef enum
 	PMFEAT_GHOSTMOVE = 0x100,
 	PMFEAT_CONTINOUSJUMP = 0x200,
 	PMFEAT_ITEMPICK = 0x400,
-	PMFEAT_GUNBLADEAUTOATTACK = 0x800, //racesow
-	PMFEAT_WEAPONSWITCH = 0x1000, //racesow
+	PMFEAT_GUNBLADEAUTOATTACK = 0x800,
+	PMFEAT_WEAPONSWITCH = 0x1000,
 	PMFEAT_ALL = 0xffff,
 	PMFEAT_DEFAULT = 0xfeff,
 } pmovefeats_e;
@@ -245,14 +249,15 @@ typedef enum
 	POWERUP_NONE = 0x0,
 	POWERUP_QUAD = 0x25,
 	POWERUP_SHELL = 0x26,
-	POWERUP_TOTAL = 0x27,
+	POWERUP_REGEN = 0x27,
+	POWERUP_TOTAL = 0x28,
 } powerup_tag_e;
 
 typedef enum
 {
-	AMMO_PACK_WEAK = 0x27,
-	AMMO_PACK_STRONG = 0x28,
-	AMMO_PACK = 0x29,
+	AMMO_PACK_WEAK = 0x28,
+	AMMO_PACK_STRONG = 0x29,
+	AMMO_PACK = 0x2a,
 } otheritems_tag_e;
 
 typedef enum
@@ -272,7 +277,7 @@ typedef enum
 	CHAN_ITEM = 0x3,
 	CHAN_BODY = 0x4,
 	CHAN_MUZZLEFLASH = 0x5,
-	CHAN_FIXED = 0x80, //racesow
+	CHAN_FIXED = 0x80,
 } sound_channels_e;
 
 typedef enum
@@ -334,7 +339,6 @@ typedef enum
 {
 	SVF_NOCLIENT = 0x1,
 	SVF_PORTAL = 0x2,
-	SVF_NOORIGIN2 = 0x4,
 	SVF_TRANSMITORIGIN2 = 0x8,
 	SVF_SOUNDCULL = 0x10,
 	SVF_FAKECLIENT = 0x20,
@@ -343,21 +347,7 @@ typedef enum
 	SVF_PROJECTILE = 0x100,
 	SVF_ONLYTEAM = 0x200,
 	SVF_FORCEOWNER = 0x400,
-	SVF_NOCULLATORIGIN2 = 0x4,
 } serverflags_e;
-
-typedef enum
-{
-	CVAR_ARCHIVE = 0x1,
-	CVAR_USERINFO = 0x2,
-	CVAR_SERVERINFO = 0x4,
-	CVAR_NOSET = 0x8,
-	CVAR_LATCH = 0x10,
-	CVAR_LATCH_VIDEO = 0x20,
-	CVAR_LATCH_SOUND = 0x40,
-	CVAR_CHEAT = 0x80,
-	CVAR_READONLY = 0x100,
-} cvarflags_e;
 
 typedef enum
 {
@@ -402,14 +392,12 @@ typedef enum
 	MOD_HIT = 0x4a,
 } meaningsofdeath_e;
 
-//racesow
 typedef enum
 {
 	DAMAGE_NO = 0x0,
 	DAMAGE_YES = 0x1,
 	DAMAGE_AIM = 0x2,
 } takedamage_e;
-//!racesow
 
 typedef enum
 {
@@ -458,63 +446,66 @@ void RS_LoadMapList( int );
 bool RS_QueryPjState( int playerNum);
 bool RS_ResetPjState( int playerNum);
 //!racesow
-cEntity @G_SpawnEntity( cString & );
-cString @G_SpawnTempValue( cString & );
+cEntity @G_SpawnEntity( const String &in );
+String @G_SpawnTempValue( const String &in );
 cEntity @G_GetEntity( int entNum );
 cClient @G_GetClient( int clientNum );
 cTeam @G_GetTeam( int team );
 cItem @G_GetItem( int tag );
-cItem @G_GetItemByName( cString &name );
-cItem @G_GetItemByClassname( cString &name ); //racesow
-cEntity @G_FindEntityInRadius( cEntity @, cEntity @, cVec3 &, float radius );
-cEntity @G_FindEntityInRadius( cEntity @, cVec3 &, float radius );
-cEntity @G_FindEntityWithClassname( cEntity @, cString & );
-cEntity @G_FindEntityWithClassName( cEntity @, cString & );
+cItem @G_GetItemByName( const String &in name );
+cItem @G_GetItemByClassname( const String &in name );
+cEntity @G_FindEntityInRadius( cEntity @, cEntity @, const Vec3 &in, float radius );
+cEntity @G_FindEntityInRadius( cEntity @, const Vec3 &in, float radius );
+cEntity @G_FindEntityWithClassname( cEntity @, const String &in );
+cEntity @G_FindEntityWithClassName( cEntity @, const String &in );
 void G_RemoveAllProjectiles();
 void removeProjectiles( cEntity @ ); //racesow
 void G_RemoveDeadBodies();
 void G_Items_RespawnByType( uint typeMask, int item_tag, float delay );
-void G_Print( cString &in );
-void G_PrintMsg( cEntity @, cString &in );
-void G_CenterPrintMsg( cEntity @, cString &in );
+void G_Print( const String &in );
+void G_PrintMsg( cEntity @, const String &in );
+void G_CenterPrintMsg( cEntity @, const String &in );
 void G_Sound( cEntity @, int channel, int soundindex, float attenuation );
-void G_PositionedSound( cVec3 &in, int channel, int soundindex, float attenuation );
+void G_PositionedSound( const Vec3 &in, int channel, int soundindex, float attenuation );
 void G_GlobalSound( int channel, int soundindex );
 void G_AnnouncerSound( cClient @, int soundIndex, int team, bool queued, cClient @ );
 float random();
 float brandom( float min, float max );
-int G_DirToByte( cVec3 &origin );
-int G_PointContents( cVec3 &origin );
-bool G_InPVS( cVec3 &origin1, cVec3 &origin2 );
-bool G_WriteFile( cString &, cString & );
-bool G_AppendToFile( cString &, cString & );
-//racesow
-//cString &G_LoadFile( cString & );
-cString @G_LoadFile( cString & );
-//!racesow
-int G_FileLength( cString & );
-void G_CmdExecute( cString & );
-cString @G_LocationName( cVec3 &origin );
-int G_LocationTag( cString & );
-cString @G_LocationName( int tag );
-int G_ImageIndex( cString &in );
-int G_SkinIndex( cString &in );
-int G_ModelIndex( cString &in );
-int G_SoundIndex( cString &in );
-int G_ModelIndex( cString &in, bool pure );
-int G_SoundIndex( cString &in, bool pure );
-void G_RegisterCommand( cString &in );
-void G_RegisterCallvote( cString &in, cString &in, cString &in );
-void G_ConfigString( int index, cString &in );
-void G_FireInstaShot( cVec3 &origin, cVec3 &angles, int range, int damage, int knockback, int stun, cEntity @owner );
-cEntity @G_FireWeakBolt( cVec3 &origin, cVec3 &angles, int speed, int damage, int knockback, int stun, cEntity @owner );
-void G_FireStrongBolt( cVec3 &origin, cVec3 &angles, int range, int damage, int knockback, int stun, cEntity @owner );
-cEntity @G_FirePlasma( cVec3 &origin, cVec3 &angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
-cEntity @G_FireRocket( cVec3 &origin, cVec3 &angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
-cEntity @G_FireGrenade( cVec3 &origin, cVec3 &angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
-void G_FireRiotgun( cVec3 &origin, cVec3 &angles, int range, int spread, int count, int damage, int knockback, int stun, cEntity @owner );
-void G_FireBullet( cVec3 &origin, cVec3 &angles, int range, int spread, int damage, int knockback, int stun, cEntity @owner );
-cEntity @G_FireBlast( cVec3 &origin, cVec3 &angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
-bool ML_FilenameExists( cString & );
-cString @ML_GetMapByNum( int num );
+int G_DirToByte( const Vec3 &in origin );
+int G_PointContents( const Vec3 &in origin );
+bool G_InPVS( const Vec3 &in origin1, const Vec3 &in origin2 );
+bool G_WriteFile( const String &, const String & );
+bool G_AppendToFile( const String &, const String & );
+String @G_LoadFile( const String & );
+int G_FileLength( const String & );
+void G_CmdExecute( const String & );
+String @G_LocationName( const Vec3 &in origin );
+int G_LocationTag( const String & );
+String @G_LocationName( int tag );
+void __G_CallThink( cEntity @ent );
+void __G_CallTouch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags );
+void __G_CallUse( cEntity @ent, cEntity @other, cEntity @activator );
+void __G_CallStop( cEntity @ent );
+void __G_CallPain( cEntity @ent, cEntity @other, float kick, float damage );
+void __G_CallDie( cEntity @ent, cEntity @inflicter, cEntity @attacker );
+int G_ImageIndex( const String &in );
+int G_SkinIndex( const String &in );
+int G_ModelIndex( const String &in );
+int G_SoundIndex( const String &in );
+int G_ModelIndex( const String &in, bool pure );
+int G_SoundIndex( const String &in, bool pure );
+void G_RegisterCommand( const String &in );
+void G_RegisterCallvote( const String &in, const String &in, const String &in );
+void G_ConfigString( int index, const String &in );
+void G_FireInstaShot( const Vec3 &in origin, const Vec3 &in angles, int range, int damage, int knockback, int stun, cEntity @owner );
+cEntity @G_FireWeakBolt( const Vec3 &in origin, const Vec3 &in angles, int speed, int damage, int knockback, int stun, cEntity @owner );
+void G_FireStrongBolt( const Vec3 &in origin, const Vec3 &in angles, int range, int damage, int knockback, int stun, cEntity @owner );
+cEntity @G_FirePlasma( const Vec3 &in origin, const Vec3 &in angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
+cEntity @G_FireRocket( const Vec3 &in origin, const Vec3 &in angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
+cEntity @G_FireGrenade( const Vec3 &in origin, const Vec3 &in angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
+void G_FireRiotgun( const Vec3 &in origin, const Vec3 &in angles, int range, int spread, int count, int damage, int knockback, int stun, cEntity @owner );
+void G_FireBullet( const Vec3 &in origin, const Vec3 &in angles, int range, int spread, int damage, int knockback, int stun, cEntity @owner );
+cEntity @G_FireBlast( const Vec3 &in origin, const Vec3 &in angles, int speed, int radius, int damage, int knockback, int stun, cEntity @owner );
+bool ML_FilenameExists( String & );
+String @ML_GetMapByNum( int num );
 

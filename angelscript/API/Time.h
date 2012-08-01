@@ -1,7 +1,7 @@
 /**
- * cTime
+ * Time
  */
-class cTime
+class Time
 {
 public:
 	/* object properties */
@@ -17,12 +17,12 @@ public:
 	const int isdst;
 
 	/* object behaviors */
-	cTime @ f(); /* factory */ 
-	cTime @ f(uint64 t); /* factory */ 
-	cTime & f(const cTime &in); /* = */
+	void _beh_0_();&s
+	void _beh_0_(uint64);&s
+	void _beh_0_(const Time&in);&s
 
-	/* global behaviors */
-	bool f(const cTime &in, const cTime &in); /* == */
-	bool f(const cTime &in, const cTime &in); /* != */
+	/* object methods */
+	Time& opAssign(const Time&in);
+	bool opEquals(const Time&in, const Time&in);
 };
 

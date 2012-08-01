@@ -1,3 +1,5 @@
+/* funcdefs */
+
 /**
  * cGametypeDesc
  */
@@ -30,29 +32,30 @@ public:
 	bool canShowMinimap;
 	bool teamOnlyMinimap;
 	int spawnpointRadius;
-//racesow
 	bool customDeadBodyCam;
+//racesow
 	bool autoInactivityRemove;
 	bool playerInteraction;
 	bool freestyleMapFix;
 	bool enableDrowning;
 //!racesow
+	bool mmCompatible;
 
 	/* object behaviors */
 
 	/* object methods */
-	cString @ getName();
-	cString @ getTitle();
-	void setTitle( cString & );
-	cString @ getVersion();
-	void setVersion( cString & );
-	cString @ getAuthor();
-	void setAuthor( cString & );
-	cString @ getManifest();
+	String @ getName() const;
+	String @ getTitle() const;
+	void setTitle( String & );
+	String @ getVersion() const;
+	void setVersion( String & );
+	String @ getAuthor() const;
+	void setAuthor( String & );
+	String @ getManifest() const;
 	void setTeamSpawnsystem( int team, int spawnsystem, int wave_time, int wave_maxcount, bool deadcam );
-	bool isInstagib();
-	bool hasFallDamage();
-	bool hasSelfDamage();
-	bool isInvidualGameType();
+	bool isInstagib() const;
+	bool hasFallDamage() const;
+	bool hasSelfDamage() const;
+	bool isInvidualGameType() const;
 };
 
