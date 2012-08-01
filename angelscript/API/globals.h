@@ -50,8 +50,8 @@ typedef enum
 	EF_EXPIRING_QUAD = 0x200,
 	EF_EXPIRING_SHELL = 0x400,
 	EF_GODMODE = 0x800,
-	EF_PLAYER_STUNNED = 0x1,
-	EF_PLAYER_HIDENAME = 0x100,
+	EF_PLAYER_STUNNED = 0x1, //racesow
+	EF_PLAYER_HIDENAME = 0x100, //racesow
 } state_effects_e;
 
 typedef enum
@@ -121,8 +121,8 @@ typedef enum
 	ET_FLAG_BASE = 0x10,
 	ET_MINIMAP_ICON = 0x11,
 	ET_DECAL = 0x12,
-	ET_ITEM_TIMER = 0x13,
-	ET_PARTICLES = 0x14,
+	ET_ITEM_TIMER = 0x13, //racesow
+	ET_PARTICLES = 0x14, //racesow
 	ET_EVENT = 0x60,
 	ET_SOUNDEVENT = 0x61,
 } entitytype_e;
@@ -137,7 +137,7 @@ typedef enum
 typedef enum
 {
 	MOVETYPE_NONE = 0x0,
-	MOVETYPE_PLAYER = 0x1,
+	MOVETYPE_PLAYER = 0x1, //racesow
 	MOVETYPE_NOCLIP = 0x2,
 	MOVETYPE_PUSH = 0x3,
 	MOVETYPE_STOP = 0x4,
@@ -146,7 +146,7 @@ typedef enum
 	MOVETYPE_LINEARPROJECTILE = 0x7,
 	MOVETYPE_BOUNCE = 0x8,
 	MOVETYPE_BOUNCEGRENADE = 0x9,
-	MOVETYPE_TOSSSLIDE = 0xa,
+	MOVETYPE_TOSSSLIDE = 0xa, //racesow
 } movetype_e;
 
 typedef enum
@@ -162,8 +162,8 @@ typedef enum
 	PMFEAT_GHOSTMOVE = 0x100,
 	PMFEAT_CONTINOUSJUMP = 0x200,
 	PMFEAT_ITEMPICK = 0x400,
-	PMFEAT_GUNBLADEAUTOATTACK = 0x800,
-	PMFEAT_WEAPONSWITCH = 0x1000,
+	PMFEAT_GUNBLADEAUTOATTACK = 0x800, //racesow
+	PMFEAT_WEAPONSWITCH = 0x1000, //racesow
 	PMFEAT_ALL = 0xffff,
 	PMFEAT_DEFAULT = 0xfeff,
 } pmovefeats_e;
@@ -272,7 +272,7 @@ typedef enum
 	CHAN_ITEM = 0x3,
 	CHAN_BODY = 0x4,
 	CHAN_MUZZLEFLASH = 0x5,
-	CHAN_FIXED = 0x80,
+	CHAN_FIXED = 0x80, //racesow
 } sound_channels_e;
 
 typedef enum
@@ -402,12 +402,14 @@ typedef enum
 	MOD_HIT = 0x4a,
 } meaningsofdeath_e;
 
+//racesow
 typedef enum
 {
 	DAMAGE_NO = 0x0,
 	DAMAGE_YES = 0x1,
 	DAMAGE_AIM = 0x2,
 } takedamage_e;
+//!racesow
 
 typedef enum
 {
@@ -426,12 +428,15 @@ const int numEntities;
 const int maxClients;
 cGametypeDesc gametype;
 cMatch match;
+//racesow
 int mysqlConnected;
 int ircConnected;
+//!racesow
 
 /**
  * Global functions
  */
+//racesow
 cString @G_Md5( cString & );
 bool RS_MysqlPlayerAppear( cString &, int, int, int, bool, cString &, cString &, cString & );
 bool RS_MysqlPlayerDisappear( cString &, int, int, int, int, int, int, bool, bool );
@@ -452,6 +457,7 @@ cString @RS_LastMap();
 void RS_LoadMapList( int );
 bool RS_QueryPjState( int playerNum);
 bool RS_ResetPjState( int playerNum);
+//!racesow
 cEntity @G_SpawnEntity( cString & );
 cString @G_SpawnTempValue( cString & );
 cEntity @G_GetEntity( int entNum );
@@ -459,13 +465,13 @@ cClient @G_GetClient( int clientNum );
 cTeam @G_GetTeam( int team );
 cItem @G_GetItem( int tag );
 cItem @G_GetItemByName( cString &name );
-cItem @G_GetItemByClassname( cString &name );
+cItem @G_GetItemByClassname( cString &name ); //racesow
 cEntity @G_FindEntityInRadius( cEntity @, cEntity @, cVec3 &, float radius );
 cEntity @G_FindEntityInRadius( cEntity @, cVec3 &, float radius );
 cEntity @G_FindEntityWithClassname( cEntity @, cString & );
 cEntity @G_FindEntityWithClassName( cEntity @, cString & );
 void G_RemoveAllProjectiles();
-void removeProjectiles( cEntity @ );
+void removeProjectiles( cEntity @ ); //racesow
 void G_RemoveDeadBodies();
 void G_Items_RespawnByType( uint typeMask, int item_tag, float delay );
 void G_Print( cString &in );
@@ -482,7 +488,10 @@ int G_PointContents( cVec3 &origin );
 bool G_InPVS( cVec3 &origin1, cVec3 &origin2 );
 bool G_WriteFile( cString &, cString & );
 bool G_AppendToFile( cString &, cString & );
+//racesow
+//cString &G_LoadFile( cString & );
 cString @G_LoadFile( cString & );
+//!racesow
 int G_FileLength( cString & );
 void G_CmdExecute( cString & );
 cString @G_LocationName( cVec3 &origin );
