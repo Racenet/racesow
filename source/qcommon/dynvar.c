@@ -207,10 +207,11 @@ dynvar_set_status_t Dynvar_SetValue(
         void *value
 )
 {
-	dynvar_set_status_t status = dynvar->setter( value );
+	dynvar_set_status_t status;
 	assert( dynvar );
 	assert( dynvar->setter );
 	assert( !dynvar->listeners_immutable );
+	status = dynvar->setter( value );
 	if( status == DYNVAR_SET_OK )
 		Dynvar_CallListeners( dynvar, value );
 	return status;

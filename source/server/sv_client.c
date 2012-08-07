@@ -622,7 +622,7 @@ static void SV_BeginDownload_f( client_t *client )
 	char *url;
 	qboolean allow, requestpak;
 
-	if( !sv_uploads->integer || ( !sv_uploads_from_server->integer && ( strlen( sv_uploads_baseurl->string ) == 0 ) ) )
+	if( !sv_uploads->integer || ( !sv_uploads_from_server->integer && ( sv_uploads_baseurl->string[0] == '\0' ) ) )
 	{
 		SV_DenyDownload( client, "Downloading is not allowed on this server" );
 		return;

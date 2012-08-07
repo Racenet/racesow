@@ -19,19 +19,24 @@ namespace
 }
 namespace WSWUI
 {
-
 	GameTypesDataSource::GameTypesDataSource():Rocket::Controls::DataSource("gametypes_source")
 	{
-      // Gametypes will appear in the list in the same order they appear in the
-      // `gameTypes' vector. We want the "stock" gametypes to appear BEFORE any
-      // other gametypes, so we'll prepopulate `gameTypes' with them
+		// Gametypes will appear in the list in the same order they appear in the
+		// `gameTypes' vector. We want the "stock" gametypes to appear BEFORE any
+		// other gametypes, so we'll prepopulate `gameTypes' with them
 		gameTypes.push_back(std::make_pair("dm", "Deathmatch"));
+		gameTypes.push_back(std::make_pair("ffa", "Free for All"));
 		gameTypes.push_back(std::make_pair("duel", "Duel"));
 		gameTypes.push_back(std::make_pair("tdm", "Team Deathmatch"));
 		gameTypes.push_back(std::make_pair("ctf", "Capture the Flag"));
 		gameTypes.push_back(std::make_pair("race", "Race"));
 		gameTypes.push_back(std::make_pair("ca", "Clan Arena"));
-		
+		gameTypes.push_back(std::make_pair("bomb", "Bomb and Defuse"));
+		gameTypes.push_back(std::make_pair("ctftactics", "CTF: Tactics"));
+		gameTypes.push_back(std::make_pair("da", "Duel Arena"));
+		gameTypes.push_back(std::make_pair("headhunt", "Headhunt Deathmatch"));
+		gameTypes.push_back(std::make_pair("tdo", "Team Domination"));
+
 		std::vector<std::string> listedGameTypes;
 		getFileList(listedGameTypes, "progs/gametypes", ".gt");
 

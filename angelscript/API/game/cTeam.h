@@ -1,3 +1,5 @@
+/* funcdefs */
+
 /**
  * cTeam
  */
@@ -15,13 +17,13 @@ public:
 
 	/* object methods */
 	cEntity @ ent( int index );
-	cString @ getName();
-	cString @ getDefaultName();
-	void setName( cString &in );
-	bool isLocked();
-	bool lock();
-	bool unlock();
+	String @ getName() const;
+	String @ getDefaultName() const;
+	void setName( String &in );
+	bool isLocked() const;
+	bool lock() const;
+	bool unlock() const;
 	void clearInvites();
-	int team();
+	int team() const;
 };
 

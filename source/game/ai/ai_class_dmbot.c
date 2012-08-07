@@ -529,7 +529,7 @@ void BOT_DMclass_MoveWander( edict_t *self, usercmd_t *ucmd )
 	// Special check for elevators, stand still until the ride comes to a complete stop.
 	if( self->groundentity && self->groundentity->use == Use_Plat )
 	{
-		if( self->groundentity->moveinfo.state != STATE_UP ||
+		if( self->groundentity->moveinfo.state != STATE_UP &&
 			self->groundentity->moveinfo.state != STATE_DOWN )
 		{
 			self->velocity[0] = 0;

@@ -723,7 +723,7 @@ static void SV_Physics_Toss( edict_t *ent )
 	qboolean wasinwater;
 	qboolean isinwater;
 	vec3_t old_origin;
-	float d, oldSpeed;
+	float oldSpeed;
 
 	// if not a team captain, so movement will be handled elsewhere
 	if( ent->flags & FL_TEAMSLAVE )
@@ -815,21 +815,21 @@ static void SV_Physics_Toss( edict_t *ent )
 
 		if( ent->movetype == MOVETYPE_BOUNCE || ent->movetype == MOVETYPE_BOUNCEGRENADE )
 		{
+			// stop dead on allsolid
+
 			// LA: hopefully will fix grenades bouncing down slopes
 			// method taken from Darkplaces sourcecode
-			if( ISWALKABLEPLANE( &trace.plane ) )
+			if( trace.allsolid || 
+				( ISWALKABLEPLANE( &trace.plane ) && 
+					fabs( DotProduct( trace.plane.normal, ent->velocity ) ) < 60 
+				)
+			)
 			{
-				d = DotProduct( trace.plane.normal, ent->velocity );
-
-				// wsw: Lardase fix for grenade bouncing in stairs
-				if( fabs( d ) < 60 || trace.allsolid )
-				{
-					ent->groundentity = &game.edicts[trace.ent];
-					ent->groundentity_linkcount = ent->groundentity->r.linkcount;
-					VectorClear( ent->velocity );
-					VectorClear( ent->avelocity );
-					G_CallStop( ent );
-				}
+				ent->groundentity = &game.edicts[trace.ent];
+				ent->groundentity_linkcount = ent->groundentity->r.linkcount;
+				VectorClear( ent->velocity );
+				VectorClear( ent->avelocity );
+				G_CallStop( ent );
 			}
 		}
 		else
@@ -841,8 +841,8 @@ static void SV_Physics_Toss( edict_t *ent )
 			if( ent->groundentity )
 			{
 #else
-			// walkable or trapped inside another solid
-			if( ISWALKABLEPLANE( &trace.plane ) || trace.allsolid )
+			// walkable or trapped inside solid brush
+			if( trace.allsolid || ISWALKABLEPLANE( &trace.plane ) )
 			{
 				ent->groundentity = trace.ent < 0 ? world : &game.edicts[trace.ent];
 				ent->groundentity_linkcount = ent->groundentity->r.linkcount;

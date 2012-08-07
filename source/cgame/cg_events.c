@@ -1564,7 +1564,7 @@ static void CG_FirePlayerStateEvents( void )
 		switch( event )
 		{
 		case PSEV_HIT:
-			if( parm < 0 || parm > 6 )
+			if( parm > 6 )
 				break;
 			if( parm < 4 )
 			{        // hit of some caliber

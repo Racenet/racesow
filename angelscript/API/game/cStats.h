@@ -1,3 +1,5 @@
+/* funcdefs */
+
 /**
  * cStats
  */
@@ -24,11 +26,12 @@ public:
 	/* object methods */
 	void setScore( int i );
 	void addScore( int i );
+	void addRound();
 	void clear();
-	int accuracyShots( int ammo );
-	int accuracyHits( int ammo );
-	int accuracyHitsDirect( int ammo );
-	int accuracyHitsAir( int ammo );
-	int accuracyDamage( int ammo );
+	int accuracyShots( int ammo ) const;
+	int accuracyHits( int ammo ) const;
+	int accuracyHitsDirect( int ammo ) const;
+	int accuracyHitsAir( int ammo ) const;
+	int accuracyDamage( int ammo ) const;
 };
 

@@ -239,6 +239,7 @@ static char *SV_ShortInfoString( void )
 	char entry[20];
 	size_t len;
 	int i, count, bots;
+	const char *password;
 
 	bots = 0;
 	count = 0;
@@ -300,9 +301,10 @@ static char *SV_ShortInfoString( void )
 		len = strlen( string );
 	}
 
-	if( ( strlen( Cvar_String( "password" ) ) > 0 ) )
+	password = Cvar_String( "password" );
+	if( password[0] != '\0' )
 	{
-		Q_snprintfz( entry, sizeof( entry ), "p\\\\%i\\\\", ( strlen( Cvar_String( "password" ) ) > 0 ) );
+		Q_snprintfz( entry, sizeof( entry ), "p\\\\1\\\\" );
 		if( MAX_SVCINFOSTRING_LEN - len > strlen( entry ) )
 		{
 			Q_strncatz( string, entry, sizeof( string ) );

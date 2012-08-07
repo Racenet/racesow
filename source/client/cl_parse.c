@@ -362,7 +362,7 @@ static size_t CL_WebDownloadReadCb( const void *buf, size_t numb, float percenta
 		return;
 	}
 
-	if( allow_serverdownload == qfalse && strlen( url ) == 0 )
+	if( allow_serverdownload == qfalse && url[0] == '\0' )
 	{
 		Com_Printf( "Neither server or web download provided by the server\n" );
 		CL_DownloadDone();
@@ -528,7 +528,7 @@ static size_t CL_WebDownloadReadCb( const void *buf, size_t numb, float percenta
 	}
 
 	cls.download.baseoffset = cls.download.offset = FS_FOpenBaseFile( cls.download.tempname, &cls.download.filenum, FS_APPEND );
-	if( cls.download.offset < 0 )
+	if( !cls.download.filenum )
 	{
 		Com_Printf( "Can't download, couldn't open %s for writing\n", cls.download.tempname );
 
@@ -710,13 +710,6 @@ static void CL_ParseDownload( msg_t *msg )
 	svFilename = MSG_ReadString( msg );
 	offset = MSG_ReadLong( msg );
 	size = MSG_ReadLong( msg );
-
-	if( size < 0 )
-	{
-		Com_Printf( "Error: Invalid size on a download message\n" );
-		CL_RetryDownload();
-		return;
-	}
 
 	if( msg->readcount + size > msg->cursize )
 	{

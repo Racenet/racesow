@@ -1,3 +1,5 @@
+/* funcdefs */
+
 /**
  * cClient
  */
@@ -15,7 +17,10 @@ public:
 	const int zoomFov;
 	const bool isOperator;
 	const uint queueTimeStamp;
+//racesow
+//	const int muted;
 	int muted;
+//!racesow
 	float armor;
 	uint gunbladeChargeTimeStamp;
 	const bool chaseActive;
@@ -28,39 +33,43 @@ public:
 	const int16 pendingWeapon;
 	const int16 pmoveFeatures;
 	bool takeStun;
+	uint lastActivity;
 
 	/* object behaviors */
 	cClient @ f(); /* factory */ 
 
 	/* object methods */
-	int playerNum();
-	bool isReady();
-	bool isBot();
-	cBot @ getBot();
-	int state();
+	int playerNum() const;
+	bool isReady() const;
+	bool isBot() const;
+	cBot @ getBot() const;
+	int state() const;
 	void respawn( bool ghost );
 	void clearPlayerStateEvents();
-	cString @ getName();
-	cString @ getClanName();
-	cEntity @ getEnt();
-	int inventoryCount( int tag );
+	String @ getName() const;
+	String @ getClanName() const;
+	cEntity @ getEnt() const;
+	int inventoryCount( int tag ) const;
 	void inventorySetCount( int tag, int count );
 	void inventoryGiveItem( int tag, int count );
 	void inventoryGiveItem( int tag );
 	void inventoryClear();
-	bool canSelectWeapon( int tag );
+	bool canSelectWeapon( int tag ) const;
 	void selectWeapon( int tag );
-	void addAward( cString &in );
-	void execGameCommand( cString &in );
+	void addAward( const String &in );
+	void addMetaAward( const String &in );
+	void execGameCommand( const String &in );
 	void setHUDStat( int stat, int value );
-	int getHUDStat( int stat );
+	int getHUDStat( int stat ) const;
 	void setPMoveFeatures( uint bitmask );
 	void setPMoveMaxSpeed( float speed );
 	void setPMoveJumpSpeed( float speed );
 	void setPMoveDashSpeed( float speed );
-	cString @ getUserInfoKey( cString &in );
-	void printMessage( cString &in );
-	void chaseCam( cString @, bool teamOnly );
+	String @ getUserInfoKey( const String &in ) const;
+	void printMessage( const String &in );
+	void chaseCam( String @, bool teamOnly );
 	void setChaseActive( bool active );
+	void newRaceRun( int numSectors );
+	void setRaceTime( int sector, uint time );
 };
 

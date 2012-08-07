@@ -1499,6 +1499,27 @@ void G_GlobalSound( int channel, int soundindex )
 	G_PositionedSound( NULL, channel, soundindex, ATTN_NONE );
 }
 
+/*
+* G_LocalSound
+*/
+void G_LocalSound( edict_t *owner, int channel, int soundindex )
+{
+	edict_t *ent;
+
+	if( !soundindex ) {
+		return;
+	}
+	if( ISEVENTENTITY( &owner->s ) ) {
+		return; // event entities can't be owner of sound entities
+	}
+
+	ent = _G_SpawnSound( channel, soundindex, ATTN_NONE );
+	ent->s.ownerNum = ENTNUM( owner );
+	ent->r.svflags |= SVF_ONLYOWNER|SVF_BROADCAST;
+
+	GClip_LinkEntity( ent );
+}
+
 //==============================================================================
 //
 //Kill box

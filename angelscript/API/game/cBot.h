@@ -1,3 +1,5 @@
+/* funcdefs */
+
 /**
  * cBot
  */
@@ -21,7 +23,7 @@ public:
 	void clearGoalWeights();
 	void resetGoalWeights();
 	void setGoalWeight( int i, float weight );
-	cEntity @ getGoalEnt( int i );
-	float getItemWeight( cItem @item );
+	cEntity @ getGoalEnt( int i ) const;
+	float getItemWeight( cItem @item ) const;
 };
 

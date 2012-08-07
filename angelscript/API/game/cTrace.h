@@ -1,3 +1,5 @@
+/* funcdefs */
+
 /**
  * cTrace
  */
@@ -16,11 +18,12 @@ public:
 	const int16 planeSignBits;
 
 	/* object behaviors */
-	cTrace@ f(); /* factory */ 
+	void f();
+	void f(const cTrace &in);
 
 	/* object methods */
-	bool doTrace( cVec3 &in, cVec3 &, cVec3 &, cVec3 &in, int ignore, int contentMask );
-	cVec3 @ getEndPos();
-	cVec3 @ getPlaneNormal();
+	bool doTrace( const Vec3 &in, const Vec3 &in, const Vec3 &in, const Vec3 &in, int ignore, int contentMask ) const;
+	Vec3 getEndPos() const;
+	Vec3 getPlaneNormal() const;
 };
 

@@ -1922,7 +1922,7 @@ void Mod_LoadQ2BrushModel( model_t *mod, model_t *parent, void *buffer, bspForma
 	mod_base = ( qbyte * )header;
 
 	// swap all the lumps
-	for( i = 0; i < sizeof( header )/4; i++ )
+	for( i = 0; i < sizeof( *header )/4; i++ )
 		( (int *)header )[i] = LittleLong( ( (int *)header )[i] );
 
 	// load into heap

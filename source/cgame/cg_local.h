@@ -549,6 +549,7 @@ typedef struct
 	vec3_t lightingOrigin;
 
 	qboolean showScoreboard;            // demos and multipov
+	qboolean specStateChanged;
 
 	unsigned int multiviewPlayerNum;       // for multipov chasing, takes effect on next snap
 

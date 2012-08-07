@@ -911,6 +911,10 @@ static qboolean SNAP_SnapCullEntity( cmodel_state_t *cms, edict_t *ent, edict_t 
 	if( ( ent->r.svflags & SVF_ONLYTEAM ) && ( clent && ent->s.team != clent->s.team ) )
 		return qtrue;
 
+	// send only to owner
+	if( ( ent->r.svflags & SVF_ONLYOWNER ) && ( clent && ent->s.ownerNum != clent->s.number ) )
+		return qtrue;
+
 	if( ent->r.svflags & SVF_BROADCAST )  // send to everyone
 		return qfalse;
 

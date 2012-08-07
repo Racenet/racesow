@@ -235,7 +235,7 @@ void GL_SetState( int state )
 
 	if( diff & GLSTATE_ALPHAFUNC )
 	{
-		int alphafunc = state & state & GLSTATE_ALPHAFUNC;
+		int alphafunc = state & GLSTATE_ALPHAFUNC;
 
 		if( alphafunc )
 		{

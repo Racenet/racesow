@@ -510,10 +510,10 @@ LONG WINAPI MainWndProc(
 		AppFocused = qtrue;
 		break;
 
-		// wsw : pb : new keyboard code using WM_CHAR event
+	// wsw : pb : new keyboard code using WM_CHAR event
 	case WM_CHAR:
 		{
-			int key = (wParam >= 0 && wParam <= 255) ? wParam : 0;
+			int key = (wParam <= 255) ? wParam : 0;
 			Key_CharEvent( key, wParam );
 		}
 		break;

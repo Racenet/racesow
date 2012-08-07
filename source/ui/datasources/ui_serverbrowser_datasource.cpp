@@ -407,7 +407,7 @@ void ServerInfoFetcher::startQuery( const std::string &adr )
 	activeQueries.push_back( std::make_pair( trap::Milliseconds(), adr ) );
 
 	// execute command to initiate the query
-	trap::Cmd_ExecuteText( EXEC_APPEND, va( "pingserver %s;", adr.c_str() ) );
+	trap::Cmd_ExecuteText( EXEC_APPEND, va( "pingserver %s\n", adr.c_str() ) );
 
 //	Com_Printf("startQuery: %s\n", adr.c_str() );
 }
@@ -602,6 +602,7 @@ void ServerBrowserDataSource::updateFrame()
 void ServerBrowserDataSource::startFullUpdate( void )
 {
 	// ch : removed de-activation by time
+	std::string gameName = trap::Cvar_String( "gamename" );
 
 	active = true;
 
@@ -617,13 +618,13 @@ void ServerBrowserDataSource::startFullUpdate( void )
 	tokenize( trap::Cvar_String("masterservers"), ' ', masterServers );
 
 	for( std::vector<std::string>::iterator it = masterServers.begin(); it != masterServers.end(); it++ ) {
-		std::string queryString =  std::string ("requestservers global ") + *it + " Warsow full empty";
+		std::string queryString = std::string ("requestservers global ") + *it + " " + gameName + " full empty\n";
 
 		trap::Cmd_ExecuteText( EXEC_APPEND, queryString.c_str() );
 	}
 
 	// query for LAN servers too
-	trap::Cmd_ExecuteText( EXEC_APPEND, "requestservers local" );
+	trap::Cmd_ExecuteText( EXEC_APPEND, "requestservers local full empty\n" );
 
 	for( ReferenceListMap::iterator it = referenceListMap.begin(); it != referenceListMap.end(); it++ ) {
 		size_t size = it->second.size();

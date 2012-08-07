@@ -1357,11 +1357,12 @@ void G_PredictedEvent( int entNum, int ev, int parm )
 */
 static void ClientMakePlrkeys( gclient_t *client, usercmd_t *ucmd )
 {
-	client_snapreset_t *clsnap = &client->resp.snap;
+	client_snapreset_t *clsnap;
 
 	if( !client )
 		return;
 
+	clsnap = &client->resp.snap;
 	clsnap->plrkeys = 0; // clear it first
 
 	if( ucmd->forwardmove > 0 )

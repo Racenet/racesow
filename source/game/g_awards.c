@@ -229,7 +229,7 @@ void G_AwardPlayerHit( edict_t *targ, edict_t *attacker, int mod )
 			//else if( flag == COMBO_FLAG( WEAP_ROCKETLAUNCHER ) )  // to RL
 			//	G_PlayerAward( attacker, S_COLOR_BLUE "RL to RL!" );
 		}
-		else if( attacker->r.client->resp.awardInfo.combo[PLAYERNUM( targ )] == COMBO_FLAG( WEAP_ROCKETLAUNCHER ) && G_IsDead( targ ) ) // GL...
+		else if( attacker->r.client->resp.awardInfo.combo[PLAYERNUM( targ )] == COMBO_FLAG( WEAP_GRENADELAUNCHER ) && G_IsDead( targ ) ) // GL...
 		{
 			if( flag == COMBO_FLAG( WEAP_ELECTROBOLT ) )  // to EB
 				G_PlayerAward( attacker, S_COLOR_BLUE "GL to EB!" );

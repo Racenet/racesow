@@ -1912,7 +1912,7 @@ static int CG_LFuncDrawPlayername( struct cg_layoutnode_s *commandnode, struct c
 	if( cgs.demoTutorial )
 		return qtrue;
 
-	if( index >= 0 && ( index < gs.maxclients + 1 ) && cgs.clientInfo[index].name )
+	if( index >= 0 && ( index < gs.maxclients + 1 ) && cgs.clientInfo[index].name[0] )
 	{
 		trap_SCR_DrawString( layout_cursor_x, layout_cursor_y, layout_cursor_align, cgs.clientInfo[index].name, layout_cursor_font, layout_cursor_color );
 		return qtrue;

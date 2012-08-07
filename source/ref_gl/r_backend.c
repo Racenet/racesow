@@ -940,9 +940,9 @@ static void R_DeformVertices( void )
 				quad[1] = ( float * )( inVertsArray + elemsArray[k+1] );
 				quad[2] = ( float * )( inVertsArray + elemsArray[k+2] );
 
-				for( j = 2; j >= 0; j-- )
+				for( j = 3; j >= 1; j-- )
 				{
-					quad[3] = ( float * )( inVertsArray + elemsArray[k+3+j] );
+					quad[3] = ( float * )( inVertsArray + elemsArray[k+3+j-1] );
 
 					if( !VectorCompare( quad[3], quad[0] ) &&
 						!VectorCompare( quad[3], quad[1] ) &&
@@ -1075,9 +1075,9 @@ static void R_DeformVertices( void )
 					quad[1] = ( float * )( inVertsArray + elemsArray[k+1] );
 					quad[2] = ( float * )( inVertsArray + elemsArray[k+2] );
 
-					for( j = 2; j >= 0; j-- )
+					for( j = 3; j >= 1; j-- )
 					{
-						quad[3] = ( float * )( inVertsArray + elemsArray[k+3+j] );
+						quad[3] = ( float * )( inVertsArray + elemsArray[k+3+j-1] );
 
 						if( !VectorCompare( quad[3], quad[0] ) &&
 							!VectorCompare( quad[3], quad[1] ) &&

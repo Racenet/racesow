@@ -51,7 +51,7 @@ static void CG_DrawAlignPic( int x, int y, int width, int height, int align, con
 /*
 * CG_PingColor
 */
-static void CG_PingColor( int ping, vec3_t color )
+static void CG_PingColor( int ping, vec4_t color )
 {
 	if( ping < 70 )
 		Vector4Copy( colorGreen, color );
@@ -99,7 +99,7 @@ static void SCB_ParsePlayerStats( const char **s )
 		shot_total = CG_ParseValue( s );
 		if( shot_total == 0 )
 			continue;
-		hit_total = hit_strong = CG_ParseValue( s );
+		hit_total = CG_ParseValue( s );
 
 		shot_strong = shot_total;
 		hit_strong = hit_total;

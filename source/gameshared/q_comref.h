@@ -263,6 +263,7 @@ typedef struct
 #define SVF_PROJECTILE			0x00000100		// sets s.solid to SOLID_NOT for prediction
 #define SVF_ONLYTEAM			0x00000200		// this entity is only transmited to clients with the same ent->s.team value
 #define SVF_FORCEOWNER			0x00000400		// this entity forces the entity at s.ownerNum to be included in the snapshot
+#define SVF_ONLYOWNER			0x00000800		// this entity is only transmitted to its owner
 
 // edict->solid values
 typedef enum
