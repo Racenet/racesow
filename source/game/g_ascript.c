@@ -2150,6 +2150,7 @@ static const asProperty_t gameclient_Properties[] =
 	{ ASLIB_PROPERTY_DECL(int, chaseFollowMode), ASLIB_FOFFSET(gclient_t, resp.chase.followmode) },
 	{ ASLIB_PROPERTY_DECL(const bool, coach), ASLIB_FOFFSET(gclient_t, teamstate.is_coach) },
 	{ ASLIB_PROPERTY_DECL(const int, ping), ASLIB_FOFFSET(gclient_t, r.ping) },
+	{ ASLIB_PROPERTY_DECL(const uint, uCmdTimeStamp), ASLIB_FOFFSET(gclient_t, ucmd.serverTimeStamp) }, //racesow
 	{ ASLIB_PROPERTY_DECL(const int16, weapon), ASLIB_FOFFSET(gclient_t, ps.stats[STAT_WEAPON]) },
 	{ ASLIB_PROPERTY_DECL(const int16, pendingWeapon), ASLIB_FOFFSET(gclient_t, ps.stats[STAT_PENDING_WEAPON]) },
 	{ ASLIB_PROPERTY_DECL(const int16, pmoveFeatures), ASLIB_FOFFSET(gclient_t, ps.pmove.stats[PM_STAT_FEATURES]) },

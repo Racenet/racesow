@@ -29,6 +29,7 @@ public:
 	int chaseFollowMode;
 	const bool coach;
 	const int ping;
+	const uint uCmdTimeStamp; // racesow
 	const int16 weapon;
 	const int16 pendingWeapon;
 	const int16 pmoveFeatures;
