@@ -247,7 +247,6 @@ class Racesow_Player
 		this.onQuad = false;
 		this.isWaitingForCommand = false;
 		this.bestRaceTime = 0;
-		this.resetAuth();
 		this.auth.setPlayer(@this);
 		this.demo.setPlayer(@this);
 		this.bestCheckPoints.resize( numCheckpoints );
@@ -268,14 +267,19 @@ class Racesow_Player
 		this.printWelcomeMessage = false;
 		this.highestSpeed = 0;
 		this.state = "";
+
+		this.auth.setName(client.getUserInfoKey(rs_authField_Name.string));
+		this.auth.setPass(client.getUserInfoKey(rs_authField_Pass.string));
+		this.auth.setToken(client.getUserInfoKey(rs_authField_Token.string));
 	}
 
 	/**
 	 * Destructor
 	 *
 	 */
-    ~Racesow_Player()
+	~Racesow_Player()
 	{
+		this.resetAuth();
 	}
 
 	/**

@@ -195,12 +195,10 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 		}
 		else if ( score_event == "enterGame" )
 		{
-            player.getAuth().setName(client.getUserInfoKey(rs_authField_Name.string));
-            player.getAuth().setPass(client.getUserInfoKey(rs_authField_Pass.string));
-            player.getAuth().setToken(client.getUserInfoKey(rs_authField_Token.string));
-
-            player.appear();
-            RS_ircSendMessage( player.getName().removeColorTokens() + " entered the game" );
+			//FIXME: This could be problematic when done in the Players Constructor because it adds a reference to the player object
+			// maybe it can be fixed by refactoring -K1ll
+			player.appear();
+			RS_ircSendMessage( player.getName().removeColorTokens() + " entered the game" );
 		}
 		else if ( score_event == "disconnect" )
 		{
