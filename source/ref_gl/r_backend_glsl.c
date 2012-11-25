@@ -87,15 +87,15 @@ static r_glslfeat_t R_BonesTransformsToProgramFeatures( void )
 /*
 * R_DlightbitsToProgramFeatures
 */
-static r_glslfeat_t R_DlightbitsToProgramFeatures( void )
+static r_glslfeat_t R_DlightbitsToProgramFeatures( unsigned int dlightBits )
 {
 	int numDlights;
 
-	if( !r_back.currentDlightBits ) {
+	if( !dlightBits ) {
 		return 0;
 	}
 	
-	numDlights = Q_bitcount( r_back.currentDlightBits );
+	numDlights = Q_bitcount( dlightBits );
 	if( r_lighting_maxglsldlights->integer && numDlights > r_lighting_maxglsldlights->integer ) {
 		numDlights = r_lighting_maxglsldlights->integer;
 	}
@@ -110,6 +110,37 @@ static r_glslfeat_t R_DlightbitsToProgramFeatures( void )
 		return GLSL_COMMON_APPLY_DLIGHTS_16;
 	}
 	return GLSL_COMMON_APPLY_DLIGHTS_32;
+}
+
+/*
+* R_ShadowbitsToProgramFeatures
+*
+* For given dlightbits, return matching GLSL program features
+*/
+static r_glslfeat_t R_ShadowbitsToProgramFeatures( unsigned int shadowBits )
+{
+	int i, numShadows;
+	r_glslfeat_t feat;
+
+	if( !shadowBits ) {
+		return 0;
+	}
+	
+	numShadows = Q_bitcount( shadowBits );
+	
+	if( numShadows == 1 ) {
+		return 0;
+	}
+
+	feat = GLSL_SHADOWMAP_APPLY_SHADOW2;
+	for( i = 2; i < GLSL_SHADOWMAP_LIMIT; i++ ) {
+		if( numShadows == i ) {
+			break;
+		}
+		feat <<= 1;
+	}
+
+	return feat;
 }
 
 /*
@@ -214,7 +245,7 @@ static void R_RenderMeshGLSL_Material( r_glslfeat_t programFeatures )
 
 	// add dynamic lights
 	if( r_back.currentDlightBits ) {
-		programFeatures |= R_DlightbitsToProgramFeatures();
+		programFeatures |= R_DlightbitsToProgramFeatures( r_back.currentDlightBits );
 	}
 
 	pass->tcgen = TC_GEN_BASE;
@@ -550,21 +581,28 @@ static void R_RenderMeshGLSL_Distortion( r_glslfeat_t programFeatures )
 }
 
 /*
-* R_RenderMeshGLSL_Shadowmap
+* R_RenderMeshGLSL_ShadowmapBatch
+*
+* Renders a batch of shadowmap groups in one pass
 */
-static void R_RenderMeshGLSL_Shadowmap( r_glslfeat_t programFeatures )
+static void R_RenderMeshGLSL_ShadowmapArray( r_glslfeat_t programFeatures, 
+		int numShadows, shadowGroup_t **shadowGroups, int *scissor )
 {
 	int i;
 	int state;
-	int scissor[4], old_scissor[4];
 	int program, object;
-	vec3_t tdir, lightDir;
 	shaderpass_t *pass = r_back.accumPasses[0];
 
-	if( r_shadows_pcf->integer )
-		programFeatures |= GLSL_SHADOWMAP_APPLY_PCF;
-	if( r_shadows_dither->integer )
-		programFeatures |= GLSL_SHADOWMAP_APPLY_DITHER;
+	assert( numShadows <= GLSL_SHADOWMAP_LIMIT );
+
+	if( numShadows > GLSL_SHADOWMAP_LIMIT ) {
+		numShadows = GLSL_SHADOWMAP_LIMIT;
+	}
+
+	// this will tell the program how many shaders we want to render
+	if( numShadows > 1 ) {
+		programFeatures |= GLSL_SHADOWMAP_APPLY_SHADOW2 << (numShadows - 2);
+	}
 
 	// update uniforms
 	program = R_RegisterGLSLProgram( pass->program_type, pass->program, NULL, NULL, NULL, 0, programFeatures );
@@ -572,52 +610,98 @@ static void R_RenderMeshGLSL_Shadowmap( r_glslfeat_t programFeatures )
 	if( !object )
 		return;
 
-	Vector4Copy( ri.scissor, old_scissor );
-
-	for( i = 0, r_back.currentCastGroup = r_shadowGroups; i < r_numShadowGroups; i++, r_back.currentCastGroup++ )
-	{
-		if( !( r_back.currentShadowBits & r_back.currentCastGroup->bit ) )
-			continue;
-
-		// project the bounding box on to screen then use scissor test
-		// so that fragment shader isn't run for unshadowed regions
-		if( !R_ScissorForBounds( r_back.currentCastGroup->visCorners, 
-			&scissor[0], &scissor[1], &scissor[2], &scissor[3] ) )
-			continue;
+	for( i = 0; i < numShadows; i++ ) {
+		r_back.currentCastGroup = shadowGroups[i];
 
 		GL_Scissor( ri.refdef.x + scissor[0], ri.refdef.y + scissor[1], scissor[2], scissor[3] );
 
-		R_BindShaderpass( pass, r_back.currentCastGroup->depthTexture, 0, NULL );
+		R_BindShaderpass( pass, r_back.currentCastGroup->depthTexture, i, NULL );
 
 		GL_TexEnv( GL_MODULATE );
 
 		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE_ARB );
 		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL );
 
-		// calculate the fragment color
-		R_ModifyColor( pass, qfalse, qfalse );
+		if( !i ) {
+			// set shaderpass state (blending, depthwrite, etc)
+			state = r_back.currentShaderState | ( pass->flags & r_back.currentShaderPassMask ) | GLSTATE_BLEND_MTEX;
+			GL_SetState( state );
+		}
+	}
 
-		// set shaderpass state (blending, depthwrite, etc)
-		state = r_back.currentShaderState | ( pass->flags & r_back.currentShaderPassMask ) | GLSTATE_BLEND_MTEX;
-		GL_SetState( state );
+	qglUseProgramObjectARB( object );
 
-		qglUseProgramObjectARB( object );
+	R_UpdateProgramShadowmapUniforms( program, ri.currententity->axis, numShadows, shadowGroups );
 
-		VectorCopy( r_back.currentCastGroup->direction, tdir );
-		Matrix_TransformVector( ri.currententity->axis, tdir, lightDir );
+	R_FlushArrays();
 
-		R_UpdateProgramUniforms( program, ri.viewOrigin, vec3_origin, lightDir,
-			r_back.currentCastGroup->lightAmbient, NULL, NULL, qtrue,
-			r_back.currentCastGroup->depthTexture->upload_width, r_back.currentCastGroup->depthTexture->upload_height,
-			r_back.currentCastGroup->projDist,
-			0, 0, 
-			colorArrayCopy[0], r_back.overBrightBits, r_back.currentShaderTime, r_back.entityColor );
+	qglUseProgramObjectARB( 0 );
 
-		R_FlushArrays();
-
-		qglUseProgramObjectARB( 0 );
-
+	for( i--; i >= 0; i-- ) {
+		GL_SelectTexture( i );
 		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
+	}
+}
+
+/*
+* R_RenderMeshGLSL_Shadowmap
+*
+* Batch shadow groups so we can render up to 4 in one pass. 
+* The downside of this approach is that scissoring won't be as useful.
+*/
+static void R_RenderMeshGLSL_Shadowmap( r_glslfeat_t programFeatures )
+{
+	int i;
+	int scissor[4], old_scissor[4];
+	int numShadows;
+	shadowGroup_t *group, *shadowGroups[GLSL_SHADOWMAP_LIMIT];
+
+	if( r_shadows_pcf->integer )
+		programFeatures |= GLSL_SHADOWMAP_APPLY_PCF;
+	if( r_shadows_dither->integer )
+		programFeatures |= GLSL_SHADOWMAP_APPLY_DITHER;
+
+	Vector4Copy( ri.scissor, old_scissor );
+
+	numShadows = 0;
+	for( i = 0, group = r_shadowGroups; i < r_numShadowGroups; i++, group++ )
+	{
+		int groupScissor[4];
+
+		if( !( r_back.currentShadowBits & group->bit ) ) {
+			continue;
+		}
+
+		// project the bounding box on to screen then use scissor test
+		// so that fragment shader isn't run for unshadowed regions
+		if( !R_ScissorForBounds( group->visCorners, 
+			&groupScissor[0], &groupScissor[1], &groupScissor[2], &groupScissor[3] ) )
+			continue;
+
+		if( !numShadows ) {
+			Vector4Copy( groupScissor, scissor );
+		}
+		else {
+			int min_x, min_y;
+
+			min_x = min( scissor[0], groupScissor[0] );
+			min_y = max( scissor[1], groupScissor[1] );
+
+			scissor[0] = min_x;
+			scissor[1] = min_y;
+			scissor[2] = max( min_x + scissor[2], groupScissor[0] + groupScissor[2] ) - min_x;
+			scissor[3] = max( min_y + scissor[3], groupScissor[1] + groupScissor[3] ) - min_y;
+		}
+
+		shadowGroups[numShadows++] = group;
+		if( numShadows >= min( GLSL_SHADOWMAP_LIMIT, r_temp1->integer) ) {
+			R_RenderMeshGLSL_ShadowmapArray( programFeatures, numShadows, shadowGroups, scissor );
+			numShadows = 0;
+		}
+	}
+
+	if( numShadows > 0 ) {
+		R_RenderMeshGLSL_ShadowmapArray( programFeatures, numShadows, shadowGroups, scissor );
 	}
 
 	GL_Scissor( old_scissor[0], old_scissor[1], old_scissor[2], old_scissor[3] );
@@ -741,7 +825,7 @@ static void R_RenderMeshGLSL_DynamicLights( r_glslfeat_t programFeatures )
 
 	if( ri.params & RP_CLIPPLANE )
 		programFeatures |= GLSL_COMMON_APPLY_CLIPPING;
-	programFeatures |= R_DlightbitsToProgramFeatures();
+	programFeatures |= R_DlightbitsToProgramFeatures( r_back.currentDlightBits );
 
 	GL_SelectTexture( 0 );
 	GL_SetTexCoordArrayMode( 0 );
@@ -819,7 +903,7 @@ static void R_RenderMeshGLSL_Q3AShader( r_glslfeat_t programFeatures )
 	if( isLightmap ) {
 		// add dynamic lights
 		if( r_back.currentDlightBits ) {
-			programFeatures |= R_DlightbitsToProgramFeatures();
+			programFeatures |= R_DlightbitsToProgramFeatures( r_back.currentDlightBits );
 		}
 		if( ( ri.params & RP_DRAWFLAT ) && !( r_back.currentShader->flags & SHADER_NODRAWFLAT ) ) {
 			programFeatures |= GLSL_COMMON_APPLY_DRAWFLAT;

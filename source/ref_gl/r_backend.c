@@ -2636,7 +2636,7 @@ void R_RenderMeshBuffer( const meshbuffer_t *mb, const rbackAnimData_t *animData
 			r_back.superLightStyle = &r_worldbrushmodel->superLightStyles[((mb->sortkey >> 10) - 1) & (MAX_SUPER_STYLES-1)];
 		}
 		else {
-			r_worldbrushmodel = NULL;
+			r_back.superLightStyle = NULL;
 		}
 
 		// whether we should special dynamic lighting pass(es). some GLSL passes

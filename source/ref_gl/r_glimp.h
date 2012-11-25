@@ -63,7 +63,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //====================================================================
 
-extern cvar_t *r_colorbits;
 extern cvar_t *r_stencilbits;
 extern cvar_t *gl_drawbuffer;
 extern cvar_t *gl_driver;

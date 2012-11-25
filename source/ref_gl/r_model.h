@@ -132,7 +132,7 @@ typedef struct
 	float			texMatrix[2][2];
 } mlightmapRect_t;
 
-typedef struct
+typedef struct mbrushmodel_s
 {
 	const bspFormatDesc_t *format;
 
@@ -240,7 +240,7 @@ typedef struct
 	mesh_vbo_t		*vbo;
 } maliasmesh_t;
 
-typedef struct
+typedef struct maliasmodel_s
 {
 	int				numframes;
 	maliasframe_t	*frames;
@@ -323,7 +323,7 @@ typedef struct
 	bonepose_t		*boneposes;
 } mskframe_t;
 
-typedef struct
+typedef struct mskmodel_s
 {
 	unsigned int	numbones;
 	mskbone_t		*bones;

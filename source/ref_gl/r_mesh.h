@@ -176,7 +176,7 @@ enum
 	SKYBOX_BOTTOM		// not used for skydome, but is used for skybox
 };
 
-typedef struct
+typedef struct skydome_s
 {
 	mesh_t				*meshes;
 	vec2_t				*sphereStCoords[5];

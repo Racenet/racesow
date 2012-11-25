@@ -339,7 +339,6 @@ extern cvar_t *r_lighting_diffuse2heightmap;
 extern cvar_t *r_lighting_specular;
 extern cvar_t *r_lighting_glossintensity;
 extern cvar_t *r_lighting_glossexponent;
-extern cvar_t *r_lighting_models_followdeluxe;
 extern cvar_t *r_lighting_ambientscale;
 extern cvar_t *r_lighting_directedscale;
 extern cvar_t *r_lighting_packlightmaps;
@@ -763,8 +762,12 @@ enum
 #define GLSL_DISTORTION_APPLY_REFRACTION		GLSL_BIT(36)
 
 // shadowmaps
+#define GLSL_SHADOWMAP_LIMIT					4 // shadowmaps per program limit
 #define GLSL_SHADOWMAP_APPLY_DITHER				GLSL_BIT(32)
 #define GLSL_SHADOWMAP_APPLY_PCF				GLSL_BIT(33)
+#define GLSL_SHADOWMAP_APPLY_SHADOW2			GLSL_BIT(34)
+#define GLSL_SHADOWMAP_APPLY_SHADOW3			GLSL_BIT(35)
+#define GLSL_SHADOWMAP_APPLY_SHADOW4			GLSL_BIT(36)
 
 // outlines
 #define GLSL_OUTLINE_APPLY_OUTLINES_CUTOFF		GLSL_BIT(32)
@@ -796,6 +799,7 @@ void		R_UpdateProgramPlanarShadowParams( int elem, float shaderTime, const vec3_
 void		R_UpdateProgramCellshadeParams( int elem, float shaderTime, const vec3_t eyeOrigin, const vec3_t entDist, const qbyte *constColor, int overbrightBits, const qbyte *entityColor, mat4x4_t reflectionMatrix );
 void		R_UpdateProgramBonesParams( int elem, unsigned int numBones, dualquat_t *animDualQuat );
 void		R_UpdateDrawFlatParams( int elem, const vec3_t wallColor, const vec3_t floorColor );
+void		R_UpdateProgramShadowmapUniforms( int elem, vec3_t entityAxis[3], int numShadows, const shadowGroup_t **groups );
 void		R_ShutdownGLSLPrograms( void );
 void		R_ProgramList_f( void );
 void		R_ProgramDump_f( void );

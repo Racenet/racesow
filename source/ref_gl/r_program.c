@@ -96,7 +96,11 @@ typedef struct glsl_program_s
 					*locDualQuats,
 
 					locWallColor,
-					locFloorColor
+					locFloorColor,
+
+					locShadowLightAmbient[GLSL_SHADOWMAP_LIMIT],
+					locShadowProjDistance[GLSL_SHADOWMAP_LIMIT],
+					locShadowmapTextureParams[GLSL_SHADOWMAP_LIMIT]
 	;
 } glsl_program_t;
 
@@ -488,6 +492,10 @@ static const glsl_feature_t glsl_features_shadowmap[] =
 
 	{ GLSL_SHADOWMAP_APPLY_DITHER, "#define APPLY_DITHER\n", "_dither" },
 	{ GLSL_SHADOWMAP_APPLY_PCF, "#define APPLY_PCF\n", "_pcf" },
+	{ GLSL_SHADOWMAP_APPLY_SHADOW2, "#define MAX_SHADOWS 2\n", "_2" },
+	{ GLSL_SHADOWMAP_APPLY_SHADOW3, "#define MAX_SHADOWS 3\n", "_3" },
+	{ GLSL_SHADOWMAP_APPLY_SHADOW4, "#define MAX_SHADOWS 4\n", "_4" },
+
 
 	{ 0, NULL, NULL }
 };
@@ -899,8 +907,8 @@ GLSL_FOGGEN_OVERLOAD \
 "for (int i = 0; i < MAX_DLIGHTS; i++)\n" \
 "{\n" \
 "myhalf3 STR = myhalf3(DynamicLights[i].Position - v_VertexPosition);\n" \
-"myhalf length = myhalf(length(STR));\n" \
-"myhalf falloff = clamp(1.0 - length / DynamicLights[i].Radius, 0.0, 1.0);\n" \
+"myhalf distance = myhalf(length(STR));\n" \
+"myhalf falloff = clamp(1.0 - distance / DynamicLights[i].Radius, 0.0, 1.0);\n" \
 "\n" \
 "falloff *= falloff;\n" \
 "\n" \
@@ -1504,32 +1512,34 @@ static const char *r_defaultShadowmapGLSLProgram =
 "\n"
 MYHALFTYPES
 "\n"
-"varying vec4 ProjVector;\n"
-"varying float NormalDot;\n"
+"#ifndef MAX_SHADOWS\n"
+"# define MAX_SHADOWS 1\n"
+"#endif\n"
+"\n"
+"varying vec4 ShadowProjVector[MAX_SHADOWS];\n"
 "\n"
 "#ifdef VERTEX_SHADER\n"
 "// Vertex shader\n"
-"\n"
-"uniform vec3 LightDir;\n"
 "\n"
 "void main(void)\n"
 "{\n"
 "\n"
 "vec4 Position = gl_Vertex;\n"
+"gl_Position = gl_ModelViewProjectionMatrix * Position;\n"
 "\n"
 "mat4 textureMatrix;\n"
-"textureMatrix = gl_TextureMatrix[0];\n"
+"for (int i = 0; i < MAX_SHADOWS; i++)\n"
+"{\n"
+"textureMatrix = gl_TextureMatrix[i];\n"
 "\n"
-"gl_Position = gl_ModelViewProjectionMatrix * Position;\n"
-"ProjVector = textureMatrix * Position;\n"
+"ShadowProjVector[i] = textureMatrix * Position;\n"
 "// a trick whish allows us not to perform the\n"
 "// 'shadowmaptc = (shadowmaptc + vec3 (1.0)) * vec3 (0.5)'\n"
 "// computation in the fragment shader\n"
-"ProjVector.xyz = (ProjVector.xyz + vec3(ProjVector.w)) * 0.5;\n"
+"ShadowProjVector[i].xyz = (ShadowProjVector[i].xyz + vec3(ShadowProjVector[i].w)) * 0.5;\n"
+"}\n"
 "\n"
-"NormalDot = dot(gl_Normal, LightDir);\n"
-"\n"
-"gl_FrontColor = gl_Color;\n"
+"gl_FrontColor = vec4(1.0);\n"
 "}\n"
 "\n"
 "#endif // VERTEX_SHADER\n"
@@ -1538,39 +1548,41 @@ MYHALFTYPES
 "#ifdef FRAGMENT_SHADER\n"
 "// Fragment shader\n"
 "\n"
-"uniform myhalf3 LightAmbient;\n"
-"\n"
-"uniform vec4 TextureParams;\n"
-"uniform float ProjDistance;\n"
-"\n"
-"uniform sampler2DShadow ShadowmapTexture;\n"
+"uniform myhalf3 ShadowLightAmbient[MAX_SHADOWS];\n"
+"uniform float ShadowProjDistance[MAX_SHADOWS];\n"
+"uniform vec4 ShadowmapTextureParams[MAX_SHADOWS];\n"
+"uniform sampler2DShadow ShadowmapTexture[MAX_SHADOWS];\n"
 "\n"
 "void main(void)\n"
 "{\n"
+"myhalf finalcolor = myhalf(1.0);\n"
+"\n"
+"for (int i = 0; i < MAX_SHADOWS; i++)\n"
+"{\n"
 "myhalf color = myhalf(1.0);\n"
 "\n"
-"myhalf d = step(ProjVector.w, 32.0) + step(ProjDistance, ProjVector.w);\n"
+"myhalf d = step(ShadowProjVector[i].w, 32.0) + step(ShadowProjDistance[i], ShadowProjVector[i].w);\n"
 "\n"
 "\n"
 "// most of what follows was written by eihrul\n"
 "\n"
-"float dtW = TextureParams.z; // .x - inverse texture width\n"
-"float dtH = TextureParams.w; // .w - inverse texture height\n"
+"float dtW = ShadowmapTextureParams[i].z; // .x - inverse texture width\n"
+"float dtH = ShadowmapTextureParams[i].w; // .w - inverse texture height\n"
 "\n"
-"vec3 shadowmaptc = vec3 (ProjVector.xyz / ProjVector.w);\n"
+"vec3 shadowmaptc = vec3 (ShadowProjVector[i].xyz / ShadowProjVector[i].w);\n"
 "//shadowmaptc = (shadowmaptc + vec3 (1.0)) * vec3 (0.5);\n"
-"shadowmaptc.x = shadowmaptc.s * TextureParams.x; // .x - texture width\n"
-"shadowmaptc.y = shadowmaptc.t * TextureParams.y; // .y - texture height\n"
+"shadowmaptc.x = shadowmaptc.s * ShadowmapTextureParams[i].x; // .x - texture width\n"
+"shadowmaptc.y = shadowmaptc.t * ShadowmapTextureParams[i].y; // .y - texture height\n"
 "shadowmaptc.z = clamp(shadowmaptc.r, 0.0, 1.0);\n"
-"shadowmaptc.xy = vec2(clamp(shadowmaptc.x, dtW, TextureParams.x - dtW), clamp(shadowmaptc.y, dtH, TextureParams.y - dtH));\n"
+"shadowmaptc.xy = vec2(clamp(shadowmaptc.x, dtW, ShadowmapTextureParams[i].x - dtW), clamp(shadowmaptc.y, dtH, ShadowmapTextureParams[i].y - dtH));\n"
 "\n"
-"vec2 ShadowMap_TextureScale = TextureParams.zw;\n"
+"vec2 ShadowMap_TextureScale = ShadowmapTextureParams[i].zw;\n"
 "\n"
 "myhalf f;\n"
 "\n"
 "#ifdef APPLY_DITHER\n"
 "# ifdef APPLY_PCF\n"
-"#  define texval(x, y) myhalf(shadow2D(ShadowmapTexture, vec3(center + vec2(x, y)*ShadowMap_TextureScale, shadowmaptc.z)).r)\n"
+"#  define texval(x, y) myhalf(shadow2D(ShadowmapTexture[i], vec3(center + vec2(x, y)*ShadowMap_TextureScale, shadowmaptc.z)).r)\n"
 "\n"
 "// this method can be described as a 'dithered pinwheel' (4 texture lookups)\n"
 "// which is a combination of the 'pinwheel' filter suggested by eihrul and dithered 4x4 PCF,\n"
@@ -1588,7 +1600,7 @@ MYHALFTYPES
 "\n"
 "f = dot(myhalf4(0.25), myhalf4(group1, group2, group3, group4));\n"
 "# else\n"
-"f = myhalf(shadow2D(ShadowmapTexture, vec3(shadowmaptc.xy*ShadowMap_TextureScale, shadowmaptc.z)).r);\n"
+"f = myhalf(shadow2D(ShadowmapTexture[i], vec3(shadowmaptc.xy*ShadowMap_TextureScale, shadowmaptc.z)).r);\n"
 "# endif\n"
 "#else\n"
 "// an essay by eihrul:\n"
@@ -1608,21 +1620,24 @@ MYHALFTYPES
 "// NOTE: we're using emulation of texture_gather now\n"
 "\n"
 "# ifdef APPLY_PCF\n"
-"# define texval(off) shadow2D(ShadowmapTexture, vec3(off,shadowmaptc.z)).r\n"
+"# define texval(off) shadow2D(ShadowmapTexture[i], vec3(off,shadowmaptc.z)).r\n"
 "vec2 offset = fract(shadowmaptc.xy - 0.5);\n\n"
 "vec4 size = vec4(offset + 1.0, 2.0 - offset), weight = (vec4(2.0 - 1.0 / size.xy, 1.0 / size.zw - 1.0) + (shadowmaptc.xy - offset).xyxy)*ShadowMap_TextureScale.xyxy;\n"
 "f = (1.0/9.0)*dot(size.zxzx*size.wwyy, vec4(texval(weight.zw), texval(weight.xw), texval(weight.zy), texval(weight.xy)));\n"
 "# else\n"
-"f = shadow2D(ShadowmapTexture, vec3(shadowmaptc.xy*ShadowMap_TextureScale, shadowmaptc.z)).r;\n"
+"f = shadow2D(ShadowmapTexture[i], vec3(shadowmaptc.xy*ShadowMap_TextureScale, shadowmaptc.z)).r;\n"
 "# endif\n"
 "#endif\n"
 "\n"
-"myhalf attenuation = myhalf(float (ProjVector.w) / ProjDistance);\n"
-"myhalf compensation = myhalf(0.25) - max(LightAmbient.x, max(LightAmbient.y, LightAmbient.z))\n;"
+"myhalf attenuation = myhalf(float (ShadowProjVector[i].w) / ShadowProjDistance[i]);\n"
+"myhalf compensation = myhalf(0.25) - max(ShadowLightAmbient[i].x, max(ShadowLightAmbient[i].y, ShadowLightAmbient[i].z))\n;"
 "compensation = max (compensation, 0.0);\n"
 "f = f + attenuation + compensation;\n"
 "\n"
-"gl_FragColor = vec4(vec3(max(f,clamp(d, 0.0, 1.0))),1.0);\n"
+"finalcolor *= clamp(max(f, d), 0.0, 1.0);\n"
+"}\n"
+"\n"
+"gl_FragColor = vec4(vec3(finalcolor),1.0);\n"
 "}\n"
 "\n"
 "#endif // FRAGMENT_SHADER\n"
@@ -2792,6 +2807,44 @@ void R_UpdateProgramCellshadeParams( int elem, float shaderTime, const vec3_t ey
 }
 
 /*
+* R_UpdateProgramShadowmapUniforms
+*/
+void R_UpdateProgramShadowmapUniforms( int elem, vec3_t entityAxis[3], int numShadows, const shadowGroup_t **groups )
+{
+	int i;
+	const shadowGroup_t *group;
+	glsl_program_t *program = r_glslprograms + elem - 1;
+
+	assert( groups != NULL );
+	assert( numShadows <= GLSL_SHADOWMAP_LIMIT );
+
+	if( numShadows > GLSL_SHADOWMAP_LIMIT ) {
+		numShadows = GLSL_SHADOWMAP_LIMIT;
+	}
+
+	for( i = 0; i < numShadows; i++ ) {
+		image_t *shadowmap;
+
+		group = groups[i];
+		shadowmap = group->depthTexture;
+
+		if( program->locShadowLightAmbient[i] >= 0 ) {
+			qglUniform3fARB( program->locShadowLightAmbient[i], group->lightAmbient[0], group->lightAmbient[1], group->lightAmbient[2] );
+		}
+
+		if( program->locShadowProjDistance[i] >= 0 ) {
+			qglUniform1fARB( program->locShadowProjDistance[i], group->projDist );
+		}
+
+		if( program->locShadowmapTextureParams[i] >= 0 ) {
+			int TexWidth = shadowmap->upload_width;
+			int TexHeight = shadowmap->upload_height;
+			qglUniform4fARB( program->locShadowmapTextureParams[i], TexWidth, TexHeight, TexWidth ? 1.0 / TexWidth : 1.0, TexHeight ? 1.0 / TexHeight : 1.0 );
+		}
+	}
+}
+
+/*
 * R_UpdateProgramBonesParams
 * 
 * Set uniform values for animation dual quaternions
@@ -2844,7 +2897,7 @@ static void R_GetProgramUniformLocations( glsl_program_t *program )
 			locDuDvMapTexture,
 			locReflectionTexture,
 			locRefractionTexture,
-			locShadowmapTexture,
+			locShadowmapTexture[GLSL_SHADOWMAP_LIMIT],
 			locCellShadeTexture,
 			locCellLightTexture,
 			locDiffuseTexture,
@@ -2868,7 +2921,9 @@ static void R_GetProgramUniformLocations( glsl_program_t *program )
 	locReflectionTexture = qglGetUniformLocationARB( program->object, "ReflectionTexture" );
 	locRefractionTexture = qglGetUniformLocationARB( program->object, "RefractionTexture" );
 
-	locShadowmapTexture = qglGetUniformLocationARB( program->object, "ShadowmapTexture" );
+	for( i = 0; i < GLSL_SHADOWMAP_LIMIT; i++ ) {
+		locShadowmapTexture[i] = qglGetUniformLocationARB( program->object, va( "ShadowmapTexture[%i]", i ) );
+	}
 
 	locCellShadeTexture = qglGetUniformLocationARB( program->object, "CellShadeTexture" );
 	locCellLightTexture = qglGetUniformLocationARB( program->object, "CellLightTexture" );
@@ -2950,6 +3005,16 @@ static void R_GetProgramUniformLocations( glsl_program_t *program )
 		program->locDynamicLightsDiffuse[i] = locD;
 	}
 
+	// shadowmaps
+	for( i = 0; i < GLSL_SHADOWMAP_LIMIT; i++ ) {
+		program->locShadowLightAmbient[i] = 
+			qglGetUniformLocationARB( program->object, va( "ShadowLightAmbient[%i]", i ) );
+		program->locShadowProjDistance[i] = 
+			qglGetUniformLocationARB( program->object, va( "ShadowProjDistance[%i]", i ) );
+		program->locShadowmapTextureParams[i] = 
+			qglGetUniformLocationARB( program->object, va( "ShadowmapTextureParams[%i]", i ) );
+	}
+
 	program->locWallColor = qglGetUniformLocationARB( program->object, "WallColor" );
 	program->locFloorColor = qglGetUniformLocationARB( program->object, "FloorColor" );
 
@@ -2972,8 +3037,10 @@ static void R_GetProgramUniformLocations( glsl_program_t *program )
 	if( locRefractionTexture >= 0 )
 		qglUniform1iARB( locRefractionTexture, 3 );
 
-	if( locShadowmapTexture >= 0 )
-		qglUniform1iARB( locShadowmapTexture, 0 );
+	for( i = 0; i < GLSL_SHADOWMAP_LIMIT; i++ ) {
+		if( locShadowmapTexture[i] >= 0 )
+			qglUniform1iARB( locShadowmapTexture[i], i );
+	}
 
 //	if( locBaseTexture >= 0 )
 //		qglUniform1iARB( locBaseTexture, 0 );

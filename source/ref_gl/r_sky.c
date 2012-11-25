@@ -300,7 +300,7 @@ qboolean R_DrawSky( shader_t *shader )
 	vec3_t mins, maxs;
 	mat4x4_t m, oldm;
 	elem_t *elem;
-	skydome_t *skydome = r_skydomes[shader-r_shaders] ? r_skydomes[shader-r_shaders] : NULL;
+	skydome_t *skydome = shader->skydome;
 	meshbuffer_t *mbuffer = &r_skydome_mbuffer;
 	int u, v, umin, umax, vmin, vmax;
 	float depthmin = gldepthmin, depthmax = gldepthmax;

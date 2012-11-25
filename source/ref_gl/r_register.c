@@ -105,7 +105,6 @@ cvar_t *r_lodscale;
 
 cvar_t *r_stencilbits;
 cvar_t *r_gamma;
-cvar_t *r_colorbits;
 cvar_t *r_texturebits;
 cvar_t *r_texturemode;
 cvar_t *r_texturefilter;
@@ -749,7 +748,6 @@ void R_Register( void )
 	r_lighting_specular = Cvar_Get( "r_lighting_specular", "1", CVAR_ARCHIVE|CVAR_LATCH_VIDEO );
 	r_lighting_glossintensity = Cvar_Get( "r_lighting_glossintensity", "1", CVAR_ARCHIVE );
 	r_lighting_glossexponent = Cvar_Get( "r_lighting_glossexponent", "48", CVAR_ARCHIVE );
-	r_lighting_models_followdeluxe = Cvar_Get( "r_lighting_models_followdeluxe", "1", CVAR_ARCHIVE|CVAR_LATCH_VIDEO );
 	r_lighting_ambientscale = Cvar_Get( "r_lighting_ambientscale", "1.0", 0 );
 	r_lighting_directedscale = Cvar_Get( "r_lighting_directedscale", "1.0", 0 );
 
@@ -789,7 +787,6 @@ void R_Register( void )
 	r_lodscale = Cvar_Get( "r_lodscale", "5.0", CVAR_ARCHIVE );
 
 	r_gamma = Cvar_Get( "r_gamma", "1.0", CVAR_ARCHIVE );
-	r_colorbits = Cvar_Get( "r_colorbits", "0", CVAR_ARCHIVE | CVAR_LATCH_VIDEO );
 	r_texturebits = Cvar_Get( "r_texturebits", "0", CVAR_ARCHIVE | CVAR_LATCH_VIDEO );
 	r_texturemode = Cvar_Get( "r_texturemode", "GL_LINEAR_MIPMAP_LINEAR", CVAR_ARCHIVE );
 	r_texturefilter = Cvar_Get( "r_texturefilter", "1", CVAR_ARCHIVE );
@@ -1108,7 +1105,7 @@ init_qgl:
 
 	R_InitCinematics();
 
-	R_InitShaders( qfalse );
+	R_InitShaders();
 
 	R_InitSkinFiles();
 

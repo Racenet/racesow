@@ -44,7 +44,6 @@ typedef struct shadercache_s
 } shadercache_t;
 
 shader_t r_shaders[MAX_SHADERS];
-skydome_t *r_skydomes[MAX_SHADERS];
 
 static char *shaderPaths;
 static shader_t r_shaders_hash_headnode[SHADERS_HASH_SIZE], *r_free_shaders;
@@ -74,7 +73,7 @@ mempool_t *r_shadersmempool;
 static char *r_shaderTemplateBuf;
 
 static qboolean Shader_Parsetok( shader_t *shader, shaderpass_t *pass, const shaderkey_t *keys, const char *token, const char **ptr );
-static void Shader_MakeCache( qboolean silent, const char *filename );
+static void Shader_MakeCache( const char *filename );
 static unsigned int Shader_GetCache( const char *name, shadercache_t **cache );
 #define Shader_FreePassCinematics(pass) if( (pass)->cin ) { R_FreeCinematic( (pass)->cin ); (pass)->cin = 0; }
 
@@ -200,12 +199,17 @@ static qboolean Shader_ParseConditions( const char **ptr, shader_t *shader )
 	int i;
 	char *tok;
 	int numConditions;
+	qboolean isVolatile = qfalse;
+	unsigned int volatileFlags;
 	shaderCon_t conditions[MAX_CONDITIONS];
 	qboolean result = qfalse, val = qfalse, skip, expectingOperator;
 	static const int falseCondition = 0;
 
 	numConditions = 0;
 	memset( conditions, 0, sizeof( conditions ) );
+
+	isVolatile = qfalse;
+	volatileFlags = 0;
 
 	skip = qfalse;
 	expectingOperator = qfalse;
@@ -295,8 +299,14 @@ static qboolean Shader_ParseConditions( const char **ptr, shader_t *shader )
 				conditions[numConditions].operand = ( int )glConfig.ext.GLSL;
 			else if( !Q_stricmp( tok, "GLSL" ) )
 				conditions[numConditions].operand = ( int )glConfig.ext.GLSL;
-			else if( !Q_stricmp( tok, "deluxeMaps" ) || !Q_stricmp( tok, "deluxe" ) )
+			else if( !Q_stricmp( tok, "deluxeMaps" ) || !Q_stricmp( tok, "deluxe" ) ) {
 				conditions[numConditions].operand = ( int )mapConfig.deluxeMappingEnabled;
+
+				isVolatile = qtrue;
+				if( mapConfig.deluxeMappingEnabled ) {
+					volatileFlags |= SHADER_VOLATILE_MAPCONFIG_DELUXEMAPPING;
+				}
+			}
 			else if( !Q_stricmp( tok, "portalMaps" ) )
 				conditions[numConditions].operand = ( int )r_portalmaps->integer;
 			else
@@ -383,6 +393,12 @@ static qboolean Shader_ParseConditions( const char **ptr, shader_t *shader )
 		{
 			result = val;
 		}
+	}
+
+	if( isVolatile ) {
+		// store volatile flags based on parsed conditions
+		shader->flags |= SHADER_VOLATILE;
+		shader->volatileFlags |= volatileFlags;
 	}
 
 	return result;
@@ -670,14 +686,12 @@ static void Shader_DeformVertexes( shader_t *shader, shaderpass_t *pass, const c
 
 static void Shader_SkyParmsExt( shader_t *shader, shaderpass_t *pass, const char **ptr, qboolean underscore )
 {
-	int shaderNum;
 	float skyheight;
 	shader_t *farboxShaders[6];
 	shader_t *nearboxShaders[6];
 
-	shaderNum = shader - r_shaders;
-	if( r_skydomes[shaderNum] )
-		R_FreeSkydome( r_skydomes[shaderNum] );
+	if( shader->skydome )
+		R_FreeSkydome( shader->skydome );
 
 	Shader_ParseSkySides( ptr, farboxShaders, qtrue, underscore );
 
@@ -687,7 +701,7 @@ static void Shader_SkyParmsExt( shader_t *shader, shaderpass_t *pass, const char
 
 	Shader_ParseSkySides( ptr, nearboxShaders, qfalse, underscore );
 
-	r_skydomes[shaderNum] = R_CreateSkydome( skyheight, farboxShaders, nearboxShaders );
+	shader->skydome = R_CreateSkydome( skyheight, farboxShaders, nearboxShaders );
 	shader->flags |= SHADER_SKY;
 }
 
@@ -1898,7 +1912,7 @@ void R_ShaderDump_f( void )
 	cache->buffer[ptr - cache->buffer] = backup;
 }
 
-static void Shader_MakeCache( qboolean silent, const char *filename )
+static void Shader_MakeCache( const char *filename )
 {
 	int size;
 	unsigned int key;
@@ -1915,8 +1929,7 @@ static void Shader_MakeCache( qboolean silent, const char *filename )
 	assert( pathName );
 	Q_snprintfz( pathName, pathNameSize, "scripts/%s", filename );
 
-	if( !silent )
-		Com_Printf( "...loading '%s'\n", pathName );
+	Com_Printf( "...loading '%s'\n", pathName );
 
 	size = FS_LoadFile( pathName, ( void ** )&temp, NULL, 0 );
 	if( !temp || size <= 0 )
@@ -2008,7 +2021,7 @@ static unsigned int Shader_GetCache( const char *name, shadercache_t **cache )
 /*
 * R_InitShadersCache
 */
-static qboolean R_InitShadersCache( qboolean silent )
+static qboolean R_InitShadersCache( void )
 {
 	int i, numfiles;
 	const char *fileptr;
@@ -2028,7 +2041,7 @@ static qboolean R_InitShadersCache( qboolean silent )
 
 	for( i = 0; i < numfiles; i++, fileptr += filelen + 1 ) {
 		filelen = strlen( fileptr );
-		Shader_MakeCache( silent, fileptr );
+		Shader_MakeCache( fileptr );
 	}
 
 	return qtrue;
@@ -2037,18 +2050,16 @@ static qboolean R_InitShadersCache( qboolean silent )
 /*
 * R_InitShaders
 */
-void R_InitShaders( qboolean silent )
+void R_InitShaders( void )
 {
 	int i;
 
-	if( !silent ) {
-		Com_Printf( "Initializing Shaders:\n" );
-	}
+	Com_Printf( "Initializing Shaders:\n" );
 
 	r_shadersmempool = Mem_AllocPool( NULL, "Shaders" );
 	r_shaderTemplateBuf = NULL;
 
-	if( !R_InitShadersCache( silent ) ) {
+	if( !R_InitShadersCache() ) {
 		Mem_FreePool( &r_shadersmempool );
 		Com_Error( ERR_DROP, "Could not find any shaders!" );
 	}
@@ -2065,8 +2076,7 @@ void R_InitShaders( qboolean silent )
 		r_shaders[i].next = &r_shaders[i+1];
 	}
 
-	if( !silent )
-		Com_Printf( "--------------------------------------\n\n" );
+	Com_Printf( "--------------------------------------\n\n" );
 }
 
 /*
@@ -2079,9 +2089,9 @@ static void R_FreeShader( shader_t *shader )
 	shaderpass_t *pass;
 
 	shaderNum = shader - r_shaders;
-	if( ( shader->flags & SHADER_SKY ) && r_skydomes[shaderNum] ) {
-		R_FreeSkydome( r_skydomes[shaderNum] );
-		r_skydomes[shaderNum] = NULL;
+	if( ( shader->flags & SHADER_SKY ) && shader->skydome ) {
+		R_FreeSkydome( shader->skydome );
+		shader->skydome = NULL;
 	}
 
 	if( shader->flags & SHADER_VIDEOMAP ) {
@@ -2091,9 +2101,16 @@ static void R_FreeShader( shader_t *shader )
 
 	Shader_Free( shader->name );
 	shader->name = NULL;
+	shader->flags = 0;
 	shader->numpasses = 0;
 	shader->registration_sequence = 0;
+}
 
+/*
+* R_UnlinkShader
+*/
+static void R_UnlinkShader( shader_t *shader )
+{
 	// remove from linked active list
 	shader->prev->next = shader->next;
 	shader->next->prev = shader->prev;
@@ -2109,7 +2126,6 @@ static void R_FreeShader( shader_t *shader )
 void R_TouchShader( shader_t *s )
 {
 	int i, j;
-	int shaderNum;
 
 	if( s->registration_sequence == r_front.registration_sequence ) {
 		return;
@@ -2136,10 +2152,9 @@ void R_TouchShader( shader_t *s )
 		}
 	}
 
-	shaderNum = s - r_shaders;
-	if( r_skydomes[shaderNum] ) {
+	if( s->skydome ) {
 		// touch sky images for this shader
-		R_TouchSkydome( r_skydomes[shaderNum] );
+		R_TouchSkydome( s->skydome );
 	}
 }
 
@@ -2160,7 +2175,10 @@ void R_FreeUnusedShaders( void )
 			// we need this shader
 			continue;
 		}
+
 		R_FreeShader( s );
+
+		R_UnlinkShader( s );
 	}
 }
 
@@ -2732,6 +2750,9 @@ static void Shader_Finish( int defaultType, shader_t *s )
 	Shader_SetFeatures( s );
 }
 
+/*
+* R_UploadCinematicShader
+*/
 void R_UploadCinematicShader( const shader_t *shader )
 {
 	int j;
@@ -2743,6 +2764,20 @@ void R_UploadCinematicShader( const shader_t *shader )
 		if( pass->cin )
 			pass->anim_frames[0] = R_UploadCinematic( pass->cin );
 	}
+}
+
+/*
+* R_ShaderVolatileFlagsForGlobalState
+*/
+unsigned int R_ShaderVolatileFlagsForGlobalState( void )
+{
+	unsigned int volatileFlags = 0;
+
+	if( mapConfig.deluxeMappingEnabled ) {
+		volatileFlags |= SHADER_VOLATILE_MAPCONFIG_DELUXEMAPPING;
+	}
+
+	return volatileFlags;
 }
 
 /*
@@ -2774,72 +2809,17 @@ static size_t R_ShaderShortName( const char *name, char *shortname, size_t short
 }
 
 /*
-* R_LoadShader
+* R_LoadShaderReal
 */
-shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int addFlags, int ignoreType, const char *text )
+static void R_LoadShaderReal( shader_t *s, char *shortname, size_t shortname_length, int type, 
+							   qboolean forceDefault, int addFlags, const char *text )
 {
-	unsigned int key, length;
-	char shortname[MAX_QPATH];
-	shader_t *s, *best;
-	shader_t *hnode, *prev, *next;
 	shadercache_t *cache;
 	shaderpass_t *pass;
 	image_t *materialImages[MAX_SHADER_ANIM_FRAMES];
 
-	if( !name || !name[0] )
-		return NULL;
-
-	length = R_ShaderShortName( name, shortname, sizeof( shortname ) );
-	if( !length )
-		return NULL;
-
-	// redefine shader type for vertex lighting
-	if( type == SHADER_BSP && r_lighting_vertexlight->integer ) {
-		type = SHADER_BSP_VERTEX;
-		if( ignoreType == SHADER_BSP_VERTEX ) {
-			ignoreType = SHADER_INVALID;
-		}
-	}
-
-	// test if already loaded
-	key = Com_HashKey( shortname, SHADERS_HASH_SIZE );
-	hnode = &r_shaders_hash_headnode[key];
-	best = NULL;
-
-	for( s = hnode->next; s != hnode; s = s->next ) {
-		if( !strcmp( s->name, shortname ) && ( s->type != ignoreType ) ) {
-			// scan all instances of the same shader for exact match of the type
-			best = s;
-			if( s->type == type ) {
-				break;
-			}
-		}
-	}
-
-	if( best ) {
-		// match found
-		R_TouchShader( best );
-		return best;
-	}
-
-	if( !r_free_shaders ) {
-		Com_Error( ERR_FATAL, "R_LoadShader: Shader limit exceeded" );
-	}
-
-	s = r_free_shaders;
-	r_free_shaders = s->next;
-
-	prev = s->prev;
-	next = s->next;
-	memset( s, 0, sizeof( shader_t ) );
-	s->next = next;
-	s->prev = prev;
-
 	s->name = shortname;
 	s->offsetmapping_scale = 1;
-
-	if( ignoreType == SHADER_UNKNOWN )
-		forceDefault = qtrue;
 
 	r_shaderNoMipMaps =	qfalse;
 	r_shaderNoPicMip = qfalse;
@@ -2858,15 +2838,13 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 	if( !forceDefault )
 		Shader_GetCache( shortname, &cache );
 
-	if( cache )
-	{
+	if( cache ) {
 		// shader is in the shader scripts
 		text = cache->buffer + cache->offset;
-		Com_DPrintf( "Loading shader %s from cache...\n", name );
+		Com_DPrintf( "Loading shader %s from cache...\n", shortname );
 	}
 
-	if( text )
-	{
+	if( text ) {
 		const char *ptr, *token;
 
 		// set defaults
@@ -2877,11 +2855,11 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 		ptr = text;
 		token = COM_ParseExt( &ptr, qtrue );
 
-		if( !ptr || token[0] != '{' )
+		if( !ptr || token[0] != '{' ) {
 			goto create_default;
+		}
 
-		while( ptr )
-		{
+		while( ptr ) {
 			token = COM_ParseExt( &ptr, qtrue );
 
 			if( !token[0] )
@@ -2907,13 +2885,14 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 				&& Shaderpass_LoadMaterial( &materialImages[0], &materialImages[1], &materialImages[2], shortname, addFlags, 1 ) )
 			{
 				s->type = SHADER_BSP_VERTEX;
-				s->flags = SHADER_DEPTHWRITE|SHADER_CULL_FRONT|SHADER_MATERIAL;
+				s->flags = SHADER_DEPTHWRITE|SHADER_CULL_FRONT|SHADER_MATERIAL|SHADER_VOLATILE;
+				s->volatileFlags = SHADER_VOLATILE_MAPCONFIG_DELUXEMAPPING;
 				s->features = MF_STCOORDS|MF_NORMALS|MF_SVECTORS|MF_ENABLENORMALS|MF_COLORS|MF_HARDWARE;
 				s->sort = SHADER_SORT_OPAQUE;
 				s->numpasses = 1;
-				s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+				s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 				strcpy( s->name, shortname );
-				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 				pass = &s->passes[0];
 				pass->flags = SHADERPASS_DELUXEMAP|GLSTATE_DEPTHWRITE|SHADERPASS_NOCOLORARRAY|SHADERPASS_BLEND_REPLACE;
@@ -2934,9 +2913,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 				s->features = MF_STCOORDS|MF_COLORS|MF_HARDWARE;
 				s->sort = SHADER_SORT_OPAQUE;
 				s->numpasses = 1;
-				s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+				s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 				strcpy( s->name, shortname );
-				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 				s->numpasses = 0;
 				pass = &s->passes[s->numpasses++];
@@ -2952,9 +2931,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->features = MF_STCOORDS|MF_COLORS;
 			s->sort = SHADER_SORT_ADDITIVE;
 			s->numpasses = 1;
-			s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+			s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 			strcpy( s->name, shortname );
-			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 			pass = &s->passes[0];
 			pass->flags = SHADERPASS_BLEND_ADD|GLSTATE_SRCBLEND_ONE|GLSTATE_DSTBLEND_ONE;
@@ -2969,9 +2948,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->features = MF_STCOORDS|MF_NORMALS;
 			s->sort = SHADER_SORT_OPAQUE;
 			s->numpasses = 1;
-			s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+			s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 			strcpy( s->name, shortname );
-			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 			pass = &s->passes[0];
 			pass->flags = GLSTATE_DEPTHWRITE|SHADERPASS_BLEND_MODULATE;
@@ -2980,8 +2959,8 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			pass->tcgen = TC_GEN_BASE;
 			pass->anim_frames[0] = Shader_FindImage( s, shortname, addFlags, 0 );
 
-			// load default GLSL program if there's a bumpmap was found
-			if( ( r_lighting_models_followdeluxe->integer ? mapConfig.deluxeMappingEnabled : glConfig.ext.GLSL )
+			// load default GLSL program if bumpmap was found
+			if( mapConfig.deluxeMappingEnabled
 				&& Shaderpass_LoadMaterial( &materialImages[0], &materialImages[1], &materialImages[2], shortname, addFlags, 1 ) )
 			{
 				pass->rgbgen.type = RGB_GEN_IDENTITY;
@@ -2991,7 +2970,8 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 				pass->anim_frames[2] = materialImages[1]; // glossmap
 				pass->anim_frames[3] = materialImages[2]; // decalmap
 				s->features |= MF_SVECTORS|MF_ENABLENORMALS;
-				s->flags |= SHADER_MATERIAL;
+				s->flags |= SHADER_MATERIAL|SHADER_VOLATILE;
+				s->volatileFlags |= SHADER_VOLATILE_MAPCONFIG_DELUXEMAPPING;
 			}
 			break;
 		case SHADER_2D:
@@ -3001,9 +2981,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->features = MF_STCOORDS|MF_COLORS;
 			s->sort = SHADER_SORT_ADDITIVE;
 			s->numpasses = 1;
-			s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+			s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 			strcpy( s->name, shortname );
-			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 			pass = &s->passes[0];
 			pass->flags = SHADERPASS_BLEND_MODULATE|GLSTATE_SRCBLEND_SRC_ALPHA|GLSTATE_DSTBLEND_ONE_MINUS_SRC_ALPHA /* | SHADERPASS_NOCOLORARRAY*/;
@@ -3029,9 +3009,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->sort = SHADER_SORT_SKY;
 			s->flags = SHADER_SKY;
 			s->numpasses = 1;
-			s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+			s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 			strcpy( s->name, shortname );
-			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 			pass = &s->passes[0];
 			pass->flags = SHADERPASS_NOCOLORARRAY|SHADERPASS_BLEND_MODULATE /*|GLSTATE_SRCBLEND_ONE|GLSTATE_DSTBLEND_ZERO*/;
@@ -3046,9 +3026,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->sort = SHADER_SORT_SKY;
 			s->numpasses = 1;
 			s->flags = SHADER_SKY;
-			s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+			s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 			strcpy( s->name, shortname );
-			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 			pass = &s->passes[0];
 			pass->flags = GLSTATE_ALPHAFUNC|SHADERPASS_NOCOLORARRAY|SHADERPASS_BLEND_DECAL|GLSTATE_SRCBLEND_SRC_ALPHA|GLSTATE_DSTBLEND_ONE_MINUS_SRC_ALPHA;
@@ -3064,9 +3044,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->flags = 0;
 			s->numdeforms = 1;
 			s->numpasses = 1;
-			s->name = Shader_Malloc( length + 1 + s->numdeforms * sizeof( deformv_t ) + sizeof( shaderpass_t ) * s->numpasses + 3 * sizeof( float ) );
+			s->name = Shader_Malloc( shortname_length + 1 + s->numdeforms * sizeof( deformv_t ) + sizeof( shaderpass_t ) * s->numpasses + 3 * sizeof( float ) );
 			strcpy( s->name, shortname );
-			s->deforms = ( deformv_t * )( ( qbyte * )s->name + length + 1 );
+			s->deforms = ( deformv_t * )( ( qbyte * )s->name + shortname_length + 1 );
 			s->deforms[0].type = DEFORMV_PROJECTION_SHADOW;
 			s->passes = ( shaderpass_t * )( ( qbyte * )s->deforms + s->numdeforms * sizeof( deformv_t ) );
 
@@ -3087,9 +3067,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->sort = SHADER_SORT_NONE;
 			s->flags = SHADER_CULL_FRONT|SHADER_DEPTHWRITE;
 			s->numpasses = 1;
-			s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses + 3 * sizeof( float ) );
+			s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses + 3 * sizeof( float ) );
 			strcpy( s->name, shortname );
-			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+			s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 			pass = &s->passes[0];
 			pass->flags = SHADERPASS_NOCOLORARRAY|GLSTATE_DEPTHWRITE;
@@ -3108,9 +3088,9 @@ shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int a
 			s->flags = SHADER_CULL_BACK|SHADER_DEPTHWRITE;
 			s->numdeforms = 1;
 			s->numpasses = 1;
-			s->name = Shader_Malloc( length + 1 + s->numdeforms * sizeof( deformv_t ) + sizeof( shaderpass_t ) * s->numpasses );
+			s->name = Shader_Malloc( shortname_length + 1 + s->numdeforms * sizeof( deformv_t ) + sizeof( shaderpass_t ) * s->numpasses );
 			strcpy( s->name, shortname );
-			s->deforms = ( deformv_t * )( ( qbyte * )s->name + length + 1 );
+			s->deforms = ( deformv_t * )( ( qbyte * )s->name + shortname_length + 1 );
 			s->deforms[0].type = DEFORMV_OUTLINE;
 			s->passes = ( shaderpass_t * )( ( qbyte * )s->deforms + s->numdeforms * sizeof( deformv_t ) );
 
@@ -3129,13 +3109,14 @@ create_default:
 				&& Shaderpass_LoadMaterial( &materialImages[0], &materialImages[1], &materialImages[2], shortname, addFlags, 1 ) )
 			{
 				s->type = SHADER_BSP;
-				s->flags = SHADER_DEPTHWRITE|SHADER_CULL_FRONT|SHADER_LIGHTMAP|SHADER_MATERIAL;
+				s->flags = SHADER_DEPTHWRITE|SHADER_CULL_FRONT|SHADER_LIGHTMAP|SHADER_MATERIAL|SHADER_VOLATILE;
+				s->volatileFlags |= SHADER_VOLATILE_MAPCONFIG_DELUXEMAPPING;
 				s->features = MF_STCOORDS|MF_LMCOORDS|MF_NORMALS|MF_SVECTORS|MF_ENABLENORMALS|MF_HARDWARE;
 				s->sort = SHADER_SORT_OPAQUE;
 				s->numpasses = 1;
-				s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+				s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 				strcpy( s->name, shortname );
-				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 
 				pass = &s->passes[0];
 				pass->flags = SHADERPASS_LIGHTMAP|SHADERPASS_DELUXEMAP|GLSTATE_DEPTHWRITE|SHADERPASS_NOCOLORARRAY|SHADERPASS_BLEND_REPLACE;
@@ -3156,9 +3137,9 @@ create_default:
 				s->features = MF_STCOORDS|MF_LMCOORDS|MF_HARDWARE;
 				s->sort = SHADER_SORT_OPAQUE;
 				s->numpasses = 2;
-				s->name = Shader_Malloc( length + 1 + sizeof( shaderpass_t ) * s->numpasses );
+				s->name = Shader_Malloc( shortname_length + 1 + sizeof( shaderpass_t ) * s->numpasses );
 				strcpy( s->name, shortname );
-				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + length + 1 );
+				s->passes = ( shaderpass_t * )( ( qbyte * )s->name + shortname_length + 1 );
 				s->numpasses = 0;
 
 				pass = &s->passes[s->numpasses++];
@@ -3181,6 +3162,83 @@ create_default:
 	// calculate sortkey
 	s->sortkey = Shader_Sortkey( s, s->sort );
 	s->registration_sequence = r_front.registration_sequence;
+}
+
+/*
+* R_LoadShader
+*/
+shader_t *R_LoadShader( const char *name, int type, qboolean forceDefault, int addFlags, int ignoreType, const char *text )
+{
+	unsigned int key, nameLength;
+	char shortname[MAX_QPATH];
+	shader_t *s, *best;
+	shader_t *hnode, *prev, *next;
+	unsigned int globalVolatileFlags = R_ShaderVolatileFlagsForGlobalState();
+
+	if( !name || !name[0] )
+		return NULL;
+
+	nameLength = R_ShaderShortName( name, shortname, sizeof( shortname ) );
+	if( !nameLength )
+		return NULL;
+
+	// redefine shader type for vertex lighting
+	if( type == SHADER_BSP && r_lighting_vertexlight->integer ) {
+		type = SHADER_BSP_VERTEX;
+		if( ignoreType == SHADER_BSP_VERTEX ) {
+			ignoreType = SHADER_INVALID;
+		}
+	}
+
+	if( ignoreType == SHADER_UNKNOWN )
+		forceDefault = qtrue;
+
+	// test if already loaded
+	key = Com_HashKey( shortname, SHADERS_HASH_SIZE );
+	hnode = &r_shaders_hash_headnode[key];
+	best = NULL;
+
+	// scan all instances of the same shader for exact match of the type
+	for( s = hnode->next; s != hnode; s = s->next ) {
+		if( !strcmp( s->name, shortname ) && ( s->type != ignoreType ) ) {
+			best = s;
+			if( s->type == type ) {
+				break;
+			}
+		}
+	}
+
+	if( best ) {
+		// shader must also be non-volatile or its volatile flags matching the current state
+		if ( ( best->flags & SHADER_VOLATILE ) && best->volatileFlags != globalVolatileFlags ) {
+			R_FreeShader( best );
+
+			// reload the shader with different set of volatile flags
+			R_LoadShaderReal( best, shortname, nameLength, type, forceDefault, addFlags, text );
+			return best;
+		}
+	}
+
+	if( best ) {
+		// match found
+		R_TouchShader( best );
+		return best;
+	}
+
+	if( !r_free_shaders ) {
+		Com_Error( ERR_FATAL, "R_LoadShader: Shader limit exceeded" );
+	}
+
+	s = r_free_shaders;
+	r_free_shaders = s->next;
+
+	prev = s->prev;
+	next = s->next;
+	memset( s, 0, sizeof( shader_t ) );
+	s->next = next;
+	s->prev = prev;
+
+	R_LoadShaderReal( s, shortname, nameLength, type, forceDefault, addFlags, text );
 
 	// add to linked lists
 	s->prev = hnode;

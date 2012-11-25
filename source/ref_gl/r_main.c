@@ -2651,19 +2651,25 @@ void R_TransformToScreen_Vec3( const vec3_t in, vec3_t out )
 */
 void R_TransformVectorToScreen( const refdef_t *rd, const vec3_t in, vec2_t out )
 {
+	refdef_t trd;
 	mat4x4_t p, m;
 	vec4_t temp, temp2;
 
 	if( !rd || !in || !out )
 		return;
 
+	trd = *rd;
+	if ( glState.wideScreen && !( trd.rdflags & RDF_NOFOVADJUSTMENT ) ) {
+		AdjustFov( &trd.fov_x, &trd.fov_y, glState.width, glState.height, qfalse );
+	}
+
 	temp[0] = in[0];
 	temp[1] = in[1];
 	temp[2] = in[2];
 	temp[3] = 1.0f;
 
-	R_SetupProjectionMatrix( rd, p );
-	R_SetupModelviewMatrix( rd, m );
+	R_SetupProjectionMatrix( &trd, p );
+	R_SetupModelviewMatrix( &trd, m );
 
 	Matrix4_Multiply_Vector( m, temp, temp2 );
 	Matrix4_Multiply_Vector( p, temp2, temp );
@@ -2671,8 +2677,8 @@ void R_TransformVectorToScreen( const refdef_t *rd, const vec3_t in, vec2_t out 
 	if( !temp[3] )
 		return;
 
-	out[0] = rd->x + ( temp[0] / temp[3] + 1.0f ) * rd->width * 0.5f;
-	out[1] = glState.height - (rd->y + ( temp[1] / temp[3] + 1.0f ) * rd->height * 0.5f);
+	out[0] = trd.x + ( temp[0] / temp[3] + 1.0f ) * trd.width * 0.5f;
+	out[1] = glState.height - (trd.y + ( temp[1] / temp[3] + 1.0f ) * trd.height * 0.5f);
 }
 
 //==================================================================================

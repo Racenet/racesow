@@ -67,7 +67,8 @@ enum
 	SHADER_PORTAL_CAPTURE2			= 1 << 14,
 	SHADER_NO_TEX_FILTERING			= 1 << 15,
 	SHADER_ALLDETAIL				= 1 << 16,
-	SHADER_NODRAWFLAT				= 1 << 17
+	SHADER_NODRAWFLAT				= 1 << 17,
+	SHADER_VOLATILE					= 1 << 18
 };
 
 // sorting
@@ -212,6 +213,13 @@ enum
 #endif
 };
 
+// volatile flags for shaders
+// a volatile shader can change its behavior based on cvars
+// or global flags and thus may need to be reloaded between
+// map loads (or maybe even on a cvar value change?)
+#define SHADER_VOLATILE_MAPCONFIG_DELUXEMAPPING		1<<0
+
+
 typedef struct
 {
 	unsigned short		type;			// SHADER_FUNC enum
@@ -272,6 +280,7 @@ typedef struct shader_s
 	unsigned int		features;
 	unsigned int		sort;
 	unsigned int		sortkey;
+	unsigned int		volatileFlags;
 
 	int					type;
 
@@ -287,6 +296,8 @@ typedef struct shader_s
 	float				gloss_exponent;
 	float				offsetmapping_scale;
 
+	struct skydome_s	*skydome;
+
 	struct shader_s		*prev, *next;
 } shader_t;
 
@@ -295,7 +306,6 @@ extern mempool_t *r_shadersmempool;
 
 extern shader_t	r_shaders[MAX_SHADERS];
 extern int r_numShaders;
-extern skydome_t *r_skydomes[MAX_SHADERS];
 
 #define		Shader_Malloc( size ) Mem_Alloc( r_shadersmempool, size )
 #define		Shader_Realloc( data, size ) Mem_Realloc( data, size )
@@ -305,7 +315,7 @@ extern skydome_t *r_skydomes[MAX_SHADERS];
 #define 	Shader_UseTextureFog(s) ( ( (s)->sort <= SHADER_SORT_ALPHATEST && \
 				( (s)->flags & ( SHADER_DEPTHWRITE|SHADER_SKY ) ) ) || (s)->fog_dist )
 
-void		R_InitShaders( qboolean silent );
+void		R_InitShaders( void );
 void		R_ShutdownShaders( void );
 
 void		R_UploadCinematicShader( const shader_t *shader );
