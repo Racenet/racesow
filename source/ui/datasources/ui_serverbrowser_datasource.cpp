@@ -36,7 +36,7 @@ namespace {
 
 // ServerInfo
 ServerInfo::ServerInfo( const char *adr, const char *info )
-	:	has_changed(false), ping_updated(false), address( adr ),
+	:	has_changed(false), ping_updated(false), has_ping(false), address( adr ),
 		iaddress( addr_to_int( adr ) ), hostname(""), cleanname(""), map(""), curuser(0),
 		maxuser(0), bots(0), gametype(""), modname(""), instagib(false), skilllevel(0),
 		password(false), mm(false), tv(false), ping(0), ping_retries(0), favorite(false)
@@ -60,6 +60,7 @@ void ServerInfo::fromOther( const ServerInfo &other )
 {
 	has_changed = other.has_changed;
 	ping_updated = other.ping_updated;
+	has_ping = other.has_ping;
 	address = other.address;
 	iaddress = other.iaddress;
 	hostname = other.hostname;
@@ -187,12 +188,15 @@ void ServerInfo::fromInfo( const char *info )
 			unsigned int tmpping;
 			std::stringstream toint( value );
 			toint >> tmpping;
-			if( !toint.fail() && ( tmpping != ping || ping_retries == 0 ) ) {
-				has_changed = true;
-				ping_updated = true;
-				ping = tmpping;
-				if( ping > 999 )
-					ping = 999;
+			if( !toint.fail() ) {
+				if ( tmpping != ping || ping_retries == 0 ) {
+					has_ping = true;
+					has_changed = true;
+					ping_updated = true;
+					ping = tmpping;
+					if( ping > 999 )
+						ping = 999;
+				}
 			}
 		}
 		else if( cmd == "mm" ) { // MATCHMAKING
@@ -368,6 +372,7 @@ void ServerInfoFetcher::clearQueries()
 	activeQueries.clear();
 	while( numWaiting() > 0 )
 		serverQueue.pop();
+	numIssuedQueries = 0;
 }
 
 // advance queries
@@ -403,6 +408,8 @@ void ServerInfoFetcher::updateFrame()
 // initiates a query
 void ServerInfoFetcher::startQuery( const std::string &adr )
 {
+	numIssuedQueries++;
+
 	// add to the active list
 	activeQueries.push_back( std::make_pair( trap::Milliseconds(), adr ) );
 
@@ -423,7 +430,8 @@ ServerBrowserDataSource::ServerBrowserDataSource() :
 {
 	// default sorting function
 	// hostname
-	sortCompare = &ServerInfo::DefaultCompareBinary;
+	sortCompare = lastSortCompare = &ServerInfo::DefaultCompareBinary;
+	sortDirection = -1;
 	active = false;
 
 	referenceListMap.clear();
@@ -531,7 +539,10 @@ void ServerBrowserDataSource::addServerToTable( ServerInfo &info, String tableNa
 		// server isnt in the list, use insertion sort to put it in
 
 		// insertion sort (FIXME: batchAdd has to batch adjacent elements!)
-		it = referenceList.insert( lower_bound( referenceList, &info, sortCompare ), &info );
+		if( sortDirection < 0 )
+			it = referenceList.insert( lower_bound( referenceList, &info, sortCompare ), &info );
+		else
+			it = referenceList.insert( lower_bound( referenceList, &info, ServerInfo::InvertComparePtrFunction( sortCompare ) ), &info );
 
 		// notify rocket on the addition of row
 		NotifyRowAdd( tableName, std::distance( referenceList.begin(), it ) /*referenceList.size()-1 */, 1 );
@@ -593,7 +604,7 @@ void ServerBrowserDataSource::updateFrame()
 	//if( numNotifies )
 	//	Com_Printf("ServerBrowser::updateFrame %d notifies\n", numNotifies );
 
-	if( !fetcher.numQueries() && !fetcher.numWaiting() && active && !referenceListMap.empty() ) {
+	if( active && fetcher.numActive() == 0 && fetcher.numWaiting() == 0 && fetcher.numIssued() > 0 && !referenceListMap.empty() ) {
 		active = false;
 	}
 }
@@ -641,12 +652,12 @@ void ServerBrowserDataSource::startFullUpdate( void )
 void ServerBrowserDataSource::addToServerList( const char *adr, const char *info )
 {
 	// check if user has canceled the update
-	if( !active )
+	if( !active ) {
 		return;
+	}	
 
 	// TODO: hint for the address. If previous address matches this address
 	// use that previous iterator as a hint for the insert function!
-
 
 	// create serverinfo object and associate with the list
 	ServerInfo newInfo( adr, info );
@@ -659,7 +670,7 @@ void ServerBrowserDataSource::addToServerList( const char *adr, const char *info
 
 	// -- we could also just match \\EOT in info --
 	// initial addition from master query or ping error
-	if( it_inserted.second || !serverInfo.isChanged() )
+	if( !newInfo.hasPing() && ( it_inserted.second || !serverInfo.isChanged() ) )
 	{
 		// check if we want to drop this
 		if( serverInfo.ping_retries++ >= MAX_RETRIES )
@@ -747,6 +758,10 @@ void ServerBrowserDataSource::sortByColumn( const char *_column )
 		sortCompare = ServerInfo::LessPtrBinary<std::string, &ServerInfo::address>;
 	else if( column == "hostname" )
 		sortCompare = ServerInfo::LessPtrBinary<std::string, &ServerInfo::hostname>;
+	else if( column == "cleanname" )
+		sortCompare = ServerInfo::LessPtrBinary<std::string, &ServerInfo::locleanname>;	// Dirty hack, but we really want this
+	else if( column == "locleanname" )
+		sortCompare = ServerInfo::LessPtrBinary<std::string, &ServerInfo::locleanname>;
 	else if( column == "map" )
 		sortCompare = ServerInfo::LessPtrBinary<std::string, &ServerInfo::map>;
 	else if( column == "players" )
@@ -773,11 +788,29 @@ void ServerBrowserDataSource::sortByColumn( const char *_column )
 		return;
 	}
 
-	// we're not really sorting this one here..
-	// serverList.sort( sortCompare );
+	// Toggle sorting direction
+	if( sortCompare == lastSortCompare )
+		sortDirection = -sortDirection;
+	else // Reset direction
+		sortDirection = -1;
 
-	// then tell rocket that our table is changed
-	//NotifyRowChange(TABLE_NAME);
+	// Now resort the list
+	if( sortDirection > 0 ) {
+		for(ReferenceListMap::iterator it = referenceListMap.begin(); it != referenceListMap.end(); it++) {
+			it->second.sort( ServerInfo::InvertComparePtrFunction( sortCompare ) );
+			// then tell rocket that our table is changed
+			NotifyRowChange(it->first);
+		}
+	}
+	else {
+		for(ReferenceListMap::iterator it = referenceListMap.begin(); it != referenceListMap.end(); it++) {
+			it->second.sort( sortCompare );
+			// then tell rocket that our table is changed
+			NotifyRowChange(it->first);
+		}
+	}
+
+	lastSortCompare = sortCompare;
 }
 
 // called to reform visibleServers and hiddenServers

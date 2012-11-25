@@ -36,6 +36,7 @@ namespace WSWUI {
 	{
 		bool has_changed;
 		bool ping_updated;
+		bool has_ping;
 	public:
 		// Attributes
 		std::string		address;
@@ -78,6 +79,7 @@ namespace WSWUI {
 
 		bool isChanged() const { return has_changed; }
 		void setChanged(bool changed) { has_changed = changed; }
+		bool hasPing() const { return has_ping; }
 
 		// comparison function type
 		typedef bool (*CompareFunction)( const ServerInfo &, const ServerInfo & );
@@ -94,6 +96,23 @@ namespace WSWUI {
 		static bool LessPtrBinary( const ServerInfo *lhs, const ServerInfo *rhs ) {
 			return lhs->*comp_member < rhs->*comp_member;
 		}
+
+		// General invertors for above functions
+		struct InvertCompareFunction {
+			CompareFunction function;
+			InvertCompareFunction(CompareFunction _function) : function(_function) {}
+			bool operator()( const ServerInfo &lhs, const ServerInfo &rhs ) {
+				return !function(lhs, rhs);
+			}
+		};
+
+		struct InvertComparePtrFunction {
+			ComparePtrFunction function;
+			InvertComparePtrFunction(ComparePtrFunction _function) : function(_function) {}
+			bool operator()( const ServerInfo *lhs, const ServerInfo *rhs ) {
+				return !function(lhs, rhs);
+			}
+		};
 
 		// struct that can be used for both values and pointers
 		template<typename T, T ServerInfo::*comp_member>
@@ -197,7 +216,7 @@ namespace WSWUI {
 
 	public:
 		ServerInfoFetcher(ServerBrowserDataSource *_serverBrowser)
-			: serverBrowser( _serverBrowser ), lastQueryTime( 0 )
+			: serverBrowser( _serverBrowser ), lastQueryTime( 0 ), numIssuedQueries( 0 )
 		{}
 		~ServerInfoFetcher() {}
 
@@ -210,11 +229,13 @@ namespace WSWUI {
 		// advance queries
 		void updateFrame();
 
-		int numQueries() { return activeQueries.size(); }
-		int numWaiting() { return serverQueue.size(); }
+		unsigned int numActive() const { return activeQueries.size(); }
+		unsigned int numWaiting() const { return serverQueue.size(); }
+		unsigned int numIssued() const { return numIssuedQueries; }
 
 	private:
 		unsigned int lastQueryTime;
+		unsigned int numIssuedQueries;
 
 		// compare address of active query
 		struct CompareAddress {
@@ -268,6 +289,8 @@ namespace WSWUI {
 
 		// we use pointers on referenceList! how can we use struct here?
 		ServerInfo::ComparePtrFunction sortCompare;
+		ServerInfo::ComparePtrFunction lastSortCompare;
+		int sortDirection;	// 1 ascending, -1 descending
 
 		// need to separate full update and refresh?
 		bool active;

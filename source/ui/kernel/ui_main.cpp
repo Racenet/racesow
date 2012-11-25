@@ -604,5 +604,4 @@ void UI_Main::PrintDocuments_Cmd( void )
 	Com_Printf("Document cache:\n");
 	cache->printCache();
 }
-
 }

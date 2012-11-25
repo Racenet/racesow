@@ -25,6 +25,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <Rocket/Controls.h>
 
+#include <typeinfo>
+
 namespace WSWUI
 {
 using namespace Rocket::Core;
@@ -53,58 +55,76 @@ public:
 	{
 		ElementDataGrid::ProcessEvent( evt );
 
-		if( evt == "click" )
+		if( evt == "click" || evt == "dblclick" )
 		{
 			Element* elem;
 			int column = -1;
 
 			// get the column index
 			elem = evt.GetTargetElement();
-			while( elem && elem->GetTagName() != "datagridcell" ) {
+			while( elem && elem->GetTagName() != "datagridcell" && elem->GetTagName() != "datagridcolumn" ) {
 				elem = elem->GetParentNode();
 			}
 			if( elem ) {
-				column = static_cast<ElementDataGridCell *>( elem )->GetColumn();
+				// "datagridcolumn" points to just Element, so figure out the index by iterating
+				// FIXME: We could be little smarter with this and get the column definition here too
+				// and use colselect or colactivate events
+				if( elem->GetTagName() == "datagridcolumn" ) {
+					Element* child = elem->GetParentNode()->GetFirstChild();
+					column = 0;
+					while( child && child != elem ) {
+						child = child->GetNextSibling();
+						column++;
+					}
+				}
+				else {
+					column = static_cast<ElementDataGridCell *>( elem )->GetColumn();
+				}
 			}
 
 			// get the row element
 			elem = evt.GetTargetElement();
-			while( elem && elem->GetTagName() != "datagridrow" ) {
+			while( elem && elem->GetTagName() != "datagridrow" && elem->GetTagName() != "datagridheader" ) {
 				elem = elem->GetParentNode();
 			}
 
 			if( elem )
 			{
-				ElementDataGridRow *row = static_cast<ElementDataGridRow*>( elem );
+				ElementDataGridRow *row = dynamic_cast<ElementDataGridRow*>( elem );
 				int index = row->GetTableRelativeIndex();
-
-				// this should never happen
-				if( index < 0 || index >= this->GetNumRows() )
-					return;
-					
-				// deselect last selected row
-				if( lastSelectedRow != row )
-				{
-					if( lastSelectedRow ) {
-						lastSelectedRow->SetPseudoClass( "selected", false );
-						lastSelectedRow->RemoveReference();
-					}
-				}
-
-				// select clicked row
-				lastSelectedRow = row;
-				lastSelectedRowIndex = index;
-
 				Rocket::Core::String indexStr(toString( index ).c_str());
-				this->SetProperty( "selected-row", indexStr );
+					
+				// this should never happen
+				if( index >= this->GetNumRows() )
+					return;
+				if( index >= 0 )
+				{
+					// deselect last selected row
+					if( lastSelectedRow != row )
+					{
+						if( lastSelectedRow ) {
+							lastSelectedRow->SetPseudoClass( "selected", false );
+							lastSelectedRow->RemoveReference();
+						}
+					}
 
-				row->SetPseudoClass( "selected", true );
-				row->AddReference();
+					// select clicked row
+					lastSelectedRow = row;
+					lastSelectedRowIndex = index;
 
+					this->SetProperty( "selected-row", indexStr );
+
+					row->SetPseudoClass( "selected", true );
+					row->AddReference();
+				}
+				
 				Rocket::Core::Dictionary parameters;
 				parameters.Set( "index", indexStr );
 				parameters.Set( "column_index", column );
-				DispatchEvent( "rowselect", parameters );
+				if( evt == "click" )
+					DispatchEvent( "rowselect", parameters );
+				else
+					DispatchEvent( "rowactivate", parameters );
 			}
 		}
 		else if( evt == "rowremove" )
@@ -122,6 +142,9 @@ public:
 				lastSelectedRowIndex = -1;
 				this->SetProperty( "selected-row", "-1" );
 			}
+		}
+		else if( evt == "dblclick" )
+		{
 		}
 	}
 

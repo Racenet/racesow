@@ -79,7 +79,7 @@ public:
 
 	// DEBUG
 	static void PrintDocuments_Cmd( void );
-
+	
 	// Other static functions
 	static UI_Main *Instance( int vidWidth, int vidHeight, int protocol, int sharedSeed, bool demoPlaying, const char *demoName );
 	static UI_Main *Get( void );

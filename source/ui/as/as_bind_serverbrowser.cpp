@@ -26,6 +26,11 @@ static bool Serverbrowser_removeFavorite( ServerBrowserDataSource *browser, cons
 	return browser->removeFavorite( fav.buffer );
 }
 
+static void Serverbrowser_sortByColumn( ServerBrowserDataSource *browser, const asstring_t &column )
+{
+	browser->sortByColumn( column.buffer );
+}
+
 void BindServerbrowser( ASInterface *as )
 {
 	ASBind::GetClass<ServerBrowserDataSource>( as->getEngine() )
@@ -36,6 +41,7 @@ void BindServerbrowser( ASInterface *as )
 		.method( &ServerBrowserDataSource::stopUpdate, "stopUpdate" )
 		.method( &Serverbrowser_addFavorite, "addFavorite", true )
 		.method( &Serverbrowser_removeFavorite, "removeFavorite", true )
+		.method( &Serverbrowser_sortByColumn, "sortByColumn", true )
 		;
 }
 

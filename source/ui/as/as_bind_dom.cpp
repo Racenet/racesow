@@ -703,6 +703,18 @@ static unsigned int DataGrid_GetNumRows( ElementDataGrid *self ) {
 	return self->GetNumRows();
 }
 
+static asstring_t *DataGrid_GetColumn( ElementDataGrid *self, int idx ) {
+	// Tricky SOB, build a string from column->fields
+	const ElementDataGrid::Column *column = self->GetColumn( idx );
+	if( !column )
+		return ASSTR( "" );
+	String ret;
+	for( StringList::const_iterator it = column->fields.begin(); it != column->fields.end(); it++) {
+		ret += *it + " ";
+	}
+	return ASSTR( ret.Substring( 0, std::max( 0U, ret.Length() - 1 ) ) );
+}
+
 static void DataGrid_SetDataSource( ElementDataGrid *self, const asstring_t &source ) {
 	self->SetDataSource( ASSTR( source ) );
 }
@@ -721,6 +733,7 @@ static void BindElementDataGrid( ASInterface *as )
 
 		.method( &DataGrid_GetRow, "getRow", true )
 		.method( &DataGrid_GetNumRows, "getNumRows", true )
+		.method( &DataGrid_GetColumn, "getColumn", true )
 		.method( &DataGrid_SetDataSource, "setDataSource", true )
 		.refcast( &DataGrid_CastToElement, true, true )
 		;
