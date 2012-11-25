@@ -58,6 +58,8 @@ static qboolean filter_allow_empty = qfalse;
 
 static unsigned int masterServerUpdateSeq;
 
+static unsigned int localQueryTimeStamp = 0;
+
 //=========================================================
 
 /*
@@ -113,8 +115,8 @@ static qboolean CL_AddServerToList( serverlist_t **serversList, char *adr, unsig
 		// ignore excessive updates for about a second or so, which may happen
 		// when we're querying multiple master servers at once
 		if( !newserv->masterServerUpdateSeq ||
-			newserv->lastUpdatedByMasterServer + 1000 < cls.realtime ) {
-			newserv->lastUpdatedByMasterServer = cls.realtime;
+			newserv->lastUpdatedByMasterServer + 1000 < Sys_Milliseconds() ) {
+			newserv->lastUpdatedByMasterServer = Sys_Milliseconds();
 			newserv->masterServerUpdateSeq = masterServerUpdateSeq;
 		}
 		return qfalse;
@@ -127,7 +129,7 @@ static qboolean CL_AddServerToList( serverlist_t **serversList, char *adr, unsig
 		newserv->lastValidPing = Com_DaysSince1900();
 	else
 		newserv->lastValidPing = days;
-	newserv->lastUpdatedByMasterServer = cls.realtime;
+	newserv->lastUpdatedByMasterServer = Sys_Milliseconds();
 	newserv->masterServerUpdateSeq = masterServerUpdateSeq;
 	newserv->pnext = *serversList;
 	*serversList = newserv;
@@ -358,10 +360,10 @@ void CL_PingServer_f( void )
 		return;
 
 	// never request a second ping while awaiting for a ping reply
-	if( pingserver->pingTimeStamp + SERVER_PINGING_TIMEOUT > cls.realtime )
+	if( pingserver->pingTimeStamp + SERVER_PINGING_TIMEOUT > Sys_Milliseconds() )
 		return;
 
-	pingserver->pingTimeStamp = cls.realtime;
+	pingserver->pingTimeStamp = Sys_Milliseconds();
 
 	Q_snprintfz( requestString, sizeof( requestString ), "info %i %s %s", SERVERBROWSER_PROTOCOL_VERSION,
 		filter_allow_full ? "full" : "",
@@ -392,10 +394,17 @@ void CL_ParseStatusMessage( const socket_t *socket, const netadr_t *address, msg
 
 	if( pingserver && pingserver->pingTimeStamp ) // valid ping
 	{
-		unsigned int ping = cls.realtime - pingserver->pingTimeStamp;
+		unsigned int ping = Sys_Milliseconds() - pingserver->pingTimeStamp;
 		CL_UIModule_AddToServerList( adrString, va( "\\\\ping\\\\%i%s", ping, s ) );
 		pingserver->pingTimeStamp = 0;
 		pingserver->lastValidPing = Com_DaysSince1900();
+		return;
+	}
+
+	// assume LAN response
+	if( NET_IsLANAddress( address ) && ( localQueryTimeStamp + LAN_SERVER_PINGING_TIMEOUT > Sys_Milliseconds() ) ) {
+		unsigned int ping = Sys_Milliseconds() - localQueryTimeStamp;
+		CL_UIModule_AddToServerList( adrString, va( "\\\\ping\\\\%i%s", ping, s ) );
 		return;
 	}
 
@@ -600,6 +609,12 @@ void CL_GetServers_f( void )
 
 	if( !Q_stricmp( Cmd_Argv( 1 ), "local" ) )
 	{
+		if( localQueryTimeStamp + LAN_SERVER_PINGING_TIMEOUT > Sys_Milliseconds() ) {
+			return;
+		}
+
+		localQueryTimeStamp = Sys_Milliseconds();
+
 		// send a broadcast packet
 		Com_Printf( "pinging broadcast...\n" );
 

@@ -2641,6 +2641,44 @@ static size_t CL_CheckForUpdateReadCb( const void *buf, size_t numb, float perce
 	return numb;
 }
 
+#define TRACKING_PROFILE_ID "profile.id"
+
+/*
+* CL_CheckForUpdateHeaderCb
+*
+* Read the Set-Profile-Id header which works as a cookie and
+* store the read value in a file. All subsequent update requests
+* will echo back this id.
+*/
+static void CL_CheckForUpdateHeaderCb( const char *buf, void *privatep )
+{
+	const char *str;
+
+	if ( (str  = (char*)strstr(buf, "SET-PROFILE-ID:")) )
+	{
+		const char *val;
+		size_t val_size;
+
+		str += 15;
+		while (*str && (*str == ' ')) { str++; }
+
+		val = str;
+		while (*str && (*str != '\r') && (*str != '\n') && (*str != '\n')) { str++; }
+		val_size = str - val;
+
+		if( val_size > 0 ) {
+			int filenum; 
+			
+			if( FS_FOpenFile( TRACKING_PROFILE_ID, &filenum, FS_WRITE ) < 0 ) {
+				return;
+			}
+
+			FS_Write( val, val_size - 1, filenum );
+			FS_FCloseFile( filenum );
+		}
+	}
+}
+
 /*
 * CL_CheckForUpdate
 * 
@@ -2650,7 +2688,16 @@ static size_t CL_CheckForUpdateReadCb( const void *buf, size_t numb, float perce
 static void CL_CheckForUpdate( void )
 {
 #ifdef PUBLIC_BUILD
+#define HTTP_HEADER_SIZE	128
+
 	char url[MAX_STRING_CHARS];
+	char *resolution;
+	char *campaign;
+	int campaignSize;
+	char *profileId;
+	int profileIdSize;
+	int headerNum = 0;
+	const char *headers[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 	if( !cl_checkForUpdate->integer )
 		return;
@@ -2667,7 +2714,39 @@ static void CL_CheckForUpdate( void )
 	updateRemoteData = Mem_ZoneMalloc( 1 );
 	*updateRemoteData = '\0';
 
-	CL_AsyncStreamRequest( url, NULL, 15, 0, CL_CheckForUpdateReadCb, CL_CheckForUpdateDoneCb, NULL, qfalse );
+	// send screen resolution in UA-pixels header
+	resolution = Mem_TempMalloc( HTTP_HEADER_SIZE );
+	Q_snprintfz( resolution, HTTP_HEADER_SIZE, "%ix%i", viddef.width, viddef.height );
+	headers[headerNum++] = "UA-pixels";
+	headers[headerNum++] = resolution;
+
+	// send campaign ID
+	campaign = NULL;
+	campaignSize = FS_LoadBaseFile( "campaign.txt", &campaign, NULL, 0 );
+	if( campaignSize > 0 ) {
+		headers[headerNum++] = "X-Campaign";
+		headers[headerNum++] = campaign;
+	}
+
+	// send profile ID
+	profileId = NULL;
+	profileIdSize = FS_LoadFile( TRACKING_PROFILE_ID, &profileId, NULL, 0 );
+	if( profileIdSize > 0 ) {
+		headers[headerNum++] = "X-Profile-Id";
+		headers[headerNum++] = Q_strlwr( profileId );
+	}
+
+	CL_AsyncStreamRequest( url, headers, 15, 0, CL_CheckForUpdateReadCb, CL_CheckForUpdateDoneCb, 
+		CL_CheckForUpdateHeaderCb, NULL, qfalse );
+
+	Mem_TempFree( resolution );
+
+	if( campaign ) {
+		FS_FreeBaseFile( campaign );
+	}
+	if( profileId ) {
+		FS_FreeBaseFile( profileId );
+	}
 #endif
 }
 
@@ -2713,9 +2792,9 @@ static void CL_ShutdownAsyncStream( void )
 /*
 * CL_AsyncStreamRequest
 */
-void CL_AsyncStreamRequest( const char *url, const char *referer, int timeout, int resumeFrom,
+void CL_AsyncStreamRequest( const char *url, const char **headers, int timeout, int resumeFrom,
 	size_t (*read_cb)(const void *, size_t, float, const char *, void *), void (*done_cb)(int, const char *, void *), 
-	void *privatep, qboolean urlencodeUnsafe )
+	void (*header_cb)(const char *, void *), void *privatep, qboolean urlencodeUnsafe )
 {
 	char *tmpUrl = NULL;
 	const char *safeUrl;
@@ -2732,8 +2811,8 @@ void CL_AsyncStreamRequest( const char *url, const char *referer, int timeout, i
 		safeUrl = url;
 	}
 
-	AsyncStream_PerformRequest( cl_async_stream, safeUrl, "GET", NULL, referer, timeout, 
-		resumeFrom, read_cb, done_cb, NULL );
+	AsyncStream_PerformRequestExt( cl_async_stream, safeUrl, "GET", NULL, headers, timeout, 
+		resumeFrom, read_cb, done_cb, header_cb, NULL );
 
 	if( urlencodeUnsafe ) {
 		Mem_TempFree( tmpUrl );

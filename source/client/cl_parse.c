@@ -546,6 +546,7 @@ static size_t CL_WebDownloadReadCb( const void *buf, size_t numb, float percenta
 
 	if( cls.download.web ) {
 		char *referer, *fullurl;
+		const char *headers[3] = { NULL, NULL, NULL };
 
 		alloc_size = strlen( APP_URI_SCHEME ) + strlen( NET_AddressToString( &cls.serveraddress ) ) + 1;
 		referer = Mem_ZoneMalloc( alloc_size );
@@ -556,8 +557,11 @@ static size_t CL_WebDownloadReadCb( const void *buf, size_t numb, float percenta
 		fullurl = Mem_ZoneMalloc( alloc_size );
 		Q_snprintfz( fullurl, alloc_size, "%s/%s", url, filename );
 
-		CL_AsyncStreamRequest( fullurl, referer, cl_downloads_from_web_timeout->integer, cls.download.offset, 
-			CL_WebDownloadReadCb, CL_WebDownloadDoneCb, NULL, qtrue );
+		headers[0] = "Referer";
+		headers[1] = referer;
+
+		CL_AsyncStreamRequest( fullurl, headers, cl_downloads_from_web_timeout->integer, cls.download.offset, 
+			CL_WebDownloadReadCb, CL_WebDownloadDoneCb, NULL, NULL, qtrue );
 
 		Mem_ZoneFree( fullurl );
 		Mem_ZoneFree( referer );

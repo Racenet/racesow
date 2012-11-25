@@ -563,28 +563,54 @@ void CL_PlayDemoToAvi_f( void )
 */
 size_t CL_ReadDemoMetaData( const char *demopath, char *meta_data, size_t meta_data_size )
 {
-	char *name;
-	size_t name_size;
+	char *servername;
 	size_t meta_data_realsize = 0;
-	int demofile = 0, demolength;
 
 	if( !demopath || !*demopath ) {
 		return 0;
 	}
 
-	name_size = sizeof( char ) * ( strlen( "demos/" ) + strlen( demopath ) + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
-	name = Mem_TempMalloc( name_size );
+	// have to copy the argument now, since next actions will lose it
+	servername = TempCopyString( demopath );
+	COM_SanitizeFilePath( servername );
 
-	Q_snprintfz( name, name_size, "demos/%s", demopath );
-	COM_DefaultExtension( name, APP_DEMO_EXTENSION_STR, name_size );
-
-	demolength = FS_FOpenFile( name, &demofile, FS_READ );
-	if( demolength > 0 ) {
-		meta_data_realsize = SNAP_ReadDemoMetaData( demofile, meta_data, meta_data_size );
+	// hack: 
+	if( cls.demo.playing && !Q_stricmp( cls.demo.name, servername ) && cls.demo.meta_data_realsize > 0 ) {
+		if( meta_data && meta_data_size ) {
+			meta_data_realsize = cls.demo.meta_data_realsize;
+			memcpy( meta_data, cls.demo.meta_data, min( meta_data_size, cls.demo.meta_data_realsize ) );
+			meta_data[min( meta_data_size - 1, cls.demo.meta_data_realsize )] = '\0';
+		}
 	}
-	FS_FCloseFile( demofile );
+	else {
+		char *name;
+		size_t name_size;
+		int demofile, demolength;
 
-	Mem_TempFree( name );
+		name_size = sizeof( char ) * ( strlen( "demos/" ) + strlen( servername ) + strlen( APP_DEMO_EXTENSION_STR ) + 1 );
+		name = Mem_TempMalloc( name_size );
+
+		Q_snprintfz( name, name_size, "demos/%s", servername );
+		COM_DefaultExtension( name, APP_DEMO_EXTENSION_STR, name_size );
+
+		demolength = FS_FOpenFile( name, &demofile, FS_READ );
+
+		if( !demofile || demolength < 1 ) {
+			// relative filename didn't work, try launching a demo from absolute path
+			Q_snprintfz( name, name_size, "%s", servername );
+			COM_DefaultExtension( name, APP_DEMO_EXTENSION_STR, name_size );
+			demolength = FS_FOpenAbsoluteFile( name, &demofile, FS_READ );
+		}
+
+		if( demolength > 0 ) {
+			meta_data_realsize = SNAP_ReadDemoMetaData( demofile, meta_data, meta_data_size );
+		}
+		FS_FCloseFile( demofile );
+
+		Mem_TempFree( name );
+	}
+
+	Mem_TempFree( servername );
 
 	return meta_data_realsize;
 }

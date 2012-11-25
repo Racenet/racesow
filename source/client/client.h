@@ -382,9 +382,9 @@ void CL_Precache_f( void );
 void CL_ForwardToServer_f( void );
 void CL_ServerDisconnect_f( void );
 
-void CL_AsyncStreamRequest( const char *url, const char *referer, int timeout, int resumeFrom,
+void CL_AsyncStreamRequest( const char *url, const char **headers, int timeout, int resumeFrom,
 	size_t (*read_cb)(const void *, size_t, float, const char *, void *), void (*done_cb)(int, const char *, void *), 
-	void *privatep, qboolean urlencodeUnsafe );
+	void (*header_cb)(const char *, void *), void *privatep, qboolean urlencodeUnsafe );
 
 //
 // cl_game.c

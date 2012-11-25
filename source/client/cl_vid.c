@@ -255,9 +255,11 @@ static rserr_t VID_ChangeMode( vid_init_t vid_init )
 		return err;
 	}
 	else {
+		Cvar_ForceSet( "vid_fullscreen", "0" );
+		vid_fullscreen->modified = qfalse;
+		fs = qfalse;
+
 		if( err == rserr_invalid_fullscreen ) {
-			Cvar_ForceSet( "vid_fullscreen", "0" );
-			vid_fullscreen->modified = qfalse;
 			Com_Printf( "VID_ChangeMode() - fullscreen unavailable in this mode\n" );
 
 			if( ( err = vid_init( x, y, w, h, qfalse, ws ) ) == rserr_ok ) {
@@ -265,7 +267,7 @@ static rserr_t VID_ChangeMode( vid_init_t vid_init )
 			}
 		}
 		else if( err == rserr_invalid_mode ) {
-			Cvar_SetValue( "vid_mode", vid_ref_prevmode );
+			Cvar_ForceSet( "vid_mode", va( "%i", vid_ref_prevmode ) );
 			vid_mode->modified = qfalse;
 
 			Com_Printf( "VID_ChangeMode() - invalid mode\n" );
