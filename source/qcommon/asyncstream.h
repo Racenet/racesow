@@ -39,6 +39,7 @@ typedef void (*async_stream_free_t)( void *data, const char *filename, int filel
 
 typedef size_t (*async_stream_read_cb_t)(const void *buf, size_t numb, float percentage, const char *contentType, void *privatep);
 typedef void (*async_stream_done_cb_t)(int status, const char *contentType, void *privatep);
+typedef void (*async_stream_header_cb_t)(const void *buf, void *privatep);
 
 typedef struct async_stream_module_s async_stream_module_t;
 
@@ -80,7 +81,7 @@ size_t AsyncStream_UrlDecode( const char *src, char *dst, size_t size );
 void AsyncStream_UrlEncodeUnsafeChars( const char *src, char *dst, size_t size );
 
 /*
-* AsyncStream_PerformRequest
+* AsyncStream_PerformRequestExt
 *
 * Performs asynchronous HTTP request to specified URL. In case of GET method, data
 * is appended to the URL, in case of POST it is sent as the post data. Data is assumed
@@ -93,5 +94,10 @@ void AsyncStream_UrlEncodeUnsafeChars( const char *src, char *dst, size_t size )
 *
 * Returns 0 on success.
 */
+int AsyncStream_PerformRequestExt( async_stream_module_t *module, const char *url, const char *method, const char *data, 
+	const char **headers, int timeout, int resumeFrom, 
+	async_stream_read_cb_t read_cb, async_stream_done_cb_t done_cb, async_stream_header_cb_t header_cb,
+	void *privatep );
+
 int AsyncStream_PerformRequest( async_stream_module_t *module, const char *url, const char *method, const char *data, 
 	const char *referer, int timeout, int resumeFrom, async_stream_read_cb_t read_cb, async_stream_done_cb_t done_cb, void *privatep );

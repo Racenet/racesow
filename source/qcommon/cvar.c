@@ -797,9 +797,8 @@ char **Cvar_CompleteBuildList( const char *partial )
 	return buf;
 }
 
-
 /*
-* CVar_CompleteBuildList
+* Cvar_CompleteBuildListWithFlag
 */
 char **Cvar_CompleteBuildListWithFlag( const char *partial, cvar_flag_t flag )
 {
@@ -817,13 +816,17 @@ char **Cvar_CompleteBuildListWithFlag( const char *partial, cvar_flag_t flag )
 	return buf;
 }
 
-
+/*
+* Cvar_CompleteBuildListUser
+*/
 char **Cvar_CompleteBuildListUser( const char *partial )
 {
 	return Cvar_CompleteBuildListWithFlag( partial, CVAR_USERINFO );
 }
 
-
+/*
+* Cvar_CompleteBuildListServer
+*/
 char **Cvar_CompleteBuildListServer( const char *partial )
 {
 	return Cvar_CompleteBuildListWithFlag( partial, CVAR_SERVERINFO );

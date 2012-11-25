@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 typedef struct async_stream_handler_s {
 	async_stream_read_cb_t read_cb;
 	async_stream_done_cb_t done_cb;
+	async_stream_header_cb_t header_cb;
 	wswcurl_req *request;
 	void *privatep;
 
@@ -129,6 +130,24 @@ static void AsyncStream_DoneCallback( wswcurl_req *req, int status, void *privat
 }
 
 /*
+* AsyncStream_HeaderCallback
+*/
+static void AsyncStream_HeaderCallback( wswcurl_req *req, const char *buf, void *privatep )
+{
+	async_stream_handler_t *handler;	
+
+	handler = ( async_stream_handler_t * )privatep;
+	assert( handler );
+	if( !handler ) {
+		return;
+	}
+
+	if( handler->header_cb ) {
+		handler->header_cb( buf, handler->privatep );
+	}
+}
+
+/*
 * AsyncStream_UrlEncode
 */
 void AsyncStream_UrlEncode( const char *src, char *dst, size_t size )
@@ -153,10 +172,12 @@ void AsyncStream_UrlEncodeUnsafeChars( const char *src, char *dst, size_t size )
 }
 
 /*
-* AsyncStream_PerformRequest
+* AsyncStream_PerformRequestExt
 */
-int AsyncStream_PerformRequest( async_stream_module_t *module, const char *url, const char *method, const char *data, 
-	const char *referer, int timeout, int resumeFrom, async_stream_read_cb_t read_cb, async_stream_done_cb_t done_cb, void *privatep )
+int AsyncStream_PerformRequestExt( async_stream_module_t *module, const char *url, const char *method, const char *data, 
+	const char **headers, int timeout, int resumeFrom, 
+	async_stream_read_cb_t read_cb, async_stream_done_cb_t done_cb, async_stream_header_cb_t header_cb,
+	void *privatep )
 {
 	const char *postfields;
 	wswcurl_req *request;
@@ -221,6 +242,7 @@ int AsyncStream_PerformRequest( async_stream_module_t *module, const char *url, 
 	// initialize
 	handler->read_cb = read_cb;
 	handler->done_cb = done_cb;
+	handler->header_cb = header_cb;
 	handler->privatep = privatep;
 	handler->request = request;
 	handler->module = module;
@@ -237,20 +259,40 @@ int AsyncStream_PerformRequest( async_stream_module_t *module, const char *url, 
 	if( postfields ) {
 		wswcurl_set_postfields( request, postfields, strlen( postfields ) );
 	}
-	if( referer ) {
-		wswcurl_header( request, "Referer", referer );
+	if( headers ) {
+		int i, j;
+
+		for( i = 0, j = 1; headers[i] && headers[j]; i += 2, j += 2 ) {
+			wswcurl_header( request, headers[i], headers[j] );
+		}
 	}
 	if( resumeFrom ) {
 		wswcurl_set_resume_from( request, resumeFrom );
 	}
 
 	wswcurl_set_timeout( request, timeout );
-	wswcurl_stream_callbacks( request, AsyncStream_ReadCallback, AsyncStream_DoneCallback, handler );
+	wswcurl_stream_callbacks( request, AsyncStream_ReadCallback, AsyncStream_DoneCallback, 
+		AsyncStream_HeaderCallback, handler );
 
 	// start
 	wswcurl_start( request );
 
 	return 0;
+}
+
+/*
+* AsyncStream_PerformRequest
+*/
+int AsyncStream_PerformRequest( async_stream_module_t *module, const char *url, const char *method, const char *data, 
+	const char *referer, int timeout, int resumeFrom, async_stream_read_cb_t read_cb, async_stream_done_cb_t done_cb, void *privatep )
+{
+	const char *headers[3] = { NULL, NULL, NULL };
+	
+	headers[0] = "Referer";
+	headers[1] = referer;
+
+	return AsyncStream_PerformRequestExt( module, url, method, data, headers, 
+		timeout, resumeFrom, read_cb, done_cb, NULL, privatep );
 }
 
 /*

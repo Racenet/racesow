@@ -88,6 +88,8 @@ struct wswcurl_req_s {
 	wswcurl_done_cb callback_done;
 	// Callback when data is available
 	wswcurl_read_cb callback_read;
+	// Callback when header data is available
+	wswcurl_header_cb callback_header;
 
 	CURL *curl;		// Curl handle
 	CURLcode res;	// Curl response code
@@ -310,7 +312,7 @@ void wswcurl_start(wswcurl_req *req)
 
 size_t wswcurl_getsize( wswcurl_req *req, size_t *rxreceived )
 {
-	while( !req->headers_done && req->status >= 0 && req->status != WSTATUS_FINISHED && req->status != WSTATUS_QUEUED ) {
+	while( !req->headers_done && req->status >= 0 && req->status != WSTATUS_FINISHED/* && req->status != WSTATUS_QUEUED*/ ) {
 		// blocking read until we finish reading all headers
 		CURLDBG(("   CURL BLOCKING GETSIZE LOOP\n"));
 		wswcurl_perform_single( req );
@@ -326,10 +328,12 @@ size_t wswcurl_getsize( wswcurl_req *req, size_t *rxreceived )
 	return req->rx_expsize;
 }
 
-void wswcurl_stream_callbacks(wswcurl_req *req, wswcurl_read_cb read_cb, wswcurl_done_cb done_cb, void *customp)
+void wswcurl_stream_callbacks(wswcurl_req *req, wswcurl_read_cb read_cb, wswcurl_done_cb done_cb, 
+							  wswcurl_header_cb header_cb, void *customp)
 {
 	req->callback_read = read_cb;
 	req->callback_done = done_cb;
+	req->callback_header = header_cb;
 	req->customp = customp;
 }
 
@@ -538,7 +542,8 @@ int wswcurl_header( wswcurl_req *req, const char *key, const char *value, ...)
 
 wswcurl_req *wswcurl_create( const char *furl, ... )
 {
-	wswcurl_req req, *retreq = NULL;
+	wswcurl_req *retreq;
+	CURL *curl;
 	CURLcode res;
 	char url[4 * 1024]; // 4kb url buffer?
 	va_list arg;
@@ -551,42 +556,42 @@ wswcurl_req *wswcurl_create( const char *furl, ... )
 	va_end( arg );
 
 	// Initialize structure
-	memset( &req, 0, sizeof( req ) );
-
-	if( !(req.curl = curl_easy_init()) ) {
+	if( !(curl = curl_easy_init()) ) {
 		return NULL;
 	}
 
-	CURLSETOPT( req.curl, res, CURLOPT_URL, url );
-	CURLSETOPT( req.curl, res, CURLOPT_WRITEFUNCTION, wswcurl_write );
-	CURLSETOPT( req.curl, res, CURLOPT_NOPROGRESS, 1 );
-	CURLSETOPT( req.curl, res, CURLOPT_FOLLOWLOCATION, 1 );
-	CURLSETOPT( req.curl, res, CURLOPT_HEADERFUNCTION, wswcurl_readheader );
-	CURLSETOPT( req.curl, res, CURLOPT_CONNECTTIMEOUT, WCONNECTTIMEOUT );
-#if defined( APPLICATION ) && defined( APP_VERSION_STR )
-	CURLSETOPT( req.curl, res, CURLOPT_USERAGENT, APPLICATION " " APP_VERSION_STR " " CPUSTRING " " BUILDSTRING );
+	// allocate, copy
+	retreq = ( wswcurl_req * )WMALLOC( sizeof( wswcurl_req ) );
+	memset( retreq, 0, sizeof( *retreq ) );
+
+	retreq->curl = curl;
+	retreq->url = ( char* )WMALLOC( strlen( url ) + 1 );
+	memcpy( retreq->url, url, strlen( url ) + 1 );
+
+	CURLSETOPT( curl, res, CURLOPT_URL, retreq->url );
+	CURLSETOPT( curl, res, CURLOPT_WRITEFUNCTION, wswcurl_write );
+	CURLSETOPT( curl, res, CURLOPT_NOPROGRESS, 1 );
+	CURLSETOPT( curl, res, CURLOPT_FOLLOWLOCATION, 1 );
+	CURLSETOPT( curl, res, CURLOPT_HEADERFUNCTION, wswcurl_readheader );
+	CURLSETOPT( curl, res, CURLOPT_CONNECTTIMEOUT, WCONNECTTIMEOUT );
+#if defined( APPLICATION ) && defined( APP_VERSION_STR ) && defined( OSNAME ) && defined( CPUSTRING )
+	CURLSETOPT( curl, res, CURLOPT_USERAGENT, APPLICATION"/"APP_VERSION_STR" (compatible; N; "OSNAME"; "CPUSTRING")" );
 #endif
+	CURLSETOPT( curl, res, CURLOPT_WRITEDATA, ( void * )retreq );
+	CURLSETOPT( curl, res, CURLOPT_WRITEHEADER, ( void * )retreq );
+	CURLSETOPT( curl, res, CURLOPT_PRIVATE, ( void * )retreq );
 
 	// HTTP proxy settings
 	if( proxy && *proxy ) {
-		CURLSETOPT( req.curl, res, CURLOPT_PROXYTYPE, CURLPROXY_HTTP );
+		CURLSETOPT( curl, res, CURLOPT_PROXYTYPE, CURLPROXY_HTTP );
 
-		CURLSETOPT( req.curl, res, CURLOPT_PROXY, proxy );
+		CURLSETOPT( curl, res, CURLOPT_PROXY, proxy );
 		if( proxy_userpwd && *proxy_userpwd ) {
-			CURLSETOPT( req.curl, res, CURLOPT_PROXYUSERPWD, proxy_userpwd );
+			CURLSETOPT( curl, res, CURLOPT_PROXYUSERPWD, proxy_userpwd );
 		}
 	}
 
-	if( !req.curl ) {
-		return NULL;
-	}
-
-	req.url = ( char* )WMALLOC( strlen( url ) + 1 );
-	memcpy( req.url, url, strlen( url ) + 1 );
-
-	// Everything OK, allocate, copy, prepend to list and return
-	retreq = ( wswcurl_req * )WMALLOC( sizeof( wswcurl_req ) );
-	memcpy( retreq, &req, sizeof( wswcurl_req ) );
+	wswcurl_set_timeout( retreq, WTIMEOUT );
 
 	// link
 	retreq->prev = NULL;
@@ -598,15 +603,6 @@ wswcurl_req *wswcurl_create( const char *furl, ... )
 		http_requests_hnode = retreq;
 	}
 	http_requests = retreq;
-
-	wswcurl_set_timeout( retreq, WTIMEOUT );
-
-	CURLSETOPT( retreq->curl, res, CURLOPT_URL, req.url );	// fix for possibly bugged libcurl version
-
-	// Set the wswcurl_req as data
-	CURLSETOPT( retreq->curl, res, CURLOPT_WRITEDATA, ( void * )retreq );
-	CURLSETOPT( retreq->curl, res, CURLOPT_WRITEHEADER, ( void * )retreq );
-	CURLSETOPT( retreq->curl, res, CURLOPT_PRIVATE, ( void * )retreq );
 
 	CURLDBG((va("   CURL CREATE %s\n", url)));
 
@@ -734,6 +730,11 @@ const char *wswcurl_errorstr(int status)
 	return curl_easy_strerror( ( CURLcode )-status );
 }
 
+const char *wswcurl_get_url(const wswcurl_req *req)
+{
+	return req->url;
+}
+
 const char *wswcurl_get_effective_url(wswcurl_req *req)
 {
 	char *last_url = NULL;
@@ -784,6 +785,11 @@ static size_t wswcurl_readheader(void *ptr, size_t size, size_t nmemb, void *str
 	else if ( (str  = (char*)strstr(buf, "TRANSFER-ENCODING:")) )
 	{
 		req->rx_expsize = 0;
+	}
+
+	// call header callback function
+	if( req->callback_header ) {
+		req->callback_header( req, buf, req->customp );
 	}
 
 	req->last_action = wswcurl_now();
@@ -909,6 +915,11 @@ static void wswcurl_unpause( wswcurl_req *req )
 
 int wswcurl_tell( wswcurl_req *req )
 {
+	return req->rxreturned;
+}
+
+static int wswcurl_remaining( wswcurl_req *req )
+{
 	if( req->rx_expsize ) {
 		return req->rx_expsize - req->rxreturned;
 	}
@@ -918,7 +929,7 @@ int wswcurl_tell( wswcurl_req *req )
 int wswcurl_eof( wswcurl_req *req )
 {
 	return (req->status == WSTATUS_FINISHED || req->status < 0) // request completed
-		&& !wswcurl_tell( req );
+		&& !wswcurl_remaining( req );
 }
 
 static time_t wswcurl_now( void )

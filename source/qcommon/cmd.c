@@ -565,7 +565,7 @@ static void Cmd_AliasList_f( void )
 * 
 * Creates a new command that executes a command string (possibly ; separated)
 */
-static void Cmd_Alias_f( void )
+static void Cmd_Alias_f_( qboolean archive )
 {
 	cmd_alias_t *a;
 	char cmd[1024];
@@ -593,7 +593,7 @@ static void Cmd_Alias_f( void )
 	{
 		if( Cmd_Argc() == 2 )
 		{
-			if( !Q_stricmp( Cmd_Argv( 0 ), "aliasa" ) )
+			if( archive )
 				a->archive = qtrue;
 			Com_Printf( "alias \"%s" S_COLOR_WHITE "\" is \"%s\"\n", a->name, a->value );
 			return;
@@ -608,7 +608,7 @@ static void Cmd_Alias_f( void )
 		Trie_Insert( cmd_alias_trie, s, a );
 	}
 
-	if( !Q_stricmp( Cmd_Argv( 0 ), "aliasa" ) )
+	if( archive )
 		a->archive = qtrue;
 
 	// copy the rest of the command line
@@ -622,6 +622,22 @@ static void Cmd_Alias_f( void )
 	}
 
 	a->value = ZoneCopyString( cmd );
+}
+
+/*
+* Cmd_Alias_f
+*/
+static void Cmd_Alias_f( void )
+{
+	Cmd_Alias_f_( qfalse );
+}
+
+/*
+* Cmd_Aliasa_f
+*/
+static void Cmd_Aliasa_f( void )
+{
+	Cmd_Alias_f_( qtrue );
 }
 
 /*
@@ -1227,12 +1243,16 @@ void Cmd_Init( void )
 	Cmd_AddCommand( "exec", Cmd_Exec_f );
 	Cmd_AddCommand( "echo", Cmd_Echo_f );
 	Cmd_AddCommand( "aliaslist", Cmd_AliasList_f );
-	Cmd_AddCommand( "aliasa", Cmd_Alias_f );
+	Cmd_AddCommand( "aliasa", Cmd_Aliasa_f );
 	Cmd_AddCommand( "unalias", Cmd_Unalias_f );
 	Cmd_AddCommand( "unaliasall", Cmd_UnaliasAll_f );
 	Cmd_AddCommand( "alias", Cmd_Alias_f );
 	Cmd_AddCommand( "wait", Cmd_Wait_f );
 	Cmd_AddCommand( "vstr", Cmd_VStr_f );
+
+	Cmd_SetCompletionFunc( "alias", Cmd_CompleteAliasBuildList );
+	Cmd_SetCompletionFunc( "aliasa", Cmd_CompleteAliasBuildList );
+	Cmd_SetCompletionFunc( "unalias", Cmd_CompleteAliasBuildList );
 
 	cmd_initialized = qtrue;
 }

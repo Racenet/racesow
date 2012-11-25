@@ -9,6 +9,7 @@ typedef struct wswcurl_req_s wswcurl_req;
 
 typedef void (*wswcurl_done_cb)(struct wswcurl_req_s *req, int status, void *customp);
 typedef size_t (*wswcurl_read_cb)(struct wswcurl_req_s *req, const void *buf, size_t numb, float percentage, void *customp);
+typedef void (*wswcurl_header_cb)(struct wswcurl_req_s *req, const char *buf, void *customp);
 
 /**
  * initializes the memory pool, clears buffers, counters, etc
@@ -33,7 +34,8 @@ size_t wswcurl_getsize (wswcurl_req *req, size_t *rxreceived);
 /**
  * Sets callbacks to read the data in streaming-mode, no data will be stored by wswcurl
  */
-void wswcurl_stream_callbacks (wswcurl_req *req, wswcurl_read_cb read_cb, wswcurl_done_cb done_cb, void *customp);
+void wswcurl_stream_callbacks (wswcurl_req *req, wswcurl_read_cb read_cb, wswcurl_done_cb done_cb, 
+							   wswcurl_header_cb header_cb, void *customp);
 /**
  * Read 'size' bytes to buffer. Blocking call that waits for as long as buffer is filled
  * or EOF is reached. Returns the number of bytes written.
@@ -103,7 +105,7 @@ void wswcurl_urlencode_unsafechars( const char *src, char *dst, size_t size );
  */
 int wswcurl_isvalidhandle(wswcurl_req *req);
 /**
- * Returns number of unread bytes. For streamed urls may vary depending on how much data has been buffered.
+ * Returns current position in stream.
  */
 int wswcurl_tell(wswcurl_req *req);
 /**
@@ -114,6 +116,7 @@ int wswcurl_eof(wswcurl_req *req);
 const char *wswcurl_get_content_type( wswcurl_req *req );
 const char *wswcurl_getip(wswcurl_req *req);
 const char *wswcurl_errorstr(int status);
+const char *wswcurl_get_url(const wswcurl_req *req);
 const char *wswcurl_get_effective_url(wswcurl_req *req);
 
 #endif

@@ -120,6 +120,7 @@ static void GetLocalAddress( void )
 		Com_Printf( "Alias: %s\n", p );
 	}
 
+	// FIXME: IPv6?
 	if( hostInfo->h_addrtype != AF_INET )
 		return;
 
@@ -1472,6 +1473,8 @@ qboolean NET_IsAnyAddress( const netadr_t *address )
 
 /*
 * NET_IsLANAddress
+*
+* FIXME: This function apparently doesn't support CIDR
 */
 qboolean NET_IsLANAddress( const netadr_t *address )
 {
@@ -1494,7 +1497,6 @@ qboolean NET_IsLANAddress( const netadr_t *address )
 				return qtrue;
 			if( addr4->ip[0] == 192 && addr4->ip[1] == 168 )
 				return qtrue;
-			return qfalse;
 		}
 
 	case NA_IP6:
@@ -1502,12 +1504,21 @@ qboolean NET_IsLANAddress( const netadr_t *address )
 			const netadr_ipv6_t *addr6 = &address->address.ipv6;
 
 			// Local addresses are either the loopback adress (tested earlier), or fe80::/10
-			return ( addr6->ip[0] == 0xFE && ( addr6->ip[1] & 0xC0 ) == 0x80 ) ? qtrue : qfalse;
+			if ( addr6->ip[0] == 0xFE && ( addr6->ip[1] & 0xC0 ) == 0x80 ) {
+				return qtrue;
+			}
+
+			// private address space
+			if ( ( addr6->ip[0] & 0xFE ) == 0xFC ) {
+				return qtrue;
+			}
 		}
 
 	default:
 		return qfalse;
 	}
+
+	return qfalse;
 }
 
 /*

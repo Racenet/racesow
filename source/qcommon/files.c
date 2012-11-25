@@ -1038,7 +1038,7 @@ static int _FS_FOpenFile( const char *filename, int *filenum, int mode, qboolean
 			return -1;
 		}
 
-		wswcurl_stream_callbacks( file->streamHandle, NULL, FS_StreamDoneSimpleCb, file );
+		wswcurl_stream_callbacks( file->streamHandle, NULL, FS_StreamDoneSimpleCb, NULL, file );
 		wswcurl_start( file->streamHandle );
 
 		if( noSize )
@@ -1447,8 +1447,6 @@ int FS_Seek( int file, int offset, int whence )
 	qbyte buf[FS_ZIP_BUFSIZE * 4];
 
 	fh = FS_FileHandleForNum( file );
-	if( !fh->fstream )
-		return -1;
 
 	currentOffset = fh->uncompressedSize - fh->restReadUncompressed;
 
@@ -1463,6 +1461,35 @@ int FS_Seek( int file, int offset, int whence )
 	clamp( offset, 0, (int)fh->uncompressedSize );
 	if( offset == currentOffset )
 		return 0;
+
+	if( fh->streamHandle ) {
+		// kill the current stream
+		// start a new one with byte offset
+		wswcurl_req *newreq;
+		char *url = FS_CopyString( wswcurl_get_url( fh->streamHandle ) );
+
+		newreq = wswcurl_create( "%s", url );
+		if( !newreq ) {
+			FS_Free( url );
+			return -1;
+		}
+
+		wswcurl_delete( fh->streamHandle );
+		fh->streamHandle = newreq;
+
+		wswcurl_set_resume_from( newreq, offset );
+		wswcurl_stream_callbacks( newreq, NULL, FS_StreamDoneSimpleCb, NULL, fh );
+		wswcurl_start( newreq );
+		wswcurl_perform();
+
+		FS_Free( url );
+
+		fh->restReadUncompressed = fh->uncompressedSize - offset;
+		return 0;
+	}
+
+	if( !fh->fstream )
+		return -1;
 
 	if( !fh->zipEntry )
 	{

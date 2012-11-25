@@ -64,6 +64,9 @@ static void ML_AddMap( const char *filename, const char *fullname )
 	if( !ML_ValidateFilename( filename ) )
 		return;
 
+	if( !strcmp(filename, "ui") )
+		return;
+
 	if( !fullname )
 	{
 		ML_GetFullnameFromMap( filename, fullname_, sizeof( fullname_ ) );
