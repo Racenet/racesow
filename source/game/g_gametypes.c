@@ -749,7 +749,7 @@ void G_Match_LaunchState( int matchState )
 	static qboolean advance_queue = qfalse;
 
 	// There isn't any script, run generic fuction
-	if( level.gametype.asEngineHandle < 0 )
+	if( level.asEngineHandle < 0 )
 	{
 		if( !G_Gametype_GENERIC_MatchStateFinished( matchState ) )
 			return;
@@ -757,7 +757,7 @@ void G_Match_LaunchState( int matchState )
 	else
 	{
 		// give the gametype a chance to refuse the state change, or to set up things for it
-		if( !G_asCallMatchStateFinishedScript( matchState ) )
+		if( !GT_asCallMatchStateFinished( matchState ) )
 			return;
 	}
 
@@ -857,10 +857,10 @@ void G_Match_LaunchState( int matchState )
 	// give the gametype the chance to setup for the new state
 
 	// There isn't any script, run generic fuction
-	if( level.gametype.asEngineHandle < 0 )
+	if( level.asEngineHandle < 0 )
 		G_Gametype_GENERIC_MatchStateStarted();
 	else
-		G_asCallMatchStateStartedScript();
+		GT_asCallMatchStateStarted();
 
 	G_UpdatePlayersMatchMsgs();
 }
@@ -1759,10 +1759,10 @@ void G_Gametype_ScoreEvent( gclient_t *client, const char *score_event, const ch
 	if( !score_event || !score_event[0] )
 		return;
 
-	if( level.gametype.asEngineHandle < 0 )
+	if( level.asEngineHandle < 0 )
 		G_Gametype_GENERIC_ScoreEvent( client, score_event, args );
 	else
-		G_asCallScoreEventScript( client, score_event, args );
+		GT_asCallScoreEvent( client, score_event, args );
 }
 
 /*
@@ -1777,10 +1777,10 @@ void G_RunGametype( void )
 	G_UpdateScoreBoardMessages();
 
 	//check gametype specific rules
-	if( level.gametype.asEngineHandle < 0 )
+	if( level.asEngineHandle < 0 )
 		G_Gametype_GENERIC_ThinkRules();
 	else
-		G_asCallThinkRulesScript();
+		GT_asCallThinkRules();
 
 	if( G_EachNewSecond() )
 	{
@@ -1803,63 +1803,6 @@ void G_RunGametype( void )
 //======================================================
 //		Game type registration
 //======================================================
-
-/*
-* G_ChecksumGametypes_f
-*/
-void G_ChecksumGametypes_f( void )
-{
-	const char *basePath = "progs/gametypes";
-	const char *gamedir = trap_Cvar_String( "fs_game" );
-	char *name, *sectionName;
-	char filename[MAX_STRING_CHARS];
-	int count, sectionNum;
-	int length, filenum;
-	qbyte *data;
-
-	if( !level.canSpawnEntities )
-	{
-		G_Printf( "The level is being reinitialized, retry in a second\n" );
-		return;
-	}
-
-	for( count = 0; ( name = G_ListNameForPosition( g_gametypes_list->string, count, CHAR_GAMETYPE_SEPARATOR ) ) != NULL; count++ )
-	{
-		trap_Cmd_ExecuteText( EXEC_APPEND, va( "fs_checksum %s/%s/%s%s\n", gamedir, basePath, name, GAMETYPE_PROJECT_EXTENSION ) );
-
-		Q_snprintfz( filename, sizeof( filename ), "progs/gametypes/%s%s", name, GAMETYPE_PROJECT_EXTENSION );
-		Q_strlwr( filename );
-		if( ( length = trap_FS_FOpenFile( filename, &filenum, FS_READ ) ) == -1 )
-		{
-			G_Printf( "WARNING: Couldn't find %s\n", filename );
-			continue;
-		}
-
-		if( !length )
-		{
-			trap_FS_FCloseFile( filenum );
-			continue;
-		}
-
-		// load the definition file into memory
-		data = G_Malloc( length + 1 );
-		trap_FS_Read( data, length, filenum );
-		trap_FS_FCloseFile( filenum );
-
-		// do it
-		for( sectionNum = 0; ( sectionName = G_ListNameForPosition( ( const char * )data, sectionNum, CHAR_GAMETYPE_SEPARATOR ) ) != NULL; sectionNum++ )
-		{
-			COM_StripExtension( sectionName );
-			while( *sectionName == '\n' || *sectionName == ' ' || *sectionName == '\r' )
-				sectionName++;
-
-			trap_Cmd_ExecuteText( EXEC_APPEND, va( "fs_checksum %s/%s/%s%s\n", gamedir, basePath, sectionName, GAMETYPE_SCRIPT_EXTENSION ) );
-		}
-
-		G_Free( data );
-		trap_Cbuf_Execute();
-	}
-}
 
 /*
 * G_Gametype_Exists
@@ -2031,7 +1974,7 @@ void G_Gametype_Init( void )
 	G_Gametype_SetDefaults();
 
 	// Init the current gametype
-	if( !G_asLoadGametypeScript( g_gametype->string ) )
+	if( !GT_asLoadGametypeS( g_gametype->string ) )
 		G_Gametype_GENERIC_Init();
 
 	trap_ConfigString( CS_GAMETYPENAME, gs.gametypeName );

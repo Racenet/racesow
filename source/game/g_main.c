@@ -405,8 +405,12 @@ void G_Shutdown( void )
 	RS_Shutdown();
 	//!racesow
 
-	G_asCallShutdownScript();
-	G_asShutdownGametypeScript();
+	GT_asCallShutdown();
+	G_asCallMapExit();
+ 
+	G_asShutdownMapScript();
+	GT_asShutdownScript();
+	G_asShutdownGameModuleEngine();
 
 	SV_WriteIPList ();
 

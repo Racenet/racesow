@@ -105,7 +105,6 @@ qboolean Pickup_Weapon( edict_t *ent, edict_t *other )
 	{
 		// give them some ammo with it
 		ammo_tag = item->ammo_tag;
-
 		if( ammo_tag )
 			Add_Ammo( other->r.client, GS_FindItemByTag( ammo_tag ), weapondef->firedef.weapon_pickup, qtrue );
 	}

@@ -49,8 +49,8 @@ void G_UpdateScoreBoardMessages( void )
 	// fixme : mess of copying
 	maxlen = MAX_STRING_CHARS - ( strlen( "scb \"\"" + 4 ) );
 
-	if( level.gametype.asEngineHandle >= 0 )
-		scoreBoardMessage = G_asCallScoreboardMessage( maxlen );
+	if( level.asEngineHandle >= 0 )
+		scoreBoardMessage = GT_asCallScoreboardMessage( maxlen );
 	else
 		scoreBoardMessage = G_Gametype_GENERIC_ScoreboardMessage();
 

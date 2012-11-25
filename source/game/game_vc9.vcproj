@@ -634,6 +634,14 @@
 			Filter="*.c"
 			>
 			<File
+				RelativePath=".\g_as_gametypes.c"
+				>
+			</File>
+			<File
+				RelativePath=".\g_as_maps.c"
+				>
+			</File>
+			<File
 				RelativePath=".\g_ascript.c"
 				>
 			</File>
@@ -1939,6 +1947,10 @@
 			</File>
 			<File
 				RelativePath="..\gameshared\config.h"
+				>
+			</File>
+			<File
+				RelativePath=".\g_as_local.h"
 				>
 			</File>
 			<File

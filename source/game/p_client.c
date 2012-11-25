@@ -248,7 +248,8 @@ static edict_t *CopyToBodyQue( edict_t *ent, edict_t *attacker, int damage )
 	body->die = body_die;
 	body->think = body_think; // body self destruction countdown
 
-	if( ent->health < GIB_HEALTH )
+	if( ent->health < GIB_HEALTH
+		|| meansOfDeath == MOD_ELECTROBOLT_S /* electrobolt always gibs */ )
 	{
 		ThrowSmallPileOfGibs( body, damage );
 		ThrowClientHead( body, damage ); // sets ET_GIB
@@ -653,8 +654,8 @@ void G_ClientRespawn( edict_t *self, qboolean ghost )
 	GClip_LinkEntity( self );
 
 	// let the gametypes perform their changes
-	if( level.gametype.asEngineHandle >= 0 )
-		G_asCallPlayerRespawnScript( self, old_team, self->s.team );
+	if( level.asEngineHandle >= 0 )
+		GT_asCallPlayerRespawn( self, old_team, self->s.team );
 	else
 		G_Gametype_GENERIC_ClientRespawn( self, old_team, self->s.team );
 }

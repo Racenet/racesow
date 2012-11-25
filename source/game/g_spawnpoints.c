@@ -331,8 +331,8 @@ void SelectSpawnPoint( edict_t *ent, edict_t **spawnpoint, vec3_t origin, vec3_t
 	}
 	else 
 	{
-		if( level.gametype.asEngineHandle >= 0 )
-			spot = G_asCallSelectSpawnPointScript( ent );
+		if( level.asEngineHandle >= 0 )
+			spot = GT_asCallSelectSpawnPoint( ent );
 
 		if( !spot )
 			spot = SelectDeathmatchSpawnPoint( ent );

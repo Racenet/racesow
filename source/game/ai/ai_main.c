@@ -477,7 +477,7 @@ void AI_UpdateStatus( edict_t *self )
 
 		self->ai.status.moveTypesMask = self->ai.pers.moveTypesMask;
 
-		if( !G_asCallBotStatusScript( self ) )
+		if( !GT_asCallBotStatus( self ) )
 			self->ai.pers.UpdateStatus( self );
 
 		self->ai.statusUpdateTimeout = level.time + AI_STATUS_TIMEOUT;

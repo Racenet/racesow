@@ -451,7 +451,7 @@ void G_Damage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const vec3_
 		return;
 
 	// adding damage given/received to stats
-	if( statDmg && attacker->r.client )
+	if( statDmg && attacker->r.client && !targ->deadflag && targ->movetype != MOVETYPE_PUSH && targ->s.type != ET_CORPSE )
 	{
 		attacker->r.client->level.stats.total_damage_given += take + asave;
 		teamlist[attacker->s.team].stats.total_damage_given += take + asave;
@@ -529,7 +529,7 @@ void G_Damage( edict_t *targ, edict_t *inflictor, edict_t *attacker, const vec3_
 	}
 
 	// accumulate given damage for hit sounds
-	if( ( take || asave ) && targ != attacker && targ->r.client && !targ->deadflag )
+	if( ( take || asave ) && targ != attacker && client && !targ->deadflag )
 	{
 		if( attacker )
 		{

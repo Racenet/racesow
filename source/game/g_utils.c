@@ -875,7 +875,7 @@ void G_FreeEdict( edict_t *ed )
 	AI_RemoveGoalEntity( ed );
 	G_FreeAI( ed );
 
-	G_asReleaseEntityBehavoirs( ed );
+	G_asReleaseEntityBehaviors( ed );
 
 	memset( ed, 0, sizeof( *ed ) );
 	ed->r.inuse = qfalse;
@@ -905,7 +905,7 @@ void G_InitEdict( edict_t *e )
 	e->s.linearProjectile = qfalse;
 	e->scriptSpawned = qfalse;
 
-	G_asResetEntityBehavoirs( e );
+	G_asResetEntityBehaviors( e );
 
 	//mark all entities to not be sent by default
 	if( e->r.svflags & SVF_FAKECLIENT )

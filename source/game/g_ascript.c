@@ -19,14 +19,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "g_local.h"
-#include "../gameshared/angelref.h"
+#include "g_as_local.h"
 
-#define G_AsMalloc								G_LevelMalloc
-#define G_AsFree								G_LevelFree
+angelwrap_api_t *angelExport = NULL;
 
-static angelwrap_api_t *angelExport = NULL;
-
-#define SCRIPT_MODULE_NAME						"gametypes"
+qboolean inMapFuncCall = qfalse;
 
 //=======================================================================
 
@@ -2767,9 +2764,9 @@ static const asClassDescriptor_t * const asClassesDescriptors[] =
 };
 
 /*
-* G_RegisterObjectClasses
+* G_asRegisterObjectClasses
 */
-static void G_RegisterObjectClasses( int asEngineHandle )
+static void G_asRegisterObjectClasses( int asEngineHandle )
 {
 	int i, j;
 	int error;
@@ -2812,12 +2809,7 @@ static void G_RegisterObjectClasses( int asEngineHandle )
 				if( !objBehavior->declaration )
 					break;
 
-				if( level.gametype.asEngineIsGeneric ) {
-					error = -1;
-				}
-				else {
-					error = angelExport->asRegisterObjectBehaviour( asEngineHandle, cDescr->name, objBehavior->behavior, objBehavior->declaration, objBehavior->funcPointer, objBehavior->callConv );
-				}
+				error = angelExport->asRegisterObjectBehaviour( asEngineHandle, cDescr->name, objBehavior->behavior, objBehavior->declaration, objBehavior->funcPointer, objBehavior->callConv );
 			}
 		}
 
@@ -2830,12 +2822,7 @@ static void G_RegisterObjectClasses( int asEngineHandle )
 				if( !objMethod->declaration )
 					break;
 
-				if( level.gametype.asEngineIsGeneric ) {
-					error = -1;
-				}
-				else {
-					error = angelExport->asRegisterObjectMethod( asEngineHandle, cDescr->name, objMethod->declaration, objMethod->funcPointer, objMethod->callConv );
-				}
+				error = angelExport->asRegisterObjectMethod( asEngineHandle, cDescr->name, objMethod->declaration, objMethod->funcPointer, objMethod->callConv );
 			}
 		}
 
@@ -2874,7 +2861,11 @@ static edict_t *asFunc_G_Spawn( asstring_t *classname )
 	}
 
 	ent->scriptSpawned = qtrue;
-	G_asClearEntityBehavoirs( ent );
+
+	// FIXME: fetch current module from activeContext
+	ent->scriptModule = inMapFuncCall ? MAP_SCRIPTS_MODULE_NAME : GAMETYPE_SCRIPTS_MODULE_NAME;
+
+	G_asClearEntityBehaviors( ent );
 
 	return ent;
 }
@@ -3687,11 +3678,7 @@ static void G_asRegisterGlobalFunctions( int asEngineHandle )
 
 	for( func = asGlobFuncs; func->declaration; func++ )
 	{
-		if( level.gametype.asEngineIsGeneric ) {
-			error = -1;
-		} else {
-			error = angelExport->asRegisterGlobalFunction( asEngineHandle, func->declaration, func->pointer, asCALL_CDECL );
-		}
+		error = angelExport->asRegisterGlobalFunction( asEngineHandle, func->declaration, func->pointer, asCALL_CDECL );
 
 		if( error < 0 )
 		{
@@ -3700,6 +3687,13 @@ static void G_asRegisterGlobalFunctions( int asEngineHandle )
 		}
 
 		count++;
+	}
+
+	// get AS function pointers
+	for( func = asGlobFuncs; func->declaration; func++ ) {
+		if( func->asFuncPtr ) {
+			*func->asFuncPtr = angelExport->asGetGlobalFunctionByDecl( asEngineHandle, func->declaration );
+		}
 	}
 }
 
@@ -3722,411 +3716,40 @@ static void G_asRegisterGlobalProperties( int asEngineHandle )
 	}
 }
 
-static void G_InitializeGameModuleSyntax( int asEngineHandle )
-{
-	G_Printf( "* Initializing Game module syntax\n" );
-
-	// register global variables
-	G_asRegisterEnums( asEngineHandle );
-
-	// register classes
-	G_RegisterObjectClasses( asEngineHandle );
-
-	// register global functions
-	G_asRegisterGlobalFunctions( asEngineHandle );
-
-	// register global properties
-	G_asRegisterGlobalProperties( asEngineHandle );
-}
-
-
-static qboolean G_asExecutionErrorReport( int asEngineHandle, int asContextHandle, int error )
-{
-	if( error == asEXECUTION_FINISHED )
-		return qfalse;
-
-	// The execution didn't finish as we had planned. Determine why.
-	if( error == asEXECUTION_ABORTED )
-		G_Printf( "* The script was aborted before it could finish. Probably it timed out.\n" );
-
-	else if( error == asEXECUTION_EXCEPTION )
-	{
-		void *func;
-
-		G_Printf( "* The script ended with an exception.\n" );
-
-		// Write some information about the script exception
-		func = angelExport->asGetExceptionFunction( asContextHandle );
-		G_Printf( "* func: %s\n", angelExport->asGetFunctionDeclaration( func, qtrue ) );
-		G_Printf( "* modl: %s\n", SCRIPT_MODULE_NAME );
-		G_Printf( "* sect: %s\n", angelExport->asGetFunctionSection( func ) );
-		G_Printf( "* line: %i\n", angelExport->asGetExceptionLineNumber( asContextHandle ) );
-		G_Printf( "* desc: %s\n", angelExport->asGetExceptionString( asContextHandle ) );
-	}
-	else
-		G_Printf( "* The script ended for some unforeseen reason ( %i ).\n", error );
-
-	return qtrue;
-}
-
-static void G_ResetGametypeScriptData( void )
-{
-	level.gametype.asEngineHandle = -1;
-	level.gametype.asEngineIsGeneric = qfalse;
-	level.gametype.initFunc = NULL;
-	level.gametype.spawnFunc = NULL;
-	level.gametype.matchStateStartedFunc = NULL;
-	level.gametype.matchStateFinishedFunc = NULL;
-	level.gametype.thinkRulesFunc = NULL;
-	level.gametype.playerRespawnFunc = NULL;
-	level.gametype.scoreEventFunc = NULL;
-	level.gametype.scoreboardMessageFunc = NULL;
-	level.gametype.selectSpawnPointFunc = NULL;
-	level.gametype.clientCommandFunc = NULL;
-	level.gametype.botStatusFunc = NULL;
-	level.gametype.shutdownFunc = NULL;
-
-	asEntityCallThinkFuncPtr = NULL;
-	asEntityCallTouchFuncPtr = NULL;
-	asEntityCallUseFuncPtr = NULL;
-	asEntityCallStopFuncPtr = NULL;
-	asEntityCallPainFuncPtr = NULL;
-	asEntityCallDieFuncPtr = NULL;
-}
-
-void G_asShutdownGametypeScript( void )
-{
-	int i;
-	edict_t *e;
-
-	// release the callback and any other objects obtained from the script engine before releasing the engine
-	for( i = 0; i < game.numentities; i++ ) {
-		e = &game.edicts[i];
-
-		if( e->scriptSpawned ) {
-			G_asReleaseEntityBehavoirs( e );
-		}
-	}
-
-	if( level.gametype.asEngineHandle > -1 ) {
-		if( angelExport )
-			angelExport->asReleaseScriptEngine( level.gametype.asEngineHandle );
-	}
-
-	G_ResetGametypeScriptData();
-}
-
-//"void GT_SpawnGametype()"
-void G_asCallLevelSpawnScript( void )
-{
-	int error, asContextHandle;
-
-	if( !level.gametype.spawnFunc )
-		return;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.spawnFunc );
-	if( error < 0 ) 
-		return;
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-}
-
-//"void GT_MatchStateStarted()"
-void G_asCallMatchStateStartedScript( void )
-{
-	int error, asContextHandle;
-
-	if( !level.gametype.matchStateStartedFunc )
-		return;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.matchStateStartedFunc );
-	if( error < 0 ) 
-		return;
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-}
-
-//"bool GT_MatchStateFinished( int incomingMatchState )"
-qboolean G_asCallMatchStateFinishedScript( int incomingMatchState )
-{
-	int error, asContextHandle;
-	qboolean result;
-
-	if( !level.gametype.matchStateFinishedFunc )
-		return qtrue;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.matchStateFinishedFunc );
-	if( error < 0 ) 
-		return qtrue;
-
-	// Now we need to pass the parameters to the script function.
-	angelExport->asSetArgDWord( asContextHandle, 0, incomingMatchState );
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-
-	// Retrieve the return from the context
-	result = angelExport->asGetReturnBool( asContextHandle );
-
-	return result;
-}
-
-//"void GT_ThinkRules( void )"
-void G_asCallThinkRulesScript( void )
-{
-	int error, asContextHandle;
-
-	if( !level.gametype.thinkRulesFunc )
-		return;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.thinkRulesFunc );
-	if( error < 0 ) 
-		return;
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-}
-
-//"void GT_playerRespawn( cEntity @ent, int old_team, int new_team )"
-void G_asCallPlayerRespawnScript( edict_t *ent, int old_team, int new_team )
-{
-	int error, asContextHandle;
-
-	if( !level.gametype.playerRespawnFunc )
-		return;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.playerRespawnFunc );
-	if( error < 0 ) 
-		return;
-
-	// Now we need to pass the parameters to the script function.
-	angelExport->asSetArgObject( asContextHandle, 0, ent );
-	angelExport->asSetArgDWord( asContextHandle, 1, old_team );
-	angelExport->asSetArgDWord( asContextHandle, 2, new_team );
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-}
-
-//"void GT_scoreEvent( cClient @client, String &score_event, String &args )"
-void G_asCallScoreEventScript( gclient_t *client, const char *score_event, const char *args )
-{
-	int error, asContextHandle;
-	asstring_t *s1, *s2;
-
-	if( !level.gametype.scoreEventFunc )
-		return;
-
-	if( !score_event || !score_event[0] )
-		return;
-
-	if( !args )
-		args = "";
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.scoreEventFunc );
-	if( error < 0 ) 
-		return;
-
-	// Now we need to pass the parameters to the script function.
-	s1 = angelExport->asStringFactoryBuffer( score_event, strlen( score_event ) );
-	s2 = angelExport->asStringFactoryBuffer( args, strlen( args ) );
-
-	angelExport->asSetArgObject( asContextHandle, 0, client );
-	angelExport->asSetArgObject( asContextHandle, 1, s1 );
-	angelExport->asSetArgObject( asContextHandle, 2, s2 );
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-
-	angelExport->asStringRelease( s1 );
-	angelExport->asStringRelease( s2 );
-}
-
-//"String @GT_ScoreboardMessage( uint maxlen )"
-char *G_asCallScoreboardMessage( unsigned int maxlen )
-{
-	asstring_t *string;
-	int error, asContextHandle;
-
-	scoreboardString[0] = 0;
-
-	if( !level.gametype.scoreboardMessageFunc )
-		return NULL;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.scoreboardMessageFunc );
-	if( error < 0 ) 
-		return NULL;
-
-	// Now we need to pass the parameters to the script function.
-	angelExport->asSetArgDWord( asContextHandle, 0, maxlen );
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-
-	string = (asstring_t *)angelExport->asGetReturnObject( asContextHandle );
-	if( !string || !string->len || !string->buffer )
-		return NULL;
-
-	Q_strncpyz( scoreboardString, string->buffer, sizeof( scoreboardString ) );
-
-	return scoreboardString;
-}
-
-//"cEntity @GT_SelectSpawnPoint( cEntity @ent )"
-edict_t *G_asCallSelectSpawnPointScript( edict_t *ent )
-{
-	int error, asContextHandle;
-	edict_t *spot;
-
-	if( !level.gametype.selectSpawnPointFunc )
-		return SelectDeathmatchSpawnPoint( ent ); // should have a hardcoded backup
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.selectSpawnPointFunc );
-	if( error < 0 ) 
-		return SelectDeathmatchSpawnPoint( ent );
-
-	// Now we need to pass the parameters to the script function.
-	angelExport->asSetArgObject( asContextHandle, 0, ent );
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-
-	spot = (edict_t *)angelExport->asGetReturnObject( asContextHandle );
-	if( !spot )
-		spot = SelectDeathmatchSpawnPoint( ent );
-
-	return spot;
-}
-
-//"bool GT_Command( cClient @client, String &cmdString, String &argsString, int argc )"
-qboolean G_asCallGameCommandScript( gclient_t *client, const char *cmd, const char *args, int argc )
-{
-	int error, asContextHandle;
-	asstring_t *s1, *s2;
-
-	if( !level.gametype.clientCommandFunc )
-		return qfalse; // should have a hardcoded backup
-
-	// check for having any command to parse
-	if( !cmd || !cmd[0] )
-		return qfalse;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.clientCommandFunc );
-	if( error < 0 ) 
-		return qfalse;
-
-	// Now we need to pass the parameters to the script function.
-	s1 = angelExport->asStringFactoryBuffer( cmd, strlen( cmd ) );
-	s2 = angelExport->asStringFactoryBuffer( args, strlen( args ) );
-
-	angelExport->asSetArgObject( asContextHandle, 0, client );
-	angelExport->asSetArgObject( asContextHandle, 1, s1 );
-	angelExport->asSetArgObject( asContextHandle, 2, s2 );
-	angelExport->asSetArgDWord( asContextHandle, 3, argc );
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-
-	angelExport->asStringRelease( s1 );
-	angelExport->asStringRelease( s2 );
-
-	// Retrieve the return from the context
-	return angelExport->asGetReturnBool( asContextHandle );
-}
-
-//"bool GT_UpdateBotStatus( cEntity @ent )"
-qboolean G_asCallBotStatusScript( edict_t *ent )
-{
-	int error, asContextHandle;
-
-	if( !level.gametype.botStatusFunc )
-		return qfalse; // should have a hardcoded backup
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.botStatusFunc );
-	if( error < 0 ) 
-		return qfalse;
-
-	// Now we need to pass the parameters to the script function.
-	angelExport->asSetArgObject( asContextHandle, 0, ent );
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-
-	// Retrieve the return from the context
-	return angelExport->asGetReturnBool( asContextHandle );
-}
-
-//"void GT_Shutdown()"
-void G_asCallShutdownScript( void )
-{
-	int error, asContextHandle;
-
-	if( !level.gametype.shutdownFunc || !angelExport )
-		return;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.shutdownFunc );
-	if( error < 0 ) 
-		return;
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
-}
+// ==========================================================================================
 
 // map entity spawning
 qboolean G_asCallMapEntitySpawnScript( const char *classname, edict_t *ent )
 {
 	char fdeclstr[MAX_STRING_CHARS];
 	int error, asContextHandle;
-	if (!angelExport) return qfalse;
+	const char *spawnModule;
+
+	if (!angelExport) {
+		return qfalse;
+	}
 
 	Q_snprintfz( fdeclstr, sizeof( fdeclstr ), "void %s( cEntity @ent )", classname );
 
-	ent->asSpawnFunc = angelExport->asGetFunctionByDecl( level.gametype.asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
+	// lookup the spawn function in gametype module first, fallback to map script
+	spawnModule = GAMETYPE_SCRIPTS_MODULE_NAME;
+	ent->asSpawnFunc = angelExport->asGetFunctionByDecl( level.asEngineHandle, spawnModule, fdeclstr );
+	if( !ent->asSpawnFunc ) {
+		spawnModule = MAP_SCRIPTS_MODULE_NAME;
+		ent->asSpawnFunc = angelExport->asGetFunctionByDecl( level.asEngineHandle, spawnModule, fdeclstr );
+	}
+
 	if( !ent->asSpawnFunc )
 		return qfalse;
 
-	// this is in case we might want to call G_asReleaseEntityBehavoirs
+	// this is in case we might want to call G_asReleaseEntityBehaviors
 	// in the spawn function (an object may release itself, ugh)
 	ent->scriptSpawned = qtrue;
-	G_asClearEntityBehavoirs( ent );
+	ent->scriptModule = spawnModule;
+	G_asClearEntityBehaviors( ent );
 
 	// call the spawn function
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
+	asContextHandle = angelExport->asAdquireContext( level.asEngineHandle );
 	error = angelExport->asPrepare( asContextHandle, ent->asSpawnFunc );
 	if( error < 0 ) 
 		return qfalse;
@@ -4135,9 +3758,9 @@ qboolean G_asCallMapEntitySpawnScript( const char *classname, edict_t *ent )
 	angelExport->asSetArgObject( asContextHandle, 0, ent );
 
 	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
+	if( G_ExecutionErrorReport( level.asEngineHandle, asContextHandle, error ) )
 	{
-		G_asShutdownGametypeScript();
+		GT_asShutdownScript();
 		ent->asSpawnFunc = NULL;
 		return qfalse;
 	}
@@ -4147,9 +3770,9 @@ qboolean G_asCallMapEntitySpawnScript( const char *classname, edict_t *ent )
 }
 
 /*
-* G_asResetEntityBehavoirs
+* G_asResetEntityBehaviors
 */
-void G_asResetEntityBehavoirs( edict_t *ent )
+void G_asResetEntityBehaviors( edict_t *ent )
 {
 	ent->asThinkFunc = asEntityCallThinkFuncPtr;
 	ent->asTouchFunc = asEntityCallTouchFuncPtr;
@@ -4160,9 +3783,9 @@ void G_asResetEntityBehavoirs( edict_t *ent )
 }
 
 /*
-* G_asClearEntityBehavoirs
+* G_asClearEntityBehaviors
 */
-void G_asClearEntityBehavoirs( edict_t *ent )
+void G_asClearEntityBehaviors( edict_t *ent )
 {
 	ent->asThinkFunc = NULL;
 	ent->asTouchFunc = NULL;
@@ -4173,11 +3796,11 @@ void G_asClearEntityBehavoirs( edict_t *ent )
 }
 
 /*
-* G_asReleaseEntityBehavoirs
+* G_asReleaseEntityBehaviors
 *
 * Release callback function references held by the engine for script spawned entities
 */
-void G_asReleaseEntityBehavoirs( edict_t *ent )
+void G_asReleaseEntityBehaviors( edict_t *ent )
 {
 	if( ent->scriptSpawned && angelExport ) {
 		if( ent->asThinkFunc ) {
@@ -4200,7 +3823,7 @@ void G_asReleaseEntityBehavoirs( edict_t *ent )
 		}
 	}
 
-	G_asClearEntityBehavoirs( ent );
+	G_asClearEntityBehaviors( ent );
 }
 
 //"void %s_think( cEntity @ent )"
@@ -4213,7 +3836,7 @@ void G_asCallMapEntityThink( edict_t *ent )
 	if( !ent->asThinkFunc )
 		return;
 
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
+	asContextHandle = angelExport->asAdquireContext( level.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asThinkFunc );
 	if( error < 0 ) 
@@ -4223,8 +3846,8 @@ void G_asCallMapEntityThink( edict_t *ent )
 	angelExport->asSetArgObject( asContextHandle, 0, ent );
 
 	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
+	if( G_ExecutionErrorReport( level.asEngineHandle, asContextHandle, error ) )
+		GT_asShutdownScript();
 }
 
 // "void %s_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfFlags )"
@@ -4238,7 +3861,7 @@ void G_asCallMapEntityTouch( edict_t *ent, edict_t *other, cplane_t *plane, int 
 
 	assert( ent->scriptSpawned == qtrue );
 
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
+	asContextHandle = angelExport->asAdquireContext( level.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asTouchFunc );
 	if( error < 0 ) 
@@ -4260,8 +3883,8 @@ void G_asCallMapEntityTouch( edict_t *ent, edict_t *other, cplane_t *plane, int 
 	angelExport->asSetArgDWord( asContextHandle, 3, surfFlags );
 
 	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
+	if( G_ExecutionErrorReport( level.asEngineHandle, asContextHandle, error ) )
+		GT_asShutdownScript();
 }
 
 // "void %s_use( cEntity @ent, cEntity @other, cEntity @activator )"
@@ -4274,7 +3897,7 @@ void G_asCallMapEntityUse( edict_t *ent, edict_t *other, edict_t *activator )
 
 	assert( ent->scriptSpawned == qtrue );
 
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
+	asContextHandle = angelExport->asAdquireContext( level.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asUseFunc );
 	if( error < 0 ) 
@@ -4286,8 +3909,8 @@ void G_asCallMapEntityUse( edict_t *ent, edict_t *other, edict_t *activator )
 	angelExport->asSetArgObject( asContextHandle, 2, activator );
 
 	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
+	if( G_ExecutionErrorReport( level.asEngineHandle, asContextHandle, error ) )
+		GT_asShutdownScript();
 }
 
 // "void %s_pain( cEntity @ent, cEntity @other, float kick, float damage )"
@@ -4300,7 +3923,7 @@ void G_asCallMapEntityPain( edict_t *ent, edict_t *other, float kick, float dama
 
 	assert( ent->scriptSpawned == qtrue );
 
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
+	asContextHandle = angelExport->asAdquireContext( level.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asPainFunc );
 	if( error < 0 ) 
@@ -4313,8 +3936,8 @@ void G_asCallMapEntityPain( edict_t *ent, edict_t *other, float kick, float dama
 	angelExport->asSetArgFloat( asContextHandle, 3, damage );
 
 	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
+	if( G_ExecutionErrorReport( level.asEngineHandle, asContextHandle, error ) )
+		GT_asShutdownScript();
 }
 
 // "void %s_die( cEntity @ent, cEntity @inflicter, cEntity @attacker )"
@@ -4327,7 +3950,7 @@ void G_asCallMapEntityDie( edict_t *ent, edict_t *inflicter, edict_t *attacker, 
 
 	assert( ent->scriptSpawned == qtrue );
 
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
+	asContextHandle = angelExport->asAdquireContext( level.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asDieFunc );
 	if( error < 0 ) 
@@ -4339,8 +3962,8 @@ void G_asCallMapEntityDie( edict_t *ent, edict_t *inflicter, edict_t *attacker, 
 	angelExport->asSetArgObject( asContextHandle, 2, attacker );
 
 	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
+	if( G_ExecutionErrorReport( level.asEngineHandle, asContextHandle, error ) )
+		GT_asShutdownScript();
 }
 
 //"void %s_stop( cEntity @ent )"
@@ -4353,7 +3976,7 @@ void G_asCallMapEntityStop( edict_t *ent )
 
 	assert( ent->scriptSpawned == qtrue );
 
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
+	asContextHandle = angelExport->asAdquireContext( level.asEngineHandle );
 
 	error = angelExport->asPrepare( asContextHandle, ent->asStopFunc );
 	if( error < 0 ) 
@@ -4363,18 +3986,54 @@ void G_asCallMapEntityStop( edict_t *ent )
 	angelExport->asSetArgObject( asContextHandle, 0, ent );
 
 	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		G_asShutdownGametypeScript();
+	if( G_ExecutionErrorReport( level.asEngineHandle, asContextHandle, error ) )
+		GT_asShutdownScript();
 }
 
-static char *G_LoadScriptSection( const char *script, int sectionNum )
+// ======================================================================================
+
+/*
+* G_ExecutionErrorReport
+*/
+qboolean G_ExecutionErrorReport( int asEngineHandle, int asContextHandle, int error )
+{
+	if( error == asEXECUTION_FINISHED )
+		return qfalse;
+
+	// The execution didn't finish as we had planned. Determine why.
+	if( error == asEXECUTION_ABORTED )
+		G_Printf( "* The script was aborted before it could finish. Probably it timed out.\n" );
+
+	else if( error == asEXECUTION_EXCEPTION )
+	{
+		void *func;
+
+		G_Printf( "* The script ended with an exception.\n" );
+
+		// Write some information about the script exception
+		func = angelExport->asGetExceptionFunction( asContextHandle );
+		G_Printf( "* func: %s\n", angelExport->asGetFunctionDeclaration( func, qtrue ) );
+		G_Printf( "* sect: %s\n", angelExport->asGetFunctionSection( func ) );
+		G_Printf( "* line: %i\n", angelExport->asGetExceptionLineNumber( asContextHandle ) );
+		G_Printf( "* desc: %s\n", angelExport->asGetExceptionString( asContextHandle ) );
+	}
+	else
+		G_Printf( "* The script ended for some unforeseen reason ( %i ).\n", error );
+
+	return qtrue;
+}
+
+/*
+* G_LoadScriptSection
+*/
+static char *G_LoadScriptSection( const char *dir, const char *script, int sectionNum )
 {
 	char filename[MAX_QPATH];
 	qbyte *data;
 	int length, filenum;
 	char *sectionName;
 
-	sectionName = G_ListNameForPosition( script, sectionNum, CHAR_GAMETYPE_SEPARATOR );
+	sectionName = G_ListNameForPosition( script, sectionNum, SECTIONS_SEPARATOR );
 	if( !sectionName )
 		return NULL;
 
@@ -4384,9 +4043,9 @@ static char *G_LoadScriptSection( const char *script, int sectionNum )
 		sectionName++;
 
 	if( sectionName[0] == '/' )
-		Q_snprintfz( filename, sizeof( filename ), "progs%s%s", sectionName, GAMETYPE_SCRIPT_EXTENSION );
+		Q_snprintfz( filename, sizeof( filename ), "%s%s%s", SCRIPTS_DIRECTORY, sectionName, ANGEL_SCRIPT_EXTENSION );
 	else
-		Q_snprintfz( filename, sizeof( filename ), "progs/gametypes/%s%s", sectionName, GAMETYPE_SCRIPT_EXTENSION );
+		Q_snprintfz( filename, sizeof( filename ), "%s/%s/%s%s", SCRIPTS_DIRECTORY, dir, sectionName, ANGEL_SCRIPT_EXTENSION );
 	Q_strlwr( filename );
 
 	length = trap_FS_FOpenFile( filename, &filenum, FS_READ );
@@ -4406,255 +4065,82 @@ static char *G_LoadScriptSection( const char *script, int sectionNum )
 	return (char *)data;
 }
 
-qboolean G_asInitializeGametypeScript( const char *script, const char *gametypeName )
+/*
+* G_BuildGameScript
+*/
+static qboolean G_BuildGameScript( const char *moduleName, const char *dir, const char *scriptName, const char *script )
 {
-	int asEngineHandle, asContextHandle, error;
+	int asEngineHandle, error;
 	int numSections, sectionNum;
-	int funcCount;
 	char *section;
-	const char *fdeclstr;
-	const asglobfuncs_t *func;
 
-	angelExport = trap_asGetAngelExport();
-	if( !angelExport )
-	{
-		G_Printf( "G_asInitializeGametypeScript: Angelscript API unavailable\n" );
+	asEngineHandle = level.asEngineHandle;
+	if( asEngineHandle < 0 ) {
+		G_Printf( "G_BuildGameScript: Angelscript API unavailable\n" );
 		return qfalse;
 	}
 
-	G_Printf( "* Initializing gametype scripts\n" );
+	G_Printf( "* Initializing script '%s'\n", scriptName );
 
 	// count referenced script sections
-	for( numSections = 0; ( section = G_ListNameForPosition( script, numSections, CHAR_GAMETYPE_SEPARATOR ) ) != NULL; numSections++ );
+	for( numSections = 0; ( section = G_ListNameForPosition( script, numSections, SECTIONS_SEPARATOR ) ) != NULL; numSections++ );
 
-	if( !numSections )
-	{
-		G_Printf( "* Invalid gametype script: The gametype has no valid script sections included.\n" );
-		goto releaseAll;
+	if( !numSections ) {
+		G_Printf( "* Error: script '%s' has no sections\n", scriptName );
+		return qfalse;
 	}
-
-	// initialize the engine
-	asEngineHandle = angelExport->asCreateScriptEngine( &level.gametype.asEngineIsGeneric );
-	if( asEngineHandle < 0 )
-	{
-		G_Printf( "* Couldn't initialize angelscript.\n" );
-		goto releaseAll;
-	}
-
-	if( level.gametype.asEngineIsGeneric )
-	{
-		G_Printf( "* Generic calling convention detected, aborting.\n" );
-		goto releaseAll;
-	}
-
-	G_InitializeGameModuleSyntax( asEngineHandle );
 
 	// load up the script sections
 
-	for( sectionNum = 0; ( section = G_LoadScriptSection( script, sectionNum ) ) != NULL; sectionNum++ )
-	{
-		char *sectionName = G_ListNameForPosition( script, sectionNum, CHAR_GAMETYPE_SEPARATOR );
-		error = angelExport->asAddScriptSection( asEngineHandle, SCRIPT_MODULE_NAME, sectionName, section, strlen( section ) );
+	for( sectionNum = 0; ( section = G_LoadScriptSection( dir, script, sectionNum ) ) != NULL; sectionNum++ ) {
+		char *sectionName = G_ListNameForPosition( script, sectionNum, SECTIONS_SEPARATOR );
+		error = angelExport->asAddScriptSection( asEngineHandle, moduleName, sectionName, section, strlen( section ) );
 
 		G_Free( section );
 
-		if( error )
-		{
-			G_Printf( "* Failed to add the script section %s with error %i\n", gametypeName, error );
-			goto releaseAll;
+		if( error ) {
+			G_Printf( "* Failed to add the script section %s with error %i\n", sectionName, error );
+			return qfalse;
 		}
 	}
 
-	if( sectionNum != numSections )
-	{
-
-		G_Printf( "* Couldn't load all script sections. Can't continue.\n" );
-		goto releaseAll;
+	if( sectionNum != numSections ) {
+		G_Printf( "* Error: couldn't load all script sections.\n" );
+		return qfalse;
 	}
 
-	error = angelExport->asBuildModule( asEngineHandle, SCRIPT_MODULE_NAME );
-	if( error )
-	{
-		G_Printf( "* Failed to build the script %s\n", gametypeName );
-		goto releaseAll;
+	error = angelExport->asBuildModule( asEngineHandle, moduleName );
+	if( error ) {
+		G_Printf( "* Failed to build the script '%s'\n", scriptName );
+		return qfalse;
 	}
-
-	// grab script function calls
-	funcCount = 0;
-
-	fdeclstr = "void GT_InitGametype()";
-	level.gametype.initFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.initFunc )
-	{
-		G_Printf( "* The function '%s' was not found. Can not continue.\n", fdeclstr );
-		goto releaseAll;
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "void GT_SpawnGametype()";
-	level.gametype.spawnFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.spawnFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "void GT_MatchStateStarted()";
-	level.gametype.matchStateStartedFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.matchStateStartedFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "bool GT_MatchStateFinished( int incomingMatchState )";
-	level.gametype.matchStateFinishedFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.matchStateFinishedFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "void GT_ThinkRules()";
-	level.gametype.thinkRulesFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.thinkRulesFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "void GT_playerRespawn( cEntity @ent, int old_team, int new_team )";
-	level.gametype.playerRespawnFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.playerRespawnFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "void GT_scoreEvent( cClient @client, String &score_event, String &args )";
-	level.gametype.scoreEventFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.scoreEventFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "String @GT_ScoreboardMessage( uint maxlen )";
-	level.gametype.scoreboardMessageFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.scoreboardMessageFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "cEntity @GT_SelectSpawnPoint( cEntity @ent )";
-	level.gametype.selectSpawnPointFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.selectSpawnPointFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "bool GT_Command( cClient @client, String &cmdString, String &argsString, int argc )";
-	level.gametype.clientCommandFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.clientCommandFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "bool GT_UpdateBotStatus( cEntity @ent )";
-	level.gametype.botStatusFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( level.gametype.botStatusFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	fdeclstr = "void GT_Shutdown()";
-	level.gametype.shutdownFunc = angelExport->asGetFunctionByDecl( asEngineHandle, SCRIPT_MODULE_NAME, fdeclstr );
-	if( !level.gametype.shutdownFunc )
-	{
-		if( developer->integer || sv_cheats->integer )
-			G_Printf( "* The function '%s' was not present in the script.\n", fdeclstr );
-	}
-	else
-		funcCount++;
-
-	// get AS function pointers
-	for( func = asGlobFuncs; func->declaration; func++ ) {
-		if( func->asFuncPtr ) {
-			*func->asFuncPtr = angelExport->asGetGlobalFunctionByDecl( asEngineHandle, func->declaration );
-		}
-	}
-
-
-	//
-	// execute the GT_InitGametype function
-	//
-
-	level.gametype.asEngineHandle = asEngineHandle;
-
-	asContextHandle = angelExport->asAdquireContext( level.gametype.asEngineHandle );
-
-	error = angelExport->asPrepare( asContextHandle, level.gametype.initFunc );
-	if( error < 0 ) 
-		goto releaseAll;
-
-	error = angelExport->asExecute( asContextHandle );
-	if( G_asExecutionErrorReport( level.gametype.asEngineHandle, asContextHandle, error ) )
-		goto releaseAll;
 
 	return qtrue;
-
-releaseAll:
-	G_asShutdownGametypeScript();
-	return qfalse;
 }
 
-qboolean G_asLoadGametypeScript( const char *gametypeName )
+/*
+* G_LoadGameScript
+*/
+qboolean G_LoadGameScript( const char *moduleName, const char *dir, const char *filename, const char *ext )
 {
 	int length, filenum;
-	qbyte *data;
-	char filename[MAX_QPATH];
+	char *data;
+	char filepath[MAX_QPATH];
 
-	G_ResetGametypeScriptData();
+	Q_snprintfz( filepath, sizeof( filepath ), "%s/%s/%s", SCRIPTS_DIRECTORY, dir, filename );
+	COM_DefaultExtension( filepath, ext, sizeof( filepath ) );
 
-	Q_snprintfz( filename, sizeof( filename ), "progs/gametypes/%s%s", gametypeName, GAMETYPE_PROJECT_EXTENSION );
-	Q_strlwr( filename );
-
-	length = trap_FS_FOpenFile( filename, &filenum, FS_READ );
+	length = trap_FS_FOpenFile( filepath, &filenum, FS_READ );
 
 	if( length == -1 )
 	{
-		G_Printf( "Failed to initialize: Couldn't find '%s'.\n", filename );
+		G_Printf( "G_LoadGameScript: Couldn't find '%s'.\n", filepath );
 		return qfalse;
 	}
 
 	if( !length )
 	{
-		G_Printf( "Failed to initialize: Gametype '%s' is empty.\n", filename );
+		G_Printf( "G_LoadGameScript: '%s' is empty.\n", filepath );
 		trap_FS_FCloseFile( filenum );
 		return qfalse;
 	}
@@ -4665,15 +4151,102 @@ qboolean G_asLoadGametypeScript( const char *gametypeName )
 	trap_FS_FCloseFile( filenum );
 
 	// Initialize the script
-	if( !G_asInitializeGametypeScript( (const char *)data, gametypeName ) )
+	if( !G_BuildGameScript( moduleName, dir, filepath, data ) )
 	{
-		G_Printf( "Failed to initialize gametype: '%s'.\n", filename );
 		G_Free( data );
 		return qfalse;
 	}
 
 	G_Free( data );
 	return qtrue;
+}
+
+/*
+* G_ResetGameModuleScriptData
+*/
+static void G_ResetGameModuleScriptData( void )
+{
+	level.asEngineHandle = -1;
+	level.asGlobalsInitialized = qfalse;
+
+	asEntityCallThinkFuncPtr = NULL;
+	asEntityCallTouchFuncPtr = NULL;
+	asEntityCallUseFuncPtr = NULL;
+	asEntityCallStopFuncPtr = NULL;
+	asEntityCallPainFuncPtr = NULL;
+	asEntityCallDieFuncPtr = NULL;
+}
+
+/*
+* G_InitializeGameModuleSyntax
+*/
+static void G_InitializeGameModuleSyntax( int asEngineHandle )
+{
+	if( level.asGlobalsInitialized ) {
+		return;
+	}
+
+	level.asGlobalsInitialized = qtrue;
+
+	G_Printf( "* Initializing Game module syntax\n" );
+
+	// register global variables
+	G_asRegisterEnums( asEngineHandle );
+
+	// register classes
+	G_asRegisterObjectClasses( asEngineHandle );
+
+	// register global functions
+	G_asRegisterGlobalFunctions( asEngineHandle );
+
+	// register global properties
+	G_asRegisterGlobalProperties( asEngineHandle );
+}
+
+/*
+* G_asInitGameModuleEngine
+*/
+void G_asInitGameModuleEngine( void )
+{
+	qboolean asGeneric;
+	int asEngineHandle;
+
+	G_ResetGameModuleScriptData();
+
+	// initialize the engine
+	angelExport = trap_asGetAngelExport();
+	if( !angelExport ) {
+		G_Printf( "* Couldn't initialize angelscript, missing symbol.\n" );
+		return;
+	}
+
+	asEngineHandle = angelExport->asCreateScriptEngine( &asGeneric );
+	if( asEngineHandle < 0 ) {
+		G_Printf( "* Couldn't initialize angelscript.\n" );
+		return;
+	}
+
+	if( asGeneric ) {
+		G_Printf( "* Generic calling convention detected, aborting.\n" );
+		G_asShutdownGameModuleEngine();
+		return;
+	}
+
+	level.asEngineHandle = asEngineHandle;
+
+	G_InitializeGameModuleSyntax( asEngineHandle );
+}
+
+/*
+* G_asShutdownGameModuleEngine
+*/
+void G_asShutdownGameModuleEngine( void )
+{
+	if( level.asEngineHandle > -1 ) {
+		if( angelExport )
+			angelExport->asReleaseScriptEngine( level.asEngineHandle );
+		G_ResetGameModuleScriptData();
+	}
 }
 
 /*
@@ -4693,12 +4266,12 @@ void G_asGarbageCollect( qboolean force )
 
 	if( force || lastTime + g_asGC_interval->value * 1000 < game.serverTime )
 	{
-		angelExport->asGetGCStatistics( level.gametype.asEngineHandle, &currentSize, &totalDestroyed, &totalDetected );
+		angelExport->asGetGCStatistics( level.asEngineHandle, &currentSize, &totalDestroyed, &totalDetected );
 
 		if( g_asGC_stats->integer )
 			G_Printf( "GC: t=%u size=%u destroyed=%u detected=%u\n", game.serverTime, currentSize, totalDestroyed, totalDetected );
 
-		angelExport->asGarbageCollect( level.gametype.asEngineHandle );
+		angelExport->asGarbageCollect( level.asEngineHandle );
 
 		lastTime = game.serverTime;
 	}

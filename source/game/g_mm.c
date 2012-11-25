@@ -379,7 +379,7 @@ void G_SetRaceTime( edict_t *ent, int sector, unsigned int time )
 	// normal sector
 	if( sector >= 0 )
 		rr->times[sector] = time;
-	else
+	else if (rr->numSectors > 0)
 	{
 		raceRun_t *nrr;	// new global racerun
 

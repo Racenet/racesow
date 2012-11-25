@@ -31,9 +31,8 @@ extern cvar_t *g_gametype; // only for use in function that deal with changing g
 extern cvar_t *g_gametypes_list;
 
 #define G_CHALLENGERS_MIN_JOINTEAM_MAPTIME  9000 // must wait 10 seconds before joining
-#define GAMETYPE_PROJECT_EXTENSION ".gt"
-#define GAMETYPE_SCRIPT_EXTENSION ".as"
-#define CHAR_GAMETYPE_SEPARATOR ';'
+#define GAMETYPE_PROJECT_EXTENSION			".gt"
+#define CHAR_GAMETYPE_SEPARATOR				';'
 
 #define MAX_RACE_CHECKPOINTS	32
 
@@ -119,9 +118,6 @@ typedef struct
 typedef struct
 {
 	match_t match;
-
-	int asEngineHandle;
-	qboolean asEngineIsGeneric;
 
 	void *initFunc;
 	void *spawnFunc;

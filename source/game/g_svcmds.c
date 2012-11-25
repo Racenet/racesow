@@ -361,8 +361,6 @@ static void Cmd_WriteIP_f( void )
 	SV_WriteIPList ();
 }
 
-void G_ChecksumGametypes_f( void );
-
 /*
 * G_AddCommands
 */
@@ -392,8 +390,6 @@ void G_AddServerCommands( void )
 	trap_Cmd_AddCommand( "addnode", AITools_AddNode_Cmd );
 	trap_Cmd_AddCommand( "dropnode", AITools_AddNode_Cmd );
 	trap_Cmd_AddCommand( "addbotroam", AITools_AddBotRoamNode_Cmd );
-
-	trap_Cmd_AddCommand( "checksumGametypes", G_ChecksumGametypes_f );
 
 	trap_Cmd_AddCommand( "dumpASapi", G_asDumpAPI_f );
 
@@ -430,8 +426,6 @@ void G_RemoveCommands( void )
 	trap_Cmd_RemoveCommand( "addnode" );
 	trap_Cmd_RemoveCommand( "dropnode" );
 	trap_Cmd_RemoveCommand( "addbotroam" );
-
-	trap_Cmd_RemoveCommand( "checksumGametypes" );
 
 	trap_Cmd_RemoveCommand( "dumpASapi" );
 

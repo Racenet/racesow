@@ -211,8 +211,20 @@ typedef struct
 	qboolean exitNow;
 	qboolean hardReset;
 
+	// angelScript engine handle
+	int asEngineHandle;
+	qboolean asGlobalsInitialized;
+
 	// gametype definition and execution
 	gametype_descriptor_t gametype;
+
+	// map scripts
+	struct {
+		void *initFunc;
+		void *preThinkFunc;
+		void *postThinkFunc;
+		void *exitFunc;
+	} mapscript;
 
 	qboolean teamlock;
 	qboolean ready[MAX_CLIENTS];
@@ -455,32 +467,47 @@ void SP_func_static( edict_t *ent );
 void SP_func_bobbing( edict_t *ent );
 void SP_func_pendulum( edict_t *ent );
 
-qboolean G_asLoadGametypeScript( const char *gametypeName );
-void G_asShutdownGametypeScript( void );
+//
+// g_ascript.c
+//
+#define ANGEL_SCRIPT_EXTENSION				".as"
 
-void G_asCallLevelSpawnScript( void );
-void G_asCallMatchStateStartedScript( void );
-qboolean G_asCallMatchStateFinishedScript( int incomingMatchState );
-void G_asCallThinkRulesScript( void );
-void G_asCallPlayerKilledScript( edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point, int mod );
-void G_asCallPlayerRespawnScript( edict_t *ent, int old_team, int new_team );
-void G_asCallScoreEventScript( gclient_t *client, const char *score_event, const char *args );
-char *G_asCallScoreboardMessage( unsigned int maxlen );
-edict_t *G_asCallSelectSpawnPointScript( edict_t *ent );
-qboolean G_asCallGameCommandScript( gclient_t *client, const char *cmd, const char *args, int argc );
-qboolean G_asCallBotStatusScript( edict_t *ent );
-void G_asCallShutdownScript( void );
-qboolean G_asCallMapEntitySpawnScript( const char *classname, edict_t *ent );
+qboolean GT_asLoadScript( const char *gametypeName );
+void GT_asShutdownScript( void );
+void GT_asCallSpawn( void );
+void GT_asCallMatchStateStarted( void );
+qboolean GT_asCallMatchStateFinished( int incomingMatchState );
+void GT_asCallThinkRules( void );
+void GT_asCallPlayerKilled( edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point, int mod );
+void GT_asCallPlayerRespawn( edict_t *ent, int old_team, int new_team );
+void GT_asCallScoreEvent( gclient_t *client, const char *score_event, const char *args );
+char *GT_asCallScoreboardMessage( unsigned int maxlen );
+edict_t *GT_asCallSelectSpawnPoint( edict_t *ent );
+qboolean GT_asCallGameCommand( gclient_t *client, const char *cmd, const char *args, int argc );
+qboolean GT_asCallBotStatus( edict_t *ent );
+void GT_asCallShutdown( void );
+
 void G_asCallMapEntityThink( edict_t *ent );
 void G_asCallMapEntityTouch( edict_t *ent, edict_t *other, cplane_t *plane, int surfFlags );
 void G_asCallMapEntityUse( edict_t *ent, edict_t *other, edict_t *activator );
 void G_asCallMapEntityPain( edict_t *ent, edict_t *other, float kick, float damage );
 void G_asCallMapEntityDie( edict_t *ent, edict_t *inflicter, edict_t *attacker, int damage, const vec3_t point );
 void G_asCallMapEntityStop( edict_t *ent );
-void G_asResetEntityBehavoirs( edict_t *ent );
-void G_asClearEntityBehavoirs( edict_t *ent );
-void G_asReleaseEntityBehavoirs( edict_t *ent );
+void G_asResetEntityBehaviors( edict_t *ent );
+void G_asClearEntityBehaviors( edict_t *ent );
+void G_asReleaseEntityBehaviors( edict_t *ent );
 
+qboolean G_asLoadMapScript( const char *mapname );
+void G_asShutdownMapScript( void );
+void G_asCallMapInit( void );
+void G_asCallMapPreThink( void );
+void G_asCallMapPostThink( void );
+void G_asCallMapExit( void );
+
+qboolean G_asCallMapEntitySpawnScript( const char *classname, edict_t *ent );
+ 
+void G_asInitGameModuleEngine( void );
+void G_asShutdownGameModuleEngine( void );
 void G_asGarbageCollect( qboolean force );
 void G_asDumpAPI_f( void );
 
@@ -1350,6 +1377,7 @@ struct edict_s
 
 	int asRefCount, asFactored;
 	qboolean scriptSpawned;
+	const char *scriptModule;
 	void *asSpawnFunc, *asThinkFunc, *asUseFunc, *asTouchFunc, *asPainFunc, *asDieFunc, *asStopFunc;
 };
 

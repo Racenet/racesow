@@ -371,7 +371,7 @@ static void Cmd_CvarInfo_f( edict_t *ent )
 	}
 
 	// see if the gametype script is requesting this info
-	if( !G_asCallGameCommandScript( ent->r.client, "cvarinfo", trap_Cmd_Args(), trap_Cmd_Argc() - 1 ) )
+	if( !GT_asCallGameCommand( ent->r.client, "cvarinfo", trap_Cmd_Args(), trap_Cmd_Argc() - 1 ) )
 	{
 		// if the gametype script wasn't interested in this command, print the output to console
 		G_Printf( "%s%s's cvar '%s' is '%s%s'\n", ent->r.client->netname, S_COLOR_WHITE, trap_Cmd_Argv( 1 ), trap_Cmd_Argv( 2 ), S_COLOR_WHITE );
@@ -1362,7 +1362,7 @@ void ClientCommand( edict_t *ent )
 			if( g_Commands[i].func )
 				g_Commands[i].func( ent );
 			else
-				G_asCallGameCommandScript( ent->r.client, cmd, trap_Cmd_Args(), trap_Cmd_Argc() - 1 );
+				GT_asCallGameCommand( ent->r.client, cmd, trap_Cmd_Args(), trap_Cmd_Argc() - 1 );
 			return;
 		}
 	}
