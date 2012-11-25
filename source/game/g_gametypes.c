@@ -1974,7 +1974,7 @@ void G_Gametype_Init( void )
 	G_Gametype_SetDefaults();
 
 	// Init the current gametype
-	if( !GT_asLoadGametypeS( g_gametype->string ) )
+	if( !GT_asLoadScript( g_gametype->string ) )
 		G_Gametype_GENERIC_Init();
 
 	trap_ConfigString( CS_GAMETYPENAME, gs.gametypeName );
