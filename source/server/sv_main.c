@@ -778,6 +778,22 @@ void SV_UserinfoChanged( client_t *client )
 		}
 	}
 
+	// mm session
+	ival = 0;
+	val = Info_ValueForKey( client->userinfo, "cl_mm_session" );
+	if( val )
+		ival = atoi( val );
+	if( !val || ival != client->mm_session )
+		Info_SetValueForKey( client->userinfo, "cl_mm_session", va("%d", client->mm_session ) );
+
+	// mm login
+	if( client->mm_login[0] != '\0' ) {
+		Info_SetValueForKey( client->userinfo, "cl_mm_login", client->mm_login );
+	}
+	else {
+		Info_RemoveKey( client->userinfo, "cl_mm_login" );
+	}
+
 	// call prog code to allow overrides
 	ge->ClientUserinfoChanged( client->edict, client->userinfo );
 
@@ -795,14 +811,6 @@ void SV_UserinfoChanged( client_t *client )
 		return;
 	}
 	Q_strncpyz( client->name, val, sizeof( client->name ) );
-
-	// mm session
-	ival = 0;
-	val = Info_ValueForKey( client->userinfo, "cl_mm_session" );
-	if( val )
-		ival = atoi( val );
-	if( !val || ival != client->mm_session )
-		Info_SetValueForKey( client->userinfo, "cl_mm_session", va("%d", client->mm_session ) );
 
 #ifndef RATEKILLED
 	// rate command

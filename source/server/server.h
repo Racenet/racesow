@@ -178,6 +178,7 @@ typedef struct client_s
 
 	int mm_session;
 	unsigned int mm_ticket;
+	char mm_login[MAX_INFO_VALUE];
 } client_t;
 
 // a client can leave the server in one of four ways:
