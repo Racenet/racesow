@@ -1016,8 +1016,7 @@ int GLimp_Init( void *hinstance, void *wndproc, void *parenthWnd )
 #endif
 	_xf86_XineramaInit();
 
-	if( r_colorbits->integer == 16 || r_colorbits->integer == 24 ) colorbits = r_colorbits->integer;
-	else colorbits = 0;
+	colorbits = 0;
 
 	if( r_stencilbits->integer == 8 || r_stencilbits->integer == 16 ) stencilbits = r_stencilbits->integer;
 	else stencilbits = 0;
