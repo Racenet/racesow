@@ -398,18 +398,20 @@ void StatQuery_Send( stat_query_t *query )
 {
 	StatQuery_Prepare( query );
 
-	wswcurl_stream_callbacks ( query->req, NULL, StatQuery_CallbackGeneric, (void*)query );
+	wswcurl_stream_callbacks ( query->req, NULL, StatQuery_CallbackGeneric, NULL, (void*)query );
 	wswcurl_start( query->req );
 }
 
 void StatQuery_SetField( stat_query_t *query, const char *name, const char *value )
 {
 	if( query->req )
-		wswcurl_formadd( query->req, name, value );
+		wswcurl_formadd( query->req, name, "%s", value );
 	else
 	{
 		// GET request, store parameters
 		// add in '=', '&' and '\0' = 3
+
+		// FIXME: add proper URL encode
 		size_t len = strlen( query->url ) + strlen( name ) + strlen( value ) + 3;
 		query->url = SQREALLOC( query->url, len );
 		strcat( query->url, name );
