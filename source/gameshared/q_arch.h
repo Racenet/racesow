@@ -107,6 +107,8 @@ extern "C" {
 #define BUILDSTRING "Win32 DEBUG"
 #endif
 
+#define OSNAME "Windows"
+
 #ifdef _M_IX86
 #if defined __FreeBSD__
 #define CPUSTRING "i386"
@@ -177,8 +179,10 @@ typedef UINT_PTR socket_handle_t;
 
 #ifdef __FreeBSD__
 #define BUILDSTRING "FreeBSD"
+#define OSNAME "FreeBSD"
 #else
 #define BUILDSTRING "Linux"
+#define OSNAME "Linux"
 #endif
 
 #ifdef __i386__
@@ -249,6 +253,7 @@ typedef int socket_handle_t;
 
 //Mac OSX has universal binaries, no need for cpu dependency
 #define BUILDSTRING "MacOSX"
+#define OSNAME "MacOSX"
 #define CPUSTRING "universal"
 #define ARCH "mac"
 
