@@ -966,6 +966,8 @@ void CG_Init( const char *serverName, unsigned int playerNum, int vidWidth, int 
 
 	cgs.demoTutorial = cgs.demoPlaying && (strstr( cgs.demoName, "tutorials/" ) != NULL);
 
+	cg.firstFrame = qtrue; // think of the next frame in CG_NewFrameSnap as of the first one
+
 	// now that we're done with precaching, let the autorecord actions do something
 	CG_ConfigString( CS_AUTORECORDSTATE, cgs.configStrings[CS_AUTORECORDSTATE] );
 

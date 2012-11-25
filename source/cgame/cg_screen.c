@@ -1284,6 +1284,7 @@ void CG_Draw2DView( void )
 	// if changed from or to spec, reload the HUD
 	if (cg.specStateChanged) {
 		cg_specHUD->modified = cg_clientHUD->modified = qtrue;
+		cg.specStateChanged = qfalse;
 	}
 
 	if (ISREALSPECTATOR())

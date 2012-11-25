@@ -467,7 +467,7 @@ void CG_NewFrameSnap( snapshot_t *frame, snapshot_t *lerpframe )
 		cgs.tvRequested = qtrue;
 	}
 
-	cg.specStateChanged = SPECSTATECHANGED() || lerpframe == NULL;
+	cg.specStateChanged = SPECSTATECHANGED() || lerpframe == NULL || cg.firstFrame;
 
 	// a new server frame begins now
 	CG_FixVolumeCvars();
@@ -486,6 +486,8 @@ void CG_NewFrameSnap( snapshot_t *frame, snapshot_t *lerpframe )
 	}
 
 	CG_FireEvents( qtrue );
+
+	cg.firstFrame = qfalse; // not the first frame anymore
 }
 
 
