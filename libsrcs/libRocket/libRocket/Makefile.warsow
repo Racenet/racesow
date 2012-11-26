@@ -10,6 +10,8 @@ CXXFLAGS+=-DSTATIC_LIB -IInclude
 
 ifneq ($(USE_MINGW),YES)
 CXXFLAGS+=-I$(LOCALBASE)/include -fPIC $(FREETYPE_INC)
+else
+CXXFLAGS+=-I../../../libsrcs/libfreetype/include
 endif
 
 ifeq ($(DEBUG_BUILD),YES)

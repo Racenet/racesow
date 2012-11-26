@@ -30,6 +30,8 @@ BUILD_TV_SERVER?=NO
 # Build Warsow client without server capabilities?
 BUILD_THIN_CLIENT?=NO
 
+CROSS_COMPILE=YES
+
 ###########################################################
 
 ifeq ($(USE_MINGW),YES)
@@ -140,6 +142,9 @@ CFLAGS_ROCKET+=-Iui
 
 # static link to custombuilt lib
 LDFLAGS_ROCKET=-L$(LIBROCKET_DIR)/lib -lRocketWSW -lfreetype
+ifeq ($(USE_MINGW),YES)
+LDFLAGS_ROCKET+=-lzstat
+endif
 # dynamic link to 'official' build
 # LDFLAGS_ROCKET=-L$(LIBROCKET_DIR)/Build -lRocketCore -lRocketControls -lfreetype
 
@@ -178,10 +183,10 @@ LDFLAGS_COMMON+= -s
 LXXFLAGS_COMMON+= -s
 endif
 
-LDFLAGS_CLIENT=-lcurlstat lwsock32 -ljpegstat -lpngstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid -lws2_32 -lzstat
+LDFLAGS_CLIENT=-lcurlstat -lwsock32 -ljpegstat -lpngstat -lgdi32 -L../dxsdk/lib/ -lddraw -ldinput -ldxguid -lws2_32 -lzstat
 LDFLAGS_DED=-lcurlstat -lwsock32 -lws2_32 -lzstat
 LDFLAGS_MODULE=-shared
-LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lzstat -lws2_32 -lwsock32 -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+LDFLAGS_GAME=$(LDFLAGS_MODULE) -L$(LIBDIR) -lmysqlclientstat -lpthreadstat -lzstat -lwsock32 -lws2_32
 LDFLAGS_TV_SERVER=-lcurlstat -lwsock32 -lws2_32 -lzstat
 
 # openal
